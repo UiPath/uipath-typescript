@@ -5,23 +5,6 @@
 
 A TypeScript SDK that enables programmatic interaction with UiPath Cloud Platform services including processes, assets, buckets, context grounding, data services, jobs, and more.
 
-## Installation
-
-```bash
-npm install @uipath/sdk
-# or
-yarn add @uipath/sdk
-```
-
-## Configuration
-
-Create a `.env` file in your project root with the following variables:
-
-```env
-UIPATH_URL=https://cloud.uipath.com/ACCOUNT_NAME/TENANT_NAME
-UIPATH_ACCESS_TOKEN=YOUR_TOKEN_HERE
-```
-
 ## Basic Usage
 
 ```typescript
