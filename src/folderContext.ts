@@ -1,5 +1,6 @@
 import { Config } from './config';
 import { ExecutionContext } from './executionContext';
+import { ENV } from './utils/constants';
 
 /**
  * Constants for environment variables and headers
@@ -8,6 +9,11 @@ export const ENV_FOLDER_KEY = 'UIPATH_FOLDER_KEY';
 export const ENV_FOLDER_PATH = 'UIPATH_FOLDER_PATH';
 export const HEADER_FOLDER_KEY = 'X-UIPATH-OrganizationUnitId';
 export const HEADER_FOLDER_PATH = 'X-UIPATH-OrganizationUnitPath';
+
+export interface FolderContextConfig {
+  [ENV.FOLDER_KEY]?: string;
+  [ENV.FOLDER_PATH]?: string;
+}
 
 /**
  * Manages the folder context for UiPath automation resources.
@@ -23,11 +29,11 @@ export class FolderContext {
   protected _folderKey: string | undefined;
   protected _folderPath: string | undefined;
 
-  constructor(config: Config, executionContext: ExecutionContext) {
+  constructor(config: Config, executionContext: ExecutionContext, folderConfig: FolderContextConfig = {}) {
     this.config = config;
     this.executionContext = executionContext;
-    this._folderKey = process.env[ENV_FOLDER_KEY];
-    this._folderPath = process.env[ENV_FOLDER_PATH];
+    this._folderKey = folderConfig[ENV.FOLDER_KEY];
+    this._folderPath = folderConfig[ENV.FOLDER_PATH];
   }
 
   /**
@@ -40,7 +46,7 @@ export class FolderContext {
    * 
    * @returns A dictionary containing the appropriate folder header 
    *          (either folder key or folder path). If no folder header is
-   *          set as environment variable, returns an empty dictionary.
+   *          set, returns an empty dictionary.
    */
   public get folderHeaders(): Record<string, string> {
     if (this._folderKey !== undefined) {

@@ -1,7 +1,7 @@
 import { Config, ConfigSchema } from './config';
-import { ExecutionContext } from './executionContext';
+import { ExecutionContext, ExecutionContextConfig } from './executionContext';
 import { ActionsService } from './services/actionsService';
-import { ApiClient } from './services/apiClient';
+import { ApiClient, ApiClientConfig } from './services/apiClient';
 import { ProcessesService } from './services/processesService';
 import { AssetsService } from './services/assetsService';
 import { BucketsService } from './services/bucketsService';
@@ -13,16 +13,22 @@ import { FolderService } from './services/folderService';
 import { EntityService } from './services/entityService';
 import { logger } from './utils/logger';
 import { UiPathOpenAIService } from './services/llmGatewayService';
+import { FolderContextConfig } from './folderContext';
 
 export interface UiPathOptions {
   baseUrl: string;
   secret: string;
-  debug?: boolean;  // Optional
+  debug?: boolean;
+  executionContext?: ExecutionContextConfig;
+  apiConfig?: ApiClientConfig;
+  folderConfig?: FolderContextConfig;
 }
 
 export class UiPath {
   private readonly config: Config;
   private readonly executionContext: ExecutionContext;
+  private readonly apiConfig: ApiClientConfig;
+  private readonly folderConfig: FolderContextConfig;
   
   private _apiClient?: ApiClient;
   private _assetsService?: AssetsService;
@@ -57,12 +63,14 @@ export class UiPath {
     // Setup logging before initializing services
     logger.setup({ debug: options.debug });
 
-    this.executionContext = new ExecutionContext();
+    this.executionContext = new ExecutionContext(options.executionContext);
+    this.apiConfig = options.apiConfig ?? {};
+    this.folderConfig = options.folderConfig ?? {};
   }
 
   get apiClient(): ApiClient {
     if (!this._apiClient) {
-      this._apiClient = new ApiClient(this.config, this.executionContext);
+      this._apiClient = new ApiClient(this.config, this.executionContext, this.apiConfig);
     }
     return this._apiClient;
   }

@@ -7,12 +7,21 @@ import { FolderContext } from '../folderContext';
 import { headerUserAgent } from '../utils/userAgent';
 import { ENV, HEADERS } from '../utils/constants';
 
+export interface ApiClientConfig {
+  [ENV.TENANT_ID]?: string;
+  [ENV.ORGANIZATION_ID]?: string;
+}
+
 export class ApiClient {
   private readonly tenantScopeClient: AxiosInstance;
   private readonly orgScopeClient: AxiosInstance;
   private folderContext: FolderContext;
 
-  constructor(private readonly config: Config, private readonly executionContext: ExecutionContext) {
+  constructor(
+    private readonly config: Config, 
+    private readonly executionContext: ExecutionContext,
+    private readonly apiConfig: ApiClientConfig = {}
+  ) {
     // Create tenant scope client
     this.tenantScopeClient = axios.create({
       baseURL: this.config.baseUrl,
@@ -149,13 +158,13 @@ export class ApiClient {
     }
 
     // Add tenant ID if available
-    const tenantId = process.env[ENV.TENANT_ID];
+    const tenantId = this.apiConfig[ENV.TENANT_ID];
     if (tenantId) {
       headers[HEADERS.TENANT_ID] = tenantId;
     }
 
     // Add organization ID if available
-    const orgId = process.env[ENV.ORGANIZATION_ID];
+    const orgId = this.apiConfig[ENV.ORGANIZATION_ID];
     if (orgId) {
       headers[HEADERS.ORGANIZATION_UNIT_ID] = orgId;
     }

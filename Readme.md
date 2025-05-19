@@ -18,7 +18,7 @@ import { UiPath } from "uipath-typescript-sdk";
 
 // Initialize the SDK with required parameters
 const sdk = new UiPath({
-    // Base URL for the UiPath Cloud Platform (required)
+    // Base URL for the UiPath Platform (required)
     baseUrl: "https://alpha.uipath.com/{orgName}/{tenantName}",
     
     // Authentication token (required)
@@ -26,7 +26,19 @@ const sdk = new UiPath({
     secret: "your-access-token",
     
     // Optional debug logging
-    debug: false
+    debug: false,
+
+    // Optional API configuration
+    apiConfig: {
+        UIPATH_TENANT_ID: "your-tenant-id",
+        UIPATH_ORGANIZATION_ID: "your-org-id"
+    },
+
+    // Optional folder configuration
+    folderConfig: {
+        UIPATH_FOLDER_KEY: "your-folder-key",
+        UIPATH_FOLDER_PATH: "your-folder-path"
+    }
 });
 
 // Example: Execute a process
