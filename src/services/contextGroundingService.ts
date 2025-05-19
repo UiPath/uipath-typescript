@@ -87,41 +87,36 @@ export class ContextGroundingService extends BaseService {
    * @param contentType - The type of content being added
    * @param blobFilePath - The path where the blob will be stored in the storage bucket
    * @param content - The content to be added, either as a string or Buffer
-   * @param sourcePath - The source path of the content if it is being uploaded from a file
    * @param options - Optional folder parameters
    */
   async addToIndex(
     name: string,
     contentType: string,
     blobFilePath: string,
-    content?: string | Buffer,
-    sourcePath?: string,
+    content?: string | Buffer | ArrayBuffer | Blob,
     options: { folderKey?: string; folderPath?: string } = {}
   ): Promise<void> {
-    if (!content && !sourcePath) {
-      throw new Error('Content or sourcePath is required');
-    }
-    if (content && sourcePath) {
-      throw new Error('Content and sourcePath are mutually exclusive');
+    if (!content) {
+      throw new Error('Content is required');
     }
 
     const index = await this.retrieve(name, options);
     const [bucketName, bucketFolderPath] = this.extractBucketInfo(index);
 
-    if (sourcePath) {
-      await this.bucketsService.upload({
+    if (typeof content === 'string') {
+      await this.bucketsService.uploadFromMemory({
         name: bucketName,
         blobFilePath,
-        sourcePath,
+        content,
         folderPath: bucketFolderPath,
         contentType,
         folderKey: index.dataSource?.folder || ''
       });
-    } else if (content) {
-      await this.bucketsService.uploadFromMemory({
+    } else {
+      await this.bucketsService.upload({
         name: bucketName,
-        content,
         blobFilePath,
+        content,
         folderPath: bucketFolderPath,
         contentType,
         folderKey: index.dataSource?.folder || ''

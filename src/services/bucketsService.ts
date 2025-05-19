@@ -4,8 +4,8 @@ import { BaseService } from './baseService';
 import { FolderContext } from '../folderContext';
 import { Bucket, BucketUri } from '../models/bucket';
 import { headerFolder } from '../utils/headers';
+import { FileSystem, isNode } from '../utils/platform';
 import axios from 'axios';
-import * as fs from 'fs/promises';
 
 interface BucketOptions {
   folderKey: string;
@@ -39,7 +39,8 @@ export class BucketsService extends BaseService {
    * @param params.name - The name of the bucket
    * @param params.key - The key of the bucket
    * @param params.blobFilePath - The path to the file in the bucket
-   * @param params.destinationPath - The local path where the file will be saved
+   * @param params.destinationPath - The local path where the file will be saved (Node.js only)
+   * @param params.onDownloadComplete - Callback function that receives the downloaded data (Browser only)
    * @param params.folderKey - The key of the folder where the bucket resides
    * @param params.folderPath - The path of the folder where the bucket resides
    */
@@ -48,13 +49,23 @@ export class BucketsService extends BaseService {
     key,
     blobFilePath,
     destinationPath,
+    onDownloadComplete,
     ...options
   }: {
     name?: string;
     key?: string;
     blobFilePath: string;
-    destinationPath: string;
+    destinationPath?: string;
+    onDownloadComplete?: (data: ArrayBuffer) => void | Promise<void>;
   } & BucketOptions): Promise<void> {
+    if (!destinationPath && !onDownloadComplete) {
+      throw new Error('Either destinationPath (Node.js) or onDownloadComplete (Browser) must be provided');
+    }
+
+    if (destinationPath && !isNode) {
+      throw new Error('destinationPath is only supported in Node.js environment');
+    }
+
     const bucket = await this.retrieve({ name, key, ...options });
     const readUri = await this.getReadUri(bucket.Id, blobFilePath, options);
 
@@ -73,7 +84,11 @@ export class BucketsService extends BaseService {
       });
     }
 
-    await fs.writeFile(destinationPath, Buffer.from(response.data));
+    if (destinationPath && isNode) {
+      await FileSystem.writeFile(destinationPath, Buffer.from(response.data));
+    } else if (onDownloadComplete) {
+      await onDownloadComplete(response.data);
+    }
   }
 
   /**
@@ -84,7 +99,8 @@ export class BucketsService extends BaseService {
    * @param params.key - The key of the bucket
    * @param params.blobFilePath - The path where the file will be stored in the bucket
    * @param params.contentType - The MIME type of the file
-   * @param params.sourcePath - The local path of the file to upload
+   * @param params.sourcePath - The local path of the file to upload (Node.js only)
+   * @param params.content - The file content as ArrayBuffer, Buffer, or Blob (Browser only)
    * @param params.folderKey - The key of the folder where the bucket resides
    * @param params.folderPath - The path of the folder where the bucket resides
    */
@@ -94,21 +110,39 @@ export class BucketsService extends BaseService {
     blobFilePath,
     contentType,
     sourcePath,
+    content,
     ...options
   }: {
     name?: string;
     key?: string;
     blobFilePath: string;
     contentType: string;
-    sourcePath: string;
+    sourcePath?: string;
+    content?: ArrayBuffer | Buffer | Blob;
   } & BucketOptions): Promise<void> {
+    if (!sourcePath && !content) {
+      throw new Error('Either sourcePath (Node.js) or content (Browser) must be provided');
+    }
+
+    if (sourcePath && !isNode) {
+      throw new Error('sourcePath is only supported in Node.js environment');
+    }
+
     const bucket = await this.retrieve({ name, key, ...options });
     const writeUri = await this.getWriteUri(bucket.Id, contentType, blobFilePath, options);
-    console.log('-------Write URI:', writeUri);
     const headers = this.convertHeaders(writeUri.Headers);
-    const fileContent = await fs.readFile(sourcePath);
+
+    let uploadContent: ArrayBuffer | Buffer | Blob;
+    if (sourcePath && isNode) {
+      uploadContent = await FileSystem.readFile(sourcePath);
+    } else if (content) {
+      uploadContent = content;
+    } else {
+      throw new Error('No content available for upload');
+    }
+
     const formData = new FormData();
-    formData.append('file', new Blob([fileContent]));
+    formData.append('file', new Blob([uploadContent], { type: contentType }));
 
     if (writeUri.RequiresAuth) {
       await this.request('PUT', writeUri.Uri, {
@@ -135,13 +169,18 @@ export class BucketsService extends BaseService {
     key?: string;
     blobFilePath: string;
     contentType: string;
-    content: string | Buffer;
+    content: string | ArrayBuffer | Buffer | Blob;
   } & BucketOptions): Promise<void> {
     const bucket = await this.retrieve({ name, key, ...options });
     const writeUri = await this.getWriteUri(bucket.Id, contentType, blobFilePath, options);
-
     const headers = this.convertHeaders(writeUri.Headers);
-    const data = typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
+
+    let data: ArrayBuffer | Buffer | Blob;
+    if (typeof content === 'string') {
+      data = new TextEncoder().encode(content).buffer;
+    } else {
+      data = content;
+    }
 
     if (writeUri.RequiresAuth) {
       await this.request('PUT', writeUri.Uri, {
