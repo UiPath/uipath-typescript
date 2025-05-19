@@ -1,21 +1,42 @@
 {
-  "name": "@uipath/typescript",
+  "name": "uipath-typescript-sdk",
   "version": "0.1.0",
-  "description": "TypeScript SDK for UiPath Cloud Platform",
+  "description": "TypeScript SDK for UiPath Platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "prepublishOnly": "npm run build",
+    "prepare": "npm run build"
   },
+  "keywords": [
+    "uipath",
+    "sdk",
+    "automation",
+    "rpa",
+    "typescript",
+    "api"
+  ],
+  "author": "Raina Middha",
+  "license": "Apache-2.0",
   "dependencies": {
+    "@types/eventemitter3": "^1.2.0",
     "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.1",
     "axios": "^1.6.7",
     "dotenv": "^16.4.1",
+    "eventemitter3": "^5.0.1",
     "ts-retry-promise": "^0.8.1",
     "uuid": "^11.1.0",
+    "ws": "^8.18.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

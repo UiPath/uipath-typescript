@@ -143,7 +143,7 @@ export class ApiClient {
       ...headerUserAgent('ApiClient.defaultHeaders'),
     };
 
-    // Add organization unit ID if available
+    // Add instance ID if available
     if (this.executionContext.instanceId) {
       headers[HEADERS.INSTANCE_ID] = this.executionContext.instanceId;
     }

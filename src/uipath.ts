@@ -10,13 +10,14 @@ import { ContextGroundingService } from './services/contextGroundingService';
 import { JobsService } from './services/jobsService';
 import { QueuesService } from './services/queuesService';
 import { FolderService } from './services/folderService';
+import { EntityService } from './services/entityService';
 import { logger } from './utils/logger';
 import { UiPathOpenAIService } from './services/llmGatewayService';
 
 export interface UiPathOptions {
-  baseUrl?: string;
-  secret?: string;
-  debug?: boolean;
+  baseUrl: string;
+  secret: string;
+  debug?: boolean;  // Optional
 }
 
 export class UiPath {
@@ -29,33 +30,32 @@ export class UiPath {
   private _bucketsService?: BucketsService;
   private _connectionsService?: ConnectionsService;
   private _contextGroundingService?: ContextGroundingService;
+  private _entityService?: EntityService;
   private _jobsService?: JobsService;
   private _queuesService?: QueuesService;
   private _actionsService?: ActionsService;
   private _folderService?: FolderService;
   private _llmGatewayService?: UiPathOpenAIService;
 
-  constructor(options?: UiPathOptions) {
-    const baseUrl = options?.baseUrl ?? process.env.UIPATH_URL;
-    const secret = options?.secret ?? 
-      process.env.UIPATH_UNATTENDED_USER_ACCESS_TOKEN ?? 
-      process.env.UIPATH_ACCESS_TOKEN;
-
+  constructor(options: UiPathOptions) {
     try {
-      this.config = ConfigSchema.parse({ baseUrl, secret });
+      this.config = ConfigSchema.parse({ 
+        baseUrl: options.baseUrl,
+        secret: options.secret
+      });
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('baseUrl')) {
-          throw new Error('Base URL is missing');
+          throw new Error('Base URL is required and must be a valid URL');
         } else if (error.message.includes('secret')) {
-          throw new Error('Secret is missing');
+          throw new Error('Secret is required and must not be empty');
         }
       }
       throw error;
     }
 
     // Setup logging before initializing services
-    logger.setup({ debug: options?.debug });
+    logger.setup({ debug: options.debug });
 
     this.executionContext = new ExecutionContext();
   }
@@ -72,6 +72,13 @@ export class UiPath {
       this._assetsService = new AssetsService(this.config, this.executionContext);
     }
     return this._assetsService;
+  }
+
+  get entity(): EntityService {
+    if (!this._entityService) {
+      this._entityService = new EntityService(this.config, this.executionContext);
+    }
+    return this._entityService;
   }
 
   get processes(): ProcessesService {

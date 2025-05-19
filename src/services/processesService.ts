@@ -9,14 +9,12 @@ import { HEADERS } from '../utils/constants';
 export interface Job {
   id: string;
   state: string;
-  // Add other job properties as needed
 }
 
 export interface Process {
   name: string;
   description?: string;
   id: string;
-  // Add other process properties as needed
 }
 
 interface ProcessOptions {
@@ -80,6 +78,7 @@ export class ProcessesService extends BaseService {
       ...headerFolder(folderKey, folderPath)
     };
 
+    // Add job ID if available
     const jobId = process.env.UIPATH_JOB_ID;
     if (jobId) {
       headers[HEADERS.JOB_KEY] = jobId;
