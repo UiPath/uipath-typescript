@@ -57,3 +57,4 @@ logs/
 npm-debug.log* 
 
 dist/
+docs/

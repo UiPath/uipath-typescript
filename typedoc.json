@@ -1,0 +1,13 @@
+{
+    "entryPoints": ["src/index.ts"],
+    "out": "docs",
+    "name": "UiPath TypeScript SDK",
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "excludeExternals": true,
+    "includeVersion": true,
+    "theme": "default",
+    "hideGenerator": true,
+    "cleanOutputDir": true,
+    "githubPages": true
+} 
