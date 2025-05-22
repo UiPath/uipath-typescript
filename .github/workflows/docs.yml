@@ -25,9 +25,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          npm install
-          npm install typedoc --no-save
-          npm install @types/node --no-save
+          npm install --legacy-peer-deps
+          npm install --no-save typedoc@0.24.8 --legacy-peer-deps
+          npm install --no-save @types/node --legacy-peer-deps
 
       - name: Generate Documentation
         run: npm run docs:generate
