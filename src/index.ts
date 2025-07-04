@@ -5,35 +5,40 @@
  * including processes, assets, buckets, context grounding, data services, jobs, and more.
  */
 
+// Export core functionality
 export { UiPath } from './uipath';
-export { Config } from './config';
-export { ExecutionContext } from './executionContext';
+export type { Config } from './core/config/config';
 
-// Export services
-export { ActionsService } from './services/actionsService';
-export { AssetsService } from './services/assetsService';
-export { BucketsService } from './services/bucketsService';
-export { ConnectionsService } from './services/connectionsService';
-export { ContextGroundingService } from './services/contextGroundingService';
-export { EntityService } from './services/entityService';
-export { FolderService } from './services/folderService';
-export { JobsService } from './services/jobsService';
-export { ProcessesService } from './services/processesService';
-export { QueuesService } from './services/queuesService';
+// Process Instance Models
+// export {
+//   // Schemas for validation
+//   SpanSchema,
+//   SourceEnum,
+//   StatusEnum,
+//   InstanceCancelRequestSchema,
+//   InstancePauseRequestSchema,
+//   InstanceResumeRequestSchema,
+//   InstancesStatusResponseSchema,
+//   GetInstanceResponseSchema,
+//   GetAllInstancesResponseSchema,
+// } from './models/processInstance';
 
-// Export models
-export * from './models/contextGrounding';
-export * from './models/contextGroundingIndex';
-export * from './models/errors';
-export * from './models/entity';
+// Process Instance Types
+// export type {
+//   Source,
+//   Status,
+//   Span,
+//   InstanceCancelRequest,
+//   InstancePauseRequest,
+//   InstanceResumeRequest,
+//   InstancesStatusResponse,
+//   GetInstanceResponse,
+//   GetAllInstancesResponse,
+//   PaginationParams,
+//   GetInstancesQueryParams
+// } from './models/processInstance';
 
-// Export constants
-export { ENV, HEADERS, DATA_SOURCES, ENDPOINTS } from './utils/constants';
 
-// Export LLM Gateway Service and models
-export { UiPathOpenAIService, ChatModels, EmbeddingModels } from './services/llmGatewayService';
-export type { UsageInfo, TextEmbedding, ChatCompletion } from './services/llmGatewayService';
 
-// Export sync infrastructure
-export * from './sync/SyncManager';
-export * from './sync/EntitySyncHandler';
+export type { RequestSpec } from './models/common/requestSpec';
+
