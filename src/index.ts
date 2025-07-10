@@ -9,36 +9,13 @@
 export { UiPath } from './uipath';
 export type { Config } from './core/config/config';
 
-// Process Instance Models
-// export {
-//   // Schemas for validation
-//   SpanSchema,
-//   SourceEnum,
-//   StatusEnum,
-//   InstanceCancelRequestSchema,
-//   InstancePauseRequestSchema,
-//   InstanceResumeRequestSchema,
-//   InstancesStatusResponseSchema,
-//   GetInstanceResponseSchema,
-//   GetAllInstancesResponseSchema,
-// } from './models/processInstance';
+// Export all models
+export * from './models/common';
+export * from './models/dataFabric';
+export * from './models/maestro';
+export * from './models/case';
+export * from './models/orchestrator';
 
-// Process Instance Types
-// export type {
-//   Source,
-//   Status,
-//   Span,
-//   InstanceCancelRequest,
-//   InstancePauseRequest,
-//   InstanceResumeRequest,
-//   InstancesStatusResponse,
-//   GetInstanceResponse,
-//   GetAllInstancesResponse,
-//   PaginationParams,
-//   GetInstancesQueryParams
-// } from './models/processInstance';
-
-
-
+// Export specific common types
 export type { RequestSpec } from './models/common/requestSpec';
 

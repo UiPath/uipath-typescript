@@ -1,6 +1,7 @@
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/executionContext';
 import { RequestSpec } from '../../models/common/requestSpec';
+import { TokenInfo } from '../auth/tokenManager';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -16,7 +17,6 @@ export class ApiClient {
     this.config = config;
     this.executionContext = executionContext;
     this.clientConfig = clientConfig;
-
   }
 
   public setDefaultHeaders(headers: Record<string, string>): void {
@@ -25,19 +25,44 @@ export class ApiClient {
 
   private getDefaultHeaders(): Record<string, string> {
     // Get headers from execution context first
-    let headers: Record<string, string> = {
-      ...this.executionContext.getHeaders(),
-      'Authorization': `Bearer ${this.executionContext.get('token') || this.config.secret}`,
-      'Content-Type': 'application/json',
-      ...this.defaultHeaders
-    };
-
-    // Add custom headers if available
-    if (this.clientConfig.headers) {
-      headers = { ...headers, ...this.clientConfig.headers };
+    const contextHeaders = this.executionContext.getHeaders();
+    
+    // If Authorization header is already set in context, use that
+    if (contextHeaders['Authorization']) {
+      return {
+        ...contextHeaders,
+        'Content-Type': 'application/json',
+        ...this.defaultHeaders,
+        ...this.clientConfig.headers
+      };
     }
 
-    return headers;
+    // Try to get token info from context
+    const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
+    let token: string | undefined;
+
+    if (tokenInfo?.token) {
+      // Check token expiration
+      if (tokenInfo.expiresAt && new Date() > tokenInfo.expiresAt) {
+        throw new Error('Authentication token has expired. Please re-initialize the SDK.');
+      }
+      token = tokenInfo.token;
+    } else if (this.config.secret) {
+      // Fallback to secret if no token info
+      token = this.config.secret;
+    }
+
+    if (!token) {
+      throw new Error('No authentication token available. Make sure to initialize the SDK first.');
+    }
+
+    return {
+      ...contextHeaders,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...this.defaultHeaders,
+      ...this.clientConfig.headers
+    };
   }
 
   private async request<T>(method: string, path: string, options: RequestSpec = {}): Promise<T> {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { groupFields } from '../../utils/apiTransform';
 
 export const ProblemDetailsSchema = z.object({
   type: z.string().optional(),
@@ -8,7 +9,41 @@ export const ProblemDetailsSchema = z.object({
   instance: z.string().optional()
 });
 
-export const ProcessSummarySchema = z.object({
+/**
+ * Process information with instance statistics
+ */
+export interface MaestroProcess {
+  /** Unique key identifying the process */
+  processKey: string;
+  /** Package identifier */
+  packageId: string;
+  /** Folder key where process is located */
+  folderKey: string;
+  /** Folder name */
+  folderName: string;
+  /** Available package versions */
+  packageVersions: string[];
+  /** Total number of versions */
+  versionCount: number;
+  /** Process instance counts by status */
+  instanceCounts: {
+    pending: number;
+    running: number;
+    completed: number;
+    paused: number;
+    cancelled: number;
+    faulted: number;
+    retrying: number;
+    resuming: number;
+    pausing: number;
+    canceling: number;
+  };
+}
+
+/**
+ * Raw API schema for process data
+ */
+export const ProcessDataSchema = z.object({
   processKey: z.string(),
   packageId: z.string(),
   folderKey: z.string(),
@@ -27,9 +62,52 @@ export const ProcessSummarySchema = z.object({
   cancelingCount: z.number()
 });
 
-export const GetAllProcessesSummaryResponseSchema = z.object({
-  processes: z.array(ProcessSummarySchema)
+/**
+ * Raw API schema for get all processes response
+ */
+export const GetAllProcessesResponseSchema = z.object({
+  processes: z.array(ProcessDataSchema)
 });
+
+/**
+ * Type for raw API response
+ */
+export type RawGetAllProcessesResponse = z.infer<typeof GetAllProcessesResponseSchema>;
+
+/**
+ * Type for raw process data from API
+ */
+export type RawProcessData = z.infer<typeof ProcessDataSchema>;
+
+/**
+ * Transforms raw API process data to SDK format
+ */
+export function transformProcess(raw: RawProcessData): MaestroProcess {
+  const countMapping = {
+    pendingCount: 'pending',
+    runningCount: 'running',
+    completedCount: 'completed',
+    pausedCount: 'paused',
+    cancelledCount: 'cancelled',
+    faultedCount: 'faulted',
+    retryingCount: 'retrying',
+    resumingCount: 'resuming',
+    pausingCount: 'pausing',
+    cancelingCount: 'canceling'
+  };
+
+  const transformed = groupFields(countMapping, 'instanceCounts')(raw) as any;
+  
+  return {
+    processKey: raw.processKey,
+    packageId: raw.packageId,
+    folderKey: raw.folderKey,
+    folderName: raw.folderName,
+    packageVersions: raw.packageVersions,
+    versionCount: raw.versionCount,
+    instanceCounts: transformed.instanceCounts
+  };
+}
 
 export enum ExtractedValueType {
   String = 'String',
@@ -67,5 +145,4 @@ export interface ProcessSettings {
 }
 
 export type ProblemDetails = z.infer<typeof ProblemDetailsSchema>;
-export type ProcessSummary = z.infer<typeof ProcessSummarySchema>;
-export type GetAllProcessesSummaryResponse = z.infer<typeof GetAllProcessesSummaryResponseSchema>; 
+export type GetAllProcessesResponse = z.infer<typeof GetAllProcessesResponseSchema>; 

@@ -7,41 +7,40 @@
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
-      ".": {
-        "import": "./dist/index.js",
-        "require": "./dist/index.js",
-        "types": "./dist/index.d.ts"
-      }
+        ".": {
+            "import": "./dist/index.js",
+            "require": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
     },
     "files": [
-      "dist",
-      "README.md"
+        "dist",
+        "README.md"
     ],
     "scripts": {
-      "clean": "rm -rf dist",
-      "prebuild": "npm run clean",
-      "build": "tsc",
-      "prepare": "npm run build",
-      "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-      "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-      "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-      "lint": "eslint src/**/*.ts"
+        "clean": "rm -rf dist",
+        "prebuild": "npm run clean",
+        "build": "tsc",
+        "prepare": "npm run build",
+        "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+        "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+        "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+        "lint": "eslint src/**/*.ts"
     },
     "dependencies": {
-      "axios": "^1.6.7",
-      "eventemitter3": "^5.0.1",
-      "uuid": "^9.0.1",
-      "ws": "^8.16.0",
-      "zod": "^3.22.4"
+        "axios": "^1.6.7",
+        "eventemitter3": "^5.0.1",
+        "uuid": "^9.0.1",
+        "ws": "^8.16.0",
+        "zod": "^3.22.4"
     },
     "devDependencies": {
-      "@types/jest": "^29.5.12",
-      "@types/node": "^20.11.19",
-      "@types/uuid": "^9.0.8",
-      "@types/ws": "^8.5.10",
-      "jest": "^29.7.0",
-      "ts-jest": "^29.1.2",
-      "typescript": "^5.3.3"
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20.11.19",
+        "@types/uuid": "^9.0.8",
+        "@types/ws": "^8.5.10",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.2",
+        "typescript": "^5.3.3"
     }
-  }
-  
+}

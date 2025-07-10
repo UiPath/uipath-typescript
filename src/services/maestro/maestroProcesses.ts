@@ -1,22 +1,41 @@
-import { GetAllProcessesSummaryResponse, ProcessSettings } from '../../models/maestro/maestroProcess';
+import { RawProcessData, RawGetAllProcessesResponse, transformProcess, ProcessSettings, MaestroProcess } from '../../models/maestro/maestroProcess';
 import { BaseService } from '../baseService';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/executionContext';
+import { unwrapAndMapResponse } from '../../utils/apiTransform';
 
+/**
+ * Service for interacting with Maestro Processes
+ */
 export class MaestroProcessesService extends BaseService {
   constructor(config: Config, executionContext: ExecutionContext) {
     super(config, executionContext);
   }
 
   /**
-   * Get All Processes Summary
-   * Includes all folders in tenant user has Jobs.View permission for
-   * @returns Promise<GetAllProcessesSummaryResponse>
+   * Get all processes with their instance statistics
+   * @returns Promise resolving to array of processes
+   * 
+   * @example
+   * ```typescript
+   * // Get all processes
+   * const processes = await sdk.maestro.processes.getAll();
+   * 
+   * // Access process information
+   * for (const process of processes) {
+   *   console.log(`Process: ${process.processKey}`);
+   * }
+   * 
+   * // Filter processes with faulted instances
+   * const faultedProcesses = processes.filter(p => p.instanceCounts.faulted > 0);
+   * ```
    */
-  async getSummary(): Promise<GetAllProcessesSummaryResponse> {
-    const response = await this.get<GetAllProcessesSummaryResponse>('pims_/api/v1/processes/summary', {
-    });
-    return response.data;
+  async getAll(): Promise<MaestroProcess[]> {
+    const response = await this.get<RawGetAllProcessesResponse>('pims_/api/v1/processes/summary');
+    return unwrapAndMapResponse<RawProcessData, MaestroProcess>(
+      'processes',
+      transformProcess
+    )(response.data);
   }
 
   /**

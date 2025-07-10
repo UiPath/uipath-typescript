@@ -52,7 +52,7 @@ export class ProcessInstancesService extends BaseService {
    * @param folderKey The folder key for authorization
    * @returns Promise<GetInstanceResponse>
    */
-  async getById(instanceId: string, folderKey: string): Promise<GetInstanceResponse> {
+  private async getInstanceById(instanceId: string, folderKey: string): Promise<GetInstanceResponse> {
     const response = await this.get<GetInstanceResponse>(`pims_/api/v1/instances/${instanceId}`, {
       headers: {
         [FOLDER_KEY]: folderKey
@@ -67,8 +67,8 @@ export class ProcessInstancesService extends BaseService {
    * @param folderKey The folder key for authorization
    * @returns Promise<ProcessInstance>
    */
-  async getInstanceById(instanceId: string, folderKey: string): Promise<ProcessInstance> {
-    const response = await this.getById(instanceId, folderKey);
+  async getById(instanceId: string, folderKey: string): Promise<ProcessInstance> {
+    const response = await this.getInstanceById(instanceId, folderKey);
     return ProcessInstance.fromResponse(response, this, folderKey);
   }
 

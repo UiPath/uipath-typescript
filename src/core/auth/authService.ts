@@ -1,8 +1,9 @@
 import { BaseService } from '../../services/baseService';
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/executionContext';
+import { TokenManager, TokenInfo } from './tokenManager';
+import { hasOAuthConfig, hasSecretConfig } from '../config/sdkConfig';
 
-// Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
 export interface AuthToken {
@@ -14,22 +15,106 @@ export interface AuthToken {
 }
 
 export class AuthService extends BaseService {
-  private currentToken?: string;
+  private tokenManager: TokenManager;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     super(config, executionContext);
+    this.tokenManager = new TokenManager(executionContext);
+  }
+
+  /**
+   * Authenticates the user based on the provided SDK configuration.
+   * This method handles both secret-based and OAuth 2.0 authentication flows.
+   * @param config The SDK configuration object.
+   * @returns A promise that resolves to true if authentication is successful, otherwise false.
+   * In an OAuth flow, this method will trigger a page redirect and the promise will not resolve.
+   */
+  public async authenticate(config: Config): Promise<boolean> {
+    if (hasSecretConfig(config)) {
+      this.updateToken(config.secret, 'secret');
+      return true;
+    }
+
+    if (hasOAuthConfig(config)) {
+      return this._handleOAuthFlow(config);
+    }
+
+    return false;
+  }
+
+  private async _handleOAuthFlow(config: { clientId: string; redirectUri: string }): Promise<boolean> {
+    if (!isBrowser) {
+      throw new Error('OAuth flow is only supported in browser environments');
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    if (!code) {
+      // No authorization code present, so we need to initiate the flow.
+      // This will redirect the user.
+      await this._initiateOAuthFlow(config);
+      // This line is not expected to be reached.
+      return false;
+    } else {
+      // Authorization code is present, so we can exchange it for a token.
+      await this._handleOAuthCallback(code, config);
+      return this.hasValidToken();
+    }
+  }
+
+  private async _initiateOAuthFlow(config: { clientId: string; redirectUri: string }): Promise<void> {
+    const { clientId, redirectUri } = config;
+
+    const codeVerifier = this.generateCodeVerifier();
+    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+
+    sessionStorage.setItem('uipath_sdk_code_verifier', codeVerifier);
+
+    const authUrl = this.getAuthorizationUrl({
+      clientId,
+      redirectUri,
+      codeChallenge
+    });
+
+    window.location.href = authUrl;
+  }
+
+  private async _handleOAuthCallback(code: string, config: { clientId: string; redirectUri: string }): Promise<void> {
+    const { clientId, redirectUri } = config;
+
+    const codeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    if (!codeVerifier) {
+      throw new Error('Code verifier not found in session storage. Authentication may have been interrupted.');
+    }
+    sessionStorage.removeItem('uipath_sdk_code_verifier');
+
+    await this.getAccessToken({
+      clientId,
+      redirectUri,
+      code,
+      codeVerifier
+    });
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('code');
+    url.searchParams.delete('state');
+    window.history.replaceState({}, '', url.toString());
   }
 
   /**
    * Updates the access token used for API requests
    * @param token The new access token
+   * @param type The type of token (secret or oauth)
+   * @param expiresIn Optional expiration time in seconds
    */
-  updateToken(token: string): void {
-    this.currentToken = token;
-    // Update the execution context headers with the new token
-    this.executionContext.setHeaders({
-      'Authorization': `Bearer ${token}`
-    });
+  updateToken(token: string, type: 'secret' | 'oauth', expiresIn?: number): void {
+    const tokenInfo: TokenInfo = {
+      token,
+      type,
+      expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : undefined
+    };
+    this.tokenManager.setToken(tokenInfo);
   }
 
   /**
@@ -37,7 +122,21 @@ export class AuthService extends BaseService {
    * @returns The current access token or undefined if not set
    */
   getToken(): string | undefined {
-    return this.currentToken;
+    return this.tokenManager.getToken();
+  }
+
+  /**
+   * Gets detailed information about the current token
+   */
+  getTokenInfo(): TokenInfo | undefined {
+    return this.tokenManager.getTokenInfo();
+  }
+
+  /**
+   * Checks if we have a valid token
+   */
+  hasValidToken(): boolean {
+    return this.tokenManager.hasValidToken();
   }
 
   /**
@@ -139,7 +238,7 @@ export class AuthService extends BaseService {
     }
 
     const token = await response.json() as AuthToken;
-    this.updateToken(token.access_token);
+    this.updateToken(token.access_token, 'oauth', token.expires_in);
     return token;
   }
 
