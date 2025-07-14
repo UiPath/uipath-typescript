@@ -5,7 +5,8 @@ import {
   MaestroProcessesService,
   ProcessInstancesService,
   CaseService,
-  EntityService
+  EntityService,
+  ActionsService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdkConfig';
 import { validateConfig, normalizeBaseUrl } from './core/config/configUtils';
@@ -119,6 +120,13 @@ export class UiPath {
    */
   get entity(): EntityService {
     return this.getService(EntityService);
+  }
+
+  /**
+   * Access to Actions service
+   */
+  get actions(): ActionsService {
+    return this.getService(ActionsService);
   }
 }
 
