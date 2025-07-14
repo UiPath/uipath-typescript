@@ -76,7 +76,7 @@ export class AuthService extends BaseService {
       redirectUri,
       codeChallenge
     });
-
+    
     window.location.href = authUrl;
   }
 
@@ -197,7 +197,7 @@ export class AuthService extends BaseService {
       redirect_uri: params.redirectUri,
       code_challenge: params.codeChallenge,
       code_challenge_method: 'S256',
-      scope: params.scope || 'PIMS OR.default',
+      scope: params.scope || 'PIMS',
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 

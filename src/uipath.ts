@@ -1,11 +1,14 @@
 import { UiPathConfig } from './core/config/config';
 import { ExecutionContext } from './core/context/executionContext';
 import { AuthService } from './core/auth/authService';
-import { MaestroProcessesService } from './services/maestro/maestroProcesses';
-import { ProcessInstancesService } from './services/maestro/processInstances';
+import { 
+  MaestroProcessesService,
+  ProcessInstancesService,
+  CaseService,
+  EntityService
+} from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdkConfig';
 import { validateConfig, normalizeBaseUrl } from './core/config/configUtils';
-import { CaseService } from './services/case/caseService';
 
 type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext) => T;
 
@@ -109,6 +112,13 @@ export class UiPath {
    */
   get case(): CaseService {
     return this.getService(CaseService);
+  }
+  
+  /**
+   * Access to Entity service
+   */
+  get entity(): EntityService {
+    return this.getService(EntityService);
   }
 }
 

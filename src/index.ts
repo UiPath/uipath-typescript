@@ -1,8 +1,7 @@
 /**
  * UiPath TypeScript SDK
  * 
- * A TypeScript SDK that enables programmatic interaction with UiPath Cloud Platform services
- * including processes, assets, buckets, context grounding, data services, jobs, and more.
+ * A TypeScript SDK that enables programmatic interaction with UiPath Platform services.
  */
 
 // Export core functionality
@@ -16,6 +15,4 @@ export * from './models/maestro';
 export * from './models/case';
 export * from './models/orchestrator';
 
-// Export specific common types
-export type { RequestSpec } from './models/common/requestSpec';
 
