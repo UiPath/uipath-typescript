@@ -14,7 +14,7 @@ import {
   ODataValueOfTaskOperationErrorResponse,
   TaskCompletionRequest,
   TaskType
-} from '../../models/actions/task';
+} from '../../models/actions/actions';
 import { ORGANIZATION_UNIT_ID } from '../../utils/constants/headers';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys } from '../../utils/transform';
 
