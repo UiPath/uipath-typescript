@@ -12,14 +12,14 @@ import {
   ActionAssignmentResultCollection,
   ActionCompletionRequest,
   ActionType
-} from '../../models/actions/actions.types';
+} from '../../models/action/action.types';
 import {
   Action,
   ActionServiceModel
-} from '../../models/actions/actions.model';
+} from '../../models/action/action.model';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse } from '../../utils/transform';
-import { ActionStatusMap, ActionTimeMap } from '../../models/actions/actions.fieldMaps';
+import { ActionStatusMap, ActionTimeMap } from '../../models/action/action.fieldMaps';
 import { CollectionResponse } from '../../models/common/commonTypes';
 
 /**

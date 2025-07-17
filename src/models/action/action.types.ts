@@ -69,12 +69,10 @@ export interface ActionAssignment {
 export interface ActionCreateRequest {
   title: string;
   priority?: ActionPriority;
-  data?: any;
 }
 
 export interface ActionCreateResponse {
   status: ActionStatus;
-//   data: any | null;
   action: string | null;
   waitJobState: JobState | null;
   organizationUnitFullyQualifiedName: string | null;

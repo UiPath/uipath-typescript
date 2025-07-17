@@ -1,4 +1,4 @@
-import { ActionStatus } from './actions.types';
+import { ActionStatus } from './action.types';
 
 /**
  * Maps numeric ActionStatus values (from API) to ActionStatus enum values.

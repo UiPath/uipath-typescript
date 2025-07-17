@@ -14,4 +14,4 @@ export * from './maestro';
 export * from './orchestrator';
 
 // Actions models
-export * from './actions';
+export * from './action';

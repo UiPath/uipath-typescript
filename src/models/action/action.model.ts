@@ -9,7 +9,7 @@ import type {
   ActionCompletionRequest,
   ActionCompletionOptions,
   ActionAssignOptions
-} from './actions.types';
+} from './action.types';
 
 export interface ActionServiceModel {
   assign(request: ActionAssignmentRequest, folderId?: number): Promise<ActionAssignmentResult[]>;
