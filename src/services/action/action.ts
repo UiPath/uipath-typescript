@@ -11,16 +11,19 @@ import {
   ActionAssignmentResult,
   ActionAssignmentResultCollection,
   ActionCompletionRequest,
-  ActionType
+  ActionType,
+  ActionGetAllOptions,
+  ActionGetByIdOptions
 } from '../../models/action/action.types';
 import {
   Action,
   ActionServiceModel
-} from '../../models/action/action.model';
+} from '../../models/action/action.models';
 import { FOLDER_ID } from '../../utils/constants/headers';
-import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse } from '../../utils/transform';
-import { ActionStatusMap, ActionTimeMap } from '../../models/action/action.fieldMaps';
+import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse, addPrefixToKeys } from '../../utils/transform';
+import { ActionStatusMap, ActionTimeMap } from '../../models/action/action.constants';
 import { CollectionResponse } from '../../models/common/commonTypes';
+import { createHeaders } from '../../utils/http/headers';
 
 /**
  * Service for interacting with UiPath Actions API
@@ -28,22 +31,6 @@ import { CollectionResponse } from '../../models/common/commonTypes';
 export class ActionService extends BaseService implements ActionServiceModel {
   constructor(config: Config, executionContext: ExecutionContext) {
     super(config, executionContext);
-  }
-
-  /**
-   * Creates headers object with folder ID if provided
-   * @param folderId - Optional folder/organization unit ID
-   * @returns Headers object with folder ID if provided
-   * @private
-   */
-  private createHeaders(folderId?: number): Record<string, string> {
-    const headers: Record<string, string> = {};
-    
-    if (folderId !== undefined) {
-      headers[FOLDER_ID] = folderId.toString();
-    }
-    
-    return headers;
   }
 
   /**
@@ -62,7 +49,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * ```
    */
   async create(action: ActionCreateRequest, folderId: number): Promise<Action> {
-    const headers = this.createHeaders(folderId);
+    const headers = createHeaders(folderId);
     
     const externalTask = {
       ...action,
@@ -95,22 +82,15 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * const actions = await sdk.action.getAll();
    * ```
    */
-  async getAll(options: {
-    event?: 'ForwardedEver';
-    $expand?: string;
-    $filter?: string;
-    $select?: string;
-    $orderby?: string;
-    $top?: number;
-    $skip?: number;
-    $count?: boolean;
-  } = {}, folderId?: number): Promise<Action[]> {
-    const headers = this.createHeaders(folderId);
-    
+  async getAll(options: ActionGetAllOptions = {}, folderId?: number): Promise<Action[]> {
+    const headers = createHeaders(folderId);
+    // prefix all keys except 'event'
+    const keysToPrefix = Object.keys(options).filter(k => k !== 'event');
+    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     const response = await this.get<CollectionResponse<ActionGetResponse>>(
       '/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders',
       { 
-        params: options,
+        params: apiOptions,
         headers
       }
     );
@@ -142,16 +122,15 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * const action = await sdk.action.getById(123);
    * ```
    */
-  async getById(id: number, options: {
-    $expand?: string;
-    $select?: string;
-  } = {}, folderId?: number): Promise<Action> {
-    const headers = this.createHeaders(folderId);
-    
+  async getById(id: number, options: ActionGetByIdOptions = {}, folderId?: number): Promise<Action> {
+    const headers = createHeaders(folderId);
+    // prefix all keys in options
+    const keysToPrefix = Object.keys(options);
+    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     const response = await this.get<ActionGetResponse>(
       `/odata/Tasks(${id})`,
       { 
-        params: options,
+        params: apiOptions,
         headers
       }
     );
@@ -200,7 +179,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * ```
    */
   async assign(actionAssignments: ActionAssignmentRequest | ActionAssignmentRequest[], folderId?: number): Promise<ActionAssignmentResult[]> {
-    const headers = this.createHeaders(folderId);
+    const headers = createHeaders(folderId);
     
     const request: ActionsAssignRequest = {
       taskAssignments: Array.isArray(actionAssignments) ? actionAssignments : [actionAssignments]
@@ -256,7 +235,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * ```
    */
   async reassign(actionAssignments: ActionAssignmentRequest | ActionAssignmentRequest[], folderId?: number): Promise<ActionAssignmentResult[]> {
-    const headers = this.createHeaders(folderId);
+    const headers = createHeaders(folderId);
     
     const request: ActionsAssignRequest = {
       taskAssignments: Array.isArray(actionAssignments) ? actionAssignments : [actionAssignments]
@@ -294,7 +273,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * ```
    */
   async unassign(actionIds: number | number[], folderId?: number): Promise<ActionAssignmentResult[]> {
-    const headers = this.createHeaders(folderId);
+    const headers = createHeaders(folderId);
     
     const request: ActionsUnassignRequest = {
       taskIds: Array.isArray(actionIds) ? actionIds : [actionIds]
@@ -336,7 +315,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * ```
    */
   async complete(completionType: ActionType, request: ActionCompletionRequest, folderId: number): Promise<void> {
-    const headers = this.createHeaders(folderId);
+    const headers = createHeaders(folderId);
     
     let endpoint: string;
     

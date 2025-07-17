@@ -1,2 +1,2 @@
 export * from './action.types';
-export * from './action.model'; 
+export * from './action.models'; 

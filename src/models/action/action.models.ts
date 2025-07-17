@@ -7,7 +7,7 @@ import type {
   ActionAssignmentResult, 
   ActionAssignmentRequest,
   ActionCompletionRequest,
-  ActionCompletionOptions,
+  ActionCompleteOptions,
   ActionAssignOptions
 } from './action.types';
 
@@ -164,7 +164,7 @@ export class Action {
    * });
    * ```
    */
-  async complete(options: ActionCompletionOptions): Promise<void> {
+  async complete(options: ActionCompleteOptions): Promise<void> {
     if (!this.id) throw new Error('Task ID is undefined');
     const folderId = this.folderId;
     if (!folderId) throw new Error('Folder ID is required');

@@ -1,12 +1,13 @@
 import { CollectionResponse } from "../common/commonTypes";
+import type { QueryParams } from '../common/requestSpec';
 
 export interface UserLoginInfo {
-  name?: string;
-  surname?: string;
-  userName?: string;
-  emailAddress?: string;
-  displayName?: string;
-  id?: number;
+  name: string;
+  surname: string;
+  userName: string;
+  emailAddress: string;
+  displayName: string;
+  id: number;
 }
 
 export enum ActionType {
@@ -40,7 +41,7 @@ export enum JobState {
   Resumed = 'Resumed'
 }
 
-export enum ActionSlaStartEndCriteria {
+export enum ActionSlaCriteria {
   TaskCreated = 'TaskCreated',
   TaskAssigned = 'TaskAssigned',
   TaskCompleted = 'TaskCompleted'
@@ -55,8 +56,8 @@ export enum ActionSlaStatus {
 
 export interface ActionSlaDetail {
   expiryTime?: string;
-  startCriteria?: ActionSlaStartEndCriteria;
-  endCriteria?: ActionSlaStartEndCriteria;
+  startCriteria?: ActionSlaCriteria;
+  endCriteria?: ActionSlaCriteria;
   status?: ActionSlaStatus;
 }
 
@@ -140,14 +141,6 @@ export interface ActionAssignmentRequest {
   userNameOrEmail?: string;
 }
 
-/**
- * Options for action assignment operations in the Action class
- * At least one identification parameter is required
- */
-export type ActionAssignOptions = 
-  | { userId: number; userNameOrEmail?: string}
-  | { userId?: number; userNameOrEmail: string};
-
 export interface ActionsAssignRequest {
   taskAssignments: ActionAssignmentRequest[];
 }
@@ -173,8 +166,36 @@ export interface ActionCompletionRequest {
 }
 
 /**
+ * Options for action assignment operations in the Action class
+ * At least one identification parameter is required
+ */
+export type ActionAssignOptions = 
+  | { userId: number; userNameOrEmail?: string}
+  | { userId?: number; userNameOrEmail: string};
+
+/**
  * Options for completing an action
  */
-export type ActionCompletionOptions =
+export type ActionCompleteOptions =
   | { type: ActionType.External; data?: any; action?: string }
   | { type: Exclude<ActionType, ActionType.External>; data: any; action: string }; 
+
+/**
+ * Query options for getting all actions
+ */
+export interface ActionGetAllOptions extends QueryParams {
+  event?: 'ForwardedEver';
+  expand?: string;
+  filter?: string;
+  select?: string;
+  orderby?: string;
+  count?: boolean;
+}
+
+/**
+ * Query options for getting an action by ID 
+ */
+export interface ActionGetByIdOptions extends QueryParams {
+  expand?: string;
+  select?: string;
+} 

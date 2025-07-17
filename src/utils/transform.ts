@@ -289,3 +289,31 @@ export function transformApiResponse<T extends object, K extends keyof T, M exte
   }
   return result;
 } 
+
+/**
+ * Adds a prefix to specified keys in an object, returning a new object.
+ * Only the provided keys are prefixed; all others are left unchanged.
+ *
+ * @param obj The source object
+ * @param prefix The prefix to add (e.g., '$')
+ * @param keys The keys to prefix (e.g., ['expand', 'filter'])
+ * @returns A new object with specified keys prefixed
+ *
+ * @example
+ * addPrefixToKeys({ expand: 'a', foo: 1 }, '$', ['expand']) // { $expand: 'a', foo: 1 }
+ */
+export function addPrefixToKeys<T extends object>(
+  obj: T,
+  prefix: string,
+  keys: string[]
+): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (keys.includes(key)) {
+      result[`${prefix}${key}`] = value;
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+} 
