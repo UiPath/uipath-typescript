@@ -116,6 +116,37 @@ export function camelToPascalCase(str: string): string {
 }
 
 /**
+ * Generic function to transform object keys using a provided case conversion function
+ * @param data The object to transform
+ * @param convertCase The function to convert each key
+ * @returns A new object with transformed keys
+ */
+function transformCaseKeys<T extends object>(
+  data: T | T[], 
+  convertCase: (str: string) => string
+): any {
+  // Handle array of objects
+  if (Array.isArray(data)) {
+    return data.map(item => transformCaseKeys(item, convertCase));
+  }
+
+  const result: Record<string, any> = {};
+  
+  for (const [key, value] of Object.entries(data)) {
+    const transformedKey = convertCase(key);
+    
+    // Recursively transform nested objects and arrays
+    if (value !== null && typeof value === 'object') {
+      result[transformedKey] = transformCaseKeys(value, convertCase);
+    } else {
+      result[transformedKey] = value;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Transforms an object's keys from PascalCase to camelCase
  * @param data The object with PascalCase keys
  * @returns A new object with all keys converted to camelCase
@@ -148,25 +179,7 @@ export function camelToPascalCase(str: string): string {
  * ```
  */
 export function pascalToCamelCaseKeys<T extends object>(data: T | T[]): any {
-  // Handle array of objects
-  if (Array.isArray(data)) {
-    return data.map(item => pascalToCamelCaseKeys(item));
-  }
-
-  const result: Record<string, any> = {};
-  
-  for (const [key, value] of Object.entries(data)) {
-    const camelKey = pascalToCamelCase(key);
-    
-    // Recursively transform nested objects and arrays
-    if (value !== null && typeof value === 'object') {
-      result[camelKey] = pascalToCamelCaseKeys(value);
-    } else {
-      result[camelKey] = value;
-    }
-  }
-
-  return result;
+  return transformCaseKeys(data, pascalToCamelCase);
 }
 
 /**
@@ -202,23 +215,77 @@ export function pascalToCamelCaseKeys<T extends object>(data: T | T[]): any {
  * ```
  */
 export function camelToPascalCaseKeys<T extends object>(data: T | T[]): any {
-  // Handle array of objects
-  if (Array.isArray(data)) {
-    return data.map(item => camelToPascalCaseKeys(item));
-  }
+  return transformCaseKeys(data, camelToPascalCase);
+} 
 
-  const result: Record<string, any> = {};
-  
-  for (const [key, value] of Object.entries(data)) {
-    const pascalKey = camelToPascalCase(key);
-    
-    // Recursively transform nested objects and arrays
-    if (value !== null && typeof value === 'object') {
-      result[pascalKey] = camelToPascalCaseKeys(value);
-    } else {
-      result[pascalKey] = value;
-    }
-  }
+/**
+ * Maps a field value in an object using a provided mapping object.
+ * Returns a new object with the mapped field value.
+ * 
+ * @param obj The object to map
+ * @param field The field name to map
+ * @param valueMap The mapping object (from input value to output value)
+ * @returns A new object with the mapped field value
+ * 
+ * @example
+ * const statusMap = { 0: 'Unassigned', 1: 'Pending', 2: 'Completed' };
+ * const task = { status: 1, id: 123 };
+ * const mapped = mapFieldValue(task, 'status', statusMap);
+ * // mapped = { status: 'Pending', id: 123 }
+ */
+export function mapFieldValue<
+  T extends object,
+  K extends keyof T,
+  M extends { [key: string]: any }
+>(
+  obj: T,
+  field: K,
+  valueMap: M
+): T {
+  const lookupKey = String(obj[field]);
+  return {
+    ...obj,
+    [field]:
+      lookupKey in valueMap
+        ? valueMap[lookupKey as keyof M]
+        : obj[field],
+  };
+} 
 
+/**
+ * General API response transformer with optional field value mapping.
+ *
+ * @param data - The API response data to transform
+ * @param options - Optional mapping options:
+ *   - field: The field name to map (optional)
+ *   - valueMap: The mapping object for the field (optional)
+ *   - transform: A function to further transform the data (optional)
+ * @returns The transformed data, with field value mapped if specified
+ *
+ * @example
+ * // Just transform
+ * const result = transformApiResponse(data);
+ *
+ * // Map a field value, then transform
+ * const result = transformApiResponse(data, { field: 'status', valueMap: StatusMap });
+ *
+ * // Map a field value, then apply a custom transform
+ * const result = transformApiResponse(data, { field: 'status', valueMap: StatusMap, transform: customTransform });
+ */
+export function transformApiResponse<T extends object, K extends keyof T, M extends { [key: string]: any }>(
+  data: T,
+  options?: {
+    field?: K;
+    valueMap?: M;
+    transform?: (d: T) => T;
+  }
+): T {
+  let result = data;
+  if (options?.field && options?.valueMap) {
+    result = mapFieldValue(result, options.field, options.valueMap);
+  }
+  if (options?.transform) {
+    result = options.transform(result);
+  }
   return result;
 } 
