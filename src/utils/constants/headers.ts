@@ -5,5 +5,5 @@ export const  TENANT_ID = 'X-UIPATH-Internal-TenantId';
 export const  ACCOUNT_ID = 'X-UIPATH-Internal-AccountId';
 export const  CORRELATION_ID = 'X-UIPATH-Correlation-Id';
 export const  JOB_KEY = 'X-UIPATH-JobKey';
-export const  ORGANIZATION_UNIT_ID = 'X-UIPATH-OrganizationUnitId';
+export const  FOLDER_ID = 'X-UIPATH-OrganizationUnitId';
 export const  INSTANCE_ID = 'X-UIPATH-InstanceId';
