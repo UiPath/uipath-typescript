@@ -8,7 +8,8 @@ import type {
   ActionAssignmentRequest,
   ActionCompletionRequest,
   ActionCompleteOptions,
-  ActionAssignOptions
+  ActionAssignOptions,
+  ActionGetFormResponse
 } from './action.types';
 
 export interface ActionServiceModel {
@@ -25,9 +26,10 @@ export interface ActionServiceModel {
   ): Promise<void>;
 }
 
-export class Action {
+type ActionData = ActionGetResponse | ActionCreateResponse | ActionGetFormResponse;
+export class Action<T extends ActionData > {
   constructor(
-    private readonly _data: ActionGetResponse | ActionCreateResponse,
+    private readonly _data: T,
     private readonly service: ActionServiceModel,
   ) {}
   get id(): number {
@@ -75,7 +77,7 @@ export class Action {
   }
 
   // Access to raw task data
-  get data(): ActionGetResponse | ActionCreateResponse {
+  get data(): T {
     return this._data;
   }
 

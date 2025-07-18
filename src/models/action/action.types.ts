@@ -54,6 +54,19 @@ export enum ActionSlaStatus {
   CompletedInTime = 'CompletedInTime'
 }
 
+export enum ActionSourceName {
+  Agent = 'Agent',
+  Workflow = 'Workflow',
+  Maestro = 'Maestro',
+  Default = 'Default'
+}
+
+export interface ActionSource {
+  sourceName: ActionSourceName;
+  sourceId: string;
+  taskSourceMetadata: Record<string, unknown>;
+}
+
 export interface ActionSlaDetail {
   expiryTime?: string;
   startCriteria?: ActionSlaCriteria;
@@ -135,6 +148,42 @@ export interface ActionGetResponse {
   taskAssignments?: ActionAssignment[];
 }
 
+export interface ActionGetFormResponse {
+  formLayout: Record<string, unknown>;
+  formLayoutId: number | null;
+  bulkFormLayoutId: number | null;
+  actionLabel: string | null;
+  status: ActionStatus;
+  action: string | null;
+  organizationUnitFullyQualifiedName: string;
+  assignedToUser: UserLoginInfo | null;
+  taskSlaDetails: ActionSlaDetail[] | null;
+  completedByUser: UserLoginInfo | null;
+  taskAssignmentCriteria?: string;
+  taskAssignees: UserLoginInfo[] | null;
+  isCurrentUserInAllUserAssignedGroup: boolean | null;
+  taskSource: ActionSource | null;
+  processingTime: number | null;
+  title: string;
+  type: ActionType;
+  priority: ActionPriority;
+  assignedToUserId: number | null;
+  organizationUnitId: number;
+  externalTag: string | null;
+  lastAssignedTime: string | null;
+  completionTime: string | null;
+  parentOperationId: string | null;
+  key: string;
+  isDeleted: boolean;
+  deleterUserId: number | null;
+  deletionTime: string | null;
+  lastModificationTime: string | null;
+  lastModifierUserId: number | null;
+  creationTime: string;
+  creatorUserId: number;
+  id: number;
+} 
+
 export interface ActionAssignmentRequest {
   taskId: number;
   userId?: number;
@@ -198,4 +247,11 @@ export interface ActionGetAllOptions extends QueryParams {
 export interface ActionGetByIdOptions extends QueryParams {
   expand?: string;
   select?: string;
-} 
+}
+
+/**
+ * Options for getting a form task by ID
+ */
+export interface ActionGetFormOptions extends QueryParams {
+  expandOnFormLayout?: boolean;
+}
