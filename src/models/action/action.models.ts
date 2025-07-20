@@ -26,8 +26,8 @@ export interface ActionServiceModel {
   ): Promise<void>;
 }
 
-type ActionData = ActionGetResponse | ActionCreateResponse | ActionGetFormResponse;
-export class Action<T extends ActionData > {
+type ActionResponseData = ActionGetResponse | ActionCreateResponse | ActionGetFormResponse;
+export class Action<T extends ActionResponseData > {
   constructor(
     private readonly _data: T,
     private readonly service: ActionServiceModel,

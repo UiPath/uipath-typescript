@@ -80,14 +80,37 @@ export interface ActionAssignment {
   id?: number;
 }
 
+/**
+ * Base interface containing common fields shared across all action response types
+ */
+export interface ActionBaseResponse {
+  status: ActionStatus;
+  title: string;
+  type: ActionType;
+  priority: ActionPriority;
+  organizationUnitId: number;
+  key: string;
+  isDeleted: boolean;
+  creationTime: string;
+  creatorUserId: number;
+  id: number;
+  action: string | null;
+  assignedToUserId: number | null;
+  externalTag: string | null;
+  lastAssignedTime: string | null;
+  completionTime: string | null;
+  parentOperationId: string | null;
+  deleterUserId: number | null;
+  deletionTime: string | null;
+  lastModificationTime: string | null;
+}
+
 export interface ActionCreateRequest {
   title: string;
   priority?: ActionPriority;
 }
 
-export interface ActionCreateResponse {
-  status: ActionStatus;
-  action: string | null;
+export interface ActionCreateResponse extends ActionBaseResponse {
   waitJobState: JobState | null;
   organizationUnitFullyQualifiedName: string | null;
   assignedToUser: UserLoginInfo | null;
@@ -96,51 +119,15 @@ export interface ActionCreateResponse {
   taskAssignees: UserLoginInfo[] | null;
   isCurrentUserInAllUserAssignedGroup: boolean | null;
   processingTime: number | null;
-  title: string;
-  type: ActionType;
-  priority: ActionPriority;
-  assignedToUserId: number | null;
-  organizationUnitId: number;
-  externalTag: string | null;
-  lastAssignedTime: string | null;
-  completionTime: string | null;
-  parentOperationId: string | null;
-  key: string;
-  isDeleted: boolean;
-  deleterUserId: number | null;
-  deletionTime: string | null;
-  lastModificationTime: string | null;
-  creationTime: string;
-  creatorUserId: number;
-  id: number;
 }
 
-export interface ActionGetResponse {
-  status: ActionStatus;
+export interface ActionGetResponse extends ActionBaseResponse {
   isCompleted: boolean;
   encrypted: boolean;
-  title: string;
-  type: ActionType;
-  priority: ActionPriority;
-  organizationUnitId: number;
-  key: string;
-  isDeleted: boolean;
-  creationTime: string;
-  creatorUserId: number;
-  id: number;
   bulkFormLayoutId: number | null;
   formLayoutId: number | null;
-  action: string | null;
   taskSlaDetail: ActionSlaDetail | null;
   taskAssigneeName: string | null;
-  assignedToUserId: number | null;
-  externalTag: string | null;
-  lastAssignedTime: string | null;
-  completionTime: string | null;
-  parentOperationId: string | null;
-  deleterUserId: number | null;
-  deletionTime: string | null;
-  lastModificationTime: string | null;
   lastModifierUserId: number | null;
   assignedToUser?: UserLoginInfo;
   creatorUser?: UserLoginInfo;
@@ -148,13 +135,11 @@ export interface ActionGetResponse {
   taskAssignments?: ActionAssignment[];
 }
 
-export interface ActionGetFormResponse {
+export interface ActionGetFormResponse extends ActionBaseResponse {
   formLayout: Record<string, unknown>;
   formLayoutId: number | null;
   bulkFormLayoutId: number | null;
   actionLabel: string | null;
-  status: ActionStatus;
-  action: string | null;
   organizationUnitFullyQualifiedName: string;
   assignedToUser: UserLoginInfo | null;
   taskSlaDetails: ActionSlaDetail[] | null;
@@ -164,24 +149,7 @@ export interface ActionGetFormResponse {
   isCurrentUserInAllUserAssignedGroup: boolean | null;
   taskSource: ActionSource | null;
   processingTime: number | null;
-  title: string;
-  type: ActionType;
-  priority: ActionPriority;
-  assignedToUserId: number | null;
-  organizationUnitId: number;
-  externalTag: string | null;
-  lastAssignedTime: string | null;
-  completionTime: string | null;
-  parentOperationId: string | null;
-  key: string;
-  isDeleted: boolean;
-  deleterUserId: number | null;
-  deletionTime: string | null;
-  lastModificationTime: string | null;
   lastModifierUserId: number | null;
-  creationTime: string;
-  creatorUserId: number;
-  id: number;
 } 
 
 export interface ActionAssignmentRequest {
