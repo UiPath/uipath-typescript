@@ -54,6 +54,19 @@ export enum ActionSlaStatus {
   CompletedInTime = 'CompletedInTime'
 }
 
+export enum ActionSourceName {
+  Agent = 'Agent',
+  Workflow = 'Workflow',
+  Maestro = 'Maestro',
+  Default = 'Default'
+}
+
+export interface ActionSource {
+  sourceName: ActionSourceName;
+  sourceId: string;
+  taskSourceMetadata: Record<string, unknown>;
+}
+
 export interface ActionSlaDetail {
   expiryTime?: string;
   startCriteria?: ActionSlaCriteria;
@@ -67,72 +80,67 @@ export interface ActionAssignment {
   id?: number;
 }
 
+/**
+ * Base interface containing common fields shared across all action response types
+ */
+export interface ActionBaseResponse {
+  status: ActionStatus;
+  title: string;
+  type: ActionType;
+  priority: ActionPriority;
+  organizationUnitId: number;
+  key: string;
+  isDeleted: boolean;
+  creationTime: string;
+  creatorUserId: number;
+  id: number;
+  action: string | null;
+  assignedToUserId: number | null;
+  externalTag: string | null;
+  lastAssignedTime: string | null;
+  completionTime: string | null;
+  parentOperationId: string | null;
+  deleterUserId: number | null;
+  deletionTime: string | null;
+  lastModificationTime: string | null;
+}
+
 export interface ActionCreateRequest {
   title: string;
   priority?: ActionPriority;
 }
 
-export interface ActionCreateResponse {
-  status: ActionStatus;
-  action: string | null;
+export interface ActionCreateResponse extends ActionBaseResponse {
   waitJobState: JobState | null;
-  organizationUnitFullyQualifiedName: string | null;
   assignedToUser: UserLoginInfo | null;
   taskSlaDetails: ActionSlaDetail[] | null;
   completedByUser: UserLoginInfo | null;
   taskAssignees: UserLoginInfo[] | null;
-  isCurrentUserInAllUserAssignedGroup: boolean | null;
   processingTime: number | null;
-  title: string;
-  type: ActionType;
-  priority: ActionPriority;
-  assignedToUserId: number | null;
-  organizationUnitId: number;
-  externalTag: string | null;
-  lastAssignedTime: string | null;
-  completionTime: string | null;
-  parentOperationId: string | null;
-  key: string;
-  isDeleted: boolean;
-  deleterUserId: number | null;
-  deletionTime: string | null;
-  lastModificationTime: string | null;
-  creationTime: string;
-  creatorUserId: number;
-  id: number;
 }
 
-export interface ActionGetResponse {
-  status: ActionStatus;
+export interface ActionGetResponse extends ActionBaseResponse {
   isCompleted: boolean;
   encrypted: boolean;
-  title: string;
-  type: ActionType;
-  priority: ActionPriority;
-  organizationUnitId: number;
-  key: string;
-  isDeleted: boolean;
-  creationTime: string;
-  creatorUserId: number;
-  id: number;
   bulkFormLayoutId: number | null;
   formLayoutId: number | null;
-  action: string | null;
   taskSlaDetail: ActionSlaDetail | null;
   taskAssigneeName: string | null;
-  assignedToUserId: number | null;
-  externalTag: string | null;
-  lastAssignedTime: string | null;
-  completionTime: string | null;
-  parentOperationId: string | null;
-  deleterUserId: number | null;
-  deletionTime: string | null;
-  lastModificationTime: string | null;
   lastModifierUserId: number | null;
   assignedToUser?: UserLoginInfo;
   creatorUser?: UserLoginInfo;
   lastModifierUser?: UserLoginInfo;
   taskAssignments?: ActionAssignment[];
+
+  //additional fields for form actions
+  formLayout?: Record<string, unknown>;
+  actionLabel?: string | null;
+  taskSlaDetails?: ActionSlaDetail[] | null;
+  completedByUser?: UserLoginInfo | null;
+  taskAssignmentCriteria?: string;
+  taskAssignees?: UserLoginInfo[] | null;
+  taskSource?: ActionSource | null;
+  processingTime?: number | null;
 }
 
 export interface ActionAssignmentRequest {
@@ -198,4 +206,11 @@ export interface ActionGetAllOptions extends QueryParams {
 export interface ActionGetByIdOptions extends QueryParams {
   expand?: string;
   select?: string;
-} 
+}
+
+/**
+ * Options for getting a form task by ID
+ */
+export interface ActionGetFormOptions extends QueryParams {
+  expandOnFormLayout?: boolean;
+}

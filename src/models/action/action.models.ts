@@ -25,9 +25,10 @@ export interface ActionServiceModel {
   ): Promise<void>;
 }
 
-export class Action {
+type ActionResponseData = ActionGetResponse | ActionCreateResponse;
+export class Action<T extends ActionResponseData > {
   constructor(
-    private readonly _data: ActionGetResponse | ActionCreateResponse,
+    private readonly _data: T,
     private readonly service: ActionServiceModel,
   ) {}
   get id(): number {
@@ -75,7 +76,7 @@ export class Action {
   }
 
   // Access to raw task data
-  get data(): ActionGetResponse | ActionCreateResponse {
+  get data(): T {
     return this._data;
   }
 

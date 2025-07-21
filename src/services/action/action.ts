@@ -13,13 +13,13 @@ import {
   ActionCompletionRequest,
   ActionType,
   ActionGetAllOptions,
-  ActionGetByIdOptions
+  ActionGetByIdOptions,
+  ActionGetFormOptions
 } from '../../models/action/action.types';
 import {
   Action,
   ActionServiceModel
 } from '../../models/action/action.models';
-import { FOLDER_ID } from '../../utils/constants/headers';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse, addPrefixToKeys } from '../../utils/transform';
 import { ActionStatusMap, ActionTimeMap } from '../../models/action/action.constants';
 import { CollectionResponse } from '../../models/common/commonTypes';
@@ -36,7 +36,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
   /**
    * Creates a new action
    * @param action - The action to be created
-   * @param folderId - Required folder/organization unit ID
+   * @param folderId - Required folder ID
    * @returns Promise resolving to the created action
    * 
    * @example
@@ -48,7 +48,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async create(action: ActionCreateRequest, folderId: number): Promise<Action> {
+  async create(action: ActionCreateRequest, folderId: number): Promise<Action<ActionCreateResponse>> {
     const headers = createHeaders(folderId);
     
     const externalTask = {
@@ -63,7 +63,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
     );
     // Transform time fields for consistency
     const normalizedData = transformData(response.data, ActionTimeMap);
-    return new Action(
+    return new Action<ActionCreateResponse>(
       transformApiResponse(normalizedData, { field: 'status', valueMap: ActionStatusMap }),
       this
     );
@@ -73,7 +73,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * Gets actions across folders with optional query parameters
    * 
    * @param options - Query options
-   * @param folderId - Optional folder/organization unit ID
+   * @param folderId - Optional folder ID
    * @returns Promise resolving to an array of actions
    * 
    * @example
@@ -82,7 +82,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * const actions = await sdk.action.getAll();
    * ```
    */
-  async getAll(options: ActionGetAllOptions = {}, folderId?: number): Promise<Action[]> {
+  async getAll(options: ActionGetAllOptions = {}, folderId?: number): Promise<Action<ActionGetResponse>[]> {
     const headers = createHeaders(folderId);
     // prefix all keys except 'event'
     const keysToPrefix = Object.keys(options).filter(k => k !== 'event');
@@ -101,7 +101,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
     );
     
     return transformedActions.map(action => 
-      new Action(
+      new Action<ActionGetResponse>(
         transformApiResponse(action, { field: 'status', valueMap: ActionStatusMap }),
         this
       )
@@ -113,16 +113,18 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * 
    * @param id - The ID of the action to retrieve
    * @param options - Optional query parameters
-   * @param folderId - Optional folder/organization unit ID
-   * @returns Promise resolving to the action
+   * @param folderId - Optional folder ID
+   * @returns Promise resolving to the action (form actions will return form-specific data)
    * 
    * @example
    * ```typescript
    * // Get action by ID
    * const action = await sdk.action.getById(123);
+   * 
+   * // If the action is a form action, it will automatically return form-specific data
    * ```
    */
-  async getById(id: number, options: ActionGetByIdOptions = {}, folderId?: number): Promise<Action> {
+  async getById(id: number, options: ActionGetByIdOptions = {}, folderId?: number): Promise<Action<ActionGetResponse>> {
     const headers = createHeaders(folderId);
     // prefix all keys in options
     const keysToPrefix = Object.keys(options);
@@ -138,7 +140,12 @@ export class ActionService extends BaseService implements ActionServiceModel {
     // Transform response from PascalCase to camelCase and normalize time fields
     const transformedAction = transformData(pascalToCamelCaseKeys(response.data) as ActionGetResponse, ActionTimeMap);
     
-    return new Action(
+    // Check if this is a form action and get form-specific data if it is
+    if (transformedAction.type === ActionType.Form) {
+      return this.getFormActionById(id, folderId || transformedAction.organizationUnitId);
+    }
+    
+    return new Action<ActionGetResponse>(
       transformApiResponse(transformedAction, { field: 'status', valueMap: ActionStatusMap }),
       this
     );
@@ -148,7 +155,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * Assigns actions to users
    * 
    * @param taskAssignments - Single action assignment or array of action assignments
-   * @param folderId - Optional folder/organization unit ID
+   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of action assignment results
    * 
    * @example
@@ -204,7 +211,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * Reassigns actions to new users
    * 
    * @param actionAssignments - Single action assignment or array of action assignments
-   * @param folderId - Optional folder/organization unit ID
+   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of action assignment results
    * 
    * @example
@@ -260,7 +267,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * Unassigns actions (removes current assignees)
    * 
    * @param actionIds - Single action ID or array of action IDs to unassign
-   * @param folderId - Optional folder/organization unit ID
+   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of action assignment results
    * 
    * @example
@@ -296,7 +303,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * 
    * @param completionType - The type of action (Form, App, or Generic)
    * @param request - The completion request data
-   * @param folderId - Required folder/organization unit ID
+   * @param folderId - Required folder ID
    * @returns Promise resolving to void
    * 
    * @example
@@ -332,5 +339,33 @@ export class ActionService extends BaseService implements ActionServiceModel {
     }
     
     await this.post<void>(endpoint, request, { headers });
+  }
+
+  /**
+   * Gets a form action by ID (private method)
+   * 
+   * @param id - The ID of the form action to retrieve
+   * @param folderId - Required folder ID
+   * @param options - Optional query parameters
+   * @returns Promise resolving to the form action
+   */
+  private async getFormActionById(id: number, folderId: number, options: ActionGetFormOptions = {}): Promise<Action<ActionGetResponse>> {
+    const headers = createHeaders(folderId);
+    
+    const response = await this.get<ActionGetResponse>(
+      '/forms/TaskForms/GetTaskFormById',
+      { 
+        params: {
+          taskId: id,
+          ...options
+        },
+        headers
+      }
+    );
+    const transformedFormTask = transformData(response.data, ActionTimeMap);
+    return new Action<ActionGetResponse>(
+      transformApiResponse(transformedFormTask, { field: 'status', valueMap: ActionStatusMap }),
+      this
+    );
   }
 } 
