@@ -80,57 +80,33 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * ```typescript
    * // Get all actions
    * const actions = await sdk.action.getAll();
-   * 
-   * // Get actions filtered by type
-   * const formActions = await sdk.action.getAll.filter(ActionType.Form);
    * ```
    */
-  getAll = Object.assign(
-    async (options: ActionGetAllOptions = {}, folderId?: number): Promise<Action<ActionGetResponse>[]> => {
-      const headers = createHeaders(folderId);
-      // prefix all keys except 'event'
-      const keysToPrefix = Object.keys(options).filter(k => k !== 'event');
-      const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
-      const response = await this.get<CollectionResponse<ActionGetResponse>>(
-        '/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders',
-        { 
-          params: apiOptions,
-          headers
-        }
-      );
-      
-      // Transform response Action array from PascalCase to camelCase and normalize time fields
-      const transformedActions = response.data.value.map(action => 
-        transformData(pascalToCamelCaseKeys(action) as ActionGetResponse, ActionTimeMap)
-      );
-      
-      return transformedActions.map(action => 
-        new Action<ActionGetResponse>(
-          transformApiResponse(action, { field: 'status', valueMap: ActionStatusMap }),
-          this
-        )
-      );
-    },
-    {
-      /**
-       * Filters actions by type
-       * 
-       * @param params - Object with type property to filter by
-       * @returns Promise resolving to an array of filtered actions
-       * 
-       * @example
-       * ```typescript
-       * // Get only form actions
-       * const formActions = await sdk.action.getAll.filter({ type: ActionType.Form });
-       * ```
-       */
-      filter: async (params: { type: ActionType}): Promise<Action<ActionGetResponse>[]> => {
-        const actionType = params.type;
-        const filterString = `Type eq '${actionType}'`;
-        return this.getAll({ filter: filterString });
+  async getAll(options: ActionGetAllOptions = {}, folderId?: number): Promise<Action<ActionGetResponse>[]> {
+    const headers = createHeaders(folderId);
+    // prefix all keys except 'event'
+    const keysToPrefix = Object.keys(options).filter(k => k !== 'event');
+    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const response = await this.get<CollectionResponse<ActionGetResponse>>(
+      '/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders',
+      { 
+        params: apiOptions,
+        headers
       }
-    }
-  );
+    );
+    
+    // Transform response Action array from PascalCase to camelCase and normalize time fields
+    const transformedActions = response.data.value.map(action => 
+      transformData(pascalToCamelCaseKeys(action) as ActionGetResponse, ActionTimeMap)
+    );
+    
+    return transformedActions.map(action => 
+      new Action<ActionGetResponse>(
+        transformApiResponse(action, { field: 'status', valueMap: ActionStatusMap }),
+        this
+      )
+    );
+  }
 
   /**
    * Gets an action by ID
