@@ -202,9 +202,7 @@ export interface QueryOptions extends QueryParams {
 /**
  * Query options for getting all actions
  */
-export interface ActionGetAllOptions extends QueryOptions {
-  event?: 'ForwardedEver';
-}
+export type ActionGetAllOptions = QueryOptions;
 
 /**
  * Query options for getting an action by ID 
