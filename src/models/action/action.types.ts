@@ -112,12 +112,10 @@ export interface ActionCreateRequest {
 
 export interface ActionCreateResponse extends ActionBaseResponse {
   waitJobState: JobState | null;
-  organizationUnitFullyQualifiedName: string | null;
   assignedToUser: UserLoginInfo | null;
   taskSlaDetails: ActionSlaDetail[] | null;
   completedByUser: UserLoginInfo | null;
   taskAssignees: UserLoginInfo[] | null;
-  isCurrentUserInAllUserAssignedGroup: boolean | null;
   processingTime: number | null;
 }
 
@@ -137,12 +135,10 @@ export interface ActionGetResponse extends ActionBaseResponse {
   //additional fields for form actions
   formLayout?: Record<string, unknown>;
   actionLabel?: string | null;
-  organizationUnitFullyQualifiedName?: string;
   taskSlaDetails?: ActionSlaDetail[] | null;
   completedByUser?: UserLoginInfo | null;
   taskAssignmentCriteria?: string;
   taskAssignees?: UserLoginInfo[] | null;
-  isCurrentUserInAllUserAssignedGroup?: boolean | null;
   taskSource?: ActionSource | null;
   processingTime?: number | null;
 }
