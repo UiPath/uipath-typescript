@@ -104,7 +104,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
     );
     
     // Transform response from PascalCase to camelCase
-    return response.data.value.map(user => pascalToCamelCaseKeys(user) as UserLoginInfo);
+    return response.data?.value.map(user => pascalToCamelCaseKeys(user) as UserLoginInfo);
   }
   
   /**
@@ -134,7 +134,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
     );
     
     // Transform response Action array from PascalCase to camelCase and normalize time fields
-    const transformedActions = response.data.value.map(action => 
+    const transformedActions = response.data?.value.map(action => 
       transformData(pascalToCamelCaseKeys(action) as ActionGetResponse, ActionTimeMap)
     );
     
