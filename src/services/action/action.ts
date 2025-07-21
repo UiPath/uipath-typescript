@@ -14,7 +14,6 @@ import {
   ActionType,
   ActionGetAllOptions,
   ActionGetByIdOptions,
-  ActionGetFormResponse,
   ActionGetFormOptions
 } from '../../models/action/action.types';
 import {
@@ -115,12 +114,14 @@ export class ActionService extends BaseService implements ActionServiceModel {
    * @param id - The ID of the action to retrieve
    * @param options - Optional query parameters
    * @param folderId - Optional folder ID
-   * @returns Promise resolving to the action
+   * @returns Promise resolving to the action (form actions will return form-specific data)
    * 
    * @example
    * ```typescript
    * // Get action by ID
    * const action = await sdk.action.getById(123);
+   * 
+   * // If the action is a form action, it will automatically return form-specific data
    * ```
    */
   async getById(id: number, options: ActionGetByIdOptions = {}, folderId?: number): Promise<Action<ActionGetResponse>> {
@@ -138,6 +139,11 @@ export class ActionService extends BaseService implements ActionServiceModel {
     
     // Transform response from PascalCase to camelCase and normalize time fields
     const transformedAction = transformData(pascalToCamelCaseKeys(response.data) as ActionGetResponse, ActionTimeMap);
+    
+    // Check if this is a form action and get form-specific data if it is
+    if (transformedAction.type === ActionType.Form) {
+      return this.getFormActionById(id, folderId || transformedAction.organizationUnitId);
+    }
     
     return new Action<ActionGetResponse>(
       transformApiResponse(transformedAction, { field: 'status', valueMap: ActionStatusMap }),
@@ -336,23 +342,17 @@ export class ActionService extends BaseService implements ActionServiceModel {
   }
 
   /**
-   * Gets a form action by ID
+   * Gets a form action by ID (private method)
    * 
    * @param id - The ID of the form action to retrieve
    * @param folderId - Required folder ID
    * @param options - Optional query parameters
    * @returns Promise resolving to the form action
-   * 
-   * @example
-   * ```typescript
-   * // Get form action by ID
-   * const formAction = await sdk.action.getFormActionById(123, 354, { expandOnFormLayout: true });
-   * ```
    */
-  async getFormActionById(id: number, folderId: number, options: ActionGetFormOptions = {}): Promise<Action<ActionGetFormResponse>> {
+  private async getFormActionById(id: number, folderId: number, options: ActionGetFormOptions = {}): Promise<Action<ActionGetResponse>> {
     const headers = createHeaders(folderId);
     
-    const response = await this.get<ActionGetFormResponse>(
+    const response = await this.get<ActionGetResponse>(
       '/forms/TaskForms/GetTaskFormById',
       { 
         params: {
@@ -363,7 +363,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
       }
     );
     const transformedFormTask = transformData(response.data, ActionTimeMap);
-    return new Action<ActionGetFormResponse>(
+    return new Action<ActionGetResponse>(
       transformApiResponse(transformedFormTask, { field: 'status', valueMap: ActionStatusMap }),
       this
     );

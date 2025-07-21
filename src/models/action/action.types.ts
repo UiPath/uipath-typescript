@@ -133,24 +133,19 @@ export interface ActionGetResponse extends ActionBaseResponse {
   creatorUser?: UserLoginInfo;
   lastModifierUser?: UserLoginInfo;
   taskAssignments?: ActionAssignment[];
-}
 
-export interface ActionGetFormResponse extends ActionBaseResponse {
-  formLayout: Record<string, unknown>;
-  formLayoutId: number | null;
-  bulkFormLayoutId: number | null;
-  actionLabel: string | null;
-  organizationUnitFullyQualifiedName: string;
-  assignedToUser: UserLoginInfo | null;
-  taskSlaDetails: ActionSlaDetail[] | null;
-  completedByUser: UserLoginInfo | null;
+  //additional fields for form actions
+  formLayout?: Record<string, unknown>;
+  actionLabel?: string | null;
+  organizationUnitFullyQualifiedName?: string;
+  taskSlaDetails?: ActionSlaDetail[] | null;
+  completedByUser?: UserLoginInfo | null;
   taskAssignmentCriteria?: string;
-  taskAssignees: UserLoginInfo[] | null;
-  isCurrentUserInAllUserAssignedGroup: boolean | null;
-  taskSource: ActionSource | null;
-  processingTime: number | null;
-  lastModifierUserId: number | null;
-} 
+  taskAssignees?: UserLoginInfo[] | null;
+  isCurrentUserInAllUserAssignedGroup?: boolean | null;
+  taskSource?: ActionSource | null;
+  processingTime?: number | null;
+}
 
 export interface ActionAssignmentRequest {
   taskId: number;

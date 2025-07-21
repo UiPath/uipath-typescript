@@ -8,8 +8,7 @@ import type {
   ActionAssignmentRequest,
   ActionCompletionRequest,
   ActionCompleteOptions,
-  ActionAssignOptions,
-  ActionGetFormResponse
+  ActionAssignOptions
 } from './action.types';
 
 export interface ActionServiceModel {
@@ -26,7 +25,7 @@ export interface ActionServiceModel {
   ): Promise<void>;
 }
 
-type ActionResponseData = ActionGetResponse | ActionCreateResponse | ActionGetFormResponse;
+type ActionResponseData = ActionGetResponse | ActionCreateResponse;
 export class Action<T extends ActionResponseData > {
   constructor(
     private readonly _data: T,
