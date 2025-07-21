@@ -13,5 +13,5 @@ export * from './maestro';
 // Orchestrator models
 export * from './orchestrator';
 
-// Actions models
-export * from './action';
+// Task models
+export * from './task';

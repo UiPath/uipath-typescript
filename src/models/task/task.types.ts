@@ -10,20 +10,20 @@ export interface UserLoginInfo {
   id: number;
 }
 
-export enum ActionType {
+export enum TaskType {
   Form = 'FormTask',
   External = 'ExternalTask',
   App = 'AppTask'
 }
 
-export enum ActionPriority {
+export enum TaskPriority {
   Low = 'Low',
   Medium = 'Medium',
   High = 'High',
   Critical = 'Critical'
 }
 
-export enum ActionStatus {
+export enum TaskStatus {
   Unassigned = 'Unassigned',
   Pending = 'Pending',
   Completed = 'Completed'
@@ -41,53 +41,53 @@ export enum JobState {
   Resumed = 'Resumed'
 }
 
-export enum ActionSlaCriteria {
+export enum TaskSlaCriteria {
   TaskCreated = 'TaskCreated',
   TaskAssigned = 'TaskAssigned',
   TaskCompleted = 'TaskCompleted'
 }
 
-export enum ActionSlaStatus {
+export enum TaskSlaStatus {
   OverdueLater = 'OverdueLater',
   OverdueSoon = 'OverdueSoon',
   Overdue = 'Overdue',
   CompletedInTime = 'CompletedInTime'
 }
 
-export enum ActionSourceName {
+export enum TaskSourceName {
   Agent = 'Agent',
   Workflow = 'Workflow',
   Maestro = 'Maestro',
   Default = 'Default'
 }
 
-export interface ActionSource {
-  sourceName: ActionSourceName;
+export interface TaskSource {
+  sourceName: TaskSourceName;
   sourceId: string;
   taskSourceMetadata: Record<string, unknown>;
 }
 
-export interface ActionSlaDetail {
+export interface TaskSlaDetail {
   expiryTime?: string;
-  startCriteria?: ActionSlaCriteria;
-  endCriteria?: ActionSlaCriteria;
-  status?: ActionSlaStatus;
+  startCriteria?: TaskSlaCriteria;
+  endCriteria?: TaskSlaCriteria;
+  status?: TaskSlaStatus;
 }
 
-export interface ActionAssignment {
+export interface TaskAssignment {
   assignee?: UserLoginInfo;
-  task?: ActionGetResponse;
+  task?: TaskGetResponse;
   id?: number;
 }
 
 /**
- * Base interface containing common fields shared across all action response types
+ * Base interface containing common fields shared across all task response types
  */
-export interface ActionBaseResponse {
-  status: ActionStatus;
+export interface TaskBaseResponse {
+  status: TaskStatus;
   title: string;
-  type: ActionType;
-  priority: ActionPriority;
+  type: TaskType;
+  priority: TaskPriority;
   organizationUnitId: number;
   key: string;
   isDeleted: boolean;
@@ -105,59 +105,59 @@ export interface ActionBaseResponse {
   lastModificationTime: string | null;
 }
 
-export interface ActionCreateRequest {
+export interface TaskCreateRequest {
   title: string;
-  priority?: ActionPriority;
+  priority?: TaskPriority;
 }
 
-export interface ActionCreateResponse extends ActionBaseResponse {
+export interface TaskCreateResponse extends TaskBaseResponse {
   waitJobState: JobState | null;
   assignedToUser: UserLoginInfo | null;
-  taskSlaDetails: ActionSlaDetail[] | null;
+  taskSlaDetails: TaskSlaDetail[] | null;
   completedByUser: UserLoginInfo | null;
   taskAssignees: UserLoginInfo[] | null;
   processingTime: number | null;
 }
 
-export interface ActionGetResponse extends ActionBaseResponse {
+export interface TaskGetResponse extends TaskBaseResponse {
   isCompleted: boolean;
   encrypted: boolean;
   bulkFormLayoutId: number | null;
   formLayoutId: number | null;
-  taskSlaDetail: ActionSlaDetail | null;
+  taskSlaDetail: TaskSlaDetail | null;
   taskAssigneeName: string | null;
   lastModifierUserId: number | null;
   assignedToUser?: UserLoginInfo;
   creatorUser?: UserLoginInfo;
   lastModifierUser?: UserLoginInfo;
-  taskAssignments?: ActionAssignment[];
+  taskAssignments?: TaskAssignment[];
 
-  //additional fields for form actions
+  //additional fields for form tasks
   formLayout?: Record<string, unknown>;
   actionLabel?: string | null;
-  taskSlaDetails?: ActionSlaDetail[] | null;
+  taskSlaDetails?: TaskSlaDetail[] | null;
   completedByUser?: UserLoginInfo | null;
   taskAssignmentCriteria?: string;
   taskAssignees?: UserLoginInfo[] | null;
-  taskSource?: ActionSource | null;
+  taskSource?: TaskSource | null;
   processingTime?: number | null;
 }
 
-export interface ActionAssignmentRequest {
+export interface TaskAssignmentRequest {
   taskId: number;
   userId?: number;
   userNameOrEmail?: string;
 }
 
-export interface ActionsAssignRequest {
-  taskAssignments: ActionAssignmentRequest[];
+export interface TasksAssignRequest {
+  taskAssignments: TaskAssignmentRequest[];
 }
 
-export interface ActionsUnassignRequest {
+export interface TasksUnassignRequest {
   taskIds: number[];
 }
 
-export interface ActionAssignmentResult {
+export interface TaskAssignmentResult {
   taskId?: number;
   userId?: number;
   errorCode?: number;
@@ -165,28 +165,28 @@ export interface ActionAssignmentResult {
   userNameOrEmail?: string;
 }
 
-export type ActionAssignmentResultCollection = CollectionResponse<ActionAssignmentResult>;
+export type TaskAssignmentResultCollection = CollectionResponse<TaskAssignmentResult>;
  
-export interface ActionCompletionRequest {
+export interface TaskCompletionRequest {
   taskId: number;
   data?: any;
   action?: string;
 }
 
 /**
- * Options for action assignment operations in the Action class
+ * Options for task assignment operations in the Task class
  * At least one identification parameter is required
  */
-export type ActionAssignOptions = 
+export type TaskAssignOptions = 
   | { userId: number; userNameOrEmail?: string}
   | { userId?: number; userNameOrEmail: string};
 
 /**
- * Options for completing an action
+ * Options for completing a task
  */
-export type ActionCompleteOptions =
-  | { type: ActionType.External; data?: any; action?: string }
-  | { type: Exclude<ActionType, ActionType.External>; data: any; action: string }; 
+export type TaskCompleteOptions =
+  | { type: TaskType.External; data?: any; action?: string }
+  | { type: Exclude<TaskType, TaskType.External>; data: any; action: string }; 
 
 /**
  * Common query options
@@ -200,14 +200,14 @@ export interface QueryOptions extends QueryParams {
 }
 
 /**
- * Query options for getting all actions
+ * Query options for getting all tasks
  */
-export type ActionGetAllOptions = QueryOptions;
+export type TaskGetAllOptions = QueryOptions;
 
 /**
- * Query options for getting an action by ID 
+ * Query options for getting a task by ID 
  */
-export interface ActionGetByIdOptions extends QueryParams {
+export interface TaskGetByIdOptions extends QueryParams {
   expand?: string;
   select?: string;
 }
@@ -215,14 +215,14 @@ export interface ActionGetByIdOptions extends QueryParams {
 /**
  * Options for getting a form task by ID
  */
-export interface ActionGetFormOptions extends QueryParams {
+export interface TaskGetFormOptions extends QueryParams {
   expandOnFormLayout?: boolean;
 }
 
 /**
- * Query options for getting action users
+ * Query options for getting task users
  */
-export type ActionGetUsersOptions = QueryOptions;
+export type TaskGetUsersOptions = QueryOptions;
 
 /**
  * Collection response for user login info
