@@ -189,16 +189,20 @@ export type ActionCompleteOptions =
   | { type: Exclude<ActionType, ActionType.External>; data: any; action: string }; 
 
 /**
- * Query options for getting all actions
+ * Common query options
  */
-export interface ActionGetAllOptions extends QueryParams {
-  event?: 'ForwardedEver';
+export interface QueryOptions extends QueryParams {
   expand?: string;
   filter?: string;
   select?: string;
   orderby?: string;
   count?: boolean;
 }
+
+/**
+ * Query options for getting all actions
+ */
+export type ActionGetAllOptions = QueryOptions;
 
 /**
  * Query options for getting an action by ID 
@@ -214,3 +218,13 @@ export interface ActionGetByIdOptions extends QueryParams {
 export interface ActionGetFormOptions extends QueryParams {
   expandOnFormLayout?: boolean;
 }
+
+/**
+ * Query options for getting action users
+ */
+export type ActionGetUsersOptions = QueryOptions;
+
+/**
+ * Collection response for user login info
+ */
+export type UserLoginInfoCollection = CollectionResponse<UserLoginInfo>;

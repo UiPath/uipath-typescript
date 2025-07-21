@@ -14,7 +14,10 @@ import {
   ActionType,
   ActionGetAllOptions,
   ActionGetByIdOptions,
-  ActionGetFormOptions
+  ActionGetFormOptions,
+  UserLoginInfo,
+  UserLoginInfoCollection,
+  ActionGetUsersOptions
 } from '../../models/action/action.types';
 import {
   Action,
@@ -70,6 +73,41 @@ export class ActionService extends BaseService implements ActionServiceModel {
   }
 
   /**
+   * Gets action users in the given folder who have Tasks.View and Tasks.Edit permissions
+   * 
+   * @param folderId - The folder ID to get users from
+   * @param options - Optional query parameters
+   * @returns Promise resolving to an array of users
+   * 
+   * @example
+   * ```typescript
+   * // Get all users with task permissions in a folder
+   * const users = await sdk.action.getUsers(123);
+   * 
+   * // Get users with filtering
+   * const users = await sdk.action.getUsers(123, { 
+   *   filter: "name eq 'abc'"
+   * });
+   * ```
+   */
+  async getUsers(folderId: number, options: ActionGetUsersOptions = {}): Promise<UserLoginInfo[]> {
+    const headers = createHeaders(folderId);
+    
+    const keysToPrefix = Object.keys(options);
+    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const response = await this.get<UserLoginInfoCollection>(
+      `/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId=${folderId})`,
+      { 
+        params: apiOptions,
+        headers
+      }
+    );
+    
+    // Transform response from PascalCase to camelCase
+    return response.data?.value.map(user => pascalToCamelCaseKeys(user) as UserLoginInfo);
+  }
+  
+  /**
    * Gets actions across folders with optional query parameters
    * 
    * @param options - Query options
@@ -96,7 +134,7 @@ export class ActionService extends BaseService implements ActionServiceModel {
     );
     
     // Transform response Action array from PascalCase to camelCase and normalize time fields
-    const transformedActions = response.data.value.map(action => 
+    const transformedActions = response.data?.value.map(action => 
       transformData(pascalToCamelCaseKeys(action) as ActionGetResponse, ActionTimeMap)
     );
     
