@@ -14,5 +14,6 @@ export * from './models/dataFabric';
 export * from './models/maestro';
 export * from './models/case';
 export * from './models/orchestrator';
+export * from './models/task';
 
 
