@@ -6,7 +6,7 @@ import {
   ProcessInstancesService,
   CaseService,
   EntityService,
-  ActionService
+  TaskService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdkConfig';
 import { validateConfig, normalizeBaseUrl } from './core/config/configUtils';
@@ -123,10 +123,10 @@ export class UiPath {
   }
 
   /**
-   * Access to Actions service
+   * Access to Tasks service
    */
-  get action(): ActionService {
-    return this.getService(ActionService);
+  get task(): TaskService {
+    return this.getService(TaskService);
   }
 }
 

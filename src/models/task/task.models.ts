@@ -1,35 +1,35 @@
 import type { 
-  ActionCreateResponse,
-  ActionGetResponse, 
-  ActionType as ActionTypeEnum, 
-  ActionStatus, 
-  ActionPriority, 
-  ActionAssignmentResult, 
-  ActionAssignmentRequest,
-  ActionCompletionRequest,
-  ActionCompleteOptions,
-  ActionAssignOptions
-} from './action.types';
+  TaskCreateResponse,
+  TaskGetResponse, 
+  TaskType,
+  TaskStatus, 
+  TaskPriority, 
+  TaskAssignmentResult, 
+  TaskAssignmentRequest,
+  TaskCompletionRequest,
+  TaskCompleteOptions,
+  TaskAssignOptions
+} from './task.types';
 
-export interface ActionServiceModel {
-  assign(request: ActionAssignmentRequest, folderId?: number): Promise<ActionAssignmentResult[]>;
+export interface TaskServiceModel {
+  assign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResult[]>;
   
-  reassign(request: ActionAssignmentRequest, folderId?: number): Promise<ActionAssignmentResult[]>;
+  reassign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResult[]>;
   
-  unassign(taskId: number, folderId?: number): Promise<ActionAssignmentResult[]>;
+  unassign(taskId: number, folderId?: number): Promise<TaskAssignmentResult[]>;
   
   complete(
-    taskType: ActionTypeEnum,
-    request: ActionCompletionRequest,
+    taskType: TaskType,
+    request: TaskCompletionRequest,
     folderId: number
   ): Promise<void>;
 }
 
-type ActionResponseData = ActionGetResponse | ActionCreateResponse;
-export class Action<T extends ActionResponseData > {
+type TaskResponseData = TaskGetResponse | TaskCreateResponse;
+export class Task<T extends TaskResponseData > {
   constructor(
     private readonly _data: T,
-    private readonly service: ActionServiceModel,
+    private readonly service: TaskServiceModel,
   ) {}
   get id(): number {
     return this._data.id;
@@ -43,15 +43,15 @@ export class Action<T extends ActionResponseData > {
     return this._data.title;
   }
 
-  get status(): ActionStatus {
+  get status(): TaskStatus {
     return this._data.status;
   }
 
-  get priority(): ActionPriority  {
+  get priority(): TaskPriority  {
     return this._data.priority;
   }
 
-  get type(): ActionTypeEnum {
+  get type(): TaskType {
     return this._data.type;
   }
 
@@ -80,23 +80,23 @@ export class Action<T extends ActionResponseData > {
     return this._data;
   }
 
-  // Action methods
+  // Task methods
   /**
-   * Assigns this action to a user or users
+   * Assigns this task to a user or users
    * 
    * @param options - Assignment options (requires at least one of: userId, userNameOrEmail)
-   * @returns Promise resolving to action assignment results
+   * @returns Promise resolving to task assignment results
    * 
    * @example
    * ```typescript
    * // Assign to a user by ID
-   * await action.assign({ userId: 123 });
+   * await task.assign({ userId: 123 });
    * 
    * // Assign to a user by email
-   * await action.assign({ userNameOrEmail: 'user@example.com' });
+   * await task.assign({ userNameOrEmail: 'user@example.com' });
    * ```
    */
-  async assign(options: ActionAssignOptions): Promise<ActionAssignmentResult[]> {
+  async assign(options: TaskAssignOptions): Promise<TaskAssignmentResult[]> {
     if (!this.id) throw new Error('Task ID is undefined');
     
     return this.service.assign({
@@ -106,21 +106,21 @@ export class Action<T extends ActionResponseData > {
   }
   
   /**
-   * Reassigns this action to a new user
+   * Reassigns this task to a new user
    * 
    * @param options - Assignment options (requires at least one of: userId, userNameOrEmail)
-   * @returns Promise resolving to action assignment results
+   * @returns Promise resolving to task assignment results
    * 
    * @example
    * ```typescript
    * // Reassign to a user by ID
-   * await action.reassign({ userId: 456 });
+   * await task.reassign({ userId: 456 });
    * 
    * // Reassign to a user by email
-   * await action.reassign({ userNameOrEmail: 'user@example.com' });
+   * await task.reassign({ userNameOrEmail: 'user@example.com' });
    * ```
    */
-  async reassign(options: ActionAssignOptions): Promise<ActionAssignmentResult[]> {
+  async reassign(options: TaskAssignOptions): Promise<TaskAssignmentResult[]> {
     if (!this.id) throw new Error('Task ID is undefined');
     
     return this.service.reassign({
@@ -130,42 +130,42 @@ export class Action<T extends ActionResponseData > {
   }
 
   /**
-   * Unassigns this action (removes current assignee)
+   * Unassigns this task (removes current assignee)
    * 
-   * @returns Promise resolving to action assignment results
+   * @returns Promise resolving to task assignment results
    * 
    * @example
    * ```typescript
-   * // Unassign the action
-   * await action.unassign();
+   * // Unassign the task
+   * await task.unassign();
    * ```
    */
-  async unassign(): Promise<ActionAssignmentResult[]> {
+  async unassign(): Promise<TaskAssignmentResult[]> {
     if (!this.id) throw new Error('Task ID is undefined');
     
     return this.service.unassign(this.id, this.folderId);
   }
 
   /**
-   * Completes this action with optional data and action
+   * Completes this task with optional data and action
    * 
    * @param options - Completion options
    * @returns Promise resolving to void
    * 
    * @example
    * ```typescript
-   * // Complete a action with type
-   * await action.complete({ type: ActionTypeEnum.ExternalTask });
+   * // Complete a task with type
+   * await task.complete({ type: TaskType.ExternalTask });
    * 
    * // Complete with data and action
-   * await action.complete({
-   *   type: ActionTypeEnum.AppTask,
+   * await task.complete({
+   *   type: TaskType.AppTask,
    *   data: { result: true },
    *   action: 'approve'
    * });
    * ```
    */
-  async complete(options: ActionCompleteOptions): Promise<void> {
+  async complete(options: TaskCompleteOptions): Promise<void> {
     if (!this.id) throw new Error('Task ID is undefined');
     const folderId = this.folderId;
     if (!folderId) throw new Error('Folder ID is required');
