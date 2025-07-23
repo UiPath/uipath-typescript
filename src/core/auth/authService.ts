@@ -18,7 +18,20 @@ export class AuthService extends BaseService {
 
   constructor(config: Config, executionContext: ExecutionContext) {
     super(config, executionContext);
-    this.tokenManager = TokenManager.getInstance(executionContext);
+    
+    // Determine if this is OAuth-based authentication
+    const isOAuth = hasOAuthConfig(config);
+    
+    // Create TokenManager with client ID from config or a default identifier
+    const clientId = isOAuth ? config.clientId : 
+                     hasSecretConfig(config) ? `secret-${config.orgName}-${config.tenantName}` : 
+                     `unknown-${Date.now()}`;
+                     
+    try {
+      this.tokenManager = new TokenManager(executionContext, clientId, isOAuth);
+    } catch (error) {
+      throw new Error(`Failed to create TokenManager: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**
@@ -29,7 +42,7 @@ export class AuthService extends BaseService {
    * In an OAuth flow, this method will trigger a page redirect and the promise will not resolve.
    */
   public async authenticate(config: Config): Promise<boolean> {
-    // Try to load token from storage first
+    // Try to load token from storage first (only works for OAuth tokens)
     const loadedFromStorage = this.tokenManager.loadFromStorage();
     
     // If we have a valid token from storage, return true

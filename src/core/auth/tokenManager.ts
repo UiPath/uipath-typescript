@@ -9,40 +9,133 @@ export interface TokenInfo {
 
 /**
  * TokenManager is responsible for managing authentication tokens.
- * It provides a single source of truth for token operations.
+ * It provides token operations for a specific client ID.
+ * - For OAuth tokens: Uses session storage with client ID-based keys
+ * - For Secret tokens: Stores only in memory, allowing multiple instances
  */
 export class TokenManager {
   private currentToken?: TokenInfo;
-  private readonly STORAGE_KEY = 'uipath_sdk_token';
-  private static instance: TokenManager | null = null;
+  private readonly clientId: string;
+  private readonly STORAGE_KEY_PREFIX = 'uipath_sdk_user_token-';
+  private readonly ACTIVE_CLIENT_IDS_KEY = 'uipath_sdk_active_client_ids';
   
   /**
-   * Creates a new TokenManager instance or returns the existing one
+   * Creates a new TokenManager instance for a specific client ID
    * @param executionContext The execution context
+   * @param clientId The client ID to use for token storage
+   * @param isOAuth Whether this is an OAuth-based authentication
+   * @throws Error if an OAuth TokenManager with the same client ID already exists
    */
-  public static getInstance(executionContext: ExecutionContext): TokenManager {
-    if (!TokenManager.instance) {
-      TokenManager.instance = new TokenManager(executionContext);
+  constructor(
+    private executionContext: ExecutionContext, 
+    clientId: string,
+    private isOAuth: boolean = false
+  ) {
+    // Only enforce unique client IDs for OAuth flow
+    if (isOAuth && this.isClientIdActive(clientId)) {
+      throw new Error(`A TokenManager with OAuth client ID "${clientId}" already exists. Use a different client ID.`);
     }
-    return TokenManager.instance;
+    
+    this.clientId = clientId;
+    
+    if (isOAuth) {
+      this.addActiveClientId(clientId);
+    }
   }
   
   /**
-   * Private constructor to enforce singleton pattern
+   * Gets the storage key for this TokenManager instance
    */
-  private constructor(private executionContext: ExecutionContext) {}
+  private get storageKey(): string {
+    return `${this.STORAGE_KEY_PREFIX}${this.clientId}`;
+  }
+  
+  /**
+   * Checks if a client ID is already active
+   */
+  private isClientIdActive(clientId: string): boolean {
+    if (!isBrowser) {
+      return false;
+    }
+    
+    try {
+      const activeIds = this.getActiveClientIds();
+      return activeIds.includes(clientId);
+    } catch (error) {
+      console.warn('Failed to check active client IDs', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Gets the list of active client IDs from session storage
+   */
+  private getActiveClientIds(): string[] {
+    if (!isBrowser) {
+      return [];
+    }
+    
+    try {
+      const storedIds = sessionStorage.getItem(this.ACTIVE_CLIENT_IDS_KEY);
+      if (!storedIds) {
+        return [];
+      }
+      
+      return JSON.parse(storedIds);
+    } catch (error) {
+      console.warn('Failed to get active client IDs', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Adds a client ID to the active list
+   */
+  private addActiveClientId(clientId: string): void {
+    if (!isBrowser) {
+      return;
+    }
+    
+    try {
+      const activeIds = this.getActiveClientIds();
+      if (!activeIds.includes(clientId)) {
+        activeIds.push(clientId);
+        sessionStorage.setItem(this.ACTIVE_CLIENT_IDS_KEY, JSON.stringify(activeIds));
+      }
+    } catch (error) {
+      console.warn('Failed to add active client ID', error);
+    }
+  }
+  
+  /**
+   * Removes a client ID from the active list
+   */
+  private removeActiveClientId(clientId: string): void {
+    if (!isBrowser) {
+      return;
+    }
+    
+    try {
+      const activeIds = this.getActiveClientIds();
+      const updatedIds = activeIds.filter(id => id !== clientId);
+      sessionStorage.setItem(this.ACTIVE_CLIENT_IDS_KEY, JSON.stringify(updatedIds));
+    } catch (error) {
+      console.warn('Failed to remove active client ID', error);
+    }
+  }
   
   /**
    * Loads token from session storage if available
    * @returns true if a valid token was loaded, false otherwise
    */
   public loadFromStorage(): boolean {
-    if (!isBrowser) {
+    // Only OAuth tokens are stored in session storage
+    if (!isBrowser || !this.isOAuth) {
       return false;
     }
     
     try {
-      const storedToken = sessionStorage.getItem(this.STORAGE_KEY);
+      const storedToken = sessionStorage.getItem(this.storageKey);
       if (!storedToken) {
         return false;
       }
@@ -50,14 +143,14 @@ export class TokenManager {
       const tokenInfo = this._parseTokenInfo(storedToken);
       if (!tokenInfo) {
         // Invalid token format, clear it
-        sessionStorage.removeItem(this.STORAGE_KEY);
+        sessionStorage.removeItem(this.storageKey);
         return false;
       }
       
       // Check if token is expired
       if (tokenInfo.expiresAt && new Date() >= tokenInfo.expiresAt) {
         // Token expired, clear it
-        sessionStorage.removeItem(this.STORAGE_KEY);
+        sessionStorage.removeItem(this.storageKey);
         return false;
       }
       
@@ -121,10 +214,10 @@ export class TokenManager {
     // Store token in execution context
     this._updateExecutionContext(tokenInfo);
     
-    // Store in session storage if in browser
-    if (isBrowser) {
+    // Store in session storage if in browser and this is an OAuth token
+    if (isBrowser && this.isOAuth) {
       try {
-        sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(tokenInfo));
+        sessionStorage.setItem(this.storageKey, JSON.stringify(tokenInfo));
       } catch (error) {
         console.warn('Failed to store token in session storage', error);
       }
@@ -170,10 +263,11 @@ export class TokenManager {
     delete headers['Authorization'];
     this.executionContext.setHeaders(headers);
     
-    // Remove from session storage
-    if (isBrowser) {
+    // Remove from session storage if this is an OAuth token
+    if (isBrowser && this.isOAuth) {
       try {
-        sessionStorage.removeItem(this.STORAGE_KEY);
+        sessionStorage.removeItem(this.storageKey);
+        this.removeActiveClientId(this.clientId);
       } catch (error) {
         console.warn('Failed to remove token from session storage', error);
       }
