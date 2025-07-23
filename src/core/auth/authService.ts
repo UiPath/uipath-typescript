@@ -112,6 +112,10 @@ export class AuthService extends BaseService {
     };
     this.tokenManager.setToken(tokenInfo);
   }
+
+  /**
+   * Checks if the current token is valid
+   */
   public hasValidToken(): boolean {
     return this.tokenManager.hasValidToken();
   }

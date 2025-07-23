@@ -36,30 +36,6 @@ export class UiPath {
 
     this.executionContext = new ExecutionContext();
     this.authService = new AuthService(this.config, this.executionContext);
-    
-    // Attempt to auto-initialize with stored token
-    this._attemptAutoInitialization();
-  }
-  
-  /**
-   * Attempt to auto-initialize the SDK using a stored token
-   * This is done asynchronously to avoid blocking the constructor
-   */
-  private _attemptAutoInitialization(): void {
-    // Use setTimeout to make this non-blocking
-    setTimeout(() => {
-      if (this.initialized) return;
-      
-      try {
-        if (this.authService.hasValidToken()) {
-          this.initialized = true;
-        }
-      } catch (error) {
-        // Silently ignore errors during auto-initialization
-        // The user will need to call initialize() manually
-        console.debug('Auto-initialization failed, manual initialization required');
-      }
-    }, 0);
   }
 
   /**
