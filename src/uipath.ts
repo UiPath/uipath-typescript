@@ -36,14 +36,22 @@ export class UiPath {
 
     this.executionContext = new ExecutionContext();
     this.authService = new AuthService(this.config, this.executionContext);
+
+    // Auto-initialize for secret-based auth
+    if (hasSecretConfig(config)) {
+      this.authService.authenticateWithSecret(config.secret);
+      this.initialized = true;
+    }
   }
 
   /**
-   * Initialize the SDK based on the provided configuration
-   * This method handles both secret-based and OAuth-based authentication
+   * Initialize the SDK based on the provided configuration.
+   * This method is only required for OAuth-based authentication.
+   * For secret-based authentication, initialization is automatic.
    */
   public async initialize(): Promise<void> {
-    if (this.initialized) {
+    // If already initialized or using secret auth, return immediately
+    if (this.initialized || hasSecretConfig(this.config)) {
       return;
     }
 
@@ -82,10 +90,6 @@ export class UiPath {
 
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
     const serviceName = serviceConstructor.name;
-    if (!this.initialized) {
-      throw new Error('SDK must be initialized before accessing services. Call initialize() first.');
-    }
-
     if (!this._services.has(serviceName)) {
       const serviceInstance = new serviceConstructor(this.config, this.executionContext);
       this._services.set(serviceName, serviceInstance);

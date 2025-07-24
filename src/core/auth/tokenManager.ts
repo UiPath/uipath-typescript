@@ -17,30 +17,19 @@ export class TokenManager {
   private currentToken?: TokenInfo;
   private readonly clientId: string;
   private readonly STORAGE_KEY_PREFIX = 'uipath_sdk_user_token-';
-  private readonly ACTIVE_CLIENT_IDS_KEY = 'uipath_sdk_active_client_ids';
   
   /**
    * Creates a new TokenManager instance for a specific client ID
    * @param executionContext The execution context
    * @param clientId The client ID to use for token storage
    * @param isOAuth Whether this is an OAuth-based authentication
-   * @throws Error if an OAuth TokenManager with the same client ID already exists
    */
   constructor(
     private executionContext: ExecutionContext, 
     clientId: string,
     private isOAuth: boolean = false
   ) {
-    // Only enforce unique client IDs for OAuth flow
-    if (isOAuth && this.isClientIdActive(clientId)) {
-      throw new Error(`A TokenManager with OAuth client ID "${clientId}" already exists. Use a different client ID.`);
-    }
-    
     this.clientId = clientId;
-    
-    if (isOAuth) {
-      this.addActiveClientId(clientId);
-    }
   }
   
   /**
@@ -48,80 +37,6 @@ export class TokenManager {
    */
   private get storageKey(): string {
     return `${this.STORAGE_KEY_PREFIX}${this.clientId}`;
-  }
-  
-  /**
-   * Checks if a client ID is already active
-   */
-  private isClientIdActive(clientId: string): boolean {
-    if (!isBrowser) {
-      return false;
-    }
-    
-    try {
-      const activeIds = this.getActiveClientIds();
-      return activeIds.includes(clientId);
-    } catch (error) {
-      console.warn('Failed to check active client IDs', error);
-      return false;
-    }
-  }
-  
-  /**
-   * Gets the list of active client IDs from session storage
-   */
-  private getActiveClientIds(): string[] {
-    if (!isBrowser) {
-      return [];
-    }
-    
-    try {
-      const storedIds = sessionStorage.getItem(this.ACTIVE_CLIENT_IDS_KEY);
-      if (!storedIds) {
-        return [];
-      }
-      
-      return JSON.parse(storedIds);
-    } catch (error) {
-      console.warn('Failed to get active client IDs', error);
-      return [];
-    }
-  }
-  
-  /**
-   * Adds a client ID to the active list
-   */
-  private addActiveClientId(clientId: string): void {
-    if (!isBrowser) {
-      return;
-    }
-    
-    try {
-      const activeIds = this.getActiveClientIds();
-      if (!activeIds.includes(clientId)) {
-        activeIds.push(clientId);
-        sessionStorage.setItem(this.ACTIVE_CLIENT_IDS_KEY, JSON.stringify(activeIds));
-      }
-    } catch (error) {
-      console.warn('Failed to add active client ID', error);
-    }
-  }
-  
-  /**
-   * Removes a client ID from the active list
-   */
-  private removeActiveClientId(clientId: string): void {
-    if (!isBrowser) {
-      return;
-    }
-    
-    try {
-      const activeIds = this.getActiveClientIds();
-      const updatedIds = activeIds.filter(id => id !== clientId);
-      sessionStorage.setItem(this.ACTIVE_CLIENT_IDS_KEY, JSON.stringify(updatedIds));
-    } catch (error) {
-      console.warn('Failed to remove active client ID', error);
-    }
   }
   
   /**
@@ -267,7 +182,6 @@ export class TokenManager {
     if (isBrowser && this.isOAuth) {
       try {
         sessionStorage.removeItem(this.storageKey);
-        this.removeActiveClientId(this.clientId);
       } catch (error) {
         console.warn('Failed to remove token from session storage', error);
       }

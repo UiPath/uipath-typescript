@@ -36,7 +36,8 @@ export class AuthService extends BaseService {
 
   /**
    * Authenticates the user based on the provided SDK configuration.
-   * This method handles both secret-based and OAuth 2.0 authentication flows.
+   * This method handles OAuth 2.0 authentication flow only.
+   * For secret-based authentication, see authenticateWithSecret().
    * @param config The SDK configuration object.
    * @returns A promise that resolves to true if authentication is successful, otherwise false.
    * In an OAuth flow, this method will trigger a page redirect and the promise will not resolve.
@@ -50,11 +51,9 @@ export class AuthService extends BaseService {
       return true;
     }
     
-    // If we don't have a valid token from storage, authenticate based on config
+    // If we don't have a valid token from storage, authenticate with OAuth
     if (hasOAuthConfig(config)) {
       return await this.authenticateWithOAuth(config.clientId, config.redirectUri);
-    } else if (hasSecretConfig(config)) {
-      return await this.authenticateWithSecret(config.secret);
     }
 
     return false;
@@ -88,7 +87,7 @@ export class AuthService extends BaseService {
   /**
    * Authenticate using API secret
    */
-  private async authenticateWithSecret(secret: string): Promise<boolean> {
+  public async authenticateWithSecret(secret: string): Promise<boolean> {
     try {
       this.updateToken(secret, 'secret');
       return true;
@@ -213,6 +212,15 @@ export class AuthService extends BaseService {
       redirect_uri: params.redirectUri,
       code_verifier: params.codeVerifier
     });
+
+    console.log(`${this.config.baseUrl}/${orgName}/identity_/connect/token`);
+    console.log(body.toString());
+    console.log(this.config.baseUrl); 
+    console.log(orgName); 
+    console.log(params.clientId);
+    console.log(params.redirectUri);
+    console.log(params.code);
+    console.log(params.codeVerifier);
 
     const response = await fetch(`${this.config.baseUrl}/${orgName}/identity_/connect/token`, {
       method: 'POST',
