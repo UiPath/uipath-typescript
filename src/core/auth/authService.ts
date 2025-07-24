@@ -213,15 +213,6 @@ export class AuthService extends BaseService {
       code_verifier: params.codeVerifier
     });
 
-    console.log(`${this.config.baseUrl}/${orgName}/identity_/connect/token`);
-    console.log(body.toString());
-    console.log(this.config.baseUrl); 
-    console.log(orgName); 
-    console.log(params.clientId);
-    console.log(params.redirectUri);
-    console.log(params.code);
-    console.log(params.codeVerifier);
-
     const response = await fetch(`${this.config.baseUrl}/${orgName}/identity_/connect/token`, {
       method: 'POST',
       headers: {
