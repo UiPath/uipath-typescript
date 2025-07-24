@@ -1,17 +1,10 @@
 import { BaseService } from '../../services/baseService';
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/executionContext';
-import { TokenManager, TokenInfo } from './tokenManager';
+import { TokenManager } from './tokenManager';
+import { AuthToken, TokenInfo } from './auth.types';
 import { hasOAuthConfig, hasSecretConfig } from '../config/sdkConfig';
 import { isBrowser } from '../../utils/platform';
-
-export interface AuthToken {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  scope: string;
-  refresh_token?: string;
-}
 
 export class AuthService extends BaseService {
   private tokenManager: TokenManager;
@@ -20,7 +13,7 @@ export class AuthService extends BaseService {
     super(config, executionContext);
     const isOAuth = hasOAuthConfig(config);
     const clientId = this._determineClientId(config, isOAuth);
-    this.tokenManager = new TokenManager(executionContext, clientId, isOAuth);
+    this.tokenManager = new TokenManager(executionContext, config, clientId, isOAuth);
   }
 
   /**
@@ -108,12 +101,14 @@ export class AuthService extends BaseService {
    * @param token The new access token
    * @param type The type of token (secret or oauth)
    * @param expiresIn Optional expiration time in seconds
+   * @param refreshToken Optional refresh token for OAuth flow
    */
-  updateToken(token: string, type: 'secret' | 'oauth', expiresIn?: number): void {
+  updateToken(token: string, type: 'secret' | 'oauth', expiresIn?: number, refreshToken?: string): void {
     const tokenInfo: TokenInfo = {
       token,
       type,
-      expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : undefined
+      expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : undefined,
+      refreshToken
     };
     this.tokenManager.setToken(tokenInfo);
   }
@@ -193,7 +188,7 @@ export class AuthService extends BaseService {
       redirect_uri: params.redirectUri,
       code_challenge: params.codeChallenge,
       code_challenge_method: 'S256',
-      scope: params.scope || 'PIMS',
+      scope: params.scope || 'PIMS offline_access',
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
@@ -219,6 +214,9 @@ export class AuthService extends BaseService {
       code_verifier: params.codeVerifier
     });
 
+    console.log("-------Code ", params.code);
+    console.log("-------Code Verifier ", params.codeVerifier);
+
     const response = await fetch(`${this.config.baseUrl}/${orgName}/identity_/connect/token`, {
       method: 'POST',
       headers: {
@@ -234,7 +232,11 @@ export class AuthService extends BaseService {
     }
 
     const token = await response.json() as AuthToken;
-    this.updateToken(token.access_token, 'oauth', token.expires_in);
+    console.log("-------Token ", token);
+    this.updateToken(token.access_token, 'oauth', token.expires_in, token.refresh_token);
+
+    // const refreshToken = await this.refreshAccessToken(token.refresh_token, params.clientId);
+    // console.log("-------Refresh Token in getAccess", refreshToken);
     return token;
   }
 

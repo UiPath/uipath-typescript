@@ -1,11 +1,8 @@
 import { ExecutionContext } from '../context/executionContext';
 import { isBrowser } from '../../utils/platform';
-
-export interface TokenInfo {
-  token: string;
-  type: 'secret' | 'oauth'; //remove this
-  expiresAt?: Date;
-}
+import { AuthToken, TokenInfo } from './auth.types';
+import { hasOAuthConfig } from '../config/sdkConfig';
+import { Config } from '../config/config';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -25,7 +22,8 @@ export class TokenManager {
    * @param isOAuth Whether this is an OAuth-based authentication
    */
   constructor(
-    private executionContext: ExecutionContext, 
+    private executionContext: ExecutionContext,
+    private config: Config,
     clientId: string,
     private isOAuth: boolean = false
   ) {
@@ -212,5 +210,55 @@ export class TokenManager {
     this.executionContext.setHeaders({
       'Authorization': `Bearer ${tokenInfo.token}`
     });
+  }
+
+  /**
+   * Refreshes the access token using the stored refresh token.
+   * This method only works for OAuth flow.
+   * @returns A promise that resolves to the new AuthToken
+   * @throws Error if not in OAuth flow, refresh token is missing, or the request fails
+   */
+  public async refreshAccessToken(): Promise<AuthToken> {
+    // Check if we're in OAuth flow
+    if (!hasOAuthConfig(this.config)) {
+      throw new Error('refreshAccessToken is only available in OAuth flow');
+    }
+
+    // Get current token info from token manager
+    const tokenInfo = this.getTokenInfo();
+    if (!tokenInfo?.refreshToken) {
+      throw new Error('No refresh token available. User may need to re-authenticate.');
+    }
+
+    const orgName = this.config.orgName;
+    
+    const body = new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: this.config.clientId,
+      refresh_token: tokenInfo.refreshToken
+    });
+
+    const response = await fetch(`${this.config.baseUrl}/${orgName}/identity_/connect/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      console.error("Token refresh error:", errorData);
+      throw new Error(`Failed to refresh access token: ${JSON.stringify(errorData)}`);
+    }
+
+    const token = await response.json() as AuthToken;
+    this.setToken({
+      token: token.access_token,
+      type: 'oauth',
+      expiresAt: new Date(Date.now() + token.expires_in * 1000),
+      refreshToken: token.refresh_token
+    });
+    return token;
   }
 }
