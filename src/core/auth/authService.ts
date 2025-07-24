@@ -214,9 +214,6 @@ export class AuthService extends BaseService {
       code_verifier: params.codeVerifier
     });
 
-    console.log("-------Code ", params.code);
-    console.log("-------Code Verifier ", params.codeVerifier);
-
     const response = await fetch(`${this.config.baseUrl}/${orgName}/identity_/connect/token`, {
       method: 'POST',
       headers: {
@@ -232,11 +229,8 @@ export class AuthService extends BaseService {
     }
 
     const token = await response.json() as AuthToken;
-    console.log("-------Token ", token);
     this.updateToken(token.access_token, 'oauth', token.expires_in, token.refresh_token);
 
-    // const refreshToken = await this.refreshAccessToken(token.refresh_token, params.clientId);
-    // console.log("-------Refresh Token in getAccess", refreshToken);
     return token;
   }
 
