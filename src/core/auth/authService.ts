@@ -22,16 +22,17 @@ export class AuthService extends BaseService {
     // Determine if this is OAuth-based authentication
     const isOAuth = hasOAuthConfig(config);
     
-    // Create TokenManager with client ID from config or a default identifier
-    const clientId = isOAuth ? config.clientId : 
-                     hasSecretConfig(config) ? `secret-${config.orgName}-${config.tenantName}` : 
-                     `unknown-${Date.now()}`;
-                     
-    try {
-      this.tokenManager = new TokenManager(executionContext, clientId, isOAuth);
-    } catch (error) {
-      throw new Error(`Failed to create TokenManager: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Determine client ID based on authentication type
+    let clientId: string;
+    if (isOAuth) {
+      clientId = config.clientId;
+    } else if (hasSecretConfig(config)) {
+      clientId = `secret-${config.orgName}-${config.tenantName}`;
+    } else {
+      clientId = `unknown-${Date.now()}`;
     }
+                     
+    this.tokenManager = new TokenManager(executionContext, clientId, isOAuth);
   }
 
   /**
@@ -87,7 +88,7 @@ export class AuthService extends BaseService {
   /**
    * Authenticate using API secret
    */
-  public async authenticateWithSecret(secret: string): Promise<boolean> {
+  public authenticateWithSecret(secret: string): boolean {
     try {
       this.updateToken(secret, 'secret');
       return true;

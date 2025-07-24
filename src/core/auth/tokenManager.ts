@@ -31,6 +31,20 @@ export class TokenManager {
   ) {
     this.clientId = clientId;
   }
+
+  /**
+   * Checks if a token is expired
+   * @param tokenInfo The token info to check
+   * @returns true if the token is expired, false otherwise
+   */
+  public static isTokenExpired(tokenInfo?: TokenInfo): boolean {
+    // If no token info or no expiration date, token is not expired
+    if (!tokenInfo?.expiresAt) {
+      return false;
+    }
+    
+    return new Date() >= tokenInfo.expiresAt;
+  }
   
   /**
    * Gets the storage key for this TokenManager instance
@@ -63,7 +77,7 @@ export class TokenManager {
       }
       
       // Check if token is expired
-      if (tokenInfo.expiresAt && new Date() >= tokenInfo.expiresAt) {
+      if (TokenManager.isTokenExpired(tokenInfo)) {
         // Token expired, clear it
         sessionStorage.removeItem(this.storageKey);
         return false;
@@ -161,7 +175,7 @@ export class TokenManager {
       return false;
     }
 
-    if (this.currentToken.expiresAt && new Date() > this.currentToken.expiresAt) {
+    if (TokenManager.isTokenExpired(this.currentToken)) {
       return false;
     }
 

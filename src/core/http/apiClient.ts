@@ -1,7 +1,7 @@
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/executionContext';
 import { RequestSpec } from '../../models/common/requestSpec';
-import { TokenInfo } from '../auth/tokenManager';
+import { TokenInfo, TokenManager } from '../auth/tokenManager';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -43,7 +43,7 @@ export class ApiClient {
 
     if (tokenInfo?.token) {
       // Check token expiration
-      if (tokenInfo.expiresAt && new Date() > tokenInfo.expiresAt) {
+      if (TokenManager.isTokenExpired(tokenInfo)) {
         throw new Error('Authentication token has expired. Please re-initialize the SDK.');
       }
       token = tokenInfo.token;
