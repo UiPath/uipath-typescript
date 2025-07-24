@@ -3,8 +3,7 @@ import { Config } from '../config/config';
 import { ExecutionContext } from '../context/executionContext';
 import { TokenManager, TokenInfo } from './tokenManager';
 import { hasOAuthConfig, hasSecretConfig } from '../config/sdkConfig';
-
-const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+import { isBrowser } from '../../utils/platform';
 
 export interface AuthToken {
   access_token: string;
@@ -19,30 +18,58 @@ export class AuthService extends BaseService {
 
   constructor(config: Config, executionContext: ExecutionContext) {
     super(config, executionContext);
-    this.tokenManager = new TokenManager(executionContext);
+    const isOAuth = hasOAuthConfig(config);
+    const clientId = this._determineClientId(config, isOAuth);
+    this.tokenManager = new TokenManager(executionContext, clientId, isOAuth);
+  }
+
+  /**
+   * Determines the client ID based on the authentication type and configuration
+   * @param config The SDK configuration
+   * @param isOAuth Whether this is an OAuth-based authentication
+   * @returns A unique client ID string
+   * @private
+   */
+  private _determineClientId(config: Config, isOAuth: boolean): string {
+    if (isOAuth) {
+      return config.clientId as string;
+    } 
+    if (hasSecretConfig(config)) {
+      return `secret-${config.orgName}-${config.tenantName}`;
+    }
+    return `unknown-${Date.now()}`;
   }
 
   /**
    * Authenticates the user based on the provided SDK configuration.
-   * This method handles both secret-based and OAuth 2.0 authentication flows.
+   * This method handles OAuth 2.0 authentication flow only.
+   * For secret-based authentication, see authenticateWithSecret().
    * @param config The SDK configuration object.
    * @returns A promise that resolves to true if authentication is successful, otherwise false.
    * In an OAuth flow, this method will trigger a page redirect and the promise will not resolve.
    */
   public async authenticate(config: Config): Promise<boolean> {
-    if (hasSecretConfig(config)) {
-      this.updateToken(config.secret, 'secret');
+    // Try to load token from storage first (only works for OAuth tokens)
+    const loadedFromStorage = this.tokenManager.loadFromStorage();
+    
+    // If we have a valid token from storage, return true
+    if (loadedFromStorage && this.tokenManager.hasValidToken()) {
       return true;
     }
-
+    
+    // If we don't have a valid token from storage, authenticate with OAuth
     if (hasOAuthConfig(config)) {
-      return this._handleOAuthFlow(config);
+      return await this._authenticateWithOAuth(config.clientId, config.redirectUri);
     }
 
     return false;
   }
+  
 
-  private async _handleOAuthFlow(config: { clientId: string; redirectUri: string }): Promise<boolean> {
+  /**
+   * Authenticate using OAuth flow
+   */
+  private async _authenticateWithOAuth(clientId: string, redirectUri: string): Promise<boolean> {
     if (!isBrowser) {
       throw new Error('OAuth flow is only supported in browser environments');
     }
@@ -53,53 +80,27 @@ export class AuthService extends BaseService {
     if (!code) {
       // No authorization code present, so we need to initiate the flow.
       // This will redirect the user.
-      await this._initiateOAuthFlow(config);
+      await this._initiateOAuthFlow(clientId, redirectUri);
       // This line is not expected to be reached.
       return false;
     } else {
       // Authorization code is present, so we can exchange it for a token.
-      await this._handleOAuthCallback(code, config);
+      await this._handleOAuthCallback(code, clientId, redirectUri);
       return this.hasValidToken();
     }
   }
 
-  private async _initiateOAuthFlow(config: { clientId: string; redirectUri: string }): Promise<void> {
-    const { clientId, redirectUri } = config;
-
-    const codeVerifier = this.generateCodeVerifier();
-    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
-
-    sessionStorage.setItem('uipath_sdk_code_verifier', codeVerifier);
-
-    const authUrl = this.getAuthorizationUrl({
-      clientId,
-      redirectUri,
-      codeChallenge
-    });
-    
-    window.location.href = authUrl;
-  }
-
-  private async _handleOAuthCallback(code: string, config: { clientId: string; redirectUri: string }): Promise<void> {
-    const { clientId, redirectUri } = config;
-
-    const codeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
-    if (!codeVerifier) {
-      throw new Error('Code verifier not found in session storage. Authentication may have been interrupted.');
+  /**
+   * Authenticate using API secret
+   */
+  public authenticateWithSecret(secret: string): boolean {
+    try {
+      this.updateToken(secret, 'secret');
+      return true;
+    } catch (error) {
+      console.error('Failed to authenticate with secret', error);
+      return false;
     }
-    sessionStorage.removeItem('uipath_sdk_code_verifier');
-
-    await this.getAccessToken({
-      clientId,
-      redirectUri,
-      code,
-      codeVerifier
-    });
-
-    const url = new URL(window.location.href);
-    url.searchParams.delete('code');
-    url.searchParams.delete('state');
-    window.history.replaceState({}, '', url.toString());
   }
 
   /**
@@ -118,25 +119,20 @@ export class AuthService extends BaseService {
   }
 
   /**
-   * Gets the current access token
-   * @returns The current access token or undefined if not set
+   * Checks if the current token is valid
    */
-  getToken(): string | undefined {
-    return this.tokenManager.getToken();
-  }
-
-  /**
-   * Gets detailed information about the current token
-   */
-  getTokenInfo(): TokenInfo | undefined {
-    return this.tokenManager.getTokenInfo();
-  }
-
-  /**
-   * Checks if we have a valid token
-   */
-  hasValidToken(): boolean {
+  public hasValidToken(): boolean {
     return this.tokenManager.hasValidToken();
+  }
+
+  /**
+   * Get the current token
+   */
+  public getToken(): string | undefined {
+    if (!this.tokenManager.hasValidToken()) {
+      return undefined;
+    }
+    return this.tokenManager.getToken();
   }
 
   /**
@@ -207,7 +203,7 @@ export class AuthService extends BaseService {
   /**
    * Exchanges the authorization code for an access token and automatically updates the current token
    */
-  async getAccessToken(params: {
+  private async _getAccessToken(params: {
     clientId: string;
     redirectUri: string;
     code: string;
@@ -251,5 +247,40 @@ export class AuthService extends BaseService {
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=/g, '');
+  }
+
+  private async _initiateOAuthFlow(clientId: string, redirectUri: string): Promise<void> {
+    const codeVerifier = this.generateCodeVerifier();
+    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+
+    sessionStorage.setItem('uipath_sdk_code_verifier', codeVerifier);
+
+    const authUrl = this.getAuthorizationUrl({
+      clientId,
+      redirectUri,
+      codeChallenge
+    });
+    
+    window.location.href = authUrl;
+  }
+
+  private async _handleOAuthCallback(code: string, clientId: string, redirectUri: string): Promise<void> {
+    const codeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    if (!codeVerifier) {
+      throw new Error('Code verifier not found in session storage. Authentication may have been interrupted.');
+    }
+    sessionStorage.removeItem('uipath_sdk_code_verifier');
+
+    await this._getAccessToken({
+      clientId,
+      redirectUri,
+      code,
+      codeVerifier
+    });
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('code');
+    url.searchParams.delete('state');
+    window.history.replaceState({}, '', url.toString());
   }
 } 
