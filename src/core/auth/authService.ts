@@ -17,6 +17,13 @@ export class AuthService extends BaseService {
   }
 
   /**
+   * Get the token manager instance
+   */
+  public getTokenManager(): TokenManager {
+    return this.tokenManager;
+  }
+
+  /**
    * Authenticates the user based on the provided SDK configuration.
    * This method handles OAuth 2.0 authentication flow only.
    * For secret-based authentication, see authenticateWithSecret().
