@@ -10,27 +10,10 @@ export class AuthService extends BaseService {
   private tokenManager: TokenManager;
 
   constructor(config: Config, executionContext: ExecutionContext) {
-    super(config, executionContext);
     const isOAuth = hasOAuthConfig(config);
-    const clientId = this._determineClientId(config, isOAuth);
-    this.tokenManager = new TokenManager(executionContext, config, clientId, isOAuth);
-  }
-
-  /**
-   * Determines the client ID based on the authentication type and configuration
-   * @param config The SDK configuration
-   * @param isOAuth Whether this is an OAuth-based authentication
-   * @returns A unique client ID string
-   * @private
-   */
-  private _determineClientId(config: Config, isOAuth: boolean): string {
-    if (isOAuth) {
-      return config.clientId as string;
-    } 
-    if (hasSecretConfig(config)) {
-      return `secret-${config.orgName}-${config.tenantName}`;
-    }
-    return `unknown-${Date.now()}`;
+    const tokenManager = new TokenManager(executionContext, config, isOAuth);
+    super(config, executionContext, tokenManager);
+    this.tokenManager = tokenManager;
   }
 
   /**
@@ -88,7 +71,7 @@ export class AuthService extends BaseService {
    */
   public authenticateWithSecret(secret: string): boolean {
     try {
-      this.updateToken(secret, 'secret');
+      this.updateToken({ token: secret, type: 'secret' });
       return true;
     } catch (error) {
       console.error('Failed to authenticate with secret', error);
@@ -98,18 +81,9 @@ export class AuthService extends BaseService {
 
   /**
    * Updates the access token used for API requests
-   * @param token The new access token
-   * @param type The type of token (secret or oauth)
-   * @param expiresIn Optional expiration time in seconds
-   * @param refreshToken Optional refresh token for OAuth flow
+   * @param tokenInfo The token information containing the access token, type, expiration, and refresh token
    */
-  updateToken(token: string, type: 'secret' | 'oauth', expiresIn?: number, refreshToken?: string): void {
-    const tokenInfo: TokenInfo = {
-      token,
-      type,
-      expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : undefined,
-      refreshToken
-    };
+  updateToken(tokenInfo: TokenInfo): void {
     this.tokenManager.setToken(tokenInfo);
   }
 
@@ -229,7 +203,12 @@ export class AuthService extends BaseService {
     }
 
     const token = await response.json() as AuthToken;
-    this.updateToken(token.access_token, 'oauth', token.expires_in, token.refresh_token);
+    this.updateToken({
+      token: token.access_token,
+      type: 'oauth',
+      expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : undefined,
+      refreshToken: token.refresh_token
+    });
 
     return token;
   }

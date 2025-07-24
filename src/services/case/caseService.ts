@@ -5,6 +5,7 @@ import { EntityService } from '../dataFabric/entity';
 import { CaseDefinition, CaseDefinitionData, StateDefinitionData, CountableResult } from '../../models/case/caseDefinition';
 import { FilterOperator, LogicalOperator } from '../../models/dataFabric/entity';
 import { createTransform } from '../../utils/transform';
+import { TokenManager } from '../../core/auth/tokenManager';
 
 /**
  * Creates a countable result from an array
@@ -121,9 +122,9 @@ class CaseDefinitionHandler implements CaseDefinition {
 export class CaseService extends BaseService {
   private readonly entityService: EntityService;
 
-  constructor(config: Config, executionContext: ExecutionContext) {
-    super(config, executionContext);
-    this.entityService = new EntityService(config, executionContext);
+  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
+    super(config, executionContext, tokenManager);
+    this.entityService = new EntityService(config, executionContext, tokenManager);
   }
 
   /**

@@ -14,11 +14,16 @@ export class ApiClient {
   private readonly clientConfig: ApiClientConfig;
   private defaultHeaders: Record<string, string> = {};
   private tokenManager: TokenManager;
-  constructor(config: Config, executionContext: ExecutionContext, clientConfig: ApiClientConfig = {}) {
+  constructor(
+    config: Config, 
+    executionContext: ExecutionContext, 
+    tokenManager: TokenManager,
+    clientConfig: ApiClientConfig = {}
+  ) {
     this.config = config;
     this.executionContext = executionContext;
     this.clientConfig = clientConfig;
-    this.tokenManager = new TokenManager(executionContext, config, config.clientId!, true);
+    this.tokenManager = tokenManager;
   }
 
   public setDefaultHeaders(headers: Record<string, string>): void {
@@ -44,7 +49,7 @@ export class ApiClient {
     }
 
     // If token is not expired, return it
-    if (!TokenManager.isTokenExpired(tokenInfo)) {
+    if (!this.tokenManager.isTokenExpired(tokenInfo)) {
       return tokenInfo.token;
     }
 
