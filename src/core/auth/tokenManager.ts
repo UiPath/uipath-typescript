@@ -3,7 +3,7 @@ import { isBrowser } from '../../utils/platform';
 
 export interface TokenInfo {
   token: string;
-  type: 'secret' | 'oauth';
+  type: 'secret' | 'oauth'; //remove this
   expiresAt?: Date;
 }
 
@@ -49,7 +49,7 @@ export class TokenManager {
   /**
    * Gets the storage key for this TokenManager instance
    */
-  private get storageKey(): string {
+  private _getStorageKey(): string {
     return `${this.STORAGE_KEY_PREFIX}${this.clientId}`;
   }
   
@@ -64,7 +64,7 @@ export class TokenManager {
     }
     
     try {
-      const storedToken = sessionStorage.getItem(this.storageKey);
+      const storedToken = sessionStorage.getItem(this._getStorageKey());
       if (!storedToken) {
         return false;
       }
@@ -72,14 +72,14 @@ export class TokenManager {
       const tokenInfo = this._parseTokenInfo(storedToken);
       if (!tokenInfo) {
         // Invalid token format, clear it
-        sessionStorage.removeItem(this.storageKey);
+        sessionStorage.removeItem(this._getStorageKey());
         return false;
       }
       
       // Check if token is expired
       if (TokenManager.isTokenExpired(tokenInfo)) {
         // Token expired, clear it
-        sessionStorage.removeItem(this.storageKey);
+        sessionStorage.removeItem(this._getStorageKey());
         return false;
       }
       
@@ -146,7 +146,7 @@ export class TokenManager {
     // Store in session storage if in browser and this is an OAuth token
     if (isBrowser && this.isOAuth) {
       try {
-        sessionStorage.setItem(this.storageKey, JSON.stringify(tokenInfo));
+        sessionStorage.setItem(this._getStorageKey(), JSON.stringify(tokenInfo));
       } catch (error) {
         console.warn('Failed to store token in session storage', error);
       }
@@ -195,7 +195,7 @@ export class TokenManager {
     // Remove from session storage if this is an OAuth token
     if (isBrowser && this.isOAuth) {
       try {
-        sessionStorage.removeItem(this.storageKey);
+        sessionStorage.removeItem(this._getStorageKey());
       } catch (error) {
         console.warn('Failed to remove token from session storage', error);
       }

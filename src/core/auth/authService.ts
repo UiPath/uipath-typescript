@@ -18,21 +18,26 @@ export class AuthService extends BaseService {
 
   constructor(config: Config, executionContext: ExecutionContext) {
     super(config, executionContext);
-    
-    // Determine if this is OAuth-based authentication
     const isOAuth = hasOAuthConfig(config);
-    
-    // Determine client ID based on authentication type
-    let clientId: string;
-    if (isOAuth) {
-      clientId = config.clientId;
-    } else if (hasSecretConfig(config)) {
-      clientId = `secret-${config.orgName}-${config.tenantName}`;
-    } else {
-      clientId = `unknown-${Date.now()}`;
-    }
-                     
+    const clientId = this._determineClientId(config, isOAuth);
     this.tokenManager = new TokenManager(executionContext, clientId, isOAuth);
+  }
+
+  /**
+   * Determines the client ID based on the authentication type and configuration
+   * @param config The SDK configuration
+   * @param isOAuth Whether this is an OAuth-based authentication
+   * @returns A unique client ID string
+   * @private
+   */
+  private _determineClientId(config: Config, isOAuth: boolean): string {
+    if (isOAuth) {
+      return config.clientId as string;
+    } 
+    if (hasSecretConfig(config)) {
+      return `secret-${config.orgName}-${config.tenantName}`;
+    }
+    return `unknown-${Date.now()}`;
   }
 
   /**
@@ -54,7 +59,7 @@ export class AuthService extends BaseService {
     
     // If we don't have a valid token from storage, authenticate with OAuth
     if (hasOAuthConfig(config)) {
-      return await this.authenticateWithOAuth(config.clientId, config.redirectUri);
+      return await this._authenticateWithOAuth(config.clientId, config.redirectUri);
     }
 
     return false;
@@ -64,7 +69,7 @@ export class AuthService extends BaseService {
   /**
    * Authenticate using OAuth flow
    */
-  private async authenticateWithOAuth(clientId: string, redirectUri: string): Promise<boolean> {
+  private async _authenticateWithOAuth(clientId: string, redirectUri: string): Promise<boolean> {
     if (!isBrowser) {
       throw new Error('OAuth flow is only supported in browser environments');
     }
@@ -198,7 +203,7 @@ export class AuthService extends BaseService {
   /**
    * Exchanges the authorization code for an access token and automatically updates the current token
    */
-  private async getAccessToken(params: {
+  private async _getAccessToken(params: {
     clientId: string;
     redirectUri: string;
     code: string;
@@ -266,7 +271,7 @@ export class AuthService extends BaseService {
     }
     sessionStorage.removeItem('uipath_sdk_code_verifier');
 
-    await this.getAccessToken({
+    await this._getAccessToken({
       clientId,
       redirectUri,
       code,
