@@ -1,6 +1,7 @@
 import { BaseService } from '../../services/baseService';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/executionContext';
+import { TokenManager } from '../../core/auth/tokenManager';
 import { 
   GetAllInstancesResponse, 
   GetInstanceResponse, 
@@ -22,8 +23,8 @@ interface CommentRequest {
 }
 
 export class ProcessInstancesService extends BaseService {
-  constructor(config: Config, executionContext: ExecutionContext) {
-    super(config, executionContext);
+  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
+    super(config, executionContext, tokenManager);
   }
 
   private getFolderKeyHeader(folderKey: string) {

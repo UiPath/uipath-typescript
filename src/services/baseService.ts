@@ -2,6 +2,7 @@ import { ApiClient } from '../core/http/apiClient';
 import { Config } from '../core/config/config';
 import { ExecutionContext } from '../core/context/executionContext';
 import { RequestSpec } from '../models/common/requestSpec';
+import { TokenManager } from '../core/auth/tokenManager';
 
 export interface ApiResponse<T> {
   data: T;
@@ -12,10 +13,10 @@ export class BaseService {
   protected readonly executionContext: ExecutionContext;
   protected readonly apiClient: ApiClient;
 
-  constructor(config: Config, executionContext: ExecutionContext) {
+  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     this.config = config;
     this.executionContext = executionContext;
-    this.apiClient = new ApiClient(config, executionContext);
+    this.apiClient = new ApiClient(config, executionContext, tokenManager);
   }
 
   protected async request<T>(method: string, path: string, options: RequestSpec = {}): Promise<ApiResponse<T>> {

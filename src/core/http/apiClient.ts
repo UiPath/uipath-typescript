@@ -1,7 +1,8 @@
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/executionContext';
 import { RequestSpec } from '../../models/common/requestSpec';
-import { TokenInfo, TokenManager } from '../auth/tokenManager';
+import { TokenManager } from '../auth/tokenManager';
+import { TokenInfo } from '../auth/auth.types';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -12,18 +13,55 @@ export class ApiClient {
   private readonly executionContext: ExecutionContext;
   private readonly clientConfig: ApiClientConfig;
   private defaultHeaders: Record<string, string> = {};
-
-  constructor(config: Config, executionContext: ExecutionContext, clientConfig: ApiClientConfig = {}) {
+  private tokenManager: TokenManager;
+  constructor(
+    config: Config, 
+    executionContext: ExecutionContext, 
+    tokenManager: TokenManager,
+    clientConfig: ApiClientConfig = {}
+  ) {
     this.config = config;
     this.executionContext = executionContext;
     this.clientConfig = clientConfig;
+    this.tokenManager = tokenManager;
   }
 
   public setDefaultHeaders(headers: Record<string, string>): void {
     this.defaultHeaders = { ...this.defaultHeaders, ...headers };
   }
 
-  private getDefaultHeaders(): Record<string, string> {
+  /**
+   * Checks if the current token needs refresh and refreshes it if necessary
+   * @returns The valid token
+   * @throws Error if token refresh fails
+   */
+  private async ensureValidToken(): Promise<string> {
+    // Try to get token info from context
+    const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
+    
+    if (!tokenInfo) {
+      throw new Error('No authentication token available. Make sure to initialize the SDK first.');
+    }
+
+    // For secret-based tokens, they never expire
+    if (tokenInfo.type === 'secret') {
+      return tokenInfo.token;
+    }
+
+    // If token is not expired, return it
+    if (!this.tokenManager.isTokenExpired(tokenInfo)) {
+      return tokenInfo.token;
+    }
+
+    try {
+      const newToken = await this.tokenManager.refreshAccessToken();
+      return newToken.access_token;
+    } catch (error: any) {
+      throw new Error(`Token refresh failed: ${error.message}. Please re-authenticate.`);
+    }
+  }
+
+  private async getDefaultHeaders(): Promise<Record<string, string>> {
     // Get headers from execution context first
     const contextHeaders = this.executionContext.getHeaders();
     
@@ -37,24 +75,7 @@ export class ApiClient {
       };
     }
 
-    // Try to get token info from context
-    const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
-    let token: string | undefined;
-
-    if (tokenInfo?.token) {
-      // Check token expiration
-      if (TokenManager.isTokenExpired(tokenInfo)) {
-        throw new Error('Authentication token has expired. Please re-initialize the SDK.');
-      }
-      token = tokenInfo.token;
-    } else if (this.config.secret) {
-      // Fallback to secret if no token info
-      token = this.config.secret;
-    }
-
-    if (!token) {
-      throw new Error('No authentication token available. Make sure to initialize the SDK first.');
-    }
+    const token = await this.ensureValidToken();
 
     return {
       ...contextHeaders,
@@ -76,7 +97,7 @@ export class ApiClient {
     ).toString();
 
     const headers = {
-      ...this.getDefaultHeaders(),
+      ...await this.getDefaultHeaders(),
       ...options.headers
     };
 

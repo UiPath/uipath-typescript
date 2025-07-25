@@ -10,8 +10,9 @@ import {
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdkConfig';
 import { validateConfig, normalizeBaseUrl } from './core/config/configUtils';
+import { TokenManager } from './core/auth/tokenManager';
 
-type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext) => T;
+type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
 export class UiPath {
   private config: UiPathConfig;
@@ -91,7 +92,7 @@ export class UiPath {
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
     const serviceName = serviceConstructor.name;
     if (!this._services.has(serviceName)) {
-      const serviceInstance = new serviceConstructor(this.config, this.executionContext);
+      const serviceInstance = new serviceConstructor(this.config, this.executionContext, this.authService.getTokenManager());
       this._services.set(serviceName, serviceInstance);
     }
 

@@ -1,6 +1,7 @@
 import { BaseService } from '../baseService';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/executionContext';
+import { TokenManager } from '../../core/auth/tokenManager';
 import { 
   TaskCreateRequest, 
   TaskCreateResponse, 
@@ -32,8 +33,8 @@ import { createHeaders } from '../../utils/http/headers';
  * Service for interacting with UiPath Tasks API
  */
 export class TaskService extends BaseService implements TaskServiceModel {
-  constructor(config: Config, executionContext: ExecutionContext) {
-    super(config, executionContext);
+  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
+    super(config, executionContext, tokenManager);
   }
 
   /**

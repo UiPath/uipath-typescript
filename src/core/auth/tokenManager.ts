@@ -1,11 +1,8 @@
 import { ExecutionContext } from '../context/executionContext';
 import { isBrowser } from '../../utils/platform';
-
-export interface TokenInfo {
-  token: string;
-  type: 'secret' | 'oauth'; //remove this
-  expiresAt?: Date;
-}
+import { AuthToken, TokenInfo } from './auth.types';
+import { hasOAuthConfig } from '../config/sdkConfig';
+import { Config } from '../config/config';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -15,29 +12,27 @@ export interface TokenInfo {
  */
 export class TokenManager {
   private currentToken?: TokenInfo;
-  private readonly clientId: string;
   private readonly STORAGE_KEY_PREFIX = 'uipath_sdk_user_token-';
+  private refreshPromise: Promise<AuthToken> | null = null;
   
   /**
-   * Creates a new TokenManager instance for a specific client ID
+   * Creates a new TokenManager instance
    * @param executionContext The execution context
-   * @param clientId The client ID to use for token storage
+   * @param config The SDK configuration
    * @param isOAuth Whether this is an OAuth-based authentication
    */
   constructor(
-    private executionContext: ExecutionContext, 
-    clientId: string,
+    private executionContext: ExecutionContext,
+    private config: Config,
     private isOAuth: boolean = false
-  ) {
-    this.clientId = clientId;
-  }
+  ) {}
 
   /**
    * Checks if a token is expired
    * @param tokenInfo The token info to check
    * @returns true if the token is expired, false otherwise
    */
-  public static isTokenExpired(tokenInfo?: TokenInfo): boolean {
+  public isTokenExpired(tokenInfo?: TokenInfo): boolean {
     // If no token info or no expiration date, token is not expired
     if (!tokenInfo?.expiresAt) {
       return false;
@@ -50,7 +45,7 @@ export class TokenManager {
    * Gets the storage key for this TokenManager instance
    */
   private _getStorageKey(): string {
-    return `${this.STORAGE_KEY_PREFIX}${this.clientId}`;
+    return `${this.STORAGE_KEY_PREFIX}${this.config.clientId}`;
   }
   
   /**
@@ -77,7 +72,7 @@ export class TokenManager {
       }
       
       // Check if token is expired
-      if (TokenManager.isTokenExpired(tokenInfo)) {
+      if (this.isTokenExpired(tokenInfo)) {
         // Token expired, clear it
         sessionStorage.removeItem(this._getStorageKey());
         return false;
@@ -175,7 +170,7 @@ export class TokenManager {
       return false;
     }
 
-    if (TokenManager.isTokenExpired(this.currentToken)) {
+    if (this.isTokenExpired(this.currentToken)) {
       return false;
     }
 
@@ -212,5 +207,79 @@ export class TokenManager {
     this.executionContext.setHeaders({
       'Authorization': `Bearer ${tokenInfo.token}`
     });
+  }
+
+  /**
+   * Refreshes the access token using the stored refresh token.
+   * This method only works for OAuth flow.
+   * Uses a lock mechanism to prevent multiple simultaneous refreshes.
+   * @returns A promise that resolves to the new AuthToken
+   * @throws Error if not in OAuth flow, refresh token is missing, or the request fails
+   */
+  public async refreshAccessToken(): Promise<AuthToken> {
+    // If there's already a refresh in progress, return that promise
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    try {
+      // Create new refresh promise
+      this.refreshPromise = this._doRefreshToken();
+      // Wait for refresh to complete
+      const result = await this.refreshPromise;
+      return result;
+    } finally {
+      // Clear the refresh promise when done (success or failure)
+      this.refreshPromise = null;
+    }
+  }
+
+  /**
+   * Internal method to perform the actual token refresh
+   */
+  private async _doRefreshToken(): Promise<AuthToken> {
+    // Check if we're in OAuth flow
+    if (!hasOAuthConfig(this.config)) {
+      throw new Error('refreshAccessToken is only available in OAuth flow');
+    }
+
+    // Get current token info from token manager
+    const tokenInfo = this.getTokenInfo();
+    if (!tokenInfo?.refreshToken) {
+      throw new Error('No refresh token available. User may need to re-authenticate.');
+    }
+
+    const orgName = this.config.orgName;
+    
+    const body = new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: this.config.clientId,
+      refresh_token: tokenInfo.refreshToken
+    });
+
+    const response = await fetch(`${this.config.baseUrl}/${orgName}/identity_/connect/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      console.error("Token refresh error:", errorData);
+      // Clear the invalid token to prevent further failed requests
+      this.clearToken();
+      throw new Error(`Failed to refresh access token: ${JSON.stringify(errorData)}`);
+    }
+
+    const token = await response.json() as AuthToken;
+    this.setToken({
+      token: token.access_token,
+      type: 'oauth',
+      expiresAt: new Date(Date.now() + token.expires_in * 1000),
+      refreshToken: token.refresh_token
+    });
+    return token;
   }
 }

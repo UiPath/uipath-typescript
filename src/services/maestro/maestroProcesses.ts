@@ -3,13 +3,14 @@ import { BaseService } from '../baseService';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/executionContext';
 import { unwrapAndMapResponse } from '../../utils/apiTransform';
+import { TokenManager } from '../../core/auth/tokenManager';
 
 /**
  * Service for interacting with Maestro Processes
  */
 export class MaestroProcessesService extends BaseService {
-  constructor(config: Config, executionContext: ExecutionContext) {
-    super(config, executionContext);
+  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
+    super(config, executionContext, tokenManager);
   }
 
   /**

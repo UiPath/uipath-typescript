@@ -18,6 +18,7 @@ import {
 } from '../../models/dataFabric/entity';
 import { QueryBuilder } from '../../utils/builders/queryBuilder';
 import { QueryParams } from '../../models/common/requestSpec';
+import { TokenManager } from '../../core/auth/tokenManager';
 
 /**
  * Service for interacting with the Data Fabric Entity API.
@@ -26,8 +27,8 @@ import { QueryParams } from '../../models/common/requestSpec';
 export class EntityService extends BaseService {
   private static readonly BASE_PATH = '/datafabric_/api/EntityService';
 
-  constructor(config: Config, executionContext: ExecutionContext) {
-    super(config, executionContext);
+  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
+    super(config, executionContext, tokenManager);
   }
 
   /**
