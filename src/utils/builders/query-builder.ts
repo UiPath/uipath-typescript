@@ -1,12 +1,4 @@
-import { PaginationState } from '../../models/common/pagination';
-
-/**
- * Base pagination parameters
- */
-export interface PaginationOptions {
-  start?: number;
-  limit?: number;
-}
+import { PaginationState, PaginationOptions } from '../../models/common/pagination';
 
 /**
  * Base response structure for paginated queries

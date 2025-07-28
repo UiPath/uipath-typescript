@@ -1,12 +1,5 @@
 import { PaginatedResponse } from '../../utils/builders/query-builder';
-
-/**
- * Base pagination options
- */
-export interface PaginationOptions {
-  start?: number;
-  limit?: number;
-}
+import { PaginationOptions } from '../common';
 
 /**
  * Base options for entity queries
