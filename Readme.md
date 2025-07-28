@@ -5,15 +5,15 @@ A comprehensive TypeScript SDK for interacting with the UiPath Platform services
 ## Installation
 
 ```bash
-npm install @uipath/sdk
+npm install @uipath/uipath-typescript
 # or
-yarn add @uipath/sdk
+yarn add @uipath/uipath-typescript
 ```
 
 ## Quick Start
 
 ```typescript
-import { UiPath } from '@uipath/sdk';
+import { UiPath } from '@uipath/uipath-typescript';
 
 // Initialize the SDK
 const sdk = new UiPath({
@@ -61,7 +61,6 @@ The SDK provides access to the following services through a consistent API:
 - `sdk.processInstance` - Manage process executions
 - `sdk.task` - Create and manage tasks
 - `sdk.entity` - Data Fabric entity operations
-- `sdk.case` - Business case management
 
 ### Consistent Method Naming
 
@@ -101,8 +100,7 @@ import {
   ProcessResponse,
   EntityResponse,
   ProcessInstanceResponse,
-  CaseResponse
-} from '@uipath/sdk';
+} from '@uipath/uipath-typescript';
 
 // TypeScript will provide full intellisense
 const createTaskRequest: CreateTaskRequest = {
