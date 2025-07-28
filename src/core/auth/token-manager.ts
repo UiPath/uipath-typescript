@@ -1,7 +1,7 @@
-import { ExecutionContext } from '../context/executionContext';
+import { ExecutionContext } from '../context/execution-context';
 import { isBrowser } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './auth.types';
-import { hasOAuthConfig } from '../config/sdkConfig';
+import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 
 /**

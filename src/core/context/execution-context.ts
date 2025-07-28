@@ -1,4 +1,4 @@
-import { RequestSpec } from '../../models/common/requestSpec';
+import { RequestSpec } from '../../models/common/request-spec';
 
 /**
  * ExecutionContext manages the state and context of API operations.

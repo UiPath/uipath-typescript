@@ -1,4 +1,4 @@
-import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './sdkConfig';
+import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './sdk-config';
 
 export function validateConfig(config: UiPathSDKConfig): void {
   if (!config.baseUrl || !config.orgName || !config.tenantName) {

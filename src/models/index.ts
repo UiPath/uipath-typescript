@@ -5,7 +5,7 @@ export * from './common';
 export * from './case';
 
 // DataFabric models
-export * from './dataFabric';
+export * from './data-fabric';
 
 // Maestro models
 export * from './maestro';

@@ -1,11 +1,11 @@
 import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/executionContext';
-import { BaseService } from '../baseService';
-import { EntityService } from '../dataFabric/entity';
-import { CaseDefinition, CaseDefinitionData, StateDefinitionData, CountableResult } from '../../models/case/caseDefinition';
-import { FilterOperator, LogicalOperator } from '../../models/dataFabric/entity';
+import { ExecutionContext } from '../../core/context/execution-context';
+import { BaseService } from '../base-service';
+import { EntityService } from '../data-fabric/entity';
+import { CaseDefinition, CaseDefinitionData, StateDefinitionData, CountableResult } from '../../models/case/case-definition';
+import { FilterOperator, LogicalOperator } from '../../models/data-fabric/entity';
 import { createTransform } from '../../utils/transform';
-import { TokenManager } from '../../core/auth/tokenManager';
+import { TokenManager } from '../../core/auth/token-manager';
 
 /**
  * Creates a countable result from an array
