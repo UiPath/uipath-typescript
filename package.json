@@ -1,5 +1,5 @@
 {
-    "name": "uipath-typescript",
+    "name": "@uipath/uipath-typescript",
     "version": "1.0.0",
     "description": "UiPath TypeScript SDK",
     "type": "module",
@@ -47,6 +47,10 @@
         "typescript": "^5.3.3"
     },
     "repository": {
-        "type": "git"
+        "type": "git",
+        "url": "git+https://github.com/UiPath/uipath-typescript.git"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
     }
 }

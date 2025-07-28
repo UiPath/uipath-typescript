@@ -44,7 +44,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * // With filtering
    * const instances = await sdk.processInstance.getAll({
    *   processKey: 'MyProcess',
-   *   pageSize: 50
+   *   limit: 50
    * });
    * ```
    */
