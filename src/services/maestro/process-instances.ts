@@ -3,48 +3,59 @@ import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { 
-  GetAllInstancesResponse, 
-  GetInstanceResponse, 
-  GetInstancesQueryParams, 
-  PaginationParams,
-  InstanceCancelRequest,
-  InstancePauseRequest,
-  InstanceResumeRequest,
-  InstancesStatusResponse,
-  Span,
+  ProcessInstanceGetAllResponse, 
+  ProcessInstanceGetResponse, 
+  ProcessInstanceGetAllOptions, 
+  ProcessInstanceOperationRequest,
+  ProcessInstanceExecutionHistoryResponse,
   ProcessInstance,
-  ProcessInstanceDto
-} from '../../models/maestro/process-instance';
-import { FOLDER_KEY } from '../../utils/constants/headers';
+  ProcessInstanceServiceModel
+} from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
+import { createHeaders } from '../../utils/http/headers';
+import { FOLDER_KEY } from '../../utils/constants/headers';
 
 
-interface CommentRequest {
-  comment: string | null;
-}
 
-export class ProcessInstancesService extends BaseService {
+export class ProcessInstancesService extends BaseService implements ProcessInstanceServiceModel {
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }
 
-  private getFolderKeyHeader(folderKey: string) {
-    return {
-      [FOLDER_KEY]: folderKey
-    };
-  }
 
   /**
    * Get all process instances with pagination support
    * Includes all folders in tenant user has Jobs.View permission for
    * @param params Query parameters for filtering instances and pagination
-   * @returns Promise<GetAllInstancesResponse>
+   * @returns Promise<ProcessInstance[]> Array of ProcessInstance objects with helper methods
+   * 
+   * @example
+   * ```typescript
+   * // Get all instances
+   * const instances = await sdk.processInstance.getAll();
+   * 
+   * // Each instance has methods available
+   * for (const instance of instances) {
+   *   if (instance.state === 'Faulted') {
+   *     await instance.cancel('Cancelling faulted instance');
+   *   }
+   * }
+   * 
+   * // With filtering
+   * const instances = await sdk.processInstance.getAll({
+   *   processKey: 'MyProcess',
+   *   pageSize: 50
+   * });
+   * ```
    */
-  async getAll(params?: GetInstancesQueryParams): Promise<GetAllInstancesResponse> {
-    const response = await this.get<GetAllInstancesResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_ALL, {
+  async getAll(params?: ProcessInstanceGetAllOptions): Promise<ProcessInstance[]> {
+    const response = await this.get<ProcessInstanceGetAllResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_ALL, {
       params: params as Record<string, string | number>
     });
-    return response.data;
+    
+    return response.data.instances.map(instanceData => 
+      ProcessInstance.fromResponse(instanceData, this)
+    );
   }
 
   /**
@@ -54,11 +65,9 @@ export class ProcessInstancesService extends BaseService {
    * @param folderKey The folder key for authorization
    * @returns Promise<GetInstanceResponse>
    */
-  private async getInstanceById(instanceId: string, folderKey: string): Promise<GetInstanceResponse> {
-    const response = await this.get<GetInstanceResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(instanceId), {
-      headers: {
-        [FOLDER_KEY]: folderKey
-      }
+  private async _getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse> {
+    const response = await this.get<ProcessInstanceGetResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(id), {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
     return response.data;
   }
@@ -69,19 +78,19 @@ export class ProcessInstancesService extends BaseService {
    * @param folderKey The folder key for authorization
    * @returns Promise<ProcessInstance>
    */
-  async getById(instanceId: string, folderKey: string): Promise<ProcessInstance> {
-    const response = await this.getInstanceById(instanceId, folderKey);
-    return ProcessInstance.fromResponse(response, this, folderKey);
+  async getById(id: string, folderKey: string): Promise<ProcessInstance> {
+    const response = await this._getById(id, folderKey);
+    return ProcessInstance.fromResponse(response, this);
   }
 
   /**
    * Get execution history (spans) for a process instance
    * Includes all folders in tenant user has Jobs.View permission for
    * @param instanceId The ID of the instance to get history for
-   * @returns Promise<Span[]>
+   * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
    */
-  async getExecutionHistory(instanceId: string): Promise<Span[]> {
-    const response = await this.get<Span[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
+  async getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+    const response = await this.get<ProcessInstanceExecutionHistoryResponse[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
     return response.data;
   }
 
@@ -95,7 +104,7 @@ export class ProcessInstancesService extends BaseService {
   async getBpmn(instanceId: string, folderKey: string): Promise<string> {
     const response = await this.get<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
       headers: {
-        [FOLDER_KEY]: folderKey,
+        ...createHeaders({ [FOLDER_KEY]: folderKey }),
         'Accept': 'application/xml'
       },
       responseType: 'text'
@@ -110,9 +119,9 @@ export class ProcessInstancesService extends BaseService {
    * @param folderKey The folder key for authorization
    * @returns Promise<void>
    */
-  async cancel(instanceId: string, folderKey: string, request: CommentRequest = { comment: null }): Promise<void> {
-    await this.post(MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId), request, {
-      headers: this.getFolderKeyHeader(folderKey)
+  async cancel(instanceId: string, folderKey: string, request?: ProcessInstanceOperationRequest): Promise<void> {
+    await this.post(MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId), request || {}, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
   }
 
@@ -123,9 +132,9 @@ export class ProcessInstancesService extends BaseService {
    * @param folderKey The folder key for authorization
    * @returns Promise<void>
    */
-  async pause(instanceId: string, folderKey: string, request: CommentRequest = { comment: null }): Promise<void> {
-    await this.post(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), request, {
-      headers: this.getFolderKeyHeader(folderKey)
+  async pause(instanceId: string, folderKey: string, request?: ProcessInstanceOperationRequest): Promise<void> {
+    await this.post(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), request || {}, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
   }
 
@@ -136,64 +145,9 @@ export class ProcessInstancesService extends BaseService {
    * @param folderKey The folder key for authorization
    * @returns Promise<void>
    */
-  async resume(instanceId: string, folderKey: string, request: CommentRequest = { comment: null }): Promise<void> {
-    await this.post(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), request, {
-      headers: this.getFolderKeyHeader(folderKey)
+  async resume(instanceId: string, folderKey: string, request?: ProcessInstanceOperationRequest): Promise<void> {
+    await this.post(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), request || {}, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
   }
-
-//   /**
-//    * Helper method to get all pages of process instances
-//    * @param params Query parameters for filtering instances (excluding pagination params)
-//    * @param pageSize Optional page size (default: 100)
-//    * @returns Promise<GetInstanceResponse[]>
-//    */
-//   async getAllPages(params?: Omit<GetInstancesQueryParams, keyof PaginationParams>, pageSize: number = 100): Promise<GetInstanceResponse[]> {
-//     const instances: GetInstanceResponse[] = [];
-//     let nextPage: string | null = null;
-
-//     do {
-//       const response = await this.getAll({
-//         ...params,
-//         pageSize,
-//         nextPage: nextPage || undefined
-//       });
-
-//       if (response.instances) {
-//         instances.push(...response.instances);
-//       }
-
-//       nextPage = response.nextPage;
-//     } while (nextPage);
-
-//     return instances;
-//   }
-
-//   /**
-//    * Helper method to iterate over process instances page by page
-//    * @param params Query parameters for filtering instances (excluding pagination params)
-//    * @param pageCallback Callback function to process each page of results
-//    * @param pageSize Optional page size (default: 100)
-//    */
-//   async forEachPage(
-//     params: Omit<GetInstancesQueryParams, keyof PaginationParams>,
-//     pageCallback: (page: GetInstanceResponse[]) => Promise<void> | void,
-//     pageSize: number = 100
-//   ): Promise<void> {
-//     let nextPage: string | null = null;
-
-//     do {
-//       const response = await this.getAll({
-//         ...params,
-//         pageSize,
-//         nextPage: nextPage || undefined
-//       });
-
-//       if (response.instances) {
-//         await pageCallback(response.instances);
-//       }
-
-//       nextPage = response.nextPage;
-//     } while (nextPage);
-//   }
 } 

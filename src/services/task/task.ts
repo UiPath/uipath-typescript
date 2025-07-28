@@ -28,6 +28,7 @@ import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformA
 import { TaskStatusMap, TaskTimeMap } from '../../models/task/task.constants';
 import { CollectionResponse } from '../../models/common/common-types';
 import { createHeaders } from '../../utils/http/headers';
+import { FOLDER_ID } from '../../utils/constants/headers';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
@@ -54,7 +55,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   async create(task: TaskCreateRequest, folderId: number): Promise<Task<TaskCreateResponse>> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const externalTask = {
       ...task,
@@ -93,7 +94,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   async getUsers(folderId: number, options: TaskGetUsersOptions = {}): Promise<UserLoginInfo[]> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
@@ -123,7 +124,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   async getAll(options: TaskGetAllOptions = {}, folderId?: number): Promise<Task<TaskGetResponse>[]> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     // prefix all keys except 'event'
     const keysToPrefix = Object.keys(options).filter(k => k !== 'event');
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
@@ -165,7 +166,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<Task<TaskGetResponse>> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     // prefix all keys in options
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
@@ -226,7 +227,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   async assign(taskAssignments: TaskAssignmentRequest | TaskAssignmentRequest[], folderId?: number): Promise<TaskAssignmentResult[]> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const request: TasksAssignRequest = {
       taskAssignments: Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments]
@@ -282,7 +283,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   async reassign(taskAssignments: TaskAssignmentRequest | TaskAssignmentRequest[], folderId?: number): Promise<TaskAssignmentResult[]> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const request: TasksAssignRequest = {
       taskAssignments: Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments]
@@ -320,7 +321,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   async unassign(taskIds: number | number[], folderId?: number): Promise<TaskAssignmentResult[]> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const request: TasksUnassignRequest = {
       taskIds: Array.isArray(taskIds) ? taskIds : [taskIds]
@@ -362,7 +363,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   async complete(completionType: TaskType, request: TaskCompletionRequest, folderId: number): Promise<void> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     let endpoint: string;
     
@@ -390,7 +391,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * @returns Promise resolving to the form task
    */
   private async getFormTaskById(id: number, folderId: number, options: TaskGetFormOptions = {}): Promise<Task<TaskGetResponse>> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const response = await this.get<TaskGetResponse>(
       TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,

@@ -1,4 +1,4 @@
-import { RawProcessData, RawGetAllProcessesResponse, transformProcess, ProcessSettings, MaestroProcess } from '../../models/maestro/maestro-process';
+import { RawProcessData, RawMaestroProcessGetAllResponse, transformMaestroProcess, MaestroProcessSettingsResponse, MaestroProcessGetAllResponse } from '../../models/maestro';
 import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
@@ -32,11 +32,11 @@ export class MaestroProcessesService extends BaseService {
    * const faultedProcesses = processes.filter(p => p.instanceCounts.faulted > 0);
    * ```
    */
-  async getAll(): Promise<MaestroProcess[]> {
-    const response = await this.get<RawGetAllProcessesResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
-    return unwrapAndMapResponse<RawProcessData, MaestroProcess>(
+  async getAll(): Promise<MaestroProcessGetAllResponse[]> {
+    const response = await this.get<RawMaestroProcessGetAllResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
+    return unwrapAndMapResponse<RawProcessData, MaestroProcessGetAllResponse>(
       'processes',
-      transformProcess
+      transformMaestroProcess
     )(response.data);
   }
 
@@ -46,8 +46,8 @@ export class MaestroProcessesService extends BaseService {
    * @param processKey - The unique identifier of the process
    * @returns Promise<ProcessSettings>
    */
-  async getSettings(processKey: string): Promise<ProcessSettings> {
-    const response = await this.get<ProcessSettings>(MAESTRO_ENDPOINTS.PROCESSES.GET_SETTINGS(processKey), {});
+  async getSettings(processKey: string): Promise<MaestroProcessSettingsResponse> {
+    const response = await this.get<MaestroProcessSettingsResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_SETTINGS(processKey), {});
     return response.data;
   }
 } 
