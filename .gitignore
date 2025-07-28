@@ -58,3 +58,6 @@ npm-debug.log*
 
 dist/
 docs/
+
+tests/
+jest.config.*

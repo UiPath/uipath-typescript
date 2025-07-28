@@ -1,15 +1,24 @@
 {
-  "compilerOptions": {
-    "target": "es2018",
-    "module": "esnext",
-    "declaration": true,
-    "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node"
-  },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "tests"]
-}
+    "compilerOptions": {
+      "target": "ES2020",
+      "module": "ESNext",
+      "lib": ["ES2020", "DOM"],
+      "declaration": true,
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "baseUrl": ".",
+      "paths": {
+        "*": ["node_modules/*", "src/types/*"]
+      }
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist", "tests"]
+  }
+  

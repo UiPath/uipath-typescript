@@ -1,165 +1,133 @@
-import { Config, ConfigSchema } from './config';
-import { ExecutionContext, ExecutionContextConfig } from './executionContext';
-import { ActionsService } from './services/actionsService';
-import { ApiClient, ApiClientConfig } from './services/apiClient';
-import { ProcessesService } from './services/processesService';
-import { AssetsService } from './services/assetsService';
-import { BucketsService } from './services/bucketsService';
-import { ConnectionsService } from './services/connectionsService';
-import { ContextGroundingService } from './services/contextGroundingService';
-import { JobsService } from './services/jobsService';
-import { QueuesService } from './services/queuesService';
-import { FolderService } from './services/folderService';
-import { EntityService } from './services/entityService';
-import { logger } from './utils/logger';
-import { UiPathOpenAIService } from './services/llmGatewayService';
-import { FolderContextConfig } from './folderContext';
+import { UiPathConfig } from './core/config/config';
+import { ExecutionContext } from './core/context/execution-context';
+import { AuthService } from './core/auth/auth-service';
+import { 
+  MaestroProcessesService,
+  ProcessInstancesService,
+  EntityService,
+  TaskService
+} from './services';
+import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
+import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
+import { TokenManager } from './core/auth/token-manager';
 
-export interface UiPathOptions {
-  baseUrl: string;
-  secret: string;
-  debug?: boolean;
-  executionContext?: ExecutionContextConfig;
-  apiConfig?: ApiClientConfig;
-  folderConfig?: FolderContextConfig;
-}
+type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
 export class UiPath {
-  private readonly config: Config;
-  private readonly executionContext: ExecutionContext;
-  private readonly apiConfig: ApiClientConfig;
-  private readonly folderConfig: FolderContextConfig;
-  
-  private _apiClient?: ApiClient;
-  private _assetsService?: AssetsService;
-  private _processesService?: ProcessesService;
-  private _bucketsService?: BucketsService;
-  private _connectionsService?: ConnectionsService;
-  private _contextGroundingService?: ContextGroundingService;
-  private _entityService?: EntityService;
-  private _jobsService?: JobsService;
-  private _queuesService?: QueuesService;
-  private _actionsService?: ActionsService;
-  private _folderService?: FolderService;
-  private _llmGatewayService?: UiPathOpenAIService;
+  private config: UiPathConfig;
+  private executionContext: ExecutionContext;
+  private authService: AuthService;
+  private initialized: boolean = false;
+  private readonly _services: Map<string, any> = new Map();
 
-  constructor(options: UiPathOptions) {
+  constructor(config: UiPathSDKConfig) {
+    // Validate and normalize the configuration
+    validateConfig(config);
+    
+    // Initialize core components
+    this.config = new UiPathConfig({
+      baseUrl: normalizeBaseUrl(config.baseUrl),
+      orgName: config.orgName,
+      tenantName: config.tenantName,
+      secret: hasSecretConfig(config) ? config.secret : undefined,
+      clientId: hasOAuthConfig(config) ? config.clientId : undefined,
+      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined
+    });
+
+    this.executionContext = new ExecutionContext();
+    this.authService = new AuthService(this.config, this.executionContext);
+
+    // Auto-initialize for secret-based auth
+    if (hasSecretConfig(config)) {
+      this.authService.authenticateWithSecret(config.secret);
+      this.initialized = true;
+    }
+  }
+
+  /**
+   * Initialize the SDK based on the provided configuration.
+   * This method is only required for OAuth-based authentication.
+   * For secret-based authentication, initialization is automatic.
+   */
+  public async initialize(): Promise<void> {
+    // If already initialized or using secret auth, return immediately
+    if (this.initialized || hasSecretConfig(this.config)) {
+      return;
+    }
+
     try {
-      this.config = ConfigSchema.parse({ 
-        baseUrl: options.baseUrl,
-        secret: options.secret
-      });
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes('baseUrl')) {
-          throw new Error('Base URL is required and must be a valid URL');
-        } else if (error.message.includes('secret')) {
-          throw new Error('Secret is required and must not be empty');
-        }
+      // If the OAuth flow redirects, the promise from `authenticate` will not resolve,
+      // and execution will stop here.
+      const success = await this.authService.authenticate(this.config);
+
+      if (!success || !this.authService.hasValidToken()) {
+        // If authenticate() returns false, it means a valid token could not be obtained.
+        // This could be due to invalid config or a failure in the OAuth callback.
+        // We don't throw an error for the initial OAuth redirect because that won't return.
+        throw new Error('Failed to obtain a valid authentication token.');
       }
-      throw error;
+
+      this.initialized = true;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      throw new Error(`Failed to initialize UiPath SDK: ${errorMessage}`);
     }
-
-    // Setup logging before initializing services
-    logger.setup({ debug: options.debug });
-
-    this.executionContext = new ExecutionContext(options.executionContext);
-    this.apiConfig = options.apiConfig ?? {};
-    this.folderConfig = options.folderConfig ?? {};
   }
 
-  get apiClient(): ApiClient {
-    if (!this._apiClient) {
-      this._apiClient = new ApiClient(this.config, this.executionContext, this.apiConfig);
-    }
-    return this._apiClient;
+  /**
+   * Check if the SDK has been initialized
+   */
+  public isInitialized(): boolean {
+    return this.initialized;
   }
 
-  get assets(): AssetsService {
-    if (!this._assetsService) {
-      this._assetsService = new AssetsService(this.config, this.executionContext);
-    }
-    return this._assetsService;
+  /**
+   * Get the current authentication token
+   */
+  public getToken(): string | undefined {
+    return this.authService.getToken();
   }
 
+  private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
+    const serviceName = serviceConstructor.name;
+    if (!this._services.has(serviceName)) {
+      const serviceInstance = new serviceConstructor(this.config, this.executionContext, this.authService.getTokenManager());
+      this._services.set(serviceName, serviceInstance);
+    }
+
+    return this._services.get(serviceName) as T;
+  }
+
+  /**
+   * Access to Maestro Processes service
+   */
+  get maestroProcess(): MaestroProcessesService {
+    return this.getService(MaestroProcessesService);
+  }
+
+  /**
+   * Access to Maestro Process Instances service
+   */
+  get processInstance(): ProcessInstancesService {
+    return this.getService(ProcessInstancesService);
+  }
+  
+  /**
+   * Access to Entity service
+   */
   get entity(): EntityService {
-    if (!this._entityService) {
-      this._entityService = new EntityService(this.config, this.executionContext);
-    }
-    return this._entityService;
+    return this.getService(EntityService);
   }
 
-  get processes(): ProcessesService {
-    if (!this._processesService) {
-      this._processesService = new ProcessesService(this.config, this.executionContext);
-    }
-    return this._processesService;
+  /**
+   * Access to Tasks service
+   */
+  get task(): TaskService {
+    return this.getService(TaskService);
   }
+}
 
-  get actions(): ActionsService {
-    if (!this._actionsService) {
-      this._actionsService = new ActionsService(this.config, this.executionContext);
-    }
-    return this._actionsService;
-  }
-
-  get buckets(): BucketsService {
-    if (!this._bucketsService) {
-      this._bucketsService = new BucketsService(this.config, this.executionContext);
-    }
-    return this._bucketsService;
-  }
-
-  get connections(): ConnectionsService {
-    if (!this._connectionsService) {
-      this._connectionsService = new ConnectionsService(this.config, this.executionContext);
-    }
-    return this._connectionsService;
-  }
-
-  get contextGrounding(): ContextGroundingService {
-    if (!this._folderService) {
-      this._folderService = new FolderService(this.config, this.executionContext);
-    }
-    if (!this._bucketsService) {
-      this._bucketsService = new BucketsService(this.config, this.executionContext);
-    }
-    if (!this._contextGroundingService) {
-      this._contextGroundingService = new ContextGroundingService(
-        this.config,
-        this.executionContext,
-        this._folderService,
-        this._bucketsService
-      );
-    }
-    return this._contextGroundingService;
-  }
-
-  get queues(): QueuesService {
-    if (!this._queuesService) {
-      this._queuesService = new QueuesService(this.config, this.executionContext);
-    }
-    return this._queuesService;
-  }
-
-  get jobs(): JobsService {
-    if (!this._jobsService) {
-      this._jobsService = new JobsService(this.config, this.executionContext);
-    }
-    return this._jobsService;
-  }
-
-  get folders(): FolderService {
-    if (!this._folderService) {
-      this._folderService = new FolderService(this.config, this.executionContext);
-    }
-    return this._folderService;
-  }
-
-  get llmGateway(): UiPathOpenAIService {
-    if (!this._llmGatewayService) {
-      this._llmGatewayService = new UiPathOpenAIService(this.config, this.executionContext);
-    }
-    return this._llmGatewayService;
-  }
+// Factory function for creating UiPath instance
+export default function uipath(config: UiPathSDKConfig): UiPath {
+  return new UiPath(config);
 }
