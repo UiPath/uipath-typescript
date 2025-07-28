@@ -1,2 +1,2 @@
-export * from './maestroProcess';
-export * from './processInstance';
+export * from './maestro-process';
+export * from './process-instance';

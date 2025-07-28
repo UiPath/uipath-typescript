@@ -1,7 +1,7 @@
-import { BaseService } from '../../services/baseService';
+import { BaseService } from '../../services/base-service';
 import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/executionContext';
-import { TokenManager } from '../../core/auth/tokenManager';
+import { ExecutionContext } from '../../core/context/execution-context';
+import { TokenManager } from '../../core/auth/token-manager';
 import { 
   GetAllInstancesResponse, 
   GetInstanceResponse, 
@@ -14,8 +14,9 @@ import {
   Span,
   ProcessInstance,
   ProcessInstanceDto
-} from '../../models/maestro/processInstance';
+} from '../../models/maestro/process-instance';
 import { FOLDER_KEY } from '../../utils/constants/headers';
+import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 
 interface CommentRequest {
@@ -40,7 +41,7 @@ export class ProcessInstancesService extends BaseService {
    * @returns Promise<GetAllInstancesResponse>
    */
   async getAll(params?: GetInstancesQueryParams): Promise<GetAllInstancesResponse> {
-    const response = await this.get<GetAllInstancesResponse>('pims_/api/v1/instances', {
+    const response = await this.get<GetAllInstancesResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_ALL, {
       params: params as Record<string, string | number>
     });
     return response.data;
@@ -54,7 +55,7 @@ export class ProcessInstancesService extends BaseService {
    * @returns Promise<GetInstanceResponse>
    */
   private async getInstanceById(instanceId: string, folderKey: string): Promise<GetInstanceResponse> {
-    const response = await this.get<GetInstanceResponse>(`pims_/api/v1/instances/${instanceId}`, {
+    const response = await this.get<GetInstanceResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(instanceId), {
       headers: {
         [FOLDER_KEY]: folderKey
       }
@@ -80,7 +81,7 @@ export class ProcessInstancesService extends BaseService {
    * @returns Promise<Span[]>
    */
   async getExecutionHistory(instanceId: string): Promise<Span[]> {
-    const response = await this.get<Span[]>(`pims_/api/v1/spans/${instanceId}`);
+    const response = await this.get<Span[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
     return response.data;
   }
 
@@ -92,7 +93,7 @@ export class ProcessInstancesService extends BaseService {
    * @returns Promise<string> The BPMN XML contents
    */
   async getBpmn(instanceId: string, folderKey: string): Promise<string> {
-    const response = await this.get<string>(`pims_/api/v1/instances/${instanceId}/bpmn`, {
+    const response = await this.get<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
       headers: {
         [FOLDER_KEY]: folderKey,
         'Accept': 'application/xml'
@@ -110,7 +111,7 @@ export class ProcessInstancesService extends BaseService {
    * @returns Promise<void>
    */
   async cancel(instanceId: string, folderKey: string, request: CommentRequest = { comment: null }): Promise<void> {
-    await this.post(`pims_/api/v1/instances/${instanceId}/cancel`, request, {
+    await this.post(MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId), request, {
       headers: this.getFolderKeyHeader(folderKey)
     });
   }
@@ -123,7 +124,7 @@ export class ProcessInstancesService extends BaseService {
    * @returns Promise<void>
    */
   async pause(instanceId: string, folderKey: string, request: CommentRequest = { comment: null }): Promise<void> {
-    await this.post(`pims_/api/v1/instances/${instanceId}/pause`, request, {
+    await this.post(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), request, {
       headers: this.getFolderKeyHeader(folderKey)
     });
   }
@@ -136,7 +137,7 @@ export class ProcessInstancesService extends BaseService {
    * @returns Promise<void>
    */
   async resume(instanceId: string, folderKey: string, request: CommentRequest = { comment: null }): Promise<void> {
-    await this.post(`pims_/api/v1/instances/${instanceId}/resume`, request, {
+    await this.post(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), request, {
       headers: this.getFolderKeyHeader(folderKey)
     });
   }

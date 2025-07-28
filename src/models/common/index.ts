@@ -1,2 +1,2 @@
 export * from './pagination';
-export * from './requestSpec';
+export * from './request-spec';

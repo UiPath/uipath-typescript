@@ -1,6 +1,6 @@
 import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/executionContext';
-import { BaseService } from '../baseService';
+import { ExecutionContext } from '../../core/context/execution-context';
+import { BaseService } from '../base-service';
 import {
   EntityData,
   EntityQueryResponse,
@@ -15,18 +15,17 @@ import {
   transformFilter,
   transformExpansion,
   EntityRecord
-} from '../../models/dataFabric/entity';
-import { QueryBuilder } from '../../utils/builders/queryBuilder';
-import { QueryParams } from '../../models/common/requestSpec';
-import { TokenManager } from '../../core/auth/tokenManager';
+} from '../../models/data-fabric/entity';
+import { QueryBuilder } from '../../utils/builders/query-builder';
+import { QueryParams } from '../../models/common/request-spec';
+import { TokenManager } from '../../core/auth/token-manager';
+import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
  * Service for interacting with the Data Fabric Entity API.
  * Provides methods for retrieving and managing entities.
  */
 export class EntityService extends BaseService {
-  private static readonly BASE_PATH = '/datafabric_/api/EntityService';
-
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }
@@ -38,7 +37,7 @@ export class EntityService extends BaseService {
   private async getChoiceSets(): Promise<EntityRecord[]> {
     const response = await this.request<EntityRecord[]>(
       'GET',
-      '/api/Entity/choiceset'
+      DATA_FABRIC_ENDPOINTS.CHOICE_SET.GET_ALL
     );
     return response.data;
   }
@@ -58,7 +57,7 @@ export class EntityService extends BaseService {
   async getChoiceSetById(id: string): Promise<EntityRecord> {
     const response = await this.request<EntityRecord>(
       'GET',
-      `/api/Entity/choiceset/${id}`
+      DATA_FABRIC_ENDPOINTS.CHOICE_SET.GET_BY_ID(id)
     );
     return response.data;
   }
@@ -149,7 +148,7 @@ export class EntityService extends BaseService {
         if (!filter) {
           const response = await this.request<RawQueryResponseJson>(
             'GET',
-            `${EntityService.BASE_PATH}/${entityName}/read`,
+            DATA_FABRIC_ENDPOINTS.ENTITY.READ(entityName),
             { params: options as QueryParams }
           );
           return transformQueryResponse<T>(response.data);
@@ -170,7 +169,7 @@ export class EntityService extends BaseService {
 
         const response = await this.request<RawQueryResponseJson>(
           'POST',
-          `${EntityService.BASE_PATH}/${entityName}/query_expansion`,
+          DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_EXPANSION(entityName),
           {
             params: { expansionLevel: options.expansionLevel },
             body: queryRequest
@@ -240,7 +239,7 @@ export class EntityService extends BaseService {
         if (!filter) {
           const response = await this.request<RawQueryResponseJson>(
             'GET',
-            `${EntityService.BASE_PATH}/entity/${entityId}/read`,
+            DATA_FABRIC_ENDPOINTS.ENTITY.BY_ID.READ(entityId),
             { params: options as QueryParams }
           );
           return transformQueryResponse<T>(response.data);
@@ -261,7 +260,7 @@ export class EntityService extends BaseService {
 
         const response = await this.request<RawQueryResponseJson>(
           'POST',
-          `${EntityService.BASE_PATH}/entity/${entityId}/query_expansion`,
+          DATA_FABRIC_ENDPOINTS.ENTITY.BY_ID.QUERY_EXPANSION(entityId),
           {
             params: { expansionLevel: options.expansionLevel },
             body: queryRequest

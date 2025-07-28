@@ -1,7 +1,7 @@
-import { BaseService } from '../baseService';
+import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/executionContext';
-import { TokenManager } from '../../core/auth/tokenManager';
+import { ExecutionContext } from '../../core/context/execution-context';
+import { TokenManager } from '../../core/auth/token-manager';
 import { 
   TaskCreateRequest, 
   TaskCreateResponse, 
@@ -26,8 +26,9 @@ import {
 } from '../../models/task/task.models';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse, addPrefixToKeys } from '../../utils/transform';
 import { TaskStatusMap, TaskTimeMap } from '../../models/task/task.constants';
-import { CollectionResponse } from '../../models/common/commonTypes';
+import { CollectionResponse } from '../../models/common/common-types';
 import { createHeaders } from '../../utils/http/headers';
+import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -61,7 +62,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     };
     
     const response = await this.post<TaskCreateResponse>(
-      '/tasks/GenericTasks/CreateTask',
+      TASK_ENDPOINTS.CREATE_GENERIC_TASK,
       externalTask,
       { headers }
     );
@@ -97,7 +98,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     const response = await this.get<UserLoginInfoCollection>(
-      `/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId=${folderId})`,
+      TASK_ENDPOINTS.GET_TASK_USERS(folderId),
       { 
         params: apiOptions,
         headers
@@ -127,7 +128,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const keysToPrefix = Object.keys(options).filter(k => k !== 'event');
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     const response = await this.get<CollectionResponse<TaskGetResponse>>(
-      '/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders',
+      TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
       { 
         params: apiOptions,
         headers
@@ -169,7 +170,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     const response = await this.get<TaskGetResponse>(
-      `/odata/Tasks(${id})`,
+      TASK_ENDPOINTS.GET_BY_ID(id),
       { 
         params: apiOptions,
         headers
@@ -235,7 +236,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const pascalRequest = camelToPascalCaseKeys(request);
     
     const response = await this.post<TaskAssignmentResultCollection>(
-      '/odata/Tasks/UiPath.Server.Configuration.OData.AssignTasks',
+      TASK_ENDPOINTS.ASSIGN_TASKS,
       pascalRequest,
       { headers }
     );
@@ -291,7 +292,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const pascalRequest = camelToPascalCaseKeys(request);
     
     const response = await this.post<TaskAssignmentResultCollection>(
-      '/odata/Tasks/UiPath.Server.Configuration.OData.ReassignTasks',
+      TASK_ENDPOINTS.REASSIGN_TASKS,
       pascalRequest,
       { headers }
     );
@@ -326,7 +327,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     };
     
     const response = await this.post<TaskAssignmentResultCollection>(
-      '/odata/Tasks/UiPath.Server.Configuration.OData.UnassignTasks',
+      TASK_ENDPOINTS.UNASSIGN_TASKS,
       request,
       { headers }
     );
@@ -367,13 +368,13 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     switch (completionType) {
       case TaskType.Form:
-        endpoint = '/forms/TaskForms/CompleteTask';
+        endpoint = TASK_ENDPOINTS.COMPLETE_FORM_TASK;
         break;
       case TaskType.App:
-        endpoint = '/tasks/AppTasks/CompleteAppTask';
+        endpoint = TASK_ENDPOINTS.COMPLETE_APP_TASK;
         break;
       default:
-        endpoint = '/tasks/GenericTasks/CompleteTask';
+        endpoint = TASK_ENDPOINTS.COMPLETE_GENERIC_TASK;
         break;
     }
     
@@ -392,7 +393,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const headers = createHeaders(folderId);
     
     const response = await this.get<TaskGetResponse>(
-      '/forms/TaskForms/GetTaskFormById',
+      TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
       { 
         params: {
           taskId: id,

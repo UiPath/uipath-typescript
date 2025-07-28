@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ProcessInstancesService } from '../../services/maestro/processInstances';
+import { ProcessInstancesService } from '../../services/maestro/process-instances';
 
 export const GetInstanceResponseSchema = z.object({
   organizationId: z.string().nullable(),

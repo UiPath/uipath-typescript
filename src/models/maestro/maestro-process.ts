@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { groupFields } from '../../utils/apiTransform';
+import { groupFields } from '../../utils/api-transform';
 
 export const ProblemDetailsSchema = z.object({
   type: z.string().optional(),

@@ -1,9 +1,10 @@
-import { RawProcessData, RawGetAllProcessesResponse, transformProcess, ProcessSettings, MaestroProcess } from '../../models/maestro/maestroProcess';
-import { BaseService } from '../baseService';
+import { RawProcessData, RawGetAllProcessesResponse, transformProcess, ProcessSettings, MaestroProcess } from '../../models/maestro/maestro-process';
+import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/executionContext';
-import { unwrapAndMapResponse } from '../../utils/apiTransform';
-import { TokenManager } from '../../core/auth/tokenManager';
+import { ExecutionContext } from '../../core/context/execution-context';
+import { unwrapAndMapResponse } from '../../utils/api-transform';
+import { TokenManager } from '../../core/auth/token-manager';
+import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
  * Service for interacting with Maestro Processes
@@ -32,7 +33,7 @@ export class MaestroProcessesService extends BaseService {
    * ```
    */
   async getAll(): Promise<MaestroProcess[]> {
-    const response = await this.get<RawGetAllProcessesResponse>('pims_/api/v1/processes/summary');
+    const response = await this.get<RawGetAllProcessesResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
     return unwrapAndMapResponse<RawProcessData, MaestroProcess>(
       'processes',
       transformProcess
@@ -46,7 +47,7 @@ export class MaestroProcessesService extends BaseService {
    * @returns Promise<ProcessSettings>
    */
   async getSettings(processKey: string): Promise<ProcessSettings> {
-    const response = await this.get<ProcessSettings>(`pims_/api/v1/processes/${processKey}/settings`, {});
+    const response = await this.get<ProcessSettings>(MAESTRO_ENDPOINTS.PROCESSES.GET_SETTINGS(processKey), {});
     return response.data;
   }
 } 

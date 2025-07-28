@@ -1,4 +1,4 @@
-import { EntityData } from '../dataFabric/entity';
+import { EntityData } from '../data-fabric/entity';
 
 /**
  * Result object with count functionality

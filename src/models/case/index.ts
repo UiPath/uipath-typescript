@@ -1,2 +1,2 @@
 // Export case models
-export * from './caseDefinition'; 
+export * from './case-definition'; 
