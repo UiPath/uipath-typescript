@@ -1,4 +1,4 @@
-import { PaginatedResponse } from '../../utils/builders/queryBuilder';
+import { PaginatedResponse } from '../../utils/builders/query-builder';
 
 /**
  * Base pagination options

@@ -1,15 +1,15 @@
 import { UiPathConfig } from './core/config/config';
-import { ExecutionContext } from './core/context/executionContext';
-import { AuthService } from './core/auth/authService';
+import { ExecutionContext } from './core/context/execution-context';
+import { AuthService } from './core/auth/auth-service';
 import { 
   MaestroProcessesService,
   ProcessInstancesService,
   EntityService,
   TaskService
 } from './services';
-import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdkConfig';
-import { validateConfig, normalizeBaseUrl } from './core/config/configUtils';
-import { TokenManager } from './core/auth/tokenManager';
+import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
+import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
+import { TokenManager } from './core/auth/token-manager';
 
 type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
@@ -101,14 +101,14 @@ export class UiPath {
   /**
    * Access to Maestro Processes service
    */
-  get maestroProcesses(): MaestroProcessesService {
+  get maestroProcess(): MaestroProcessesService {
     return this.getService(MaestroProcessesService);
   }
 
   /**
    * Access to Maestro Process Instances service
    */
-  get processInstances(): ProcessInstancesService {
+  get processInstance(): ProcessInstancesService {
     return this.getService(ProcessInstancesService);
   }
   

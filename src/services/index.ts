@@ -1,5 +1,5 @@
-export * from './baseService';
-export * from './dataFabric';
+export * from './base-service';
+export * from './data-fabric';
 export * from './maestro';
 export * from './task';
 

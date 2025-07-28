@@ -1,10 +1,11 @@
-import { BaseService } from '../../services/baseService';
+import { BaseService } from '../../services/base-service';
 import { Config } from '../config/config';
-import { ExecutionContext } from '../context/executionContext';
-import { TokenManager } from './tokenManager';
+import { ExecutionContext } from '../context/execution-context';
+import { TokenManager } from './token-manager';
 import { AuthToken, TokenInfo } from './auth.types';
-import { hasOAuthConfig, hasSecretConfig } from '../config/sdkConfig';
+import { hasOAuthConfig, hasSecretConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
+import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
 export class AuthService extends BaseService {
   private tokenManager: TokenManager;
@@ -173,7 +174,7 @@ export class AuthService extends BaseService {
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
-    return `${this.config.baseUrl}/${orgName}/identity_/connect/authorize?${queryParams.toString()}`;
+    return `${this.config.baseUrl}/${orgName}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
   }
 
   /**
@@ -195,7 +196,7 @@ export class AuthService extends BaseService {
       code_verifier: params.codeVerifier
     });
 
-    const response = await fetch(`${this.config.baseUrl}/${orgName}/identity_/connect/token`, {
+    const response = await fetch(`${this.config.baseUrl}/${orgName}/${IDENTITY_ENDPOINTS.TOKEN}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'

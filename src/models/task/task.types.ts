@@ -1,5 +1,5 @@
-import { CollectionResponse } from "../common/commonTypes";
-import type { QueryParams } from '../common/requestSpec';
+import { CollectionResponse } from "../common/common-types";
+import type { QueryParams } from '../common/request-spec';
 
 export interface UserLoginInfo {
   name: string;

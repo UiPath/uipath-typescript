@@ -1,8 +1,8 @@
-import { ApiClient } from '../core/http/apiClient';
+import { ApiClient } from '../core/http/api-client';
 import { Config } from '../core/config/config';
-import { ExecutionContext } from '../core/context/executionContext';
-import { RequestSpec } from '../models/common/requestSpec';
-import { TokenManager } from '../core/auth/tokenManager';
+import { ExecutionContext } from '../core/context/execution-context';
+import { RequestSpec } from '../models/common/request-spec';
+import { TokenManager } from '../core/auth/token-manager';
 
 export interface ApiResponse<T> {
   data: T;

@@ -1,9 +1,10 @@
-import { RawProcessData, RawGetAllProcessesResponse, transformProcess, ProcessSettings, MaestroProcess } from '../../models/maestro/maestroProcess';
-import { BaseService } from '../baseService';
+import { RawProcessData, RawMaestroProcessGetAllResponse, transformMaestroProcess, MaestroProcessSettingsResponse, MaestroProcessGetAllResponse } from '../../models/maestro';
+import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/executionContext';
-import { unwrapAndMapResponse } from '../../utils/apiTransform';
-import { TokenManager } from '../../core/auth/tokenManager';
+import { ExecutionContext } from '../../core/context/execution-context';
+import { unwrapAndMapResponse } from '../../utils/api-transform';
+import { TokenManager } from '../../core/auth/token-manager';
+import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
  * Service for interacting with Maestro Processes
@@ -31,11 +32,11 @@ export class MaestroProcessesService extends BaseService {
    * const faultedProcesses = processes.filter(p => p.instanceCounts.faulted > 0);
    * ```
    */
-  async getAll(): Promise<MaestroProcess[]> {
-    const response = await this.get<RawGetAllProcessesResponse>('pims_/api/v1/processes/summary');
-    return unwrapAndMapResponse<RawProcessData, MaestroProcess>(
+  async getAll(): Promise<MaestroProcessGetAllResponse[]> {
+    const response = await this.get<RawMaestroProcessGetAllResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
+    return unwrapAndMapResponse<RawProcessData, MaestroProcessGetAllResponse>(
       'processes',
-      transformProcess
+      transformMaestroProcess
     )(response.data);
   }
 
@@ -45,8 +46,8 @@ export class MaestroProcessesService extends BaseService {
    * @param processKey - The unique identifier of the process
    * @returns Promise<ProcessSettings>
    */
-  async getSettings(processKey: string): Promise<ProcessSettings> {
-    const response = await this.get<ProcessSettings>(`pims_/api/v1/processes/${processKey}/settings`, {});
+  async getSettings(processKey: string): Promise<MaestroProcessSettingsResponse> {
+    const response = await this.get<MaestroProcessSettingsResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_SETTINGS(processKey), {});
     return response.data;
   }
 } 

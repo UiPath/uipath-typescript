@@ -1,7 +1,7 @@
 import { Config } from '../config/config';
-import { ExecutionContext } from '../context/executionContext';
-import { RequestSpec } from '../../models/common/requestSpec';
-import { TokenManager } from '../auth/tokenManager';
+import { ExecutionContext } from '../context/execution-context';
+import { RequestSpec } from '../../models/common/request-spec';
+import { TokenManager } from '../auth/token-manager';
 import { TokenInfo } from '../auth/auth.types';
 
 export interface ApiClientConfig {
