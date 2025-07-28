@@ -1,9 +1,6 @@
 // Common types
 export * from './common';
 
-// Case models
-export * from './case';
-
 // DataFabric models
 export * from './dataFabric';
 
