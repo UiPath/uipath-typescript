@@ -8,6 +8,7 @@ export enum BucketOptions {
 }
 
 export interface BucketGetResponse {
+  id: number;
   name: string;
   description: string | null;
   identifier: string;
@@ -19,7 +20,6 @@ export interface BucketGetResponse {
   externalName: string | null;
   password: string | null;
   foldersCount: number;
-  id: number;
 }
 
 export type BucketGetAllOptions = RequestOptions;

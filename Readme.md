@@ -61,6 +61,8 @@ The SDK provides access to the following services through a consistent API:
 - `sdk.processInstance` - Manage process executions
 - `sdk.task` - Create and manage tasks
 - `sdk.entity` - Data Fabric entity operations
+- `sdk.process` - Manage Orchestrator processes
+- `sdk.buckets` - Manage storage buckets in Orchestrator
 
 ### Consistent Method Naming
 
@@ -81,6 +83,17 @@ const task = await sdk.task.getById('task-id');
 
 // Create a new entity
 const entity = await sdk.entity.create({...});
+
+// Get all buckets 
+const buckets = await sdk.buckets.getAll();
+
+// Get a specific process and start it
+const process = await sdk.process.getAll({ 
+  filter: "name eq 'MyProcess'" 
+});
+const job = await sdk.process.startProcess({
+  releaseKey: process[0].key
+}, 'folder-id');
 ```
 
 ## TypeScript Support
@@ -100,6 +113,8 @@ import {
   ProcessResponse,
   EntityResponse,
   ProcessInstanceResponse,
+  ProcessStartResponse,
+  BucketGetResponse,
 } from '@uipath/uipath-typescript';
 
 // TypeScript will provide full intellisense
