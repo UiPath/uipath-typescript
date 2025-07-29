@@ -1,7 +1,6 @@
-import { CollectionResponse } from "../common/commonTypes";
-import { JobState } from "../common/commonTypes";
-import { RequestOptions } from "../common/commonTypes";
-import type { QueryParams } from '../common/requestSpec';
+import { CollectionResponse, RequestOptions } from "../common/common-types";
+import { JobState } from "../common/common-types";
+import type { QueryParams } from '../common/request-spec';
 
 export interface UserLoginInfo {
   name: string;

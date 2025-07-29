@@ -1,7 +1,7 @@
 import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { CollectionResponse, RequestOptions } from '../../models/common/commonTypes';
+import { CollectionResponse, RequestOptions } from '../../models/common/common-types';
 import { 
   ProcessGetResponse, 
   ProcessGetAllOptions, 
@@ -14,6 +14,7 @@ import { createHeaders } from '../../utils/http/headers';
 import { ProcessTimeMap } from '../../models/orchestrator/process.constants';
 import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
+import { PROCESS_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -49,7 +50,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     
     const response = await this.get<CollectionResponse<ProcessGetResponse>>(
-      '/odata/Releases',
+      PROCESS_ENDPOINTS.GET_ALL,
       { 
         params: apiOptions,
         headers
@@ -100,7 +101,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     
     const response = await this.post<CollectionResponse<processStartResponse>>(
-      '/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs',
+      PROCESS_ENDPOINTS.START_JOBS,
       requestBody,
       { 
         params: apiOptions,

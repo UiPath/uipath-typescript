@@ -1,5 +1,4 @@
-import { JobState } from '../common/commonTypes';
-import { RequestOptions } from '../common/commonTypes';
+import { JobState, RequestOptions } from '../common/common-types';
 
 /**
  * Enum for process types

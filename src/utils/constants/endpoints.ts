@@ -67,3 +67,11 @@ export const IDENTITY_ENDPOINTS = {
   TOKEN: 'identity_/connect/token',
   AUTHORIZE: 'identity_/connect/authorize',
 } as const;
+
+/**
+ * Orchestrator Process Service Endpoints
+ */
+export const PROCESS_ENDPOINTS = {
+  GET_ALL: '/odata/Releases',
+  START_JOBS: '/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs',
+} as const;
