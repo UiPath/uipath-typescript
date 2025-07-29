@@ -1,6 +1,6 @@
-import { BaseService } from '../baseService';
+import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/executionContext';
+import { ExecutionContext } from '../../core/context/execution-context';
 import { CollectionResponse, RequestOptions } from '../../models/common/commonTypes';
 import { 
   ProcessGetResponse, 
@@ -12,13 +12,15 @@ import {
 import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
 import { ProcessTimeMap } from '../../models/orchestrator/process.constants';
+import { TokenManager } from '../../core/auth/token-manager';
+import { FOLDER_ID } from '../../utils/constants/headers';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
  */
 export class ProcessService extends BaseService implements ProcessServiceModel {
-  constructor(config: Config, executionContext: ExecutionContext) {
-    super(config, executionContext);
+  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
+    super(config, executionContext, tokenManager);
   }
 
   /**
@@ -40,7 +42,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * ```
    */
   async getAll(options: ProcessGetAllOptions = {}, folderId?: number): Promise<ProcessGetResponse[]> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders(folderId !== undefined ? { [FOLDER_ID]: folderId } : {});
     
     // Prefix all keys with '$' for OData
     const keysToPrefix = Object.keys(options);
@@ -83,7 +85,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * ```
    */
   async startProcess(request: processStartRequest, folderId: number, options: RequestOptions = {}): Promise<processStartResponse[]> {
-    const headers = createHeaders(folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     // Convert to PascalCase for API
     const pascalOptions = camelToPascalCaseKeys(request);
