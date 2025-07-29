@@ -6,8 +6,8 @@ import {
   ProcessGetResponse, 
   ProcessGetAllOptions, 
   ProcessServiceModel, 
-  processStartRequest, 
-  processStartResponse
+  ProcessStartRequest, 
+  ProcessStartResponse
 } from '../../models/orchestrator/process';
 import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
@@ -43,7 +43,11 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * ```
    */
   async getAll(options: ProcessGetAllOptions = {}, folderId?: number): Promise<ProcessGetResponse[]> {
-    const headers = createHeaders(folderId !== undefined ? { [FOLDER_ID]: folderId } : {});
+    let headerParams = {};
+    if (folderId !== undefined) {
+      headerParams = { [FOLDER_ID]: folderId };
+    }
+    const headers = createHeaders(headerParams);
     
     // Prefix all keys with '$' for OData
     const keysToPrefix = Object.keys(options);
@@ -85,7 +89,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async startProcess(request: processStartRequest, folderId: number, options: RequestOptions = {}): Promise<processStartResponse[]> {
+  async startProcess(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     // Convert to PascalCase for API
@@ -100,7 +104,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     
-    const response = await this.post<CollectionResponse<processStartResponse>>(
+    const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_JOBS,
       requestBody,
       { 
@@ -110,7 +114,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     );
     
     const transformedProcess = response.data?.value.map(process => 
-      transformData(pascalToCamelCaseKeys(process) as processStartResponse, ProcessTimeMap)
+      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessTimeMap)
     );
 
     return transformedProcess;

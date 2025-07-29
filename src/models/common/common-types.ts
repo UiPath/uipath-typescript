@@ -1,5 +1,3 @@
-import type { QueryParams } from './requestSpec';
-
 export interface CollectionResponse<T> {
   value: T[];
 }
@@ -22,7 +20,7 @@ export enum JobState {
 /**
  * Common request options interface used across services for querying data
  */
-export interface RequestOptions extends QueryParams {
+export interface RequestOptions {
   expand?: string;
   filter?: string;
   select?: string;

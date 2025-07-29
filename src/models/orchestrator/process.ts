@@ -100,15 +100,6 @@ export enum StopStrategy {
   Kill = 'Kill'
 }
 
-/**
- * Interface for MachineRobot
- */
-export interface MachineRobot {
-  machineId?: number;
-  machineName?: string;
-  robotId?: number;
-  robotUserName?: string;
-}
 
 /**
  * Interface for Job Attachment
@@ -121,17 +112,9 @@ export interface JobAttachment {
 }
 
 /**
- * Interface for Autopilot settings
- */
-export interface AutopilotSettings {
-  enabled?: boolean;
-  healingEnabled?: boolean;
-}
-
-/**
  * Interface for common process properties shared across multiple interfaces
  */
-export interface BaseProcessProperties {
+export interface ProcessProperties {
   jobPriority?: JobPriority;
   specificPriorityValue?: number;
   inputArguments?: string;
@@ -142,26 +125,17 @@ export interface BaseProcessProperties {
 }
 
 /**
- * Interface for common telemetry properties
+ * Interface for common folder properties
  */
-export interface TelemetryProperties {
-  traceId?: string;
-  parentSpanId?: string;
-  rootSpanId?: string;
-}
-
-/**
- * Interface for common organization properties
- */
-export interface OrganizationProperties {
-  organizationUnitId?: number;
-  organizationUnitFullyQualifiedName?: string;
+export interface FolderProperties {
+  folderId?: number;
+  folderFullyQualifiedName?: string;
 }
 
 /**
  * Base interface for process start request
  */
-interface BaseProcessStartRequest extends BaseProcessProperties, TelemetryProperties {
+interface BaseProcessStartRequest extends ProcessProperties {
   strategy?: StartStrategy;
   robotIds?: number[];
   machineSessionIds?: number[];
@@ -171,7 +145,6 @@ interface BaseProcessStartRequest extends BaseProcessProperties, TelemetryProper
   runtimeType?: string;
   inputFile?: string;
   reference?: string;
-  machineRobots?: MachineRobot[];
   attachments?: JobAttachment[];
   targetFramework?: TargetFramework;
   resumeOnSameContext?: boolean;
@@ -205,21 +178,21 @@ interface ProcessStartRequestWithName extends BaseProcessStartRequest {
  * Interface for start process request
  * Either releaseKey or releaseName must be provided
  */
-export type processStartRequest = ProcessStartRequestWithKey | ProcessStartRequestWithName;
+export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartRequestWithName;
 
 /**
- * Interface for simple robot
+ * Interface for robot metadata
  */
-export interface SimpleRobot {
+export interface RobotMetadata {
   id?: number;
   name?: string;
   username?: string;
 }
 
 /**
- * Interface for simple process
+ * Interface for process metadata
  */
-export interface SimpleProcess {
+export interface ProcessMetadata {
   id?: number;
   name?: string;
   processKey?: string;
@@ -272,12 +245,12 @@ export interface ProcessVersion {
   CreationTime?: string;
   ReleaseName?: string;
   Id?: number;
-}
+} 
 
 /**
  * Interface for job response
  */
-export interface processStartResponse extends BaseProcessProperties, TelemetryProperties, OrganizationProperties {
+export interface ProcessStartResponse extends ProcessProperties, FolderProperties {
   key: string;
   startTime: string | null;
   endTime: string | null;
@@ -312,15 +285,15 @@ export interface processStartResponse extends BaseProcessProperties, TelemetryPr
   lastModifiedTime: string | null;  
   jobError: JobError | null;
   errorCode: string | null;
-  robot?: SimpleRobot;
-  release?: SimpleProcess;
+  robot?: RobotMetadata;
+  release?: ProcessMetadata;
   id: number;
 }
 
 /**
  * Interface for process response
  */
-export interface ProcessGetResponse extends BaseProcessProperties, OrganizationProperties {
+export interface ProcessGetResponse extends ProcessProperties, FolderProperties {
   key: string;
   processKey: string;
   processVersion: string;
@@ -360,5 +333,5 @@ export interface ProcessGetAllOptions extends RequestOptions {}
  */
 export interface ProcessServiceModel {
   getAll(options?: ProcessGetAllOptions, folderId?: number): Promise<ProcessGetResponse[]>;
-  startProcess(request: processStartRequest, folderId: number, options?: RequestOptions): Promise<processStartResponse[]>;
+  startProcess(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
 }

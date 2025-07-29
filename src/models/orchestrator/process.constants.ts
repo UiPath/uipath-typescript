@@ -3,5 +3,7 @@
  */
 export const ProcessTimeMap: { [key: string]: string } = {
   lastModificationTime: 'lastModifiedTime',
-  creationTime: 'createdTime'
+  creationTime: 'createdTime',
+  organizationUnitId: 'folderId',
+  organizationUnitFullyQualifiedName: 'folderFullyQualifiedName'
 }; 
