@@ -105,7 +105,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
-      PROCESS_ENDPOINTS.START_JOBS,
+      PROCESS_ENDPOINTS.START_PROCESS,
       requestBody,
       { 
         params: apiOptions,
