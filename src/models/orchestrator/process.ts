@@ -184,7 +184,7 @@ export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartReque
  * Interface for robot metadata
  */
 export interface RobotMetadata {
-  id?: number;
+  id: number;
   name?: string;
   username?: string;
 }
@@ -193,7 +193,7 @@ export interface RobotMetadata {
  * Interface for process metadata
  */
 export interface ProcessMetadata {
-  id?: number;
+  id: number;
   name?: string;
   processKey?: string;
   processVersion?: string;
@@ -203,7 +203,7 @@ export interface ProcessMetadata {
  * Interface for machine
  */
 export interface Machine {
-  id?: number;
+  id: number;
   name?: string;
 }
 
@@ -232,20 +232,9 @@ export enum JobType {
  * Interface for argument metadata
  */
 export interface ArgumentMetadata {
-  Input?: string;
-  Output?: string;
+  input?: string;
+  output?: string;
 }
-
-/**
- * Interface for process version
- */
-export interface ProcessVersion {
-  ReleaseId: number;
-  VersionNumber: string;
-  CreationTime?: string;
-  ReleaseName?: string;
-  Id?: number;
-} 
 
 /**
  * Interface for job response
@@ -307,8 +296,6 @@ export interface ProcessGetResponse extends ProcessProperties, FolderProperties 
   isConversational: boolean | null;
   minRequiredRobotVersion: string | null;
   isCompiled: boolean;
-  currentVersion?: ProcessVersion;
-  releaseVersions?: ProcessVersion[];
   arguments: ArgumentMetadata;
   autoUpdate: boolean;
   hiddenForAttendedUser: boolean;
