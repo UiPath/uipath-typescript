@@ -1,6 +1,5 @@
 import { CollectionResponse, RequestOptions } from "../common/common-types";
 import { JobState } from "../common/common-types";
-import type { QueryParams } from '../common/request-spec';
 
 export interface UserLoginInfo {
   name: string;
@@ -185,7 +184,7 @@ export type TaskGetAllOptions = RequestOptions;
 /**
  * Query options for getting a task by ID 
  */
-export interface TaskGetByIdOptions extends QueryParams {
+export interface TaskGetByIdOptions {
   expand?: string;
   select?: string;
 }
@@ -193,7 +192,7 @@ export interface TaskGetByIdOptions extends QueryParams {
 /**
  * Options for getting a form task by ID
  */
-export interface TaskGetFormOptions extends QueryParams {
+export interface TaskGetFormOptions {
   expandOnFormLayout?: boolean;
 }
 

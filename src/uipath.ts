@@ -6,7 +6,8 @@ import {
   ProcessInstancesService,
   EntityService,
   TaskService,
-  ProcessService
+  ProcessService,
+  BucketService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
@@ -132,6 +133,13 @@ export class UiPath {
    */
   get process(): ProcessService {
     return this.getService(ProcessService);
+  }
+
+  /**
+   * Access to Orchestrator Buckets service
+   */
+  get bucket(): BucketService {
+    return this.getService(BucketService);
   }
 }
 
