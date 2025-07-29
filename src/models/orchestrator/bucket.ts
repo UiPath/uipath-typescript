@@ -1,3 +1,5 @@
+import { RequestOptions } from "../common/common-types";
+
 export enum BucketOptions {
   None = 'None',
   ReadOnly = 'ReadOnly',
@@ -20,13 +22,7 @@ export interface BucketGetResponse {
   id: number;
 }
 
-export interface BucketGetAllOptions {
-  expand?: string;
-  filter?: string;
-  select?: string;
-  orderby?: string;
-  count?: boolean;
-}
+export type BucketGetAllOptions = RequestOptions;
 
 export interface BucketGetByIdOptions {
   expand?: string;
