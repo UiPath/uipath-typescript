@@ -5,7 +5,8 @@ import {
   MaestroProcessesService,
   ProcessInstancesService,
   EntityService,
-  TaskService
+  TaskService,
+  ProcessService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
@@ -124,6 +125,13 @@ export class UiPath {
    */
   get task(): TaskService {
     return this.getService(TaskService);
+  }
+
+  /**
+   * Access to Orchestrator Processes service
+   */
+  get process(): ProcessService {
+    return this.getService(ProcessService);
   }
 }
 
