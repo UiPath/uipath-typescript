@@ -60,6 +60,14 @@ export const DATA_FABRIC_ENDPOINTS = {
 } as const;
 
 /**
+ * Orchestrator Bucket Endpoints
+ */
+export const BUCKET_ENDPOINTS = {
+  GET_ALL: '/odata/Buckets',
+  GET_BY_ID: (id: number) => `/odata/Buckets(${id})`,
+} as const;
+
+/**
  * Identity/Authentication Endpoints
  */
 export const IDENTITY_ENDPOINTS = {
