@@ -1,5 +1,7 @@
-import { CollectionResponse } from "../common/common-types";
-import type { QueryParams } from '../common/request-spec';
+import { CollectionResponse } from "../common/commonTypes";
+import { JobState } from "../common/commonTypes";
+import { RequestOptions } from "../common/commonTypes";
+import type { QueryParams } from '../common/requestSpec';
 
 export interface UserLoginInfo {
   name: string;
@@ -27,18 +29,6 @@ export enum TaskStatus {
   Unassigned = 'Unassigned',
   Pending = 'Pending',
   Completed = 'Completed'
-}
-
-export enum JobState {
-  Pending = 'Pending',
-  Running = 'Running',
-  Stopping = 'Stopping',
-  Terminating = 'Terminating',
-  Faulted = 'Faulted',
-  Successful = 'Successful',
-  Stopped = 'Stopped',
-  Suspended = 'Suspended',
-  Resumed = 'Resumed'
 }
 
 export enum TaskSlaCriteria {
@@ -189,20 +179,9 @@ export type TaskCompleteOptions =
   | { type: Exclude<TaskType, TaskType.External>; data: any; action: string }; 
 
 /**
- * Common query options
- */
-export interface QueryOptions extends QueryParams {
-  expand?: string;
-  filter?: string;
-  select?: string;
-  orderby?: string;
-  count?: boolean;
-}
-
-/**
  * Query options for getting all tasks
  */
-export type TaskGetAllOptions = QueryOptions;
+export type TaskGetAllOptions = RequestOptions;
 
 /**
  * Query options for getting a task by ID 
@@ -222,7 +201,7 @@ export interface TaskGetFormOptions extends QueryParams {
 /**
  * Query options for getting task users
  */
-export type TaskGetUsersOptions = QueryOptions;
+export type TaskGetUsersOptions = RequestOptions;
 
 /**
  * Collection response for user login info

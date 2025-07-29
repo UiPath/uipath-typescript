@@ -1,17 +1,17 @@
 import { BaseService } from '../baseService';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/executionContext';
-import { CollectionResponse } from '../../models/common/commonTypes';
+import { CollectionResponse, RequestOptions } from '../../models/common/commonTypes';
 import { 
   ProcessGetResponse, 
   ProcessGetAllOptions, 
   ProcessServiceModel, 
   processStartRequest, 
-  processStartOptions, 
   processStartResponse
 } from '../../models/orchestrator/process';
-import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys } from '../../utils/transform';
+import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
+import { ProcessTimeMap } from '../../models/orchestrator/process.constants';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -53,10 +53,9 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
         headers
       }
     );
-    
-    // Transform response from PascalCase to camelCase
+
     const transformedProcesses = response.data?.value.map(process => 
-      pascalToCamelCaseKeys(process) as ProcessGetResponse
+      transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessTimeMap)
     );
     
     return transformedProcesses;
@@ -74,36 +73,16 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * ```typescript
    * // Start a process by release key
    * const jobs = await sdk.process.startProcess({
-   *   releaseKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-   *   strategy: StartStrategy.All
+   *   releaseKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
    * }, 123); // folderId is required
    * 
    * // Start a process by name with specific robots
    * const jobs = await sdk.process.startProcess({
-   *   releaseName: "MyProcess",
-   *   strategy: StartStrategy.Specific,
-   *   robotIds: [456, 789]
+   *   releaseName: "MyProcess"
    * }, 123); // folderId is required
-   * 
-   * // Start a process with input arguments
-   * const jobs = await sdk.process.startProcess({
-   *   releaseKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-   *   strategy: StartStrategy.All,
-   *   inputArguments: JSON.stringify({ param1: "value1", param2: 42 })
-   * }, 123); // folderId is required
-   * 
-   * // Start a process with query options
-   * const jobs = await sdk.process.startProcess(
-   *   {
-   *     releaseKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-   *     strategy: StartStrategy.All
-   *   },
-   *   123, // folderId is required
-   *   { expand: "Robot,Release" } // query options
-   * );
    * ```
    */
-  async startProcess(request: processStartRequest, folderId: number, options: processStartOptions = {}): Promise<processStartResponse[]> {
+  async startProcess(request: processStartRequest, folderId: number, options: RequestOptions = {}): Promise<processStartResponse[]> {
     const headers = createHeaders(folderId);
     
     // Convert to PascalCase for API
@@ -127,9 +106,10 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
       }
     );
     
-    // Transform response from PascalCase to camelCase
-    return response.data?.value.map(job => 
-      pascalToCamelCaseKeys(job) as processStartResponse
+    const transformedProcess = response.data?.value.map(process => 
+      transformData(pascalToCamelCaseKeys(process) as processStartResponse, ProcessTimeMap)
     );
+
+    return transformedProcess;
   }
 }

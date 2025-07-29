@@ -1,4 +1,5 @@
-import { CollectionResponse } from '../common/commonTypes';
+import { JobState } from '../common/commonTypes';
+import { RequestOptions } from '../common/commonTypes';
 
 /**
  * Enum for process types
@@ -101,42 +102,6 @@ export enum StopStrategy {
 }
 
 /**
- * Interface for entry point data variation
- */
-export interface EntryPointDataVariation {
-  content?: string;
-  contentType?: 'Json';
-  id?: number;
-}
-
-/**
- * Interface for entry point
- */
-export interface EntryPoint {
-  uniqueId?: string;
-  path?: string;
-  inputArguments?: string;
-  outputArguments?: string;
-  dataVariation?: EntryPointDataVariation;
-  id?: number;
-}
-
-/**
- * Interface for tag
- */
-export interface Tag {
-  name?: string;
-  id?: number;
-}
-
-/**
- * Interface for process settings
- */
-export interface OrchestratorProcessSettings {
-  // Define based on actual API response
-}
-
-/**
  * Interface for MachineRobot
  */
 export interface MachineRobot {
@@ -165,66 +130,83 @@ export interface AutopilotSettings {
 }
 
 /**
- * Interface for video recording settings
+ * Interface for common process properties shared across multiple interfaces
  */
-export interface VideoRecordingSettings {
-  // Define based on actual API response
+export interface BaseProcessProperties {
+  jobPriority?: JobPriority;
+  specificPriorityValue?: number;
+  inputArguments?: string;
+  environmentVariables?: string;
+  entryPointPath?: string;
+  remoteControlAccess?: RemoteControlAccess;
+  requiresUserInteraction?: boolean;
 }
 
 /**
- * Interface for start process request
+ * Interface for common telemetry properties
  */
-export interface processStartRequest {
-  releaseKey?: string;
-  releaseName?: string;
+export interface TelemetryProperties {
+  traceId?: string;
+  parentSpanId?: string;
+  rootSpanId?: string;
+}
+
+/**
+ * Interface for common organization properties
+ */
+export interface OrganizationProperties {
+  organizationUnitId?: number;
+  organizationUnitFullyQualifiedName?: string;
+}
+
+/**
+ * Base interface for process start request
+ */
+interface BaseProcessStartRequest extends BaseProcessProperties, TelemetryProperties {
   strategy?: StartStrategy;
   robotIds?: number[];
   machineSessionIds?: number[];
   noOfRobots?: number;
   jobsCount?: number;
   source?: ProcessSourceType;
-  jobPriority?: JobPriority;
-  specificPriorityValue?: number;
   runtimeType?: string;
-  inputArguments?: string;
   inputFile?: string;
-  environmentVariables?: string;
   reference?: string;
   machineRobots?: MachineRobot[];
   attachments?: JobAttachment[];
   targetFramework?: TargetFramework;
   resumeOnSameContext?: boolean;
   batchExecutionKey?: string;
-  requiresUserInteraction?: boolean;
   stopProcessExpression?: string;
   stopStrategy?: StopStrategy;
   killProcessExpression?: string;
-  remoteControlAccess?: RemoteControlAccess;
   alertPendingExpression?: string;
   alertRunningExpression?: string;
   runAsMe?: boolean;
   parentOperationId?: string;
-  // autopilotForRobots?: AutopilotSettings;
-  profilingOptions?: string;
-  fpsContext?: string;
-  fpsProperties?: string;
-  traceId?: string;
-  parentSpanId?: string;
-  rootSpanId?: string;
-  entryPointPath?: string;
-  // videoRecordingSettings?: VideoRecordingSettings;
 }
 
 /**
- * Interface for process query options
+ * Interface for start process request with releaseKey
  */
-export interface processStartOptions {
-  expand?: string;
-  filter?: string;
-  select?: string;
-  orderby?: string;
-  count?: boolean;
+interface ProcessStartRequestWithKey extends BaseProcessStartRequest {
+  releaseKey: string;
+  releaseName?: string;
 }
+
+/**
+ * Interface for start process request with releaseName
+ */
+interface ProcessStartRequestWithName extends BaseProcessStartRequest {
+  releaseKey?: string;
+  releaseName: string;
+}
+
+/**
+ * Interface for start process request
+ * Either releaseKey or releaseName must be provided
+ */
+export type processStartRequest = ProcessStartRequestWithKey | ProcessStartRequestWithName;
 
 /**
  * Interface for simple robot
@@ -236,9 +218,9 @@ export interface SimpleRobot {
 }
 
 /**
- * Interface for simple release
+ * Interface for simple process
  */
-export interface SimpleRelease {
+export interface SimpleProcess {
   id?: number;
   name?: string;
   processKey?: string;
@@ -266,21 +248,6 @@ export interface JobError {
 }
 
 /**
- * Enum for job state
- */
-export enum OrchestratorJobState {
-  Pending = 'Pending',
-  Running = 'Running',
-  Stopping = 'Stopping',
-  Terminating = 'Terminating',
-  Faulted = 'Faulted',
-  Successful = 'Successful',
-  Stopped = 'Stopped',
-  Suspended = 'Suspended',
-  Resumed = 'Resumed'
-}
-
-/**
  * Enum for job type
  */
 export enum JobType {
@@ -293,41 +260,38 @@ export enum JobType {
  * Interface for argument metadata
  */
 export interface ArgumentMetadata {
-  // Define based on actual API response
+  Input?: string;
+  Output?: string;
 }
 
 /**
- * Interface for release version
+ * Interface for process version
  */
-export interface ReleaseVersion {
-  // Define based on actual API response
+export interface ProcessVersion {
+  ReleaseId: number;
+  VersionNumber: string;
+  CreationTime?: string;
+  ReleaseName?: string;
+  Id?: number;
 }
 
 /**
  * Interface for job response
  */
-export interface processStartResponse {
+export interface processStartResponse extends BaseProcessProperties, TelemetryProperties, OrganizationProperties {
   key: string;
   startTime: string | null;
   endTime: string | null;
-  state: OrchestratorJobState;
-  // subState: string | null;
-  jobPriority: JobPriority;
-  specificPriorityValue: number;
-  robot?: SimpleRobot;
-  release?: SimpleRelease;
-  // resourceOverwrites: string | null;
+  state: JobState;
   source: string;
   sourceType: string;
   batchExecutionKey: string;
   info: string | null;
-  creationTime: string;
+  createdTime: string; 
   startingScheduleId: number | null;
   releaseName: string;
   type: JobType;
-  inputArguments: string | null;
   inputFile: string | null;
-  environmentVariables?: string;
   outputArguments: string | null;
   outputFile: string | null;
   hostMachineName: string | null;
@@ -335,39 +299,29 @@ export interface processStartResponse {
   resumeVersion: number | null;
   stopStrategy: StopStrategy | null;
   runtimeType: string;
-  requiresUserInteraction: boolean;
   releaseVersionId: number | null;
-  entryPointPath: string;
-  organizationUnitId: number;
-  organizationUnitFullyQualifiedName: string | null;
   reference?: string;
   processType: ProcessType;
   machine?: Machine;
-  profilingOptions: string | null;
   resumeOnSameContext: boolean;
   localSystemAccount?: string;
   orchestratorUserIdentity: string | null;
-  remoteControlAccess: RemoteControlAccess;
   startingTriggerId: string | null;
   maxExpectedRunningTimeSeconds: number | null;
   parentJobKey: string | null;
   resumeTime: string | null;
-  lastModificationTime: string | null;
+  lastModifiedTime: string | null;  
   jobError: JobError | null;
   errorCode: string | null;
-  // fpsProperties: string | null;
-  traceId: string | null;
-  parentSpanId: string | null;
-  rootSpanId: string | null;
-  // autopilotForRobots: AutopilotSettings | null;
-  // fpsContext: string | null;
+  robot?: SimpleRobot;
+  release?: SimpleProcess;
   id: number;
 }
 
 /**
  * Interface for process response
  */
-export interface ProcessGetResponse {
+export interface ProcessGetResponse extends BaseProcessProperties, OrganizationProperties {
   key: string;
   processKey: string;
   processVersion: string;
@@ -376,37 +330,23 @@ export interface ProcessGetResponse {
   description?: string;
   name: string;
   entryPointId: number;
-  entryPointPath: string | null;
-  // entryPoint?: EntryPoint;
-  inputArguments: string | null;
-  environmentVariables?: string;
   processType: ProcessType;
   supportsMultipleEntryPoints: boolean;
-  requiresUserInteraction: boolean;
   isConversational: boolean | null;
-  minRequiredRobotVersion: string | null
+  minRequiredRobotVersion: string | null;
   isCompiled: boolean;
-  // automationHubIdeaUrl?: string;
-  currentVersion?: ReleaseVersion;
-  releaseVersions?: ReleaseVersion[];
+  currentVersion?: ProcessVersion;
+  releaseVersions?: ProcessVersion[];
   arguments: ArgumentMetadata;
-  processSettings: OrchestratorProcessSettings | null;
-  // videoRecordingSettings?: VideoRecordingSettings;
   autoUpdate: boolean;
   hiddenForAttendedUser: boolean;
   feedId: string;
-  jobPriority: JobPriority;
-  specificPriorityValue: number;
   folderKey: string;
-  organizationUnitId: number;
-  organizationUnitFullyQualifiedName: string;
   targetFramework: TargetFramework;
   robotSize: RobotSize | null;
-  // tags?: Tag[];
-  remoteControlAccess: RemoteControlAccess;
-  lastModificationTime: string | null;
+  lastModifiedTime: string | null;  
   lastModifierUserId: number | null;
-  creationTime: string;
+  createdTime: string;              
   creatorUserId: number;
   id: number;
 }
@@ -414,72 +354,12 @@ export interface ProcessGetResponse {
 /**
  * Interface for process get all options
  */
-export interface ProcessGetAllOptions {
-  expand?: string;
-  filter?: string;
-  select?: string;
-  orderby?: string;
-  count?: boolean;
-}
+export interface ProcessGetAllOptions extends RequestOptions {}
 
 /**
  * Process service model interface
  */
 export interface ProcessServiceModel {
   getAll(options?: ProcessGetAllOptions, folderId?: number): Promise<ProcessGetResponse[]>;
-  startProcess(request: processStartRequest, folderId: number, options?: processStartOptions): Promise<processStartResponse[]>;
+  startProcess(request: processStartRequest, folderId: number, options?: RequestOptions): Promise<processStartResponse[]>;
 }
-
-/**
- * Process class to represent a UiPath process
- */
-// export class Process implements ProcessResponse {
-//   key?: string;
-//   processKey?: string;
-//   processVersion?: string;
-//   isLatestVersion?: boolean;
-//   isProcessDeleted?: boolean;
-//   description?: string;
-//   name!: string;
-//   entryPointId?: number;
-//   entryPointPath?: string;
-//   entryPoint?: EntryPoint;
-//   inputArguments?: string;
-//   environmentVariables?: string;
-//   processType?: ProcessType;
-//   supportsMultipleEntryPoints?: boolean;
-//   requiresUserInteraction?: boolean;
-//   isConversational?: boolean;
-//   minRequiredRobotVersion?: string;
-//   isAttended?: boolean;
-//   isCompiled?: boolean;
-//   automationHubIdeaUrl?: string;
-//   currentVersion?: ReleaseVersion;
-//   releaseVersions?: ReleaseVersion[];
-//   arguments?: ArgumentMetadata;
-//   processSettings?: OrchestratorProcessSettings;
-//   videoRecordingSettings?: VideoRecordingSettings;
-//   autoUpdate?: boolean;
-//   hiddenForAttendedUser?: boolean;
-//   feedId?: string;
-//   jobPriority?: JobPriority;
-//   specificPriorityValue?: number;
-//   folderKey?: string;
-//   organizationUnitId?: number;
-//   organizationUnitFullyQualifiedName?: string;
-//   targetFramework?: TargetFramework;
-//   robotSize?: RobotSize;
-//   tags?: Tag[];
-//   remoteControlAccess?: RemoteControlAccess;
-//   lastModificationTime?: string;
-//   lastModifierUserId?: number;
-//   creationTime?: string;
-//   creatorUserId?: number;
-//   id?: number;
-//   [key: string]: any;
-  
-//   constructor(data: ProcessResponse, private service: ProcessServiceModel) {
-//     Object.assign(this, data);
-//   }
-  
-// }
