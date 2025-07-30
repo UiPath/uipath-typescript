@@ -261,11 +261,11 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   stopStrategy: StopStrategy | null;
   runtimeType: string;
   releaseVersionId: number | null;
-  reference?: string;
+  reference: string;
   processType: ProcessType;
   machine?: Machine;
   resumeOnSameContext: boolean;
-  localSystemAccount?: string;
+  localSystemAccount: string;
   orchestratorUserIdentity: string | null;
   startingTriggerId: string | null;
   maxExpectedRunningTimeSeconds: number | null;
@@ -288,7 +288,7 @@ export interface ProcessGetResponse extends ProcessProperties, FolderProperties 
   processVersion: string;
   isLatestVersion: boolean;
   isProcessDeleted: boolean;
-  description?: string;
+  description: string;
   name: string;
   entryPointId: number;
   processType: ProcessType;

@@ -62,7 +62,8 @@ The SDK provides access to the following services through a consistent API:
 - `sdk.task` - Create and manage tasks
 - `sdk.entity` - Data Fabric entity operations
 - `sdk.process` - Manage Orchestrator processes
-- `sdk.buckets` - Manage storage buckets in Orchestrator
+- `sdk.bucket` - Manage storage buckets in Orchestrator
+- `sdk.queue` - Manage Orchestrator queues
 
 ### Consistent Method Naming
 
@@ -85,7 +86,7 @@ const task = await sdk.task.getById('task-id');
 const entity = await sdk.entity.create({...});
 
 // Get all buckets 
-const buckets = await sdk.buckets.getAll();
+const buckets = await sdk.bucket.getAll();
 
 // Get a specific process and start it
 const process = await sdk.process.getAll({ 
@@ -94,6 +95,9 @@ const process = await sdk.process.getAll({
 const job = await sdk.process.startProcess({
   releaseKey: process[0].key
 }, 'folder-id');
+
+// Get all queues
+const queues = await sdk.queue.getAll();
 ```
 
 ## TypeScript Support

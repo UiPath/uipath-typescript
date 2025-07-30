@@ -11,7 +11,7 @@ import {
 } from '../../models/orchestrator/process';
 import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
-import { ProcessTimeMap } from '../../models/orchestrator/process.constants';
+import { ProcessMap } from '../../models/orchestrator/process.constants';
 import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { PROCESS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -62,7 +62,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     );
 
     const transformedProcesses = response.data?.value.map(process => 
-      transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessTimeMap)
+      transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap)
     );
     
     return transformedProcesses;
@@ -114,7 +114,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     );
     
     const transformedProcess = response.data?.value.map(process => 
-      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessTimeMap)
+      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
     );
 
     return transformedProcess;

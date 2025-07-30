@@ -7,7 +7,8 @@ import {
   EntityService,
   TaskService,
   ProcessService,
-  BucketService
+  BucketService,
+  QueueService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
@@ -140,6 +141,13 @@ export class UiPath {
    */
   get bucket(): BucketService {
     return this.getService(BucketService);
+  }
+  
+  /**
+   * Access to Orchestrator Queues service
+   */
+  get queue(): QueueService {
+    return this.getService(QueueService);
   }
 }
 

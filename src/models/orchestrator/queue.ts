@@ -1,45 +1,37 @@
 import { RequestOptions } from '../common/common-types';
 
 /**
- * Interface for queue definition response
+ * Interface for queue response
  */
-export interface QueueDefinitionDto {
+export interface QueueGetResponse {
   key: string;
   name: string;
-  description?: string;
-  maxNumberOfRetries?: number;
-  acceptAutomaticallyRetry?: boolean;
-  retryAbandonedItems?: boolean;
-  enforceUniqueReference?: boolean;
-  encrypted?: boolean;
-  specificDataJsonSchema?: string;
-  outputDataJsonSchema?: string;
-  analyticsDataJsonSchema?: string;
-  creationTime?: string;
-  processScheduleId?: number;
-  slaInMinutes?: number;
-  riskSlaInMinutes?: number;
-  releaseId?: number;
-  isProcessInCurrentFolder?: boolean;
-  foldersCount?: number;
-  organizationUnitId?: number;
-  organizationUnitFullyQualifiedName?: string;
   id: number;
+  description: string;
+  maxNumberOfRetries: number;
+  acceptAutomaticallyRetry: boolean;
+  retryAbandonedItems: boolean;
+  enforceUniqueReference: boolean;
+  encrypted: boolean;
+  specificDataJsonSchema: string | null;
+  outputDataJsonSchema: string | null;
+  analyticsDataJsonSchema: string | null;
+  createdTime: string;
+  processScheduleId: number | null;
+  slaInMinutes: number;
+  riskSlaInMinutes: number;
+  releaseId: number | null;
+  isProcessInCurrentFolder: boolean | null;
+  foldersCount: number;
+  folderId: number;
+  folderFullyQualifiedName: string;
 }
 
-/**
- * Interface for queue get all options
- */
-export interface QueueGetAllOptions extends RequestOptions {
-  mandatoryPermissions?: string[];
-  atLeastOnePermissions?: string[];
-}
+export type QueueGetAllOptions = RequestOptions;
 
-/**
- * Wrapper for QueueDefinitionDto collection response
- */
-export interface QueueDefinitionCollection {
-  value: QueueDefinitionDto[];
+export interface QueueGetByIdOptions {
+  expand?: string;
+  select?: string;
 }
 
 /**
@@ -53,14 +45,14 @@ export interface QueueServiceModel {
    * @param folderId - Optional folder ID
    * @returns Promise resolving to an array of queues
    */
-  getAll(options?: QueueGetAllOptions, folderId?: number): Promise<QueueDefinitionDto[]>;
+  getAll(options?: QueueGetAllOptions, folderId?: number): Promise<QueueGetResponse[]>;
 
   /**
    * Gets a single queue by ID
    * 
    * @param id - Queue ID
-   * @param folderId - Optional folder ID
+   * @param folderId - Required folder ID
    * @returns Promise resolving to a queue definition
    */
-  getById(id: number, folderId?: number): Promise<QueueDefinitionDto>;
+  getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueGetResponse>;
 }
