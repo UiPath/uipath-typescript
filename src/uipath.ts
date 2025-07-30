@@ -8,7 +8,8 @@ import {
   TaskService,
   ProcessService,
   BucketService,
-  QueueService
+  QueueService,
+  AssetService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
@@ -148,6 +149,13 @@ export class UiPath {
    */
   get queue(): QueueService {
     return this.getService(QueueService);
+  }
+
+  /**
+   * Access to Orchestrator Assets service
+   */
+  get asset(): AssetService {
+    return this.getService(AssetService);
   }
 }
 

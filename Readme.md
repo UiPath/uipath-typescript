@@ -64,6 +64,7 @@ The SDK provides access to the following services through a consistent API:
 - `sdk.process` - Manage Orchestrator processes
 - `sdk.bucket` - Manage storage buckets in Orchestrator
 - `sdk.queue` - Manage Orchestrator queues
+- `sdk.asset` - Manage Orchestrator assets
 
 ### Consistent Method Naming
 
@@ -86,7 +87,7 @@ const task = await sdk.task.getById('task-id');
 const entity = await sdk.entity.create({...});
 
 // Get all buckets 
-const buckets = await sdk.bucket.getAll();
+const buckets = await sdk.bucket.getAll('folder-id');
 
 // Get a specific process and start it
 const process = await sdk.process.getAll({ 
@@ -98,6 +99,9 @@ const job = await sdk.process.startProcess({
 
 // Get all queues
 const queues = await sdk.queue.getAll();
+
+// Get all assets
+const assets = await sdk.asset.getAll('folder-Id');
 ```
 
 ## TypeScript Support

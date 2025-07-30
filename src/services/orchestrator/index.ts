@@ -1,4 +1,4 @@
-// export * from './assets';
+export * from './assets';
 export * from './buckets';
 // export * from './folders';
 // export * from './jobs';

@@ -91,3 +91,10 @@ export const QUEUE_ENDPOINTS = {
   GET_ALL: '/odata/QueueDefinitions',
   GET_BY_ID: (id: number) => `/odata/QueueDefinitions(${id})`,
 } as const;
+
+/**
+ * Orchestrator Asset Service Endpoints
+ */
+export const ASSET_ENDPOINTS = {
+  GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered',
+} as const;
