@@ -4,5 +4,5 @@
 export const QueueMap: { [key: string]: string } = {
     creationTime: 'createdTime',
     organizationUnitId: 'folderId',
-    organizationUnitFullyQualifiedName: 'folderFullyQualifiedName'
+    organizationUnitFullyQualifiedName: 'folderName'
   }; 

@@ -24,7 +24,7 @@ export interface QueueGetResponse {
   isProcessInCurrentFolder: boolean | null;
   foldersCount: number;
   folderId: number;
-  folderFullyQualifiedName: string;
+  folderName: string;
 }
 
 export type QueueGetAllOptions = RequestOptions;

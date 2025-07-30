@@ -129,7 +129,7 @@ export interface ProcessProperties {
  */
 export interface FolderProperties {
   folderId?: number;
-  folderFullyQualifiedName?: string;
+  folderName?: string;
 }
 
 /**
