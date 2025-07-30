@@ -313,7 +313,7 @@ export interface ProcessGetResponse extends ProcessProperties, FolderProperties 
 /**
  * Interface for process get all options
  */
-export interface ProcessGetAllOptions extends RequestOptions {}
+export type ProcessGetAllOptions = RequestOptions;
 
 /**
  * Process service model interface
