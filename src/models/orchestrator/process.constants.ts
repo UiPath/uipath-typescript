@@ -1,9 +1,9 @@
 /**
- * Maps time-related fields for Process entities to ensure consistent naming
+ * Maps fields for Process entities to ensure consistent naming
  */
-export const ProcessTimeMap: { [key: string]: string } = {
+export const ProcessMap: { [key: string]: string } = {
   lastModificationTime: 'lastModifiedTime',
   creationTime: 'createdTime',
   organizationUnitId: 'folderId',
-  organizationUnitFullyQualifiedName: 'folderFullyQualifiedName'
+  organizationUnitFullyQualifiedName: 'folderName'
 }; 

@@ -83,3 +83,11 @@ export const PROCESS_ENDPOINTS = {
   GET_ALL: '/odata/Releases',
   START_PROCESS: '/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs',
 } as const;
+
+/**
+ * Orchestrator Queue Service Endpoints
+ */
+export const QUEUE_ENDPOINTS = {
+  GET_ALL: '/odata/QueueDefinitions',
+  GET_BY_ID: (id: number) => `/odata/QueueDefinitions(${id})`,
+} as const;

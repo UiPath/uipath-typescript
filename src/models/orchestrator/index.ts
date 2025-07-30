@@ -5,4 +5,4 @@ export * from './bucket';
 // export * from './folder';
 // export * from './job';
 export * from './process';
-// export * from './queue';
+export * from './queue';
