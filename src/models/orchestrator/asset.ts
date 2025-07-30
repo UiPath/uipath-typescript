@@ -42,13 +42,6 @@ export interface AssetGetResponse {
   valueScope: AssetValueScope;
   valueType: AssetValueType;
   value: string | null;
-  stringValue: string;
-  boolValue: boolean;
-  intValue: number;
-  credentialUsername: string;
-  credentialPassword: string;
-  secretValue: string;
-  externalName: string | null;
   credentialStoreId: number | null;
   keyValueList: CustomKeyValuePair[];
   hasDefaultValue: boolean;
