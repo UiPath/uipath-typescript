@@ -111,23 +111,39 @@ export class TaskService extends BaseService implements TaskServiceModel {
   }
   
   /**
-   * Gets tasks across folders with optional query parameters
+   * Gets tasks across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options
-   * @param folderId - Optional folder ID
+   * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of tasks
    * 
    * @example
    * ```typescript
-   * // Get all tasks
+   * // Get all tasks across folders
    * const tasks = await sdk.task.getAll();
+   * 
+   * // Get tasks within a specific folder
+   * const tasks = await sdk.task.getAll({ 
+   *   folderId: 123
+   * });
    * ```
    */
-  async getAll(options: TaskGetAllOptions = {}, folderId?: number): Promise<Task<TaskGetResponse>[]> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
+  async getAll(options: TaskGetAllOptions = {}): Promise<Task<TaskGetResponse>[]> {
+    const { folderId, ...restOptions } = options;
+    
+    let headers = {};
+    // If folderId is provided, add it to the filter
+    if (folderId !== undefined) {
+      // Create or add to existing filter
+      if (restOptions.filter) {
+        restOptions.filter = `${restOptions.filter} and organizationUnitId eq ${folderId}`;
+      } else {
+        restOptions.filter = `organizationUnitId eq ${folderId}`;
+      }
+    }
+    
     // prefix all keys except 'event'
-    const keysToPrefix = Object.keys(options).filter(k => k !== 'event');
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const keysToPrefix = Object.keys(restOptions).filter(k => k !== 'event');
+    const apiOptions = addPrefixToKeys(restOptions, '$', keysToPrefix);
     const response = await this.get<CollectionResponse<TaskGetResponse>>(
       TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
       { 
