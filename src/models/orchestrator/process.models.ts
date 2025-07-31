@@ -21,5 +21,5 @@ export interface ProcessServiceModel {
    * @param options - Optional request options
    * @returns Promise resolving to array of started process instances
    */
-  startProcess(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
+  start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
 } 

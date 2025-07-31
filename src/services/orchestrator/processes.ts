@@ -52,7 +52,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     
     // Add folderId to headers if provided
     let headerParams = {};
-    if (folderId !== undefined && folderId !== null) {
+    if (folderId) {
       headerParams = { [FOLDER_ID]: folderId };
     }
     const headers = createHeaders(headerParams);
@@ -98,7 +98,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async startProcess(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
+  async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     // Convert to PascalCase for API

@@ -81,7 +81,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     const { folderId, ...restOptions } = options;
     
     // If folderId is provided, use the folder-specific endpoint
-    if (folderId !== undefined && folderId !== null) {
+    if (folderId) {
       return this._getByFolder<object, BucketGetResponse>(
         BUCKET_ENDPOINTS.GET_BY_FOLDER,
         folderId, 

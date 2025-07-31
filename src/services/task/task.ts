@@ -133,7 +133,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     let headers = {};
     // If folderId is provided, add it to the filter
-    if (folderId !== undefined && folderId !== null) {
+    if (folderId) {
       // Create or add to existing filter
       if (restOptions.filter) {
         restOptions.filter = `${restOptions.filter} and organizationUnitId eq ${folderId}`;

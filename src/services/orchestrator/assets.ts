@@ -46,8 +46,8 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
   async getAll(options: AssetGetAllOptions = {}): Promise<AssetGetResponse[]> {
     const { folderId, ...restOptions } = options;
     
-    // If folderId is provided and not null, use the folder-specific endpoint
-    if (folderId !== undefined && folderId !== null) {
+    // If folderId is provided, use the folder-specific endpoint
+    if (folderId) {
       return this._getByFolder<object, AssetGetResponse>(
         ASSET_ENDPOINTS.GET_BY_FOLDER, 
         folderId, 

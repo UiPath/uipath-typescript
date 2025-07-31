@@ -50,7 +50,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     const { folderId, ...restOptions } = options;
     
     // If folderId is provided, use the folder-specific endpoint
-    if (folderId !== undefined && folderId !== null) {
+    if (folderId) {
       return this._getByFolder<object, QueueGetResponse>(
         QUEUE_ENDPOINTS.GET_BY_FOLDER,
         folderId,
