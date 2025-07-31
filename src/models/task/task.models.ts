@@ -19,8 +19,8 @@ export interface TaskServiceModel {
 
   getById(id: number, options?: TaskGetByIdOptions, folderId?: number): Promise<Task<TaskGetResponse>>;
 
-  create(request: TaskCreateRequest, folderId?: number): Promise<Task<TaskCreateResponse>>;
-  
+  create(request: TaskCreateRequest, folderId: number): Promise<Task<TaskCreateResponse>>;
+
   assign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResult[]>;
   
   reassign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResult[]>;

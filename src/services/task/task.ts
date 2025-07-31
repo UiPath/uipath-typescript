@@ -30,6 +30,7 @@ import { CollectionResponse } from '../../models/common/common-types';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
+import { ODATA_PREFIX } from '../../utils/constants/common';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -132,7 +133,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     let headers = {};
     // If folderId is provided, add it to the filter
-    if (folderId !== undefined) {
+    if (folderId !== undefined && folderId !== null) {
       // Create or add to existing filter
       if (restOptions.filter) {
         restOptions.filter = `${restOptions.filter} and organizationUnitId eq ${folderId}`;
@@ -143,7 +144,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     // prefix all keys except 'event'
     const keysToPrefix = Object.keys(restOptions).filter(k => k !== 'event');
-    const apiOptions = addPrefixToKeys(restOptions, '$', keysToPrefix);
+    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
     const response = await this.get<CollectionResponse<TaskGetResponse>>(
       TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
       { 
@@ -185,7 +186,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     // prefix all keys in options
     const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
     const response = await this.get<TaskGetResponse>(
       TASK_ENDPOINTS.GET_BY_ID(id),
       { 

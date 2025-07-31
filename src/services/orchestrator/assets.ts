@@ -1,23 +1,22 @@
-import { BaseService } from '../base-service';
+import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { CollectionResponse } from '../../models/common/common-types';
 import { 
   AssetGetResponse, 
-  AssetGetAllOptions,
-  AssetServiceModel 
-} from '../../models/orchestrator/asset';
+  AssetGetAllOptions
+} from '../../models/orchestrator/asset.types';
+import { AssetServiceModel } from '../../models/orchestrator/asset.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
-import { createHeaders } from '../../utils/http/headers';
 import { TokenManager } from '../../core/auth/token-manager';
-import { FOLDER_ID } from '../../utils/constants/headers';
 import { ASSET_ENDPOINTS } from '../../utils/constants/endpoints';
+import { ODATA_PREFIX } from '../../utils/constants/common';
 import { AssetMap } from '../../models/orchestrator/assets.constants';
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
  */
-export class AssetService extends BaseService implements AssetServiceModel {
+export class AssetService extends FolderScopedService implements AssetServiceModel {
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }
@@ -47,14 +46,19 @@ export class AssetService extends BaseService implements AssetServiceModel {
   async getAll(options: AssetGetAllOptions = {}): Promise<AssetGetResponse[]> {
     const { folderId, ...restOptions } = options;
     
-    // If folderId is provided, use the folder-specific endpoint
-    if (folderId !== undefined) {
-      return this.getByFolder(folderId, restOptions);
+    // If folderId is provided and not null, use the folder-specific endpoint
+    if (folderId !== undefined && folderId !== null) {
+      return this._getByFolder<object, AssetGetResponse>(
+        ASSET_ENDPOINTS.GET_BY_FOLDER, 
+        folderId, 
+        restOptions, 
+        (asset) => transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap)
+      );
     }
     
     // Otherwise get assets across all folders
     const keysToPrefix = Object.keys(restOptions);
-    const apiOptions = addPrefixToKeys(restOptions, '$', keysToPrefix);
+    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<CollectionResponse<AssetGetResponse>>(
       ASSET_ENDPOINTS.GET_ALL,
@@ -63,35 +67,8 @@ export class AssetService extends BaseService implements AssetServiceModel {
       }
     );
 
-    const transformedAssets = response.data?.value.map(asset => 
-      transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap)
-    );
-    
-    return transformedAssets;
-  }
-
-  /**
-   * Gets assets in a folder with optional query parameters
-   * 
-   * @param folderId - required folder ID
-   * @param options - Query options
-   * @returns Promise resolving to an array of assets
-   */
-  private async getByFolder(folderId: number, options: AssetGetAllOptions = {}): Promise<AssetGetResponse[]> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
-    
-    const response = await this.get<CollectionResponse<AssetGetResponse>>(
-      ASSET_ENDPOINTS.GET_BY_FOLDER,
-      { 
-        params: apiOptions,
-        headers
-      }
-    );
-
-    const transformedAssets = response.data?.value.map(asset => 
+    const assetArray = response.data?.value;
+    const transformedAssets = assetArray?.map(asset => 
       transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap)
     );
     

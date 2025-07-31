@@ -1,23 +1,24 @@
-import { BaseService } from '../base-service';
+import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { 
   BucketGetResponse, 
   BucketGetAllOptions, 
-  BucketGetByIdOptions,
-  BucketServiceModel 
-} from '../../models/orchestrator/bucket';
+  BucketGetByIdOptions
+} from '../../models/orchestrator/bucket.types';
+import { BucketServiceModel } from '../../models/orchestrator/bucket.models';
 import { pascalToCamelCaseKeys, addPrefixToKeys } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
+import { ODATA_PREFIX } from '../../utils/constants/common';
 import { CollectionResponse } from '../../models/common/common-types';
 
 /**
  * Service for interacting with UiPath Orchestrator Buckets API
  */
-export class BucketService extends BaseService implements BucketServiceModel {
+export class BucketService extends FolderScopedService implements BucketServiceModel {
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }
@@ -40,7 +41,7 @@ export class BucketService extends BaseService implements BucketServiceModel {
     
     // Prefix all keys in options with $ for OData
     const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<BucketGetResponse>(
       BUCKET_ENDPOINTS.GET_BY_ID(bucketId),
@@ -80,13 +81,18 @@ export class BucketService extends BaseService implements BucketServiceModel {
     const { folderId, ...restOptions } = options;
     
     // If folderId is provided, use the folder-specific endpoint
-    if (folderId !== undefined) {
-      return this.getByFolder(folderId, restOptions);
+    if (folderId !== undefined && folderId !== null) {
+      return this._getByFolder<object, BucketGetResponse>(
+        BUCKET_ENDPOINTS.GET_BY_FOLDER,
+        folderId, 
+        restOptions,
+        (bucket) => pascalToCamelCaseKeys(bucket) as BucketGetResponse
+      );
     }
     
     // Otherwise get buckets across all folders
     const keysToPrefix = Object.keys(restOptions);
-    const apiOptions = addPrefixToKeys(restOptions, '$', keysToPrefix);
+    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<CollectionResponse<BucketGetResponse>>(
       BUCKET_ENDPOINTS.GET_ALL,
@@ -95,37 +101,8 @@ export class BucketService extends BaseService implements BucketServiceModel {
       }
     );
 
-    // Transform response Bucket array from PascalCase to camelCase
-    const transformedBuckets = response.data?.value.map(bucket => 
-      pascalToCamelCaseKeys(bucket) as BucketGetResponse
-    );
-    
-    return transformedBuckets;
-  }
-
-  /**
-   * Gets buckets in a folder with optional query parameters
-   * 
-   * @param folderId - required folder ID
-   * @param options - Query options
-   * @returns Promise resolving to an array of buckets
-   */
-  private async getByFolder(folderId: number, options: BucketGetAllOptions = {}): Promise<BucketGetResponse[]> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
-    
-    const response = await this.get<CollectionResponse<BucketGetResponse>>(
-      BUCKET_ENDPOINTS.GET_BY_FOLDER,
-      { 
-        params: apiOptions,
-        headers
-      }
-    );
-
-    // Transform response Bucket array from PascalCase to camelCase
-    const transformedBuckets = response.data?.value.map(bucket => 
+    const bucketArray = response.data?.value; 
+    const transformedBuckets = bucketArray?.map(bucket => 
       pascalToCamelCaseKeys(bucket) as BucketGetResponse
     );
     

@@ -316,11 +316,3 @@ export interface ProcessGetResponse extends ProcessProperties, FolderProperties 
 export interface ProcessGetAllOptions extends RequestOptions {
   folderId?: number;
 }
-
-/**
- * Process service model interface
- */
-export interface ProcessServiceModel {
-  getAll(options?: ProcessGetAllOptions): Promise<ProcessGetResponse[]>;
-  startProcess(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
-}

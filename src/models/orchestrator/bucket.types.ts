@@ -30,8 +30,3 @@ export interface BucketGetByIdOptions {
   expand?: string;
   select?: string;
 }
-
-export interface BucketServiceModel {
-  getAll(options?: BucketGetAllOptions): Promise<BucketGetResponse[]>;
-  getById(bucketId: number, folderId: number, options?: BucketGetByIdOptions): Promise<BucketGetResponse>;
-}
