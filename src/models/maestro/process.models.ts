@@ -8,6 +8,14 @@ import { ProcessInstancesCollection } from './process-instance.models';
 import { ProcessInstancesService } from '../../services/maestro/process-instances';
 
 /**
+ * Service interface for MaestroProcessesService
+ * Defines the contract that the service must implement
+ */
+export interface MaestroProcessesServiceModel {
+  getAll(): Promise<MaestroProcess[]>;
+}
+
+/**
  * Enhanced MaestroProcess class providing fluent interface for process operations
  * Uses interface declaration merging to avoid property duplication
  */
@@ -18,7 +26,8 @@ export class MaestroProcess {
 
   constructor(
     data: MaestroProcessGetAllResponse,
-    private readonly service: ProcessInstancesService
+    private readonly processInstancesService: ProcessInstancesService,
+    private readonly processesService: MaestroProcessesServiceModel
   ) {
     // Copy all fields from data to this instance
     Object.assign(this, data);
@@ -27,7 +36,7 @@ export class MaestroProcess {
     this._instances = new ProcessInstancesCollection(
       data.processKey,
       data.folderKey,
-      service
+      processInstancesService
     );
   }
 
@@ -49,5 +58,6 @@ export class MaestroProcess {
   get instances(): ProcessInstancesCollection {
     return this._instances;
   }
+
 
 } 

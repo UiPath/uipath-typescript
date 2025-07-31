@@ -1,15 +1,16 @@
-import { RawMaestroProcessGetAllResponse, MaestroProcessSettingsResponse, MaestroProcess } from '../../models/maestro';
+import { RawMaestroProcessGetAllResponse, MaestroProcess } from '../../models/maestro';
 import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ProcessInstancesService } from './process-instances';
+import type { MaestroProcessesServiceModel } from '../../models/maestro/process.models';
 
 /**
  * Service for interacting with Maestro Processes
  */
-export class MaestroProcessesService extends BaseService {
+export class MaestroProcessesService extends BaseService implements MaestroProcessesServiceModel {
   private _processInstancesService: ProcessInstancesService;
 
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
@@ -38,6 +39,9 @@ export class MaestroProcessesService extends BaseService {
    *     const instance = await process.instances.getById(instances[0].id);
    *     await instance.cancel('Example cancellation');
    *   }
+   * 
+   *   // Get process settings
+   *   const settings = await process.getSettings();
    * }
    * 
    * // Filter processes with faulted instances
@@ -47,20 +51,9 @@ export class MaestroProcessesService extends BaseService {
   async getAll(): Promise<MaestroProcess[]> {
     const response = await this.get<RawMaestroProcessGetAllResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
     
-    // Convert to MaestroProcess objects with fluent interface
+    // Convert to MaestroProcess rich objects following Task service pattern
     return response.data.processes.map(data => 
-      new MaestroProcess(data, this._processInstancesService)
+      new MaestroProcess(data, this._processInstancesService, this)
     );
-  }
-
-  /**
-   * Get Process Settings
-   * Authorized via Processes.View folder permission
-   * @param processKey - The unique identifier of the process
-   * @returns Promise<ProcessSettings>
-   */
-  async getSettings(processKey: string): Promise<MaestroProcessSettingsResponse> {
-    const response = await this.get<MaestroProcessSettingsResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_SETTINGS(processKey), {});
-    return response.data;
   }
 } 

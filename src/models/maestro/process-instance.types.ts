@@ -21,8 +21,8 @@ export interface ProcessInstanceGetResponse {
   instanceDisplayName: string;
   source: string;
   creatorUserKey: string | null;
-  startedTimeUtc: string;
-  completedTimeUtc: string | null;
+  startedTime: string | null;
+  completedTime: string | null;
   instanceRuns: InstanceRun[];
 }
 
@@ -97,7 +97,7 @@ export interface ProcessInstanceExecutionHistoryResponse {
   updatedAt?: string;
   organizationId: string;
   tenantId: string | null;
-  expiryTimeUtc: string | null;
+  expiredTime: string | null;
   folderKey: string | null;
   source: ProcessInstanceSource;
 }
@@ -108,7 +108,7 @@ export interface ProcessInstanceExecutionHistoryResponse {
 export interface InstanceRun {
   runId: string;
   status: string;
-  startedTimeUtc: string;
-  completedTimeUtc: string;
+  startedTime: string;
+  completedTime: string;
   properties: Record<string, unknown>;
 }

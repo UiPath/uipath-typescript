@@ -14,6 +14,8 @@ import {
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../utils/constants/headers';
+import { transformData } from '../../utils/transform';
+import { ProcessInstanceMap, ProcessInstanceExecutionHistoryMap, InstanceRunMap } from '../../models/maestro/process-instance.constants';
 
 
 
@@ -54,7 +56,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     });
     
     return response.data?.instances?.map(instanceData => 
-      new ProcessInstance(instanceData, this)
+      new ProcessInstance(transformData(instanceData, ProcessInstanceMap), this)
     ) || [];
   }
 
@@ -80,7 +82,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    */
   async getById(id: string, folderKey: string): Promise<ProcessInstance> {
     const response = await this._getById(id, folderKey);
-    return new ProcessInstance(response, this);
+    return new ProcessInstance(transformData(response, ProcessInstanceMap), this);
   }
 
   /**
@@ -91,7 +93,9 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    */
   async getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
     const response = await this.get<ProcessInstanceExecutionHistoryResponse[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
-    return response.data;
+    return response.data.map(historyItem => 
+      transformData(historyItem, ProcessInstanceExecutionHistoryMap)
+    );
   }
 
   /**

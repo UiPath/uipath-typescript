@@ -60,6 +60,9 @@ export class ProcessInstancesCollection {
  * This allows the class to call service methods
  */
 export interface ProcessInstanceServiceModel {
+  getById(instanceId: string, folderKey: string): Promise<ProcessInstance>;
+  getExecutionHistory(instanceId: string): Promise<any[]>;
+  getBpmn(instanceId: string, folderKey: string): Promise<string>;
   cancel(instanceId: string, folderKey: string, request?: ProcessInstanceOperationRequest): Promise<void>;
   pause(instanceId: string, folderKey: string, request?: ProcessInstanceOperationRequest): Promise<void>;
   resume(instanceId: string, folderKey: string, request?: ProcessInstanceOperationRequest): Promise<void>;
@@ -138,6 +141,36 @@ export class ProcessInstance {
   async resume(comment?: string): Promise<void> {
     if (!this.instanceId) throw new Error('Instance ID is null');
     await this.service.resume(this.instanceId, this.folderKey, comment ? { comment } : {});
+  }
+
+  /**
+   * Gets execution history for this process instance
+   * 
+   * @returns Promise resolving to execution history
+   * 
+   * @example
+   * ```typescript
+   * const history = await instance.getExecutionHistory();
+   * ```
+   */
+  async getExecutionHistory(): Promise<any[]> {
+    if (!this.instanceId) throw new Error('Instance ID is null');
+    return this.service.getExecutionHistory(this.instanceId);
+  }
+
+  /**
+   * Gets BPMN XML for this process instance
+   * 
+   * @returns Promise resolving to BPMN XML string
+   * 
+   * @example
+   * ```typescript
+   * const bpmn = await instance.getBpmn();
+   * ```
+   */
+  async getBpmn(): Promise<string> {
+    if (!this.instanceId) throw new Error('Instance ID is null');
+    return this.service.getBpmn(this.instanceId, this.folderKey);
   }
 
 }
