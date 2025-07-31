@@ -25,16 +25,20 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
   }
 
   /**
-   * Gets processes with optional query parameters
+   * Gets all processes across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options
-   * @param folderId - Optional folder ID
+   * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of processes
    * 
    * @example
    * ```typescript
-   * // Get all processes
+   * // Get all processes across folders
    * const processes = await sdk.process.getAll();
+   * 
+   * // Get processes within a specific folder
+   * const processes = await sdk.process.getAll({ 
+   *   folderId: 123
+   * });
    * 
    * // Get processes with filtering
    * const processes = await sdk.process.getAll({ 
@@ -42,7 +46,10 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * });
    * ```
    */
-  async getAll(options: ProcessGetAllOptions = {}, folderId?: number): Promise<ProcessGetResponse[]> {
+  async getAll(options: ProcessGetAllOptions = {}): Promise<ProcessGetResponse[]> {
+    const { folderId, ...restOptions } = options;
+    
+    // Add folderId to headers if provided
     let headerParams = {};
     if (folderId !== undefined) {
       headerParams = { [FOLDER_ID]: folderId };
@@ -50,8 +57,8 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     const headers = createHeaders(headerParams);
     
     // Prefix all keys with '$' for OData
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const keysToPrefix = Object.keys(restOptions);
+    const apiOptions = addPrefixToKeys(restOptions, '$', keysToPrefix);
     
     const response = await this.get<CollectionResponse<ProcessGetResponse>>(
       PROCESS_ENDPOINTS.GET_ALL,

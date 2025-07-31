@@ -63,7 +63,8 @@ export const DATA_FABRIC_ENDPOINTS = {
  * Orchestrator Bucket Endpoints
  */
 export const BUCKET_ENDPOINTS = {
-  GET_ALL: '/odata/Buckets',
+  GET_BY_FOLDER: '/odata/Buckets',
+  GET_ALL: '/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders',
   GET_BY_ID: (id: number) => `/odata/Buckets(${id})`,
 } as const;
 
@@ -88,7 +89,8 @@ export const PROCESS_ENDPOINTS = {
  * Orchestrator Queue Service Endpoints
  */
 export const QUEUE_ENDPOINTS = {
-  GET_ALL: '/odata/QueueDefinitions',
+  GET_BY_FOLDER: '/odata/QueueDefinitions',
+  GET_ALL: '/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueuesAcrossFolders',
   GET_BY_ID: (id: number) => `/odata/QueueDefinitions(${id})`,
 } as const;
 
@@ -96,5 +98,6 @@ export const QUEUE_ENDPOINTS = {
  * Orchestrator Asset Service Endpoints
  */
 export const ASSET_ENDPOINTS = {
-  GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered',
+  GET_BY_FOLDER: '/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered',
+  GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders',
 } as const;

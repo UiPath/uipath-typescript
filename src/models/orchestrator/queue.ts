@@ -27,7 +27,9 @@ export interface QueueGetResponse {
   folderName: string;
 }
 
-export type QueueGetAllOptions = RequestOptions;
+export interface QueueGetAllOptions extends RequestOptions {
+  folderId?: number;
+}
 
 export interface QueueGetByIdOptions {
   expand?: string;
@@ -39,13 +41,12 @@ export interface QueueGetByIdOptions {
  */
 export interface QueueServiceModel {
   /**
-   * Gets all queues with optional query parameters
+   * Gets all queues across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options
-   * @param folderId - Optional folder ID
+   * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of queues
    */
-  getAll(options?: QueueGetAllOptions, folderId?: number): Promise<QueueGetResponse[]>;
+  getAll(options?: QueueGetAllOptions): Promise<QueueGetResponse[]>;
 
   /**
    * Gets a single queue by ID

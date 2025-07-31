@@ -22,7 +22,9 @@ export interface BucketGetResponse {
   foldersCount: number;
 }
 
-export type BucketGetAllOptions = RequestOptions;
+export interface BucketGetAllOptions extends RequestOptions {
+  folderId?: number;
+}
 
 export interface BucketGetByIdOptions {
   expand?: string;
@@ -30,6 +32,6 @@ export interface BucketGetByIdOptions {
 }
 
 export interface BucketServiceModel {
-  getAll(folderId: number, options?: BucketGetAllOptions): Promise<BucketGetResponse[]>;
+  getAll(options?: BucketGetAllOptions): Promise<BucketGetResponse[]>;
   getById(bucketId: number, folderId: number, options?: BucketGetByIdOptions): Promise<BucketGetResponse>;
 }

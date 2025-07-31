@@ -4,7 +4,7 @@ import { ExecutionContext } from '../../core/context/execution-context';
 import { CollectionResponse } from '../../models/common/common-types';
 import { 
   AssetGetResponse, 
-  AssetGetAllOptions, 
+  AssetGetAllOptions,
   AssetServiceModel 
 } from '../../models/orchestrator/asset';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
@@ -23,31 +23,68 @@ export class AssetService extends BaseService implements AssetServiceModel {
   }
 
   /**
-   * Gets assets with optional query parameters
+   * Gets all assets across folders with optional filtering and folder scoping
    * 
-   * @param folderId - required folder ID
-   * @param options - Query options
+   * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of assets
    * 
    * @example
    * ```typescript
-   * // Get all assets
-   * const assets = await sdk.asset.getAll(folderId);
+   * // Get all assets across folders
+   * const assets = await sdk.asset.getAll();
+   * 
+   * // Get assets within a specific folder
+   * const assets = await sdk.asset.getAll({ 
+   *   folderId: 123
+   * });
    * 
    * // Get assets with filtering
-   * const assets = await sdk.asset.getAll(folderId, { 
+   * const assets = await sdk.asset.getAll({ 
    *   filter: "name eq 'MyAsset'"
    * });
    * ```
    */
-  async getAll(folderId: number, options: AssetGetAllOptions = {}): Promise<AssetGetResponse[]> {
+  async getAll(options: AssetGetAllOptions = {}): Promise<AssetGetResponse[]> {
+    const { folderId, ...restOptions } = options;
+    
+    // If folderId is provided, use the folder-specific endpoint
+    if (folderId !== undefined) {
+      return this.getByFolder(folderId, restOptions);
+    }
+    
+    // Otherwise get assets across all folders
+    const keysToPrefix = Object.keys(restOptions);
+    const apiOptions = addPrefixToKeys(restOptions, '$', keysToPrefix);
+    
+    const response = await this.get<CollectionResponse<AssetGetResponse>>(
+      ASSET_ENDPOINTS.GET_ALL,
+      { 
+        params: apiOptions
+      }
+    );
+
+    const transformedAssets = response.data?.value.map(asset => 
+      transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap)
+    );
+    
+    return transformedAssets;
+  }
+
+  /**
+   * Gets assets in a folder with optional query parameters
+   * 
+   * @param folderId - required folder ID
+   * @param options - Query options
+   * @returns Promise resolving to an array of assets
+   */
+  private async getByFolder(folderId: number, options: AssetGetAllOptions = {}): Promise<AssetGetResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
     
     const response = await this.get<CollectionResponse<AssetGetResponse>>(
-      ASSET_ENDPOINTS.GET_ALL,
+      ASSET_ENDPOINTS.GET_BY_FOLDER,
       { 
         params: apiOptions,
         headers

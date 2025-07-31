@@ -53,18 +53,22 @@ export interface AssetGetResponse {
   creatorUserId: number;
 }
 
-export type AssetGetAllOptions = RequestOptions;
+export interface AssetGetAllOptions extends RequestOptions {
+  /**
+   * Optional folder ID to filter assets by folder
+   */
+  folderId?: number;
+}
 
 /**
  * Asset service model interface
  */
 export interface AssetServiceModel {
   /**
-   * Gets all assets with optional query parameters
+   * Gets all assets across folders with optional filtering
    * 
-   * @param options - Query options
-   * @param folderId - Required folder ID
+   * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of assets
    */
-  getAll(folderId: number, options?: AssetGetAllOptions): Promise<AssetGetResponse[]>;
+  getAll(options?: AssetGetAllOptions): Promise<AssetGetResponse[]>;
 }
