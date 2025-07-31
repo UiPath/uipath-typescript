@@ -1,4 +1,4 @@
-import { RequestOptions } from "../common/common-types";
+import { BaseOptions, RequestOptions } from "../common/common-types";
 
 export enum BucketOptions {
   None = 'None',
@@ -26,7 +26,4 @@ export interface BucketGetAllOptions extends RequestOptions {
   folderId?: number;
 }
 
-export interface BucketGetByIdOptions {
-  expand?: string;
-  select?: string;
-}
+export type BucketGetByIdOptions = BaseOptions

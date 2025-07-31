@@ -1,4 +1,4 @@
-import { RequestOptions } from '../common/common-types';
+import { BaseOptions, RequestOptions } from '../common/common-types';
 
 /**
  * Interface for queue response
@@ -31,7 +31,4 @@ export interface QueueGetAllOptions extends RequestOptions {
   folderId?: number;
 }
 
-export interface QueueGetByIdOptions {
-  expand?: string;
-  select?: string;
-}
+export type QueueGetByIdOptions = BaseOptions

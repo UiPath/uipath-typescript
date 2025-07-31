@@ -17,13 +17,16 @@ export enum JobState {
   Resumed = 'Resumed'
 }
 
+export interface BaseOptions {
+  expand?: string;
+  select?: string;
+}
+
 /**
  * Common request options interface used across services for querying data
  */
-export interface RequestOptions {
-  expand?: string;
+export interface RequestOptions extends BaseOptions {
   filter?: string;
-  select?: string;
   orderby?: string;
   count?: boolean;
 }
