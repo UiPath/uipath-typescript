@@ -24,7 +24,7 @@ import {
   Task,
   TaskServiceModel
 } from '../../models/task/task.models';
-import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse, addPrefixToKeys } from '../../utils/transform';
+import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, applyDataTransforms, addPrefixToKeys } from '../../utils/transform';
 import { TaskStatusMap, TaskTimeMap } from '../../models/task/task.constants';
 import { CollectionResponse } from '../../models/common/common-types';
 import { createHeaders } from '../../utils/http/headers';
@@ -70,7 +70,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     // Transform time fields for consistency
     const normalizedData = transformData(response.data, TaskTimeMap);
     return new Task<TaskCreateResponse>(
-      transformApiResponse(normalizedData, { field: 'status', valueMap: TaskStatusMap }),
+      applyDataTransforms(normalizedData, { field: 'status', valueMap: TaskStatusMap }),
       this
     );
   }
@@ -143,7 +143,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     return transformedTasks.map(task => 
       new Task<TaskGetResponse>(
-        transformApiResponse(task, { field: 'status', valueMap: TaskStatusMap }),
+        applyDataTransforms(task, { field: 'status', valueMap: TaskStatusMap }),
         this
       )
     );
@@ -187,7 +187,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     }
     
     return new Task<TaskGetResponse>(
-      transformApiResponse(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
+      applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
       this
     );
   }
@@ -405,7 +405,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     );
     const transformedFormTask = transformData(response.data, TaskTimeMap);
     return new Task<TaskGetResponse>(
-      transformApiResponse(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
+      applyDataTransforms(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
       this
     );
   }

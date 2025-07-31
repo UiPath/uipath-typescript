@@ -110,13 +110,6 @@ export class UiPath {
   }
 
   /**
-   * Access to Maestro Process Instances service
-   */
-  get processInstance(): ProcessInstancesService {
-    return this.getService(ProcessInstancesService);
-  }
-  
-  /**
    * Access to Entity service
    */
   get entity(): EntityService {

@@ -19,19 +19,26 @@ export interface MaestroProcessGetAllResponse {
   packageVersions: string[];
   /** Total number of versions */
   versionCount: number;
-  /** Process instance counts by status */
-  instanceCounts: {
-    pending: number;
-    running: number;
-    completed: number;
-    paused: number;
-    cancelled: number;
-    faulted: number;
-    retrying: number;
-    resuming: number;
-    pausing: number;
-    canceling: number;
-  };
+  /** Process instance count - pending */
+  pendingCount: number;
+  /** Process instance count - running */
+  runningCount: number;
+  /** Process instance count - completed */
+  completedCount: number;
+  /** Process instance count - paused */
+  pausedCount: number;
+  /** Process instance count - cancelled */
+  cancelledCount: number;
+  /** Process instance count - faulted */
+  faultedCount: number;
+  /** Process instance count - retrying */
+  retryingCount: number;
+  /** Process instance count - resuming */
+  resumingCount: number;
+  /** Process instance count - pausing */
+  pausingCount: number;
+  /** Process instance count - canceling */
+  cancelingCount: number;
 }
 
 /**

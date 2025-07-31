@@ -5,8 +5,55 @@
 
 import {
   ProcessInstanceGetResponse,
-  ProcessInstanceOperationRequest
+  ProcessInstanceOperationRequest,
+  ProcessInstanceGetAllOptions,
 } from './process-instance.types';
+import { ProcessInstancesService } from '../../services/maestro/process-instances';
+
+/**
+ * Collection class for managing process instances for a specific process
+ */
+export class ProcessInstancesCollection {
+  constructor(
+    private readonly processKey: string,
+    private readonly folderKey: string,
+    private readonly service: ProcessInstancesService
+  ) {}
+
+  /**
+   * Get all instances for this process
+   * @param options Additional filtering options
+   * @returns Promise resolving to array of ProcessInstance objects
+   * 
+   * @example
+   * ```typescript
+   * const instances = await process.instances.getAll();
+   * const runningInstances = await process.instances.getAll({ status: 'Running' });
+   * ```
+   */
+  async getAll(options?: ProcessInstanceGetAllOptions): Promise<ProcessInstance[]> {
+    const params = {
+      ...options,
+      processKey: this.processKey
+    };
+    return this.service.getAll(params);
+  }
+
+  /**
+   * Get a specific instance by ID
+   * @param instanceId The ID of the instance to retrieve
+   * @returns Promise resolving to ProcessInstance object
+   * 
+   * @example
+   * ```typescript
+   * const instance = await process.instances.getById('instance-123');
+   * await instance.cancel('No longer needed');
+   * ```
+   */
+  async getById(instanceId: string): Promise<ProcessInstance> {
+    return this.service.getById(instanceId, this.folderKey);
+  }
+}
 
 /**
  * Service interface that ProcessInstance class depends on
@@ -20,45 +67,17 @@ export interface ProcessInstanceServiceModel {
 
 /**
  * ProcessInstance class providing a rich object model for process instances
- * Similar to the Task class pattern
+ * Uses interface declaration merging to avoid property duplication
  */
+export interface ProcessInstance extends ProcessInstanceGetResponse {}
+
 export class ProcessInstance {
   constructor(
-    private readonly _data: ProcessInstanceGetResponse,
-    private readonly service: ProcessInstanceServiceModel,
-  ) {}
-
-  // Core instance properties
-  get id(): string | null {
-    return this._data.instanceId;
-  }
-
-  get folderKey(): string {
-    return this._data.folderKey;
-  }
-
-  get processKey(): string | null {
-    return this._data.processKey;
-  }
-
-  get displayName(): string | null {
-    return this._data.instanceDisplayName;
-  }
-
-  get startTime(): string {
-    return this._data.startedTimeUtc;
-  }
-
-  get createdTime(): string {
-    return this._data.startedTimeUtc;
-  }
-
-  get completedTime(): string | null {
-    return this._data.completedTimeUtc;
-  }
-  // Access to raw instance data
-  get data(): ProcessInstanceGetResponse {
-    return this._data;
+    data: ProcessInstanceGetResponse,
+    private readonly service: ProcessInstanceServiceModel
+  ) {
+    // Copy all fields from data to this instance
+    Object.assign(this, data);
   }
 
   /**
@@ -76,9 +95,9 @@ export class ProcessInstance {
    * await instance.cancel();
    * ```
    */
-  async cancel(comment: string | null = null): Promise<void> {
-    if (!this.id) throw new Error('Instance ID is null');
-    await this.service.cancel(this.id, this.folderKey, { comment });
+  async cancel(comment?: string): Promise<void> {
+    if (!this.instanceId) throw new Error('Instance ID is null');
+    await this.service.cancel(this.instanceId, this.folderKey, comment ? { comment } : {});
   }
 
   /**
@@ -96,9 +115,9 @@ export class ProcessInstance {
    * await instance.pause();
    * ```
    */
-  async pause(comment: string | null = null): Promise<void> {
-    if (!this.id) throw new Error('Instance ID is null');
-    await this.service.pause(this.id, this.folderKey, { comment });
+  async pause(comment?: string): Promise<void> {
+    if (!this.instanceId) throw new Error('Instance ID is null');
+    await this.service.pause(this.instanceId, this.folderKey, comment ? { comment } : {});
   }
 
   /**
@@ -116,23 +135,9 @@ export class ProcessInstance {
    * await instance.resume();
    * ```
    */
-  async resume(comment: string | null = null): Promise<void> {
-    if (!this.id) throw new Error('Instance ID is null');
-    await this.service.resume(this.id, this.folderKey, { comment });
+  async resume(comment?: string): Promise<void> {
+    if (!this.instanceId) throw new Error('Instance ID is null');
+    await this.service.resume(this.instanceId, this.folderKey, comment ? { comment } : {});
   }
 
-  /**
-   * Creates a ProcessInstance from an API response
-   * 
-   * @param response The API response data
-   * @param service The service instance for operations
-   * @param folderKey The folder key for authorization
-   * @returns A new ProcessInstance instance
-   */
-  static fromResponse(
-    response: ProcessInstanceGetResponse, 
-    service: ProcessInstanceServiceModel, 
-  ): ProcessInstance {
-    return new ProcessInstance(response, service);
-  }
 }

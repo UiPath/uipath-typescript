@@ -1,6 +1,8 @@
-// Process types and constants
+// Process types
 export * from './process.types';
-export * from './process.constants';
+
+// Process models
+export * from './process.models';
 
 // Process instance types and models
 export * from './process-instance.types';

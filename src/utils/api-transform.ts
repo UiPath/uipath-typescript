@@ -11,7 +11,7 @@
  * ```
  */
 export function unwrapArrayResponse<T>(key: string) {
-  return (response: { [key: string]: T[] }): T[] => {
+  return <R extends Record<string, any>>(response: R): T[] => {
     return response[key] || [];
   };
 }
@@ -92,7 +92,7 @@ export function chainTransforms<T>(transforms: ((data: any) => any)[]) {
  * const items = transformItems(rawItems);
  * ```
  */
-export function mapArrayItems<T, R>(itemTransform: (item: T) => R) {
+export function _mapArrayItems<T, R>(itemTransform: (item: T) => R) {
   return (items: T[]): R[] => {
     return items.map(itemTransform);
   };
@@ -123,6 +123,65 @@ export function unwrapAndMapResponse<T, R>(
 ) {
   return chainTransforms([
     unwrapArrayResponse<T>(key),
-    mapArrayItems(itemTransform)
+    _mapArrayItems(itemTransform)
   ]);
+}
+
+/**
+ * Transforms data by grouping specified fields and automatically preserving all other fields
+ * @param data The raw data to transform
+ * @param groupConfig Configuration for grouping fields
+ * @returns Transformed data with grouped fields and all other fields preserved
+ * 
+ * @example
+ * ```typescript
+ * const result = transformWithGrouping(
+ *   rawData,
+ *   {
+ *     groupName: 'instanceCounts',
+ *     fields: {
+ *       pendingCount: 'pending',
+ *       runningCount: 'running',
+ *       completedCount: 'completed'
+ *     }
+ *   }
+ * );
+ * // result = {
+ * //   processKey: 'key123',      // automatically preserved
+ * //   packageId: 'pkg456',        // automatically preserved
+ * //   folderKey: 'folder789',     // automatically preserved
+ * //   folderName: 'My Folder',    // automatically preserved
+ * //   packageVersions: ['1.0'],   // automatically preserved
+ * //   versionCount: 2,            // automatically preserved
+ * //   instanceCounts: { pending: 5, running: 10, completed: 15 }
+ * // }
+ * ```
+ */
+export function transformWithGrouping<TInput extends Record<string, any>, TOutput extends Record<string, any>>(
+  data: TInput,
+  groupConfig: {
+    groupName: string;
+    fields: Record<string, string>;
+  }
+): TOutput {
+  const result: any = {};
+  const groupedFieldNames = Object.keys(groupConfig.fields);
+  const groupedValues: Record<string, any> = {};
+  
+  // Process all fields from the input data
+  Object.entries(data).forEach(([key, value]) => {
+    if (groupedFieldNames.includes(key)) {
+      // This field should be grouped
+      const targetFieldName = groupConfig.fields[key];
+      groupedValues[targetFieldName] = value;
+    } else {
+      // This field should be preserved as-is
+      result[key] = value;
+    }
+  });
+  
+  // Add the grouped fields
+  result[groupConfig.groupName] = groupedValues;
+  
+  return result as TOutput;
 } 

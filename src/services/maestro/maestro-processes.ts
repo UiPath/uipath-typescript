@@ -1,43 +1,56 @@
-import { RawProcessData, RawMaestroProcessGetAllResponse, transformMaestroProcess, MaestroProcessSettingsResponse, MaestroProcessGetAllResponse } from '../../models/maestro';
+import { RawMaestroProcessGetAllResponse, MaestroProcessSettingsResponse, MaestroProcess } from '../../models/maestro';
 import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { unwrapAndMapResponse } from '../../utils/api-transform';
 import { TokenManager } from '../../core/auth/token-manager';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
+import { ProcessInstancesService } from './process-instances';
 
 /**
  * Service for interacting with Maestro Processes
  */
 export class MaestroProcessesService extends BaseService {
+  private _processInstancesService: ProcessInstancesService;
+
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
+    this._processInstancesService = new ProcessInstancesService(config, executionContext, tokenManager);
   }
 
   /**
    * Get all processes with their instance statistics
-   * @returns Promise resolving to array of processes
+   * @returns Promise resolving to array of MaestroProcess objects with fluent interface
    * 
    * @example
    * ```typescript
    * // Get all processes
    * const processes = await sdk.maestro.processes.getAll();
    * 
-   * // Access process information
+   * // Access process information and instances fluently
    * for (const process of processes) {
    *   console.log(`Process: ${process.processKey}`);
+   *   
+   *   // Get instances for this process
+   *   const instances = await process.instances.getAll();
+   *   
+   *   // Get specific instance and perform actions
+   *   if (instances.length > 0) {
+   *     const instance = await process.instances.getById(instances[0].id);
+   *     await instance.cancel('Example cancellation');
+   *   }
    * }
    * 
    * // Filter processes with faulted instances
-   * const faultedProcesses = processes.filter(p => p.instanceCounts.faulted > 0);
+   * const faultedProcesses = processes.filter(p => p.faultedCount > 0);
    * ```
    */
-  async getAll(): Promise<MaestroProcessGetAllResponse[]> {
+  async getAll(): Promise<MaestroProcess[]> {
     const response = await this.get<RawMaestroProcessGetAllResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
-    return unwrapAndMapResponse<RawProcessData, MaestroProcessGetAllResponse>(
-      'processes',
-      transformMaestroProcess
-    )(response.data);
+    
+    // Convert to MaestroProcess objects with fluent interface
+    return response.data.processes.map(data => 
+      new MaestroProcess(data, this._processInstancesService)
+    );
   }
 
   /**

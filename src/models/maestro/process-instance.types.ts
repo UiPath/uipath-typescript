@@ -93,27 +93,13 @@ export interface ProcessInstanceExecutionHistoryResponse {
   endTime: string | null;
   attributes: string | null;
   status: ProcessInstanceExecutionStatus;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   organizationId: string;
   tenantId: string | null;
   expiryTimeUtc: string | null;
   folderKey: string | null;
   source: ProcessInstanceSource;
-}
-
-/**
- * Process instance DTO (for future use)
- */
-export interface ProcessInstanceDto {
-  id: string;
-  status: string;
-  startTime: string;
-  endTime: string | null;
-  priority: string;
-  specificContent: any;
-  outputArguments: any;
-  info: any;
 }
 
 /**
@@ -125,18 +111,4 @@ export interface InstanceRun {
   startedTimeUtc: string;
   completedTimeUtc: string;
   properties: Record<string, unknown>;
-}
-
-/**
- * Incident response (placeholder for future implementation)
- */
-export interface IncidentResponse {
-  // TODO: Add IncidentResponse properties when available
-}
-
-/**
- * Go to cursors (placeholder for future implementation)
- */
-export interface GoToCursors {
-  // TODO: Add GoToCursors properties when available
 }

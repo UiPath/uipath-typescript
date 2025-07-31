@@ -13,7 +13,7 @@ import {
 } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_KEY } from '../../utils/constants/headers';
+import { FOLDER_KEY, CONTENT_TYPES } from '../../utils/constants/headers';
 
 
 
@@ -53,9 +53,9 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
       params: params as Record<string, string | number>
     });
     
-    return response.data.instances.map(instanceData => 
-      ProcessInstance.fromResponse(instanceData, this)
-    );
+    return response.data?.instances?.map(instanceData => 
+      new ProcessInstance(instanceData, this)
+    ) || [];
   }
 
   /**
@@ -80,7 +80,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    */
   async getById(id: string, folderKey: string): Promise<ProcessInstance> {
     const response = await this._getById(id, folderKey);
-    return ProcessInstance.fromResponse(response, this);
+    return new ProcessInstance(response, this);
   }
 
   /**
@@ -105,7 +105,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     const response = await this.get<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
       headers: {
         ...createHeaders({ [FOLDER_KEY]: folderKey }),
-        'Accept': 'application/xml'
+        'Accept': CONTENT_TYPES.XML
       },
       responseType: 'text'
     });
