@@ -179,7 +179,9 @@ export type TaskCompleteOptions =
 /**
  * Query options for getting all tasks
  */
-export type TaskGetAllOptions = RequestOptions;
+export interface TaskGetAllOptions extends RequestOptions {
+  folderId?: number;
+}
 
 /**
  * Query options for getting a task by ID 

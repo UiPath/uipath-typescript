@@ -5,16 +5,17 @@ import { CollectionResponse, RequestOptions } from '../../models/common/common-t
 import { 
   ProcessGetResponse, 
   ProcessGetAllOptions, 
-  ProcessServiceModel, 
   ProcessStartRequest, 
   ProcessStartResponse
-} from '../../models/orchestrator/process';
+} from '../../models/orchestrator/process.types';
+import { ProcessServiceModel } from '../../models/orchestrator/process.models';
 import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
 import { ProcessMap } from '../../models/orchestrator/process.constants';
 import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { PROCESS_ENDPOINTS } from '../../utils/constants/endpoints';
+import { ODATA_PREFIX } from '../../utils/constants/common';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -25,16 +26,20 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
   }
 
   /**
-   * Gets processes with optional query parameters
+   * Gets all processes across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options
-   * @param folderId - Optional folder ID
+   * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of processes
    * 
    * @example
    * ```typescript
-   * // Get all processes
+   * // Get all processes across folders
    * const processes = await sdk.process.getAll();
+   * 
+   * // Get processes within a specific folder
+   * const processes = await sdk.process.getAll({ 
+   *   folderId: 123
+   * });
    * 
    * // Get processes with filtering
    * const processes = await sdk.process.getAll({ 
@@ -42,16 +47,19 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * });
    * ```
    */
-  async getAll(options: ProcessGetAllOptions = {}, folderId?: number): Promise<ProcessGetResponse[]> {
+  async getAll(options: ProcessGetAllOptions = {}): Promise<ProcessGetResponse[]> {
+    const { folderId, ...restOptions } = options;
+    
+    // Add folderId to headers if provided
     let headerParams = {};
-    if (folderId !== undefined) {
+    if (folderId) {
       headerParams = { [FOLDER_ID]: folderId };
     }
     const headers = createHeaders(headerParams);
     
     // Prefix all keys with '$' for OData
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const keysToPrefix = Object.keys(restOptions);
+    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<CollectionResponse<ProcessGetResponse>>(
       PROCESS_ENDPOINTS.GET_ALL,
@@ -61,7 +69,8 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
       }
     );
 
-    const transformedProcesses = response.data?.value.map(process => 
+    const processArray = response.data?.value;
+    const transformedProcesses = processArray?.map(process => 
       transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap)
     );
     
@@ -89,7 +98,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async startProcess(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
+  async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     // Convert to PascalCase for API
@@ -102,7 +111,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
 
     // Prefix all query parameter keys with '$' for OData
     const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_PROCESS,

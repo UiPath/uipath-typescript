@@ -87,7 +87,7 @@ const task = await sdk.task.getById('task-id');
 const entity = await sdk.entity.create({...});
 
 // Get all buckets 
-const buckets = await sdk.bucket.getAll('folder-id');
+const buckets = await sdk.bucket.getAll();
 
 // Get a specific process and start it
 const process = await sdk.process.getAll({ 
@@ -101,7 +101,9 @@ const job = await sdk.process.startProcess({
 const queues = await sdk.queue.getAll();
 
 // Get all assets
-const assets = await sdk.asset.getAll('folder-Id');
+const assets = await sdk.asset.getAll();
+//Get assets in a folder
+const assets = await sdk.asset.getAll({folderId: 'folder-id'});
 ```
 
 ## TypeScript Support

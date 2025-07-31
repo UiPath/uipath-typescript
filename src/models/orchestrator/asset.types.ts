@@ -53,18 +53,9 @@ export interface AssetGetResponse {
   creatorUserId: number;
 }
 
-export type AssetGetAllOptions = RequestOptions;
-
-/**
- * Asset service model interface
- */
-export interface AssetServiceModel {
+export interface AssetGetAllOptions extends RequestOptions {
   /**
-   * Gets all assets with optional query parameters
-   * 
-   * @param options - Query options
-   * @param folderId - Required folder ID
-   * @returns Promise resolving to an array of assets
+   * Optional folder ID to filter assets by folder
    */
-  getAll(folderId: number, options?: AssetGetAllOptions): Promise<AssetGetResponse[]>;
+  folderId?: number;
 }

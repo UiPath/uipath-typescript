@@ -1,39 +1,44 @@
-import { BaseService } from '../base-service';
+import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { CollectionResponse } from '../../models/common/common-types';
 import { 
   QueueGetResponse, 
   QueueGetAllOptions, 
-  QueueGetByIdOptions,
-  QueueServiceModel 
-} from '../../models/orchestrator/queue';
+  QueueGetByIdOptions
+} from '../../models/orchestrator/queue.types';
+import { QueueServiceModel } from '../../models/orchestrator/queue.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
 import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { QUEUE_ENDPOINTS } from '../../utils/constants/endpoints';
+import { ODATA_PREFIX } from '../../utils/constants/common';
 import { QueueMap } from '../../models/orchestrator/queues.constants';
 
 /**
  * Service for interacting with UiPath Orchestrator Queues API
  */
-export class QueueService extends BaseService implements QueueServiceModel {
+export class QueueService extends FolderScopedService implements QueueServiceModel {
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }
 
   /**
-   * Gets queues with optional query parameters
+   * Gets all queues across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options
-   * @param folderId - Optional folder ID
+   * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of queues
    * 
    * @example
    * ```typescript
-   * // Get all queues
+   * // Get all queues across folders
    * const queues = await sdk.queue.getAll();
+   * 
+   * // Get queues within a specific folder
+   * const queues = await sdk.queue.getAll({ 
+   *   folderId: 123
+   * });
    * 
    * // Get queues with filtering
    * const queues = await sdk.queue.getAll({ 
@@ -41,25 +46,32 @@ export class QueueService extends BaseService implements QueueServiceModel {
    * });
    * ```
    */
-  async getAll(options: QueueGetAllOptions = {}, folderId?: number): Promise<QueueGetResponse[]> {
-    let headerParams = {};
-    if (folderId !== undefined) {
-      headerParams = { [FOLDER_ID]: folderId };
+  async getAll(options: QueueGetAllOptions = {}): Promise<QueueGetResponse[]> {
+    const { folderId, ...restOptions } = options;
+    
+    // If folderId is provided, use the folder-specific endpoint
+    if (folderId) {
+      return this._getByFolder<object, QueueGetResponse>(
+        QUEUE_ENDPOINTS.GET_BY_FOLDER,
+        folderId,
+        restOptions,
+        (queue) => transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap)
+      );
     }
-    const headers = createHeaders(headerParams);
-
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    
+    // Otherwise get queues across all folders
+    const keysToPrefix = Object.keys(restOptions);
+    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<CollectionResponse<QueueGetResponse>>(
       QUEUE_ENDPOINTS.GET_ALL,
       { 
-        params: apiOptions,
-        headers
+        params: apiOptions
       }
     );
 
-    const transformedQueues = response.data?.value.map(queue => 
+    const queueArray = response.data?.value;
+    const transformedQueues = queueArray?.map(queue => 
       transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap)
     );
     
@@ -83,7 +95,7 @@ export class QueueService extends BaseService implements QueueServiceModel {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<QueueGetResponse>(
       QUEUE_ENDPOINTS.GET_BY_ID(id),

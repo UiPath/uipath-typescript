@@ -27,32 +27,11 @@ export interface QueueGetResponse {
   folderName: string;
 }
 
-export type QueueGetAllOptions = RequestOptions;
+export interface QueueGetAllOptions extends RequestOptions {
+  folderId?: number;
+}
 
 export interface QueueGetByIdOptions {
   expand?: string;
   select?: string;
-}
-
-/**
- * Queue service model interface
- */
-export interface QueueServiceModel {
-  /**
-   * Gets all queues with optional query parameters
-   * 
-   * @param options - Query options
-   * @param folderId - Optional folder ID
-   * @returns Promise resolving to an array of queues
-   */
-  getAll(options?: QueueGetAllOptions, folderId?: number): Promise<QueueGetResponse[]>;
-
-  /**
-   * Gets a single queue by ID
-   * 
-   * @param id - Queue ID
-   * @param folderId - Required folder ID
-   * @returns Promise resolving to a queue definition
-   */
-  getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueGetResponse>;
 }
