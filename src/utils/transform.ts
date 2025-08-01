@@ -298,6 +298,36 @@ export function transformApiResponse<T extends object, K extends keyof T, M exte
 } 
 
 /**
+ * Filters out undefined values from an object
+ * @param obj The source object
+ * @returns A new object without undefined values
+ * 
+ * @example
+ * ```typescript
+ * // Object with undefined values
+ * const options = { 
+ *   name: 'test',
+ *   count: 5,
+ *   prefix: undefined,
+ *   suffix: null
+ * };
+ * const result = filterUndefined(options);
+ * // result = { name: 'test', count: 5, suffix: null }
+ * ```
+ */
+export function filterUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
+  const result: Partial<T> = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      result[key as keyof T] = value;
+    }
+  }
+  
+  return result;
+}
+
+/**
  * Adds a prefix to specified keys in an object, returning a new object.
  * Only the provided keys are prefixed; all others are left unchanged.
  * 
