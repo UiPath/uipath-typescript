@@ -100,4 +100,5 @@ export const QUEUE_ENDPOINTS = {
 export const ASSET_ENDPOINTS = {
   GET_BY_FOLDER: '/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered',
   GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders',
+  GET_BY_ID: (id: number) => `/odata/Assets(${id})`,
 } as const;

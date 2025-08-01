@@ -1,4 +1,4 @@
-import { RequestOptions } from '../common/common-types';
+import { BaseOptions, RequestOptions } from '../common/common-types';
 
 /**
  * Enum for Asset Value Scope
@@ -59,3 +59,8 @@ export interface AssetGetAllOptions extends RequestOptions {
    */
   folderId?: number;
 }
+
+/**
+ * Options for getting a single asset by ID
+ */
+export type AssetGetByIdOptions = BaseOptions
