@@ -10,7 +10,7 @@ import {
   ProcessGetByIdOptions
 } from '../../models/orchestrator/process.types';
 import { ProcessServiceModel } from '../../models/orchestrator/process.models';
-import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
+import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys, reverseMap, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
 import { ProcessMap } from '../../models/orchestrator/process.constants';
 import { TokenManager } from '../../core/auth/token-manager';
@@ -104,14 +104,17 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     
     // Transform processKey/processName to releaseKey/releaseName for API compatibility
     const apiRequest: Record<string, any> = { ...request };
-    if ('processKey' in apiRequest) {
-      apiRequest['releaseKey'] = apiRequest['processKey'];
-      delete apiRequest['processKey'];
-    }
-    if ('processName' in apiRequest) {
-      apiRequest['releaseName'] = apiRequest['processName'];
-      delete apiRequest['processName'];
-    }
+    
+    // Create a reverse mapping using ProcessMap
+    const clientToApiMap = reverseMap(ProcessMap);
+    
+    // Apply transformations for any client properties found in the request
+    Object.entries(clientToApiMap).forEach(([clientKey, apiKey]) => {
+      if (clientKey in apiRequest) {
+        apiRequest[apiKey] = apiRequest[clientKey];
+        delete apiRequest[clientKey];
+      }
+    });
     
     // Convert to PascalCase for API
     const pascalOptions = camelToPascalCaseKeys(apiRequest);   
