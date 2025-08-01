@@ -106,6 +106,8 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       }
     );
 
-    return transformData(pascalToCamelCaseKeys(response.data) as AssetGetResponse, AssetMap);
+    const transformedAsset = transformData(pascalToCamelCaseKeys(response.data) as AssetGetResponse, AssetMap);
+    
+    return transformedAsset;
   }
 }

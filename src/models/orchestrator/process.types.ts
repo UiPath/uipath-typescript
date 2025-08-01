@@ -1,9 +1,9 @@
-import { JobState, RequestOptions } from '../common/common-types';
+import { JobState, RequestOptions, BaseOptions } from '../common/common-types';
 
 /**
- * Enum for process types
+ * Enum for package types
  */
-export enum ProcessType {
+export enum PackageType {
   Undefined = 'Undefined',
   Process = 'Process',
   ProcessOrchestration = 'ProcessOrchestration',
@@ -64,9 +64,9 @@ export enum StartStrategy {
 }
 
 /**
- * Enum for process source type
+ * Enum for package source type
  */
-export enum ProcessSourceType {
+export enum PackageSourceType {
   Manual = 'Manual',
   Schedule = 'Schedule',
   Queue = 'Queue',
@@ -141,7 +141,7 @@ interface BaseProcessStartRequest extends ProcessProperties {
   machineSessionIds?: number[];
   noOfRobots?: number;
   jobsCount?: number;
-  source?: ProcessSourceType;
+  source?: PackageSourceType;
   runtimeType?: string;
   inputFile?: string;
   reference?: string;
@@ -159,24 +159,24 @@ interface BaseProcessStartRequest extends ProcessProperties {
 }
 
 /**
- * Interface for start process request with releaseKey
+ * Interface for start process request with processKey
  */
 interface ProcessStartRequestWithKey extends BaseProcessStartRequest {
-  releaseKey: string;
-  releaseName?: string;
+  processKey: string;
+  processName?: string;
 }
 
 /**
- * Interface for start process request with releaseName
+ * Interface for start process request with processName
  */
 interface ProcessStartRequestWithName extends BaseProcessStartRequest {
-  releaseKey?: string;
-  releaseName: string;
+  processKey?: string;
+  processName: string;
 }
 
 /**
  * Interface for start process request
- * Either releaseKey or releaseName must be provided
+ * Either processKey or processName must be provided
  */
 export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartRequestWithName;
 
@@ -187,16 +187,6 @@ export interface RobotMetadata {
   id: number;
   name?: string;
   username?: string;
-}
-
-/**
- * Interface for process metadata
- */
-export interface ProcessMetadata {
-  id: number;
-  name?: string;
-  processKey?: string;
-  processVersion?: string;
 }
 
 /**
@@ -250,7 +240,7 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   info: string | null;
   createdTime: string; 
   startingScheduleId: number | null;
-  releaseName: string;
+  processName: string;
   type: JobType;
   inputFile: string | null;
   outputArguments: string | null;
@@ -260,9 +250,9 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   resumeVersion: number | null;
   stopStrategy: StopStrategy | null;
   runtimeType: string;
-  releaseVersionId: number | null;
+  processVersionId: number | null;
   reference: string;
-  processType: ProcessType;
+  packageType: PackageType;
   machine?: Machine;
   resumeOnSameContext: boolean;
   localSystemAccount: string;
@@ -275,7 +265,6 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   jobError: JobError | null;
   errorCode: string | null;
   robot?: RobotMetadata;
-  release?: ProcessMetadata;
   id: number;
 }
 
@@ -284,14 +273,14 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
  */
 export interface ProcessGetResponse extends ProcessProperties, FolderProperties {
   key: string;
-  processKey: string;
-  processVersion: string;
+  packageKey: string;
+  packageVersion: string;
   isLatestVersion: boolean;
-  isProcessDeleted: boolean;
+  isPackageDeleted: boolean;
   description: string;
   name: string;
   entryPointId: number;
-  processType: ProcessType;
+  packageType: PackageType;
   supportsMultipleEntryPoints: boolean;
   isConversational: boolean | null;
   minRequiredRobotVersion: string | null;
@@ -316,3 +305,8 @@ export interface ProcessGetResponse extends ProcessProperties, FolderProperties 
 export interface ProcessGetAllOptions extends RequestOptions {
   folderId?: number;
 }
+
+/**
+ * Options for getting a single process by ID
+ */
+export type ProcessGetByIdOptions = BaseOptions;

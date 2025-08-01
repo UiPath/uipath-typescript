@@ -1,5 +1,5 @@
 import { RequestOptions } from '../common/common-types';
-import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse } from './process.types';
+import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions } from './process.types';
 
 /**
  * Process service model interface
@@ -12,6 +12,16 @@ export interface ProcessServiceModel {
    * @returns Promise resolving to an array of processes
    */
   getAll(options?: ProcessGetAllOptions): Promise<ProcessGetResponse[]>;
+  
+  /**
+   * Gets a single process by ID
+   * 
+   * @param id - Process ID
+   * @param folderId - Required folder ID
+   * @param options - Optional query parameters
+   * @returns Promise resolving to a single process
+   */
+  getById(id: number, folderId: number, options?: ProcessGetByIdOptions): Promise<ProcessGetResponse>;
   
   /**
    * Starts a process with the specified configuration
