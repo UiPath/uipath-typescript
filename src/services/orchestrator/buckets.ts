@@ -5,10 +5,15 @@ import { TokenManager } from '../../core/auth/token-manager';
 import { 
   BucketGetResponse, 
   BucketGetAllOptions, 
-  BucketGetByIdOptions
+  BucketGetByIdOptions,
+  BucketGetFilesOptions,
+  BucketGetFilesResponse,
+  BlobGetUriResponse,
+  GetReadUriOptions,
+  GetWriteUriOptions
 } from '../../models/orchestrator/bucket.types';
 import { BucketServiceModel } from '../../models/orchestrator/bucket.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys } from '../../utils/transform';
+import { pascalToCamelCaseKeys, addPrefixToKeys, filterUndefined } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -107,5 +112,136 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     );
     
     return transformedBuckets;
+  }
+
+  /**
+   * Gets files from a bucket with optional filtering and pagination
+   * 
+   * @param bucketId - The ID of the bucket to get files from
+   * @param folderId - Required folder ID for organization unit context
+   * @param options - Optional parameters for filtering, pagination and access URL generation
+   * @returns Promise resolving to the list of files in the bucket
+   * 
+   * @example
+   * ```typescript
+   * // Get all files in a bucket
+   * const files = await sdk.buckets.getFiles(123, 456);
+   * 
+   * // Get files with a specific prefix
+   * const files = await sdk.buckets.getFiles(123, 456, {
+   *   prefix: '/folder1'
+   * });
+   * ```
+   */
+  async getFiles(bucketId: number, folderId: number, options: BucketGetFilesOptions = {}): Promise<BucketGetFilesResponse> {
+    // Create headers with required folder ID
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    
+    // Filter out undefined values from options
+    const queryParams = filterUndefined(options);
+    
+    // Transform 'limit' to 'takeHint' for API compatibility
+    if ('limit' in queryParams) {
+      (queryParams as any).takeHint = queryParams.limit;
+      delete queryParams.limit;
+    }
+    
+    // Make the API call to get files
+    const response = await this.get<BucketGetFilesResponse>(
+      BUCKET_ENDPOINTS.GET_FILES(bucketId),
+      {
+        params: queryParams,
+        headers
+      }
+    );
+    
+    return response.data;
+  }
+
+  /**
+   * Gets a direct download URL for a file in the bucket
+   * 
+   * @param bucketId - The ID of the bucket containing the file
+   * @param folderId - Required folder ID for organization unit context
+   * @param options - Required file path and optional expiry time
+   * @returns Promise resolving to blob file access information
+   * 
+   * @example
+   * ```typescript
+   * // Get download URL for a file
+   * const fileAccess = await sdk.buckets.getReadUri(123, 456, {
+   *   path: '/folder/file.pdf'
+   * });
+   * ```
+   */
+  async getReadUri(bucketId: number, folderId: number, options: GetReadUriOptions): Promise<BlobGetUriResponse> {
+    // Create headers with required folder ID
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    
+    // Extract OData parameters ($select, $expand) to prefix them
+    const { path, expiryInMinutes, ...restOptions } = options;
+    
+    // Filter out undefined values and build query params
+    const queryParams = filterUndefined({
+      path,
+      expiryInMinutes,
+      ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
+    });
+    
+    // Make the API call to get read URI
+    const response = await this.get<Record<string, any>>(
+      BUCKET_ENDPOINTS.GET_READ_URI(bucketId),
+      {
+        params: queryParams,
+        headers
+      }
+    );
+    
+    // Transform response from PascalCase to camelCase
+    return pascalToCamelCaseKeys(response.data) as BlobGetUriResponse;
+  }
+
+  /**
+   * Gets a direct upload URL for a file in the bucket
+   * 
+   * @param bucketId - The ID of the bucket for the file upload
+   * @param folderId - Required folder ID for organization unit context
+   * @param options - Required file path, optional expiry time and content type
+   * @returns Promise resolving to blob file access information
+   * 
+   * @example
+   * ```typescript
+   * // Get upload URL for a file
+   * const fileAccess = await sdk.buckets.getWriteUri(123, 456, {
+   *   path: '/folder/file.pdf'
+   * });
+   * ```
+   */
+  async getWriteUri(bucketId: number, folderId: number, options: GetWriteUriOptions): Promise<BlobGetUriResponse> {
+    // Create headers with required folder ID
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    
+    // Extract OData parameters ($select, $expand) to prefix them
+    const { path, expiryInMinutes, contentType, ...restOptions } = options;
+    
+    // Filter out undefined values and build query params
+    const queryParams = filterUndefined({
+      path,
+      expiryInMinutes,
+      contentType,
+      ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
+    });
+    
+    // Make the API call to get write URI
+    const response = await this.get<Record<string, any>>(
+      BUCKET_ENDPOINTS.GET_WRITE_URI(bucketId),
+      {
+        params: queryParams,
+        headers
+      }
+    );
+    
+    // Transform response from PascalCase to camelCase
+    return pascalToCamelCaseKeys(response.data) as BlobGetUriResponse;
   }
 }

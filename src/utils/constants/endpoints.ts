@@ -66,6 +66,9 @@ export const BUCKET_ENDPOINTS = {
   GET_BY_FOLDER: '/odata/Buckets',
   GET_ALL: '/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders',
   GET_BY_ID: (id: number) => `/odata/Buckets(${id})`,
+  GET_FILES: (id: number) => `/api/Buckets/${id}/ListFiles`,
+  GET_READ_URI: (id: number) => `/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetReadUri`,
+  GET_WRITE_URI: (id: number) => `/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetWriteUri`,
 } as const;
 
 /**
