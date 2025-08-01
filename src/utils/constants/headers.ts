@@ -15,3 +15,13 @@ export const CONTENT_TYPES = {
   JSON: 'application/json',
   XML: 'application/xml'
 } as const;
+
+/**
+ * Response type constants for HTTP requests
+ */
+export const RESPONSE_TYPES = {
+  JSON: 'json',
+  TEXT: 'text',
+  BLOB: 'blob',
+  ARRAYBUFFER: 'arraybuffer'
+} as const;

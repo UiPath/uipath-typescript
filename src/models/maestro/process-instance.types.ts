@@ -40,7 +40,6 @@ export interface ProcessInstanceGetAllResponse {
  * Query options for getting process instances
  */
 export interface ProcessInstanceGetAllOptions extends PaginationOptions {
-  [key: string]: string | number | undefined;
   packageId?: string;
   packageVersion?: string;
   processKey?: string;
@@ -53,14 +52,6 @@ export interface ProcessInstanceGetAllOptions extends PaginationOptions {
  */
 export interface ProcessInstanceOperationRequest {
   comment?: string | null;
-}
-
-/**
- * Response for process instance status
- */
-export interface ProcessInstanceStatusResponse {
-  instanceId: string | null;
-  status: string | null;
 }
 
 /**

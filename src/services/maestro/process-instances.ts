@@ -8,18 +8,17 @@ import {
   ProcessInstanceGetAllOptions, 
   ProcessInstanceOperationRequest,
   ProcessInstanceExecutionHistoryResponse,
-  ProcessInstance,
-  ProcessInstanceServiceModel
+  ProcessInstancesServiceModel
 } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_KEY, CONTENT_TYPES } from '../../utils/constants/headers';
+import { FOLDER_KEY, CONTENT_TYPES, RESPONSE_TYPES } from '../../utils/constants/headers';
 import { transformData } from '../../utils/transform';
-import { ProcessInstanceMap, ProcessInstanceExecutionHistoryMap, InstanceRunMap } from '../../models/maestro/process-instance.constants';
+import { ProcessInstanceMap } from '../../models/maestro/process-instance.constants';
 
 
 
-export class ProcessInstancesService extends BaseService implements ProcessInstanceServiceModel {
+export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }
@@ -28,35 +27,39 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
   /**
    * Get all process instances with pagination support
    * Includes all folders in tenant user has Jobs.View permission for
-   * @param params Query parameters for filtering instances and pagination
+   * @param options Query parameters for filtering instances and pagination
    * @returns Promise<ProcessInstance[]> Array of ProcessInstance objects with helper methods
    * 
    * @example
    * ```typescript
    * // Get all instances
-   * const instances = await sdk.processInstance.getAll();
+   * const instances = await sdk.maestro.processInstances.getAll();
    * 
-   * // Each instance has methods available
+   * // Cancel faulted instances
    * for (const instance of instances) {
    *   if (instance.state === 'Faulted') {
-   *     await instance.cancel('Cancelling faulted instance');
+   *     await sdk.maestro.processInstances.cancel(
+   *       instance.instanceId, 
+   *       instance.folderKey,
+   *       { comment: 'Cancelling faulted instance' }
+   *     );
    *   }
    * }
    * 
    * // With filtering
-   * const instances = await sdk.processInstance.getAll({
+   * const instances = await sdk.maestro.processInstances.getAll({
    *   processKey: 'MyProcess',
    *   limit: 50
    * });
    * ```
    */
-  async getAll(params?: ProcessInstanceGetAllOptions): Promise<ProcessInstance[]> {
+  async getAll(options?: ProcessInstanceGetAllOptions): Promise<ProcessInstanceGetResponse[]> {
     const response = await this.get<ProcessInstanceGetAllResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_ALL, {
-      params: params as Record<string, string | number>
+      params: options as Record<string, string | number>
     });
     
     return response.data?.instances?.map(instanceData => 
-      new ProcessInstance(transformData(instanceData, ProcessInstanceMap), this)
+      transformData(instanceData, ProcessInstanceMap) as ProcessInstanceGetResponse
     ) || [];
   }
 
@@ -80,9 +83,9 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @param folderKey The folder key for authorization
    * @returns Promise<ProcessInstance>
    */
-  async getById(id: string, folderKey: string): Promise<ProcessInstance> {
+  async getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse> {
     const response = await this._getById(id, folderKey);
-    return new ProcessInstance(transformData(response, ProcessInstanceMap), this);
+    return transformData(response, ProcessInstanceMap) as ProcessInstanceGetResponse;
   }
 
   /**
@@ -94,7 +97,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
   async getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
     const response = await this.get<ProcessInstanceExecutionHistoryResponse[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
     return response.data.map(historyItem => 
-      transformData(historyItem, ProcessInstanceExecutionHistoryMap)
+      transformData(historyItem, ProcessInstanceMap)
     );
   }
 
@@ -111,7 +114,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
         ...createHeaders({ [FOLDER_KEY]: folderKey }),
         'Accept': CONTENT_TYPES.XML
       },
-      responseType: 'text'
+      responseType: RESPONSE_TYPES.TEXT
     });
     return response.data;
   }
