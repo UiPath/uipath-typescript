@@ -24,7 +24,7 @@ const sdk = new UiPath({
 });
 
 // Use the services
-const processes = await sdk.maestroProcess.getAll();
+const processes = await sdk.maestro.process.getAll();
 const tasks = await sdk.task.getAll();
 ```
 
@@ -57,8 +57,8 @@ const sdk = new UiPath({
 
 The SDK provides access to the following services through a consistent API:
 
-- `sdk.maestroProcess` - Manage agentic maestro processes
-- `sdk.processInstance` - Manage maestro process executions
+- `sdk.maestro.processes` - Manage agentic maestro processes
+- `sdk.maestro.processInstance` - Manage maestro process executions
 - `sdk.task` - Create and manage tasks
 - `sdk.entity` - Data Fabric entity operations
 - `sdk.process` - Manage Orchestrator processes
@@ -78,7 +78,7 @@ All services follow a consistent method naming pattern:
 Example usage:
 ```typescript
 // Get all processes
-const processes = await sdk.maestroProcess.getAll();
+const bpmnProcesses = await sdk.maestro.process.getAll();
 
 // Get a specific task
 const task = await sdk.task.getById('task-id');
@@ -184,7 +184,7 @@ The SDK provides typed errors for better error handling:
 
 ```typescript
 try {
-  const process = await sdk.maestroProcess.getById('invalid-id');
+  const process = await sdk.maestro.process.getById('invalid-id');
 } catch (error) {
   if (error.code === 'PROCESS_NOT_FOUND') {
     console.error('Process not found');
