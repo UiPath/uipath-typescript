@@ -84,8 +84,8 @@ export interface ProcessInstanceExecutionHistoryResponse {
   endTime: string | null;
   attributes: string | null;
   status: ProcessInstanceExecutionStatus;
-  createdAt?: string;
-  updatedAt?: string;
+  createdTime?: string;
+  updatedTime?: string;
   organizationId: string;
   tenantId: string | null;
   expiredTime: string | null;

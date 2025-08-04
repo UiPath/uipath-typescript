@@ -4,5 +4,7 @@
 export const ProcessInstanceMap: { [key: string]: string } = {
   startedTimeUtc: 'startedTime',
   completedTimeUtc: 'completedTime',
-  expiryTimeUtc: 'expiredTime'
+  expiryTimeUtc: 'expiredTime',
+  createdAt: 'createdTime',
+  updatedAt: 'updatedTime'
 };

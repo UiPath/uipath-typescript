@@ -58,7 +58,7 @@ const sdk = new UiPath({
 The SDK provides access to the following services through a consistent API:
 
 - `sdk.maestro.processes` - Manage agentic maestro processes
-- `sdk.maestro.processInstance` - Manage maestro process executions
+- `sdk.maestro.processInstances` - Manage maestro process executions
 - `sdk.task` - Create and manage tasks
 - `sdk.entity` - Data Fabric entity operations
 - `sdk.process` - Manage Orchestrator processes
