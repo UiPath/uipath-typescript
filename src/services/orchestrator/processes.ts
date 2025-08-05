@@ -106,10 +106,10 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     const apiRequest: Record<string, any> = { ...request };
     
     // Create a reverse mapping using ProcessMap
-    const clientToApiMap = reverseMap(ProcessMap);
+    const reversedPropertiesMap = reverseMap(ProcessMap);
     
     // Apply transformations for any client properties found in the request
-    Object.entries(clientToApiMap).forEach(([clientKey, apiKey]) => {
+    Object.entries(reversedPropertiesMap).forEach(([clientKey, apiKey]) => {
       if (clientKey in apiRequest) {
         apiRequest[apiKey] = apiRequest[clientKey];
         delete apiRequest[clientKey];
