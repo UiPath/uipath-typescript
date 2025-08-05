@@ -6,19 +6,21 @@ import {
   BucketGetResponse, 
   BucketGetAllOptions, 
   BucketGetByIdOptions,
-  BucketGetFilesOptions,
-  BucketGetFilesResponse,
-  BlobGetUriResponse,
-  GetReadUriOptions,
-  GetWriteUriOptions
+  BucketGetUriResponse,
+  BucketGetReadUriOptions,
+  BucketGetWriteUriOptions,
+  BucketGetFileMetaDataOptions,
+  BucketGetFileMetaDataResponse
 } from '../../models/orchestrator/bucket.types';
 import { BucketServiceModel } from '../../models/orchestrator/bucket.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys, filterUndefined } from '../../utils/transform';
+import { pascalToCamelCaseKeys, addPrefixToKeys, renameObjectFields, transformData, arrayDictionaryToRecord } from '../../utils/transform';
+import { filterUndefined } from '../../utils/object-utils';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX } from '../../utils/constants/common';
 import { CollectionResponse } from '../../models/common/common-types';
+import { BucketMap } from '../../models/orchestrator/bucket.constants';
 
 /**
  * Service for interacting with UiPath Orchestrator Buckets API
@@ -42,6 +44,14 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * ```
    */
   async getById(bucketId: number, folderId: number, options: BucketGetByIdOptions = {}): Promise<BucketGetResponse> {
+    if (!bucketId) {
+      throw new Error('bucketId is required');
+    }
+    
+    if (!folderId) {
+      throw new Error('folderId is required');
+    }
+    
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     // Prefix all keys in options with $ for OData
@@ -133,21 +143,25 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
-  async getFiles(bucketId: number, folderId: number, options: BucketGetFilesOptions = {}): Promise<BucketGetFilesResponse> {
+  async getFileMetaData(bucketId: number, folderId: number, options: BucketGetFileMetaDataOptions = {}): Promise<BucketGetFileMetaDataResponse> {
+    if (!bucketId) {
+      throw new Error('bucketId is required');
+    }
+    
+    if (!folderId) {
+      throw new Error('folderId is required');
+    }
+    
     // Create headers with required folder ID
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     // Filter out undefined values from options
     const queryParams = filterUndefined(options);
     
-    // Transform 'limit' to 'takeHint' for API compatibility
-    if ('limit' in queryParams) {
-      (queryParams as any).takeHint = queryParams.limit;
-      delete queryParams.limit;
-    }
+    renameObjectFields(queryParams, { limit: 'takeHint' });
     
     // Make the API call to get files
-    const response = await this.get<BucketGetFilesResponse>(
+    const response = await this.get<BucketGetFileMetaDataResponse>(
       BUCKET_ENDPOINTS.GET_FILES(bucketId),
       {
         params: queryParams,
@@ -155,31 +169,42 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       }
     );
     
-    return response.data;
+    return transformData(response.data, BucketMap);
   }
 
   /**
    * Gets a direct download URL for a file in the bucket
    * 
-   * @param bucketId - The ID of the bucket containing the file
-   * @param folderId - Required folder ID for organization unit context
-   * @param options - Required file path and optional expiry time
+   * @param options - Contains bucketId, folderId, file path and optional expiry time
    * @returns Promise resolving to blob file access information
    * 
    * @example
    * ```typescript
    * // Get download URL for a file
-   * const fileAccess = await sdk.buckets.getReadUri(123, 456, {
+   * const fileAccess = await sdk.buckets.getReadUri({
+   *   bucketId: 123, 
+   *   folderId: 456,
    *   path: '/folder/file.pdf'
    * });
    * ```
    */
-  async getReadUri(bucketId: number, folderId: number, options: GetReadUriOptions): Promise<BlobGetUriResponse> {
+  async getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse> {
+    const { bucketId, folderId, path, expiryInMinutes, ...restOptions } = options;
+    
+    if (!bucketId) {
+      throw new Error('bucketId is required');
+    }
+    
+    if (!folderId) {
+      throw new Error('folderId is required');
+    }
+
+    if (!path) {
+      throw new Error('path is required');
+    }
+    
     // Create headers with required folder ID
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    // Extract OData parameters ($select, $expand) to prefix them
-    const { path, expiryInMinutes, ...restOptions } = options;
     
     // Filter out undefined values and build query params
     const queryParams = filterUndefined({
@@ -197,32 +222,51 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       }
     );
     
-    // Transform response from PascalCase to camelCase
-    return pascalToCamelCaseKeys(response.data) as BlobGetUriResponse;
+    const transformedData = transformData(pascalToCamelCaseKeys(response.data), BucketMap) as BucketGetUriResponse;
+    
+    // Convert headers from array-based to record if needed
+    if (transformedData.headers && 'keys' in transformedData.headers && 'values' in transformedData.headers) {
+      transformedData.headers = arrayDictionaryToRecord(
+        transformedData.headers as unknown as { keys: string[], values: string[] }
+      );
+    }
+    
+    return transformedData;
   }
 
   /**
    * Gets a direct upload URL for a file in the bucket
    * 
-   * @param bucketId - The ID of the bucket for the file upload
-   * @param folderId - Required folder ID for organization unit context
-   * @param options - Required file path, optional expiry time and content type
+   * @param options - Contains bucketId, folderId, file path, optional expiry time and content type
    * @returns Promise resolving to blob file access information
    * 
    * @example
    * ```typescript
    * // Get upload URL for a file
-   * const fileAccess = await sdk.buckets.getWriteUri(123, 456, {
+   * const fileAccess = await sdk.buckets.getWriteUri({
+   *   bucketId: 123, 
+   *   folderId: 456,
    *   path: '/folder/file.pdf'
    * });
    * ```
    */
-  async getWriteUri(bucketId: number, folderId: number, options: GetWriteUriOptions): Promise<BlobGetUriResponse> {
+  async getWriteUri(options: BucketGetWriteUriOptions): Promise<BucketGetUriResponse> {
+    const { bucketId, folderId, path, expiryInMinutes, contentType, ...restOptions } = options;
+    
+    if (!bucketId) {
+      throw new Error('bucketId is required');
+    }
+    
+    if (!folderId) {
+      throw new Error('folderId is required');
+    }
+
+    if (!path) {
+      throw new Error('path is required');
+    }
+    
     // Create headers with required folder ID
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    // Extract OData parameters ($select, $expand) to prefix them
-    const { path, expiryInMinutes, contentType, ...restOptions } = options;
     
     // Filter out undefined values and build query params
     const queryParams = filterUndefined({
@@ -241,7 +285,15 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       }
     );
     
-    // Transform response from PascalCase to camelCase
-    return pascalToCamelCaseKeys(response.data) as BlobGetUriResponse;
+    const transformedData = transformData(pascalToCamelCaseKeys(response.data), BucketMap) as BucketGetUriResponse;
+    
+    // Convert headers from array-based to record if needed
+    if (transformedData.headers && 'keys' in transformedData.headers && 'values' in transformedData.headers) {
+      transformedData.headers = arrayDictionaryToRecord(
+        transformedData.headers as unknown as { keys: string[], values: string[] }
+      );
+    }
+    
+    return transformedData;
   }
 }

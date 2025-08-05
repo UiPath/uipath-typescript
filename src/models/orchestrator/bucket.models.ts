@@ -1,4 +1,4 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFilesOptions, BucketGetFilesResponse, BlobGetUriResponse, GetReadUriOptions, GetWriteUriOptions } from './bucket.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketGetWriteUriOptions } from './bucket.types';
 
 /**
  * Bucket service model interface
@@ -30,25 +30,21 @@ export interface BucketServiceModel {
    * @param options - Optional parameters for filtering, pagination and access URL generation
    * @returns Promise resolving to the files in the bucket
    */
-  getFiles(bucketId: number, folderId: number, options?: BucketGetFilesOptions): Promise<BucketGetFilesResponse>;
+  getFileMetaData(bucketId: number, folderId: number, options?: BucketGetFileMetaDataOptions): Promise<BucketGetFileMetaDataResponse>;
 
   /**
    * Gets a direct download URL for a file in the bucket
    * 
-   * @param bucketId - The ID of the bucket containing the file
-   * @param folderId - Required folder ID for organization unit context
-   * @param options - Required file path and optional expiry time
+   * @param options - Contains bucketId, folderId, file path and optional expiry time
    * @returns Promise resolving to blob file access information
    */
-  getReadUri(bucketId: number, folderId: number, options: GetReadUriOptions): Promise<BlobGetUriResponse>;
+  getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse>;
   
   /**
    * Gets a direct upload URL for a file in the bucket
    * 
-   * @param bucketId - The ID of the bucket for the file upload
-   * @param folderId - Required folder ID for organization unit context
-   * @param options - Required file path, optional expiry time and content type
+   * @param options - Contains bucketId, folderId, file path, optional expiry time and content type
    * @returns Promise resolving to blob file access information
    */
-  getWriteUri(bucketId: number, folderId: number, options: GetWriteUriOptions): Promise<BlobGetUriResponse>;
+  getWriteUri(options: BucketGetWriteUriOptions): Promise<BucketGetUriResponse>;
 } 

@@ -29,33 +29,30 @@ export interface BucketGetAllOptions extends RequestOptions {
 export type BucketGetByIdOptions = BaseOptions
 
 /**
- * Response dictionary structure used by UiPath APIs
+ * Maps header names to their values
+ * 
+ * @example
+ * ```typescript
+ * {
+ *   "x-ms-blob-type": "BlockBlob"
+ * }
+ * ```
  */
-export interface ResponseDictionary {
-  /**
-   * Array of dictionary keys
-   */
-  keys: string[];
-  
-  /**
-   * Array of dictionary values corresponding to the keys array
-   */
-  values: string[];
-}
+export type ResponseDictionary = Record<string, string>;
 
 /**
  * Response from the GetReadUri API
  */
-export interface BlobGetUriResponse {
+export interface BucketGetUriResponse {
   /**
    * The URI for accessing the blob file
    */
   uri: string;
   
   /**
-   * HTTP verb to use with the URI
+   * HTTP method to use with the URI
    */
-  verb: string;
+  method: string;
   
   /**
    * Whether authentication is required to access the URI
@@ -68,7 +65,17 @@ export interface BlobGetUriResponse {
   headers: ResponseDictionary;
 }
 
-export interface GetUriOptions extends BaseOptions {
+export interface BucketGetUriOptions extends BaseOptions {
+  /**
+   * The ID of the bucket
+   */
+  bucketId: number;
+
+  /**
+   * The ID of the folder
+   */
+  folderId: number;
+
   /**
    * The full path to the BlobFile
    */
@@ -83,12 +90,12 @@ export interface GetUriOptions extends BaseOptions {
 /**
  * Request options for getting a read URI for a file in a bucket
  */
-export type GetReadUriOptions = GetUriOptions;
+export type BucketGetReadUriOptions = BucketGetUriOptions;
 
 /**
  * Request options for getting a write URI for a file in a bucket
  */
-export interface GetWriteUriOptions extends GetUriOptions {
+export interface BucketGetWriteUriOptions extends BucketGetUriOptions {
   /**
    * ContentType for S3 access policy
    */
@@ -98,7 +105,7 @@ export interface GetWriteUriOptions extends GetUriOptions {
 /**
  * Request options for getting files in a bucket
  */
-export interface BucketGetFilesOptions {
+export interface BucketGetFileMetaDataOptions {
   /**
    * The path prefix to filter files by
    */
@@ -125,11 +132,11 @@ export interface BucketGetFilesOptions {
 /**
  * Response from the GetFiles API
  */
-export interface BucketGetFilesResponse {
+export interface BucketGetFileMetaDataResponse {
   /**
    * Array of blob items in the bucket
    */
-  items: BlobItem[];
+  blobItems: BlobItem[];
   
   /**
    * Token for retrieving the next set of results
@@ -144,7 +151,7 @@ export interface BlobItem {
   /**
    * Full path to the blob
    */
-  fullPath: string;
+  path: string;
   
   /**
    * Content type of the blob
