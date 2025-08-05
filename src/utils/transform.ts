@@ -317,3 +317,22 @@ export function addPrefixToKeys<T extends object>(
   }
   return result;
 } 
+
+/**
+ * Creates a new map with the keys and values reversed
+ * @param map The original map to reverse
+ * @returns A new map with keys and values swapped
+ * 
+ * @example
+ * ```typescript
+ * const original = { key1: 'value1', key2: 'value2' };
+ * const reversed = reverseMap(original);
+ * // reversed = { value1: 'key1', value2: 'key2' }
+ * ```
+ */
+export function reverseMap<T extends Record<string, string>>(map: T): Record<string, string> {
+  return Object.entries(map).reduce((acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+  }, {} as Record<string, string>);
+} 

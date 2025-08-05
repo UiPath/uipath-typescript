@@ -93,8 +93,8 @@ const buckets = await sdk.bucket.getAll();
 const process = await sdk.process.getAll({ 
   filter: "name eq 'MyProcess'" 
 });
-const job = await sdk.process.startProcess({
-  releaseKey: process[0].key
+const job = await sdk.process.start({
+  processKey: process[0].key
 }, 'folder-id');
 
 // Get all queues

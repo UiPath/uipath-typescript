@@ -83,6 +83,7 @@ export const IDENTITY_ENDPOINTS = {
 export const PROCESS_ENDPOINTS = {
   GET_ALL: '/odata/Releases',
   START_PROCESS: '/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs',
+  GET_BY_ID: (id: number) => `/odata/Releases(${id})`,
 } as const;
 
 /**
