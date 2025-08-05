@@ -1,25 +1,6 @@
-import { PageResult, PaginationCursor, PaginationOptions, InternalPaginationOptions, PaginationType } from './pagination.types';
-
-/**
- * Internal cursor data structure for tracking pagination state
- */
-interface CursorData {
-  /** The type of pagination used by this service */
-  type: PaginationType;
-  
-  /** For OData and Entity pagination */
-  pageNumber?: number;
-  
-  /** For token-based pagination */
-  continuationToken?: string;
-  
-  /** Common parameters */
-  pageSize?: number;
-  includeTotal?: boolean;
-  
-  /** Service-specific parameters (passed through) */
-  extras?: Record<string, any>;
-}
+import { PaginatedResponse, PaginationCursor } from './pagination.types';
+import { CursorData, PaginationType, PaginationInfo } from './pagination.internal-types';
+import { filterUndefined } from '../object-utils';
 
 /**
  * PaginationManager handles the conversion between uniform cursor-based pagination
@@ -30,15 +11,7 @@ export class PaginationManager {
    * Create a pagination cursor for subsequent page requests
    */
   static createCursor(
-    pageInfo: {
-      hasMore: boolean;
-      pageSize?: number;
-      currentPage?: number;
-      continuationToken?: string;
-      includeTotal?: boolean;
-    }, 
-    type: PaginationType,
-    extras: Record<string, any> = {}
+    { pageInfo, type }: PaginationInfo
   ): PaginationCursor | undefined {
     if (!pageInfo.hasMore) {
       return undefined;
@@ -47,8 +20,6 @@ export class PaginationManager {
     const cursorData: CursorData = {
       type,
       pageSize: pageInfo.pageSize,
-      includeTotal: pageInfo.includeTotal,
-      extras
     };
     
     switch (type) {
@@ -69,61 +40,19 @@ export class PaginationManager {
     }
     
     return {
-      cursor: Buffer.from(JSON.stringify(cursorData)).toString('base64')
+      value: Buffer.from(JSON.stringify(cursorData)).toString('base64')
     };
   }
-  
+
   /**
-   * Convert a unified pagination options to service-specific parameters
+   * Create a paginated response with navigation cursors
    */
-  static getRequestParameters(
-    options: PaginationOptions
-  ): InternalPaginationOptions {
-    // If no cursor is provided, it's a first page request
-    if (!options.cursor) {
-      return {
-        pageSize: options.pageSize,
-        pageNumber: 1,
-        includeTotal: options.includeTotal
-      };
-    }
-    
-    // Parse the cursor
-    try {
-      const cursorData: CursorData = JSON.parse(
-        Buffer.from(options.cursor.cursor, 'base64').toString('utf-8')
-      );
-      
-      return {
-        pageSize: cursorData.pageSize || options.pageSize,
-        pageNumber: cursorData.pageNumber,
-        continuationToken: cursorData.continuationToken,
-        includeTotal: options.includeTotal !== undefined ? options.includeTotal : cursorData.includeTotal,
-        type: cursorData.type,
-        extras: cursorData.extras
-      };
-    } catch (error) {
-      throw new Error('Invalid pagination cursor');
-    }
-  }
-  
-  /**
-   * Create a page result with navigation cursors
-   */
-  static createPageResult<T>(
+  static createPaginatedResponse<T>(
+    { pageInfo, type }: PaginationInfo,
     items: T[],
-    pageInfo: {
-      hasMore: boolean;
-      totalCount?: number;
-      currentPage?: number;
-      pageSize?: number;
-      continuationToken?: string;
-      includeTotal?: boolean;
-    },
-    type: PaginationType,
-    extras: Record<string, any> = {}
-  ): PageResult<T> {
-    const nextCursor = PaginationManager.createCursor(pageInfo, type, extras);
+  ): PaginatedResponse<T> {
+    const nextCursor = PaginationManager.createCursor(
+      { pageInfo, type });
     
     // Create previous page cursor if applicable
     let previousCursor: PaginationCursor | undefined = undefined;
@@ -132,24 +61,34 @@ export class PaginationManager {
         type,
         pageNumber: pageInfo.currentPage - 1,
         pageSize: pageInfo.pageSize,
-        extras
       };
       
       previousCursor = {
-        cursor: Buffer.from(JSON.stringify(prevCursorData)).toString('base64')
+        value: Buffer.from(JSON.stringify(prevCursorData)).toString('base64')
       };
     }
     
-    // Only include totalCount when includeTotal is true
-    const shouldIncludeTotalCount = pageInfo.includeTotal === true;
+    // Calculate total pages if we have totalCount and pageSize
+    let totalPages: number | undefined = undefined;
+    if (pageInfo.totalCount !== undefined && pageInfo.pageSize) {
+      totalPages = Math.ceil(pageInfo.totalCount / pageInfo.pageSize);
+    }
     
-    return {
+    // Determine if this pagination type supports page jumping
+    const supportsPageJump = type === PaginationType.ODATA || type === PaginationType.ENTITY;
+    
+    // Create the result object with all fields, then filter out undefined values
+    const result = filterUndefined({
       items,
-      totalCount: shouldIncludeTotalCount ? pageInfo.totalCount : undefined,
-      hasNext: pageInfo.hasMore,
-      next: nextCursor,
-      previous: previousCursor,
-      hasTotalCount: shouldIncludeTotalCount && pageInfo.totalCount !== undefined
-    };
+      totalCount: pageInfo.totalCount,
+      hasNextPage: pageInfo.hasMore,
+      nextCursor: nextCursor,
+      previousCursor: previousCursor,
+      currentPage: pageInfo.currentPage,
+      totalPages,
+      supportsPageJump
+    });
+    
+    return result as PaginatedResponse<T>;
   }
 } 

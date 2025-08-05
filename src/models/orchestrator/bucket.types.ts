@@ -23,7 +23,7 @@ export interface BucketGetResponse {
   foldersCount: number;
 }
 
-export interface BucketGetAllOptions extends RequestOptions, PaginationOptions {
+export type BucketGetAllOptions = RequestOptions & PaginationOptions & {
   folderId?: number;
 }
 

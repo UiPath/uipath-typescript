@@ -1,3 +1,5 @@
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
+
 /**
  * HTTP methods supported by the API client
  */
@@ -57,10 +59,10 @@ export interface BodyOptions {
  */
 export interface PaginationMetadata {
   /** Type of pagination used by the API endpoint */
-  paginationType: 'odata' | 'entity' | 'token';
-  /** Response field containing items array (defaults to 'value' for odata/entity, 'items' for token) */
+  paginationType: PaginationType;
+  /** Response field containing items array (defaults to 'value') */
   itemsField?: string;
-  /** Response field containing total count (defaults to 'totalRecordCount') */
+  /** Response field containing total count (defaults to '@odata.count') */
   totalCountField?: string;
   /** Response field containing continuation token (defaults to 'continuationToken') */
   continuationTokenField?: string;

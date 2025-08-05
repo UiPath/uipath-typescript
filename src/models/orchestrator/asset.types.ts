@@ -57,7 +57,7 @@ export interface AssetGetResponse {
 /**
  * Options for getting assets across folders
  */
-export interface AssetGetAllOptions extends RequestOptions, PaginationOptions {
+export type AssetGetAllOptions = RequestOptions & PaginationOptions & {
   /**
    * Optional folder ID to filter assets by folder
    */

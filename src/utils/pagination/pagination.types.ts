@@ -1,49 +1,32 @@
 /**
  * Simplified universal pagination cursor
- * Used to fetch next/previous pages without knowing the pagination mechanism
+ * Used to fetch next/previous pages
  */
 export interface PaginationCursor {
-  /** Opaque cursor string containing all information needed to fetch next page */
-  cursor: string;
+  /** Opaque string containing all information needed to fetch next page */
+  value: string;
 }
 
 /**
- * Public pagination options that can be added to any options interface
- * to enable cursor-based pagination
+ * Discriminated union for pagination methods - ensures cursor and jumpToPage are mutually exclusive
  */
-export interface PaginationOptions {
+export type PaginationMethodUnion = 
+  | { cursor?: PaginationCursor; jumpToPage?: never }
+  | { cursor?: never; jumpToPage?: number }
+  | { cursor?: never; jumpToPage?: never };
+
+/**
+ * Pagination options. Users cannot specify both cursor and jumpToPage.
+ */
+export type PaginationOptions = {
   /** Size of the page to fetch (items per page) */
   pageSize?: number;
-  
-  /** Whether to include the total count of items if available */
-  includeTotal?: boolean;
-  
-  /** Pagination cursor for continuing from a previous page */
-  cursor?: PaginationCursor;
-}
+} & PaginationMethodUnion;
 
 /**
- * Internal pagination options used by the pagination implementation
- * @internal This interface is for internal use only
+ * Paginated response containing items and navigation information
  */
-export interface InternalPaginationOptions extends PaginationOptions {
-  /** Current page number (1-based) - for internal use only */
-  pageNumber?: number;
-  
-  /** Token for continuing pagination - for internal use only */
-  continuationToken?: string;
-  
-  /** Pagination type - for internal use only */
-  type?: any; // Will be properly typed in the pagination service
-  
-  /** Extra parameters to pass through - for internal use only */
-  extras?: Record<string, any>;
-}
-
-/**
- * Page result containing items and navigation information
- */
-export interface PageResult<T> {
+export interface PaginatedResponse<T> {
   /** The items in the current page */
   items: T[];
   
@@ -51,23 +34,29 @@ export interface PageResult<T> {
   totalCount?: number;
   
   /** Whether more pages are available */
-  hasNext: boolean;
+  hasNextPage: boolean;
   
   /** Cursor to fetch the next page (if available) */
-  next?: PaginationCursor;
+  nextCursor?: PaginationCursor;
   
   /** Cursor to fetch the previous page (if available) */
-  previous?: PaginationCursor;
+  previousCursor?: PaginationCursor;
   
-  /** Whether total count is included in this result */
-  hasTotalCount: boolean;
+  /** Current page number (1-based, if available) */
+  currentPage?: number;
+  
+  /** Total number of pages (if available) */
+  totalPages?: number;
+  
+  /** Whether this pagination type supports jumping to arbitrary pages */
+  supportsPageJump: boolean;
 } 
 
 /**
- * Pagination types supported by the SDK
+ * Helper type for defining paginated method overloads
+ * Creates a union type of all ways pagination can be triggered
  */
-export enum PaginationType {
-    ODATA = 'odata',
-    ENTITY = 'entity',
-    TOKEN = 'token'
-  } 
+export type HasPaginationOptions<T> = 
+  | (T & { pageSize: number })
+  | (T & { cursor: PaginationCursor })
+  | (T & { jumpToPage: number }); 
