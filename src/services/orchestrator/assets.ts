@@ -15,6 +15,7 @@ import { FOLDER_ID } from '../../utils/constants/headers';
 import { ASSET_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX } from '../../utils/constants/common';
 import { AssetMap } from '../../models/orchestrator/assets.constants';
+import { PageResult, PaginationCursor } from '../../utils/pagination';
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
@@ -27,28 +28,79 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
   /**
    * Gets all assets across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of assets
+   * The method returns either:
+   * - An array of assets (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
    * 
    * @example
    * ```typescript
-   * // Get all assets across folders
+   * // Standard array return
    * const assets = await sdk.asset.getAll();
    * 
-   * // Get assets within a specific folder
-   * const assets = await sdk.asset.getAll({ 
-   *   folderId: 123
-   * });
+   * // With folder
+   * const folderAssets = await sdk.asset.getAll({ folderId: 123 });
    * 
-   * // Get assets with filtering
-   * const assets = await sdk.asset.getAll({ 
-   *   filter: "name eq 'MyAsset'"
-   * });
+   * // First page with pagination
+   * const page1 = await sdk.asset.getAll({ pageSize: 10, includeTotal: true });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNext) {
+   *   const page2 = await sdk.asset.getAll({ cursor: page1.next });
+   * }
    * ```
    */
-  async getAll(options: AssetGetAllOptions = {}): Promise<AssetGetResponse[]> {
-    const { folderId, ...restOptions } = options;
+  async getAll(options?: AssetGetAllOptions & { 
+    pageSize?: undefined; 
+    includeTotal?: undefined;
+    cursor?: undefined;
+  }): Promise<AssetGetResponse[]>;
+  
+  async getAll(options: AssetGetAllOptions & { 
+    pageSize?: number;
+  } | AssetGetAllOptions & { 
+    includeTotal: true;
+  } | AssetGetAllOptions & { 
+    cursor: PaginationCursor;
+  }): Promise<PageResult<AssetGetResponse>>;
+  
+  async getAll(options: AssetGetAllOptions = {}): Promise<AssetGetResponse[] | PageResult<AssetGetResponse>> {
+    const { folderId, cursor, pageSize, includeTotal, ...restOptions } = options;
     
+    // Detect pagination intent from any pagination parameter
+    const isPaginationRequested = cursor !== undefined || pageSize !== undefined || includeTotal === true;
+    
+    // If pagination is requested, use the pagination flow
+    if (isPaginationRequested) {
+      const endpoint = folderId ? ASSET_ENDPOINTS.GET_BY_FOLDER : ASSET_ENDPOINTS.GET_ALL;
+      const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
+      
+      const pageResult = await this.requestWithPagination<AssetGetResponse>(
+        'GET',
+        endpoint,
+        { cursor, pageSize, includeTotal },
+        {
+          headers,
+          params: restOptions,
+          pagination: {
+            paginationType: 'odata',
+            itemsField: 'value',
+            totalCountField: 'totalRecordCount'
+          }
+        }
+      );
+      
+      // Transform the data to camelCase and apply type mapping
+      const transformedItems = pageResult.items.map(asset =>
+        transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap)
+      );
+      
+      return {
+        ...pageResult,
+        items: transformedItems
+      };
+    }
+    
+    // Standard array return (default)
     // If folderId is provided, use the folder-specific endpoint
     if (folderId) {
       return this._getByFolder<object, AssetGetResponse>(

@@ -26,6 +26,7 @@ import { BucketMap, DEFAULT_CONTENT_TYPE } from '../../models/orchestrator/bucke
 import { isBrowser } from '../../utils/platform';
 import * as mimeTypes from 'mime-types';
 import axios, { AxiosResponse } from 'axios';
+import { PageResult, PaginationCursor } from '../../utils/pagination';
 
 // Import file-type dynamically to avoid issues in browser environment
 // This variable will hold the fileTypeFromBuffer function when in Node.js environment
@@ -94,8 +95,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   /**
    * Gets all buckets across folders with optional filtering and folder scoping
    * 
+   * The method returns either:
+   * - An array of buckets (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of buckets
+   * @returns Promise resolving to an array of buckets or paginated result
    * 
    * @example
    * ```typescript
@@ -111,10 +116,66 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * const buckets = await sdk.buckets.getAll({ 
    *   filter: "name eq 'MyBucket'"
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.buckets.getAll({ pageSize: 10, includeTotal: true });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNext) {
+   *   const page2 = await sdk.buckets.getAll({ cursor: page1.next });
+   * }
    * ```
    */
-  async getAll(options: BucketGetAllOptions = {}): Promise<BucketGetResponse[]> {
-    const { folderId, ...restOptions } = options;
+  async getAll(options?: BucketGetAllOptions & { 
+    pageSize?: undefined; 
+    includeTotal?: undefined;
+    cursor?: undefined;
+  }): Promise<BucketGetResponse[]>;
+  
+  async getAll(options: BucketGetAllOptions & { 
+    pageSize?: number;
+  } | BucketGetAllOptions & { 
+    includeTotal: true;
+  } | BucketGetAllOptions & { 
+    cursor: PaginationCursor;
+  }): Promise<PageResult<BucketGetResponse>>;
+  
+  async getAll(options: BucketGetAllOptions = {}): Promise<BucketGetResponse[] | PageResult<BucketGetResponse>> {
+    const { folderId, cursor, pageSize, includeTotal, ...restOptions } = options;
+    
+    // Detect pagination intent from any pagination parameter
+    const isPaginationRequested = cursor !== undefined || pageSize !== undefined || includeTotal === true;
+    
+    // If pagination is requested, use the pagination flow
+    if (isPaginationRequested) {
+      const endpoint = folderId ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL;
+      const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
+      
+      const pageResult = await this.requestWithPagination<BucketGetResponse>(
+        'GET',
+        endpoint,
+        { cursor, pageSize, includeTotal },
+        {
+          headers,
+          params: restOptions,
+          pagination: {
+            paginationType: 'odata',
+            itemsField: 'value',
+            totalCountField: '@odata.count'
+          }
+        }
+      );
+      
+      // Transform the data to camelCase
+      const transformedItems = pageResult.items.map(bucket =>
+        pascalToCamelCaseKeys(bucket) as BucketGetResponse
+      );
+      
+      return {
+        ...pageResult,
+        items: transformedItems
+      };
+    }
     
     // If folderId is provided, use the folder-specific endpoint
     if (folderId) {

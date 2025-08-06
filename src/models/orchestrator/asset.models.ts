@@ -1,4 +1,5 @@
 import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions } from './asset.types';
+import { PageResult, PaginationCursor } from '../../utils/pagination';
 
 /**
  * Asset service model interface
@@ -6,11 +7,25 @@ import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions } from './ass
 export interface AssetServiceModel {
   /**
    * Gets all assets across folders with optional filtering
+   * Returns an array of assets when no pagination parameters are provided,
+   * or a PageResult when any pagination parameter is provided
    * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of assets
+   * @param options - Query options including optional folderId and pagination
+   * @returns Promise resolving to array of assets or a paginated result
    */
-  getAll(options?: AssetGetAllOptions): Promise<AssetGetResponse[]>;
+  getAll(options?: AssetGetAllOptions & { 
+    pageSize?: undefined; 
+    includeTotal?: undefined;
+    cursor?: undefined;
+  }): Promise<AssetGetResponse[]>;
+  
+  getAll(options: AssetGetAllOptions & { 
+    pageSize?: number;
+  } | AssetGetAllOptions & { 
+    includeTotal: true;
+  } | AssetGetAllOptions & { 
+    cursor: PaginationCursor;
+  }): Promise<PageResult<AssetGetResponse>>;
 
   /**
    * Gets a single asset by ID

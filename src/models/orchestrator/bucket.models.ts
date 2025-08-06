@@ -1,4 +1,5 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketGetWriteUriOptions, BucketUploadFileOptions, BucketUploadResponse } from './bucket.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse } from './bucket.types';
+import { PageResult, PaginationCursor } from '../../utils/pagination';
 
 /**
  * Bucket service model interface
@@ -7,10 +8,26 @@ export interface BucketServiceModel {
   /**
    * Gets all buckets across folders with optional filtering
    * 
+   * The method returns either:
+   * - An array of buckets (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of buckets
+   * @returns Promise resolving to an array of buckets or a paginated result
    */
-  getAll(options?: BucketGetAllOptions): Promise<BucketGetResponse[]>;
+  getAll(options?: BucketGetAllOptions & { 
+    pageSize?: undefined; 
+    includeTotal?: undefined;
+    cursor?: undefined;
+  }): Promise<BucketGetResponse[]>;
+  
+  getAll(options: BucketGetAllOptions & { 
+    pageSize?: number;
+  } | BucketGetAllOptions & { 
+    includeTotal: true;
+  } | BucketGetAllOptions & { 
+    cursor: PaginationCursor;
+  }): Promise<PageResult<BucketGetResponse>>;
 
   /**
    * Gets a single bucket by ID
