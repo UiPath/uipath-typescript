@@ -173,24 +173,21 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   /**
-   * Gets a direct download URL for a file in the bucket
-   * 
-   * @param options - Contains bucketId, folderId, file path and optional expiry time
+   * Private method to handle common URI request logic
+   * @param endpoint - The API endpoint to call
+   * @param bucketId - The bucket ID
+   * @param folderId - The folder ID
+   * @param path - The file path
+   * @param queryOptions - Additional query parameters
    * @returns Promise resolving to blob file access information
-   * 
-   * @example
-   * ```typescript
-   * // Get download URL for a file
-   * const fileAccess = await sdk.buckets.getReadUri({
-   *   bucketId: 123, 
-   *   folderId: 456,
-   *   path: '/folder/file.pdf'
-   * });
-   * ```
    */
-  async getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse> {
-    const { bucketId, folderId, path, expiryInMinutes, ...restOptions } = options;
-    
+  private async _getUri(
+    endpoint: string,
+    bucketId: number,
+    folderId: number,
+    path: string,
+    queryOptions: Record<string, any> = {}
+  ): Promise<BucketGetUriResponse> {
     if (!bucketId) {
       throw new Error('bucketId is required');
     }
@@ -209,13 +206,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     // Filter out undefined values and build query params
     const queryParams = filterUndefined({
       path,
-      expiryInMinutes,
-      ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
+      ...queryOptions
     });
     
-    // Make the API call to get read URI
+    // Make the API call to get URI
     const response = await this.get<Record<string, any>>(
-      BUCKET_ENDPOINTS.GET_READ_URI(bucketId),
+      endpoint,
       {
         params: queryParams,
         headers
@@ -232,6 +228,39 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     }
     
     return transformedData;
+  }
+
+  /**
+   * Gets a direct download URL for a file in the bucket
+   * 
+   * @param options - Contains bucketId, folderId, file path and optional expiry time
+   * @returns Promise resolving to blob file access information
+   * 
+   * @example
+   * ```typescript
+   * // Get download URL for a file
+   * const fileAccess = await sdk.buckets.getReadUri({
+   *   bucketId: 123, 
+   *   folderId: 456,
+   *   path: '/folder/file.pdf'
+   * });
+   * ```
+   */
+  async getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse> {
+    const { bucketId, folderId, path, expiryInMinutes, ...restOptions } = options;
+    
+    const queryOptions = {
+      expiryInMinutes,
+      ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
+    };
+    
+    return this._getUri(
+      BUCKET_ENDPOINTS.GET_READ_URI(bucketId),
+      bucketId,
+      folderId,
+      path,
+      queryOptions
+    );
   }
 
   /**
@@ -253,47 +282,18 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   async getWriteUri(options: BucketGetWriteUriOptions): Promise<BucketGetUriResponse> {
     const { bucketId, folderId, path, expiryInMinutes, contentType, ...restOptions } = options;
     
-    if (!bucketId) {
-      throw new Error('bucketId is required');
-    }
-    
-    if (!folderId) {
-      throw new Error('folderId is required');
-    }
-
-    if (!path) {
-      throw new Error('path is required');
-    }
-    
-    // Create headers with required folder ID
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    // Filter out undefined values and build query params
-    const queryParams = filterUndefined({
-      path,
+    const queryOptions = {
       expiryInMinutes,
       contentType,
       ...addPrefixToKeys(restOptions, ODATA_PREFIX, Object.keys(restOptions))
-    });
+    };
     
-    // Make the API call to get write URI
-    const response = await this.get<Record<string, any>>(
+    return this._getUri(
       BUCKET_ENDPOINTS.GET_WRITE_URI(bucketId),
-      {
-        params: queryParams,
-        headers
-      }
+      bucketId,
+      folderId,
+      path,
+      queryOptions
     );
-    
-    const transformedData = transformData(pascalToCamelCaseKeys(response.data), BucketMap) as BucketGetUriResponse;
-    
-    // Convert headers from array-based to record if needed
-    if (transformedData.headers && 'keys' in transformedData.headers && 'values' in transformedData.headers) {
-      transformedData.headers = arrayDictionaryToRecord(
-        transformedData.headers as unknown as { keys: string[], values: string[] }
-      );
-    }
-    
-    return transformedData;
   }
 }

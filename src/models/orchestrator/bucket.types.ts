@@ -52,7 +52,7 @@ export interface BucketGetUriResponse {
   /**
    * HTTP method to use with the URI
    */
-  method: string;
+  httpMethod: string;
   
   /**
    * Whether authentication is required to access the URI
@@ -110,23 +110,6 @@ export interface BucketGetFileMetaDataOptions {
    * The path prefix to filter files by
    */
   prefix?: string;
-  
-  /**
-   * The minimum number of files to return in the response.
-   * Default value is 500, maximum is 1000.
-   */
-  limit?: number;
-  
-  /**
-   * A token indicating where to resume listing files. Used for pagination.
-   */
-  continuationToken?: string;
-  
-  /**
-   * The number of minutes before the generated access URL expires.
-   * If not provided, the access url will not be returned.
-   */
-  expiryInMinutes?: number;
 }
 
 /**

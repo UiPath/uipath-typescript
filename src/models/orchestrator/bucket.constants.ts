@@ -4,5 +4,5 @@
 export const BucketMap: { [key: string]: string } = {
     fullPath: 'path',
     items: 'blobItems',
-    verb: 'method'
+    verb: 'httpMethod'
   }; 
