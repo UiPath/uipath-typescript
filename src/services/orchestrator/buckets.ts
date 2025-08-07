@@ -162,7 +162,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     
     // Make the API call to get files
     const response = await this.get<BucketGetFileMetaDataResponse>(
-      BUCKET_ENDPOINTS.GET_FILES(bucketId),
+      BUCKET_ENDPOINTS.GET_FILE_META_DATA(bucketId),
       {
         params: queryParams,
         headers
