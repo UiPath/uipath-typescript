@@ -17,15 +17,10 @@
     "paths": {
       "*": ["node_modules/*", "src/types/*"]
     },
-    "composite": true,
+    "composite": false,
     "declarationMap": true,
     "sourceMap": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests", "packages"],
-  "references": [
-    {
-      "path": "./packages/cli"
-    }
-  ]
+  "exclude": ["node_modules", "dist", "tests", "packages"]
 }
