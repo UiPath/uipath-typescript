@@ -42,6 +42,7 @@ const sdk = new UiPath({
 });
 ```
 
+For OAuth, first create a non confidential External App with the required scopes and provide the clientId and redirectUri here.
 ### 2. OAuth Authentication
 ```typescript
 const sdk = new UiPath({
@@ -49,8 +50,55 @@ const sdk = new UiPath({
   orgName: 'your-organization',
   tenantName: 'your-tenant',
   clientId: 'your-client-id',
-  redirectUri: 'your-client-secret'
+  redirectUri: 'your-redirect-uri'
 });
+
+// IMPORTANT: OAuth requires calling initialize()
+await sdk.initialize();
+```
+
+## SDK Initialization - The initialize() Method
+
+### When to Use initialize()
+
+The `initialize()` method completes the authentication process for the SDK:
+
+- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
+- **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
+
+### Example: Secret Authentication (Auto-initialized)
+```typescript
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  secret: 'your-secret'
+});
+
+// Ready to use immediately - no initialize() needed
+const tasks = await sdk.task.getAll();
+```
+
+### Example: OAuth Authentication (Requires initialize)
+```typescript
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  clientId: 'your-client-id',
+  redirectUri: 'http://localhost:3000/callback'
+});
+
+// Must initialize before using services
+try {
+  await sdk.initialize();
+  console.log('SDK initialized successfully');
+  
+  // Now you can use the SDK
+  const tasks = await sdk.task.getAll();
+} catch (error) {
+  console.error('Failed to initialize SDK:', error);
+}
 ```
 
 ## Available Services
