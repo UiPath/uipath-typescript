@@ -20,7 +20,7 @@ const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret'
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 
 // Use the services
@@ -38,11 +38,11 @@ const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret'
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 ```
 
-For OAuth, first create a non confidential External App with the required scopes and provide the clientId and redirectUri here.
+For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the required scopes and provide the clientId and redirectUri here.
 ### 2. OAuth Authentication
 ```typescript
 const sdk = new UiPath({
@@ -72,7 +72,7 @@ const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret'
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 
 // Ready to use immediately - no initialize() needed
