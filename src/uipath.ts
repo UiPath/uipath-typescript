@@ -9,7 +9,8 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService
+  AssetService,
+  DocumentsService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
@@ -156,6 +157,13 @@ export class UiPath {
    */
   get asset(): AssetService {
     return this.getService(AssetService);
+  }
+
+  /**
+   * Access to Documents service (Document Understanding)
+   */
+  get documents(): DocumentsService {
+    return this.getService(DocumentsService);
   }
 }
 

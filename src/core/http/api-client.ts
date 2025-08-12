@@ -61,59 +61,105 @@ export class ApiClient {
     }
   }
 
-  private async getDefaultHeaders(): Promise<Record<string, string>> {
+  private async _getDefaultHeaders(excludeContentType: boolean = false): Promise<Record<string, string>> {
     // Get headers from execution context first
     const contextHeaders = this.executionContext.getHeaders();
     
-    // If Authorization header is already set in context, use that
-    if (contextHeaders['Authorization']) {
-      return {
-        ...contextHeaders,
-        'Content-Type': 'application/json',
-        ...this.defaultHeaders,
-        ...this.clientConfig.headers
-      };
-    }
-
-    const token = await this.ensureValidToken();
-
-    return {
+    // Base headers without Content-Type
+    const baseHeaders: Record<string, string> = {
       ...contextHeaders,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
       ...this.defaultHeaders,
       ...this.clientConfig.headers
     };
+
+    // Add Content-Type only if not excluded (for FormData)
+    if (!excludeContentType) {
+      baseHeaders['Content-Type'] = 'application/json';
+    }
+    
+    // If Authorization header is already set in context, use that
+    if (contextHeaders['Authorization']) {
+      return baseHeaders;
+    }
+
+    const token = await this.ensureValidToken();
+    baseHeaders['Authorization'] = `Bearer ${token}`;
+
+    return baseHeaders;
   }
 
-  private async request<T>(method: string, path: string, options: RequestSpec = {}): Promise<T> {
-    // Ensure path starts with a forward slash
+  private _isFormDataBody(body: unknown): boolean {
+    const anyBody = body as any;
+    return (
+      typeof FormData !== 'undefined' && body instanceof FormData
+    ) || (
+      anyBody && typeof anyBody === 'object' && typeof anyBody.getHeaders === 'function'
+    );
+  }
+
+  private _buildUrl(path: string, params?: Record<string, any>): string {
     const normalizedPath = path.startsWith('/') ? path.substring(1) : path;
-    
-    // Construct URL with org and tenant names
-    const url = new URL(
+    const base = new URL(
       `${this.config.orgName}/${this.config.tenantName}/${normalizedPath}`,
       this.config.baseUrl
     ).toString();
 
-    const headers = {
-      ...await this.getDefaultHeaders(),
+    if (!params || Object.keys(params).length === 0) {
+      return base;
+    }
+
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value));
+      }
+    });
+    return `${base}?${searchParams.toString()}`;
+  }
+
+  private _prepareRequestBody(body: unknown, isFormData: boolean): any {
+    if (!body) {
+      return undefined;
+    }
+
+    if (isFormData) {
+      const formDataBody = body as any;
+      if (typeof formDataBody.getBuffer === 'function') {
+        // form-data package in Node.js
+        // TODO: For large files (>100MB), consider using a different HTTP client that handles streams better
+        return formDataBody.getBuffer();
+      }
+      return body;
+    }
+
+    return JSON.stringify(body);
+  }
+
+  private async request<T>(method: string, path: string, options: RequestSpec = {}): Promise<T> {
+    const bodyAsAny = options.body as any;
+    const isFormData = this._isFormDataBody(options.body);
+
+    // Get headers, excluding Content-Type for FormData (browser sets it automatically with boundary)
+    let headers = {
+      ...await this._getDefaultHeaders(isFormData),
       ...options.headers
     };
 
-    // Convert params to URLSearchParams
-    const searchParams = new URLSearchParams();
-    if (options.params) {
-      Object.entries(options.params).forEach(([key, value]: [string, any]) => {
-        searchParams.append(key, value.toString());
-      });
+    // If using form-data package (Node.js), merge its headers
+    if (bodyAsAny && typeof bodyAsAny.getHeaders === 'function') {
+      const formDataHeaders = bodyAsAny.getHeaders();
+      headers = { ...headers, ...formDataHeaders };
     }
-    const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
+
+    const fullUrl = this._buildUrl(path, options.params);
+
+    // Prepare body based on type
+    const body: any = this._prepareRequestBody(options.body, isFormData);
 
     const response = await fetch(fullUrl, {
       method,
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+      body,
       signal: options.signal
     });
 

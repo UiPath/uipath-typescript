@@ -106,3 +106,12 @@ export const ASSET_ENDPOINTS = {
   GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders',
   GET_BY_ID: (id: number) => `/odata/Assets(${id})`,
 } as const;
+
+/**
+ * Document Understanding Service Endpoints
+ */
+export const DOCUMENT_ENDPOINTS = {
+  DIGITIZATION: {
+    START: (projectId: string) => `du_/api/framework/projects/${projectId}/digitization/start`,
+  },
+} as const;

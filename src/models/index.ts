@@ -4,6 +4,9 @@ export * from './common';
 // DataFabric models
 export * from './data-fabric';
 
+// Documents models
+export * from './document-understanding';
+
 // Maestro models
 export * from './maestro';
 

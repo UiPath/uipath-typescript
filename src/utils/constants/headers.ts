@@ -7,3 +7,4 @@ export const  CORRELATION_ID = 'X-UIPATH-Correlation-Id';
 export const  JOB_KEY = 'X-UIPATH-JobKey';
 export const  FOLDER_ID = 'X-UIPATH-OrganizationUnitId';
 export const  INSTANCE_ID = 'X-UIPATH-InstanceId';
+export const  PAGE_RANGE = 'X-UIPATH-Page-Range';

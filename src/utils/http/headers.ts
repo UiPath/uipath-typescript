@@ -53,3 +53,41 @@ export function createHeadersLegacy(folderId?: number): Record<string, string> {
   
   return createHeaders({ [FOLDER_ID]: folderId });
 }
+
+/**
+ * Creates query parameters object from key-value pairs
+ * @param paramsObj - Object containing parameter key-value pairs
+ * @returns Parameters object with all values converted to strings, excluding undefined values
+ * 
+ * @example
+ * ```typescript
+ * // Single parameter
+ * const params = createParams({ 'api-version': '1.1' });
+ * 
+ * // Multiple parameters
+ * const params = createParams({
+ *   'api-version': '1.1',
+ *   'page': 1,
+ *   'pageSize': 100,
+ *   'filter': undefined  // Will be excluded
+ * });
+ * 
+ * // Conditional parameters
+ * const params = createParams({
+ *   'api-version': '1.1',
+ *   'includeDeleted': options.includeDeleted,  // Only included if defined
+ *   'orderBy': options.orderBy  // Only included if defined
+ * });
+ * ```
+ */
+export function createParams(paramsObj: Record<string, string | number | boolean | undefined>): Record<string, string> {
+  const params: Record<string, string> = {};
+  
+  for (const [key, value] of Object.entries(paramsObj)) {
+    if (value !== undefined) {
+      params[key] = value.toString();
+    }
+  }
+  
+  return params;
+}
