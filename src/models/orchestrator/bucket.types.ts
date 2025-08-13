@@ -151,3 +151,49 @@ export interface BlobItem {
    */
   lastModified: string | null;
 }
+
+/**
+ * Options for uploading files to a bucket
+ */
+export interface BucketUploadFileOptions {
+  /**
+   * The ID of the bucket to upload to
+   */
+  bucketId: number;
+
+  /**
+   * The folder/organization unit ID for context
+   */
+  folderId: number;
+
+  /**
+   * Path where the file should be stored in the bucket
+   */
+  path: string;
+
+  /**
+   * File content to upload 
+   */
+  content: Blob | Buffer | File;
+
+  /**
+   * Optional MIME type of the file
+   * If not provided, it will be auto-detected
+   */
+  contentType?: string;
+}
+
+/**
+ * Response from file upload operations
+ */
+export interface BucketUploadResponse {
+  /**
+   * Whether the upload was successful
+   */
+  success: boolean;
+  
+  /**
+   * HTTP status code from the upload operation
+   */
+  statusCode: number;
+}

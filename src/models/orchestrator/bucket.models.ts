@@ -1,4 +1,4 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketGetWriteUriOptions } from './bucket.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketGetWriteUriOptions, BucketUploadFileOptions, BucketUploadResponse } from './bucket.types';
 
 /**
  * Bucket service model interface
@@ -41,10 +41,10 @@ export interface BucketServiceModel {
   getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse>;
   
   /**
-   * Gets a direct upload URL for a file in the bucket
+   * Uploads a file to a bucket
    * 
-   * @param options - Contains bucketId, folderId, file path, optional expiry time and content type
-   * @returns Promise resolving to blob file access information
+   * @param options - Options for file upload including bucket ID, folder ID, path, content, and optional parameters
+   * @returns Promise resolving to a response with success status and HTTP status code
    */
-  getWriteUri(options: BucketGetWriteUriOptions): Promise<BucketGetUriResponse>;
+  uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse>;
 } 

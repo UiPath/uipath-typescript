@@ -10,7 +10,9 @@ import {
   BucketGetReadUriOptions,
   BucketGetWriteUriOptions,
   BucketGetFileMetaDataOptions,
-  BucketGetFileMetaDataResponse
+  BucketGetFileMetaDataResponse,
+  BucketUploadFileOptions,
+  BucketUploadResponse
 } from '../../models/orchestrator/bucket.types';
 import { BucketServiceModel } from '../../models/orchestrator/bucket.models';
 import { pascalToCamelCaseKeys, addPrefixToKeys, renameObjectFields, transformData, arrayDictionaryToRecord } from '../../utils/transform';
@@ -20,14 +22,32 @@ import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX } from '../../utils/constants/common';
 import { CollectionResponse } from '../../models/common/common-types';
-import { BucketMap } from '../../models/orchestrator/bucket.constants';
+import { BucketMap, DEFAULT_CONTENT_TYPE } from '../../models/orchestrator/bucket.constants';
+import { isBrowser } from '../../utils/platform';
+import * as mimeTypes from 'mime-types';
+
+// Import file-type dynamically to avoid issues in browser environment
+// This variable will hold the fileTypeFromBuffer function when in Node.js environment
+let fileTypeFromBuffer: ((buffer: Uint8Array) => Promise<{ mime: string } | undefined>) | undefined;
+
+// Only import in Node.js environment
+if (!isBrowser) {
+  import('file-type').then(module => {
+    fileTypeFromBuffer = module.fileTypeFromBuffer;
+  }).catch(err => {
+    console.debug('Could not load file-type module:', err);
+  });
+}
 
 /**
  * Service for interacting with UiPath Orchestrator Buckets API
  */
 export class BucketService extends FolderScopedService implements BucketServiceModel {
+  protected readonly tokenManager: TokenManager;
+  
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
+    this.tokenManager = tokenManager;
   }
 
   /**
@@ -173,6 +193,182 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   /**
+   * Uploads a file to a bucket
+   * 
+   * @param options - Options for file upload including bucket ID, folder ID, path, content, and optional parameters
+   * @returns Promise resolving to a response with success status and HTTP status code
+   * 
+   * @example
+   * ```typescript
+   * // Upload a file from browser
+   * const file = new File(['file content'], 'example.txt');
+   * const result = await sdk.buckets.uploadFile({
+   *   bucketId: 123,
+   *   folderId: 456, 
+   *   path: '/folder/example.txt',
+   *   content: file
+   * });
+   * 
+   * // In Node env with explicit content type
+   * const buffer = Buffer.from('file content');
+   * const result = await sdk.buckets.uploadFile({
+   *   bucketId: 123,
+   *   folderId: 456,
+   *   path: '/folder/example.txt',
+   *   content: buffer,
+   *   contentType: 'text/plain'
+   * });
+   * ```
+   */
+  async uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse> {
+    const { bucketId, folderId, path, content, contentType } = options;
+    
+    if (!bucketId) {
+      throw new Error('bucketId is required');
+    }
+    
+    if (!folderId) {
+      throw new Error('folderId is required');
+    }
+
+    if (!path) {
+      throw new Error('path is required');
+    }
+
+    if (!content) {
+      throw new Error('content is required');
+    }
+
+    try {
+      // Get write URI for upload with detected content type if not provided
+      let detectedContentType = contentType;
+      if (!detectedContentType) {
+        detectedContentType = await this._determineContentType(content, path);
+      }
+      
+      const uriResponse = await this._getWriteUri({
+        bucketId,
+        folderId,
+        path,
+        contentType: detectedContentType
+      });
+
+      // Upload file to the provided URI
+      const response = await this._uploadToUri(uriResponse, content, detectedContentType);
+      
+      return {
+        success: response.ok,
+        statusCode: response.status
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Determines the content type of the file based on the content and path
+   * Uses a hybrid approach:
+   * 1. Checks Blob/File type if available (browser)
+   * 2. Uses content-based detection with file-type (primarily Node.js)
+   * 3. Falls back to extension-based detection with mime-types
+   * 4. Finally defaults to application/octet-stream
+   * 
+   * @param content - The file content
+   * @param path - The file path
+   * @returns The determined content type or default
+   */
+  private async _determineContentType(content: Blob | Buffer | File, path: string): Promise<string> {
+    // 1. If content is a File or Blob with type, use that (works in browser)
+    if ('type' in content && content.type) {
+      return content.type;
+    }
+
+    // 2. Try content-based detection (primarily for Node.js)
+    if (content instanceof Buffer && fileTypeFromBuffer) {
+      try {
+        const fileTypeResult = await fileTypeFromBuffer(content);
+        if (fileTypeResult?.mime) {
+          return fileTypeResult.mime;
+        }
+      } catch (error) {
+        // Silently continue to next detection method if this fails
+        console.debug('Content-based type detection failed:', error);
+      }
+    }
+
+    // 3. Try to infer from file extension using mime-types library
+    const mimeType = mimeTypes.lookup(path);
+    if (mimeType) {
+      return mimeType;
+    }
+
+    // 4. Final fallback
+    return DEFAULT_CONTENT_TYPE;
+  }
+
+  /**
+   * Uploads content to the provided URI
+   * @param uriResponse - Response from getWriteUri containing URL and headers
+   * @param content - The content to upload
+   * @param contentType - The content type of the file
+   * @returns The response from the upload request with status info
+   */
+  private async _uploadToUri(
+    uriResponse: BucketGetUriResponse, 
+    content: Blob | Buffer | File, 
+    contentType?: string
+  ): Promise<Response> {
+    const { uri, headers = {}, requiresAuth } = uriResponse;
+    
+    if (!uri) {
+      throw new Error('Upload URI not available');
+    }
+
+    // Create headers for the request
+    let requestHeaders = { ...headers };
+
+    // Ensure content-type is set if provided
+    if (contentType && !requestHeaders['content-type']) {
+      requestHeaders['content-type'] = contentType;
+    }
+
+    // Add auth header if required
+    if (requiresAuth) {
+      try {
+        const tokenInfo = this.executionContext.get('tokenInfo') as any;
+        
+        if (!tokenInfo) {
+          throw new Error('No authentication token available. Make sure to initialize the SDK first.');
+        }
+        
+        let token: string;
+        
+        // For secret-based tokens, they never expire so use directly
+        if (tokenInfo.type === 'secret') {
+          token = tokenInfo.token;
+        } 
+        // For non-secret tokens, check expiration and refresh if needed
+        else if (!this.tokenManager.isTokenExpired(tokenInfo)) {
+          token = tokenInfo.token;
+        } else {
+          const newToken = await this.tokenManager.refreshAccessToken();
+          token = newToken.access_token;
+        }
+        
+        requestHeaders['Authorization'] = `Bearer ${token}`;
+      } catch (error: any) {
+        throw new Error(`Authentication required but failed: ${error.message}`);
+      }
+    }
+    
+    return fetch(uri, {
+      method: 'PUT',
+      headers: createHeaders(requestHeaders),
+      body: content
+    });
+  }
+
+  /**
    * Private method to handle common URI request logic
    * @param endpoint - The API endpoint to call
    * @param bucketId - The bucket ID
@@ -268,18 +464,8 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @param options - Contains bucketId, folderId, file path, optional expiry time and content type
    * @returns Promise resolving to blob file access information
-   * 
-   * @example
-   * ```typescript
-   * // Get upload URL for a file
-   * const fileAccess = await sdk.buckets.getWriteUri({
-   *   bucketId: 123, 
-   *   folderId: 456,
-   *   path: '/folder/file.pdf'
-   * });
-   * ```
    */
-  async getWriteUri(options: BucketGetWriteUriOptions): Promise<BucketGetUriResponse> {
+  private async _getWriteUri(options: BucketGetWriteUriOptions): Promise<BucketGetUriResponse> {
     const { bucketId, folderId, path, expiryInMinutes, contentType, ...restOptions } = options;
     
     const queryOptions = {
