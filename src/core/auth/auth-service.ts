@@ -3,7 +3,7 @@ import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution-context';
 import { TokenManager } from './token-manager';
 import { AuthToken, TokenInfo } from './auth.types';
-import { hasOAuthConfig, hasSecretConfig } from '../config/sdk-config';
+import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
@@ -58,19 +58,40 @@ export class AuthService extends BaseService {
       throw new Error('OAuth flow is only supported in browser environments');
     }
 
+    // Check if we have a stored code verifier indicating we're in an OAuth flow
+    const codeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    const isInOAuthFlow = codeVerifier !== null;
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
 
-    if (!code) {
-      // No authorization code present, so we need to initiate the flow.
-      // This will redirect the user.
-      await this._initiateOAuthFlow(clientId, redirectUri, scope);
-      // This line is not expected to be reached.
-      return false;
-    } else {
-      // Authorization code is present, so we can exchange it for a token.
+    // If we're in an OAuth flow (server-controlled code verifier exists), handle the callback
+    if (isInOAuthFlow) {
+      // We're expecting a callback - validate parameters
+      if (!code) {
+        // Clear stored state on error
+        sessionStorage.removeItem('uipath_sdk_code_verifier');
+        throw new Error('Authorization code missing in OAuth callback');
+      }
+      
+      // Validate the authorization code format before using it
+      // OAuth authorization codes should be alphanumeric with some special characters
+      const codePattern = /^[A-Za-z0-9\-._~+/]+=*$/;
+      if (!codePattern.test(code)) {
+        // Clear stored state on error
+        sessionStorage.removeItem('uipath_sdk_code_verifier');
+        throw new Error('Invalid authorization code format');
+      }
+      
+      // Authorization code is present and validated, so we can exchange it for a token.
       await this._handleOAuthCallback(code, clientId, redirectUri);
       return this.hasValidToken();
+    } else {
+      // Not in an OAuth flow - initiate one
+      // Ignore any URL parameters that might be present
+      await this._initiateOAuthFlow(clientId, redirectUri, scope);
+      // This line is not expected to be reached due to redirect
+      return false;
     }
   }
 
