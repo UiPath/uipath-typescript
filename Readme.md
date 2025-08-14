@@ -42,7 +42,8 @@ const sdk = new UiPath({
 });
 ```
 
-For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the required scopes and provide the clientId and redirectUri here.
+For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the required scopes and provide the clientId, redirectUri, and scope here.
+
 ### 2. OAuth Authentication
 ```typescript
 const sdk = new UiPath({
@@ -50,7 +51,8 @@ const sdk = new UiPath({
   orgName: 'your-organization',
   tenantName: 'your-tenant',
   clientId: 'your-client-id',
-  redirectUri: 'your-redirect-uri'
+  redirectUri: 'your-redirect-uri',
+  scope: 'your-scopes'
 });
 
 // IMPORTANT: OAuth requires calling initialize()
@@ -86,7 +88,8 @@ const sdk = new UiPath({
   orgName: 'your-organization',
   tenantName: 'your-tenant',
   clientId: 'your-client-id',
-  redirectUri: 'http://localhost:3000/callback'
+  redirectUri: 'http://localhost:3000',
+  scope: 'your-scopes'
 });
 
 // Must initialize before using services
@@ -217,14 +220,15 @@ interface UiPathConfig {
   baseUrl: string;        // UiPath platform URL
   orgName: string;        // Organization name
   tenantName: string;     // Tenant name
-  secret?: string;        // Secret for authentication
-  clientId?: string;      // OAuth client ID
-  clientSecret?: string;  // OAuth client secret
-  timeout?: number;       // Request timeout in milliseconds
-  retryConfig?: {         // Retry configuration
-    retries: number;
-    retryDelay: number;
-  };
+  
+  // Authentication options (choose one):
+  // Option 1: Secret-based authentication
+  secret?: string;        // Secret for authentication (PAT Token or Bearer Token)
+  
+  // Option 2: OAuth authentication (all three required together)
+  clientId?: string;      // OAuth client ID (required with redirectUri and scope)
+  redirectUri?: string;   // OAuth redirect URI (required with clientId and scope)
+  scope?: string;         // OAuth scopes (required with clientId and redirectUri)
 }
 ```
 
