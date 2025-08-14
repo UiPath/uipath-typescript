@@ -64,8 +64,8 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * const bucket = await sdk.buckets.getById(123, 456);
    * ```
    */
-  async getById(bucketId: number, folderId: number, options: BucketGetByIdOptions = {}): Promise<BucketGetResponse> {
-    if (!bucketId) {
+  async getById(id: number, folderId: number, options: BucketGetByIdOptions = {}): Promise<BucketGetResponse> {
+    if (!id) {
       throw new Error('bucketId is required');
     }
     
@@ -80,7 +80,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
     
     const response = await this.get<BucketGetResponse>(
-      BUCKET_ENDPOINTS.GET_BY_ID(bucketId),
+      BUCKET_ENDPOINTS.GET_BY_ID(id),
       { 
         params: apiOptions,
         headers
