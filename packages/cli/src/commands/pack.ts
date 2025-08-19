@@ -7,14 +7,24 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 
+interface AppConfig {
+  appName: string;
+  appVersion: string;
+  systemName: string;
+  clientId: string;
+  appUrl: string;
+  registeredAt: string;
+}
+
 export default class Pack extends Command {
   static override description = 'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
 
   static override examples = [
-    '<%= config.bin %> <%= command.id %> ./dist/my-app --name MyApp',
-    '<%= config.bin %> <%= command.id %> ./dist/my-app --name MyApp --version 1.0.0',
-    '<%= config.bin %> <%= command.id %> ./dist/my-app --name MyApp --output ./.uipath',
-    '<%= config.bin %> <%= command.id %> ./dist/my-app --name MyApp --dry-run',
+    '<%= config.bin %> <%= command.id %> ./dist',
+    '<%= config.bin %> <%= command.id %> ./dist --name MyApp',
+    '<%= config.bin %> <%= command.id %> ./dist --name MyApp --version 1.0.0',
+    '<%= config.bin %> <%= command.id %> ./dist --output ./.uipath',
+    '<%= config.bin %> <%= command.id %> ./dist --dry-run',
   ];
 
   static override args = {
@@ -77,8 +87,47 @@ export default class Pack extends Command {
       this.error(`Invalid dist directory: ${distDir}`);
     }
 
-    // Get package name
-    const packageName = flags.name || await this.promptForPackageName();
+    // Try to load saved app config
+    const appConfig = await this.loadAppConfig();
+    
+    // Get package name and version
+    let packageName = flags.name;
+    let version = flags.version;
+    
+    if (appConfig && !flags.name) {
+      // Use saved config if name not provided via flag
+      packageName = appConfig.appName;
+      // Use saved version if not explicitly provided (checking if it's still the default)
+      if (flags.version === '1.0.0' && appConfig.appVersion !== '1.0.0') {
+        version = appConfig.appVersion;
+      }
+      this.log(chalk.green(`✅ Using registered app: ${packageName} v${version}`));
+    } else if (!flags.name) {
+      // No saved config and no flag, so prompt
+      packageName = await this.promptForPackageName();
+    }
+    
+    // If we have app config but user provided different values, show warning
+    if (appConfig && (packageName !== appConfig.appName || version !== appConfig.appVersion)) {
+      this.log(chalk.yellow(`⚠️  Warning: You registered app "${appConfig.appName}" v${appConfig.appVersion} but are packaging as "${packageName}" v${version}`));
+      const response = await inquirer.prompt([{
+        type: 'confirm',
+        name: 'continue',
+        message: 'Do you want to continue with these different values?',
+        default: false,
+      }]);
+      
+      if (!response.continue) {
+        this.log(chalk.blue('💡 Use the registered values by running: uipath pack ./dist'));
+        this.exit(0);
+      }
+    }
+    
+    // Ensure packageName is defined at this point
+    if (!packageName) {
+      this.error('Package name is required');
+    }
+    
     const sanitizedName = this.sanitizePackageName(packageName);
     
     // Get package description
@@ -88,7 +137,7 @@ export default class Pack extends Command {
       distDir,
       name: sanitizedName,
       originalName: packageName,
-      version: flags.version,
+      version,
       author: flags.author,
       description,
       mainFile: flags['main-file'],
@@ -388,5 +437,20 @@ export default class Pack extends Command {
       
       fs.writeFileSync(targetMetadata, JSON.stringify(metadataTemplate, null, 2));
     }
+  }
+
+  private async loadAppConfig(): Promise<AppConfig | null> {
+    const configPath = path.join(process.cwd(), '.uipath', 'app.config.json');
+    
+    try {
+      if (fs.existsSync(configPath)) {
+        const configContent = fs.readFileSync(configPath, 'utf-8');
+        return JSON.parse(configContent) as AppConfig;
+      }
+    } catch (error) {
+      this.debug(`Failed to load app config: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+    
+    return null;
   }
 }

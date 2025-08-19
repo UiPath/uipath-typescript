@@ -7,15 +7,6 @@ import * as path from 'path';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
 
-interface PackageMetadata {
-  name: string;
-  version: string;
-  description: string;
-  author: string;
-  contentType: string;
-  createdAt: string;
-}
-
 interface EnvironmentConfig {
   baseUrl: string;
   orgId: string;
@@ -26,29 +17,14 @@ interface EnvironmentConfig {
 }
 
 export default class Publish extends Command {
-  static override description = 'Publish NuGet packages to UiPath Orchestrator or publish apps';
+  static override description = 'Publish NuGet packages to UiPath Orchestrator';
 
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
-    '<%= config.bin %> <%= command.id %> --app',
-    '<%= config.bin %> <%= command.id %> --package MyApp --version 1.0.0',
-    '<%= config.bin %> <%= command.id %> --app --package MyApp --version 1.0.0',
   ];
 
   static override flags = {
     help: Flags.help({ char: 'h' }),
-    app: Flags.boolean({
-      description: 'Publish as app instead of package',
-      default: false,
-    }),
-    package: Flags.string({
-      char: 'p',
-      description: 'Package name (required for --app)',
-    }),
-    version: Flags.string({
-      char: 'v',
-      description: 'Package version (required for --app)',
-    }),
     'uipath-dir': Flags.string({
       description: 'UiPath directory containing packages',
       default: './.uipath',
@@ -66,11 +42,7 @@ export default class Publish extends Command {
       return;
     }
 
-    if (flags.app) {
-      await this.publishApp(flags, envConfig);
-    } else {
-      await this.publishPackage(flags, envConfig);
-    }
+    await this.publishPackage(flags, envConfig);
   }
 
   private async validateEnvironment(): Promise<EnvironmentConfig | null> {
@@ -176,80 +148,6 @@ export default class Publish extends Command {
     }
   }
 
-  private async publishApp(flags: any, envConfig: EnvironmentConfig): Promise<void> {
-    const spinner = ora('Publishing app to UiPath...').start();
-    
-    try {
-      // Check if package metadata exists
-      const metadataPath = path.join(flags['uipath-dir'], 'metadata.json');
-      if (!fs.existsSync(metadataPath)) {
-        spinner.fail(chalk.red('❌ metadata.json not found'));
-        this.log('');
-        this.log(chalk.yellow('💡 Run "uipath pack" first to create a package'));
-        return;
-      }
-
-      // Read package metadata
-      const metadata: PackageMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
-      
-      let packageName = flags.package || metadata.name;
-      let packageVersion = flags.version || metadata.version;
-
-      // If not provided via flags or metadata, prompt the user
-      if (!packageName || !packageVersion) {
-        spinner.stop();
-        
-        if (!packageName) {
-          const nameResponse = await inquirer.prompt([{
-            type: 'input',
-            name: 'packageName',
-            message: 'Enter package name:',
-            validate: (input: string) => input.trim() ? true : 'Package name is required',
-          }]);
-          packageName = nameResponse.packageName;
-        }
-        
-        if (!packageVersion) {
-          const versionResponse = await inquirer.prompt([{
-            type: 'input',
-            name: 'packageVersion',
-            message: 'Enter package version:',
-            default: '1.0.0',
-            validate: (input: string) => input.trim() ? true : 'Package version is required',
-          }]);
-          packageVersion = versionResponse.packageVersion;
-        }
-        
-        spinner.start('Publishing app...');
-      }
-
-      // Check if corresponding .nupkg exists
-      const expectedNupkg = path.join(flags['uipath-dir'], `${packageName}.${packageVersion}.nupkg`);
-      if (!fs.existsSync(expectedNupkg)) {
-        spinner.fail(chalk.red('❌ Corresponding .nupkg file not found'));
-        this.log('');
-        this.log(chalk.yellow(`💡 Expected: ${expectedNupkg}`));
-        this.log(chalk.yellow('💡 Run "uipath publish" first to upload the package'));
-        return;
-      }
-
-      // Publish app
-      await this.publishAppToUiPath(packageName, packageVersion, envConfig);
-      
-      spinner.succeed(chalk.green('✅ App published successfully!'));
-      this.log('');
-      this.log(`${chalk.bold('App Details:')}`);
-      this.log(`  Package: ${packageName}`);
-      this.log(`  Version: ${packageVersion}`);
-      this.log(`  Title: ${packageName}`);
-      this.log('');
-      this.log(chalk.blue('🎉 App is now available in UiPath'));
-      
-    } catch (error) {
-      spinner.fail(chalk.red('❌ App publishing failed'));
-      this.error(`Publishing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
 
   private async uploadPackage(packagePath: string, envConfig: EnvironmentConfig): Promise<void> {
     const form = new FormData();
@@ -273,33 +171,4 @@ export default class Publish extends Command {
     }
   }
 
-  private async publishAppToUiPath(packageName: string, packageVersion: string, envConfig: EnvironmentConfig): Promise<void> {
-    const url = `${envConfig.baseUrl}/${envConfig.orgId}/apps_/default/api/v1/default/models/apps/codedapp/publish`;
-    
-    const payload = {
-      tenantName: envConfig.tenantName,
-      packageName: packageName,
-      packageVersion: packageVersion,
-      title: packageName,
-      context: {
-        appUsageType: "0"
-      },
-      schema: {}
-    };
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${envConfig.bearerToken}`,
-        'x-uipath-internal-tenantid': envConfig.tenantId,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
-  }
 }
