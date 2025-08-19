@@ -247,16 +247,13 @@ export default class RegisterApp extends Command {
   }
 
   private async publishAppToUiPath(packageName: string, packageVersion: string, envConfig: EnvironmentConfig): Promise<RegisterResponse> {
-    const url = `${envConfig.baseUrl}/${envConfig.orgId}/apps_/default/api/v1/default/models/apps/codedapp/publish`;
+    const url = `${envConfig.baseUrl}/${envConfig.orgId}/apps_/default/api/v1/default/models/apps/codedapp/publish/`;
     
     const payload = {
       tenantName: envConfig.tenantName,
       packageName: packageName,
       packageVersion: packageVersion,
       title: packageName,
-      context: {
-        appUsageType: "0"
-      },
       schema: {}
     };
 
@@ -288,8 +285,10 @@ export default class RegisterApp extends Command {
         fs.mkdirSync(configDir, { recursive: true });
       }
       
-      // Save config
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      // Write atomically to avoid race conditions
+      const tempPath = `${configPath}.tmp`;
+      fs.writeFileSync(tempPath, JSON.stringify(config, null, 2));
+      fs.renameSync(tempPath, configPath);
       
     } catch (error) {
       this.warn(`Failed to save app configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -302,8 +301,11 @@ export default class RegisterApp extends Command {
     try {
       let envContent = '';
       
-      if (fs.existsSync(envPath)) {
+      // Read file contents
+      try {
         envContent = fs.readFileSync(envPath, 'utf-8');
+      } catch (error) {
+        // File doesn't exist, that's ok
       }
       
       // Check if the key already exists
@@ -320,7 +322,10 @@ export default class RegisterApp extends Command {
         envContent += `${key}=${value}\n`;
       }
       
-      fs.writeFileSync(envPath, envContent);
+      // Write atomically to avoid race conditions
+      const tempPath = `${envPath}.tmp`;
+      fs.writeFileSync(tempPath, envContent);
+      fs.renameSync(tempPath, envPath);
       
     } catch (error) {
       this.warn(`Failed to update .env file: ${error instanceof Error ? error.message : 'Unknown error'}`);
