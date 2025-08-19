@@ -25,6 +25,7 @@ import { CollectionResponse } from '../../models/common/common-types';
 import { BucketMap, DEFAULT_CONTENT_TYPE } from '../../models/orchestrator/bucket.constants';
 import { isBrowser } from '../../utils/platform';
 import * as mimeTypes from 'mime-types';
+import axios, { AxiosResponse } from 'axios';
 
 // Import file-type dynamically to avoid issues in browser environment
 // This variable will hold the fileTypeFromBuffer function when in Node.js environment
@@ -257,7 +258,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       const response = await this._uploadToUri(uriResponse, content, detectedContentType);
       
       return {
-        success: response.ok,
+        success: response.status >= 200 && response.status < 300,
         statusCode: response.status
       };
     } catch (error) {
@@ -317,7 +318,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     uriResponse: BucketGetUriResponse, 
     content: Blob | Buffer | File, 
     contentType?: string
-  ): Promise<Response> {
+  ): Promise<AxiosResponse> {
     const { uri, headers = {}, requiresAuth } = uriResponse;
     
     if (!uri) {
@@ -360,11 +361,9 @@ export class BucketService extends FolderScopedService implements BucketServiceM
         throw new Error(`Authentication required but failed: ${error.message}`);
       }
     }
-    
-    return fetch(uri, {
-      method: 'PUT',
-      headers: createHeaders(requestHeaders),
-      body: content
+   
+    return axios.put(uri, content, {
+      headers: createHeaders(requestHeaders)
     });
   }
 
