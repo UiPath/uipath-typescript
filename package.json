@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.0.0-beta.2",
+    "version": "1.0.0-beta.4",
     "description": "UiPath TypeScript SDK",
     "type": "module",
     "main": "./dist/index.js",
