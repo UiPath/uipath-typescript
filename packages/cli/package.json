@@ -1,6 +1,6 @@
 {
   "name": "@uipath/cli",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "UiPath CLI tool for authentication, packaging, publishing, and deployment",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,7 +14,7 @@
     "README.md"
   ],
   "scripts": {
-    "clean": "rm -rf dist",
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
     "prebuild": "npm run clean",
     "build": "tsc",
     "dev": "npm run build && node bin/cli.js",
@@ -27,12 +27,13 @@
     "@oclif/plugin-help": "^6.2.8",
     "@oclif/plugin-plugins": "^5.4.7",
     "chalk": "^5.3.0",
-    "inquirer": "^10.2.2",
-    "ora": "^8.1.0",
-    "uuid": "^9.0.1",
-    "jszip": "^3.10.1",
+    "dotenv": "^17.2.1",
     "form-data": "^4.0.0",
-    "node-fetch": "^3.3.2"
+    "inquirer": "^10.2.2",
+    "jszip": "^3.10.1",
+    "node-fetch": "^3.3.2",
+    "ora": "^8.1.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@oclif/test": "^4.0.9",

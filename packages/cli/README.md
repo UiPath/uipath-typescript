@@ -27,28 +27,47 @@ UIPATH_BEARER_TOKEN=your-bearer-token
 
 ## Usage
 
+### Registering Apps
+
+Register your app with UiPath to get the app URL for OAuth configuration:
+
+```bash
+# Register app to get URL
+uipath register app --name MyApp
+
+# Register with specific version
+uipath register app --name MyApp --version 1.0.0
 ```
+
+This command will:
+- Register the app with UiPath
+- Return the app URL for OAuth redirect URI
+- Save app configuration to `.uipath/app.config.json`
+- Save the URL to your .env file
+- Display the public client ID
 
 ### Packaging
 
 Package your built web applications (Angular, React, Vue, Next.js, etc.) as UiPath NuGet packages:
 
 ```bash
-# Package a built application
-uipath pack ./dist --name MyApp
+# Package a built application (uses registered app config)
+uipath pack ./dist
 
-# Package with specific version
-uipath pack ./dist --name MyApp --version 1.0.0
+# Override registered name/version
+uipath pack ./dist --name MyApp --version 2.0.0
 
 # Package with custom output directory
-uipath pack ./dist --name MyApp --output ./.packages
+uipath pack ./dist --output ./.packages
 
 # Package with custom metadata
-uipath pack ./dist --name MyApp --author "Your Name" --description "My UiPath App"
+uipath pack ./dist --author "Your Name" --description "My UiPath App"
 
 # Preview packaging without creating files
-uipath pack ./dist --name MyApp --dry-run
+uipath pack ./dist --dry-run
 ```
+
+Note: If you've registered your app, the `pack` command will automatically use the saved app name and version.
 
 ### Publishing
 
@@ -63,35 +82,27 @@ uipath publish
 # (CLI will prompt you to select from available packages)
 ```
 
-#### Publish App
-
-```bash
-# Publish app (makes it available in UiPath)
-uipath publish --app
-
-# Publish app with specific package details
-uipath publish --app --package MyApp --version 1.0.0
-```
 
 ## Commands
 
 - [`uipath auth`](#authentication) - Manage UiPath authentication (OAuth, API key, username/password)
+- [`uipath register app`](#registering-apps) - Register app with UiPath and get the app URL
 - [`uipath pack`](#packaging) - Package web applications as UiPath NuGet packages with metadata
-- [`uipath publish`](#publishing) - Publish packages to Orchestrator or publish apps to UiPath
+- [`uipath publish`](#publishing) - Publish packages to Orchestrator
 
 ## Requirements
 
 - Node.js >= 18.0.0
 - Valid UiPath Cloud or On-Premises instance with API access
-- Bearer token with appropriate permissions for package upload and app publishing
+- Bearer token with appropriate permissions for package upload and app deployment
 - Built web application (dist folder) for packaging
 
 ## Workflow
 
-1. **Build your application**: Use your framework's build command (e.g., `npm run build`, `ng build`)
-2. **Pack the application**: `uipath pack ./dist --name MyApp`
-3. **Publish the package**: `uipath publish` (uploads to Orchestrator)
-4. **Publish the app**: `uipath publish --app` (makes it available in UiPath)
+1. **Register the app**: `uipath register app --name MyApp` (gets app URL for OAuth)
+2. **Build your application**: Use your framework's build command (e.g., `npm run build`, `ng build`)
+3. **Pack the application**: `uipath pack ./dist` (uses saved app config)
+4. **Publish the package**: `uipath publish` (uploads to Orchestrator)
 
 ## Framework Support
 
