@@ -6,15 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
-
-interface AppConfig {
-  appName: string;
-  appVersion: string;
-  systemName: string;
-  clientId: string;
-  appUrl: string;
-  registeredAt: string;
-}
+import { AppConfig } from '../types/index.js';
 
 export default class Pack extends Command {
   static override description = 'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
