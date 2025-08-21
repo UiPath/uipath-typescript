@@ -1,1 +1,2 @@
-export * from './entity'; 
+export * from './entity.types';
+export * from './entity.models'; 

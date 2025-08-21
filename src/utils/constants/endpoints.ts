@@ -44,18 +44,9 @@ export const TASK_ENDPOINTS = {
  * Data Fabric Service Endpoints
  */
 export const DATA_FABRIC_ENDPOINTS = {
-  BASE_PATH: 'datafabric_/api/EntityService',
   ENTITY: {
-    READ: (entityName: string) => `datafabric_/api/EntityService/${entityName}/read`,
-    QUERY_EXPANSION: (entityName: string) => `datafabric_/api/EntityService/${entityName}/query_expansion`,
-    BY_ID: {
-      READ: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/read`,
-      QUERY_EXPANSION: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/query_expansion`,
-    },
-  },
-  CHOICE_SET: {
-    GET_ALL: '/api/Entity/choiceset',
-    GET_BY_ID: (id: string) => `/api/Entity/choiceset/${id}`,
+    GET_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/read`,
+    GET_ENTITY_METADATA: (entityId: string) => `datafabric_/api/Entity/${entityId}`,
   },
 } as const;
 

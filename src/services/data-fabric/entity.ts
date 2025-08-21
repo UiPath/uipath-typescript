@@ -1,303 +1,121 @@
+import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { BaseService } from '../base-service';
-import {
-  EntityData,
-  EntityQueryResponse,
-  EntityQueryOptions,
-  FilterExpression,
-  EntityDataQueryRequest,
-  RawQueryResponseJson,
-  transformQueryResponse,
-  transformFilter,
-  transformExpansion,
-  EntityRecord
-} from '../../models/data-fabric/entity';
-import { QueryBuilder } from '../../utils/builders/query-builder';
-import { QueryParams } from '../../models/common/request-spec';
 import { TokenManager } from '../../core/auth/token-manager';
+import { EntityServiceModel } from '../../models/data-fabric/entity.models';
+import {
+  EntityGetByIdResponse,
+  EntityGetByIdOptions,
+  EntityFieldMetaData
+} from '../../models/data-fabric/entity.types';
+import { EntityMetadataResponse } from '../../models/data-fabric/entity.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
+import { createParams } from '../../utils/http/params';
+import { transformData } from '../../utils/transform';
+import { EntityMap, EntityFieldTypeMap, SqlFieldType } from '../../models/data-fabric/entity.constants';
 
 /**
- * Service for interacting with the Data Fabric Entity API.
- * Provides methods for retrieving and managing entities.
+ * Service for interacting with the Data Fabric Entity API
  */
-export class EntityService extends BaseService {
+export class EntityService extends BaseService implements EntityServiceModel {
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }
 
   /**
-   * Retrieves all choice sets
-   * @internal
-   */
-  private async getChoiceSets(): Promise<EntityRecord[]> {
-    const response = await this.request<EntityRecord[]>(
-      'GET',
-      DATA_FABRIC_ENDPOINTS.CHOICE_SET.GET_ALL
-    );
-    return response.data;
-  }
-
-  /**
-   * Retrieves a specific choice set by ID
+   * Gets entity data by entity ID
    * 
-   * @param id ID of the choice set to retrieve
-   * @returns Promise resolving to a choice set entity record
+   * @param entityId - UUID of the entity
+   * @param options - Query options including start, limit, and expansionLevel
+   * @returns Promise resolving to query response
    * 
    * @example
    * ```typescript
-   * // Get a specific choice set by ID
-   * const choiceSet = await sdk.entity.getChoiceSetById("123e4567-e89b-12d3-a456-426614174000");
+   * // Basic usage
+   * const result = await sdk.entity.getById("123e4567-e89b-12d3-a456-426614174000");
+   * 
+   * // With expansion level
+   * const result = await sdk.entity.getById("123e4567-e89b-12d3-a456-426614174000", {
+   *   expansionLevel: 1
+   * });
    * ```
    */
-  async getChoiceSetById(id: string): Promise<EntityRecord> {
-    const response = await this.request<EntityRecord>(
-      'GET',
-      DATA_FABRIC_ENDPOINTS.CHOICE_SET.GET_BY_ID(id)
-    );
-    return response.data;
-  }
+  async getById(id: string, options: EntityGetByIdOptions = {}): Promise<EntityGetByIdResponse> {
+    const params = createParams({
+      expansionLevel: options.expansionLevel
+    });
 
-  /**
-   * Retrieves a specific choice set by name
-   * 
-   * @param name Name of the choice set to retrieve
-   * @returns Promise resolving to a choice set entity record, or null if not found
-   * 
-   * @example
-   * ```typescript
-   * // Get a specific choice set by name
-   * const choiceSet = await sdk.entity.getChoiceSetByName("StatusChoices");
-   * ```
-   */
-  async getChoiceSetByName(name: string): Promise<EntityRecord | null> {
-    const choiceSets = await this.getChoiceSets();
-    const choiceSet = choiceSets.find(cs => cs.name === name);
-    return choiceSet || null;
-  }
-
-  /**
-   * Creates a query builder for retrieving entities by name
-   * 
-   * @param entityName Name of the entity to retrieve
-   * @returns A query builder for configuring and executing the query
-   * 
-   * @example
-   * ```typescript
-   * // Simple usage with default limit (50)
-   * const results = await entityService.getByName("Customer");
-   * 
-   * // With custom limit and expansion
-   * const results = await entityService.getByName("Customer")
-   *   .limit(20)
-   *   .selectFields('expansionLevel', 1);
-   * 
-   * // With filtering
-   * const results = await entityService.getByName("Customer")
-   *   .filter({
-   *     operator: LogicalOperator.And,
-   *     conditions: [
-   *       {
-   *         field: 'age',
-   *         operator: FilterOperator.GreaterThan,
-   *         value: 18
-   *       },
-   *       {
-   *         field: 'status',
-   *         operator: FilterOperator.Equals,
-   *         value: 'active'
-   *       }
-   *     ]
-   *   });
-   * 
-   * // With filtering and expansions
-   * const results = await entityService.getByName("Customer")
-   *   .filter({
-   *     operator: LogicalOperator.And,
-   *     conditions: [
-   *       {
-   *         field: 'status',
-   *         operator: FilterOperator.Equals,
-   *         value: 'active'
-   *       }
-   *     ],
-   *     expansions: [
-   *       {
-   *         field: 'orders',
-   *         select: ['id', 'date', 'total']
-   *       }
-   *     ]
-   *   });
-   * ```
-   */
-  getByName<T = EntityData>(entityName: string): EntityQueryBuilder<T> {
-    const defaultOptions: EntityQueryOptions = {
-      limit: 50,
-      start: 0,
-      expansionLevel: 0
-    };
-
-    return new EntityQueryBuilder<T>(
-      defaultOptions,
-      async (options: EntityQueryOptions, filter?: FilterExpression) => {
-        // If no filter is provided, use the simple read endpoint
-        if (!filter) {
-          const response = await this.request<RawQueryResponseJson>(
-            'GET',
-            DATA_FABRIC_ENDPOINTS.ENTITY.READ(entityName),
-            { params: options as QueryParams }
-          );
-          return transformQueryResponse<T>(response.data);
-        }
-
-        // With filter, use the query_expansion endpoint
-        const queryRequest: EntityDataQueryRequest = {
-          selectedFields: options.select,
-          start: options.start,
-          limit: options.limit,
-          sortOptions: options.sort?.map(s => ({
-            fieldName: s.field,
-            isDescending: s.descending || false
-          })),
-          expansions: options.expand?.map(transformExpansion),
-          filterGroup: transformFilter(filter)
-        };
-
-        const response = await this.request<RawQueryResponseJson>(
-          'POST',
-          DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_EXPANSION(entityName),
-          {
-            params: { expansionLevel: options.expansionLevel },
-            body: queryRequest
-          }
-        );
-        return transformQueryResponse<T>(response.data);
+    // Get entity data
+    const response = await this.get<Record<string, unknown>>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id),
+      {
+        params,
+        ...options
       }
     );
+
+    // Get entity fields
+    const fields = await this._getEntityFields(id);
+
+    // Transform the response using EntityMap 
+    const transformedData = transformData(response.data, EntityMap);
+
+    return {
+      ...transformedData,
+      fields
+    } as EntityGetByIdResponse;
   }
 
   /**
-   * Creates a query builder for retrieving an entity by ID
-   * 
-   * @param entityId Unique identifier of the entity
-   * @returns A query builder for configuring and executing the query
-   * 
-   * @example
-   * ```typescript
-   * // Simple usage
-   * const result = await entityService.getById("123");
-   * 
-   * // With expansion and filtering
-   * const result = await entityService.getById("123")
-   *   .selectFields('expansionLevel', 2)
-   *   .filter({
-   *     operator: LogicalOperator.Or,
-   *     conditions: [
-   *       {
-   *         field: 'type',
-   *         operator: FilterOperator.Equals,
-   *         value: 'premium'
-   *       }
-   *     ]
-   *   });
-   * 
-   * // With filtering and expansions in one call
-   * const result = await entityService.getById("123")
-   *   .filter({
-   *     operator: LogicalOperator.And,
-   *     conditions: [
-   *       {
-   *         field: 'status',
-   *         operator: FilterOperator.Equals,
-   *         value: 'active'
-   *       }
-   *     ],
-   *     expansions: [
-   *       {
-   *         field: 'relatedEntity',
-   *         select: ['id', 'name', 'description']
-   *       }
-   *     ]
-   *   });
-   * ```
+   * Private method to get entity field information
+   * @param entityId - UUID of the entity
+   * @returns Promise resolving to array of field objects with name and type
    */
-  getById<T = EntityData>(entityId: string): EntityQueryBuilder<T> {
-    const defaultOptions: EntityQueryOptions = {
-      limit: 50,
-      start: 0,
-      expansionLevel: 0
-    };
+  private async _getEntityFields(entityId: string): Promise<EntityFieldMetaData[]> {
+    try {
+      const response = await this.get<EntityMetadataResponse>(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_METADATA(entityId)
+      );
 
-    return new EntityQueryBuilder<T>(
-      defaultOptions,
-      async (options: EntityQueryOptions, filter?: FilterExpression) => {
-        // If no filter is provided, use the simple read endpoint
-        if (!filter) {
-          const response = await this.request<RawQueryResponseJson>(
-            'GET',
-            DATA_FABRIC_ENDPOINTS.ENTITY.BY_ID.READ(entityId),
-            { params: options as QueryParams }
-          );
-          return transformQueryResponse<T>(response.data);
-        }
+      // Extract field information from the response
+      return this._mapEntityFields(response.data.fields || []);
+    } catch (error) {
+      console.warn(`Failed to fetch entity fields for ${entityId}:`, error);
+      return [];
+    }
+  }
 
-        // With filter, use the query_expansion endpoint
-        const queryRequest: EntityDataQueryRequest = {
-          selectedFields: options.select,
-          start: options.start,
-          limit: options.limit,
-          sortOptions: options.sort?.map(s => ({
-            fieldName: s.field,
-            isDescending: s.descending || false
-          })),
-          expansions: options.expand?.map(transformExpansion),
-          filterGroup: transformFilter(filter)
-        };
+  /**
+   * Maps raw field data to EntityFieldMetaData objects
+   * @param rawFields - Array of raw field data from API response
+   * @returns Array of structured EntityFieldMetaData objects
+   */
+  private _mapEntityFields(rawFields: EntityMetadataResponse['fields']): EntityFieldMetaData[] {
+    const mappedFields = rawFields.map((field) => {
+      const sqlTypeName = field.sqlType?.name;
+      let fieldType: SqlFieldType;
 
-        const response = await this.request<RawQueryResponseJson>(
-          'POST',
-          DATA_FABRIC_ENDPOINTS.ENTITY.BY_ID.QUERY_EXPANSION(entityId),
-          {
-            params: { expansionLevel: options.expansionLevel },
-            body: queryRequest
-          }
-        );
-        return transformQueryResponse<T>(response.data);
+      // Check if the sqlTypeName is a valid SqlFieldType
+      if (sqlTypeName && Object.values(SqlFieldType).includes(sqlTypeName as SqlFieldType)) {
+        fieldType = sqlTypeName as SqlFieldType;
+      } else {
+        // Log unknown type for monitoring
+        console.warn(`Unknown SQL type encountered: ${sqlTypeName} for field ${field.name}`);
+        fieldType = SqlFieldType.NVARCHAR; // fallback to NVARCHAR
       }
+
+      // Map SQL type to entity type
+      const entityType = EntityFieldTypeMap[fieldType];
+      
+      return {
+        name: field.name,
+        type: entityType
+      };
+    });
+
+    // Filter out invalid field metadata
+    return mappedFields.filter((field): field is EntityFieldMetaData => 
+      typeof field.name === 'string'
     );
   }
 }
-
-/**
- * Extended query builder with filtering support
- */
-class EntityQueryBuilder<T> extends QueryBuilder<EntityQueryOptions, T> {
-  private filterExpression?: FilterExpression;
-
-  /**
-   * Add a filter to the query
-   * 
-   * @param expression Filter expression with conditions and optional expansions
-   */
-  filter(expression: FilterExpression): this {
-    this.filterExpression = expression;
-    
-    // If expansions are provided in the filter, add them to the options
-    if (expression.expansions && expression.expansions.length > 0) {
-      this.options.expand = expression.expansions;
-    }
-    
-    return this;
-  }
-
-  /**
-   * Implementation of PromiseLike interface
-   */
-  then<TResult1 = EntityQueryResponse<T>, TResult2 = never>(
-    onfulfilled?: ((value: EntityQueryResponse<T>) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
-  ): PromiseLike<TResult1 | TResult2> {
-    return this.executeQuery(this.options, this.filterExpression).then(onfulfilled, onrejected);
-  }
-} 
