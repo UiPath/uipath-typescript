@@ -6,9 +6,9 @@ import { EntityServiceModel } from '../../models/data-fabric/entity.models';
 import {
   EntityGetByIdResponse,
   EntityGetByIdOptions,
-  EntityFieldMetaData,
-  EntityMetadataResponse
+  EntityFieldMetaData
 } from '../../models/data-fabric/entity.types';
+import { EntityMetadataResponse } from '../../models/data-fabric/entity.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';

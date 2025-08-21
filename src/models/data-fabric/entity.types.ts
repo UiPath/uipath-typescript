@@ -1,4 +1,5 @@
 import { BaseOptions } from "../common/common-types";
+import { EntityMetadataResponse } from "./entity.internal-types";
 
 /**
  * Entity field type names 
@@ -33,22 +34,6 @@ export interface EntityGetByIdResponse {
   totalCount: number;
   data: Record<string, any>[];
   fields: EntityFieldMetaData[];
-}
-
-// SQL Type Interface
-interface FieldType {
-  name: string;
-}
-
-// Field Definition Interface
-interface FieldDefinition {
-  name: string;
-  sqlType: FieldType;
-}
-
-// Entity Metadata Response Interface
-export interface EntityMetadataResponse {
-  fields: FieldDefinition[];
 }
 
 /**
