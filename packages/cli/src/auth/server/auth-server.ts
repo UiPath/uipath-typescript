@@ -1,15 +1,15 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs-extra';
 import { Server } from 'http';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { TokenResponse } from './oidc-utils.js';
-import { getTokenEndpointUrl } from './base-url.utils.js';
-import { validateTokenExchangeRequest, validateTokenResponse } from './validation.utils.js';
-import { AUTH_CONSTANTS } from '../../config/auth-constants.js';
+import { TokenResponse } from '../core/oidc.js';
+import { getTokenEndpointUrl } from '../utils/url.js';
+import { validateTokenExchangeRequest, validateTokenResponse } from '../utils/validation.js';
+import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { authRateLimiter, tokenRateLimiter, errorRateLimiter } from './rate-limiter.js';
-import authConfig from '../../config/auth.json' with { type: 'json' };
+import authConfig from '../config/auth.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,7 +51,7 @@ export class AuthServer {
     this.app.use(express.urlencoded({ extended: true }));
     
     // CORS middleware
-    this.app.use((req, res, next) => {
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
       res.header('Access-Control-Allow-Origin', '*');
       res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -91,9 +91,6 @@ export class AuthServer {
         if (this.authCompleteResolve) {
           this.authCompleteResolve(tokens);
         }
-
-        // Shutdown server after a delay
-        setTimeout(() => this.stop(), AUTH_CONSTANTS.TIMEOUTS.SERVER_SHUTDOWN_DELAY);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         res.status(AUTH_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json({ success: false, error: errorMessage });
@@ -189,6 +186,9 @@ export class AuthServer {
       this.server.close(() => {
         console.log('Auth server stopped');
       });
+      
+      // Destroy all active connections to force shutdown
+      this.server.unref();
       this.server = null;
     }
   }

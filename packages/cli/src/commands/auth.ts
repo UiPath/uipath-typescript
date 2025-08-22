@@ -1,15 +1,23 @@
 import { Command, Flags } from '@oclif/core';
 import chalk from 'chalk';
-import ora from 'ora';
+import ora, { Ora } from 'ora';
 import open from 'open';
 import inquirer from 'inquirer';
-import { generatePKCEChallenge, getAuthorizationUrl } from '../utils/auth/oidc-utils.js';
-import { AuthServer } from '../utils/auth/auth-server.js';
-import { loadTokens, clearTokens, isTokenExpired, saveTokensWithTenant } from '../utils/auth/token-manager.js';
-import { getTenantsAndOrganization, selectTenantInteractive } from '../utils/auth/portal-service.js';
-import { selectFolderInteractive } from '../utils/auth/folder-service.js';
-import { getBaseUrl } from '../utils/auth/base-url.utils.js';
-import { AUTH_CONSTANTS } from '../config/auth-constants.js';
+import { generatePKCEChallenge, getAuthorizationUrl, TokenResponse } from '../auth/core/oidc.js';
+import { AuthServer } from '../auth/server/auth-server.js';
+import { loadTokens, clearTokens, isTokenExpired, saveTokensWithTenant } from '../auth/core/token-manager.js';
+import { getTenantsAndOrganization, selectTenantInteractive, SelectedTenant } from '../auth/services/portal.js';
+import { selectFolderInteractive } from '../auth/services/folder.js';
+import { getBaseUrl } from '../auth/utils/url.js';
+import { getFormattedExpirationDate } from '../auth/utils/date.js';
+import { AUTH_CONSTANTS } from '../constants/auth.js';
+
+const createDomainShorthandFlag = (domain: string, otherDomains: string[]) => {
+  return Flags.boolean({
+    description: `Authenticate with ${domain} domain (shorthand for --domain ${domain})`,
+    exclusive: ['domain', ...otherDomains],
+  });
+};
 
 export default class Auth extends Command {
   static description = 'Authenticate with UiPath services';
@@ -27,21 +35,12 @@ export default class Auth extends Command {
     domain: Flags.string({
       char: 'd',
       description: 'UiPath domain to authenticate with',
-      options: ['cloud', 'alpha', 'staging'],
-      default: 'cloud',
+      options: [AUTH_CONSTANTS.DOMAINS.CLOUD, AUTH_CONSTANTS.DOMAINS.ALPHA, AUTH_CONSTANTS.DOMAINS.STAGING],
+      default: AUTH_CONSTANTS.DOMAINS.CLOUD,
     }),
-    alpha: Flags.boolean({
-      description: 'Authenticate with alpha domain (shorthand for --domain alpha)',
-      exclusive: ['domain', 'cloud', 'staging'],
-    }),
-    cloud: Flags.boolean({
-      description: 'Authenticate with cloud domain (shorthand for --domain cloud)',
-      exclusive: ['domain', 'alpha', 'staging'],
-    }),
-    staging: Flags.boolean({
-      description: 'Authenticate with staging domain (shorthand for --domain staging)',
-      exclusive: ['domain', 'alpha', 'cloud'],
-    }),
+    alpha: createDomainShorthandFlag('alpha', ['cloud', 'staging']),
+    cloud: createDomainShorthandFlag('cloud', ['alpha', 'staging']),
+    staging: createDomainShorthandFlag('staging', ['alpha', 'cloud']),
     logout: Flags.boolean({
       char: 'l',
       description: 'Logout and clear stored credentials',
@@ -69,11 +68,11 @@ export default class Auth extends Command {
     // Determine domain from shorthand flags or use explicit domain
     let domain = flags.domain;
     if (flags.alpha) {
-      domain = 'alpha';
+      domain = AUTH_CONSTANTS.DOMAINS.ALPHA;
     } else if (flags.cloud) {
-      domain = 'cloud';
+      domain = AUTH_CONSTANTS.DOMAINS.CLOUD;
     } else if (flags.staging) {
-      domain = 'staging';
+      domain = AUTH_CONSTANTS.DOMAINS.STAGING;
     }
 
     // Check for existing valid token
@@ -96,7 +95,8 @@ export default class Auth extends Command {
         ]);
 
         if (!reauth) {
-          return;
+          // Force exit when user chooses not to re-authenticate
+          process.exit(0);
         }
       }
     }
@@ -107,91 +107,143 @@ export default class Auth extends Command {
 
   private async authenticate(domain: string, port: number): Promise<void> {
     const spinner = ora('Starting authentication process...').start();
+    let authServer: AuthServer | null = null;
 
     try {
-      // Generate PKCE challenge
-      const pkce = generatePKCEChallenge();
+      // Step 1: Set up authentication server and browser flow
+      const { authServer: server, authPromise } = await this.startAuthenticationFlow(domain, port, spinner);
+      authServer = server;
       
-      // Create and start auth server
-      const authServer = new AuthServer({
-        port,
-        domain,
-        codeVerifier: pkce.codeVerifier,
-        expectedState: pkce.state,
-      });
-
-      spinner.text = 'Starting local authentication server...';
+      // Step 2: Wait for user to complete browser authentication
+      const tokens = await this.waitForBrowserAuthentication(authPromise);
       
-      // Start server in background
-      const authPromise = authServer.start();
-
-      // Generate authorization URL
-      const authUrl = getAuthorizationUrl(domain, pkce, port);
+      // Step 3: Configure tenant and folder settings
+      const selectedTenant = await this.configureTenantAndFolder(tokens, domain);
       
-      spinner.text = 'Opening browser for authentication...';
+      // Step 4: Save credentials and display success
+      await this.saveCredentialsAndFinish(tokens, domain, selectedTenant);
       
-      // Open browser
-      await open(authUrl);
-      
-      spinner.info('Please complete the authentication in your browser');
-      this.log(chalk.gray(`\nIf the browser didn't open automatically, visit:`));
-      this.log(chalk.blue(authUrl));
-      
-      // Wait for authentication to complete
-      const newSpinner = ora('Waiting for authentication...').start();
-      
-      try {
-        const tokens = await authPromise;
-        newSpinner.succeed('Authentication successful!');
-        
-        // Fetch organizations and tenants
-        const orgSpinner = ora('Fetching organization and tenants...').start();
-        try {
-          const tenantsAndOrg = await getTenantsAndOrganization(tokens.access_token, domain);
-          orgSpinner.stop();
-          
-          // Select tenant interactively
-          const selectedTenant = await selectTenantInteractive(tenantsAndOrg, domain);
-          
-          // Get base URL for folder selection
-          const baseUrl = getBaseUrl(domain);
-          
-          // Select folder
-          const folderKey = await selectFolderInteractive(
-            tokens.access_token,
-            baseUrl,
-            selectedTenant.organizationName,
-            selectedTenant.tenantName
-          );
-          
-          // Save tokens with tenant information and folder key
-          await saveTokensWithTenant(tokens, domain, selectedTenant, folderKey);
-          
-          this.log(chalk.green('\n✓ Successfully authenticated'));
-          this.log(chalk.gray(`Organization: ${selectedTenant.organizationDisplayName} (${selectedTenant.organizationName})`));
-          this.log(chalk.gray(`Tenant: ${selectedTenant.tenantDisplayName} (${selectedTenant.tenantName})`));
-          if (folderKey) {
-            this.log(chalk.gray(`Folder Key: ${folderKey}`));
-          }
-          this.log(chalk.gray(`Domain: ${domain}`));
-          this.log(chalk.gray(`Token expires at: ${new Date(Date.now() + tokens.expires_in * 1000).toLocaleString()}`));
-          this.log(chalk.gray('\nCredentials have been saved to .env file'));
-        } catch (error) {
-          orgSpinner.fail('Failed to fetch organization/tenant information');
-          // Log more details about the error
-          if (error instanceof Error) {
-            this.log(chalk.red(`Error: ${error.message}`));
-          }
-          throw error;
-        }
-      } catch (error) {
-        newSpinner.fail('Authentication failed');
-        throw error;
-      }
     } catch (error) {
       spinner.fail('Authentication failed');
       this.error(error instanceof Error ? error.message : 'Unknown error occurred');
+    } finally {
+      // Always clean up the auth server
+      authServer?.stop();
     }
+  }
+
+  private async startAuthenticationFlow(
+    domain: string, 
+    port: number, 
+    spinner: Ora
+  ): Promise<{ authServer: AuthServer; authPromise: Promise<TokenResponse> }> {
+    // Generate PKCE challenge
+    const pkce = generatePKCEChallenge();
+    
+    // Create and start auth server
+    const authServer = new AuthServer({
+      port,
+      domain,
+      codeVerifier: pkce.codeVerifier,
+      expectedState: pkce.state,
+    });
+
+    spinner.text = 'Starting local authentication server...';
+    
+    // Start server in background
+    const authPromise = authServer.start();
+
+    // Generate authorization URL and open browser
+    const authUrl = getAuthorizationUrl(domain, pkce, port);
+    
+    spinner.text = 'Opening browser for authentication...';
+    await open(authUrl);
+    
+    spinner.info('Please complete the authentication in your browser');
+    this.log(chalk.gray(`\nIf the browser didn't open automatically, visit:`));
+    this.log(chalk.blue(authUrl));
+    
+    return { authServer, authPromise };
+  }
+
+  private async waitForBrowserAuthentication(authPromise: Promise<TokenResponse>): Promise<TokenResponse> {
+    const spinner = ora('Waiting for authentication...').start();
+    
+    try {
+      const tokens = await authPromise;
+      spinner.succeed('Authentication successful!');
+      return tokens;
+    } catch (error) {
+      spinner.fail('Authentication failed');
+      throw error;
+    }
+  }
+
+  private async configureTenantAndFolder(
+    tokens: TokenResponse, 
+    domain: string
+  ): Promise<SelectedTenant & { folderKey?: string | null }> {
+    const orgSpinner = ora('Fetching organization and tenants...').start();
+    
+    try {
+      // Fetch and select tenant
+      const tenantsAndOrg = await getTenantsAndOrganization(tokens.access_token, domain);
+      orgSpinner.stop();
+      
+      const selectedTenant = await selectTenantInteractive(tenantsAndOrg, domain);
+      
+      // Select folder
+      const baseUrl = getBaseUrl(domain);
+      const folderKey = await selectFolderInteractive(
+        tokens.access_token,
+        baseUrl,
+        selectedTenant.organizationName,
+        selectedTenant.tenantName
+      );
+      
+      return { ...selectedTenant, folderKey };
+    } catch (error) {
+      orgSpinner.fail('Failed to fetch organization/tenant information');
+      if (error instanceof Error) {
+        this.log(chalk.red(`Error: ${error.message}`));
+      }
+      throw error;
+    }
+  }
+
+  private async saveCredentialsAndFinish(
+    tokens: TokenResponse,
+    domain: string,
+    selectedTenant: SelectedTenant & { folderKey?: string | null }
+  ): Promise<void> {
+    // Save tokens with tenant information
+    await saveTokensWithTenant(tokens, domain, selectedTenant, selectedTenant.folderKey);
+    
+    // Display success information
+    this.displayAuthenticationSuccess(tokens, domain, selectedTenant);
+    
+    // Force process exit after successful auth
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  }
+
+  private displayAuthenticationSuccess(
+    tokens: TokenResponse,
+    domain: string,
+    selectedTenant: SelectedTenant & { folderKey?: string | null }
+  ): void {
+    this.log(chalk.green('\n✓ Successfully authenticated'));
+    this.log(chalk.gray(`Organization: ${selectedTenant.organizationDisplayName} (${selectedTenant.organizationName})`));
+    this.log(chalk.gray(`Tenant: ${selectedTenant.tenantDisplayName} (${selectedTenant.tenantName})`));
+    
+    if (selectedTenant.folderKey) {
+      this.log(chalk.gray(`Folder Key: ${selectedTenant.folderKey}`));
+    }
+    
+    this.log(chalk.gray(`Domain: ${domain}`));
+    this.log(chalk.gray(`Token expires at: ${getFormattedExpirationDate(tokens.expires_in)}`));
+    this.log(chalk.gray('\nCredentials have been saved to .env file'));
   }
 
   private async logout(): Promise<void> {
@@ -201,6 +253,9 @@ export default class Auth extends Command {
       await clearTokens();
       spinner.succeed('Successfully logged out');
       this.log(chalk.gray('Credentials have been removed'));
+      
+      // Force exit after logout
+      process.exit(0);
     } catch (error) {
       spinner.fail('Failed to logout');
       this.error(error instanceof Error ? error.message : 'Unknown error occurred');

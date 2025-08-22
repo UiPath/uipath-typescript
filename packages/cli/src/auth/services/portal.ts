@@ -1,7 +1,7 @@
-import { AccessTokenData, parseJWT } from './oidc-utils.js';
+import { AccessTokenData, parseJWT } from '../core/oidc.js';
 import inquirer from 'inquirer';
-import { getPortalApiUrl } from './base-url.utils.js';
-import { AUTH_CONSTANTS } from '../../config/auth-constants.js';
+import { getPortalApiUrl } from '../utils/url.js';
+import { AUTH_CONSTANTS } from '../../constants/auth.js';
 
 export interface Organization {
   id: string;
@@ -52,7 +52,7 @@ export const getTenantsAndOrganization = async (
     throw new Error('No organization ID found in token');
   }
 
-  const url = getPortalApiUrl(domain, prtId, '/filtering/leftnav/tenantsAndOrganizationInfo');
+  const url = getPortalApiUrl(domain, prtId, AUTH_CONSTANTS.API_ENDPOINTS.TENANTS_AND_ORG);
   
   const response = await fetch(url, {
     headers: {
@@ -95,7 +95,7 @@ export const selectTenantInteractive = async (
       {
         type: 'list',
         name: 'tenantId',
-        message: 'Select a tenant:',
+        message: 'Select a tenant',
         choices: data.tenants.map(tenant => ({
           name: tenant.displayName || tenant.name,
           value: tenant.id,

@@ -1,7 +1,15 @@
 export const AUTH_CONSTANTS = {
+  DOMAINS: {
+    CLOUD: 'cloud',
+    ALPHA: 'alpha',
+    STAGING: 'staging',
+  },
   TIMEOUTS: {
     SERVER_SHUTDOWN_DELAY: 1000,
     AUTH_TIMEOUT: 5 * 60 * 1000,
+  },
+  CONVERSION: {
+    SECONDS_TO_MS: 1000,
   },
   HTTP_STATUS: {
     OK: 200,
@@ -42,6 +50,10 @@ export const AUTH_CONSTANTS = {
     TENANT_NAME: 'UIPATH_TENANT_NAME',
     ORG_NAME: 'UIPATH_ORG_NAME',
     FOLDER_KEY: 'UIPATH_FOLDER_KEY',
+  },
+  API_ENDPOINTS: {
+    FOLDERS_NAVIGATION: '/FoldersNavigation/GetFolderContext',
+    TENANTS_AND_ORG: '/filtering/leftnav/tenantsAndOrganizationInfo',
   },
   DEFAULT_PORT: 8104,
   ALTERNATIVE_PORTS: [8104, 8055, 42042],

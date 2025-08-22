@@ -1,4 +1,4 @@
-import { BASE_URLS } from '../../config/auth-constants.js';
+import { BASE_URLS } from '../../constants/auth.js';
 
 export const getBaseUrl = (domain: string): string => {
   return BASE_URLS[domain] || BASE_URLS.cloud;

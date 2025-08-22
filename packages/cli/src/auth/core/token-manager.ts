@@ -1,10 +1,11 @@
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import { TokenResponse } from './oidc-utils.js';
-import { SelectedTenant } from './portal-service.js';
-import { AUTH_CONSTANTS } from '../../config/auth-constants.js';
-import { getBaseUrl } from './base-url.utils.js';
+import { TokenResponse } from './oidc.js';
+import { SelectedTenant } from '../services/portal.js';
+import { AUTH_CONSTANTS } from '../../constants/auth.js';
+import { getBaseUrl } from '../utils/url.js';
+import { calculateExpirationTime } from '../utils/date.js';
 
 const UIPATH_DIR = path.join(process.cwd(), '.uipath');
 const AUTH_FILE = path.join(UIPATH_DIR, '.auth.json');
@@ -34,7 +35,7 @@ export const saveTokensWithTenant = async (
   await fs.ensureDir(UIPATH_DIR);
 
   // Calculate expiration time
-  const expiresAt = Date.now() + (tokens.expires_in * 1000);
+  const expiresAt = calculateExpirationTime(tokens.expires_in);
 
   const authData: StoredAuth = {
     access_token: tokens.access_token,

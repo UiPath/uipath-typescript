@@ -1,8 +1,8 @@
 import crypto from 'crypto';
-import { AUTH_CONSTANTS } from '../../config/auth-constants.js';
-import { getAuthorizationBaseUrl, getTokenEndpointUrl } from './base-url.utils.js';
-import { validateJWT } from './validation.utils.js';
-import authConfig from '../../config/auth.json' with { type: 'json' };
+import { AUTH_CONSTANTS } from '../../constants/auth.js';
+import { getAuthorizationBaseUrl, getTokenEndpointUrl } from '../utils/url.js';
+import { validateJWT } from '../utils/validation.js';
+import authConfig from '../config/auth.json' with { type: 'json' };
 
 export interface PKCEChallenge {
   codeVerifier: string;

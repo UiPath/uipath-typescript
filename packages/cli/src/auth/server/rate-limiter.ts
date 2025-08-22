@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import { AUTH_CONSTANTS } from '../../config/auth-constants.js';
+import { AUTH_CONSTANTS } from '../../constants/auth.js';
 
 /**
  * Standard express-rate-limit configuration

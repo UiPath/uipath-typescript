@@ -1,5 +1,5 @@
-import { AUTH_CONSTANTS } from '../../config/auth-constants.js';
-import { TokenResponse, AccessTokenData } from './oidc-utils.js';
+import { AUTH_CONSTANTS } from '../../constants/auth.js';
+import { TokenResponse } from '../core/oidc.js';
 
 export interface ValidationError {
   field: string;
@@ -87,8 +87,8 @@ export const validateFolderResponse = (data: unknown): boolean => {
 
   const obj = data as Record<string, unknown>;
   
-  return Boolean(
-    obj.PageItems && Array.isArray(obj.PageItems) ||
-    obj.value && Array.isArray(obj.value)
-  );
+  const hasPageItems = obj.PageItems && Array.isArray(obj.PageItems);
+  const hasValue = obj.value && Array.isArray(obj.value);
+  
+  return !!(hasPageItems || hasValue);
 };

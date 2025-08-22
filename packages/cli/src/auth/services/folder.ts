@@ -1,7 +1,7 @@
 import inquirer from 'inquirer';
-import { AUTH_CONSTANTS } from '../../config/auth-constants.js';
-import { getOrchestratorApiUrl } from './base-url.utils.js';
-import { validateFolderResponse } from './validation.utils.js';
+import { AUTH_CONSTANTS } from '../../constants/auth.js';
+import { getOrchestratorApiUrl } from '../utils/url.js';
+import { validateFolderResponse } from '../utils/validation.js';
 
 export interface Folder {
   Key: string;
@@ -27,7 +27,7 @@ export const getFolders = async (
   orgName: string,
   tenantName: string
 ): Promise<Folder[]> => {
-  const url = getOrchestratorApiUrl(baseUrl.replace(/https?:\/\//, '').replace('.uipath.com', ''), orgName, tenantName, '/FoldersNavigation/GetFolderContext');
+  const url = getOrchestratorApiUrl(baseUrl.replace(/https?:\/\//, '').replace('.uipath.com', ''), orgName, tenantName, AUTH_CONSTANTS.API_ENDPOINTS.FOLDERS_NAVIGATION);
 
   const response = await fetch(url.toString(), {
     headers: {
@@ -37,7 +37,6 @@ export const getFolders = async (
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
     if (response.status === AUTH_CONSTANTS.HTTP_STATUS.UNAUTHORIZED) {
       throw new Error('Unauthorized: Token may be expired');
     }
