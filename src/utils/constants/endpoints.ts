@@ -47,6 +47,9 @@ export const DATA_FABRIC_ENDPOINTS = {
   ENTITY: {
     GET_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/read`,
     GET_ENTITY_METADATA: (entityId: string) => `datafabric_/api/Entity/${entityId}`,
+    INSERT_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/insert-batch`,
+    UPDATE_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/update-batch`,
+    DELETE_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/delete-batch`,
   },
 } as const;
 
