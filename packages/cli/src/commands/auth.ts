@@ -11,6 +11,7 @@ import { selectFolderInteractive } from '../auth/services/folder.js';
 import { getBaseUrl } from '../auth/utils/url.js';
 import { getFormattedExpirationDate } from '../auth/utils/date.js';
 import { AUTH_CONSTANTS } from '../constants/auth.js';
+import { isPortAvailable } from '../auth/utils/port-checker.js';
 
 const createDomainShorthandFlag = (domain: string, otherDomains: string[]) => {
   return Flags.boolean({
@@ -44,11 +45,6 @@ export default class Auth extends Command {
     logout: Flags.boolean({
       char: 'l',
       description: 'Logout and clear stored credentials',
-    }),
-    port: Flags.integer({
-      char: 'p',
-      description: 'Local server port for OAuth callback',
-      default: AUTH_CONSTANTS.DEFAULT_PORT,
     }),
     force: Flags.boolean({
       char: 'f',
@@ -95,23 +91,46 @@ export default class Auth extends Command {
         ]);
 
         if (!reauth) {
-          // Force exit when user chooses not to re-authenticate
-          process.exit(0);
+          return;
         }
       }
     }
 
     // Start authentication flow
-    await this.authenticate(domain, flags.port);
+    await this.authenticate(domain);
   }
 
-  private async authenticate(domain: string, port: number): Promise<void> {
-    const spinner = ora('Starting authentication process...').start();
+  private async authenticate(domain: string): Promise<void> {
+    const spinner = ora('Finding available port...').start();
+    
+    // Try to find an available port from the allowed ports
+    let availablePort: number | null = null;
+    for (const port of AUTH_CONSTANTS.ALTERNATIVE_PORTS) {
+      const portAvailable = await isPortAvailable(port);
+      if (portAvailable) {
+        availablePort = port;
+        break;
+      }
+    }
+    
+    if (!availablePort) {
+      spinner.fail('All registered ports are in use');
+      this.log(chalk.red(`\nAll registered ports (${AUTH_CONSTANTS.ALTERNATIVE_PORTS.join(', ')}) are currently in use.`));
+      this.log(chalk.gray(`\nPlease free up one of these ports by stopping applications running on them:`));
+      for (const port of AUTH_CONSTANTS.ALTERNATIVE_PORTS) {
+        this.log(chalk.gray(`  • Port ${port}: ${chalk.cyan(`lsof -i :${port}`)} (macOS/Linux) or ${chalk.cyan(`netstat -ano | findstr :${port}`)} (Windows)`));
+      }
+      this.error('All registered ports are in use. Please free up one of the ports listed above and try again.');
+    }
+    
+    spinner.succeed(`Using port ${availablePort}`);
+    
+    spinner.text = 'Starting authentication process...';
     let authServer: AuthServer | null = null;
 
     try {
       // Step 1: Set up authentication server and browser flow
-      const { authServer: server, authPromise } = await this.startAuthenticationFlow(domain, port, spinner);
+      const { authServer: server, authPromise } = await this.startAuthenticationFlow(domain, availablePort, spinner);
       authServer = server;
       
       // Step 2: Wait for user to complete browser authentication
@@ -221,11 +240,6 @@ export default class Auth extends Command {
     
     // Display success information
     this.displayAuthenticationSuccess(tokens, domain, selectedTenant);
-    
-    // Force process exit after successful auth
-    setTimeout(() => {
-      process.exit(0);
-    }, 100);
   }
 
   private displayAuthenticationSuccess(
@@ -253,9 +267,6 @@ export default class Auth extends Command {
       await clearTokens();
       spinner.succeed('Successfully logged out');
       this.log(chalk.gray('Credentials have been removed'));
-      
-      // Force exit after logout
-      process.exit(0);
     } catch (error) {
       spinner.fail('Failed to logout');
       this.error(error instanceof Error ? error.message : 'Unknown error occurred');

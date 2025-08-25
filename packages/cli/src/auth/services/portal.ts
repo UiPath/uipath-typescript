@@ -2,7 +2,7 @@ import { AccessTokenData, parseJWT } from '../core/oidc.js';
 import inquirer from 'inquirer';
 import { getPortalApiUrl } from '../utils/url.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
-import { createAuthHeaders } from './base.js';
+import { createHeaders } from '../../utils/api.js';
 
 export interface Organization {
   id: string;
@@ -56,7 +56,7 @@ export const getTenantsAndOrganization = async (
   const url = getPortalApiUrl(domain, prtId, AUTH_CONSTANTS.API_ENDPOINTS.TENANTS_AND_ORG);
   
   const response = await fetch(url, {
-    headers: createAuthHeaders(accessToken),
+    headers: createHeaders({ bearerToken: accessToken }),
   });
 
   if (!response.ok) {

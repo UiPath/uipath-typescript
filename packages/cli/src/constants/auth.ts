@@ -59,8 +59,17 @@ export const AUTH_CONSTANTS = {
     FOLDERS_NAVIGATION: '/FoldersNavigation/GetFolderContext',
     TENANTS_AND_ORG: '/filtering/leftnav/tenantsAndOrganizationInfo',
   },
+  IDENTITY_ENDPOINTS: {
+    AUTHORIZE: '/identity_/connect/authorize',
+    TOKEN: '/identity_/connect/token',
+  },
+  SERVICE_PATHS: {
+    PORTAL_API: '/portal_/api',
+    ORCHESTRATOR_API: '/orchestrator_/api',
+  },
   DEFAULT_PORT: 8104,
   ALTERNATIVE_PORTS: [8104, 8055, 42042],
+  PORT_CHECK_HOSTS: ['localhost', '127.0.0.1', '::1'],
   RATE_LIMIT: {
     WINDOW_MS: 60 * 1000, // 1 minute
     AUTH_MAX_REQUESTS: 10,
@@ -74,10 +83,16 @@ export const AUTH_CONSTANTS = {
       ALLOW_HEADERS: 'Access-Control-Allow-Headers',
     },
     VALUES: {
-      ORIGIN: '*',
+      ORIGIN: 'null', // Will be dynamically set to localhost origins only
       METHODS: 'GET, POST, OPTIONS',
       HEADERS: 'Content-Type',
     },
+    ALLOWED_ORIGINS: [
+      'http://localhost',
+      'http://127.0.0.1',
+      'https://localhost',
+      'https://127.0.0.1',
+    ],
   },
 } as const;
 

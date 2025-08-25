@@ -10,7 +10,7 @@ import { validateTokenExchangeRequest, validateTokenResponse } from '../utils/va
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { authRateLimiter, tokenRateLimiter, errorRateLimiter } from './rate-limiter.js';
 import authConfig from '../config/auth.json' with { type: 'json' };
-import { createHeaders } from '../services/base.js';
+import { createHeaders } from '../../utils/api.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -36,6 +36,7 @@ export class AuthServer {
   private expectedState: string;
   private authCompleteResolve?: (value: TokenResponse) => void;
   private authCompleteReject?: (reason?: any) => void;
+  private authTimeout?: NodeJS.Timeout;
 
   constructor(options: AuthServerOptions) {
     this.port = options.port || authConfig.port;
@@ -51,11 +52,20 @@ export class AuthServer {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     
-    // CORS middleware
+    // CORS middleware - restrict to localhost origins only
     this.app.use((req: Request, res: Response, next: NextFunction) => {
-      res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_ORIGIN, AUTH_CONSTANTS.CORS.VALUES.ORIGIN);
+      const origin = req.get('origin');
+      const isAllowedOrigin = origin && AUTH_CONSTANTS.CORS.ALLOWED_ORIGINS.some(allowedOrigin => 
+        origin.startsWith(allowedOrigin)
+      );
+      
+      res.header(
+        AUTH_CONSTANTS.CORS.HEADERS.ALLOW_ORIGIN, 
+        isAllowedOrigin ? origin : 'null'
+      );
       res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_METHODS, AUTH_CONSTANTS.CORS.VALUES.METHODS);
       res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_HEADERS, AUTH_CONSTANTS.CORS.VALUES.HEADERS);
+      
       if (req.method === 'OPTIONS') {
         res.sendStatus(AUTH_CONSTANTS.HTTP_STATUS.NO_CONTENT);
       } else {
@@ -88,7 +98,11 @@ export class AuthServer {
 
         res.json({ success: true });
         
-        // Resolve the auth promise with tokens
+        // Clear timeout and resolve the auth promise with tokens
+        if (this.authTimeout) {
+          clearTimeout(this.authTimeout);
+          this.authTimeout = undefined;
+        }
         if (this.authCompleteResolve) {
           this.authCompleteResolve(tokens);
         }
@@ -96,6 +110,11 @@ export class AuthServer {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         res.status(AUTH_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json({ success: false, error: errorMessage });
         
+        // Clear timeout and reject
+        if (this.authTimeout) {
+          clearTimeout(this.authTimeout);
+          this.authTimeout = undefined;
+        }
         if (this.authCompleteReject) {
           this.authCompleteReject(error);
         }
@@ -175,7 +194,7 @@ export class AuthServer {
       });
 
       // Timeout after 5 minutes
-      setTimeout(() => {
+      this.authTimeout = setTimeout(() => {
         reject(new Error('Authentication timeout'));
         this.stop();
       }, AUTH_CONSTANTS.TIMEOUTS.AUTH_TIMEOUT);
@@ -183,6 +202,12 @@ export class AuthServer {
   }
 
   public stop(): void {
+    // Clear timeout if it exists
+    if (this.authTimeout) {
+      clearTimeout(this.authTimeout);
+      this.authTimeout = undefined;
+    }
+
     if (this.server) {
       this.server.close(() => {
         console.log('Auth server stopped');
