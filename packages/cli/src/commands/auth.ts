@@ -80,10 +80,10 @@ export default class Auth extends Command {
       const existingAuth = await loadTokens();
       if (existingAuth && !isTokenExpired(existingAuth)) {
         this.log(chalk.green('✓ Already authenticated'));
-        this.log(chalk.gray(`Organization: ${existingAuth.organization_name || existingAuth.organization_id}`));
-        this.log(chalk.gray(`Tenant: ${existingAuth.tenant_name || 'Not selected'}`));
+        this.log(chalk.gray(`Organization: ${existingAuth.organizationName || existingAuth.organizationId}`));
+        this.log(chalk.gray(`Tenant: ${existingAuth.tenantName || 'Not selected'}`));
         this.log(chalk.gray(`Domain: ${existingAuth.domain}`));
-        this.log(chalk.gray(`Token expires at: ${new Date(existingAuth.expires_at).toLocaleString()}`));
+        this.log(chalk.gray(`Token expires at: ${new Date(existingAuth.expiresAt).toLocaleString()}`));
         
         const { reauth } = await inquirer.prompt([
           {
@@ -187,7 +187,7 @@ export default class Auth extends Command {
     
     try {
       // Fetch and select tenant
-      const tenantsAndOrg = await getTenantsAndOrganization(tokens.access_token, domain);
+      const tenantsAndOrg = await getTenantsAndOrganization(tokens.accessToken, domain);
       orgSpinner.stop();
       
       const selectedTenant = await selectTenantInteractive(tenantsAndOrg, domain);
@@ -195,7 +195,7 @@ export default class Auth extends Command {
       // Select folder
       const baseUrl = getBaseUrl(domain);
       const folderKey = await selectFolderInteractive(
-        tokens.access_token,
+        tokens.accessToken,
         baseUrl,
         selectedTenant.organizationName,
         selectedTenant.tenantName
@@ -242,7 +242,7 @@ export default class Auth extends Command {
     }
     
     this.log(chalk.gray(`Domain: ${domain}`));
-    this.log(chalk.gray(`Token expires at: ${getFormattedExpirationDate(tokens.expires_in)}`));
+    this.log(chalk.gray(`Token expires at: ${getFormattedExpirationDate(tokens.expiresIn)}`));
     this.log(chalk.gray('\nCredentials have been saved to .env file'));
   }
 

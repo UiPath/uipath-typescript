@@ -2,6 +2,7 @@ import inquirer from 'inquirer';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { getOrchestratorApiUrl } from '../utils/url.js';
 import { validateFolderResponse } from '../utils/validation.js';
+import { createAuthHeaders } from './base.js';
 
 export interface Folder {
   Key: string;
@@ -30,10 +31,7 @@ export const getFolders = async (
   const url = getOrchestratorApiUrl(baseUrl.replace(/https?:\/\//, '').replace('.uipath.com', ''), orgName, tenantName, AUTH_CONSTANTS.API_ENDPOINTS.FOLDERS_NAVIGATION);
 
   const response = await fetch(url.toString(), {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
+    headers: createAuthHeaders(accessToken),
   });
 
   if (!response.ok) {

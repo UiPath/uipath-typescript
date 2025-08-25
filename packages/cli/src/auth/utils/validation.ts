@@ -36,12 +36,12 @@ export const validateTokenResponse = (data: unknown): TokenResponse => {
   }
 
   return {
-    access_token: obj.access_token as string,
-    refresh_token: obj.refresh_token as string | undefined,
-    expires_in: obj.expires_in as number,
-    token_type: obj.token_type as string,
+    accessToken: obj.access_token as string,
+    refreshToken: obj.refresh_token as string | undefined,
+    expiresIn: obj.expires_in as number,
+    tokenType: obj.token_type as string,
     scope: obj.scope as string,
-    id_token: obj.id_token as string | undefined,
+    idToken: obj.id_token as string | undefined,
   };
 };
 

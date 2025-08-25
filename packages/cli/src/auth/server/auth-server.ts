@@ -10,6 +10,7 @@ import { validateTokenExchangeRequest, validateTokenResponse } from '../utils/va
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { authRateLimiter, tokenRateLimiter, errorRateLimiter } from './rate-limiter.js';
 import authConfig from '../config/auth.json' with { type: 'json' };
+import { createHeaders } from '../services/base.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -52,9 +53,9 @@ export class AuthServer {
     
     // CORS middleware
     this.app.use((req: Request, res: Response, next: NextFunction) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type');
+      res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_ORIGIN, AUTH_CONSTANTS.CORS.VALUES.ORIGIN);
+      res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_METHODS, AUTH_CONSTANTS.CORS.VALUES.METHODS);
+      res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_HEADERS, AUTH_CONSTANTS.CORS.VALUES.HEADERS);
       if (req.method === 'OPTIONS') {
         res.sendStatus(AUTH_CONSTANTS.HTTP_STATUS.NO_CONTENT);
       } else {
@@ -140,9 +141,9 @@ export class AuthServer {
 
     const response = await fetch(tokenEndpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: createHeaders({
+        contentType: AUTH_CONSTANTS.CONTENT_TYPES.FORM_URLENCODED,
+      }),
       body: params.toString(),
     });
 

@@ -21,24 +21,24 @@ export interface AuthConfig {
 }
 
 export interface TokenResponse {
-  access_token: string;
-  refresh_token?: string;
-  expires_in: number;
-  token_type: string;
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number;
+  tokenType: string;
   scope: string;
-  id_token?: string;
+  idToken?: string;
 }
 
 export interface AccessTokenData {
   sub: string;
-  prt_id: string;
-  client_id: string;
+  prtId: string;
+  clientId: string;
   exp: number;
   iss: string;
-  aud: string;
+  aud: string; // audience
   iat: number;
-  auth_time: number;
-  organization_id?: string;
+  authTime: number;
+  organizationId?: string;
 }
 
 const base64URLEncode = (str: Buffer): string => {
@@ -96,13 +96,13 @@ export const parseJWT = (token: string): AccessTokenData => {
 
   return {
     sub: claims.sub,
-    prt_id: claims.prt_id,
-    client_id: claims.client_id,
+    prtId: claims.prt_id,
+    clientId: claims.client_id,
     exp: claims.exp,
     iss: claims.iss,
     aud: claims.aud,
     iat: claims.iat,
-    auth_time: claims.auth_time,
-    organization_id: claims.organization_id || claims.prt_id,
+    authTime: claims.auth_time,
+    organizationId: claims.organization_id || claims.prt_id,
   };
 };

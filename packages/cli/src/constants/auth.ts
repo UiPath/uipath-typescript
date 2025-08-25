@@ -17,6 +17,10 @@ export const AUTH_CONSTANTS = {
     BAD_REQUEST: 400,
     UNAUTHORIZED: 401,
   },
+  CONTENT_TYPES: {
+    JSON: 'application/json',
+    FORM_URLENCODED: 'application/x-www-form-urlencoded',
+  },
   ROUTES: {
     OIDC_LOGIN: '/oidc/login',
     TOKEN: '/token',
@@ -39,7 +43,7 @@ export const AUTH_CONSTANTS = {
   },
   UI: {
     SKIP_SELECTION: '__skip__',
-    SKIP_LABEL: '⏭️  Skip folder selection',
+    SKIP_LABEL: '⏭ Skip folder selection',
     PAGE_SIZE: 10,
   },
   ENV_VARS: {
@@ -62,6 +66,18 @@ export const AUTH_CONSTANTS = {
     AUTH_MAX_REQUESTS: 10,
     TOKEN_MAX_REQUESTS: 5,
     ERROR_MAX_REQUESTS: 20,
+  },
+  CORS: {
+    HEADERS: {
+      ALLOW_ORIGIN: 'Access-Control-Allow-Origin',
+      ALLOW_METHODS: 'Access-Control-Allow-Methods',
+      ALLOW_HEADERS: 'Access-Control-Allow-Headers',
+    },
+    VALUES: {
+      ORIGIN: '*',
+      METHODS: 'GET, POST, OPTIONS',
+      HEADERS: 'Content-Type',
+    },
   },
 } as const;
 

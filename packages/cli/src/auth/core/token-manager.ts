@@ -12,17 +12,17 @@ const AUTH_FILE = path.join(UIPATH_DIR, '.auth.json');
 const ENV_FILE = path.join(process.cwd(), '.env');
 
 export interface StoredAuth {
-  access_token: string;
-  refresh_token?: string;
-  expires_at: number;
-  token_type: string;
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+  tokenType: string;
   scope: string;
-  id_token?: string;
-  organization_id?: string;
+  idToken?: string;
+  organizationId?: string;
   domain: string;
-  tenant_id?: string;
-  tenant_name?: string;
-  organization_name?: string;
+  tenantId?: string;
+  tenantName?: string;
+  organizationName?: string;
 }
 
 export const saveTokensWithTenant = async (
@@ -35,20 +35,20 @@ export const saveTokensWithTenant = async (
   await fs.ensureDir(UIPATH_DIR);
 
   // Calculate expiration time
-  const expiresAt = calculateExpirationTime(tokens.expires_in);
+  const expiresAt = calculateExpirationTime(tokens.expiresIn);
 
   const authData: StoredAuth = {
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
-    expires_at: expiresAt,
-    token_type: tokens.token_type,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    expiresAt,
+    tokenType: tokens.tokenType,
     scope: tokens.scope,
-    id_token: tokens.id_token,
-    organization_id: tenant.organizationId,
+    idToken: tokens.idToken,
+    organizationId: tenant.organizationId,
     domain,
-    tenant_id: tenant.tenantId,
-    tenant_name: tenant.tenantName,
-    organization_name: tenant.organizationName,
+    tenantId: tenant.tenantId,
+    tenantName: tenant.tenantName,
+    organizationName: tenant.organizationName,
   };
 
   // Save to auth file with atomic write
@@ -59,7 +59,7 @@ export const saveTokensWithTenant = async (
 
   // Update .env file with environment variables
   const envVars: Record<string, string> = {
-    [AUTH_CONSTANTS.ENV_VARS.ACCESS_TOKEN]: tokens.access_token,
+    [AUTH_CONSTANTS.ENV_VARS.ACCESS_TOKEN]: tokens.accessToken,
     [AUTH_CONSTANTS.ENV_VARS.BASE_URL]: baseUrl,
     [AUTH_CONSTANTS.ENV_VARS.TENANT_ID]: tenant.tenantId,
     [AUTH_CONSTANTS.ENV_VARS.ORG_ID]: tenant.organizationId,
@@ -107,7 +107,7 @@ export const clearTokens = async (): Promise<void> => {
 };
 
 export const isTokenExpired = (auth: StoredAuth): boolean => {
-  return Date.now() >= auth.expires_at;
+  return Date.now() >= auth.expiresAt;
 };
 
 const updateEnvFile = async (vars: Record<string, string>): Promise<void> => {

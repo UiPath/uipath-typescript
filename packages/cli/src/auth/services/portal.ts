@@ -2,6 +2,7 @@ import { AccessTokenData, parseJWT } from '../core/oidc.js';
 import inquirer from 'inquirer';
 import { getPortalApiUrl } from '../utils/url.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
+import { createAuthHeaders } from './base.js';
 
 export interface Organization {
   id: string;
@@ -46,7 +47,7 @@ export const getTenantsAndOrganization = async (
 ): Promise<TenantsAndOrganizationResponse> => {
   // Parse JWT to get prt_id
   const tokenData = parseJWT(accessToken);
-  const prtId = tokenData.prt_id || tokenData.organization_id;
+  const prtId = tokenData.prtId || tokenData.organizationId;
   
   if (!prtId) {
     throw new Error('No organization ID found in token');
@@ -55,10 +56,7 @@ export const getTenantsAndOrganization = async (
   const url = getPortalApiUrl(domain, prtId, AUTH_CONSTANTS.API_ENDPOINTS.TENANTS_AND_ORG);
   
   const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
+    headers: createAuthHeaders(accessToken),
   });
 
   if (!response.ok) {
