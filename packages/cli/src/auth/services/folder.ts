@@ -3,23 +3,24 @@ import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { getOrchestratorApiUrl } from '../utils/url.js';
 import { validateFolderResponse } from '../utils/validation.js';
 import { createAuthHeaders } from './base.js';
+import { pascalToCamelCaseKeys } from '../../utils/transform.js';
 
 export interface Folder {
-  Key: string;
-  DisplayName: string;
-  FullyQualifiedName: string;
-  Description?: string;
-  ParentId?: number;
-  ProvisionType?: string;
-  PermissionModel?: string;
-  FeedType?: string;
-  Id?: number;
+  key: string;
+  displayName: string;
+  fullyQualifiedName: string;
+  description?: string;
+  parentId?: number;
+  provisionType?: string;
+  permissionModel?: string;
+  feedType?: string;
+  id?: number;
 }
 
 interface FolderContextResponse {
   "@odata.context"?: string;
-  PageItems?: Folder[];
-  value?: Folder[];
+  PageItems?: unknown[];
+  value?: unknown[];
 }
 
 export const getFolders = async (
@@ -47,7 +48,9 @@ export const getFolders = async (
     console.warn('Unexpected folder response format');
   }
   
-  return data.PageItems || data.value || [];
+  // Get folders array and transform to camelCase
+  const folders = data.PageItems || data.value || [];
+  return pascalToCamelCaseKeys(folders) as Folder[];
 };
 
 export const selectFolderInteractive = async (
@@ -68,8 +71,8 @@ export const selectFolderInteractive = async (
     // Create choices for inquirer
     const choices = [
       ...folders.map(folder => ({
-        name: `${folder.DisplayName} (${folder.FullyQualifiedName})`,
-        value: folder.Key,
+        name: `${folder.displayName} (${folder.fullyQualifiedName})`,
+        value: folder.key,
       })),
       { name: AUTH_CONSTANTS.UI.SKIP_LABEL, value: AUTH_CONSTANTS.UI.SKIP_SELECTION }
     ];
