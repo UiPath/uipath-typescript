@@ -17,12 +17,6 @@ export interface Folder {
   id?: number;
 }
 
-interface FolderContextResponse {
-  "@odata.context"?: string;
-  PageItems?: unknown[];
-  value?: unknown[];
-}
-
 export const getFolders = async (
   accessToken: string,
   baseUrl: string,
@@ -42,7 +36,7 @@ export const getFolders = async (
     throw new Error(`Failed to fetch folders: ${response.status} ${response.statusText}`);
   }
 
-  const data = await response.json() as FolderContextResponse;
+  const data = await response.json() as Record<string, unknown>;
   
   if (!validateFolderResponse(data)) {
     console.warn('Unexpected folder response format');

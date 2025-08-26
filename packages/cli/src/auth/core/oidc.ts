@@ -30,15 +30,15 @@ export interface TokenResponse {
 }
 
 export interface AccessTokenData {
-  sub: string;
-  prtId: string;
-  clientId: string;
-  exp: number;
-  iss: string;
-  aud: string; // audience
-  iat: number;
-  authTime: number;
-  organizationId?: string;
+  sub: string;              // Subject - The user's unique identifier
+  prtId: string;            // Portal ID - UiPath portal identifier
+  clientId: string;         // OAuth client ID
+  exp: number;              // Expiration time (Unix timestamp)
+  iss: string;              // Issuer - The entity that issued the token (e.g., https://cloud.uipath.com)
+  aud: string;              // Audience - Intended recipient of the token
+  iat: number;              // Issued At - When the token was issued (Unix timestamp)
+  authTime: number;         // Authentication time - When the user authenticated
+  organizationId?: string;  // Optional organization identifier
 }
 
 const base64URLEncode = (str: Buffer): string => {
