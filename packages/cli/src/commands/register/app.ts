@@ -160,7 +160,10 @@ export default class RegisterApp extends Command {
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: createHeaders(envConfig),
+      headers: createHeaders({ 
+        bearerToken: envConfig.bearerToken,
+        tenantId: envConfig.tenantId 
+      }),
       body: JSON.stringify(payload),
     });
 
