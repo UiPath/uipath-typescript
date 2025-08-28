@@ -14,6 +14,7 @@ import {
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_KEY } from '../../utils/constants/headers';
+import { ContentType } from '../../utils/constants/common';
 
 
 
@@ -105,7 +106,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     const response = await this.get<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
       headers: {
         ...createHeaders({ [FOLDER_KEY]: folderKey }),
-        'Accept': 'application/xml'
+        'Accept': ContentType.APPLICATION_XML
       },
       responseType: 'text'
     });

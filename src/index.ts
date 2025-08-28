@@ -15,4 +15,7 @@ export * from './models/maestro';
 export * from './models/orchestrator';
 export * from './models/task';
 
+// Export error handling functionality (public API only)
+export * from './core/errors';
+
 

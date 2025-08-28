@@ -2,6 +2,7 @@ import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
+import { ValidationError, AuthenticationError, HttpStatus } from '../../core/errors';
 import { 
   BucketGetResponse, 
   BucketGetAllOptions, 
@@ -20,9 +21,9 @@ import { filterUndefined } from '../../utils/object-utils';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX } from '../../utils/constants/common';
+import { ContentType, ODATA_PREFIX } from '../../utils/constants/common';
 import { CollectionResponse } from '../../models/common/common-types';
-import { BucketMap, DEFAULT_CONTENT_TYPE } from '../../models/orchestrator/bucket.constants';
+import { BucketMap } from '../../models/orchestrator/bucket.constants';
 import { isBrowser } from '../../utils/platform';
 import * as mimeTypes from 'mime-types';
 import axios, { AxiosResponse } from 'axios';
@@ -66,11 +67,11 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    */
   async getById(id: number, folderId: number, options: BucketGetByIdOptions = {}): Promise<BucketGetResponse> {
     if (!id) {
-      throw new Error('bucketId is required');
+      throw new ValidationError({ message: 'bucketId is required for getById' });
     }
     
     if (!folderId) {
-      throw new Error('folderId is required');
+      throw new ValidationError({ message: 'folderId is required for getById' });
     }
     
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -166,11 +167,11 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    */
   async getFileMetaData(bucketId: number, folderId: number, options: BucketGetFileMetaDataOptions = {}): Promise<BucketGetFileMetaDataResponse> {
     if (!bucketId) {
-      throw new Error('bucketId is required');
+      throw new ValidationError({ message: 'bucketId is required for getFileMetaData' });
     }
     
     if (!folderId) {
-      throw new Error('folderId is required');
+      throw new ValidationError({ message: 'folderId is required for getFileMetaData' });
     }
     
     // Create headers with required folder ID
@@ -225,19 +226,19 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     const { bucketId, folderId, path, content, contentType } = options;
     
     if (!bucketId) {
-      throw new Error('bucketId is required');
+      throw new ValidationError({ message: 'bucketId is required for uploadFile' });
     }
     
     if (!folderId) {
-      throw new Error('folderId is required');
+      throw new ValidationError({ message: 'folderId is required for uploadFile' });
     }
 
     if (!path) {
-      throw new Error('path is required');
+      throw new ValidationError({ message: 'path is required for uploadFile' });
     }
 
     if (!content) {
-      throw new Error('content is required');
+      throw new ValidationError({ message: 'content is required for uploadFile' });
     }
 
     try {
@@ -304,7 +305,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     }
 
     // 4. Final fallback
-    return DEFAULT_CONTENT_TYPE;
+    return ContentType.APPLICATION_OCTET_STREAM;
   }
 
   /**
@@ -322,7 +323,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     const { uri, headers = {}, requiresAuth } = uriResponse;
     
     if (!uri) {
-      throw new Error('Upload URI not available');
+      throw new ValidationError({ message: 'Upload URI not available', statusCode: HttpStatus.BAD_REQUEST });
     }
 
     // Create headers for the request
@@ -339,7 +340,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
         const tokenInfo = this.executionContext.get('tokenInfo') as any;
         
         if (!tokenInfo) {
-          throw new Error('No authentication token available. Make sure to initialize the SDK first.');
+          throw new AuthenticationError({ message: 'No authentication token available. Make sure to initialize the SDK first.' });
         }
         
         let token: string;
@@ -357,8 +358,11 @@ export class BucketService extends FolderScopedService implements BucketServiceM
         }
         
         requestHeaders['Authorization'] = `Bearer ${token}`;
-      } catch (error: any) {
-        throw new Error(`Authentication required but failed: ${error.message}`);
+      } catch (error) {
+        throw new AuthenticationError({ 
+          message: `Authentication required but failed: ${error instanceof Error ? error.message : ''}`, 
+          statusCode: HttpStatus.UNAUTHORIZED
+        });
       }
     }
    
@@ -384,15 +388,15 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     queryOptions: Record<string, any> = {}
   ): Promise<BucketGetUriResponse> {
     if (!bucketId) {
-      throw new Error('bucketId is required');
+      throw new ValidationError({ message: 'bucketId is required for getUri' });
     }
     
     if (!folderId) {
-      throw new Error('folderId is required');
+      throw new ValidationError({ message: 'folderId is required for getUri' });
     }
 
     if (!path) {
-      throw new Error('path is required');
+      throw new ValidationError({ message: 'path is required for getUri' });
     }
     
     // Create headers with required folder ID

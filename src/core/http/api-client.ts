@@ -3,6 +3,10 @@ import { ExecutionContext } from '../context/execution-context';
 import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
 import { TokenInfo } from '../auth/auth.types';
+import { AuthenticationError, HttpStatus } from '../errors';
+import { errorResponseParser } from '../errors/parser';
+import { ErrorFactory } from '../errors/error-factory';
+import { ContentType } from '../../utils/constants/common';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -40,7 +44,7 @@ export class ApiClient {
     const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
     
     if (!tokenInfo) {
-      throw new Error('No authentication token available. Make sure to initialize the SDK first.');
+      throw new AuthenticationError({ message: 'No authentication token available. Make sure to initialize the SDK first.' });
     }
 
     // For secret-based tokens, they never expire
@@ -57,7 +61,10 @@ export class ApiClient {
       const newToken = await this.tokenManager.refreshAccessToken();
       return newToken.access_token;
     } catch (error: any) {
-      throw new Error(`Token refresh failed: ${error.message}. Please re-authenticate.`);
+      throw new AuthenticationError({
+        message: `Token refresh failed: ${error.message}. Please re-authenticate.`,
+        statusCode: HttpStatus.UNAUTHORIZED
+      });
     }
   }
 
@@ -69,7 +76,7 @@ export class ApiClient {
     if (contextHeaders['Authorization']) {
       return {
         ...contextHeaders,
-        'Content-Type': 'application/json',
+        'Content-Type': ContentType.APPLICATION_JSON,
         ...this.defaultHeaders,
         ...this.clientConfig.headers
       };
@@ -80,11 +87,12 @@ export class ApiClient {
     return {
       ...contextHeaders,
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      'Content-Type': ContentType.APPLICATION_JSON,
       ...this.defaultHeaders,
       ...this.clientConfig.headers
     };
   }
+
 
   private async request<T>(method: string, path: string, options: RequestSpec = {}): Promise<T> {
     // Ensure path starts with a forward slash
@@ -110,30 +118,40 @@ export class ApiClient {
     }
     const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
 
-    const response = await fetch(fullUrl, {
-      method,
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-      signal: options.signal
-    });
+    try {
+      const response = await fetch(fullUrl, {
+        method,
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        signal: options.signal
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(`HTTP ${response.status}: ${error.message}`);
+      if (!response.ok) {
+        const errorInfo = await errorResponseParser.parse(response);
+        throw ErrorFactory.createFromHttpStatus(response.status, errorInfo);
+      }
+
+      if (response.status === 204) {
+        return undefined as T;
+      }
+
+      // Check if we're expecting XML
+      const acceptHeader = headers['Accept'] || headers['accept'];
+      if (acceptHeader === ContentType.APPLICATION_XML) {
+        const text = await response.text();
+        return text as T;
+      }
+
+      return response.json();
+    } catch (error: any) {
+      // If it's already one of our errors, re-throw it
+      if (error.name && error.name.includes('Error')) {
+        throw error;
+      }
+      
+      // Otherwise, it's likely a network error
+      throw ErrorFactory.createNetworkError(error);
     }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    // Check if we're expecting XML
-    const acceptHeader = headers['Accept'] || headers['accept'];
-    if (acceptHeader === 'application/xml') {
-      const text = await response.text();
-      return text as T;
-    }
-
-    return response.json();
   }
 
   async get<T>(path: string, options: RequestSpec = {}): Promise<T> {
