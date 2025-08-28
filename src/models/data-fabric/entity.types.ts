@@ -1,6 +1,3 @@
-import { BaseOptions } from "../common/common-types";
-import { EntityMetadataResponse } from "./entity.internal-types";
-
 /**
  * Entity field type names 
  */
@@ -54,7 +51,7 @@ export interface EntityGetByIdResponse {
 /**
  * Options for getting an entity by Id
  */
-export interface EntityGetByIdOptions extends BaseOptions {
+export interface EntityGetByIdOptions {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
 }
