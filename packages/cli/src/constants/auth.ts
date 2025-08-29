@@ -56,7 +56,7 @@ export const AUTH_CONSTANTS = {
     FOLDER_KEY: 'UIPATH_FOLDER_KEY',
   },
   API_ENDPOINTS: {
-    FOLDERS_NAVIGATION: '/FoldersNavigation/GetFolderContext',
+    FOLDERS_NAVIGATION: '/Folders/GetAllForCurrentUser',
     TENANTS_AND_ORG: '/filtering/leftnav/tenantsAndOrganizationInfo',
   },
   IDENTITY_ENDPOINTS: {
