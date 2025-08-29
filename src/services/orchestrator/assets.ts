@@ -1,7 +1,7 @@
 import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { CollectionResponse } from '../../models/common/common-types';
+import { NonPaginatedResponse } from '../../models/common/common-types';
 import { 
   AssetGetResponse, 
   AssetGetAllOptions,
@@ -15,6 +15,10 @@ import { FOLDER_ID } from '../../utils/constants/headers';
 import { ASSET_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX } from '../../utils/constants/common';
 import { AssetMap } from '../../models/orchestrator/assets.constants';
+import { ODATA_PAGINATION } from '../../utils/constants/common';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
@@ -27,55 +31,82 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
   /**
    * Gets all assets across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of assets
+   * The method returns either:
+   * - An array of assets (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
    * 
    * @example
    * ```typescript
-   * // Get all assets across folders
+   * // Standard array return
    * const assets = await sdk.asset.getAll();
    * 
-   * // Get assets within a specific folder
-   * const assets = await sdk.asset.getAll({ 
-   *   folderId: 123
-   * });
+   * // With folder
+   * const folderAssets = await sdk.asset.getAll({ folderId: 123 });
    * 
-   * // Get assets with filtering
-   * const assets = await sdk.asset.getAll({ 
-   *   filter: "name eq 'MyAsset'"
+   * // First page with pagination
+   * const page1 = await sdk.asset.getAll({ pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.asset.getAll({ cursor: page1.nextCursor });
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.asset.getAll({
+   *   jumpToPage: 5,
+   *   pageSize: 10
    * });
    * ```
    */
-  async getAll(options: AssetGetAllOptions = {}): Promise<AssetGetResponse[]> {
-    const { folderId, ...restOptions } = options;
+  async getAll<T extends AssetGetAllOptions = AssetGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<AssetGetResponse>
+      : NonPaginatedResponse<AssetGetResponse>
+  > {
+    const { folderId, ...restOptions } = options || {};
+    const cursor = options?.cursor;
+    const pageSize = options?.pageSize;
+    const jumpToPage = options?.jumpToPage;
     
-    // If folderId is provided, use the folder-specific endpoint
-    if (folderId) {
-      return this._getByFolder<object, AssetGetResponse>(
-        ASSET_ENDPOINTS.GET_BY_FOLDER, 
-        folderId, 
-        restOptions, 
-        (asset) => transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap)
-      );
+    // Determine if pagination is requested
+    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
+    
+    // Use the transformation function for assets
+    const transformAsset = (asset: any) => 
+      transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap);
+    
+    // Paginated flow
+    if (isPaginationRequested) {
+      return PaginationHelpers.getAllPaginated<any, AssetGetResponse>({
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: (folderId) => folderId ? ASSET_ENDPOINTS.GET_BY_FOLDER : ASSET_ENDPOINTS.GET_ALL,
+        folderId,
+        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
+        additionalParams: restOptions,
+        transformFn: transformAsset,
+        options: {
+          paginationType: PaginationType.ODATA,
+          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        }
+      }) as any; // Type assertion needed due to conditional return
     }
     
-    // Otherwise get assets across all folders
-    const keysToPrefix = Object.keys(restOptions);
-    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<CollectionResponse<AssetGetResponse>>(
-      ASSET_ENDPOINTS.GET_ALL,
-      { 
-        params: apiOptions
+    // Non-paginated flow
+    return PaginationHelpers.getAllNonPaginated<any, AssetGetResponse>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getAllEndpoint: ASSET_ENDPOINTS.GET_ALL,
+      getByFolderEndpoint: ASSET_ENDPOINTS.GET_BY_FOLDER,
+      folderId,
+      additionalParams: restOptions,
+      transformFn: transformAsset,
+      options: {
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
       }
-    );
-
-    const assetArray = response.data?.value;
-    const transformedAssets = assetArray?.map(asset => 
-      transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap)
-    );
-    
-    return transformedAssets;
+    }) as any;
   }
 
   /**

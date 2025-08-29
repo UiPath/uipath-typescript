@@ -21,11 +21,15 @@ import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX } from '../../utils/constants/common';
-import { CollectionResponse } from '../../models/common/common-types';
+import { NonPaginatedResponse } from '../../models/common/common-types';
 import { BucketMap, DEFAULT_CONTENT_TYPE } from '../../models/orchestrator/bucket.constants';
+import { ODATA_PAGINATION } from '../../utils/constants/common';
 import { isBrowser } from '../../utils/platform';
 import * as mimeTypes from 'mime-types';
 import axios, { AxiosResponse } from 'axios';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 
 // Import file-type dynamically to avoid issues in browser environment
 // This variable will hold the fileTypeFromBuffer function when in Node.js environment
@@ -94,8 +98,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   /**
    * Gets all buckets across folders with optional filtering and folder scoping
    * 
+   * The method returns either:
+   * - An array of buckets (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of buckets
+   * @returns Promise resolving to an array of buckets or paginated result
    * 
    * @example
    * ```typescript
@@ -111,55 +119,88 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * const buckets = await sdk.buckets.getAll({ 
    *   filter: "name eq 'MyBucket'"
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.buckets.getAll({ pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.buckets.getAll({ cursor: page1.nextCursor });
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.buckets.getAll({
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
    * ```
    */
-  async getAll(options: BucketGetAllOptions = {}): Promise<BucketGetResponse[]> {
-    const { folderId, ...restOptions } = options;
+  async getAll<T extends BucketGetAllOptions = BucketGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BucketGetResponse>
+      : NonPaginatedResponse<BucketGetResponse>
+  > {
+    const { folderId, ...restOptions } = options || {};
+    const cursor = options?.cursor;
+    const pageSize = options?.pageSize;
+    const jumpToPage = options?.jumpToPage;
     
-    // If folderId is provided, use the folder-specific endpoint
-    if (folderId) {
-      return this._getByFolder<object, BucketGetResponse>(
-        BUCKET_ENDPOINTS.GET_BY_FOLDER,
-        folderId, 
-        restOptions,
-        (bucket) => pascalToCamelCaseKeys(bucket) as BucketGetResponse
-      );
+    // Determine if pagination is requested
+    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
+    
+    // Use the transformation function for buckets
+    const transformBucket = (bucket: any) => 
+      pascalToCamelCaseKeys(bucket) as BucketGetResponse;
+    
+    // Paginated flow
+    if (isPaginationRequested) {
+      return PaginationHelpers.getAllPaginated<any, BucketGetResponse>({
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: (folderId) => folderId ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL,
+        folderId,
+        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
+        additionalParams: restOptions,
+        transformFn: transformBucket,
+        options: {
+          paginationType: PaginationType.ODATA,
+          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        }
+      }) as any; // Type assertion needed due to conditional return
     }
     
-    // Otherwise get buckets across all folders
-    const keysToPrefix = Object.keys(restOptions);
-    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<CollectionResponse<BucketGetResponse>>(
-      BUCKET_ENDPOINTS.GET_ALL,
-      { 
-        params: apiOptions
+    // Non-paginated flow
+    return PaginationHelpers.getAllNonPaginated<any, BucketGetResponse>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getAllEndpoint: BUCKET_ENDPOINTS.GET_ALL,
+      getByFolderEndpoint: BUCKET_ENDPOINTS.GET_BY_FOLDER,
+      folderId,
+      additionalParams: restOptions,
+      transformFn: transformBucket,
+      options: {
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
       }
-    );
-
-    const bucketArray = response.data?.value; 
-    const transformedBuckets = bucketArray?.map(bucket => 
-      pascalToCamelCaseKeys(bucket) as BucketGetResponse
-    );
-    
-    return transformedBuckets;
+    }) as any;
   }
 
   /**
-   * Gets files from a bucket with optional filtering and pagination
+   * Gets metadata for files in a bucket with optional filtering and pagination
    * 
-   * @param bucketId - The ID of the bucket to get files from
+   * @param bucketId - The ID of the bucket to get file metadata from
    * @param folderId - Required folder ID for organization unit context
    * @param options - Optional parameters for filtering, pagination and access URL generation
-   * @returns Promise resolving to the list of files in the bucket
+   * @returns Promise resolving to the list of file metadata in the bucket
    * 
    * @example
    * ```typescript
-   * // Get all files in a bucket
-   * const files = await sdk.buckets.getFiles(123, 456);
+   * // Get metadata for all files in a bucket
+   * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456);
    * 
-   * // Get files with a specific prefix
-   * const files = await sdk.buckets.getFiles(123, 456, {
+   * // Get file metadata with a specific prefix
+   * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456, {
    *   prefix: '/folder1'
    * });
    * ```

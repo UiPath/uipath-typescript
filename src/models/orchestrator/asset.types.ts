@@ -1,4 +1,5 @@
 import { BaseOptions, RequestOptions } from '../common/common-types';
+import { PaginationOptions } from '../../utils/pagination';
 
 /**
  * Enum for Asset Value Scope
@@ -53,7 +54,10 @@ export interface AssetGetResponse {
   creatorUserId: number;
 }
 
-export interface AssetGetAllOptions extends RequestOptions {
+/**
+ * Options for getting assets across folders
+ */
+export type AssetGetAllOptions = RequestOptions & PaginationOptions & {
   /**
    * Optional folder ID to filter assets by folder
    */

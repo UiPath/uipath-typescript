@@ -3,8 +3,6 @@
  * Types and interfaces for Maestro process instance management
  */
 
-import { PaginationOptions } from '../common';
-
 /**
  * Response for getting a single process instance
  */
@@ -39,7 +37,7 @@ export interface ProcessInstanceGetAllResponse {
 /**
  * Query options for getting process instances
  */
-export interface ProcessInstanceGetAllOptions extends PaginationOptions {
+export interface ProcessInstanceGetAllOptions {
   [key: string]: string | number | undefined;
   packageId?: string;
   packageVersion?: string;
