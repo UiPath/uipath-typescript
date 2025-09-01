@@ -42,8 +42,8 @@ export interface EntityRecord {
 /**
  * Interface for getById response
  */
-export interface EntityGetByIdResponse {
-  totalCount: number;
+export interface RawEntityGetByIdResponse {
+  id: string,
   data: EntityRecord[];
   fields: EntityFieldMetaData[];
 }

@@ -2,9 +2,9 @@ import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
-import { EntityServiceModel, Entity } from '../../models/data-fabric/entity.models';
+import { EntityServiceModel, EntityGetByIdResponse, createEntityWithMethods } from '../../models/data-fabric/entity.models';
 import {
-  EntityGetByIdResponse,
+  RawEntityGetByIdResponse,
   EntityGetByIdOptions,
   EntityFieldMetaData,
   EntityInsertOptions,
@@ -47,7 +47,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  async getById(id: string, options: EntityGetByIdOptions = {}): Promise<Entity> {
+  async getById(id: string, options: EntityGetByIdOptions = {}): Promise<EntityGetByIdResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel
     });
@@ -71,12 +71,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const transformedData = transformData(dataWithCamelCase, EntityMap);
 
     const entityData = {
+      id,
       ...transformedData,
       fields
-    } as EntityGetByIdResponse;
+    } as RawEntityGetByIdResponse;
 
-    // Return a new Entity instance
-    return new Entity(entityData, id, this);
+    // Return an entity with methods
+    return createEntityWithMethods(entityData, id, this);
   }
 
   /**
