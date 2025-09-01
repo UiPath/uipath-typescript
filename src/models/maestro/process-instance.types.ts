@@ -37,7 +37,7 @@ export interface ProcessInstanceGetAllResponse {
 /**
  * Query options for getting process instances
  */
-export interface ProcessInstanceGetAllOptions extends PaginationOptions {
+export interface ProcessInstanceGetAllOptions {
   packageId?: string;
   packageVersion?: string;
   processKey?: string;
@@ -92,7 +92,7 @@ export interface ProcessInstanceExecutionHistoryResponse {
 }
 
 /**
- * Instance run (placeholder for future implementation)
+ * Process Instance run
  */
 export interface InstanceRun {
   runId: string;

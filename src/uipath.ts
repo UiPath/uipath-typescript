@@ -111,12 +111,12 @@ export class UiPath {
       /**
        * Access to Maestro Processes service
        */
-      processes: this.getService(MaestroProcessesService),
-      
-      /**
-       * Access to Process Instances service
-       */
-      processInstances: this.getService(ProcessInstancesService)
+      processes: Object.assign(this.getService(MaestroProcessesService), {
+        /**
+         * Access to Process Instances service
+         */
+        instances: this.getService(ProcessInstancesService)
+      })
     };
   }
 

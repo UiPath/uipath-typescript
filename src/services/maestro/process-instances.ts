@@ -33,12 +33,12 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @example
    * ```typescript
    * // Get all instances
-   * const instances = await sdk.maestro.processInstances.getAll();
+   * const instances = await sdk.maestro.processes.instances.getAll();
    * 
    * // Cancel faulted instances
    * for (const instance of instances) {
    *   if (instance.state === 'Faulted') {
-   *     await sdk.maestro.processInstances.cancel(
+   *     await sdk.maestro.processes.instances.cancel(
    *       instance.instanceId, 
    *       instance.folderKey,
    *       { comment: 'Cancelling faulted instance' }
@@ -47,7 +47,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * }
    * 
    * // With filtering
-   * const instances = await sdk.maestro.processInstances.getAll({
+   * const instances = await sdk.maestro.processes.instances.getAll({
    *   processKey: 'MyProcess',
    *   limit: 50
    * });

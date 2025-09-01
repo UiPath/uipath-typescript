@@ -109,7 +109,7 @@ try {
 The SDK provides access to the following services through a consistent API:
 
 - `sdk.maestro.processes` - Manage agentic maestro processes
-- `sdk.maestro.processInstances` - Manage maestro process executions
+- `sdk.maestro.processes.instances` - Manage maestro process executions
 - `sdk.task` - Create and manage tasks
 - `sdk.entity` - Data Fabric entity operations
 - `sdk.process` - Manage Orchestrator processes

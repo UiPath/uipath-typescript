@@ -30,11 +30,8 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *   console.log(`Faulted instances: ${process.faultedCount}`);
    * }
    * 
-   * // Filter processes with faulted instances
-   * const faultedProcesses = processes.filter(p => p.faultedCount > 0);
-   * 
    * // Get instances for a specific process
-   * const instances = await sdk.maestro.processInstances.getAll({ 
+   * const instances = await sdk.maestro.processes.instances.getAll({ 
    *   processKey: processes[0].processKey 
    * });
    * ```

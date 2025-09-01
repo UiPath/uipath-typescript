@@ -55,34 +55,6 @@ export function transformData<T extends object>(
   return result;
 }
 
-// /**
-//  * Creates a transform function with predefined field mappings
-//  * @param fieldMapping Object mapping source field names to target field names
-//  * @returns Function that transforms data using the provided field mapping
-//  * 
-//  * @example
-//  * ```typescript
-//  * // Create a reusable transform function
-//  * const transformUser = createTransform({
-//  *   id: 'userId',
-//  *   userName: 'name'
-//  * });
-//  * 
-//  * // Use the transform function
-//  * const user = transformUser({ id: '123', userName: 'john' });
-//  * // user = { userId: '123', name: 'john' }
-//  * 
-//  * // Transform an array of users
-//  * const users = transformUser([
-//  *   { id: '123', userName: 'john' },
-//  *   { id: '456', userName: 'jane' }
-//  * ]);
-//  * ```
-//  */
-// export function createTransform<T extends object>(fieldMapping: FieldMapping) {
-//   return (data: T | T[]): T => transformData(data, fieldMapping);
-// }
-
 /**
  * Converts a string from PascalCase to camelCase
  * @param str The PascalCase string to convert
