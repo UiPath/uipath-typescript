@@ -1,7 +1,7 @@
 import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { CollectionResponse, NonPaginatedResponse } from '../../models/common/common-types';
+import { NonPaginatedResponse } from '../../models/common/common-types';
 import { 
   QueueGetResponse, 
   QueueGetAllOptions, 

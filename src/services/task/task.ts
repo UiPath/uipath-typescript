@@ -26,11 +26,14 @@ import {
 } from '../../models/task/task.models';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse, addPrefixToKeys } from '../../utils/transform';
 import { TaskStatusMap, TaskTimeMap } from '../../models/task/task.constants';
-import { CollectionResponse } from '../../models/common/common-types';
+import { NonPaginatedResponse } from '../../models/common/common-types';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX } from '../../utils/constants/common';
+import { ODATA_PREFIX, ODATA_PAGINATION } from '../../utils/constants/common';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -77,91 +80,193 @@ export class TaskService extends BaseService implements TaskServiceModel {
   /**
    * Gets users in the given folder who have Tasks.View and Tasks.Edit permissions
    * 
+   * The method returns either:
+   * - An array of users (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param folderId - The folder ID to get users from
-   * @param options - Optional query parameters
-   * @returns Promise resolving to an array of users
+   * @param options - Optional query and pagination parameters
+   * @returns Promise resolving to an array of users or paginated result
    * 
    * @example
    * ```typescript
-   * // Get all users with task permissions in a folder
+   * // Standard array return
    * const users = await sdk.task.getUsers(123);
    * 
    * // Get users with filtering
    * const users = await sdk.task.getUsers(123, { 
    *   filter: "name eq 'abc'"
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.task.getUsers(123, { pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.task.getUsers(123, { cursor: page1.nextCursor });
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.task.getUsers(123, {
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
    * ```
    */
-  async getUsers(folderId: number, options: TaskGetUsersOptions = {}): Promise<UserLoginInfo[]> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
+  async getUsers<T extends TaskGetUsersOptions = TaskGetUsersOptions>(
+    folderId: number,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<UserLoginInfo>
+      : NonPaginatedResponse<UserLoginInfo>
+  > {
+    const cursor = options?.cursor;
+    const pageSize = options?.pageSize;
+    const jumpToPage = options?.jumpToPage;
     
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
-    const response = await this.get<UserLoginInfoCollection>(
-      TASK_ENDPOINTS.GET_TASK_USERS(folderId),
-      { 
-        params: apiOptions,
-        headers
+    // Determine if pagination is requested
+    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
+    
+    // Use the transformation function for users
+    const transformUser = (user: any) => 
+      pascalToCamelCaseKeys(user) as UserLoginInfo;
+    
+    // Paginated flow
+    if (isPaginationRequested) {
+      return PaginationHelpers.getAllPaginated<any, UserLoginInfo>({
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => TASK_ENDPOINTS.GET_TASK_USERS(folderId),
+        folderId: undefined, // Not used since endpoint already includes folderId
+        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
+        additionalParams: options || {},
+        transformFn: transformUser,
+        options: {
+          paginationType: PaginationType.ODATA,
+          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        }
+      }) as any; // Type assertion needed due to conditional return
+    }
+    
+    // Non-paginated flow
+    return PaginationHelpers.getAllNonPaginated<any, UserLoginInfo>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getAllEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId),
+      getByFolderEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId), // Same endpoint
+      folderId: undefined, // Not used since endpoint already includes folderId
+      additionalParams: options || {},
+      transformFn: transformUser,
+      options: {
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
       }
-    );
-    
-    // Transform response from PascalCase to camelCase
-    return response.data?.value.map(user => pascalToCamelCaseKeys(user) as UserLoginInfo);
+    }) as any;
   }
   
   /**
    * Gets tasks across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of tasks
+   * The method returns either:
+   * - An array of tasks (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
+   * @param options - Query options including optional folderId and pagination options
+   * @returns Promise resolving to an array of tasks or paginated result
    * 
    * @example
    * ```typescript
-   * // Get all tasks across folders
+   * // Standard array return
    * const tasks = await sdk.task.getAll();
    * 
    * // Get tasks within a specific folder
    * const tasks = await sdk.task.getAll({ 
    *   folderId: 123
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.task.getAll({ pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.task.getAll({ cursor: page1.nextCursor });
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.task.getAll({
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
    * ```
    */
-  async getAll(options: TaskGetAllOptions = {}): Promise<TaskGetResponse[]> {
-    const { folderId, ...restOptions } = options;
+  async getAll<T extends TaskGetAllOptions = TaskGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskGetResponse>
+      : NonPaginatedResponse<TaskGetResponse>
+  > {
+    const { folderId, ...restOptions } = options || {};
+    const cursor = options?.cursor;
+    const pageSize = options?.pageSize;
+    const jumpToPage = options?.jumpToPage;
     
-    let headers = {};
-    // If folderId is provided, add it to the filter
+    // Determine if pagination is requested
+    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
+    
+    // Transformation function for tasks
+    const transformTask = (task: any) => {
+      const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskTimeMap);
+      return createTaskWithMethods(
+        transformApiResponse(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
+        this
+      ) as TaskGetResponse;
+    };
+    
+    // Handle folder filtering
+    const processedOptions = { ...restOptions };
     if (folderId) {
-      // Create or add to existing filter
-      if (restOptions.filter) {
-        restOptions.filter = `${restOptions.filter} and organizationUnitId eq ${folderId}`;
+      if (processedOptions.filter) {
+        processedOptions.filter = `${processedOptions.filter} and organizationUnitId eq ${folderId}`;
       } else {
-        restOptions.filter = `organizationUnitId eq ${folderId}`;
+        processedOptions.filter = `organizationUnitId eq ${folderId}`;
       }
     }
     
     // prefix all keys except 'event'
-    const keysToPrefix = Object.keys(restOptions).filter(k => k !== 'event');
-    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
-    const response = await this.get<CollectionResponse<TaskGetResponse>>(
-      TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
-      { 
-        params: apiOptions,
-        headers
+    const keysToPrefix = Object.keys(processedOptions).filter(k => k !== 'event');
+    const prefixedOptions = addPrefixToKeys(processedOptions, ODATA_PREFIX, keysToPrefix);
+    
+    // Paginated flow
+    if (isPaginationRequested) {
+      return PaginationHelpers.getAllPaginated<any, TaskGetResponse>({
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
+        folderId: undefined, // Not used since we handle folder filtering through the filter parameter
+        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
+        additionalParams: prefixedOptions,
+        transformFn: transformTask,
+        options: {
+          paginationType: PaginationType.ODATA,
+          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        }
+      }) as any; // Type assertion needed due to conditional return
+    }
+    
+    // Non-paginated flow
+    return PaginationHelpers.getAllNonPaginated<any, TaskGetResponse>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getAllEndpoint: TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
+      getByFolderEndpoint: TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS, // Same endpoint
+      folderId: undefined, // Not used since we handle folder filtering through the filter parameter
+      additionalParams: prefixedOptions,
+      transformFn: transformTask,
+      options: {
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
       }
-    );
-    
-    // Transform response Task array from PascalCase to camelCase and normalize time fields
-    const transformedTasks = response.data?.value.map(task => 
-      transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskTimeMap)
-    );
-    
-    return transformedTasks.map(task => 
-      createTaskWithMethods(
-        transformApiResponse(task, { field: 'status', valueMap: TaskStatusMap }),
-        this
-      ) as TaskGetResponse
-    );
+    }) as any;
   }
 
   /**
