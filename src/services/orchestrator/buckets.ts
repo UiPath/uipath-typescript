@@ -143,14 +143,14 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       : NonPaginatedResponse<BucketGetResponse>
   > {
     // Transformation function for buckets
-    const transformBucket = (bucket: any) => 
+    const transformBucketResponse = (bucket: any) => 
       pascalToCamelCaseKeys(bucket) as BucketGetResponse;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: (folderId) => folderId ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: BUCKET_ENDPOINTS.GET_BY_FOLDER,
-      transformFn: transformBucket,
+      transformFn: transformBucketResponse,
       pagination: {
         paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,

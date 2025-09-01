@@ -66,7 +66,10 @@ export interface GetAllPaginatedParams<T, R = T> {
   folderId?: number; 
   paginationParams: PaginationOptions;
   additionalParams: Record<string, any>;
-  transformFn: (item: T) => R;
+  /** 
+   * Optional function to transform API response items.
+   */
+  transformFn?: (item: T) => R;
   options?: {
     paginationType?: PaginationType;
     itemsField?: string;
@@ -84,7 +87,10 @@ export interface GetAllNonPaginatedParams<T, R = T> {
   getByFolderEndpoint: string;
   folderId?: number; 
   additionalParams: Record<string, any>;
-  transformFn: (item: T) => R;
+  /** 
+   * Optional function to transform API response items.
+   */
+  transformFn?: (item: T) => R;
   options?: {
     itemsField?: string;
     totalCountField?: string;
@@ -145,6 +151,16 @@ export interface PaginationDetectionInfo {
 }
 
 /**
+ * Configuration for pagination options
+ */
+export interface PaginationConfig {
+  paginationType?: PaginationType;
+  itemsField?: string;
+  totalCountField?: string;
+  continuationTokenField?: string;
+}
+
+/**
  * Configuration for centralized getAll implementations
  */
 export interface GetAllConfig<TRaw, TTransformed = TRaw> {
@@ -157,19 +173,16 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
   /** Alternative endpoint for folder-specific queries (optional) */
   getByFolderEndpoint?: string;
   
-  /** Function to transform raw API items to client format */
-  transformFn: (item: TRaw) => TTransformed;
+  /** 
+   * Optional function to transform raw API items to client format.
+   */
+  transformFn?: (item: TRaw) => TTransformed;
   
   /** Pagination configuration */
-  pagination?: {
-    paginationType?: PaginationType;
-    itemsField?: string;
-    totalCountField?: string;
-    continuationTokenField?: string;
-  };
+  pagination?: PaginationConfig;
   
   /** Custom parameter processing function */
-  processParameters?: (options: Record<string, any>, folderId?: number) => Record<string, any>;
+  processParametersFn?: (options: Record<string, any>, folderId?: number) => Record<string, any>;
   
   /** Keys to exclude from ODATA prefix transformation */
   excludeFromPrefix?: string[];

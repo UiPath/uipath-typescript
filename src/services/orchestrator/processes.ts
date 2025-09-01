@@ -77,14 +77,14 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
       : NonPaginatedResponse<ProcessGetResponse>
   > {
     // Transformation function for processes
-    const transformProcess = (process: any) => 
+    const transformProcessResponse = (process: any) => 
       transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap);
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => PROCESS_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL, // Processes use same endpoint for both
-      transformFn: transformProcess,
+      transformFn: transformProcessResponse,
       pagination: {
         paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,

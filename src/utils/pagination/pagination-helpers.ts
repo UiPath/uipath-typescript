@@ -198,8 +198,10 @@ export class PaginationHelpers {
       }
     );
     
-    // Transform the data using the provided transform function
-    const transformedItems = paginatedResponse.items.map(transformFn);
+    // Transform items only if a transform function is provided
+    const transformedItems = transformFn 
+      ? paginatedResponse.items.map(transformFn)
+      : paginatedResponse.items as unknown as R[];
     
     return {
       ...paginatedResponse,
@@ -247,9 +249,14 @@ export class PaginationHelpers {
       }
     );
 
-    // Extract and transform data
+    // Extract data
     const items = response.data?.[itemsField] || [];
-    const data = items.map(transformFn);
+    
+    // Transform items if a transform function is provided
+    const data = transformFn 
+      ? items.map(transformFn)
+      : items as unknown as R[];
+      
     const totalCount = response.data?.[totalCountField];
     
     return {
@@ -284,8 +291,8 @@ export class PaginationHelpers {
     
     // Process parameters (custom processing if provided, otherwise default)
     let processedOptions = restOptions;
-    if (config.processParameters) {
-      processedOptions = config.processParameters(restOptions, folderId);
+    if (config.processParametersFn) {
+      processedOptions = config.processParametersFn(restOptions, folderId);
     }
     
     // Apply ODATA prefix to keys (excluding specified keys)

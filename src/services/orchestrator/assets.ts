@@ -66,14 +66,14 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       : NonPaginatedResponse<AssetGetResponse>
   > {
     // Transformation function for assets
-    const transformAsset = (asset: any) => 
+    const transformAssetResponse = (asset: any) => 
       transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap);
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: (folderId) => folderId ? ASSET_ENDPOINTS.GET_BY_FOLDER : ASSET_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: ASSET_ENDPOINTS.GET_BY_FOLDER,
-      transformFn: transformAsset,
+      transformFn: transformAssetResponse,
       pagination: {
         paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,

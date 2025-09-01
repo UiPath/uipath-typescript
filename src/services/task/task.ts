@@ -122,7 +122,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
       : NonPaginatedResponse<UserLoginInfo>
   > {
     // Transformation function for users
-    const transformUser = (user: any) => 
+    const transformUserResponse = (user: any) => 
       pascalToCamelCaseKeys(user) as UserLoginInfo;
 
     // Add folderId to options so the centralized helper can handle it properly
@@ -132,7 +132,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: (folderId) => TASK_ENDPOINTS.GET_TASK_USERS(folderId!), // Use folderId from centralized helper
       getByFolderEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId), // Use the passed folderId
-      transformFn: transformUser,
+      transformFn: transformUserResponse,
       pagination: {
         paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -184,7 +184,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
       : NonPaginatedResponse<TaskGetResponse>
   > {
     // Transformation function for tasks
-    const transformTask = (task: any) => {
+    const transformTaskResponse = (task: any) => {
       const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskTimeMap);
       return createTaskWithMethods(
         transformApiResponse(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
@@ -192,25 +192,11 @@ export class TaskService extends BaseService implements TaskServiceModel {
       ) as TaskGetResponse;
     };
 
-    // Custom parameter processing for tasks (handles folder filtering)
-    const processParameters = (restOptions: Record<string, any>, folderId?: number) => {
-      const processedOptions = { ...restOptions };
-      if (folderId) {
-        // Create or add to existing filter for folder-specific queries
-        if (processedOptions.filter) {
-          processedOptions.filter = `${processedOptions.filter} and organizationUnitId eq ${folderId}`;
-        } else {
-          processedOptions.filter = `organizationUnitId eq ${folderId}`;
-        }
-      }
-      return processedOptions;
-    };
-
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
-      transformFn: transformTask,
-      processParameters,
+      transformFn: transformTaskResponse,
+      processParametersFn: this.processTaskParameters,
       excludeFromPrefix: ['event'], // Exclude 'event' key from ODATA prefix transformation
       pagination: {
         paginationType: PaginationType.ODATA,
@@ -479,5 +465,25 @@ export class TaskService extends BaseService implements TaskServiceModel {
       transformApiResponse(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
       this
     ) as TaskGetResponse;
+  }
+
+  /**
+   * Process parameters for task queries with folder filtering
+   * @param options - The REST API options to process
+   * @param folderId - Optional folder ID to filter by
+   * @returns Processed options with folder filtering applied if needed
+   * @private
+   */
+  private processTaskParameters = (options: Record<string, any>, folderId?: number): Record<string, any> => {
+    const processedOptions = { ...options };
+    if (folderId) {
+      // Create or add to existing filter for folder-specific queries
+      if (processedOptions.filter) {
+        processedOptions.filter = `${processedOptions.filter} and organizationUnitId eq ${folderId}`;
+      } else {
+        processedOptions.filter = `organizationUnitId eq ${folderId}`;
+      }
+    }
+    return processedOptions;
   }
 } 

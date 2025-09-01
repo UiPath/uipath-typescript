@@ -75,14 +75,14 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       : NonPaginatedResponse<QueueGetResponse>
   > {
     // Transformation function for queues
-    const transformQueue = (queue: any) => 
+    const transformQueueResponse = (queue: any) => 
       transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: (folderId) => folderId ? QUEUE_ENDPOINTS.GET_BY_FOLDER : QUEUE_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: QUEUE_ENDPOINTS.GET_BY_FOLDER,
-      transformFn: transformQueue,
+      transformFn: transformQueueResponse,
       pagination: {
         paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
