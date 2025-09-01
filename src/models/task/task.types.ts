@@ -1,4 +1,4 @@
-import { CollectionResponse, RequestOptions } from "../common/common-types";
+import { BaseOptions, CollectionResponse, RequestOptions } from "../common/common-types";
 import { JobState } from "../common/common-types";
 
 export interface UserLoginInfo {
@@ -179,15 +179,14 @@ export type TaskCompleteOptions =
 /**
  * Query options for getting all tasks
  */
-export type TaskGetAllOptions = RequestOptions;
+export interface TaskGetAllOptions extends RequestOptions {
+  folderId?: number;
+}
 
 /**
  * Query options for getting a task by ID 
  */
-export interface TaskGetByIdOptions {
-  expand?: string;
-  select?: string;
-}
+export type TaskGetByIdOptions = BaseOptions
 
 /**
  * Options for getting a form task by ID

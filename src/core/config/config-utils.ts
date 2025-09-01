@@ -6,7 +6,7 @@ export function validateConfig(config: UiPathSDKConfig): void {
   }
 
   if (!hasSecretConfig(config) && !hasOAuthConfig(config)) {
-    throw new Error('Invalid configuration: must provide either secret or (clientId and redirectUri)');
+    throw new Error('Invalid configuration: must provide either secret or (clientId, redirectUri, and scope)');
   }
 }
 

@@ -8,10 +8,19 @@ import type {
   TaskAssignmentRequest,
   TaskCompletionRequest,
   TaskCompleteOptions,
-  TaskAssignOptions
+  TaskAssignOptions,
+  TaskGetAllOptions,
+  TaskGetByIdOptions,
+  TaskCreateRequest
 } from './task.types';
 
 export interface TaskServiceModel {
+  getAll(options?: TaskGetAllOptions): Promise<Task<TaskGetResponse>[]>;
+
+  getById(id: number, options?: TaskGetByIdOptions, folderId?: number): Promise<Task<TaskGetResponse>>;
+
+  create(request: TaskCreateRequest, folderId: number): Promise<Task<TaskCreateResponse>>;
+
   assign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResult[]>;
   
   reassign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResult[]>;

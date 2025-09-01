@@ -20,7 +20,7 @@ const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret'
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 
 // Use the services
@@ -38,9 +38,11 @@ const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret'
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 ```
+
+For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the required scopes and provide the clientId, redirectUri, and scope here.
 
 ### 2. OAuth Authentication
 ```typescript
@@ -49,8 +51,57 @@ const sdk = new UiPath({
   orgName: 'your-organization',
   tenantName: 'your-tenant',
   clientId: 'your-client-id',
-  redirectUri: 'your-client-secret'
+  redirectUri: 'your-redirect-uri',
+  scope: 'your-scopes'
 });
+
+// IMPORTANT: OAuth requires calling initialize()
+await sdk.initialize();
+```
+
+## SDK Initialization - The initialize() Method
+
+### When to Use initialize()
+
+The `initialize()` method completes the authentication process for the SDK:
+
+- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
+- **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
+
+### Example: Secret Authentication (Auto-initialized)
+```typescript
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  secret: 'your-secret' //PAT Token or Bearer Token 
+});
+
+// Ready to use immediately - no initialize() needed
+const tasks = await sdk.task.getAll();
+```
+
+### Example: OAuth Authentication (Requires initialize)
+```typescript
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  clientId: 'your-client-id',
+  redirectUri: 'http://localhost:3000',
+  scope: 'your-scopes'
+});
+
+// Must initialize before using services
+try {
+  await sdk.initialize();
+  console.log('SDK initialized successfully');
+  
+  // Now you can use the SDK
+  const tasks = await sdk.task.getAll();
+} catch (error) {
+  console.error('Failed to initialize SDK:', error);
+}
 ```
 
 ## Available Services
@@ -87,21 +138,23 @@ const task = await sdk.task.getById('task-id');
 const entity = await sdk.entity.create({...});
 
 // Get all buckets 
-const buckets = await sdk.bucket.getAll('folder-id');
+const buckets = await sdk.bucket.getAll();
 
 // Get a specific process and start it
 const process = await sdk.process.getAll({ 
   filter: "name eq 'MyProcess'" 
 });
-const job = await sdk.process.startProcess({
-  releaseKey: process[0].key
+const job = await sdk.process.start({
+  processKey: process[0].key
 }, 'folder-id');
 
 // Get all queues
 const queues = await sdk.queue.getAll();
 
 // Get all assets
-const assets = await sdk.asset.getAll('folder-Id');
+const assets = await sdk.asset.getAll();
+//Get assets in a folder
+const assets = await sdk.asset.getAll({folderId: 'folder-id'});
 ```
 
 ## TypeScript Support
@@ -167,14 +220,15 @@ interface UiPathConfig {
   baseUrl: string;        // UiPath platform URL
   orgName: string;        // Organization name
   tenantName: string;     // Tenant name
-  secret?: string;        // Secret for authentication
-  clientId?: string;      // OAuth client ID
-  clientSecret?: string;  // OAuth client secret
-  timeout?: number;       // Request timeout in milliseconds
-  retryConfig?: {         // Retry configuration
-    retries: number;
-    retryDelay: number;
-  };
+  
+  // Authentication options (choose one):
+  // Option 1: Secret-based authentication
+  secret?: string;        // Secret for authentication (PAT Token or Bearer Token)
+  
+  // Option 2: OAuth authentication (all three required together)
+  clientId?: string;      // OAuth client ID (required with redirectUri and scope)
+  redirectUri?: string;   // OAuth redirect URI (required with clientId and scope)
+  scope?: string;         // OAuth scopes (required with clientId and redirectUri)
 }
 ```
 

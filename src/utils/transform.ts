@@ -121,13 +121,20 @@ export function camelToPascalCase(str: string): string {
  * @param convertCase The function to convert each key
  * @returns A new object with transformed keys
  */
-function _transformCaseKeys<T extends object>(
+function transformCaseKeys<T extends object>(
   data: T | T[], 
   convertCase: (str: string) => string
 ): any {
   // Handle array of objects
   if (Array.isArray(data)) {
-    return data.map(item => _transformCaseKeys(item, convertCase));
+    return data.map(item => {
+      // If the array element is a primitive (string, number, etc.), return it as is
+      if (item === null || typeof item !== 'object' || item instanceof String) {
+        return item;
+      }
+      // Only recursively transform if it's actually an object
+      return transformCaseKeys(item, convertCase);
+    });
   }
 
   const result: Record<string, any> = {};
@@ -137,7 +144,7 @@ function _transformCaseKeys<T extends object>(
     
     // Recursively transform nested objects and arrays
     if (value !== null && typeof value === 'object') {
-      result[transformedKey] = _transformCaseKeys(value, convertCase);
+      result[transformedKey] = transformCaseKeys(value, convertCase);
     } else {
       result[transformedKey] = value;
     }
@@ -179,7 +186,7 @@ function _transformCaseKeys<T extends object>(
  * ```
  */
 export function pascalToCamelCaseKeys<T extends object>(data: T | T[]): any {
-  return _transformCaseKeys(data, pascalToCamelCase);
+  return transformCaseKeys(data, pascalToCamelCase);
 }
 
 /**
@@ -215,7 +222,7 @@ export function pascalToCamelCaseKeys<T extends object>(data: T | T[]): any {
  * ```
  */
 export function camelToPascalCaseKeys<T extends object>(data: T | T[]): any {
-  return _transformCaseKeys(data, camelToPascalCase);
+  return transformCaseKeys(data, camelToPascalCase);
 } 
 
 /**
@@ -293,12 +300,12 @@ export function applyDataTransforms<T extends object, K extends keyof T, M exten
 /**
  * Adds a prefix to specified keys in an object, returning a new object.
  * Only the provided keys are prefixed; all others are left unchanged.
- *
+ * 
  * @param obj The source object
  * @param prefix The prefix to add (e.g., '$')
  * @param keys The keys to prefix (e.g., ['expand', 'filter'])
  * @returns A new object with specified keys prefixed
- *
+ * 
  * @example
  * addPrefixToKeys({ expand: 'a', foo: 1 }, '$', ['expand']) // { $expand: 'a', foo: 1 }
  */
@@ -316,4 +323,96 @@ export function addPrefixToKeys<T extends object>(
     }
   }
   return result;
+} 
+
+/**
+ * Creates a new map with the keys and values reversed
+ * @param map The original map to reverse
+ * @returns A new map with keys and values swapped
+ * 
+ * @example
+ * ```typescript
+ * const original = { key1: 'value1', key2: 'value2' };
+ * const reversed = reverseMap(original);
+ * // reversed = { value1: 'key1', value2: 'key2' }
+ * ```
+ */
+export function reverseMap<T extends Record<string, string>>(map: T): Record<string, string> {
+  return Object.entries(map).reduce((acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+  }, {} as Record<string, string>);
+}
+
+/**
+ * Renames fields in an object in-place
+ * @param obj The object to modify
+ * @param fieldMappings Object mapping source field names to target field names
+ * @returns The modified object (same reference as input)
+ * 
+ * @example
+ * ```typescript
+ * // Rename fields in query parameters
+ * const queryParams = { limit: 10, offset: 0, filter: 'active' };
+ * renameObjectFields(queryParams, { limit: 'takeHint' });
+ * // queryParams = { takeHint: 10, offset: 0, filter: 'active' }
+ * 
+ * // Multiple field renames
+ * const params = { username: 'john', password: '12345' };
+ * renameObjectFields(params, { username: 'userName', password: 'pwd' });
+ * // params = { userName: 'john', pwd: '12345' }
+ * ```
+ */
+export function renameObjectFields<T extends Record<string, any>>(
+  obj: T,
+  fieldMappings: Record<string, string>
+): T {
+  for (const [sourceField, targetField] of Object.entries(fieldMappings)) {
+    if (sourceField in obj) {
+      (obj as Record<string, any>)[targetField] = obj[sourceField];
+      delete obj[sourceField];
+    }
+  }
+  return obj;
+} 
+
+/**
+ * Transforms an array-based dictionary with separate keys and values arrays
+ * into a standard JavaScript object/record
+ * 
+ * @param dictionary Object containing keys and values arrays
+ * @returns A standard record object with direct key-value mapping
+ * 
+ * @example
+ * ```typescript
+ * const arrayDict = { 
+ *   keys: ['Content-Type', 'x-ms-blob-type'],
+ *   values: ['application/json', 'BlockBlob']
+ * };
+ * const record = arrayDictionaryToRecord(arrayDict);
+ * // result = { 
+ * //   'Content-Type': 'application/json', 
+ * //   'x-ms-blob-type': 'BlockBlob'
+ * // }
+ * ```
+ */
+export function arrayDictionaryToRecord(
+  dictionary: { keys: string[]; values: string[] }
+): Record<string, string> {
+  if (!dictionary || !dictionary.keys || !dictionary.values) {
+    return {};
+  }
+  
+  if (dictionary.keys.length !== dictionary.values.length) {
+    console.warn('Keys and values arrays have different lengths');
+  }
+  
+  const record: Record<string, string> = {};
+  
+  const length = Math.min(dictionary.keys.length, dictionary.values.length);
+  for (let i = 0; i < length; i++) {
+    record[dictionary.keys[i]] = dictionary.values[i];
+  }
+  
+  return record;
 } 

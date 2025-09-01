@@ -35,7 +35,8 @@ export class UiPath {
       tenantName: config.tenantName,
       secret: hasSecretConfig(config) ? config.secret : undefined,
       clientId: hasOAuthConfig(config) ? config.clientId : undefined,
-      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined
+      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined,
+      scope: hasOAuthConfig(config) ? config.scope : undefined
     });
 
     this.executionContext = new ExecutionContext();

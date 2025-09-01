@@ -3,7 +3,7 @@ import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution-context';
 import { TokenManager } from './token-manager';
 import { AuthToken, TokenInfo } from './auth.types';
-import { hasOAuthConfig, hasSecretConfig } from '../config/sdk-config';
+import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
@@ -43,7 +43,7 @@ export class AuthService extends BaseService {
     
     // If we don't have a valid token from storage, authenticate with OAuth
     if (hasOAuthConfig(config)) {
-      return await this._authenticateWithOAuth(config.clientId, config.redirectUri);
+      return await this._authenticateWithOAuth(config.clientId, config.redirectUri, config.scope);
     }
 
     return false;
@@ -53,24 +53,45 @@ export class AuthService extends BaseService {
   /**
    * Authenticate using OAuth flow
    */
-  private async _authenticateWithOAuth(clientId: string, redirectUri: string): Promise<boolean> {
+  private async _authenticateWithOAuth(clientId: string, redirectUri: string, scope: string): Promise<boolean> {
     if (!isBrowser) {
       throw new Error('OAuth flow is only supported in browser environments');
     }
 
+    // Check if we have a stored code verifier indicating we're in an OAuth flow
+    const codeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    const isInOAuthFlow = codeVerifier !== null;
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
 
-    if (!code) {
-      // No authorization code present, so we need to initiate the flow.
-      // This will redirect the user.
-      await this._initiateOAuthFlow(clientId, redirectUri);
-      // This line is not expected to be reached.
-      return false;
-    } else {
-      // Authorization code is present, so we can exchange it for a token.
+    // If we're in an OAuth flow (server-controlled code verifier exists), handle the callback
+    if (isInOAuthFlow) {
+      // We're expecting a callback - validate parameters
+      if (!code) {
+        // Clear stored state on error
+        sessionStorage.removeItem('uipath_sdk_code_verifier');
+        throw new Error('Authorization code missing in OAuth callback');
+      }
+      
+      // Validate the authorization code format before using it
+      // OAuth authorization codes should be alphanumeric with some special characters
+      const codePattern = /^[A-Za-z0-9\-._~+/]+=*$/;
+      if (!codePattern.test(code)) {
+        // Clear stored state on error
+        sessionStorage.removeItem('uipath_sdk_code_verifier');
+        throw new Error('Invalid authorization code format');
+      }
+      
+      // Authorization code is present and validated, so we can exchange it for a token.
       await this._handleOAuthCallback(code, clientId, redirectUri);
       return this.hasValidToken();
+    } else {
+      // Not in an OAuth flow - initiate one
+      // Ignore any URL parameters that might be present
+      await this._initiateOAuthFlow(clientId, redirectUri, scope);
+      // This line is not expected to be reached due to redirect
+      return false;
     }
   }
 
@@ -159,7 +180,7 @@ export class AuthService extends BaseService {
     clientId: string;
     redirectUri: string;
     codeChallenge: string;
-    scope?: string;
+    scope: string;
     state?: string;
   }): string {
     const orgName = this.config.orgName;
@@ -170,7 +191,7 @@ export class AuthService extends BaseService {
       redirect_uri: params.redirectUri,
       code_challenge: params.codeChallenge,
       code_challenge_method: 'S256',
-      scope: params.scope || 'PIMS offline_access',
+      scope: params.scope + ' offline_access',
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
@@ -232,7 +253,7 @@ export class AuthService extends BaseService {
       .replace(/=/g, '');
   }
 
-  private async _initiateOAuthFlow(clientId: string, redirectUri: string): Promise<void> {
+  private async _initiateOAuthFlow(clientId: string, redirectUri: string, scope: string): Promise<void> {
     const codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
 
@@ -241,7 +262,8 @@ export class AuthService extends BaseService {
     const authUrl = this.getAuthorizationUrl({
       clientId,
       redirectUri,
-      codeChallenge
+      codeChallenge,
+      scope
     });
     
     window.location.href = authUrl;

@@ -44,18 +44,12 @@ export const TASK_ENDPOINTS = {
  * Data Fabric Service Endpoints
  */
 export const DATA_FABRIC_ENDPOINTS = {
-  BASE_PATH: 'datafabric_/api/EntityService',
   ENTITY: {
-    READ: (entityName: string) => `datafabric_/api/EntityService/${entityName}/read`,
-    QUERY_EXPANSION: (entityName: string) => `datafabric_/api/EntityService/${entityName}/query_expansion`,
-    BY_ID: {
-      READ: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/read`,
-      QUERY_EXPANSION: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/query_expansion`,
-    },
-  },
-  CHOICE_SET: {
-    GET_ALL: '/api/Entity/choiceset',
-    GET_BY_ID: (id: string) => `/api/Entity/choiceset/${id}`,
+    GET_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/read`,
+    GET_ENTITY_METADATA: (entityId: string) => `datafabric_/api/Entity/${entityId}`,
+    INSERT_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/insert-batch`,
+    UPDATE_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/update-batch`,
+    DELETE_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/delete-batch`,
   },
 } as const;
 
@@ -63,8 +57,12 @@ export const DATA_FABRIC_ENDPOINTS = {
  * Orchestrator Bucket Endpoints
  */
 export const BUCKET_ENDPOINTS = {
-  GET_ALL: '/odata/Buckets',
+  GET_BY_FOLDER: '/odata/Buckets',
+  GET_ALL: '/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders',
   GET_BY_ID: (id: number) => `/odata/Buckets(${id})`,
+  GET_FILE_META_DATA: (id: number) => `/api/Buckets/${id}/ListFiles`,
+  GET_READ_URI: (id: number) => `/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetReadUri`,
+  GET_WRITE_URI: (id: number) => `/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetWriteUri`,
 } as const;
 
 /**
@@ -82,13 +80,15 @@ export const IDENTITY_ENDPOINTS = {
 export const PROCESS_ENDPOINTS = {
   GET_ALL: '/odata/Releases',
   START_PROCESS: '/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs',
+  GET_BY_ID: (id: number) => `/odata/Releases(${id})`,
 } as const;
 
 /**
  * Orchestrator Queue Service Endpoints
  */
 export const QUEUE_ENDPOINTS = {
-  GET_ALL: '/odata/QueueDefinitions',
+  GET_BY_FOLDER: '/odata/QueueDefinitions',
+  GET_ALL: '/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueuesAcrossFolders',
   GET_BY_ID: (id: number) => `/odata/QueueDefinitions(${id})`,
 } as const;
 
@@ -96,5 +96,7 @@ export const QUEUE_ENDPOINTS = {
  * Orchestrator Asset Service Endpoints
  */
 export const ASSET_ENDPOINTS = {
-  GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered',
+  GET_BY_FOLDER: '/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered',
+  GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders',
+  GET_BY_ID: (id: number) => `/odata/Assets(${id})`,
 } as const;

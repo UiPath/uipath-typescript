@@ -1,0 +1,79 @@
+{
+  "name": "@uipath/cli",
+  "version": "1.0.0-beta.3",
+  "description": "UiPath CLI tool for authentication, packaging, publishing, and deployment",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "uipath": "./bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "prebuild": "npm run clean",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp -r src/assets dist/",
+    "dev": "npm run build && node bin/cli.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@oclif/core": "^4.0.7",
+    "@oclif/plugin-help": "^6.2.8",
+    "@oclif/plugin-plugins": "^5.4.7",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "chalk": "^5.3.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "form-data": "^4.0.0",
+    "fs-extra": "^11.3.1",
+    "inquirer": "^10.2.2",
+    "jsonwebtoken": "^9.0.2",
+    "jszip": "^3.10.1",
+    "node-fetch": "^3.3.2",
+    "open": "^10.2.0",
+    "ora": "^8.1.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@oclif/test": "^4.0.9",
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.11.19",
+    "@types/uuid": "^9.0.8",
+    "eslint": "^8.57.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.3.3"
+  },
+  "oclif": {
+    "bin": "uipath",
+    "dirname": "uipath",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "topicSeparator": " "
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UiPath/uipath-typescript.git",
+    "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

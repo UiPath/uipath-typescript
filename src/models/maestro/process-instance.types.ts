@@ -3,8 +3,6 @@
  * Types and interfaces for Maestro process instance management
  */
 
-import { PaginationOptions } from '../common';
-
 /**
  * Response for getting a single process instance
  */

@@ -1,4 +1,5 @@
-import { RequestOptions } from '../common/common-types';
+import { BaseOptions, RequestOptions } from '../common/common-types';
+import { PaginationOptions } from '../../utils/pagination';
 
 /**
  * Enum for Asset Value Scope
@@ -53,18 +54,17 @@ export interface AssetGetResponse {
   creatorUserId: number;
 }
 
-export type AssetGetAllOptions = RequestOptions;
+/**
+ * Options for getting assets across folders
+ */
+export type AssetGetAllOptions = RequestOptions & PaginationOptions & {
+  /**
+   * Optional folder ID to filter assets by folder
+   */
+  folderId?: number;
+}
 
 /**
- * Asset service model interface
+ * Options for getting a single asset by ID
  */
-export interface AssetServiceModel {
-  /**
-   * Gets all assets with optional query parameters
-   * 
-   * @param options - Query options
-   * @param folderId - Required folder ID
-   * @returns Promise resolving to an array of assets
-   */
-  getAll(folderId: number, options?: AssetGetAllOptions): Promise<AssetGetResponse[]>;
-}
+export type AssetGetByIdOptions = BaseOptions
