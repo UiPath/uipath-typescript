@@ -200,7 +200,7 @@ export class PaginationHelpers {
     
     // Transform items only if a transform function is provided
     const transformedItems = transformFn 
-      ? paginatedResponse.items.map(transformFn)
+      ? await Promise.all(paginatedResponse.items.map(transformFn))
       : paginatedResponse.items as unknown as R[];
     
     return {
@@ -254,7 +254,7 @@ export class PaginationHelpers {
     
     // Transform items if a transform function is provided
     const data = transformFn 
-      ? items.map(transformFn)
+      ? await Promise.all(items.map(transformFn))
       : items as unknown as R[];
       
     const totalCount = response.data?.[totalCountField];
