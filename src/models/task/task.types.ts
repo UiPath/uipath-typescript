@@ -64,7 +64,7 @@ export interface TaskSlaDetail {
 
 export interface TaskAssignment {
   assignee?: UserLoginInfo;
-  task?: TaskGetResponse;
+  task?: RawTaskGetResponse;
   id?: number;
 }
 
@@ -98,7 +98,7 @@ export interface TaskCreateRequest {
   priority?: TaskPriority;
 }
 
-export interface TaskCreateResponse extends TaskBaseResponse {
+export interface RawTaskCreateResponse extends TaskBaseResponse {
   waitJobState: JobState | null;
   assignedToUser: UserLoginInfo | null;
   taskSlaDetails: TaskSlaDetail[] | null;
@@ -107,7 +107,7 @@ export interface TaskCreateResponse extends TaskBaseResponse {
   processingTime: number | null;
 }
 
-export interface TaskGetResponse extends TaskBaseResponse {
+export interface RawTaskGetResponse extends TaskBaseResponse {
   isCompleted: boolean;
   encrypted: boolean;
   bulkFormLayoutId: number | null;

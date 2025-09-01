@@ -4,8 +4,6 @@ import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { 
   TaskCreateRequest, 
-  TaskCreateResponse, 
-  TaskGetResponse, 
   TaskAssignmentRequest,
   TasksAssignRequest,
   TasksUnassignRequest,
@@ -18,11 +16,13 @@ import {
   TaskGetFormOptions,
   UserLoginInfo,
   UserLoginInfoCollection,
-  TaskGetUsersOptions
+  TaskGetUsersOptions,
 } from '../../models/task/task.types';
 import {
-  Task,
-  TaskServiceModel
+  TaskServiceModel,
+  TaskGetResponse,
+  TaskCreateResponse,
+  createTaskWithMethods
 } from '../../models/task/task.models';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse, addPrefixToKeys } from '../../utils/transform';
 import { TaskStatusMap, TaskTimeMap } from '../../models/task/task.constants';
@@ -55,7 +55,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async create(task: TaskCreateRequest, folderId: number): Promise<Task<TaskCreateResponse>> {
+  async create(task: TaskCreateRequest, folderId: number): Promise<TaskCreateResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const externalTask = {
@@ -70,10 +70,8 @@ export class TaskService extends BaseService implements TaskServiceModel {
     );
     // Transform time fields for consistency
     const normalizedData = transformData(response.data, TaskTimeMap);
-    return new Task<TaskCreateResponse>(
-      transformApiResponse(normalizedData, { field: 'status', valueMap: TaskStatusMap }),
-      this
-    );
+    const transformedData = transformApiResponse(normalizedData, { field: 'status', valueMap: TaskStatusMap });
+    return createTaskWithMethods(transformedData, this) as TaskCreateResponse;
   }
 
   /**
@@ -128,7 +126,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * });
    * ```
    */
-  async getAll(options: TaskGetAllOptions = {}): Promise<Task<TaskGetResponse>[]> {
+  async getAll(options: TaskGetAllOptions = {}): Promise<TaskGetResponse[]> {
     const { folderId, ...restOptions } = options;
     
     let headers = {};
@@ -159,10 +157,10 @@ export class TaskService extends BaseService implements TaskServiceModel {
     );
     
     return transformedTasks.map(task => 
-      new Task<TaskGetResponse>(
+      createTaskWithMethods(
         transformApiResponse(task, { field: 'status', valueMap: TaskStatusMap }),
         this
-      )
+      ) as TaskGetResponse
     );
   }
 
@@ -182,7 +180,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * // If the task is a form task, it will automatically return form-specific data
    * ```
    */
-  async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<Task<TaskGetResponse>> {
+  async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<TaskGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     // prefix all keys in options
     const keysToPrefix = Object.keys(options);
@@ -203,10 +201,10 @@ export class TaskService extends BaseService implements TaskServiceModel {
       return this.getFormTaskById(id, folderId || transformedTask.organizationUnitId);
     }
     
-    return new Task<TaskGetResponse>(
+    return createTaskWithMethods(
       transformApiResponse(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
       this
-    );
+    ) as TaskGetResponse;
   }
 
   /**
@@ -407,7 +405,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * @param options - Optional query parameters
    * @returns Promise resolving to the form task
    */
-  private async getFormTaskById(id: number, folderId: number, options: TaskGetFormOptions = {}): Promise<Task<TaskGetResponse>> {
+  private async getFormTaskById(id: number, folderId: number, options: TaskGetFormOptions = {}): Promise<TaskGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const response = await this.get<TaskGetResponse>(
@@ -421,9 +419,9 @@ export class TaskService extends BaseService implements TaskServiceModel {
       }
     );
     const transformedFormTask = transformData(response.data, TaskTimeMap);
-    return new Task<TaskGetResponse>(
+    return createTaskWithMethods(
       transformApiResponse(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
       this
-    );
+    ) as TaskGetResponse;
   }
 } 
