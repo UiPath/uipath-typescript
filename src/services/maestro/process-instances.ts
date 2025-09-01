@@ -4,11 +4,13 @@ import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { 
   ProcessInstanceGetAllResponse, 
-  ProcessInstanceGetResponse, 
+  ProcessInstanceGetResponse as RawProcessInstanceGetResponse,
   ProcessInstanceGetAllOptions, 
   ProcessInstanceOperationRequest,
   ProcessInstanceExecutionHistoryResponse,
-  ProcessInstancesServiceModel
+  ProcessInstancesServiceModel,
+  ProcessInstanceGetResponse,
+  createProcessInstanceWithMethods
 } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
@@ -53,39 +55,48 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * });
    * ```
    */
-  async getAll(options?: ProcessInstanceGetAllOptions): Promise<ProcessInstanceGetResponse[]> {
+  async getAll(options?: ProcessInstanceGetAllOptions): Promise<RawProcessInstanceGetResponse[]> {
     const response = await this.get<ProcessInstanceGetAllResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_ALL, {
       params: options as Record<string, string | number>
     });
     
     return response.data?.instances?.map(instanceData => 
-      transformData(instanceData, ProcessInstanceMap) as ProcessInstanceGetResponse
+      transformData(instanceData, ProcessInstanceMap) as RawProcessInstanceGetResponse
     ) || [];
   }
 
   /**
-   * Get a process instance by ID
-   * Authorized via Jobs.View folder permission
-   * @param instanceId The ID of the instance to retrieve
-   * @param folderKey The folder key for authorization
-   * @returns Promise<GetInstanceResponse>
+   * Get all process instances with operation methods (cancel, pause, resume)
+   * @param options Query parameters for filtering instances and pagination
+   * @returns Promise<ProcessInstanceGetResponse[]> Array of ProcessInstance objects with helper methods
    */
-  private async _getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse> {
-    const response = await this.get<ProcessInstanceGetResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(id), {
-      headers: createHeaders({ [FOLDER_KEY]: folderKey })
-    });
-    return response.data;
+  async getAllWithMethods(options?: ProcessInstanceGetAllOptions): Promise<ProcessInstanceGetResponse[]> {
+    const rawInstances = await this.getAll(options);
+    return rawInstances.map(instance => createProcessInstanceWithMethods(instance, this));
   }
 
   /**
-   * Get a process instance by ID and return a ProcessInstance object with helper methods
+   * Get a process instance by ID (raw data without methods)
    * @param instanceId The ID of the instance to retrieve
    * @param folderKey The folder key for authorization
-   * @returns Promise<ProcessInstance>
+   * @returns Promise<RawProcessInstanceGetResponse>
    */
-  async getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse> {
-    const response = await this._getById(id, folderKey);
-    return transformData(response, ProcessInstanceMap) as ProcessInstanceGetResponse;
+  async getById(id: string, folderKey: string): Promise<RawProcessInstanceGetResponse> {
+    const response = await this.get<RawProcessInstanceGetResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(id), {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
+    });
+    return transformData(response.data, ProcessInstanceMap) as RawProcessInstanceGetResponse;
+  }
+
+  /**
+   * Get a process instance by ID with operation methods (cancel, pause, resume)
+   * @param instanceId The ID of the instance to retrieve
+   * @param folderKey The folder key for authorization
+   * @returns Promise<ProcessInstanceGetResponse>
+   */
+  async getByIdWithMethods(id: string, folderKey: string): Promise<ProcessInstanceGetResponse> {
+    const rawInstance = await this.getById(id, folderKey);
+    return createProcessInstanceWithMethods(rawInstance, this);
   }
 
   /**

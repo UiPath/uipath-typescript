@@ -6,7 +6,7 @@
 /**
  * Response for getting a single process instance
  */
-export interface ProcessInstanceGetResponse {
+export interface RawProcessInstanceGetResponse {
   instanceId: string;
   packageKey: string;
   packageId: string;
@@ -28,7 +28,7 @@ export interface ProcessInstanceGetResponse {
  * Response for getting all process instances
  */
 export interface ProcessInstanceGetAllResponse {
-  instances: ProcessInstanceGetResponse[];
+  instances: RawProcessInstanceGetResponse[];
   nextPage: string | null;
   hasMoreResults: boolean;
 }
