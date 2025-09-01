@@ -142,4 +142,35 @@ export interface PaginationDetectionInfo {
   currentPage: number;
   itemsCount: number;
   continuationToken?: string;
+}
+
+/**
+ * Configuration for centralized getAll implementations
+ */
+export interface GetAllConfig<TRaw, TTransformed = TRaw> {
+  /** Service access for making API calls */
+  serviceAccess: PaginationServiceAccess;
+  
+  /** Endpoint function for getting all items (takes optional folderId) */
+  getEndpoint: (folderId?: number) => string;
+  
+  /** Alternative endpoint for folder-specific queries (optional) */
+  getByFolderEndpoint?: string;
+  
+  /** Function to transform raw API items to client format */
+  transformFn: (item: TRaw) => TTransformed;
+  
+  /** Pagination configuration */
+  pagination?: {
+    paginationType?: PaginationType;
+    itemsField?: string;
+    totalCountField?: string;
+    continuationTokenField?: string;
+  };
+  
+  /** Custom parameter processing function */
+  processParameters?: (options: Record<string, any>, folderId?: number) => Record<string, any>;
+  
+  /** Keys to exclude from ODATA prefix transformation */
+  excludeFromPrefix?: string[];
 } 

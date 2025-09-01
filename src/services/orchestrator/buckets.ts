@@ -142,48 +142,21 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       ? PaginatedResponse<BucketGetResponse>
       : NonPaginatedResponse<BucketGetResponse>
   > {
-    const { folderId, ...restOptions } = options || {};
-    const cursor = options?.cursor;
-    const pageSize = options?.pageSize;
-    const jumpToPage = options?.jumpToPage;
-    
-    // Determine if pagination is requested
-    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
-    
-    // Use the transformation function for buckets
+    // Transformation function for buckets
     const transformBucket = (bucket: any) => 
       pascalToCamelCaseKeys(bucket) as BucketGetResponse;
-    
-    // Paginated flow
-    if (isPaginationRequested) {
-      return PaginationHelpers.getAllPaginated<any, BucketGetResponse>({
-        serviceAccess: this.createPaginationServiceAccess(),
-        getEndpoint: (folderId) => folderId ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL,
-        folderId,
-        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
-        additionalParams: restOptions,
-        transformFn: transformBucket,
-        options: {
-          paginationType: PaginationType.ODATA,
-          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
-        }
-      }) as any; // Type assertion needed due to conditional return
-    }
-    
-    // Non-paginated flow
-    return PaginationHelpers.getAllNonPaginated<any, BucketGetResponse>({
+
+    return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getAllEndpoint: BUCKET_ENDPOINTS.GET_ALL,
+      getEndpoint: (folderId) => folderId ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL,
       getByFolderEndpoint: BUCKET_ENDPOINTS.GET_BY_FOLDER,
-      folderId,
-      additionalParams: restOptions,
       transformFn: transformBucket,
-      options: {
+      pagination: {
+        paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
         totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
       }
-    }) as any;
+    }, options) as any;
   }
 
   /**

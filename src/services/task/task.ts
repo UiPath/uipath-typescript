@@ -121,47 +121,24 @@ export class TaskService extends BaseService implements TaskServiceModel {
       ? PaginatedResponse<UserLoginInfo>
       : NonPaginatedResponse<UserLoginInfo>
   > {
-    const cursor = options?.cursor;
-    const pageSize = options?.pageSize;
-    const jumpToPage = options?.jumpToPage;
-    
-    // Determine if pagination is requested
-    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
-    
-    // Use the transformation function for users
+    // Transformation function for users
     const transformUser = (user: any) => 
       pascalToCamelCaseKeys(user) as UserLoginInfo;
-    
-    // Paginated flow
-    if (isPaginationRequested) {
-      return PaginationHelpers.getAllPaginated<any, UserLoginInfo>({
-        serviceAccess: this.createPaginationServiceAccess(),
-        getEndpoint: () => TASK_ENDPOINTS.GET_TASK_USERS(folderId),
-        folderId: undefined, // Not used since endpoint already includes folderId
-        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
-        additionalParams: options || {},
-        transformFn: transformUser,
-        options: {
-          paginationType: PaginationType.ODATA,
-          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
-        }
-      }) as any; // Type assertion needed due to conditional return
-    }
-    
-    // Non-paginated flow
-    return PaginationHelpers.getAllNonPaginated<any, UserLoginInfo>({
+
+    // Add folderId to options so the centralized helper can handle it properly
+    const optionsWithFolder = { ...options, folderId };
+
+    return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getAllEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId),
-      getByFolderEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId), // Same endpoint
-      folderId: undefined, // Not used since endpoint already includes folderId
-      additionalParams: options || {},
+      getEndpoint: (folderId) => TASK_ENDPOINTS.GET_TASK_USERS(folderId!), // Use folderId from centralized helper
+      getByFolderEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId), // Use the passed folderId
       transformFn: transformUser,
-      options: {
+      pagination: {
+        paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
         totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
       }
-    }) as any;
+    }, optionsWithFolder) as any;
   }
   
   /**
@@ -206,14 +183,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
       ? PaginatedResponse<TaskGetResponse>
       : NonPaginatedResponse<TaskGetResponse>
   > {
-    const { folderId, ...restOptions } = options || {};
-    const cursor = options?.cursor;
-    const pageSize = options?.pageSize;
-    const jumpToPage = options?.jumpToPage;
-    
-    // Determine if pagination is requested
-    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
-    
     // Transformation function for tasks
     const transformTask = (task: any) => {
       const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskTimeMap);
@@ -222,51 +191,33 @@ export class TaskService extends BaseService implements TaskServiceModel {
         this
       ) as TaskGetResponse;
     };
-    
-    // Handle folder filtering
-    const processedOptions = { ...restOptions };
-    if (folderId) {
-      if (processedOptions.filter) {
-        processedOptions.filter = `${processedOptions.filter} and organizationUnitId eq ${folderId}`;
-      } else {
-        processedOptions.filter = `organizationUnitId eq ${folderId}`;
-      }
-    }
-    
-    // prefix all keys except 'event'
-    const keysToPrefix = Object.keys(processedOptions).filter(k => k !== 'event');
-    const prefixedOptions = addPrefixToKeys(processedOptions, ODATA_PREFIX, keysToPrefix);
-    
-    // Paginated flow
-    if (isPaginationRequested) {
-      return PaginationHelpers.getAllPaginated<any, TaskGetResponse>({
-        serviceAccess: this.createPaginationServiceAccess(),
-        getEndpoint: () => TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
-        folderId: undefined, // Not used since we handle folder filtering through the filter parameter
-        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
-        additionalParams: prefixedOptions,
-        transformFn: transformTask,
-        options: {
-          paginationType: PaginationType.ODATA,
-          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+
+    // Custom parameter processing for tasks (handles folder filtering)
+    const processParameters = (restOptions: Record<string, any>, folderId?: number) => {
+      const processedOptions = { ...restOptions };
+      if (folderId) {
+        // Create or add to existing filter for folder-specific queries
+        if (processedOptions.filter) {
+          processedOptions.filter = `${processedOptions.filter} and organizationUnitId eq ${folderId}`;
+        } else {
+          processedOptions.filter = `organizationUnitId eq ${folderId}`;
         }
-      }) as any; // Type assertion needed due to conditional return
-    }
-    
-    // Non-paginated flow
-    return PaginationHelpers.getAllNonPaginated<any, TaskGetResponse>({
+      }
+      return processedOptions;
+    };
+
+    return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getAllEndpoint: TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
-      getByFolderEndpoint: TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS, // Same endpoint
-      folderId: undefined, // Not used since we handle folder filtering through the filter parameter
-      additionalParams: prefixedOptions,
+      getEndpoint: () => TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
       transformFn: transformTask,
-      options: {
+      processParameters,
+      excludeFromPrefix: ['event'], // Exclude 'event' key from ODATA prefix transformation
+      pagination: {
+        paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
         totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
       }
-    }) as any;
+    }, options) as any;
   }
 
   /**

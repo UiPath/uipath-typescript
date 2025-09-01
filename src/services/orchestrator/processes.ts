@@ -76,48 +76,21 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
       ? PaginatedResponse<ProcessGetResponse>
       : NonPaginatedResponse<ProcessGetResponse>
   > {
-    const { folderId, ...restOptions } = options || {};
-    const cursor = options?.cursor;
-    const pageSize = options?.pageSize;
-    const jumpToPage = options?.jumpToPage;
-    
-    // Determine if pagination is requested
-    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
-    
-    // Use the transformation function for processes
+    // Transformation function for processes
     const transformProcess = (process: any) => 
       transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap);
-    
-    // Paginated flow
-    if (isPaginationRequested) {
-      return PaginationHelpers.getAllPaginated<any, ProcessGetResponse>({
-        serviceAccess: this.createPaginationServiceAccess(),
-        getEndpoint: () => PROCESS_ENDPOINTS.GET_ALL,
-        folderId,
-        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
-        additionalParams: restOptions,
-        transformFn: transformProcess,
-        options: {
-          paginationType: PaginationType.ODATA,
-          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
-        }
-      }) as any; // Type assertion needed due to conditional return
-    }
-    
-    // Non-paginated flow
-    return PaginationHelpers.getAllNonPaginated<any, ProcessGetResponse>({
+
+    return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getAllEndpoint: PROCESS_ENDPOINTS.GET_ALL,
-      getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL, // Use same endpoint as processes don't have folder-specific endpoint
-      folderId,
-      additionalParams: restOptions,
+      getEndpoint: () => PROCESS_ENDPOINTS.GET_ALL,
+      getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL, // Processes use same endpoint for both
       transformFn: transformProcess,
-      options: {
+      pagination: {
+        paginationType: PaginationType.ODATA,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
         totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
       }
-    }) as any;
+    }, options) as any;
   }
 
   /**
