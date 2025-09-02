@@ -17,3 +17,14 @@ export const ODATA_PAGINATION = {
   /** Default field name for total count in a paginated OData response */
   TOTAL_COUNT_FIELD: '@odata.count'
 };
+
+/**
+ * Entity pagination constants for Data Fabric entities
+ */
+export const ENTITY_PAGINATION = {
+  /** Field name for items in entity response */
+  ITEMS_FIELD: 'value',
+  
+  /** Field name for total count in entity response */
+  TOTAL_COUNT_FIELD: 'totalRecordCount'
+};
