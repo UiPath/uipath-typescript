@@ -1,4 +1,5 @@
 import { BaseOptions, CollectionResponse, RequestOptions } from "../common/common-types";
+import { PaginationOptions } from '../../utils/pagination';
 import { JobState } from "../common/common-types";
 
 export interface UserLoginInfo {
@@ -177,9 +178,12 @@ export type TaskCompleteOptions =
   | { type: Exclude<TaskType, TaskType.External>; data: any; action: string }; 
 
 /**
- * Query options for getting all tasks
+ * Options for getting tasks across folders
  */
-export interface TaskGetAllOptions extends RequestOptions {
+export type TaskGetAllOptions = RequestOptions & PaginationOptions & {
+  /**
+   * Optional folder ID to filter tasks by folder
+   */
   folderId?: number;
 }
 
@@ -196,9 +200,9 @@ export interface TaskGetFormOptions {
 }
 
 /**
- * Query options for getting task users
+ * Options for getting users with task permissions
  */
-export type TaskGetUsersOptions = RequestOptions;
+export type TaskGetUsersOptions = RequestOptions & PaginationOptions;
 
 /**
  * Collection response for user login info
