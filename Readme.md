@@ -24,7 +24,7 @@ const sdk = new UiPath({
 });
 
 // Use the services
-const processes = await sdk.maestro.process.getAll();
+const processes = await sdk.maestro.processes.getAll();
 const tasks = await sdk.task.getAll();
 ```
 

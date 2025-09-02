@@ -17,20 +17,12 @@ export interface RawProcessInstanceGetResponse {
   folderKey: string;
   userId: number;
   instanceDisplayName: string;
+  startedByUser: string;
   source: string;
-  creatorUserKey: string | null;
-  startedTime: string | null;
+  creatorUserKey: string;
+  startedTime: string;
   completedTime: string | null;
-  instanceRuns: InstanceRun[];
-}
-
-/**
- * Response for getting all process instances
- */
-export interface ProcessInstanceGetAllResponse {
-  instances: RawProcessInstanceGetResponse[];
-  nextPage: string | null;
-  hasMoreResults: boolean;
+  instanceRuns: ProcessInstanceRun[];
 }
 
 
@@ -48,26 +40,8 @@ export interface ProcessInstanceGetAllOptions {
 /**
  * Request for process instance operations (cancel, pause, resume)
  */
-export interface ProcessInstanceOperationRequest {
-  comment?: string | null;
-}
-
-/**
- * Process instance source enum
- */
-export enum ProcessInstanceSource {
-  One = '1',
-  Two = '2'
-}
-
-/**
- * Process instance span status enum
- */
-export enum ProcessInstanceExecutionStatus {
-  Unset = 'Unset',
-  Ok = 'Ok',
-  Error = 'Error',
-  Unspecified = 'Unspecified'
+export interface ProcessInstanceOperationOptions {
+  comment?: string;
 }
 
 /**
@@ -77,27 +51,24 @@ export interface ProcessInstanceExecutionHistoryResponse {
   id: string;
   traceId: string;
   parentId: string | null;
-  name: string | null;
-  startTime: string;
+  name: string;
+  startedTime: string;
   endTime: string | null;
   attributes: string | null;
-  status: ProcessInstanceExecutionStatus;
-  createdTime?: string;
+  createdTime: string;
   updatedTime?: string;
-  organizationId: string;
-  tenantId: string | null;
   expiredTime: string | null;
-  folderKey: string | null;
-  source: ProcessInstanceSource;
+  // TO Do: Add status and attributes interface
 }
 
 /**
  * Process Instance run
  */
-export interface InstanceRun {
+export interface ProcessInstanceRun {
   runId: string;
   status: string;
   startedTime: string;
   completedTime: string;
-  properties: Record<string, unknown>;
 }
+
+export type BpmnXmlString = string;

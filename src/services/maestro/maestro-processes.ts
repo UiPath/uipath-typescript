@@ -1,4 +1,4 @@
-import { MaestroProcessGetAllResponse, RawMaestroProcessGetAllResponse } from '../../models/maestro';
+import { MaestroProcessGetAllResponse } from '../../models/maestro';
 import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
@@ -30,16 +30,12 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *   console.log(`Faulted instances: ${process.faultedCount}`);
    * }
    * 
-   * // Get instances for a specific process
-   * const instances = await sdk.maestro.processes.instances.getAll({ 
-   *   processKey: processes[0].processKey 
-   * });
    * ```
    */
   async getAll(): Promise<MaestroProcessGetAllResponse[]> {
-    const response = await this.get<RawMaestroProcessGetAllResponse>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
+    const response = await this.get<MaestroProcessGetAllResponse[]>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
     
-    // Return the processes with null safety
-    return response.data?.processes || [];
+    // Return the data directly with null safety
+    return response.data || [];
   }
 } 

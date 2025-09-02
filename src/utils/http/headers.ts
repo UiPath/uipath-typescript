@@ -1,4 +1,4 @@
-import { FOLDER_ID, CONTENT_TYPES } from "../constants/headers";
+import { FOLDER_ID } from "../constants/headers";
 
 /**
  * Creates headers object from key-value pairs
@@ -14,7 +14,7 @@ import { FOLDER_ID, CONTENT_TYPES } from "../constants/headers";
  * const headers = createHeaders({
  *   'X-UIPATH-FolderKey': '1234567890',
  *   'X-UIPATH-OrganizationUnitId': 123,
- *   'Accept': CONTENT_TYPES.JSON
+ *   'Accept': 'application/json'
  * });
  * 
  * // Using constants

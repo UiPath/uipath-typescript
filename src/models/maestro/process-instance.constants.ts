@@ -8,3 +8,10 @@ export const ProcessInstanceMap: { [key: string]: string } = {
   createdAt: 'createdTime',
   updatedAt: 'updatedTime'
 };
+
+/**
+ * Maps fields for Process Instance Execution History to ensure consistent naming
+ */
+export const ProcessInstanceExecutionHistoryMap: { [key: string]: string } = {
+  startTime: 'startedTime'
+};
