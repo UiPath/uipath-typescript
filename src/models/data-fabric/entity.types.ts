@@ -1,7 +1,7 @@
 /**
  * Entity field type names 
  */
-export enum EntityFieldType {
+export enum EntityFieldDataType {
   UUID = 'UUID',
   STRING = 'STRING',
   INTEGER = 'INTEGER',
@@ -14,14 +14,6 @@ export enum EntityFieldType {
   BOOLEAN = 'BOOLEAN',
   BIG_INTEGER = 'BIG_INTEGER',
   MULTILINE_TEXT = 'MULTILINE_TEXT'
-}
-
-/**
- * Field information with name and type
- */
-export interface EntityFieldMetaData {
-  name: string;
-  type: EntityFieldType;
 }
 
 /**
@@ -40,18 +32,9 @@ export interface EntityRecord {
 }
 
 /**
- * Interface for getById response
- */
-export interface RawEntityGetByIdResponse {
-  id: string,
-  data: EntityRecord[];
-  fields: EntityFieldMetaData[];
-}
-
-/**
  * Options for getting an entity by Id
  */
-export interface EntityGetByIdOptions {
+export interface EntityGetRecordsByIdOptions {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
 }
@@ -118,3 +101,189 @@ export type EntityUpdateResponse = EntityOperationResponse;
  * Response from deleting data from an entity
  */
 export type EntityDeleteResponse = EntityOperationResponse;
+
+/**
+ * Entity type enum
+ */
+export enum EntityType {
+  Entity = 'Entity',
+  ChoiceSet = 'ChoiceSet',
+  InternalEntity = 'InternalEntity',
+  SystemEntity = 'SystemEntity'
+}
+
+/**
+ * Field type metadata
+ */
+export interface FieldDataType {
+  name: EntityFieldDataType;
+  lengthLimit?: number;
+  maxValue?: number;
+  minValue?: number;
+  decimalPrecision?: number;
+}
+
+/**
+ * Reference types for fields
+ */
+export enum ReferenceType {
+  ManyToOne = 'ManyToOne'
+}
+
+/**
+ * Field display types
+ */
+export enum FieldDisplayType {
+  Basic = 'Basic',
+  Relationship = 'Relationship',
+  File = 'File',
+  ChoiceSetSingle = 'ChoiceSetSingle',
+  ChoiceSetMultiple = 'ChoiceSetMultiple',
+  AutoNumber = 'AutoNumber'
+}
+
+/**
+ * Data direction type for external fields
+ */
+export enum DataDirectionType {
+  ReadOnly = 'ReadOnly',
+  ReadAndWrite = 'ReadAndWrite'
+}
+
+/**
+ * Join type for source join criteria
+ */
+export enum JoinType {
+  LeftJoin = 'LeftJoin'
+}
+
+/**
+ * Field reference with ID
+ */
+export interface Field {
+  id: string;
+  definition?: FieldMetaData;
+}
+
+/**
+ * Detailed field definition
+ */
+export interface FieldMetaData {
+  id: string;
+  name: string;
+  isPrimaryKey: boolean;
+  isForeignKey: boolean;
+  isExternalField: boolean;
+  isHiddenField: boolean;
+  isUnique: boolean;
+  referenceName?: string;
+  referenceEntity?: RawEntityGetByIdResponse;
+  referenceChoiceSet?: RawEntityGetByIdResponse;
+  referenceField?: Field;
+  referenceType: ReferenceType;
+  fieldDataType: FieldDataType;
+  isRequired: boolean;
+  displayName: string;
+  description: string;
+  createdTime: string;
+  createdBy: string;
+  updatedTime: string;
+  updatedBy?: string;
+  isSystemField: boolean;
+  fieldDisplayType?: FieldDisplayType;
+  choiceSetId?: string;
+  defaultValue?: string;
+  isAttachment: boolean;
+  isRbacEnabled: boolean;
+}
+
+/**
+ * External object details
+ */
+export interface ExternalObject {
+  id: string;
+  externalObjectName?: string;
+  externalObjectDisplayName?: string;
+  primaryKey?: string;
+  externalConnectionId: string;
+  entityId?: string;
+  isPrimarySource: boolean;
+}
+
+/**
+ * External connection details
+ */
+export interface ExternalConnection {
+  id: string;
+  connectionId: string;
+  elementInstanceId: number;
+  folderKey: string;
+  connectorKey?: string;
+  connectorName?: string;
+  connectionName?: string;
+}
+
+/**
+ * External field mapping
+ */
+export interface ExternalFieldMapping {
+  id: string;
+  externalFieldName?: string;
+  externalFieldDisplayName?: string;
+  externalObjectId: string;
+  externalFieldType?: string;
+  internalFieldId: string;
+  directionType: DataDirectionType;
+}
+
+/**
+ * External field
+ */
+export interface ExternalField {
+  fieldMetaData: FieldMetaData;
+  externalFieldMappingDetail: ExternalFieldMapping;
+}
+
+/**
+ * External source fields
+ */
+export interface ExternalSourceFields {
+  fields?: ExternalField[];
+  externalObjectDetail?: ExternalObject;
+  externalConnectionDetail?: ExternalConnection;
+}
+
+/**
+ * Source join criteria
+ */
+export interface SourceJoinCriteria {
+  id: string;
+  entityId: string;
+  joinFieldName?: string;
+  joinType: JoinType;
+  relatedSourceObjectId?: string;
+  relatedSourceFieldName?: string;
+}
+
+/**
+ * Entity metadata returned by getById
+ */
+export interface RawEntityGetByIdResponse {
+  name: string;
+  displayName: string;
+  entityType: EntityType;
+  description: string;
+  fields: FieldMetaData[];
+  externalFields?: ExternalSourceFields[];
+  sourceJoinCriterias?: SourceJoinCriteria[];
+  recordCount?: number;
+  storageSizeInMB?: number;
+  usedStorageSizeInMB?: number;
+  attachmentSizeInByte?: number;
+  isRbacEnabled: boolean;
+  id: string;
+  createdBy: string;
+  createdTime: string;
+  updatedTime?: string;
+  updatedBy?: string;
+}

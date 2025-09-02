@@ -1,13 +1,13 @@
 import { 
-  EntityGetByIdOptions, 
-  RawEntityGetByIdResponse, 
+  EntityGetRecordsByIdOptions, 
   EntityInsertOptions, 
   EntityInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
   EntityDeleteResponse,
-  EntityRecord
+  EntityRecord,
+  RawEntityGetByIdResponse
 } from './entity.types';
 
 /**
@@ -15,13 +15,21 @@ import {
  */
 export interface EntityServiceModel {
   /**
-   * Gets entity data by entity ID
+   * Gets entity metadata by entity ID with attached operation methods
+   * 
+   * @param id - UUID of the entity
+   * @returns Promise resolving to entity metadata with operation methods
+   */
+  getById(id: string): Promise<EntityGetByIdResponse>;
+
+  /**
+   * Gets entity records by entity ID
    * 
    * @param id - UUID of the entity
    * @param options - Query options
    * @returns Promise resolving to query response
    */
-  getById(id: string, options?: EntityGetByIdOptions): Promise<EntityGetByIdResponse>;
+  getRecordsById(id: string, options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]>;
 
   /**
    * Inserts data into an entity by entity ID
@@ -85,56 +93,67 @@ export interface EntityMethods {
    * @returns Promise resolving to delete response
    */
   delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Get records from this entity
+   * 
+   * @param options - Query options
+   * @returns Promise resolving to array of entity records
+   */
+  getRecords(options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]>;
 }
 
 /**
- * Entity type combining data with operational methods
+ * Entity with methods combining metadata with operation methods
  */
 export type EntityGetByIdResponse = RawEntityGetByIdResponse & EntityMethods;
 
 /**
  * Creates entity methods that can be attached to entity data
  * 
- * @param entityData - The entity data from API response
- * @param id - The entity ID
+ * @param entityData - The entity metadata
  * @param service - The entity service instance
  * @returns Object containing entity methods
  */
 function createEntityMethods(entityData: RawEntityGetByIdResponse, service: EntityServiceModel): EntityMethods {
   return {
     async insert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse> {
-      if (!entityData.id) throw new Error('Task ID is undefined');
+      if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.insertById(entityData.id, data, options);
     },
 
     async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
-      if (!entityData.id) throw new Error('Task ID is undefined');
+      if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.updateById(entityData.id, data, options);
     },
 
     async delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse> {
-      if (!entityData.id) throw new Error('Task ID is undefined');
+      if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.deleteById(entityData.id, recordIds, options);
+    },
+
+    async getRecords(options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      
+      return service.getRecordsById(entityData.id, options);
     }
   };
 }
 
 /**
- * Creates an actionable entity by combining API entity data with operational methods
+ * Creates an actionable entity metadata by combining entity with operational methods
  * 
- * @param entityData - The entity data from API
- * @param id - The entity ID
+ * @param entityData - Entity metadata
  * @param service - The entity service instance
- * @returns An entity object with added methods
+ * @returns Entity metadata with added methods
  */
 export function createEntityWithMethods(
-  entityData: RawEntityGetByIdResponse,
-  id: string, 
+  entityData: RawEntityGetByIdResponse, 
   service: EntityServiceModel
 ): EntityGetByIdResponse {
   const methods = createEntityMethods(entityData, service);
-  return Object.assign({}, entityData, methods, { id }) as EntityGetByIdResponse;
+  return Object.assign({}, entityData, methods) as EntityGetByIdResponse;
 }

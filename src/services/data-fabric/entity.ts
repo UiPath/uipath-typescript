@@ -4,22 +4,21 @@ import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { EntityServiceModel, EntityGetByIdResponse, createEntityWithMethods } from '../../models/data-fabric/entity.models';
 import {
-  RawEntityGetByIdResponse,
-  EntityGetByIdOptions,
-  EntityFieldMetaData,
+  EntityGetRecordsByIdOptions,
   EntityInsertOptions,
   EntityInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
   EntityDeleteResponse,
-  EntityRecord
+  EntityRecord,
+  RawEntityGetByIdResponse,
+  EntityFieldDataType
 } from '../../models/data-fabric/entity.types';
-import { EntityMetadataResponse } from '../../models/data-fabric/entity.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createParams } from '../../utils/http/params';
-import { transformData, pascalToCamelCaseKeys } from '../../utils/transform';
-import { EntityMap, EntityFieldTypeMap, SqlFieldType } from '../../models/data-fabric/entity.constants';
+import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
+import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entity.constants';
 
 /**
  * Service for interacting with the Data Fabric Entity API
@@ -30,54 +29,153 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Gets entity data by entity ID
+   * Gets entity metadata by entity ID with attached operation methods
+   * 
+   * @param id - UUID of the entity
+   * @returns Promise resolving to entity metadata with schema information and operation methods
+   * 
+   * @example
+   * ```typescript
+   * // Get entity metadata with methods
+   * const entity = await sdk.entity.getById("<entityId>");
+   * 
+   * // Call operations directly on the entity
+   * const records = await entity.getRecords();
+   * 
+   * const insertResult = await entity.insert([
+   *   { name: "John", age: 30 }
+   * ]);
+   * ```
+   */
+  async getById(id: string): Promise<EntityGetByIdResponse> {
+    // Get entity metadata
+    const response = await this.get<RawEntityGetByIdResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id)
+    );
+    
+    // Convert PascalCase keys to camelCase and apply EntityMap transformations
+    const metadata = transformData(pascalToCamelCaseKeys(response.data) as RawEntityGetByIdResponse, EntityMap)
+    
+    // Transform metadata with field mappers
+    this.applyFieldMappings(metadata);
+    
+    // Return the entity metadata with methods attached
+    return createEntityWithMethods(metadata, this);
+  }
+
+  /**
+   * Orchestrates all field mapping transformations
+   * 
+   * @param metadata - Entity metadata to transform
+   * @private
+   */
+  private applyFieldMappings(metadata: RawEntityGetByIdResponse): void {
+    this.mapFieldTypes(metadata);
+    this.mapExternalFields(metadata);
+  }
+
+  /**
+   * Maps SQL field types to friendly EntityFieldTypes
+   * 
+   * @param metadata - Entity metadata with fields
+   * @private
+   */
+  private mapFieldTypes(metadata: RawEntityGetByIdResponse): void {
+    if (!metadata.fields?.length) return;
+    
+    metadata.fields = metadata.fields.map(field => {
+      // Rename sqlType to fieldDataType
+      let transformedField = transformData(field, EntityMap);
+      
+      // Map SQL field type to friendly name
+      if (transformedField.fieldDataType?.name) {
+        const sqlTypeName = transformedField.fieldDataType.name as unknown as SqlFieldType;
+        if (EntityFieldTypeMap[sqlTypeName]) {
+          transformedField.fieldDataType.name = EntityFieldTypeMap[sqlTypeName] as unknown as EntityFieldDataType;
+        }
+      }
+      
+      this.transformNestedReferences(transformedField);
+      
+      return transformedField;
+    });
+  }
+
+  /**
+   * Transforms nested reference objects in field metadata
+   */
+  private transformNestedReferences(field: any): void {
+    if (field.referenceEntity) {
+      field.referenceEntity = transformData(field.referenceEntity, EntityMap);
+    }
+    if (field.referenceChoiceSet) {
+      field.referenceChoiceSet = transformData(field.referenceChoiceSet, EntityMap);
+    }
+    if (field.referenceField?.definition) {
+      field.referenceField.definition = transformData(field.referenceField.definition, EntityMap);
+    }
+  }
+
+  /**
+   * Maps external field names to consistent naming
+   * 
+   * @param metadata - Entity metadata with externalFields
+   * @private
+   */
+  private mapExternalFields(metadata: RawEntityGetByIdResponse): void {
+    if (!metadata.externalFields?.length) return;
+    
+    metadata.externalFields = metadata.externalFields.map(externalSource => {
+      if (externalSource.fields?.length) {
+        externalSource.fields = externalSource.fields.map(field => {
+          const transformedField = transformData(field, EntityMap);
+          if (transformedField.fieldMetaData) {
+            transformedField.fieldMetaData = transformData(transformedField.fieldMetaData, EntityMap);
+            this.transformNestedReferences(transformedField.fieldMetaData);
+          }
+          return transformedField;
+        });
+      }
+      return externalSource;
+    });
+  }
+
+  /**
+   * Gets entity records by entity ID
    * 
    * @param entityId - UUID of the entity
-   * @param options - Query options including start, limit, and expansionLevel
-   * @returns Promise resolving to an Entity instance
+   * @param options - Query options including expansionLevel
+   * @returns Promise resolving to an array of entity records
    * 
    * @example
    * ```typescript
    * // Basic usage
-   * const entity = await sdk.entity.getById(<entityId>);
+   * const records = await sdk.entity.getRecordsById(<entityId>);
    * 
    * // With expansion level
-   * const entity = await sdk.entity.getById(<entityId>, {
+   * const records = await sdk.entity.getRecordsById(<entityId>, {
    *   expansionLevel: 1
    * });
    * ```
    */
-  async getById(id: string, options: EntityGetByIdOptions = {}): Promise<EntityGetByIdResponse> {
+  async getRecordsById(id: string, options: EntityGetRecordsByIdOptions = {}): Promise<EntityRecord[]> {
     const params = createParams({
       expansionLevel: options.expansionLevel
     });
 
-    // Get entity data
+    // Get entity records
     const response = await this.get<Record<string, unknown>>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id),
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(id),
       {
         params,
         ...options
       }
     );
 
-    // Get entity fields
-    const fields = await this._getEntityFields(id);
-
     // Convert PascalCase keys to camelCase
-    const dataWithCamelCase = pascalToCamelCaseKeys(response.data);
+    const camelCaseResponse = pascalToCamelCaseKeys(response.data);
     
-    // Transform the response using EntityMap 
-    const transformedData = transformData(dataWithCamelCase, EntityMap);
-
-    const entityData = {
-      id,
-      ...transformedData,
-      fields
-    } as RawEntityGetByIdResponse;
-
-    // Return an entity with methods
-    return createEntityWithMethods(entityData, id, this);
+    return (camelCaseResponse.value || []) as EntityRecord[];
   }
 
   /**
@@ -206,58 +304,5 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // Convert PascalCase response to camelCase
     const camelResponse = pascalToCamelCaseKeys(response.data);
     return camelResponse;
-  }
-
-  /**
-   * Private method to get entity field information
-   * @param entityId - UUID of the entity
-   * @returns Promise resolving to array of field objects with name and type
-   */
-  private async _getEntityFields(entityId: string): Promise<EntityFieldMetaData[]> {
-    try {
-      const response = await this.get<EntityMetadataResponse>(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_METADATA(entityId)
-      );
-
-      // Extract field information from the response
-      return this._mapEntityFields(response.data.fields || []);
-    } catch (error) {
-      console.warn(`Failed to fetch entity fields for ${entityId}:`, error);
-      return [];
-    }
-  }
-
-  /**
-   * Maps raw field data to EntityFieldMetaData objects
-   * @param rawFields - Array of raw field data from API response
-   * @returns Array of structured EntityFieldMetaData objects
-   */
-  private _mapEntityFields(rawFields: EntityMetadataResponse['fields']): EntityFieldMetaData[] {
-    const mappedFields = rawFields.map((field) => {
-      const sqlTypeName = field.sqlType?.name;
-      let fieldType: SqlFieldType;
-
-      // Check if the sqlTypeName is a valid SqlFieldType
-      if (sqlTypeName && Object.values(SqlFieldType).includes(sqlTypeName as SqlFieldType)) {
-        fieldType = sqlTypeName as SqlFieldType;
-      } else {
-        // Log unknown type for monitoring
-        console.warn(`Unknown SQL type encountered: ${sqlTypeName} for field ${field.name}`);
-        fieldType = SqlFieldType.NVARCHAR; // fallback to NVARCHAR
-      }
-
-      // Map SQL type to entity type
-      const entityType = EntityFieldTypeMap[fieldType];
-      
-      return {
-        name: field.name,
-        type: entityType
-      };
-    });
-
-    // Filter out invalid field metadata
-    return mappedFields.filter((field): field is EntityFieldMetaData => 
-      typeof field.name === 'string'
-    );
   }
 }
