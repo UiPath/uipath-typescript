@@ -1,6 +1,5 @@
 import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions } from './asset.types';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { NonPaginatedResponse } from '../common/common-types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
  * Asset service model interface

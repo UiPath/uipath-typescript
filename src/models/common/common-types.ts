@@ -3,14 +3,6 @@ export interface CollectionResponse<T> {
 }
 
 /**
- * Response for non-paginated calls that includes both data and total count
- */
-export interface NonPaginatedResponse<T> {
-  items: T[];
-  totalCount?: number;
-}
-
-/**
  * Common enum for job state used across services
  */
 export enum JobState {

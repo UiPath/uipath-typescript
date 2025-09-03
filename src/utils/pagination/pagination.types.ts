@@ -53,6 +53,14 @@ export interface PaginatedResponse<T> {
 } 
 
 /**
+ * Response for non-paginated calls that includes both data and total count
+ */
+export interface NonPaginatedResponse<T> {
+  items: T[];
+  totalCount?: number;
+}
+
+/**
  * Helper type for defining paginated method overloads
  * Creates a union type of all ways pagination can be triggered
  */

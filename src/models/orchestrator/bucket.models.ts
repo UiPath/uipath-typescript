@@ -1,6 +1,5 @@
 import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './bucket.types';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { NonPaginatedResponse } from '../common/common-types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
  * Bucket service model interface

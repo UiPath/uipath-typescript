@@ -21,13 +21,12 @@ import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../utils/constants/common';
-import { NonPaginatedResponse } from '../../models/common/common-types';
 import { BucketMap, DEFAULT_CONTENT_TYPE } from '../../models/orchestrator/bucket.constants';
 import { ODATA_PAGINATION } from '../../utils/constants/common';
 import { isBrowser } from '../../utils/platform';
 import * as mimeTypes from 'mime-types';
 import axios, { AxiosResponse } from 'axios';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 

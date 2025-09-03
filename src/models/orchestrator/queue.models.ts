@@ -1,6 +1,5 @@
 import { QueueGetAllOptions, QueueGetByIdOptions, QueueGetResponse } from './queue.types';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { NonPaginatedResponse } from '../common/common-types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
  * Queue service model interface
