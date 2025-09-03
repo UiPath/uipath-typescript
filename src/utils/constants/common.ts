@@ -28,3 +28,14 @@ export const ENTITY_PAGINATION = {
   /** Field name for total count in entity response */
   TOTAL_COUNT_FIELD: 'totalRecordCount'
 };
+
+/**
+ * Bucket pagination constants for token-based pagination
+ */
+export const BUCKET_PAGINATION = {
+  /** Field name for items in bucket file metadata response */
+  ITEMS_FIELD: 'items',
+  
+  /** Field name for continuation token in bucket file metadata response */
+  CONTINUATION_TOKEN_FIELD: 'continuationToken'
+};
