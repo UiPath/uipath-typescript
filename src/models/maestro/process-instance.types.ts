@@ -3,6 +3,8 @@
  * Types and interfaces for Maestro process instance management
  */
 
+import { PaginationOptions } from "../../utils/pagination";
+
 /**
  * Response for getting a single process instance
  */
@@ -33,9 +35,13 @@ export interface ProcessInstanceGetAllOptions {
   packageId?: string;
   packageVersion?: string;
   processKey?: string;
-  processName?: string;
   errorCode?: string;
 }
+
+/**
+ * Query options for getting process instances with pagination support
+ */
+export type ProcessInstanceGetAllWithPaginationOptions = ProcessInstanceGetAllOptions & PaginationOptions;
 
 /**
  * Request for process instance operations (cancel, pause, resume)

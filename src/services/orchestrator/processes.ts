@@ -16,7 +16,7 @@ import { ProcessMap } from '../../models/orchestrator/process.constants';
 import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { PROCESS_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_PAGINATION } from '../../utils/constants/common';
+import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
 import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
@@ -86,9 +86,14 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
       getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL, // Processes use same endpoint for both
       transformFn: transformProcessResponse,
       pagination: {
-        paginationType: PaginationType.ODATA,
+        paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
+        }
       }
     }, options) as any;
   }

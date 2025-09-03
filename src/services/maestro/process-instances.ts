@@ -5,7 +5,7 @@ import { TokenManager } from '../../core/auth/token-manager';
 import { 
   ProcessInstanceGetResponse, 
   RawProcessInstanceGetResponse,
-  ProcessInstanceGetAllOptions, 
+  ProcessInstanceGetAllWithPaginationOptions,
   ProcessInstanceOperationOptions,
   ProcessInstanceExecutionHistoryResponse,
   ProcessInstancesServiceModel,
@@ -17,7 +17,11 @@ import { FOLDER_KEY, CONTENT_TYPES } from '../../utils/constants/headers';
 import { transformData } from '../../utils/transform';
 import { ProcessInstanceMap, ProcessInstanceExecutionHistoryMap } from '../../models/maestro/process-instance.constants';
 import { BpmnXmlString } from '../../models/maestro/process-instance.types';
-import { createParams } from '../../utils/http/params';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { NonPaginatedResponse } from '../../models/common/common-types';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
+import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../utils/constants/common';
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
@@ -27,17 +31,22 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
 
 
   /**
-   * Get all process instances with pagination support
+   * Get all process instances with optional filtering and pagination
+   * 
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param options Query parameters for filtering instances and pagination
-   * @returns Promise<ProcessInstanceGetResponse[]> Array of ProcessInstance objects with helper methods
+   * @returns Promise resolving to process instances or paginated result
    * 
    * @example
    * ```typescript
-   * // Get all instances
+   * // Get all instances (non-paginated)
    * const instances = await sdk.maestro.processes.instances.getAll();
    * 
    * // Cancel faulted instances using methods directly on instances
-   * for (const instance of instances) {
+   * for (const instance of instances.items) {
    *   if (instance.latestRunStatus === 'Faulted') {
    *     await instance.cancel({ comment: 'Cancelling faulted instance' });
    *   }
@@ -47,18 +56,44 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * const instances = await sdk.maestro.processes.instances.getAll({
    *   processKey: 'MyProcess'
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.maestro.processes.instances.getAll({ pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.maestro.processes.instances.getAll({ cursor: page1.nextCursor });
+   * }
    * ```
    */
-  async getAll(options?: ProcessInstanceGetAllOptions): Promise<ProcessInstanceGetResponse[]> {
-    const response = await this.get<ProcessInstanceGetResponse[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_ALL, {
-      params: createParams(options as Record<string, string | undefined>)
-    });
-    
-    const rawInstances = response.data?.map((instanceData: ProcessInstanceGetResponse) => 
-      transformData(instanceData, ProcessInstanceMap)
-    ) || [];
-    
-    return rawInstances.map((instance: ProcessInstanceGetResponse) => createProcessInstanceWithMethods(instance, this));
+  async getAll<T extends ProcessInstanceGetAllWithPaginationOptions = ProcessInstanceGetAllWithPaginationOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<ProcessInstanceGetResponse>
+      : NonPaginatedResponse<ProcessInstanceGetResponse>
+  > {
+    // Transformation function for process instances
+    const transformProcessInstance = (item: any) => {
+      const rawInstance = transformData(item, ProcessInstanceMap);
+      return createProcessInstanceWithMethods(rawInstance, this);
+    };
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => MAESTRO_ENDPOINTS.INSTANCES.GET_ALL,
+      transformFn: transformProcessInstance,
+      pagination: {
+        paginationType: PaginationType.TOKEN,
+        itemsField: PROCESS_INSTANCE_PAGINATION.ITEMS_FIELD,
+        continuationTokenField: PROCESS_INSTANCE_PAGINATION.CONTINUATION_TOKEN_FIELD,
+        paginationParams: {
+          pageSizeParam: PROCESS_INSTANCE_TOKEN_PARAMS.PAGE_SIZE_PARAM,        
+          tokenParam: PROCESS_INSTANCE_TOKEN_PARAMS.TOKEN_PARAM                
+        }
+      },
+      excludeFromPrefix: Object.keys(options || {}) // All process instance params are not OData
+    }, options) as any;
   }
 
   /**

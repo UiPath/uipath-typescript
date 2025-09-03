@@ -5,18 +5,26 @@
 
 import type {
   RawProcessInstanceGetResponse,
-  ProcessInstanceGetAllOptions,
+  ProcessInstanceGetAllWithPaginationOptions,
   ProcessInstanceOperationOptions,
   ProcessInstanceExecutionHistoryResponse,
   BpmnXmlString
 } from './process-instance.types';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { NonPaginatedResponse } from '../common/common-types';
 
 /**
  * Service interface for ProcessInstancesService
  * Defines the contract that the service must implement
  */
 export interface ProcessInstancesServiceModel {
-  getAll(options?: ProcessInstanceGetAllOptions): Promise<ProcessInstanceGetResponse[]>;
+  getAll<T extends ProcessInstanceGetAllWithPaginationOptions = ProcessInstanceGetAllWithPaginationOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<ProcessInstanceGetResponse>
+      : NonPaginatedResponse<ProcessInstanceGetResponse>
+  >;
   getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse>;
   getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
   getBpmn(instanceId: string, folderKey: string): Promise<BpmnXmlString>;

@@ -39,8 +39,7 @@ export type InternalPaginationOptions = {
  * Pagination types supported by the SDK
  */
 export enum PaginationType {
-  ODATA = 'odata',
-  ENTITY = 'entity',
+  OFFSET = 'offset',
   TOKEN = 'token'
 }
 
@@ -75,6 +74,12 @@ export interface GetAllPaginatedParams<T, R = T> {
     itemsField?: string;
     totalCountField?: string;
     continuationTokenField?: string;
+    paginationParams?: {
+      pageSizeParam?: string;
+      offsetParam?: string;
+      tokenParam?: string;
+      countParam?: string;
+    };
   };
 }
 
@@ -136,6 +141,12 @@ export interface PaginationFieldNames {
 export interface RequestWithPaginationOptions extends RequestSpec {
   pagination: PaginationFieldNames & {
     paginationType: PaginationType;
+    paginationParams?: {
+      pageSizeParam?: string;
+      offsetParam?: string;
+      tokenParam?: string;
+      countParam?: string;
+    };
   };
 }
 
@@ -158,6 +169,18 @@ export interface PaginationConfig {
   itemsField?: string;
   totalCountField?: string;
   continuationTokenField?: string;
+  
+  /** Parameter names for different pagination types */
+  paginationParams?: {
+    /** Parameter name for page size */
+    pageSizeParam?: string;
+    /** Parameter name for page offset/skip */
+    offsetParam?: string;
+    /** Parameter name for continuation token (TOKEN type only) */
+    tokenParam?: string;
+    /** Parameter name for count inclusion (ODATA type only) */
+    countParam?: string;
+  };
 }
 
 /**

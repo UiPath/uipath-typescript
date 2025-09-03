@@ -20,7 +20,7 @@ import { filterUndefined } from '../../utils/object-utils';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, BUCKET_PAGINATION } from '../../utils/constants/common';
+import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../utils/constants/common';
 import { NonPaginatedResponse } from '../../models/common/common-types';
 import { BucketMap, DEFAULT_CONTENT_TYPE } from '../../models/orchestrator/bucket.constants';
 import { ODATA_PAGINATION } from '../../utils/constants/common';
@@ -152,9 +152,14 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       getByFolderEndpoint: BUCKET_ENDPOINTS.GET_BY_FOLDER,
       transformFn: transformBucketResponse,
       pagination: {
-        paginationType: PaginationType.ODATA,
+        paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM             
+        }
       }
     }, options) as any;
   }
@@ -218,7 +223,11 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       pagination: {
         paginationType: PaginationType.TOKEN,
         itemsField: BUCKET_PAGINATION.ITEMS_FIELD,
-        continuationTokenField: BUCKET_PAGINATION.CONTINUATION_TOKEN_FIELD
+        continuationTokenField: BUCKET_PAGINATION.CONTINUATION_TOKEN_FIELD,
+        paginationParams: {
+          pageSizeParam: BUCKET_TOKEN_PARAMS.PAGE_SIZE_PARAM,       
+          tokenParam: BUCKET_TOKEN_PARAMS.TOKEN_PARAM               
+        }
       },
       excludeFromPrefix: ['prefix'] // Bucket-specific param, not OData
     }, { ...options, folderId }) as any;

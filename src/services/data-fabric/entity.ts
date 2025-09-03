@@ -18,7 +18,7 @@ import {
 import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
-import { ENTITY_PAGINATION } from '../../utils/constants/common';
+import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
 import { NonPaginatedResponse } from '../../models/common/common-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createParams } from '../../utils/http/params';
@@ -188,9 +188,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
       transformFn: (item: Record<string, unknown>) => pascalToCamelCaseKeys(item) as EntityRecord,
       pagination: {
-        paginationType: PaginationType.ENTITY,
+        paginationType: PaginationType.OFFSET,
         itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
-        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD
+        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,    
+          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,         
+          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM            
+        }
       },
       excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
     }, options);

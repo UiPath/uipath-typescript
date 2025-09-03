@@ -191,9 +191,11 @@ export class PaginationHelpers {
         headers,
         params: additionalParams,
         pagination: {
-          paginationType: options.paginationType || PaginationType.ODATA,
+          paginationType: options.paginationType || PaginationType.OFFSET,
           itemsField: options.itemsField || DEFAULT_ITEMS_FIELD,
-          totalCountField: options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD
+          totalCountField: options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD,
+          continuationTokenField: options.continuationTokenField,
+          paginationParams: options.paginationParams
         }
       }
     );
@@ -298,7 +300,7 @@ export class PaginationHelpers {
     
     // Default pagination options
     const paginationOptions = {
-      paginationType: PaginationType.ODATA,
+      paginationType: PaginationType.OFFSET,
       itemsField: DEFAULT_ITEMS_FIELD,
       totalCountField: DEFAULT_TOTAL_COUNT_FIELD,
       ...config.pagination
@@ -313,7 +315,10 @@ export class PaginationHelpers {
         paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
         transformFn: config.transformFn,
-        options: paginationOptions
+        options: {
+          ...paginationOptions,
+          paginationParams: config.pagination?.paginationParams
+        }
       }) as any; // Type assertion needed due to conditional return
     }
     
