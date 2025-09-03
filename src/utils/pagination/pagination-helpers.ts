@@ -1,4 +1,4 @@
-import { PaginatedResponse, PaginationCursor, PaginationOptions } from './pagination.types';
+import { PaginatedResponse, PaginationCursor, PaginationOptions, HasPaginationOptions, NonPaginatedResponse } from './pagination.types';
 import { 
   InternalPaginationOptions, 
   CursorData, 
@@ -11,10 +11,8 @@ import { createHeaders } from '../http/headers';
 import { FOLDER_ID } from '../constants/headers';
 import { ODATA_PREFIX } from '../constants/common';
 import { addPrefixToKeys } from '../transform';
-import { NonPaginatedResponse } from '../../models/common/common-types';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './pagination.constants';
 import { filterUndefined } from '../object-utils';
-import { HasPaginationOptions } from './pagination.types';
 
 /**
  * Helper functions for pagination that can be used across services

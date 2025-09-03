@@ -13,8 +13,7 @@ import type {
   TaskGetUsersOptions,
   UserLoginInfo
 } from './task.types';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { NonPaginatedResponse } from '../common/common-types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 // Define the task service interface
 export interface TaskServiceModel {

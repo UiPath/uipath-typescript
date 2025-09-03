@@ -1,6 +1,6 @@
-import { RequestOptions, NonPaginatedResponse } from '../common/common-types';
+import { RequestOptions } from '../common/common-types';
 import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions } from './process.types';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
  * Process service model interface

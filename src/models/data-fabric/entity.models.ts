@@ -9,8 +9,7 @@ import {
   EntityRecord,
   RawEntityGetByIdResponse
 } from './entity.types';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
-import { NonPaginatedResponse } from '../common/common-types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
 
 /**
  * Entity service model interface

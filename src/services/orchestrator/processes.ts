@@ -1,7 +1,7 @@
 import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { CollectionResponse, RequestOptions, NonPaginatedResponse } from '../../models/common/common-types';
+import { CollectionResponse, RequestOptions } from '../../models/common/common-types';
 import { 
   ProcessGetResponse, 
   ProcessGetAllOptions, 
@@ -17,7 +17,7 @@ import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { PROCESS_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 

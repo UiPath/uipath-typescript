@@ -1,7 +1,6 @@
 import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { NonPaginatedResponse } from '../../models/common/common-types';
 import { 
   AssetGetResponse, 
   AssetGetAllOptions,
@@ -16,7 +15,7 @@ import { ASSET_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
 import { AssetMap } from '../../models/orchestrator/assets.constants';
 import { ODATA_PAGINATION } from '../../utils/constants/common';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 

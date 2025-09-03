@@ -15,11 +15,10 @@ import {
   RawEntityGetByIdResponse,
   EntityFieldDataType
 } from '../../models/data-fabric/entity.types';
-import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
-import { NonPaginatedResponse } from '../../models/common/common-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createParams } from '../../utils/http/params';
 import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
