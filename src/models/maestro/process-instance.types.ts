@@ -6,7 +6,7 @@
 /**
  * Response for getting a single process instance
  */
-export interface ProcessInstanceGetResponse {
+export interface RawProcessInstanceGetResponse {
   instanceId: string;
   packageKey: string;
   packageId: string;
@@ -17,20 +17,12 @@ export interface ProcessInstanceGetResponse {
   folderKey: string;
   userId: number;
   instanceDisplayName: string;
+  startedByUser: string;
   source: string;
-  creatorUserKey: string | null;
-  startedTimeUtc: string;
-  completedTimeUtc: string | null;
-  instanceRuns: InstanceRun[];
-}
-
-/**
- * Response for getting all process instances
- */
-export interface ProcessInstanceGetAllResponse {
-  instances: ProcessInstanceGetResponse[];
-  nextPage: string | null;
-  hasMoreResults: boolean;
+  creatorUserKey: string;
+  startedTime: string;
+  completedTime: string | null;
+  instanceRuns: ProcessInstanceRun[];
 }
 
 
@@ -38,7 +30,6 @@ export interface ProcessInstanceGetAllResponse {
  * Query options for getting process instances
  */
 export interface ProcessInstanceGetAllOptions {
-  [key: string]: string | number | undefined;
   packageId?: string;
   packageVersion?: string;
   processKey?: string;
@@ -49,34 +40,8 @@ export interface ProcessInstanceGetAllOptions {
 /**
  * Request for process instance operations (cancel, pause, resume)
  */
-export interface ProcessInstanceOperationRequest {
-  comment?: string | null;
-}
-
-/**
- * Response for process instance status
- */
-export interface ProcessInstanceStatusResponse {
-  instanceId: string | null;
-  status: string | null;
-}
-
-/**
- * Process instance source enum
- */
-export enum ProcessInstanceSource {
-  One = '1',
-  Two = '2'
-}
-
-/**
- * Process instance span status enum
- */
-export enum ProcessInstanceExecutionStatus {
-  Unset = 'Unset',
-  Ok = 'Ok',
-  Error = 'Error',
-  Unspecified = 'Unspecified'
+export interface ProcessInstanceOperationOptions {
+  comment?: string;
 }
 
 /**
@@ -86,55 +51,24 @@ export interface ProcessInstanceExecutionHistoryResponse {
   id: string;
   traceId: string;
   parentId: string | null;
-  name: string | null;
-  startTime: string;
+  name: string;
+  startedTime: string;
   endTime: string | null;
   attributes: string | null;
-  status: ProcessInstanceExecutionStatus;
-  createdAt: string;
-  updatedAt: string;
-  organizationId: string;
-  tenantId: string | null;
-  expiryTimeUtc: string | null;
-  folderKey: string | null;
-  source: ProcessInstanceSource;
+  createdTime: string;
+  updatedTime?: string;
+  expiredTime: string | null;
+  // TO Do: Add status and attributes interface
 }
 
 /**
- * Process instance DTO (for future use)
+ * Process Instance run
  */
-export interface ProcessInstanceDto {
-  id: string;
-  status: string;
-  startTime: string;
-  endTime: string | null;
-  priority: string;
-  specificContent: any;
-  outputArguments: any;
-  info: any;
-}
-
-/**
- * Instance run (placeholder for future implementation)
- */
-export interface InstanceRun {
+export interface ProcessInstanceRun {
   runId: string;
   status: string;
-  startedTimeUtc: string;
-  completedTimeUtc: string;
-  properties: Record<string, unknown>;
+  startedTime: string;
+  completedTime: string;
 }
 
-/**
- * Incident response (placeholder for future implementation)
- */
-export interface IncidentResponse {
-  // TODO: Add IncidentResponse properties when available
-}
-
-/**
- * Go to cursors (placeholder for future implementation)
- */
-export interface GoToCursors {
-  // TODO: Add GoToCursors properties when available
-}
+export type BpmnXmlString = string;

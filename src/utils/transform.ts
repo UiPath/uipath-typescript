@@ -56,34 +56,6 @@ export function transformData<T extends object>(
 }
 
 /**
- * Creates a transform function with predefined field mappings
- * @param fieldMapping Object mapping source field names to target field names
- * @returns Function that transforms data using the provided field mapping
- * 
- * @example
- * ```typescript
- * // Create a reusable transform function
- * const transformUser = createTransform({
- *   id: 'userId',
- *   userName: 'name'
- * });
- * 
- * // Use the transform function
- * const user = transformUser({ id: '123', userName: 'john' });
- * // user = { userId: '123', name: 'john' }
- * 
- * // Transform an array of users
- * const users = transformUser([
- *   { id: '123', userName: 'john' },
- *   { id: '456', userName: 'jane' }
- * ]);
- * ```
- */
-export function createTransform<T extends object>(fieldMapping: FieldMapping) {
-  return (data: T | T[]): T => transformData(data, fieldMapping);
-}
-
-/**
  * Converts a string from PascalCase to camelCase
  * @param str The PascalCase string to convert
  * @returns The camelCase version of the string
@@ -240,7 +212,7 @@ export function camelToPascalCaseKeys<T extends object>(data: T | T[]): any {
  * const mapped = mapFieldValue(task, 'status', statusMap);
  * // mapped = { status: 'Pending', id: 123 }
  */
-export function mapFieldValue<
+export function _mapFieldValue<
   T extends object,
   K extends keyof T,
   M extends { [key: string]: any }
@@ -271,15 +243,15 @@ export function mapFieldValue<
  *
  * @example
  * // Just transform
- * const result = transformApiResponse(data);
+ * const result = applyDataTransforms(data);
  *
  * // Map a field value, then transform
- * const result = transformApiResponse(data, { field: 'status', valueMap: StatusMap });
+ * const result = applyDataTransforms(data, { field: 'status', valueMap: StatusMap });
  *
  * // Map a field value, then apply a custom transform
- * const result = transformApiResponse(data, { field: 'status', valueMap: StatusMap, transform: customTransform });
+ * const result = applyDataTransforms(data, { field: 'status', valueMap: StatusMap, transform: customTransform });
  */
-export function transformApiResponse<T extends object, K extends keyof T, M extends { [key: string]: any }>(
+export function applyDataTransforms<T extends object, K extends keyof T, M extends { [key: string]: any }>(
   data: T,
   options?: {
     field?: K;
@@ -289,7 +261,7 @@ export function transformApiResponse<T extends object, K extends keyof T, M exte
 ): T {
   let result = data;
   if (options?.field && options?.valueMap) {
-    result = mapFieldValue(result, options.field, options.valueMap);
+    result = _mapFieldValue(result, options.field, options.valueMap);
   }
   if (options?.transform) {
     result = options.transform(result);

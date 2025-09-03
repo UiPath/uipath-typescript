@@ -3,6 +3,7 @@ import { ExecutionContext } from '../context/execution-context';
 import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
 import { TokenInfo } from '../auth/auth.types';
+import { CONTENT_TYPES } from '../../utils/constants/headers';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -69,7 +70,7 @@ export class ApiClient {
     if (contextHeaders['Authorization']) {
       return {
         ...contextHeaders,
-        'Content-Type': 'application/json',
+        'Content-Type': CONTENT_TYPES.JSON,
         ...this.defaultHeaders,
         ...this.clientConfig.headers
       };
@@ -80,7 +81,7 @@ export class ApiClient {
     return {
       ...contextHeaders,
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      'Content-Type': CONTENT_TYPES.JSON,
       ...this.defaultHeaders,
       ...this.clientConfig.headers
     };
@@ -128,7 +129,7 @@ export class ApiClient {
 
     // Check if we're expecting XML
     const acceptHeader = headers['Accept'] || headers['accept'];
-    if (acceptHeader === 'application/xml') {
+    if (acceptHeader === CONTENT_TYPES.XML) {
       const text = await response.text();
       return text as T;
     }
