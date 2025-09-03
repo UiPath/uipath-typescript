@@ -7,8 +7,10 @@ import * as path from 'path';
 import fetch from 'node-fetch';
 import { EnvironmentConfig, AppConfig } from '../../types/index.js';
 import { API_ENDPOINTS } from '../../constants/index.js';
+import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
 import { validateEnvironment } from '../../utils/env-validator.js';
+import { handleHttpError } from '../../utils/error-handler.js';
 
 interface RegisterResponse {
   definition: {
@@ -42,7 +44,7 @@ export default class RegisterApp extends Command {
   public async run(): Promise<void> {
     const { flags } = await this.parse(RegisterApp);
     
-    this.log(chalk.blue('🚀 UiPath App Registration'));
+    this.log(chalk.blue(MESSAGES.INFO.APP_REGISTRATION));
 
     // Validate environment variables
     const envConfig = await this.validateEnvironment();
@@ -78,10 +80,10 @@ export default class RegisterApp extends Command {
       {
         type: 'input',
         name: 'name',
-        message: 'Enter app name:',
+        message: MESSAGES.PROMPTS.ENTER_APP_NAME,
         validate: (input: string) => {
           if (!input.trim()) {
-            return 'App name is required';
+            return MESSAGES.VALIDATIONS.APP_NAME_REQUIRED;
           }
           return true;
         },
@@ -92,7 +94,7 @@ export default class RegisterApp extends Command {
   }
 
   private async registerApp(appName: string, appVersion: string, envConfig: EnvironmentConfig): Promise<void> {
-    const spinner = ora('Registering app with UiPath...').start();
+    const spinner = ora(MESSAGES.INFO.REGISTERING_APP).start();
     
     try {
       // Call the publish coded app API
@@ -119,7 +121,7 @@ export default class RegisterApp extends Command {
       await this.updateEnvFile('UIPATH_APP_URL', appUrl);
       await this.updateEnvFile('UIPATH_APP_REDIRECT_URI', appUrl);
       
-      spinner.succeed(chalk.green('✅ App registered successfully!'));
+      spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_REGISTERED_SUCCESS));
       
       this.log('');
       this.log(chalk.bold('App Details:'));
@@ -130,7 +132,7 @@ export default class RegisterApp extends Command {
       this.log(chalk.bold('App URL:'));
       this.log(`  ${chalk.green(appUrl)}`);
       this.log('');
-      this.log(chalk.blue('🎉 Your app has been registered with UiPath!'));
+      this.log(chalk.blue(MESSAGES.INFO.APP_REGISTERED));
       this.log(chalk.yellow('💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI'));
       this.log(chalk.yellow('💡 App configuration has been saved and will be used by pack command'));
       this.log(chalk.yellow('💡 You can use this URL as the redirect URI for OAuth configuration in your SDK'));
@@ -142,8 +144,9 @@ export default class RegisterApp extends Command {
       this.log(chalk.dim('3. Publish the package: uipath publish'));
       
     } catch (error) {
-      spinner.fail(chalk.red('❌ App registration failed'));
-      this.error(`Registration error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      spinner.fail(chalk.red(`❌ ${MESSAGES.ERRORS.APP_REGISTRATION_FAILED}`));
+      this.log(chalk.red(`Registration error: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      process.exit(1);
     }
   }
 
@@ -168,8 +171,7 @@ export default class RegisterApp extends Command {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      await handleHttpError(response, 'app registration');
     }
 
     return await response.json() as RegisterResponse;

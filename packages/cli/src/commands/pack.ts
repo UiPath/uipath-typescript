@@ -7,6 +7,7 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import { AppConfig } from '../types/index.js';
+import { MESSAGES } from '../constants/messages.js';
 
 export default class Pack extends Command {
   static override description = 'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
@@ -69,14 +70,15 @@ export default class Pack extends Command {
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Pack);
     
-    this.log(chalk.blue('📦 UiPath NuGet Package Creator'));
+    this.log(chalk.blue(MESSAGES.INFO.PACKAGE_CREATOR));
 
     // Get dist directory from args
     const distDir = args.dist;
     
     // Validate dist directory
     if (!this.validateDistDirectory(distDir)) {
-      this.error(`Invalid dist directory: ${distDir}`);
+      this.log(chalk.red(`${MESSAGES.ERRORS.INVALID_DIST_DIRECTORY}: ${distDir}`));
+      process.exit(1);
     }
 
     // Try to load saved app config
@@ -93,7 +95,7 @@ export default class Pack extends Command {
       if (flags.version === '1.0.0' && appConfig.appVersion !== '1.0.0') {
         version = appConfig.appVersion;
       }
-      this.log(chalk.green(`✅ Using registered app: ${packageName} v${version}`));
+      this.log(chalk.green(`${MESSAGES.SUCCESS.USING_REGISTERED_APP}: ${packageName} v${version}`));
     } else if (!flags.name) {
       // No saved config and no flag, so prompt
       packageName = await this.promptForPackageName();
@@ -110,14 +112,15 @@ export default class Pack extends Command {
       }]);
       
       if (!response.continue) {
-        this.log(chalk.blue('💡 Use the registered values by running: uipath pack ./dist'));
+        this.log(chalk.blue(MESSAGES.INFO.USE_REGISTERED_VALUES));
         this.exit(0);
       }
     }
     
     // Ensure packageName is defined at this point
     if (!packageName) {
-      this.error('Package name is required');
+      this.log(chalk.red(MESSAGES.ERRORS.PACKAGE_NAME_REQUIRED));
+      process.exit(1);
     }
     
     const sanitizedName = this.sanitizePackageName(packageName);
@@ -150,10 +153,10 @@ export default class Pack extends Command {
       {
         type: 'input',
         name: 'name',
-        message: 'Enter package name:',
+        message: MESSAGES.PROMPTS.ENTER_PACKAGE_NAME,
         validate: (input: string) => {
           if (!input.trim()) {
-            return 'Package name is required';
+            return MESSAGES.VALIDATIONS.PACKAGE_NAME_REQUIRED;
           }
           return true;
         },
@@ -168,7 +171,7 @@ export default class Pack extends Command {
       {
         type: 'input',
         name: 'description',
-        message: 'Enter package description:',
+        message: MESSAGES.PROMPTS.ENTER_PACKAGE_DESCRIPTION,
         default: `UiPath package for ${packageName}`,
       },
     ]);
@@ -197,7 +200,7 @@ export default class Pack extends Command {
 
 
   private async showPackagePreview(config: any): Promise<void> {
-    this.log(chalk.yellow('🔍 Package Preview'));
+    this.log(chalk.yellow(MESSAGES.INFO.PACKAGE_PREVIEW));
     this.log('');
     
     this.log(`${chalk.bold('Package Name:')} ${config.name}`);
@@ -220,12 +223,12 @@ export default class Pack extends Command {
     this.log(`  - ${config.name}.${config.version}.nupkg (contains .nuspec and all content)`);
     
     this.log('');
-    this.log(chalk.green('✅ Package configuration validated'));
-    this.log(chalk.blue('💡 Run without --dry-run to create the package'));
+    this.log(chalk.green(MESSAGES.SUCCESS.PACKAGE_CONFIG_VALIDATED));
+    this.log(chalk.blue(MESSAGES.INFO.RUN_WITHOUT_DRY_RUN));
   }
 
   private async createNuGetPackage(config: any): Promise<void> {
-    const spinner = ora('Creating NuGet package...').start();
+    const spinner = ora(MESSAGES.INFO.CREATING_PACKAGE).start();
     
     try {
       // Ensure output directory exists
@@ -245,7 +248,7 @@ export default class Pack extends Command {
       // Handle metadata.json
       await this.handleMetadataJson(config);
       
-      spinner.succeed(chalk.green('✅ NuGet package created successfully!'));
+      spinner.succeed(chalk.green(MESSAGES.SUCCESS.PACKAGE_CREATED_SUCCESS));
       
       this.log('');
       this.log(`${chalk.bold('Package Details:')}`);
@@ -254,12 +257,13 @@ export default class Pack extends Command {
       this.log(`  Type: ${config.contentType}`);
       this.log(`  Location: ${path.join(config.outputDir, `${config.name}.${config.version}.nupkg`)}`);
       this.log('');
-      this.log(chalk.blue('🎉 Package is ready for publishing!'));
+      this.log(chalk.blue(MESSAGES.INFO.PACKAGE_READY));
       this.log(chalk.dim('💡 Use "uipath publish" to upload to UiPath Orchestrator'));
       
     } catch (error) {
-      spinner.fail(chalk.red('❌ Package creation failed'));
-      this.error(`Packaging error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      spinner.fail(chalk.red(`❌ ${MESSAGES.ERRORS.PACKAGE_CREATION_FAILED}`));
+      this.log(chalk.red(`Packaging error: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      process.exit(1);
     }
   }
 

@@ -11,6 +11,7 @@ import { selectFolderInteractive } from '../auth/services/folder.js';
 import { getBaseUrl } from '../auth/utils/url.js';
 import { getFormattedExpirationDate } from '../auth/utils/date.js';
 import { AUTH_CONSTANTS } from '../constants/auth.js';
+import { MESSAGES } from '../constants/messages.js';
 import { isPortAvailable } from '../auth/utils/port-checker.js';
 
 const createDomainShorthandFlag = (domain: string, otherDomains: string[]) => {
@@ -75,7 +76,7 @@ export default class Auth extends Command {
     if (!flags.force) {
       const existingAuth = await loadTokens();
       if (existingAuth && !isTokenExpired(existingAuth)) {
-        this.log(chalk.green('✓ Already authenticated'));
+        this.log(chalk.green(MESSAGES.SUCCESS.ALREADY_AUTHENTICATED));
         this.log(chalk.gray(`Organization: ${existingAuth.organizationName || existingAuth.organizationId}`));
         this.log(chalk.gray(`Tenant: ${existingAuth.tenantName || 'Not selected'}`));
         this.log(chalk.gray(`Domain: ${existingAuth.domain}`));
@@ -85,7 +86,7 @@ export default class Auth extends Command {
           {
             type: 'confirm',
             name: 'reauth',
-            message: 'Do you want to re-authenticate?',
+            message: MESSAGES.PROMPTS.REAUTH_QUESTION,
             default: false,
           },
         ]);
@@ -101,7 +102,7 @@ export default class Auth extends Command {
   }
 
   private async authenticate(domain: string): Promise<void> {
-    const spinner = ora('Finding available port...').start();
+    const spinner = ora(MESSAGES.INFO.FINDING_PORT).start();
     
     // Try to find an available port from the allowed ports
     let availablePort: number | null = null;
@@ -120,7 +121,8 @@ export default class Auth extends Command {
       for (const port of AUTH_CONSTANTS.ALTERNATIVE_PORTS) {
         this.log(chalk.gray(`  • Port ${port}: ${chalk.cyan(`lsof -i :${port}`)} (macOS/Linux) or ${chalk.cyan(`netstat -ano | findstr :${port}`)} (Windows)`));
       }
-      this.error('All registered ports are in use. Please free up one of the ports listed above and try again.');
+      this.log(chalk.red(MESSAGES.ERRORS.ALL_PORTS_IN_USE));
+      process.exit(1);
     }
     
     spinner.succeed(`Using port ${availablePort}`);
@@ -143,8 +145,9 @@ export default class Auth extends Command {
       await this.saveCredentialsAndFinish(tokens, domain, selectedTenant);
       
     } catch (error) {
-      spinner.fail('Authentication failed');
-      this.error(error instanceof Error ? error.message : 'Unknown error occurred');
+      spinner.fail(MESSAGES.ERRORS.AUTHENTICATION_PROCESS_FAILED);
+      this.log(chalk.red(error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR));
+      process.exit(1);
     } finally {
       // Always clean up the auth server
       authServer?.stop();
@@ -167,7 +170,7 @@ export default class Auth extends Command {
       expectedState: pkce.state,
     });
 
-    spinner.text = 'Starting local authentication server...';
+    spinner.text = MESSAGES.INFO.STARTING_AUTH_SERVER;
     
     // Start server in background
     const authPromise = authServer.start();
@@ -175,10 +178,10 @@ export default class Auth extends Command {
     // Generate authorization URL and open browser
     const authUrl = getAuthorizationUrl(domain, pkce, port);
     
-    spinner.text = 'Opening browser for authentication...';
+    spinner.text = MESSAGES.INFO.OPENING_BROWSER;
     await open(authUrl);
     
-    spinner.info('Please complete the authentication in your browser');
+    spinner.info(MESSAGES.PROMPTS.COMPLETE_AUTH_IN_BROWSER);
     this.log(chalk.gray(`\nIf the browser didn't open automatically, visit:`));
     this.log(chalk.blue(authUrl));
     
@@ -186,14 +189,14 @@ export default class Auth extends Command {
   }
 
   private async waitForBrowserAuthentication(authPromise: Promise<TokenResponse>): Promise<TokenResponse> {
-    const spinner = ora('Waiting for authentication...').start();
+    const spinner = ora(MESSAGES.INFO.WAITING_FOR_AUTH).start();
     
     try {
       const tokens = await authPromise;
-      spinner.succeed('Authentication successful!');
+      spinner.succeed(MESSAGES.SUCCESS.AUTHENTICATION_SUCCESS.replace('✓ ', ''));
       return tokens;
     } catch (error) {
-      spinner.fail('Authentication failed');
+      spinner.fail(MESSAGES.ERRORS.AUTHENTICATION_PROCESS_FAILED);
       throw error;
     }
   }
@@ -202,7 +205,7 @@ export default class Auth extends Command {
     tokens: TokenResponse, 
     domain: string
   ): Promise<SelectedTenant & { folderKey?: string | null }> {
-    const orgSpinner = ora('Fetching organization and tenants...').start();
+    const orgSpinner = ora(MESSAGES.INFO.FETCHING_ORG_TENANTS).start();
     
     try {
       // Fetch and select tenant
@@ -247,7 +250,7 @@ export default class Auth extends Command {
     domain: string,
     selectedTenant: SelectedTenant & { folderKey?: string | null }
   ): void {
-    this.log(chalk.green('\n✓ Successfully authenticated'));
+    this.log(chalk.green(`\n${MESSAGES.SUCCESS.AUTHENTICATION_SUCCESS}`));
     this.log(chalk.gray(`Organization: ${selectedTenant.organizationDisplayName} (${selectedTenant.organizationName})`));
     this.log(chalk.gray(`Tenant: ${selectedTenant.tenantDisplayName} (${selectedTenant.tenantName})`));
     
@@ -257,19 +260,20 @@ export default class Auth extends Command {
     
     this.log(chalk.gray(`Domain: ${domain}`));
     this.log(chalk.gray(`Token expires at: ${getFormattedExpirationDate(tokens.expiresIn)}`));
-    this.log(chalk.gray('\nCredentials have been saved to .env file'));
+    this.log(chalk.gray(`\n${MESSAGES.INFO.CREDENTIALS_SAVED}`));
   }
 
   private async logout(): Promise<void> {
-    const spinner = ora('Logging out...').start();
+    const spinner = ora(MESSAGES.INFO.LOGGING_OUT).start();
     
     try {
       await clearTokens();
-      spinner.succeed('Successfully logged out');
-      this.log(chalk.gray('Credentials have been removed'));
+      spinner.succeed(MESSAGES.SUCCESS.LOGOUT_SUCCESS);
+      this.log(chalk.gray(MESSAGES.INFO.CREDENTIALS_REMOVED));
     } catch (error) {
-      spinner.fail('Failed to logout');
-      this.error(error instanceof Error ? error.message : 'Unknown error occurred');
+      spinner.fail(MESSAGES.ERRORS.LOGOUT_FAILED);
+      this.log(chalk.red(error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR));
+      process.exit(1);
     }
   }
 }
