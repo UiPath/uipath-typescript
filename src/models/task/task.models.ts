@@ -9,12 +9,22 @@ import type {
   TaskAssignOptions,
   TaskGetAllOptions,
   TaskGetByIdOptions,
-  TaskCreateRequest
+  TaskCreateRequest,
+  TaskGetUsersOptions,
+  UserLoginInfo
 } from './task.types';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { NonPaginatedResponse } from '../common/common-types';
 
 // Define the task service interface
 export interface TaskServiceModel {
-  getAll(options?: TaskGetAllOptions): Promise<TaskGetResponse[]>;
+  getAll<T extends TaskGetAllOptions = TaskGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskGetResponse>
+      : NonPaginatedResponse<TaskGetResponse>
+  >;
 
   getById(id: number, options?: TaskGetByIdOptions, folderId?: number): Promise<TaskGetResponse>;
 
@@ -31,6 +41,24 @@ export interface TaskServiceModel {
     request: TaskCompletionRequest,
     folderId: number
   ): Promise<void>;
+
+  /**
+   * Gets users in the given folder who have Tasks.View and Tasks.Edit permissions
+   * Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided,
+   * or a PaginatedResponse when any pagination parameter is provided
+   * 
+   * @param folderId - The folder ID to get users from
+   * @param options - Optional query and pagination parameters
+   * @returns Promise resolving to NonPaginatedResponse or a paginated result
+   */
+  getUsers<T extends TaskGetUsersOptions = TaskGetUsersOptions>(
+    folderId: number,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<UserLoginInfo>
+      : NonPaginatedResponse<UserLoginInfo>
+  >;
 }
 
 // Method interface that will be added to task objects

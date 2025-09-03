@@ -5,6 +5,7 @@ import {
   PaginationType, 
   GetAllPaginatedParams, 
   GetAllNonPaginatedParams,
+  GetAllConfig,
 } from './pagination.internal-types';
 import { createHeaders } from '../http/headers';
 import { FOLDER_ID } from '../constants/headers';
@@ -13,6 +14,7 @@ import { addPrefixToKeys } from '../transform';
 import { NonPaginatedResponse } from '../../models/common/common-types';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './pagination.constants';
 import { filterUndefined } from '../object-utils';
+import { HasPaginationOptions } from './pagination.types';
 
 /**
  * Helper functions for pagination that can be used across services
@@ -196,8 +198,10 @@ export class PaginationHelpers {
       }
     );
     
-    // Transform the data using the provided transform function
-    const transformedItems = paginatedResponse.items.map(transformFn);
+    // Transform items only if a transform function is provided
+    const transformedItems = transformFn 
+      ? paginatedResponse.items.map(transformFn)
+      : paginatedResponse.items as unknown as R[];
     
     return {
       ...paginatedResponse,
@@ -245,14 +249,91 @@ export class PaginationHelpers {
       }
     );
 
-    // Extract and transform data
+    // Extract data
     const items = response.data?.[itemsField] || [];
-    const data = items.map(transformFn);
+    
+    // Transform items if a transform function is provided
+    const data = transformFn 
+      ? items.map(transformFn)
+      : items as unknown as R[];
+      
     const totalCount = response.data?.[totalCountField];
     
     return {
       items: data,
       totalCount
     };
+  }
+
+  /**
+   * Centralized getAll implementation that handles both paginated and non-paginated requests
+   * 
+   * @param config - Configuration for the getAll operation
+   * @param options - Request options including pagination parameters
+   * @returns Promise resolving to either paginated or non-paginated response based on options
+   */
+  static async getAll<TOptions extends Record<string, any>, TRaw, TTransformed = TRaw>(
+    config: GetAllConfig<TRaw, TTransformed>,
+    options?: TOptions
+  ): Promise<
+    TOptions extends HasPaginationOptions<TOptions>
+      ? PaginatedResponse<TTransformed>
+      : NonPaginatedResponse<TTransformed>
+  > {
+    const optionsWithDefaults = options || {} as any;
+    const { folderId, ...restOptions } = optionsWithDefaults;
+    const cursor = options?.cursor;
+    const pageSize = options?.pageSize;
+    const jumpToPage = options?.jumpToPage;
+    
+    // Determine if pagination is requested
+    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
+    
+    // Process parameters (custom processing if provided, otherwise default)
+    let processedOptions = restOptions;
+    if (config.processParametersFn) {
+      processedOptions = config.processParametersFn(restOptions, folderId);
+    }
+    
+    // Apply ODATA prefix to keys (excluding specified keys)
+    const excludeKeys = config.excludeFromPrefix || [];
+    const keysToPrefix = Object.keys(processedOptions).filter(k => !excludeKeys.includes(k));
+    const prefixedOptions = addPrefixToKeys(processedOptions, ODATA_PREFIX, keysToPrefix);
+    
+    // Default pagination options
+    const paginationOptions = {
+      paginationType: PaginationType.ODATA,
+      itemsField: DEFAULT_ITEMS_FIELD,
+      totalCountField: DEFAULT_TOTAL_COUNT_FIELD,
+      ...config.pagination
+    };
+    
+    // Paginated flow
+    if (isPaginationRequested) {
+      return PaginationHelpers.getAllPaginated<TRaw, TTransformed>({
+        serviceAccess: config.serviceAccess,
+        getEndpoint: config.getEndpoint,
+        folderId,
+        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
+        additionalParams: prefixedOptions,
+        transformFn: config.transformFn,
+        options: paginationOptions
+      }) as any; // Type assertion needed due to conditional return
+    }
+    
+    // Non-paginated flow
+    const byFolderEndpoint = config.getByFolderEndpoint || config.getEndpoint(folderId);
+    return PaginationHelpers.getAllNonPaginated<TRaw, TTransformed>({
+      serviceAccess: config.serviceAccess,
+      getAllEndpoint: config.getEndpoint(),
+      getByFolderEndpoint: byFolderEndpoint,
+      folderId,
+      additionalParams: prefixedOptions,
+      transformFn: config.transformFn,
+      options: {
+        itemsField: paginationOptions.itemsField,
+        totalCountField: paginationOptions.totalCountField
+      }
+    }) as any;
   }
 } 

@@ -1,4 +1,5 @@
 import { JobState, RequestOptions, BaseOptions } from '../common/common-types';
+import { PaginationOptions } from '../../utils/pagination';
 
 /**
  * Enum for package types
@@ -300,9 +301,12 @@ export interface ProcessGetResponse extends ProcessProperties, FolderProperties 
 }
 
 /**
- * Interface for process get all options
+ * Options for getting processes across folders
  */
-export interface ProcessGetAllOptions extends RequestOptions {
+export type ProcessGetAllOptions = RequestOptions & PaginationOptions & {
+  /**
+   * Optional folder ID to filter processes by folder
+   */
   folderId?: number;
 }
 

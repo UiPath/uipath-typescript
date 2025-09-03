@@ -1,5 +1,6 @@
-import { RequestOptions } from '../common/common-types';
+import { RequestOptions, NonPaginatedResponse } from '../common/common-types';
 import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions } from './process.types';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
  * Process service model interface
@@ -7,11 +8,17 @@ import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessS
 export interface ProcessServiceModel {
   /**
    * Gets all processes across folders with optional filtering
+   * Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided,
+   * or a PaginatedResponse when any pagination parameter is provided
    * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of processes
+   * @param options - Query options including optional folderId and pagination options
+   * @returns Promise resolving to NonPaginatedResponse or a paginated result
    */
-  getAll(options?: ProcessGetAllOptions): Promise<ProcessGetResponse[]>;
+  getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<ProcessGetResponse>
+      : NonPaginatedResponse<ProcessGetResponse>
+  >;
   
   /**
    * Gets a single process by ID

@@ -1,4 +1,5 @@
 import { BaseOptions, RequestOptions } from '../common/common-types';
+import { PaginationOptions } from '../../utils/pagination';
 
 /**
  * Interface for queue response
@@ -27,7 +28,13 @@ export interface QueueGetResponse {
   folderName: string;
 }
 
-export interface QueueGetAllOptions extends RequestOptions {
+/**
+ * Options for getting queues across folders
+ */
+export type QueueGetAllOptions = RequestOptions & PaginationOptions & {
+  /**
+   * Optional folder ID to filter queues by folder
+   */
   folderId?: number;
 }
 

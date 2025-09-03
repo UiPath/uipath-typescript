@@ -1,7 +1,7 @@
 import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { CollectionResponse, RequestOptions } from '../../models/common/common-types';
+import { CollectionResponse, RequestOptions, NonPaginatedResponse } from '../../models/common/common-types';
 import { 
   ProcessGetResponse, 
   ProcessGetAllOptions, 
@@ -16,7 +16,10 @@ import { ProcessMap } from '../../models/orchestrator/process.constants';
 import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { PROCESS_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX } from '../../utils/constants/common';
+import { ODATA_PREFIX, ODATA_PAGINATION } from '../../utils/constants/common';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -29,12 +32,16 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
   /**
    * Gets all processes across folders with optional filtering and folder scoping
    * 
+   * The method returns either:
+   * - An array of processes (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of processes
+   * @returns Promise resolving to an array of processes or paginated result
    * 
    * @example
    * ```typescript
-   * // Get all processes across folders
+   * // Standard array return
    * const processes = await sdk.process.getAll();
    * 
    * // Get processes within a specific folder
@@ -46,36 +53,44 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * const processes = await sdk.process.getAll({ 
    *   filter: "name eq 'MyProcess'"
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.process.getAll({ pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.process.getAll({ cursor: page1.nextCursor });
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.process.getAll({
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
    * ```
    */
-  async getAll(options: ProcessGetAllOptions = {}): Promise<ProcessGetResponse[]> {
-    const { folderId, ...restOptions } = options;
-    
-    // Add folderId to headers if provided
-    let headerParams = {};
-    if (folderId) {
-      headerParams = { [FOLDER_ID]: folderId };
-    }
-    const headers = createHeaders(headerParams);
-    
-    // Prefix all keys with '$' for OData
-    const keysToPrefix = Object.keys(restOptions);
-    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<CollectionResponse<ProcessGetResponse>>(
-      PROCESS_ENDPOINTS.GET_ALL,
-      { 
-        params: apiOptions,
-        headers
-      }
-    );
+  async getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<ProcessGetResponse>
+      : NonPaginatedResponse<ProcessGetResponse>
+  > {
+    // Transformation function for processes
+    const transformProcessResponse = (process: any) => 
+      transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap);
 
-    const processArray = response.data?.value;
-    const transformedProcesses = processArray?.map(process => 
-      transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap)
-    );
-    
-    return transformedProcesses;
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => PROCESS_ENDPOINTS.GET_ALL,
+      getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL, // Processes use same endpoint for both
+      transformFn: transformProcessResponse,
+      pagination: {
+        paginationType: PaginationType.ODATA,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+      }
+    }, options) as any;
   }
 
   /**
