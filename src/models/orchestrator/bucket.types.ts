@@ -114,6 +114,11 @@ export interface BucketGetFileMetaDataOptions {
 }
 
 /**
+ * Request options for getting files in a bucket with pagination support
+ */
+export type BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataOptions & PaginationOptions;
+
+/**
  * Response from the GetFiles API
  */
 export interface BucketGetFileMetaDataResponse {

@@ -9,18 +9,18 @@ import {
   BucketGetUriResponse,
   BucketGetReadUriOptions,
   BucketGetWriteUriOptions,
-  BucketGetFileMetaDataOptions,
-  BucketGetFileMetaDataResponse,
+  BucketGetFileMetaDataWithPaginationOptions,
   BucketUploadFileOptions,
-  BucketUploadResponse
+  BucketUploadResponse,
+  BlobItem
 } from '../../models/orchestrator/bucket.types';
 import { BucketServiceModel } from '../../models/orchestrator/bucket.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys, renameObjectFields, transformData, arrayDictionaryToRecord } from '../../utils/transform';
+import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../utils/transform';
 import { filterUndefined } from '../../utils/object-utils';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX } from '../../utils/constants/common';
+import { ODATA_PREFIX, BUCKET_PAGINATION } from '../../utils/constants/common';
 import { NonPaginatedResponse } from '../../models/common/common-types';
 import { BucketMap, DEFAULT_CONTENT_TYPE } from '../../models/orchestrator/bucket.constants';
 import { ODATA_PAGINATION } from '../../utils/constants/common';
@@ -162,10 +162,14 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   /**
    * Gets metadata for files in a bucket with optional filtering and pagination
    * 
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param bucketId - The ID of the bucket to get file metadata from
    * @param folderId - Required folder ID for organization unit context
    * @param options - Optional parameters for filtering, pagination and access URL generation
-   * @returns Promise resolving to the list of file metadata in the bucket
+   * @returns Promise resolving to the list of file metadata in the bucket or paginated result
    * 
    * @example
    * ```typescript
@@ -176,9 +180,25 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456, {
    *   prefix: '/folder1'
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.buckets.getFileMetaData(123, 456, { pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.buckets.getFileMetaData(123, 456, { cursor: page1.nextCursor });
+   * }
    * ```
    */
-  async getFileMetaData(bucketId: number, folderId: number, options: BucketGetFileMetaDataOptions = {}): Promise<BucketGetFileMetaDataResponse> {
+  async getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
+    bucketId: number, 
+    folderId: number, 
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BlobItem>
+      : NonPaginatedResponse<BlobItem>
+  > {
     if (!bucketId) {
       throw new Error('bucketId is required');
     }
@@ -186,25 +206,22 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     if (!folderId) {
       throw new Error('folderId is required');
     }
-    
-    // Create headers with required folder ID
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    // Filter out undefined values from options
-    const queryParams = filterUndefined(options);
-    
-    renameObjectFields(queryParams, { limit: 'takeHint' });
-    
-    // Make the API call to get files
-    const response = await this.get<BucketGetFileMetaDataResponse>(
-      BUCKET_ENDPOINTS.GET_FILE_META_DATA(bucketId),
-      {
-        params: queryParams,
-        headers
-      }
-    );
-    
-    return transformData(response.data, BucketMap);
+
+    // Transformation function for blob items
+    const transformBlobItem = (item: any) => 
+      transformData(item, BucketMap) as BlobItem;
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => BUCKET_ENDPOINTS.GET_FILE_META_DATA(bucketId),
+      transformFn: transformBlobItem,
+      pagination: {
+        paginationType: PaginationType.TOKEN,
+        itemsField: BUCKET_PAGINATION.ITEMS_FIELD,
+        continuationTokenField: BUCKET_PAGINATION.CONTINUATION_TOKEN_FIELD
+      },
+      excludeFromPrefix: ['prefix'] // Bucket-specific param, not OData
+    }, { ...options, folderId }) as any;
   }
 
   /**
