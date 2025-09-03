@@ -1,13 +1,13 @@
 import { 
-  EntityGetByIdOptions, 
-  EntityGetByIdResponse, 
+  EntityGetRecordsByIdOptions, 
   EntityInsertOptions, 
   EntityInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
   EntityDeleteResponse,
-  EntityRecord
+  EntityRecord,
+  RawEntityGetByIdResponse
 } from './entity.types';
 
 /**
@@ -15,13 +15,21 @@ import {
  */
 export interface EntityServiceModel {
   /**
-   * Gets entity data by entity ID
+   * Gets entity metadata by entity ID with attached operation methods
+   * 
+   * @param id - UUID of the entity
+   * @returns Promise resolving to entity metadata with operation methods
+   */
+  getById(id: string): Promise<EntityGetByIdResponse>;
+
+  /**
+   * Gets entity records by entity ID
    * 
    * @param id - UUID of the entity
    * @param options - Query options
    * @returns Promise resolving to query response
    */
-  getById(id: string, options?: EntityGetByIdOptions): Promise<Entity>;
+  getRecordsById(id: string, options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]>;
 
   /**
    * Inserts data into an entity by entity ID
@@ -55,47 +63,9 @@ export interface EntityServiceModel {
 }
 
 /**
- * Entity model class representing a Data Fabric entity
+ * Entity methods interface - defines operations that can be performed on an entity
  */
-export class Entity {
-  /**
-   * The unique identifier for this entity
-   */
-  public readonly id: string;
-
-  /**
-   * The entity data records
-   */
-  public readonly data: EntityRecord[];
-
-  /**
-   * The entity field metadata
-   */
-  public readonly fields: EntityGetByIdResponse['fields'];
-
-  /**
-   * The total count of records
-   */
-  public readonly totalCount: number;
-
-  /**
-   * Creates a new Entity instance
-   * 
-   * @param response - The entity response data
-   * @param id - The entity ID
-   * @param service - The service to use for operations
-   */
-  constructor(
-    response: EntityGetByIdResponse,
-    id: string,
-    private readonly _service: EntityServiceModel
-  ) {
-    this.id = id;
-    this.data = response.data;
-    this.fields = response.fields;
-    this.totalCount = response.totalCount;
-  }
-
+export interface EntityMethods {
   /**
    * Insert data into this entity
    * 
@@ -103,9 +73,7 @@ export class Entity {
    * @param options - Insert options
    * @returns Promise resolving to insert response
    */
-  async insert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse> {
-    return this._service.insertById(this.id, data, options);
-  }
+  insert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse>;
 
   /**
    * Update data in this entity
@@ -115,9 +83,7 @@ export class Entity {
    * @param options - Update options
    * @returns Promise resolving to update response
    */
-  async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
-    return this._service.updateById(this.id, data, options);
-  }
+  update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
 
   /**
    * Delete data from this entity
@@ -126,7 +92,68 @@ export class Entity {
    * @param options - Delete options
    * @returns Promise resolving to delete response
    */
-  async delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse> {
-    return this._service.deleteById(this.id, recordIds, options);
-  }
+  delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Get records from this entity
+   * 
+   * @param options - Query options
+   * @returns Promise resolving to array of entity records
+   */
+  getRecords(options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]>;
+}
+
+/**
+ * Entity with methods combining metadata with operation methods
+ */
+export type EntityGetByIdResponse = RawEntityGetByIdResponse & EntityMethods;
+
+/**
+ * Creates entity methods that can be attached to entity data
+ * 
+ * @param entityData - The entity metadata
+ * @param service - The entity service instance
+ * @returns Object containing entity methods
+ */
+function createEntityMethods(entityData: RawEntityGetByIdResponse, service: EntityServiceModel): EntityMethods {
+  return {
+    async insert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+
+      return service.insertById(entityData.id, data, options);
+    },
+
+    async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+
+      return service.updateById(entityData.id, data, options);
+    },
+
+    async delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+
+      return service.deleteById(entityData.id, recordIds, options);
+    },
+
+    async getRecords(options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      
+      return service.getRecordsById(entityData.id, options);
+    }
+  };
+}
+
+/**
+ * Creates an actionable entity metadata by combining entity with operational methods
+ * 
+ * @param entityData - Entity metadata
+ * @param service - The entity service instance
+ * @returns Entity metadata with added methods
+ */
+export function createEntityWithMethods(
+  entityData: RawEntityGetByIdResponse, 
+  service: EntityServiceModel
+): EntityGetByIdResponse {
+  const methods = createEntityMethods(entityData, service);
+  return Object.assign({}, entityData, methods) as EntityGetByIdResponse;
 }
