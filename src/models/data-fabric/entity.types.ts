@@ -1,3 +1,5 @@
+import { PaginationOptions } from '../../utils/pagination/pagination.types';
+
 /**
  * Entity field type names 
  */
@@ -34,10 +36,10 @@ export interface EntityRecord {
 /**
  * Options for getting an entity by Id
  */
-export interface EntityGetRecordsByIdOptions {
+export type EntityGetRecordsByIdOptions = {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
-}
+} & PaginationOptions;
 
 /**
  * Common options for entity operations that modify multiple records

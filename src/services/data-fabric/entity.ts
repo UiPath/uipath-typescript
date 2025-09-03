@@ -15,6 +15,11 @@ import {
   RawEntityGetByIdResponse,
   EntityFieldDataType
 } from '../../models/data-fabric/entity.types';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { ENTITY_PAGINATION } from '../../utils/constants/common';
+import { NonPaginatedResponse } from '../../models/common/common-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createParams } from '../../utils/http/params';
 import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
@@ -144,38 +149,51 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Gets entity records by entity ID
    * 
    * @param entityId - UUID of the entity
-   * @param options - Query options including expansionLevel
-   * @returns Promise resolving to an array of entity records
+   * @param options - Query options including expansionLevel and pagination options
+   * @returns Promise resolving to an array of entity records or paginated response
    * 
    * @example
    * ```typescript
-   * // Basic usage
+   * // Basic usage (non-paginated)
    * const records = await sdk.entity.getRecordsById(<entityId>);
    * 
    * // With expansion level
    * const records = await sdk.entity.getRecordsById(<entityId>, {
    *   expansionLevel: 1
    * });
+   * 
+   * // With pagination
+   * const paginatedResponse = await sdk.entity.getRecordsById(<entityId>, {
+   *   pageSize: 50,
+   *   expansionLevel: 1
+   * });
+   * 
+   * // Navigate to next page
+   * const nextPage = await sdk.entity.getRecordsById(<entityId>, {
+   *   cursor: paginatedResponse.nextCursor,
+   *   expansionLevel: 1
+   * });
    * ```
    */
-  async getRecordsById(id: string, options: EntityGetRecordsByIdOptions = {}): Promise<EntityRecord[]> {
-    const params = createParams({
-      expansionLevel: options.expansionLevel
-    });
-
-    // Get entity records
-    const response = await this.get<Record<string, unknown>>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(id),
-      {
-        params,
-        ...options
-      }
-    );
-
-    // Convert PascalCase keys to camelCase
-    const camelCaseResponse = pascalToCamelCaseKeys(response.data);
-    
-    return (camelCaseResponse.value || []) as EntityRecord[];
+  async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+    entityId: string, 
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  > {
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
+      transformFn: (item: Record<string, unknown>) => pascalToCamelCaseKeys(item) as EntityRecord,
+      pagination: {
+        paginationType: PaginationType.ENTITY,
+        itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
+        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD
+      },
+      excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
+    }, options);
   }
 
   /**

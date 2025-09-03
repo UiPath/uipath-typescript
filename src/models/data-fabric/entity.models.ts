@@ -9,6 +9,8 @@ import {
   EntityRecord,
   RawEntityGetByIdResponse
 } from './entity.types';
+import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
+import { NonPaginatedResponse } from '../common/common-types';
 
 /**
  * Entity service model interface
@@ -25,11 +27,15 @@ export interface EntityServiceModel {
   /**
    * Gets entity records by entity ID
    * 
-   * @param id - UUID of the entity
+   * @param entityId - UUID of the entity
    * @param options - Query options
    * @returns Promise resolving to query response
    */
-  getRecordsById(id: string, options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]>;
+  getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
 
   /**
    * Inserts data into an entity by entity ID
@@ -98,9 +104,13 @@ export interface EntityMethods {
    * Get records from this entity
    * 
    * @param options - Query options
-   * @returns Promise resolving to array of entity records
+   * @returns Promise resolving to query response
    */
-  getRecords(options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]>;
+  getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
 }
 
 /**
@@ -135,10 +145,14 @@ function createEntityMethods(entityData: RawEntityGetByIdResponse, service: Enti
       return service.deleteById(entityData.id, recordIds, options);
     },
 
-    async getRecords(options?: EntityGetRecordsByIdOptions): Promise<EntityRecord[]> {
+    async getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<EntityRecord>
+        : NonPaginatedResponse<EntityRecord>
+    > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       
-      return service.getRecordsById(entityData.id, options);
+      return service.getRecordsById(entityData.id, options) as any;
     }
   };
 }

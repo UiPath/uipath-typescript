@@ -231,11 +231,7 @@ export class PaginationHelpers {
     // Set default field names
     const itemsField = options.itemsField || DEFAULT_ITEMS_FIELD;
     const totalCountField = options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD;
-    
-    // Prepare common request options
-    const keysToPrefix = Object.keys(additionalParams);
-    const apiOptions = addPrefixToKeys(additionalParams, ODATA_PREFIX, keysToPrefix);
-    
+  
     // Determine endpoint and headers based on folderId
     const endpoint = folderId ? getByFolderEndpoint : getAllEndpoint;
     const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
@@ -244,7 +240,7 @@ export class PaginationHelpers {
     const response = await serviceAccess.get<any>(
       endpoint,
       { 
-        params: apiOptions,
+        params: additionalParams,
         headers
       }
     );
