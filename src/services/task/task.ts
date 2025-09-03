@@ -30,7 +30,7 @@ import { NonPaginatedResponse } from '../../models/common/common-types';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_PAGINATION } from '../../utils/constants/common';
+import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
 import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
@@ -134,9 +134,14 @@ export class TaskService extends BaseService implements TaskServiceModel {
       getByFolderEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId), // Use the passed folderId
       transformFn: transformUserResponse,
       pagination: {
-        paginationType: PaginationType.ODATA,
+        paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,          
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM             
+        }
       }
     }, optionsWithFolder) as any;
   }
@@ -199,9 +204,14 @@ export class TaskService extends BaseService implements TaskServiceModel {
       processParametersFn: this.processTaskParameters,
       excludeFromPrefix: ['event'], // Exclude 'event' key from ODATA prefix transformation
       pagination: {
-        paginationType: PaginationType.ODATA,
+        paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      // OData OFFSET parameter
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           // OData OFFSET parameter
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              // OData OFFSET parameter
+        }
       }
     }, options) as any;
   }

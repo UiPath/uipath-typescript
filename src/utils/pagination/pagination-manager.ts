@@ -23,8 +23,7 @@ export class PaginationManager {
     };
     
     switch (type) {
-      case PaginationType.ODATA:
-      case PaginationType.ENTITY:
+      case PaginationType.OFFSET:
         if (pageInfo.currentPage) {
           cursorData.pageNumber = pageInfo.currentPage + 1;
         }
@@ -75,7 +74,7 @@ export class PaginationManager {
     }
     
     // Determine if this pagination type supports page jumping
-    const supportsPageJump = type === PaginationType.ODATA || type === PaginationType.ENTITY;
+    const supportsPageJump = type === PaginationType.OFFSET;
     
     // Create the result object with all fields, then filter out undefined values
     const result = filterUndefined({

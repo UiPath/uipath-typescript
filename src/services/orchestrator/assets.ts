@@ -13,7 +13,7 @@ import { createHeaders } from '../../utils/http/headers';
 import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { ASSET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX } from '../../utils/constants/common';
+import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
 import { AssetMap } from '../../models/orchestrator/assets.constants';
 import { ODATA_PAGINATION } from '../../utils/constants/common';
 import { PaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
@@ -75,9 +75,14 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       getByFolderEndpoint: ASSET_ENDPOINTS.GET_BY_FOLDER,
       transformFn: transformAssetResponse,
       pagination: {
-        paginationType: PaginationType.ODATA,
+        paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,     
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
+        }
       }
     }, options) as any;
   }

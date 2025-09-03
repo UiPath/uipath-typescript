@@ -15,6 +15,7 @@ import {
 import { PaginationManager } from '../utils/pagination/pagination-manager';
 import { PaginationHelpers } from '../utils/pagination/pagination-helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/pagination.constants';
+import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
 
 export interface ApiResponse<T> {
   data: T;
@@ -107,7 +108,7 @@ export class BaseService {
     const params = this.validateAndPreparePaginationParams(paginationType, paginationOptions);
     
     // Prepare request parameters based on pagination type
-    const requestParams = this.preparePaginationRequestParams(paginationType, params);
+    const requestParams = this.preparePaginationRequestParams(paginationType, params, options.pagination);
     
     // Merge pagination parameters with existing parameters
     options.params = {
@@ -146,38 +147,40 @@ export class BaseService {
    */
   private preparePaginationRequestParams(
     paginationType: PaginationType,
-    params: InternalPaginationOptions
+    params: InternalPaginationOptions,
+    paginationConfig?: RequestWithPaginationOptions['pagination']
   ): Record<string, any> {
     const requestParams: Record<string, any> = {};
     let limitedPageSize: number;
     
+    const paginationParams = paginationConfig?.paginationParams;
+    
     switch (paginationType) {
-      case PaginationType.ODATA:
+      case PaginationType.OFFSET:
         limitedPageSize = getLimitedPageSize(params.pageSize);
-        requestParams.$top = limitedPageSize;
-        if (params.pageNumber && params.pageNumber > 1) {
-          requestParams.$skip = (params.pageNumber - 1) * limitedPageSize;
-        }
-        // Always include total count
-        requestParams.$count = true;
-        break;
+        const pageSizeParam = paginationParams?.pageSizeParam || ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM;
+        const offsetParam = paginationParams?.offsetParam || ODATA_OFFSET_PARAMS.OFFSET_PARAM;
+        const countParam = paginationParams?.countParam || ODATA_OFFSET_PARAMS.COUNT_PARAM;
         
-      case PaginationType.ENTITY:
-        limitedPageSize = getLimitedPageSize(params.pageSize);
-        requestParams.limit = limitedPageSize;
+        requestParams[pageSizeParam] = limitedPageSize;
         if (params.pageNumber && params.pageNumber > 1) {
-          requestParams.start = (params.pageNumber - 1) * limitedPageSize;
-        } else {
-          requestParams.start = 0;
+          requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
+        }
+        // Include total count for ODATA APIs
+        if (countParam) {
+          requestParams[countParam] = true;
         }
         break;
         
       case PaginationType.TOKEN:
+        const tokenPageSizeParam = paginationParams?.pageSizeParam || BUCKET_TOKEN_PARAMS.PAGE_SIZE_PARAM;
+        const tokenParam = paginationParams?.tokenParam || BUCKET_TOKEN_PARAMS.TOKEN_PARAM;
+        
         if (params.pageSize) {
-          requestParams.takeHint = getLimitedPageSize(params.pageSize);
+          requestParams[tokenPageSizeParam] = getLimitedPageSize(params.pageSize);
         }
         if (params.continuationToken) {
-          requestParams.continuationToken = params.continuationToken;
+          requestParams[tokenParam] = params.continuationToken;
         }
         break;
     }
@@ -243,8 +246,7 @@ export class BaseService {
     info: PaginationDetectionInfo
   ): boolean {
     switch (paginationType) {
-      case PaginationType.ODATA:
-      case PaginationType.ENTITY:
+      case PaginationType.OFFSET:
         const effectivePageSize = info.pageSize ?? DEFAULT_PAGE_SIZE;
         
         // If totalCount is available, use it for precise calculation
