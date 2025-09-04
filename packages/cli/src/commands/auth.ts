@@ -115,9 +115,9 @@ export default class Auth extends Command {
     }
     
     if (!availablePort) {
-      spinner.fail('All registered ports are in use');
-      this.log(chalk.red(`\nAll registered ports (${AUTH_CONSTANTS.ALTERNATIVE_PORTS.join(', ')}) are currently in use.`));
-      this.log(chalk.gray(`\nPlease free up one of these ports by stopping applications running on them:`));
+      spinner.fail(MESSAGES.ERRORS.ALL_REGISTERED_PORTS_IN_USE);
+      this.log(chalk.red(`\nAll registered ports (${AUTH_CONSTANTS.ALTERNATIVE_PORTS.join(', ')}) ${MESSAGES.ERRORS.PORTS_CURRENTLY_IN_USE}`));
+      this.log(chalk.gray(`\n${MESSAGES.ERRORS.FREE_UP_PORTS_INSTRUCTION}`));
       for (const port of AUTH_CONSTANTS.ALTERNATIVE_PORTS) {
         this.log(chalk.gray(`  • Port ${port}: ${chalk.cyan(`lsof -i :${port}`)} (macOS/Linux) or ${chalk.cyan(`netstat -ano | findstr :${port}`)} (Windows)`));
       }
@@ -127,7 +127,7 @@ export default class Auth extends Command {
     
     spinner.succeed(`Using port ${availablePort}`);
     
-    spinner.text = 'Starting authentication process...';
+    spinner.text = MESSAGES.INFO.STARTING_AUTH_PROCESS;
     let authServer: AuthServer | null = null;
 
     try {
@@ -182,7 +182,7 @@ export default class Auth extends Command {
     await open(authUrl);
     
     spinner.info(MESSAGES.PROMPTS.COMPLETE_AUTH_IN_BROWSER);
-    this.log(chalk.gray(`\nIf the browser didn't open automatically, visit:`));
+    this.log(chalk.gray(`\n${MESSAGES.PROMPTS.BROWSER_FALLBACK_INSTRUCTION}`));
     this.log(chalk.blue(authUrl));
     
     return { authServer, authPromise };
@@ -225,7 +225,7 @@ export default class Auth extends Command {
       
       return { ...selectedTenant, folderKey };
     } catch (error) {
-      orgSpinner.fail('Failed to fetch organization/tenant information');
+      orgSpinner.fail(MESSAGES.ERRORS.FAILED_TO_FETCH_ORG_TENANT);
       if (error instanceof Error) {
         this.log(chalk.red(`Error: ${error.message}`));
       }

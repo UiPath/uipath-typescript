@@ -22,20 +22,32 @@ export const MESSAGES = {
     UNKNOWN_ERROR: 'Unknown error occurred',
     NO_ERROR_DETAILS: 'No additional error details provided',
     
+    // Detailed log messages (used after spinner.fail)
+    REGISTRATION_ERROR_PREFIX: 'Registration error:',
+    PACKAGING_ERROR_PREFIX: 'Packaging error:',
+    PUBLISHING_ERROR_PREFIX: 'Publishing error:',
+    
+    // Debug messages
+    FAILED_TO_LOAD_APP_CONFIG: 'Failed to load app config:',
+    
     // Operation-specific
-    APP_REGISTRATION_FAILED: 'App registration failed',
-    PACKAGE_CREATION_FAILED: 'Package creation failed', 
-    PACKAGE_PUBLISHING_FAILED: 'Package publishing failed',
-    AUTHENTICATION_PROCESS_FAILED: 'Authentication failed',
-    LOGOUT_FAILED: 'Failed to logout',
+    APP_REGISTRATION_FAILED: '❌ App registration failed',
+    PACKAGE_CREATION_FAILED: '❌ Package creation failed', 
+    PACKAGE_PUBLISHING_FAILED: '❌ Package publishing failed',
+    AUTHENTICATION_PROCESS_FAILED: '❌ Authentication failed',
+    LOGOUT_FAILED: '❌ Failed to logout',
+    FAILED_TO_FETCH_ORG_TENANT: '❌ Failed to fetch organization/tenant information',
     
     // Ports
+    ALL_REGISTERED_PORTS_IN_USE: 'All registered ports are in use',
     ALL_PORTS_IN_USE: 'All registered ports are in use. Please free up one of the ports listed above and try again.',
+    PORTS_CURRENTLY_IN_USE: 'are currently in use.',
+    FREE_UP_PORTS_INSTRUCTION: 'Please free up one of these ports by stopping applications running on them:',
     
     // Package-specific
-    NO_NUPKG_FILES_FOUND: 'No .nupkg files found',
-    UIPATH_DIR_NOT_FOUND: '.uipath directory not found',
-    PACKAGE_TOO_LARGE: 'Package file is too large for upload',
+    NO_NUPKG_FILES_FOUND: '❌ No .nupkg files found',
+    UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
+    PACKAGE_TOO_LARGE: '❌ Package file is too large for upload',
   },
   
   SUCCESS: {
@@ -60,8 +72,11 @@ export const MESSAGES = {
     // Spinners/Progress
     REGISTERING_APP: 'Registering app with UiPath...',
     CREATING_PACKAGE: 'Creating NuGet package...',
+    CREATING_METADATA_FILES: 'Creating metadata files...',
+    CREATING_NUPKG_PACKAGE: 'Creating .nupkg package...',
     PUBLISHING_PACKAGE: 'Publishing package to UiPath Orchestrator...',
     FINDING_PORT: 'Finding available port...',
+    STARTING_AUTH_PROCESS: 'Starting authentication process...',
     STARTING_AUTH_SERVER: 'Starting local authentication server...',
     OPENING_BROWSER: 'Opening browser for authentication...',
     WAITING_FOR_AUTH: 'Waiting for authentication...',
@@ -72,8 +87,22 @@ export const MESSAGES = {
     RUN_PACK_FIRST: '💡 Run "uipath pack" first to create a package',
     USE_REGISTERED_VALUES: '💡 Use the registered values by running: uipath pack ./dist',
     RUN_WITHOUT_DRY_RUN: '💡 Run without --dry-run to create the package',
+    USE_PUBLISH_TO_UPLOAD: '💡 Use "uipath publish" to upload to UiPath Orchestrator',
+    APP_URL_SAVED_TO_ENV: '💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI',
+    APP_CONFIG_SAVED: '💡 App configuration has been saved and will be used by pack command',
+    URL_FOR_OAUTH_CONFIG: '💡 You can use this URL as the redirect URI for OAuth configuration in your SDK',
     CREDENTIALS_SAVED: 'Credentials have been saved to .env file',
     CREDENTIALS_REMOVED: 'Credentials have been removed',
+    
+    // Directory/File operations
+    CREATED_OUTPUT_DIRECTORY: 'Created output directory:',
+    
+    // Next steps instructions
+    NEXT_STEPS: 'Next steps:',
+    STEP_BUILD_APP: '1. Build your application: npm run build',
+    STEP_PACKAGE_APP: '2. Package your application: uipath pack ./dist',
+    STEP_PACKAGE_NOTE: '   (App name and version will be automatically used from registration)',
+    STEP_PUBLISH_PACKAGE: '3. Publish the package: uipath publish',
     
     // Headers
     APP_REGISTRATION: '🚀 UiPath App Registration',
@@ -95,6 +124,7 @@ export const MESSAGES = {
     REAUTH_QUESTION: 'Do you want to re-authenticate?',
     CONTINUE_WITH_DIFFERENT_VALUES: 'Do you want to continue with these different values?',
     COMPLETE_AUTH_IN_BROWSER: 'Please complete the authentication in your browser',
+    BROWSER_FALLBACK_INSTRUCTION: 'If the browser didn\'t open automatically, visit:',
   },
   
   VALIDATIONS: {

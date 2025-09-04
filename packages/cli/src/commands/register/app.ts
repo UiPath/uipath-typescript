@@ -133,19 +133,19 @@ export default class RegisterApp extends Command {
       this.log(`  ${chalk.green(appUrl)}`);
       this.log('');
       this.log(chalk.blue(MESSAGES.INFO.APP_REGISTERED));
-      this.log(chalk.yellow('💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI'));
-      this.log(chalk.yellow('💡 App configuration has been saved and will be used by pack command'));
-      this.log(chalk.yellow('💡 You can use this URL as the redirect URI for OAuth configuration in your SDK'));
+      this.log(chalk.yellow(MESSAGES.INFO.APP_URL_SAVED_TO_ENV));
+      this.log(chalk.yellow(MESSAGES.INFO.APP_CONFIG_SAVED));
+      this.log(chalk.yellow(MESSAGES.INFO.URL_FOR_OAUTH_CONFIG));
       this.log('');
-      this.log(chalk.dim('Next steps:'));
-      this.log(chalk.dim('1. Build your application: npm run build'));
-      this.log(chalk.dim('2. Package your application: uipath pack ./dist'));
-      this.log(chalk.dim('   (App name and version will be automatically used from registration)'));
-      this.log(chalk.dim('3. Publish the package: uipath publish'));
+      this.log(chalk.dim(MESSAGES.INFO.NEXT_STEPS));
+      this.log(chalk.dim(MESSAGES.INFO.STEP_BUILD_APP));
+      this.log(chalk.dim(MESSAGES.INFO.STEP_PACKAGE_APP));
+      this.log(chalk.dim(MESSAGES.INFO.STEP_PACKAGE_NOTE));
+      this.log(chalk.dim(MESSAGES.INFO.STEP_PUBLISH_PACKAGE));
       
     } catch (error) {
-      spinner.fail(chalk.red(`❌ ${MESSAGES.ERRORS.APP_REGISTRATION_FAILED}`));
-      this.log(chalk.red(`Registration error: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      spinner.fail(chalk.red(`${MESSAGES.ERRORS.APP_REGISTRATION_FAILED}`));
+      this.log(chalk.red(`${MESSAGES.ERRORS.REGISTRATION_ERROR_PREFIX} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
       process.exit(1);
     }
   }

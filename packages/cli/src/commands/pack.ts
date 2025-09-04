@@ -234,15 +234,15 @@ export default class Pack extends Command {
       // Ensure output directory exists
       if (!fs.existsSync(config.outputDir)) {
         fs.mkdirSync(config.outputDir, { recursive: true });
-        this.log(chalk.dim(`Created output directory: ${config.outputDir}`));
+        this.log(chalk.dim(`${MESSAGES.INFO.CREATED_OUTPUT_DIRECTORY} ${config.outputDir}`));
       }
 
       // Create metadata files in dist directory
-      spinner.text = 'Creating metadata files...';
+      spinner.text = MESSAGES.INFO.CREATING_METADATA_FILES;
       await this.createMetadataFiles(config);
       
       // Create .nupkg using JSZip
-      spinner.text = 'Creating .nupkg package...';
+      spinner.text = MESSAGES.INFO.CREATING_NUPKG_PACKAGE;
       await this.createNupkgFile(config);
       
       // Handle metadata.json
@@ -258,11 +258,11 @@ export default class Pack extends Command {
       this.log(`  Location: ${path.join(config.outputDir, `${config.name}.${config.version}.nupkg`)}`);
       this.log('');
       this.log(chalk.blue(MESSAGES.INFO.PACKAGE_READY));
-      this.log(chalk.dim('💡 Use "uipath publish" to upload to UiPath Orchestrator'));
+      this.log(chalk.dim(MESSAGES.INFO.USE_PUBLISH_TO_UPLOAD));
       
     } catch (error) {
-      spinner.fail(chalk.red(`❌ ${MESSAGES.ERRORS.PACKAGE_CREATION_FAILED}`));
-      this.log(chalk.red(`Packaging error: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      spinner.fail(chalk.red(`${MESSAGES.ERRORS.PACKAGE_CREATION_FAILED}`));
+      this.log(chalk.red(`${MESSAGES.ERRORS.PACKAGING_ERROR_PREFIX} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
       process.exit(1);
     }
   }
@@ -444,7 +444,7 @@ export default class Pack extends Command {
         return JSON.parse(configContent) as AppConfig;
       }
     } catch (error) {
-      this.debug(`Failed to load app config: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.debug(`${MESSAGES.ERRORS.FAILED_TO_LOAD_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
     }
     
     return null;

@@ -60,7 +60,7 @@ export default class Publish extends Command {
     try {
       // Check if .uipath directory exists
       if (!fs.existsSync(flags['uipath-dir'])) {
-        spinner.fail(chalk.red(`❌ ${MESSAGES.ERRORS.UIPATH_DIR_NOT_FOUND}`));
+        spinner.fail(chalk.red(`${MESSAGES.ERRORS.UIPATH_DIR_NOT_FOUND}`));
         this.log('');
         this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
         return;
@@ -72,7 +72,7 @@ export default class Publish extends Command {
         .map(file => path.join(flags['uipath-dir'], file));
 
       if (nupkgFiles.length === 0) {
-        spinner.fail(chalk.red(`❌ ${MESSAGES.ERRORS.NO_NUPKG_FILES_FOUND}`));
+        spinner.fail(chalk.red(`${MESSAGES.ERRORS.NO_NUPKG_FILES_FOUND}`));
         this.log('');
         this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
         return;
@@ -108,8 +108,8 @@ export default class Publish extends Command {
       this.log(chalk.blue(MESSAGES.INFO.PACKAGE_AVAILABLE));
       
     } catch (error) {
-      spinner.fail(chalk.red(`❌ ${MESSAGES.ERRORS.PACKAGE_PUBLISHING_FAILED}`));
-      this.log(chalk.red(`Publishing error: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      spinner.fail(chalk.red(`${MESSAGES.ERRORS.PACKAGE_PUBLISHING_FAILED}`));
+      this.log(chalk.red(`${MESSAGES.ERRORS.PUBLISHING_ERROR_PREFIX} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
       process.exit(1);
     }
   }
