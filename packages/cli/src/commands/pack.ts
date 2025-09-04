@@ -107,7 +107,7 @@ export default class Pack extends Command {
       const response = await inquirer.prompt([{
         type: 'confirm',
         name: 'continue',
-        message: 'Do you want to continue with these different values?',
+        message: MESSAGES.PROMPTS.CONTINUE_WITH_DIFFERENT_VALUES,
         default: false,
       }]);
       

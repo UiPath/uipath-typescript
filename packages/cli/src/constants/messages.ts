@@ -48,6 +48,15 @@ export const MESSAGES = {
     NO_NUPKG_FILES_FOUND: '❌ No .nupkg files found',
     UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
     PACKAGE_TOO_LARGE: '❌ Package file is too large for upload',
+    
+    // Command-specific
+    UNKNOWN_FLAG: '✗ Error: Unknown flag',
+    UNKNOWN_COMMAND: '✗ Error: Unknown command',
+    
+    // File operations
+    FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',
+    MANUAL_ENV_INSTRUCTION: 'Please add the following to your .env file manually:',
+    FAILED_TO_SAVE_APP_CONFIG: 'Failed to save app configuration:',
   },
   
   SUCCESS: {
@@ -125,6 +134,12 @@ export const MESSAGES = {
     CONTINUE_WITH_DIFFERENT_VALUES: 'Do you want to continue with these different values?',
     COMPLETE_AUTH_IN_BROWSER: 'Please complete the authentication in your browser',
     BROWSER_FALLBACK_INSTRUCTION: 'If the browser didn\'t open automatically, visit:',
+  },
+  
+  HELP: {
+    // CLI help messages
+    FLAG_HELP: 'Run --help to see available options',
+    COMMAND_HELP: 'Run --help to see available commands',
   },
   
   VALIDATIONS: {

@@ -193,7 +193,7 @@ export default class RegisterApp extends Command {
       fs.renameSync(tempPath, configPath);
       
     } catch (error) {
-      this.warn(`Failed to save app configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.warn(`${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
     }
   }
 
@@ -230,8 +230,8 @@ export default class RegisterApp extends Command {
       fs.renameSync(tempPath, envPath);
       
     } catch (error) {
-      this.warn(`Failed to update .env file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.log(chalk.yellow(`Please add the following to your .env file manually:`));
+      this.warn(`${MESSAGES.ERRORS.FAILED_TO_UPDATE_ENV} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
+      this.log(chalk.yellow(MESSAGES.ERRORS.MANUAL_ENV_INSTRUCTION));
       this.log(chalk.dim(`${key}=${value}`));
     }
   }
