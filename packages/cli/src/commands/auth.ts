@@ -13,6 +13,7 @@ import { getFormattedExpirationDate } from '../auth/utils/date.js';
 import { AUTH_CONSTANTS } from '../constants/auth.js';
 import { MESSAGES } from '../constants/messages.js';
 import { isPortAvailable } from '../auth/utils/port-checker.js';
+import { track } from '../telemetry/index.js';
 
 const createDomainShorthandFlag = (domain: string, otherDomains: string[]) => {
   return Flags.boolean({
@@ -53,6 +54,7 @@ export default class Auth extends Command {
     }),
   };
 
+  @track('Auth')
   async run(): Promise<void> {
     const { flags } = await this.parse(Auth);
 

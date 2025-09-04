@@ -11,6 +11,7 @@ import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
 import { validateEnvironment } from '../../utils/env-validator.js';
 import { handleHttpError } from '../../utils/error-handler.js';
+import { track } from '../../telemetry/index.js';
 
 interface RegisterResponse {
   definition: {
@@ -41,6 +42,7 @@ export default class RegisterApp extends Command {
     }),
   };
 
+  @track('RegisterApp')
   public async run(): Promise<void> {
     const { flags } = await this.parse(RegisterApp);
     

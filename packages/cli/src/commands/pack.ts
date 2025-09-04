@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import { AppConfig } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
+import { track } from '../telemetry/index.js';
 
 export default class Pack extends Command {
   static override description = 'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
@@ -67,6 +68,7 @@ export default class Pack extends Command {
     }),
   };
 
+  @track('Pack')
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Pack);
     

@@ -33,6 +33,7 @@
         "dev:cli": "npm run dev --workspace=packages/cli"
     },
     "dependencies": {
+        "@opentelemetry/sdk-logs": "^0.204.0",
         "axios": "^1.6.7",
         "eventemitter3": "^5.0.1",
         "file-type": "^21.0.0",

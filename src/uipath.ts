@@ -14,6 +14,7 @@ import {
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
 import { TokenManager } from './core/auth/token-manager';
+import { telemetryClient, trackEvent } from './core/telemetry';
 
 type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
@@ -41,6 +42,18 @@ export class UiPath {
 
     this.executionContext = new ExecutionContext();
     this.authService = new AuthService(this.config, this.executionContext);
+
+    // Initialize telemetry with SDK configuration
+    telemetryClient.initialize({
+      baseUrl: config.baseUrl,
+      orgName: config.orgName,
+      tenantName: config.tenantName,
+      clientId: hasOAuthConfig(config) ? config.clientId : undefined,
+      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined
+    });
+
+    // Track SDK initialization
+    trackEvent('Sdk.Auth');
 
     // Auto-initialize for secret-based auth
     if (hasSecretConfig(config)) {

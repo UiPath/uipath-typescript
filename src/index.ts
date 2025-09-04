@@ -20,4 +20,7 @@ export * from './core/errors';
 // Export utilities  
 export * from './utils/pagination';
 
+// Export telemetry
+export * from './core/telemetry';
+
 
