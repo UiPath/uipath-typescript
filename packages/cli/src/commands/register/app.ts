@@ -7,8 +7,10 @@ import * as path from 'path';
 import fetch from 'node-fetch';
 import { EnvironmentConfig, AppConfig } from '../../types/index.js';
 import { API_ENDPOINTS } from '../../constants/index.js';
+import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
 import { validateEnvironment } from '../../utils/env-validator.js';
+import { handleHttpError } from '../../utils/error-handler.js';
 
 interface RegisterResponse {
   definition: {
@@ -42,7 +44,7 @@ export default class RegisterApp extends Command {
   public async run(): Promise<void> {
     const { flags } = await this.parse(RegisterApp);
     
-    this.log(chalk.blue('🚀 UiPath App Registration'));
+    this.log(chalk.blue(MESSAGES.INFO.APP_REGISTRATION));
 
     // Validate environment variables
     const envConfig = await this.validateEnvironment();
@@ -78,10 +80,10 @@ export default class RegisterApp extends Command {
       {
         type: 'input',
         name: 'name',
-        message: 'Enter app name:',
+        message: MESSAGES.PROMPTS.ENTER_APP_NAME,
         validate: (input: string) => {
           if (!input.trim()) {
-            return 'App name is required';
+            return MESSAGES.VALIDATIONS.APP_NAME_REQUIRED;
           }
           return true;
         },
@@ -92,7 +94,7 @@ export default class RegisterApp extends Command {
   }
 
   private async registerApp(appName: string, appVersion: string, envConfig: EnvironmentConfig): Promise<void> {
-    const spinner = ora('Registering app with UiPath...').start();
+    const spinner = ora(MESSAGES.INFO.REGISTERING_APP).start();
     
     try {
       // Call the publish coded app API
@@ -119,7 +121,7 @@ export default class RegisterApp extends Command {
       await this.updateEnvFile('UIPATH_APP_URL', appUrl);
       await this.updateEnvFile('UIPATH_APP_REDIRECT_URI', appUrl);
       
-      spinner.succeed(chalk.green('✅ App registered successfully!'));
+      spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_REGISTERED_SUCCESS));
       
       this.log('');
       this.log(chalk.bold('App Details:'));
@@ -130,20 +132,21 @@ export default class RegisterApp extends Command {
       this.log(chalk.bold('App URL:'));
       this.log(`  ${chalk.green(appUrl)}`);
       this.log('');
-      this.log(chalk.blue('🎉 Your app has been registered with UiPath!'));
-      this.log(chalk.yellow('💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI'));
-      this.log(chalk.yellow('💡 App configuration has been saved and will be used by pack command'));
-      this.log(chalk.yellow('💡 You can use this URL as the redirect URI for OAuth configuration in your SDK'));
+      this.log(chalk.blue(MESSAGES.INFO.APP_REGISTERED));
+      this.log(chalk.yellow(MESSAGES.INFO.APP_URL_SAVED_TO_ENV));
+      this.log(chalk.yellow(MESSAGES.INFO.APP_CONFIG_SAVED));
+      this.log(chalk.yellow(MESSAGES.INFO.URL_FOR_OAUTH_CONFIG));
       this.log('');
-      this.log(chalk.dim('Next steps:'));
-      this.log(chalk.dim('1. Build your application: npm run build'));
-      this.log(chalk.dim('2. Package your application: uipath pack ./dist'));
-      this.log(chalk.dim('   (App name and version will be automatically used from registration)'));
-      this.log(chalk.dim('3. Publish the package: uipath publish'));
+      this.log(chalk.dim(MESSAGES.INFO.NEXT_STEPS));
+      this.log(chalk.dim(MESSAGES.INFO.STEP_BUILD_APP));
+      this.log(chalk.dim(MESSAGES.INFO.STEP_PACKAGE_APP));
+      this.log(chalk.dim(MESSAGES.INFO.STEP_PACKAGE_NOTE));
+      this.log(chalk.dim(MESSAGES.INFO.STEP_PUBLISH_PACKAGE));
       
     } catch (error) {
-      spinner.fail(chalk.red('❌ App registration failed'));
-      this.error(`Registration error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      spinner.fail(chalk.red(`${MESSAGES.ERRORS.APP_REGISTRATION_FAILED}`));
+      this.log(chalk.red(`${MESSAGES.ERRORS.REGISTRATION_ERROR_PREFIX} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      process.exit(1);
     }
   }
 
@@ -168,8 +171,7 @@ export default class RegisterApp extends Command {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      await handleHttpError(response, 'app registration');
     }
 
     return await response.json() as RegisterResponse;
@@ -191,7 +193,7 @@ export default class RegisterApp extends Command {
       fs.renameSync(tempPath, configPath);
       
     } catch (error) {
-      this.warn(`Failed to save app configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.warn(`${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
     }
   }
 
@@ -228,8 +230,8 @@ export default class RegisterApp extends Command {
       fs.renameSync(tempPath, envPath);
       
     } catch (error) {
-      this.warn(`Failed to update .env file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      this.log(chalk.yellow(`Please add the following to your .env file manually:`));
+      this.warn(`${MESSAGES.ERRORS.FAILED_TO_UPDATE_ENV} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
+      this.log(chalk.yellow(MESSAGES.ERRORS.MANUAL_ENV_INSTRUCTION));
       this.log(chalk.dim(`${key}=${value}`));
     }
   }
