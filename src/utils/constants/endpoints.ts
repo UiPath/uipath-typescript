@@ -45,6 +45,7 @@ export const TASK_ENDPOINTS = {
  */
 export const DATA_FABRIC_ENDPOINTS = {
   ENTITY: {
+    GET_ALL: 'datafabric_/api/Entity',
     GET_ENTITY_RECORDS: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/read`,
     GET_BY_ID: (entityId: string) => `datafabric_/api/Entity/${entityId}`,
     INSERT_BY_ID: (entityId: string) => `datafabric_/api/EntityService/entity/${entityId}/insert-batch`,

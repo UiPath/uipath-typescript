@@ -2,7 +2,7 @@ import { BaseService } from '../base-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
-import { EntityServiceModel, EntityGetByIdResponse, createEntityWithMethods } from '../../models/data-fabric/entity.models';
+import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entity.models';
 import {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
@@ -12,7 +12,7 @@ import {
   EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
-  RawEntityGetByIdResponse,
+  RawEntityGetResponse,
   EntityFieldDataType
 } from '../../models/data-fabric/entity.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
@@ -51,14 +51,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ]);
    * ```
    */
-  async getById(id: string): Promise<EntityGetByIdResponse> {
+  async getById(id: string): Promise<EntityGetResponse> {
     // Get entity metadata
-    const response = await this.get<RawEntityGetByIdResponse>(
+    const response = await this.get<RawEntityGetResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id)
     );
     
-    // Convert PascalCase keys to camelCase and apply EntityMap transformations
-    const metadata = transformData(pascalToCamelCaseKeys(response.data) as RawEntityGetByIdResponse, EntityMap)
+    // Apply EntityMap transformations
+    const metadata = transformData(response.data as RawEntityGetResponse, EntityMap)
     
     // Transform metadata with field mappers
     this.applyFieldMappings(metadata);
@@ -73,7 +73,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @param metadata - Entity metadata to transform
    * @private
    */
-  private applyFieldMappings(metadata: RawEntityGetByIdResponse): void {
+  private applyFieldMappings(metadata: RawEntityGetResponse): void {
     this.mapFieldTypes(metadata);
     this.mapExternalFields(metadata);
   }
@@ -84,7 +84,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @param metadata - Entity metadata with fields
    * @private
    */
-  private mapFieldTypes(metadata: RawEntityGetByIdResponse): void {
+  private mapFieldTypes(metadata: RawEntityGetResponse): void {
     if (!metadata.fields?.length) return;
     
     metadata.fields = metadata.fields.map(field => {
@@ -126,7 +126,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @param metadata - Entity metadata with externalFields
    * @private
    */
-  private mapExternalFields(metadata: RawEntityGetByIdResponse): void {
+  private mapExternalFields(metadata: RawEntityGetResponse): void {
     if (!metadata.externalFields?.length) return;
     
     metadata.externalFields = metadata.externalFields.map(externalSource => {
@@ -326,5 +326,36 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // Convert PascalCase response to camelCase
     const camelResponse = pascalToCamelCaseKeys(response.data);
     return camelResponse;
+  }
+
+  /**
+   * Gets all entities in the system
+   * 
+   * @returns Promise resolving to an array of entity metadata
+   * 
+   * @example
+   * ```typescript
+   * // Get all entities
+   * const entities = await sdk.entity.getAll();
+   * 
+   * // Call operations on an entity
+   * const records = await entities[0].getRecords();
+   * ```
+   */
+  async getAll(): Promise<EntityGetResponse[]> {
+    const response = await this.get<RawEntityGetResponse[]>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL
+    );
+    
+    // Apply transformations
+    const entities = response.data.map(entity => {
+      // Transform each entity
+      const metadata = transformData(entity as RawEntityGetResponse, EntityMap);
+      this.applyFieldMappings(metadata);
+      // Attach entity methods
+      return createEntityWithMethods(metadata, this);
+    });
+    
+    return entities;
   }
 }

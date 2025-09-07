@@ -7,7 +7,7 @@ import {
   EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
-  RawEntityGetByIdResponse
+  RawEntityGetResponse
 } from './entity.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/pagination.types';
 
@@ -16,12 +16,19 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  */
 export interface EntityServiceModel {
   /**
+   * Gets all entities in the system
+   * 
+   * @returns Promise resolving to an array of entity metadata
+   */
+  getAll(): Promise<EntityGetResponse[]>;
+
+  /**
    * Gets entity metadata by entity ID with attached operation methods
    * 
    * @param id - UUID of the entity
    * @returns Promise resolving to entity metadata with operation methods
    */
-  getById(id: string): Promise<EntityGetByIdResponse>;
+  getById(id: string): Promise<EntityGetResponse>;
 
   /**
    * Gets entity records by entity ID
@@ -115,7 +122,7 @@ export interface EntityMethods {
 /**
  * Entity with methods combining metadata with operation methods
  */
-export type EntityGetByIdResponse = RawEntityGetByIdResponse & EntityMethods;
+export type EntityGetResponse = RawEntityGetResponse & EntityMethods;
 
 /**
  * Creates entity methods that can be attached to entity data
@@ -124,7 +131,7 @@ export type EntityGetByIdResponse = RawEntityGetByIdResponse & EntityMethods;
  * @param service - The entity service instance
  * @returns Object containing entity methods
  */
-function createEntityMethods(entityData: RawEntityGetByIdResponse, service: EntityServiceModel): EntityMethods {
+function createEntityMethods(entityData: RawEntityGetResponse, service: EntityServiceModel): EntityMethods {
   return {
     async insert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
@@ -164,9 +171,9 @@ function createEntityMethods(entityData: RawEntityGetByIdResponse, service: Enti
  * @returns Entity metadata with added methods
  */
 export function createEntityWithMethods(
-  entityData: RawEntityGetByIdResponse, 
+  entityData: RawEntityGetResponse, 
   service: EntityServiceModel
-): EntityGetByIdResponse {
+): EntityGetResponse {
   const methods = createEntityMethods(entityData, service);
-  return Object.assign({}, entityData, methods) as EntityGetByIdResponse;
+  return Object.assign({}, entityData, methods) as EntityGetResponse;
 }
