@@ -10,23 +10,26 @@ import {
   BucketGetUriResponse,
   BucketGetReadUriOptions,
   BucketGetWriteUriOptions,
-  BucketGetFileMetaDataOptions,
-  BucketGetFileMetaDataResponse,
+  BucketGetFileMetaDataWithPaginationOptions,
   BucketUploadFileOptions,
-  BucketUploadResponse
+  BucketUploadResponse,
+  BlobItem
 } from '../../models/orchestrator/bucket.types';
 import { BucketServiceModel } from '../../models/orchestrator/bucket.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys, renameObjectFields, transformData, arrayDictionaryToRecord } from '../../utils/transform';
+import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../utils/transform';
 import { filterUndefined } from '../../utils/object-utils';
 import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_ID } from '../../utils/constants/headers';
+import { CONTENT_TYPES, FOLDER_ID } from '../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ContentType, ODATA_PREFIX } from '../../utils/constants/common';
-import { CollectionResponse } from '../../models/common/common-types';
+import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../utils/constants/common';
 import { BucketMap } from '../../models/orchestrator/bucket.constants';
+import { ODATA_PAGINATION } from '../../utils/constants/common';
 import { isBrowser } from '../../utils/platform';
 import * as mimeTypes from 'mime-types';
 import axios, { AxiosResponse } from 'axios';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 
 // Import file-type dynamically to avoid issues in browser environment
 // This variable will hold the fileTypeFromBuffer function when in Node.js environment
@@ -95,8 +98,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   /**
    * Gets all buckets across folders with optional filtering and folder scoping
    * 
+   * The method returns either:
+   * - An array of buckets (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of buckets
+   * @returns Promise resolving to an array of buckets or paginated result
    * 
    * @example
    * ```typescript
@@ -112,60 +119,91 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * const buckets = await sdk.buckets.getAll({ 
    *   filter: "name eq 'MyBucket'"
    * });
-   * ```
-   */
-  async getAll(options: BucketGetAllOptions = {}): Promise<BucketGetResponse[]> {
-    const { folderId, ...restOptions } = options;
-    
-    // If folderId is provided, use the folder-specific endpoint
-    if (folderId) {
-      return this._getByFolder<object, BucketGetResponse>(
-        BUCKET_ENDPOINTS.GET_BY_FOLDER,
-        folderId, 
-        restOptions,
-        (bucket) => pascalToCamelCaseKeys(bucket) as BucketGetResponse
-      );
-    }
-    
-    // Otherwise get buckets across all folders
-    const keysToPrefix = Object.keys(restOptions);
-    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<CollectionResponse<BucketGetResponse>>(
-      BUCKET_ENDPOINTS.GET_ALL,
-      { 
-        params: apiOptions
-      }
-    );
-
-    const bucketArray = response.data?.value; 
-    const transformedBuckets = bucketArray?.map(bucket => 
-      pascalToCamelCaseKeys(bucket) as BucketGetResponse
-    );
-    
-    return transformedBuckets;
-  }
-
-  /**
-   * Gets files from a bucket with optional filtering and pagination
    * 
-   * @param bucketId - The ID of the bucket to get files from
-   * @param folderId - Required folder ID for organization unit context
-   * @param options - Optional parameters for filtering, pagination and access URL generation
-   * @returns Promise resolving to the list of files in the bucket
+   * // First page with pagination
+   * const page1 = await sdk.buckets.getAll({ pageSize: 10 });
    * 
-   * @example
-   * ```typescript
-   * // Get all files in a bucket
-   * const files = await sdk.buckets.getFiles(123, 456);
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.buckets.getAll({ cursor: page1.nextCursor });
+   * }
    * 
-   * // Get files with a specific prefix
-   * const files = await sdk.buckets.getFiles(123, 456, {
-   *   prefix: '/folder1'
+   * // Jump to specific page
+   * const page5 = await sdk.buckets.getAll({
+   *   jumpToPage: 5,
+   *   pageSize: 10
    * });
    * ```
    */
-  async getFileMetaData(bucketId: number, folderId: number, options: BucketGetFileMetaDataOptions = {}): Promise<BucketGetFileMetaDataResponse> {
+  async getAll<T extends BucketGetAllOptions = BucketGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BucketGetResponse>
+      : NonPaginatedResponse<BucketGetResponse>
+  > {
+    // Transformation function for buckets
+    const transformBucketResponse = (bucket: any) => 
+      pascalToCamelCaseKeys(bucket) as BucketGetResponse;
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: (folderId) => folderId ? BUCKET_ENDPOINTS.GET_BY_FOLDER : BUCKET_ENDPOINTS.GET_ALL,
+      getByFolderEndpoint: BUCKET_ENDPOINTS.GET_BY_FOLDER,
+      transformFn: transformBucketResponse,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM             
+        }
+      }
+    }, options) as any;
+  }
+
+  /**
+   * Gets metadata for files in a bucket with optional filtering and pagination
+   * 
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   * 
+   * @param bucketId - The ID of the bucket to get file metadata from
+   * @param folderId - Required folder ID for organization unit context
+   * @param options - Optional parameters for filtering, pagination and access URL generation
+   * @returns Promise resolving to the list of file metadata in the bucket or paginated result
+   * 
+   * @example
+   * ```typescript
+   * // Get metadata for all files in a bucket
+   * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456);
+   * 
+   * // Get file metadata with a specific prefix
+   * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456, {
+   *   prefix: '/folder1'
+   * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.buckets.getFileMetaData(123, 456, { pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.buckets.getFileMetaData(123, 456, { cursor: page1.nextCursor });
+   * }
+   * ```
+   */
+  async getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
+    bucketId: number, 
+    folderId: number, 
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BlobItem>
+      : NonPaginatedResponse<BlobItem>
+  > {
     if (!bucketId) {
       throw new ValidationError({ message: 'bucketId is required for getFileMetaData' });
     }
@@ -173,25 +211,26 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     if (!folderId) {
       throw new ValidationError({ message: 'folderId is required for getFileMetaData' });
     }
-    
-    // Create headers with required folder ID
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    // Filter out undefined values from options
-    const queryParams = filterUndefined(options);
-    
-    renameObjectFields(queryParams, { limit: 'takeHint' });
-    
-    // Make the API call to get files
-    const response = await this.get<BucketGetFileMetaDataResponse>(
-      BUCKET_ENDPOINTS.GET_FILE_META_DATA(bucketId),
-      {
-        params: queryParams,
-        headers
-      }
-    );
-    
-    return transformData(response.data, BucketMap);
+
+    // Transformation function for blob items
+    const transformBlobItem = (item: any) => 
+      transformData(item, BucketMap) as BlobItem;
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => BUCKET_ENDPOINTS.GET_FILE_META_DATA(bucketId),
+      transformFn: transformBlobItem,
+      pagination: {
+        paginationType: PaginationType.TOKEN,
+        itemsField: BUCKET_PAGINATION.ITEMS_FIELD,
+        continuationTokenField: BUCKET_PAGINATION.CONTINUATION_TOKEN_FIELD,
+        paginationParams: {
+          pageSizeParam: BUCKET_TOKEN_PARAMS.PAGE_SIZE_PARAM,       
+          tokenParam: BUCKET_TOKEN_PARAMS.TOKEN_PARAM               
+        }
+      },
+      excludeFromPrefix: ['prefix'] // Bucket-specific param, not OData
+    }, { ...options, folderId }) as any;
   }
 
   /**
@@ -305,7 +344,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     }
 
     // 4. Final fallback
-    return ContentType.APPLICATION_OCTET_STREAM;
+    return CONTENT_TYPES.OCTET_STREAM;
   }
 
   /**

@@ -17,5 +17,7 @@ export * from './models/task';
 
 // Export error handling functionality (public API only)
 export * from './core/errors';
+// Export utilities  
+export * from './utils/pagination';
 
 

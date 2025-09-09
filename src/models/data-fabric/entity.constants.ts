@@ -1,4 +1,4 @@
-import { EntityFieldType } from "./entity.types";
+import { EntityFieldDataType } from "./entity.types";
 
 /**
  * Entity field data types (SQL types from API)
@@ -21,25 +21,27 @@ export enum SqlFieldType {
 /**
  * Maps fields for Entities 
  */
-export const EntityMap: { [key: string]: string } = {
-  totalRecordCount: 'totalCount',
-  value: 'data'
+export const EntityMap = {
+  createTime: 'createdTime',
+  updateTime: 'updatedTime',
+  sqlType: 'fieldDataType',
+  fieldDefinition: 'fieldMetaData' 
 };
 
 /**
  * Maps SQL field types to friendly display names
  */
-export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldType> = {
-  [SqlFieldType.UNIQUEIDENTIFIER]: EntityFieldType.UUID,
-  [SqlFieldType.NVARCHAR]: EntityFieldType.STRING,
-  [SqlFieldType.INT]: EntityFieldType.INTEGER,
-  [SqlFieldType.DATETIME2]: EntityFieldType.DATETIME,
-  [SqlFieldType.DATETIMEOFFSET]: EntityFieldType.DATETIME_WITH_TZ,
-  [SqlFieldType.FLOAT]: EntityFieldType.FLOAT,
-  [SqlFieldType.REAL]: EntityFieldType.DOUBLE,
-  [SqlFieldType.BIGINT]: EntityFieldType.BIG_INTEGER,
-  [SqlFieldType.DATE]: EntityFieldType.DATE,
-  [SqlFieldType.BIT]: EntityFieldType.BOOLEAN,
-  [SqlFieldType.DECIMAL]: EntityFieldType.DECIMAL,
-  [SqlFieldType.MULTILINE]: EntityFieldType.MULTILINE_TEXT
+export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldDataType> = {
+  [SqlFieldType.UNIQUEIDENTIFIER]: EntityFieldDataType.UUID,
+  [SqlFieldType.NVARCHAR]: EntityFieldDataType.STRING,
+  [SqlFieldType.INT]: EntityFieldDataType.INTEGER,
+  [SqlFieldType.DATETIME2]: EntityFieldDataType.DATETIME,
+  [SqlFieldType.DATETIMEOFFSET]: EntityFieldDataType.DATETIME_WITH_TZ,
+  [SqlFieldType.FLOAT]: EntityFieldDataType.FLOAT,
+  [SqlFieldType.REAL]: EntityFieldDataType.DOUBLE,
+  [SqlFieldType.BIGINT]: EntityFieldDataType.BIG_INTEGER,
+  [SqlFieldType.DATE]: EntityFieldDataType.DATE,
+  [SqlFieldType.BIT]: EntityFieldDataType.BOOLEAN,
+  [SqlFieldType.DECIMAL]: EntityFieldDataType.DECIMAL,
+  [SqlFieldType.MULTILINE]: EntityFieldDataType.MULTILINE_TEXT
 }; 

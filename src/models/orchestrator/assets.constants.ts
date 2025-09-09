@@ -4,4 +4,4 @@
 export const AssetMap: { [key: string]: string } = {
   creationTime: 'createdTime',
   lastModificationTime: 'lastModifiedTime'
-}; 
+};

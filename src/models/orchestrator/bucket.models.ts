@@ -1,4 +1,5 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketGetWriteUriOptions, BucketUploadFileOptions, BucketUploadResponse } from './bucket.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './bucket.types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
  * Bucket service model interface
@@ -7,10 +8,18 @@ export interface BucketServiceModel {
   /**
    * Gets all buckets across folders with optional filtering
    * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of buckets
+   * The method returns either:
+   * - A NonPaginatedResponse with data and totalCount (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
+   * @param options - Query options including optional folderId and pagination options
+   * @returns Promise resolving to NonPaginatedResponse or a paginated result
    */
-  getAll(options?: BucketGetAllOptions): Promise<BucketGetResponse[]>;
+  getAll<T extends BucketGetAllOptions = BucketGetAllOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BucketGetResponse>
+      : NonPaginatedResponse<BucketGetResponse>
+  >;
 
   /**
    * Gets a single bucket by ID
@@ -23,14 +32,26 @@ export interface BucketServiceModel {
   getById(bucketId: number, folderId: number, options?: BucketGetByIdOptions): Promise<BucketGetResponse>;
 
   /**
-   * Gets files from a bucket with optional filtering and pagination
+   * Gets metadata for files in a bucket with optional filtering and pagination
    * 
-   * @param bucketId - The ID of the bucket to get files from
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   * 
+   * @param bucketId - The ID of the bucket to get file metadata from
    * @param folderId - Required folder ID for organization unit context
    * @param options - Optional parameters for filtering, pagination and access URL generation
-   * @returns Promise resolving to the files in the bucket
+   * @returns Promise resolving to the file metadata in the bucket or paginated result
    */
-  getFileMetaData(bucketId: number, folderId: number, options?: BucketGetFileMetaDataOptions): Promise<BucketGetFileMetaDataResponse>;
+  getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
+    bucketId: number, 
+    folderId: number, 
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BlobItem>
+      : NonPaginatedResponse<BlobItem>
+  >;
 
   /**
    * Gets a direct download URL for a file in the bucket

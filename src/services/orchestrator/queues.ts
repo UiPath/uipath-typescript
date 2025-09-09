@@ -1,7 +1,6 @@
 import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { CollectionResponse } from '../../models/common/common-types';
 import { 
   QueueGetResponse, 
   QueueGetAllOptions, 
@@ -13,7 +12,10 @@ import { createHeaders } from '../../utils/http/headers';
 import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { QUEUE_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX } from '../../utils/constants/common';
+import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 import { QueueMap } from '../../models/orchestrator/queues.constants';
 
 /**
@@ -27,12 +29,16 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   /**
    * Gets all queues across folders with optional filtering and folder scoping
    * 
+   * The method returns either:
+   * - An array of queues (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of queues
+   * @returns Promise resolving to an array of queues or paginated result
    * 
    * @example
    * ```typescript
-   * // Get all queues across folders
+   * // Standard array return
    * const queues = await sdk.queue.getAll();
    * 
    * // Get queues within a specific folder
@@ -44,38 +50,49 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * const queues = await sdk.queue.getAll({ 
    *   filter: "name eq 'MyQueue'"
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.queue.getAll({ pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.queue.getAll({ cursor: page1.nextCursor });
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.queue.getAll({
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
    * ```
    */
-  async getAll(options: QueueGetAllOptions = {}): Promise<QueueGetResponse[]> {
-    const { folderId, ...restOptions } = options;
-    
-    // If folderId is provided, use the folder-specific endpoint
-    if (folderId) {
-      return this._getByFolder<object, QueueGetResponse>(
-        QUEUE_ENDPOINTS.GET_BY_FOLDER,
-        folderId,
-        restOptions,
-        (queue) => transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap)
-      );
-    }
-    
-    // Otherwise get queues across all folders
-    const keysToPrefix = Object.keys(restOptions);
-    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<CollectionResponse<QueueGetResponse>>(
-      QUEUE_ENDPOINTS.GET_ALL,
-      { 
-        params: apiOptions
-      }
-    );
+  async getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<QueueGetResponse>
+      : NonPaginatedResponse<QueueGetResponse>
+  > {
+    // Transformation function for queues
+    const transformQueueResponse = (queue: any) => 
+      transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
 
-    const queueArray = response.data?.value;
-    const transformedQueues = queueArray?.map(queue => 
-      transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap)
-    );
-    
-    return transformedQueues;
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: (folderId) => folderId ? QUEUE_ENDPOINTS.GET_BY_FOLDER : QUEUE_ENDPOINTS.GET_ALL,
+      getByFolderEndpoint: QUEUE_ENDPOINTS.GET_BY_FOLDER,
+      transformFn: transformQueueResponse,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
+        }
+      }
+    }, options) as any;
   }
 
   /**

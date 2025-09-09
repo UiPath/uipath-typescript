@@ -1,4 +1,5 @@
 import { BaseOptions, RequestOptions } from "../common/common-types";
+import { PaginationOptions } from "../../utils/pagination";
 
 export enum BucketOptions {
   None = 'None',
@@ -22,7 +23,7 @@ export interface BucketGetResponse {
   foldersCount: number;
 }
 
-export interface BucketGetAllOptions extends RequestOptions {
+export type BucketGetAllOptions = RequestOptions & PaginationOptions & {
   folderId?: number;
 }
 
@@ -111,6 +112,11 @@ export interface BucketGetFileMetaDataOptions {
    */
   prefix?: string;
 }
+
+/**
+ * Request options for getting files in a bucket with pagination support
+ */
+export type BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataOptions & PaginationOptions;
 
 /**
  * Response from the GetFiles API

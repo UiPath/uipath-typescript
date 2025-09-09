@@ -104,19 +104,22 @@ export class UiPath {
   }
 
   /**
-   * Access to Maestro Processes service
+   * Access to Maestro services
    */
-  get maestroProcess(): MaestroProcessesService {
-    return this.getService(MaestroProcessesService);
+  get maestro() {
+    return {
+      /**
+       * Access to Maestro Processes service
+       */
+      processes: Object.assign(this.getService(MaestroProcessesService), {
+        /**
+         * Access to Process Instances service
+         */
+        instances: this.getService(ProcessInstancesService)
+      })
+    };
   }
 
-  /**
-   * Access to Maestro Process Instances service
-   */
-  get processInstance(): ProcessInstancesService {
-    return this.getService(ProcessInstancesService);
-  }
-  
   /**
    * Access to Entity service
    */

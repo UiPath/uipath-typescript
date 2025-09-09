@@ -1,12 +1,12 @@
 {
-  "name": "@uipath/cli",
-  "version": "1.0.0-beta.1",
+  "name": "@uipath/uipath-ts-cli",
+  "version": "1.0.0-beta.4",
   "description": "UiPath CLI tool for authentication, packaging, publishing, and deployment",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "uipath": "./bin/cli.js"
+    "uipath": "./dist/cli.js"
   },
   "files": [
     "dist",
@@ -16,7 +16,8 @@
   "scripts": {
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "prebuild": "npm run clean",
-    "build": "tsc",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp -r src/assets dist/",
     "dev": "npm run build && node bin/cli.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -26,17 +27,25 @@
     "@oclif/core": "^4.0.7",
     "@oclif/plugin-help": "^6.2.8",
     "@oclif/plugin-plugins": "^5.4.7",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "chalk": "^5.3.0",
     "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
     "form-data": "^4.0.0",
+    "fs-extra": "^11.3.1",
     "inquirer": "^10.2.2",
+    "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
     "node-fetch": "^3.3.2",
+    "open": "^10.2.0",
     "ora": "^8.1.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@oclif/test": "^4.0.9",
+    "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.7",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.11.19",

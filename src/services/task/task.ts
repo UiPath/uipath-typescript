@@ -4,8 +4,6 @@ import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { 
   TaskCreateRequest, 
-  TaskCreateResponse, 
-  TaskGetResponse, 
   TaskAssignmentRequest,
   TasksAssignRequest,
   TasksUnassignRequest,
@@ -18,19 +16,23 @@ import {
   TaskGetFormOptions,
   UserLoginInfo,
   UserLoginInfoCollection,
-  TaskGetUsersOptions
+  TaskGetUsersOptions,
 } from '../../models/task/task.types';
 import {
-  Task,
-  TaskServiceModel
+  TaskServiceModel,
+  TaskGetResponse,
+  TaskCreateResponse,
+  createTaskWithMethods
 } from '../../models/task/task.models';
-import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, transformApiResponse, addPrefixToKeys } from '../../utils/transform';
+import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, applyDataTransforms, addPrefixToKeys } from '../../utils/transform';
 import { TaskStatusMap, TaskTimeMap } from '../../models/task/task.constants';
-import { CollectionResponse } from '../../models/common/common-types';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX } from '../../utils/constants/common';
+import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -55,7 +57,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async create(task: TaskCreateRequest, folderId: number): Promise<Task<TaskCreateResponse>> {
+  async create(task: TaskCreateRequest, folderId: number): Promise<TaskCreateResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const externalTask = {
@@ -70,100 +72,147 @@ export class TaskService extends BaseService implements TaskServiceModel {
     );
     // Transform time fields for consistency
     const normalizedData = transformData(response.data, TaskTimeMap);
-    return new Task<TaskCreateResponse>(
-      transformApiResponse(normalizedData, { field: 'status', valueMap: TaskStatusMap }),
-      this
-    );
+    const transformedData = applyDataTransforms(normalizedData, { field: 'status', valueMap: TaskStatusMap });
+    return createTaskWithMethods(transformedData, this) as TaskCreateResponse;
   }
 
   /**
    * Gets users in the given folder who have Tasks.View and Tasks.Edit permissions
    * 
+   * The method returns either:
+   * - An array of users (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
    * @param folderId - The folder ID to get users from
-   * @param options - Optional query parameters
-   * @returns Promise resolving to an array of users
+   * @param options - Optional query and pagination parameters
+   * @returns Promise resolving to an array of users or paginated result
    * 
    * @example
    * ```typescript
-   * // Get all users with task permissions in a folder
+   * // Standard array return
    * const users = await sdk.task.getUsers(123);
    * 
    * // Get users with filtering
    * const users = await sdk.task.getUsers(123, { 
    *   filter: "name eq 'abc'"
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.task.getUsers(123, { pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.task.getUsers(123, { cursor: page1.nextCursor });
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.task.getUsers(123, {
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
    * ```
    */
-  async getUsers(folderId: number, options: TaskGetUsersOptions = {}): Promise<UserLoginInfo[]> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, '$', keysToPrefix);
-    const response = await this.get<UserLoginInfoCollection>(
-      TASK_ENDPOINTS.GET_TASK_USERS(folderId),
-      { 
-        params: apiOptions,
-        headers
+  async getUsers<T extends TaskGetUsersOptions = TaskGetUsersOptions>(
+    folderId: number,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<UserLoginInfo>
+      : NonPaginatedResponse<UserLoginInfo>
+  > {
+    // Transformation function for users
+    const transformUserResponse = (user: any) => 
+      pascalToCamelCaseKeys(user) as UserLoginInfo;
+
+    // Add folderId to options so the centralized helper can handle it properly
+    const optionsWithFolder = { ...options, folderId };
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: (folderId) => TASK_ENDPOINTS.GET_TASK_USERS(folderId!), // Use folderId from centralized helper
+      getByFolderEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId), // Use the passed folderId
+      transformFn: transformUserResponse,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,          
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM             
+        }
       }
-    );
-    
-    // Transform response from PascalCase to camelCase
-    return response.data?.value.map(user => pascalToCamelCaseKeys(user) as UserLoginInfo);
+    }, optionsWithFolder) as any;
   }
   
   /**
    * Gets tasks across folders with optional filtering and folder scoping
    * 
-   * @param options - Query options including optional folderId
-   * @returns Promise resolving to an array of tasks
+   * The method returns either:
+   * - An array of tasks (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
+   * @param options - Query options including optional folderId and pagination options
+   * @returns Promise resolving to an array of tasks or paginated result
    * 
    * @example
    * ```typescript
-   * // Get all tasks across folders
+   * // Standard array return
    * const tasks = await sdk.task.getAll();
    * 
    * // Get tasks within a specific folder
    * const tasks = await sdk.task.getAll({ 
    *   folderId: 123
    * });
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.task.getAll({ pageSize: 10 });
+   * 
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.task.getAll({ cursor: page1.nextCursor });
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.task.getAll({
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
    * ```
    */
-  async getAll(options: TaskGetAllOptions = {}): Promise<Task<TaskGetResponse>[]> {
-    const { folderId, ...restOptions } = options;
-    
-    let headers = {};
-    // If folderId is provided, add it to the filter
-    if (folderId) {
-      // Create or add to existing filter
-      if (restOptions.filter) {
-        restOptions.filter = `${restOptions.filter} and organizationUnitId eq ${folderId}`;
-      } else {
-        restOptions.filter = `organizationUnitId eq ${folderId}`;
-      }
-    }
-    
-    // prefix all keys except 'event'
-    const keysToPrefix = Object.keys(restOptions).filter(k => k !== 'event');
-    const apiOptions = addPrefixToKeys(restOptions, ODATA_PREFIX, keysToPrefix);
-    const response = await this.get<CollectionResponse<TaskGetResponse>>(
-      TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
-      { 
-        params: apiOptions,
-        headers
-      }
-    );
-    
-    // Transform response Task array from PascalCase to camelCase and normalize time fields
-    const transformedTasks = response.data?.value.map(task => 
-      transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskTimeMap)
-    );
-    
-    return transformedTasks.map(task => 
-      new Task<TaskGetResponse>(
-        transformApiResponse(task, { field: 'status', valueMap: TaskStatusMap }),
+  async getAll<T extends TaskGetAllOptions = TaskGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskGetResponse>
+      : NonPaginatedResponse<TaskGetResponse>
+  > {
+    // Transformation function for tasks
+    const transformTaskResponse = (task: any) => {
+      const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskTimeMap);
+      return createTaskWithMethods(
+        applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
         this
-      )
-    );
+      ) as TaskGetResponse;
+    };
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
+      transformFn: transformTaskResponse,
+      processParametersFn: this.processTaskParameters,
+      excludeFromPrefix: ['event'], // Exclude 'event' key from ODATA prefix transformation
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      // OData OFFSET parameter
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           // OData OFFSET parameter
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              // OData OFFSET parameter
+        }
+      }
+    }, options) as any;
   }
 
   /**
@@ -182,7 +231,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * // If the task is a form task, it will automatically return form-specific data
    * ```
    */
-  async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<Task<TaskGetResponse>> {
+  async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<TaskGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     // prefix all keys in options
     const keysToPrefix = Object.keys(options);
@@ -203,10 +252,10 @@ export class TaskService extends BaseService implements TaskServiceModel {
       return this.getFormTaskById(id, folderId || transformedTask.organizationUnitId);
     }
     
-    return new Task<TaskGetResponse>(
-      transformApiResponse(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
+    return createTaskWithMethods(
+      applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
       this
-    );
+    ) as TaskGetResponse;
   }
 
   /**
@@ -407,7 +456,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * @param options - Optional query parameters
    * @returns Promise resolving to the form task
    */
-  private async getFormTaskById(id: number, folderId: number, options: TaskGetFormOptions = {}): Promise<Task<TaskGetResponse>> {
+  private async getFormTaskById(id: number, folderId: number, options: TaskGetFormOptions = {}): Promise<TaskGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const response = await this.get<TaskGetResponse>(
@@ -421,9 +470,29 @@ export class TaskService extends BaseService implements TaskServiceModel {
       }
     );
     const transformedFormTask = transformData(response.data, TaskTimeMap);
-    return new Task<TaskGetResponse>(
-      transformApiResponse(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
+    return createTaskWithMethods(
+      applyDataTransforms(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
       this
-    );
+    ) as TaskGetResponse;
+  }
+
+  /**
+   * Process parameters for task queries with folder filtering
+   * @param options - The REST API options to process
+   * @param folderId - Optional folder ID to filter by
+   * @returns Processed options with folder filtering applied if needed
+   * @private
+   */
+  private processTaskParameters = (options: Record<string, any>, folderId?: number): Record<string, any> => {
+    const processedOptions = { ...options };
+    if (folderId) {
+      // Create or add to existing filter for folder-specific queries
+      if (processedOptions.filter) {
+        processedOptions.filter = `${processedOptions.filter} and organizationUnitId eq ${folderId}`;
+      } else {
+        processedOptions.filter = `organizationUnitId eq ${folderId}`;
+      }
+    }
+    return processedOptions;
   }
 } 

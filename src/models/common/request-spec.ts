@@ -1,3 +1,5 @@
+import { PaginationType } from '../../utils/pagination/pagination.internal-types';
+
 /**
  * HTTP methods supported by the API client
  */
@@ -53,6 +55,20 @@ export interface BodyOptions {
 }
 
 /**
+ * Pagination metadata for API requests
+ */
+export interface PaginationMetadata {
+  /** Type of pagination used by the API endpoint */
+  paginationType: PaginationType;
+  /** Response field containing items array (defaults to 'value') */
+  itemsField?: string;
+  /** Response field containing total count (defaults to '@odata.count') */
+  totalCountField?: string;
+  /** Response field containing continuation token (defaults to 'continuationToken') */
+  continuationTokenField?: string;
+}
+
+/**
  * Base interface for all API requests
  */
 export interface RequestSpec {
@@ -85,4 +101,7 @@ export interface RequestSpec {
   
   /** AbortSignal for cancelling the request */
   signal?: AbortSignal;
+
+  /** Pagination metadata for the request */
+  pagination?: PaginationMetadata;
 }

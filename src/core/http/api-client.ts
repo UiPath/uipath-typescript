@@ -6,7 +6,7 @@ import { TokenInfo } from '../auth/auth.types';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
-import { ContentType } from '../../utils/constants/common';
+import { CONTENT_TYPES } from '../../utils/constants/headers';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -76,7 +76,7 @@ export class ApiClient {
     if (contextHeaders['Authorization']) {
       return {
         ...contextHeaders,
-        'Content-Type': ContentType.APPLICATION_JSON,
+        'Content-Type': CONTENT_TYPES.JSON,
         ...this.defaultHeaders,
         ...this.clientConfig.headers
       };
@@ -87,7 +87,7 @@ export class ApiClient {
     return {
       ...contextHeaders,
       'Authorization': `Bearer ${token}`,
-      'Content-Type': ContentType.APPLICATION_JSON,
+      'Content-Type': CONTENT_TYPES.JSON,
       ...this.defaultHeaders,
       ...this.clientConfig.headers
     };
@@ -137,7 +137,7 @@ export class ApiClient {
 
       // Check if we're expecting XML
       const acceptHeader = headers['Accept'] || headers['accept'];
-      if (acceptHeader === ContentType.APPLICATION_XML) {
+      if (acceptHeader === CONTENT_TYPES.XML) {
         const text = await response.text();
         return text as T;
       }
@@ -152,6 +152,7 @@ export class ApiClient {
       // Otherwise, it's likely a network error
       throw ErrorFactory.createNetworkError(error);
     }
+
   }
 
   async get<T>(path: string, options: RequestSpec = {}): Promise<T> {

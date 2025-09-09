@@ -28,5 +28,4 @@ export interface BaseOptions {
 export interface RequestOptions extends BaseOptions {
   filter?: string;
   orderby?: string;
-  count?: boolean;
 }

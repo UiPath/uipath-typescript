@@ -8,7 +8,9 @@ import FormData from 'form-data';
 import fetch from 'node-fetch';
 import { EnvironmentConfig } from '../types/index.js';
 import { API_ENDPOINTS } from '../constants/index.js';
+import { MESSAGES } from '../constants/messages.js';
 import { validateEnvironment } from '../utils/env-validator.js';
+import { handleHttpError } from '../utils/error-handler.js';
 
 export default class Publish extends Command {
   static override description = 'Publish NuGet packages to UiPath Orchestrator';
@@ -28,7 +30,7 @@ export default class Publish extends Command {
   public async run(): Promise<void> {
     const { flags } = await this.parse(Publish);
     
-    this.log(chalk.blue('🚀 UiPath Publisher'));
+    this.log(chalk.blue(MESSAGES.INFO.PUBLISHER));
 
     // Validate environment variables
     const envConfig = await this.validateEnvironment();
@@ -53,14 +55,14 @@ export default class Publish extends Command {
   }
 
   private async publishPackage(flags: any, envConfig: EnvironmentConfig): Promise<void> {
-    const spinner = ora('Publishing package to UiPath Orchestrator...').start();
+    const spinner = ora(MESSAGES.INFO.PUBLISHING_PACKAGE).start();
     
     try {
       // Check if .uipath directory exists
       if (!fs.existsSync(flags['uipath-dir'])) {
-        spinner.fail(chalk.red('❌ .uipath directory not found'));
+        spinner.fail(chalk.red(`${MESSAGES.ERRORS.UIPATH_DIR_NOT_FOUND}`));
         this.log('');
-        this.log(chalk.yellow('💡 Run "uipath pack" first to create a package'));
+        this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
         return;
       }
 
@@ -70,9 +72,9 @@ export default class Publish extends Command {
         .map(file => path.join(flags['uipath-dir'], file));
 
       if (nupkgFiles.length === 0) {
-        spinner.fail(chalk.red('❌ No .nupkg files found'));
+        spinner.fail(chalk.red(`${MESSAGES.ERRORS.NO_NUPKG_FILES_FOUND}`));
         this.log('');
-        this.log(chalk.yellow('💡 Run "uipath pack" first to create a package'));
+        this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
         return;
       }
 
@@ -87,7 +89,7 @@ export default class Publish extends Command {
           {
             type: 'list',
             name: 'package',
-            message: 'Select package to publish:',
+            message: MESSAGES.PROMPTS.SELECT_PACKAGE_TO_PUBLISH,
             choices: nupkgFiles.map(file => ({
               name: path.basename(file),
               value: file,
@@ -101,13 +103,14 @@ export default class Publish extends Command {
       // Upload package using multipart form data
       await this.uploadPackage(selectedPackage, envConfig);
       
-      spinner.succeed(chalk.green('✅ Package published successfully!'));
+      spinner.succeed(chalk.green(MESSAGES.SUCCESS.PACKAGE_PUBLISHED_SUCCESS));
       this.log('');
-      this.log(chalk.blue('🎉 Package is now available in UiPath Orchestrator'));
+      this.log(chalk.blue(MESSAGES.INFO.PACKAGE_AVAILABLE));
       
     } catch (error) {
-      spinner.fail(chalk.red('❌ Package publishing failed'));
-      this.error(`Publishing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      spinner.fail(chalk.red(`${MESSAGES.ERRORS.PACKAGE_PUBLISHING_FAILED}`));
+      this.log(chalk.red(`${MESSAGES.ERRORS.PUBLISHING_ERROR_PREFIX} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      process.exit(1);
     }
   }
 
@@ -128,8 +131,7 @@ export default class Publish extends Command {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      await handleHttpError(response, 'package publishing');
     }
   }
 
