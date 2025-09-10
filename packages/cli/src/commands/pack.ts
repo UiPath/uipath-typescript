@@ -194,8 +194,8 @@ export default class Pack extends Command {
   }
 
   private sanitizePackageName(name: string): string {
-    // Replace hyphens with underscores and remove invalid characters
-    return name.replace(/-/g, '_').replace(/[^a-zA-Z0-9_.]/g, '');
+   // Remove whitespace only from the name
+   return name.replace(/\s+/g, '');
   }
 
 
