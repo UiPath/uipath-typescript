@@ -6,10 +6,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
 import { EnvironmentConfig, AppConfig } from '../../types/index.js';
-import { API_ENDPOINTS } from '../../constants/index.js';
+import { API_ENDPOINTS, AUTH_CONSTANTS } from '../../constants/index.js';
 import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
-import { validateEnvironment } from '../../utils/env-validator.js';
+import { validateEnvironment, parseUiPathUrl } from '../../utils/env-validator.js';
 import { handleHttpError } from '../../utils/error-handler.js';
 
 interface RegisterResponse {
@@ -62,12 +62,11 @@ export default class RegisterApp extends Command {
 
   private async validateEnvironment(): Promise<EnvironmentConfig | null> {
     const requiredEnvVars = [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID', 
-      'UIPATH_TENANT_ID',
-      'UIPATH_TENANT_NAME',
-      'UIPATH_FOLDER_KEY',
-      'UIPATH_BEARER_TOKEN'
+      AUTH_CONSTANTS.ENV_VARS.URL,
+      AUTH_CONSTANTS.ENV_VARS.ORG_ID,
+      AUTH_CONSTANTS.ENV_VARS.TENANT_ID,
+      AUTH_CONSTANTS.ENV_VARS.FOLDER_KEY,
+      AUTH_CONSTANTS.ENV_VARS.ACCESS_TOKEN
     ];
 
     const result = validateEnvironment(requiredEnvVars, this);
@@ -105,7 +104,8 @@ export default class RegisterApp extends Command {
       
       // Construct the app URL
       const folderKey = envConfig.folderKey!; // We know this is defined because validateEnvironment checks for it
-      const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgId, envConfig.tenantId, folderKey, appSystemName);
+      const { baseUrl } = parseUiPathUrl(envConfig.uipathUrl);
+      const appUrl = buildAppUrl(baseUrl, envConfig.orgId, envConfig.tenantId, folderKey, appSystemName);
       
       // Save app configuration
       const appConfig: AppConfig = {
@@ -151,10 +151,11 @@ export default class RegisterApp extends Command {
   }
 
   private async publishAppToUiPath(packageName: string, packageVersion: string, envConfig: EnvironmentConfig): Promise<RegisterResponse> {
-    const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.PUBLISH_CODED_APP}`;
+    const { baseUrl, tenantName } = parseUiPathUrl(envConfig.uipathUrl);
+    const url = `${baseUrl}/${envConfig.orgId}${API_ENDPOINTS.PUBLISH_CODED_APP}`;
     
     const payload = {
-      tenantName: envConfig.tenantName,
+      tenantName,
       packageName: packageName,
       packageVersion: packageVersion,
       title: packageName,
@@ -165,7 +166,7 @@ export default class RegisterApp extends Command {
       method: 'POST',
       headers: createHeaders({ 
         bearerToken: envConfig.bearerToken,
-        tenantId: envConfig.tenantId 
+        tenantId: envConfig.tenantId
       }),
       body: JSON.stringify(payload),
     });

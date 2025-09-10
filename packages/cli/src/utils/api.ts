@@ -52,3 +52,19 @@ export function buildAppUrl(
   
   return `${baseUrl}${path}`;
 }
+
+export function buildAppUrlFromName(
+  baseUrl: string,
+  orgName: string,
+  tenantName: string,
+  folderKey: string,
+  appSystemName: string
+): string {
+  const path = APP_URL_TEMPLATE
+    .replace('{orgId}', orgName)
+    .replace('{tenantId}', tenantName)
+    .replace('{folderKey}', folderKey)
+    .replace('{appSystemName}', appSystemName);
+  
+  return `${baseUrl}${path}`;
+}

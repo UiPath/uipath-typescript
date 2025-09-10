@@ -6,6 +6,7 @@ import { SelectedTenant } from '../services/portal.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { getBaseUrl } from '../utils/url.js';
 import { calculateExpirationTime } from '../utils/date.js';
+import { constructUiPathUrl } from '../../utils/env-validator.js';
 
 const UIPATH_DIR = path.join(process.cwd(), '.uipath');
 const AUTH_FILE = path.join(UIPATH_DIR, '.auth.json');
@@ -56,15 +57,14 @@ export const saveTokensWithTenant = async (
 
   // Get base URL from domain
   const baseUrl = getBaseUrl(domain);
+  const uipathUrl = constructUiPathUrl(baseUrl, tenant.organizationName, tenant.tenantName);
 
   // Update .env file with environment variables
   const envVars: Record<string, string> = {
     [AUTH_CONSTANTS.ENV_VARS.ACCESS_TOKEN]: tokens.accessToken,
-    [AUTH_CONSTANTS.ENV_VARS.BASE_URL]: baseUrl,
-    [AUTH_CONSTANTS.ENV_VARS.TENANT_ID]: tenant.tenantId,
+    [AUTH_CONSTANTS.ENV_VARS.URL]: uipathUrl,
     [AUTH_CONSTANTS.ENV_VARS.ORG_ID]: tenant.organizationId,
-    [AUTH_CONSTANTS.ENV_VARS.TENANT_NAME]: tenant.tenantName,
-    [AUTH_CONSTANTS.ENV_VARS.ORG_NAME]: tenant.organizationName,
+    [AUTH_CONSTANTS.ENV_VARS.TENANT_ID]: tenant.tenantId,
   };
 
   // Add folder key if provided
@@ -94,11 +94,9 @@ export const clearTokens = async (): Promise<void> => {
     // Clear from .env
     await updateEnvFile({
       [AUTH_CONSTANTS.ENV_VARS.ACCESS_TOKEN]: '',
-      [AUTH_CONSTANTS.ENV_VARS.BASE_URL]: '',
-      [AUTH_CONSTANTS.ENV_VARS.TENANT_ID]: '',
+      [AUTH_CONSTANTS.ENV_VARS.URL]: '',
       [AUTH_CONSTANTS.ENV_VARS.ORG_ID]: '',
-      [AUTH_CONSTANTS.ENV_VARS.TENANT_NAME]: '',
-      [AUTH_CONSTANTS.ENV_VARS.ORG_NAME]: '',
+      [AUTH_CONSTANTS.ENV_VARS.TENANT_ID]: '',
       [AUTH_CONSTANTS.ENV_VARS.FOLDER_KEY]: '',
     });
   } catch (error) {

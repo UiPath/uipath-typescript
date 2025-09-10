@@ -7,6 +7,27 @@ interface ValidationResult {
   missingVars?: string[];
 }
 
+interface ParsedUiPathUrl {
+  baseUrl: string;
+  orgName: string;
+  tenantName: string;
+}
+
+export function parseUiPathUrl(uipathUrl: string): ParsedUiPathUrl {
+  const url = new URL(uipathUrl);
+  const [orgName, tenantName] = url.pathname.split('/').filter(Boolean);
+  
+  return {
+    baseUrl: `${url.protocol}//${url.host}`,
+    orgName,
+    tenantName,
+  };
+}
+
+export function constructUiPathUrl(baseUrl: string, orgName: string, tenantName: string): string {
+  return `${baseUrl.replace(/\/$/, '')}/${orgName}/${tenantName}`;
+}
+
 export function validateEnvironment(
   requiredVars: string[],
   logger: { log: (message: string) => void }
@@ -23,12 +44,9 @@ export function validateEnvironment(
     
     // Show examples for known variables
     const examples: Record<string, string> = {
-      'UIPATH_BASE_URL': 'UIPATH_BASE_URL=https://your-orchestrator.com',
-      'UIPATH_ORG_ID': 'UIPATH_ORG_ID=your-org-id',
-      'UIPATH_TENANT_ID': 'UIPATH_TENANT_ID=your-tenant-id',
-      'UIPATH_TENANT_NAME': 'UIPATH_TENANT_NAME=your-tenant-name',
+      'UIPATH_URL': 'UIPATH_URL=https://cloud.uipath.com/your-org-name/your-tenant-name',
       'UIPATH_FOLDER_KEY': 'UIPATH_FOLDER_KEY=your-folder-key',
-      'UIPATH_BEARER_TOKEN': 'UIPATH_BEARER_TOKEN=your-bearer-token',
+      'UIPATH_ACCESS_TOKEN': 'UIPATH_ACCESS_TOKEN=your-bearer-token',
     };
     
     missing.forEach(envVar => {
@@ -40,18 +58,11 @@ export function validateEnvironment(
     return { isValid: false, missingVars: missing };
   }
   
-  // Normalize the base URL to ensure it has the protocol
-  let baseUrl = process.env.UIPATH_BASE_URL!;
-  if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-    baseUrl = `https://${baseUrl}`;
-  }
-  
   const config: EnvironmentConfig = {
-    baseUrl,
-    orgId: process.env.UIPATH_ORG_ID!,
+    uipathUrl: process.env.UIPATH_URL!,
+    orgId: process.env.UIPATH_ORGANIZATION_ID!,
     tenantId: process.env.UIPATH_TENANT_ID!,
-    tenantName: process.env.UIPATH_TENANT_NAME!,
-    bearerToken: process.env.UIPATH_BEARER_TOKEN!,
+    bearerToken: process.env.UIPATH_ACCESS_TOKEN!,
   };
   
   // Add optional fields if they're in the required list

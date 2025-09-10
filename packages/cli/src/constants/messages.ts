@@ -8,9 +8,9 @@ export const MESSAGES = {
     PACKAGE_NAME_REQUIRED: 'Package name is required',
     
     // Authentication & Authorization  
-    AUTHENTICATION_FAILED: 'Authentication failed. Please check your UIPATH_BEARER_TOKEN or run "uipath auth" to authenticate',
+    AUTHENTICATION_FAILED: 'Authentication failed. Please check your UIPATH_ACCESS_TOKEN or run "uipath auth" to authenticate',
     ACCESS_DENIED: 'Access denied. You may not have permission to access this tenant/organization',
-    API_ENDPOINT_NOT_FOUND: 'API endpoint not found. Please check your UIPATH_BASE_URL configuration',
+    API_ENDPOINT_NOT_FOUND: 'API endpoint not found. Please check your UIPATH_URL configuration',
     
     // Server errors
     SERVER_ERROR: 'Server error occurred. Please try again later or contact UiPath support',

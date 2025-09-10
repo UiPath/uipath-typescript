@@ -7,7 +7,7 @@ import * as path from 'path';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
 import { EnvironmentConfig } from '../types/index.js';
-import { API_ENDPOINTS } from '../constants/index.js';
+import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
 import { validateEnvironment } from '../utils/env-validator.js';
 import { handleHttpError } from '../utils/error-handler.js';
@@ -43,11 +43,8 @@ export default class Publish extends Command {
 
   private async validateEnvironment(): Promise<EnvironmentConfig | null> {
     const requiredEnvVars = [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID', 
-      'UIPATH_TENANT_ID',
-      'UIPATH_TENANT_NAME',
-      'UIPATH_BEARER_TOKEN'
+      AUTH_CONSTANTS.ENV_VARS.URL,
+      AUTH_CONSTANTS.ENV_VARS.ACCESS_TOKEN
     ];
 
     const result = validateEnvironment(requiredEnvVars, this);
@@ -119,7 +116,7 @@ export default class Publish extends Command {
     const form = new FormData();
     form.append('uploads[]', fs.createReadStream(packagePath));
 
-    const url = `${envConfig.baseUrl}/${envConfig.orgId}/${envConfig.tenantId}${API_ENDPOINTS.UPLOAD_PACKAGE}`;
+    const url = `${envConfig.uipathUrl}${API_ENDPOINTS.UPLOAD_PACKAGE}`;
     
     const response = await fetch(url, {
       method: 'POST',

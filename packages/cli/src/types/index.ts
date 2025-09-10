@@ -1,8 +1,7 @@
 export interface EnvironmentConfig {
-  baseUrl: string;
+  uipathUrl: string;
   orgId: string;
   tenantId: string;
-  tenantName: string;
   folderKey?: string;
   bearerToken: string;
 }
