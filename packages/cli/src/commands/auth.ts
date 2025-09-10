@@ -77,10 +77,12 @@ export default class Auth extends Command {
       const existingAuth = await loadTokens();
       if (existingAuth && !isTokenExpired(existingAuth)) {
         this.log(chalk.green(MESSAGES.SUCCESS.ALREADY_AUTHENTICATED));
-        this.log(chalk.gray(`Organization: ${existingAuth.organizationName || existingAuth.organizationId}`));
-        this.log(chalk.gray(`Tenant: ${existingAuth.tenantName || 'Not selected'}`));
-        this.log(chalk.gray(`Domain: ${existingAuth.domain}`));
-        this.log(chalk.gray(`Token expires at: ${new Date(existingAuth.expiresAt).toLocaleString()}`));
+        // Calculate expiration time from JWT
+        const payload = JSON.parse(atob(existingAuth.accessToken.split('.')[1]));
+        const expiresAt = (payload.iat + existingAuth.expiresIn) * 1000;
+        
+        this.log(chalk.gray(`Token valid and not expired`));
+        this.log(chalk.gray(`Token expires at: ${new Date(expiresAt).toLocaleString()}`));
         
         const { reauth } = await inquirer.prompt([
           {
@@ -242,12 +244,11 @@ export default class Auth extends Command {
     await saveTokensWithTenant(tokens, domain, selectedTenant, selectedTenant.folderKey);
     
     // Display success information
-    this.displayAuthenticationSuccess(tokens, domain, selectedTenant);
+    this.displayAuthenticationSuccess(tokens, selectedTenant);
   }
 
   private displayAuthenticationSuccess(
     tokens: TokenResponse,
-    domain: string,
     selectedTenant: SelectedTenant & { folderKey?: string | null }
   ): void {
     this.log(chalk.green(`\n${MESSAGES.SUCCESS.AUTHENTICATION_SUCCESS}`));
@@ -258,7 +259,6 @@ export default class Auth extends Command {
       this.log(chalk.gray(`Folder Key: ${selectedTenant.folderKey}`));
     }
     
-    this.log(chalk.gray(`Domain: ${domain}`));
     this.log(chalk.gray(`Token expires at: ${getFormattedExpirationDate(tokens.expiresIn)}`));
     this.log(chalk.gray(`\n${MESSAGES.INFO.CREDENTIALS_SAVED}`));
   }

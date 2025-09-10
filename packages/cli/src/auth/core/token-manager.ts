@@ -1,11 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
-import os from 'os';
 import { TokenResponse } from './oidc.js';
 import { SelectedTenant } from '../services/portal.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { getBaseUrl } from '../utils/url.js';
-import { calculateExpirationTime } from '../utils/date.js';
 
 const UIPATH_DIR = path.join(process.cwd(), '.uipath');
 const AUTH_FILE = path.join(UIPATH_DIR, '.auth.json');
@@ -14,15 +12,9 @@ const ENV_FILE = path.join(process.cwd(), '.env');
 export interface StoredAuth {
   accessToken: string;
   refreshToken?: string;
-  expiresAt: number;
+  expiresIn: number;
   tokenType: string;
   scope: string;
-  idToken?: string;
-  organizationId?: string;
-  domain: string;
-  tenantId?: string;
-  tenantName?: string;
-  organizationName?: string;
 }
 
 export const saveTokensWithTenant = async (
@@ -34,21 +26,12 @@ export const saveTokensWithTenant = async (
   // Ensure .uipath directory exists
   await fs.ensureDir(UIPATH_DIR);
 
-  // Calculate expiration time
-  const expiresAt = calculateExpirationTime(tokens.expiresIn);
-
   const authData: StoredAuth = {
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
-    expiresAt,
+    expiresIn: tokens.expiresIn,
     tokenType: tokens.tokenType,
     scope: tokens.scope,
-    idToken: tokens.idToken,
-    organizationId: tenant.organizationId,
-    domain,
-    tenantId: tenant.tenantId,
-    tenantName: tenant.tenantName,
-    organizationName: tenant.organizationName,
   };
 
   // Save to auth file with atomic write
@@ -107,7 +90,16 @@ export const clearTokens = async (): Promise<void> => {
 };
 
 export const isTokenExpired = (auth: StoredAuth): boolean => {
-  return Date.now() >= auth.expiresAt;
+  // Parse JWT to get issued at time
+  try {
+    const payload = JSON.parse(atob(auth.accessToken.split('.')[1]));
+    const issuedAt = payload.iat * 1000; // Convert to milliseconds
+    const expiresAt = issuedAt + (auth.expiresIn * 1000);
+    return Date.now() >= expiresAt;
+  } catch {
+    // If we can't parse the JWT, consider it expired for safety
+    return true;
+  }
 };
 
 const updateEnvFile = async (vars: Record<string, string>): Promise<void> => {
