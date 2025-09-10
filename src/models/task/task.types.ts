@@ -134,28 +134,20 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
 
 export interface TaskAssignmentRequest {
   taskId: number;
-  userId?: number;
+  userId: number;
   userNameOrEmail?: string;
 }
-
-export interface TasksAssignRequest {
-  taskAssignments: TaskAssignmentRequest[];
-}
-
 export interface TasksUnassignRequest {
   taskIds: number[];
 }
 
-export interface TaskAssignmentResult {
+export interface TaskAssignmentResponse {
   taskId?: number;
   userId?: number;
   errorCode?: number;
   errorMessage?: string;
   userNameOrEmail?: string;
-}
-
-export type TaskAssignmentResultCollection = CollectionResponse<TaskAssignmentResult>;
- 
+} 
 export interface TaskCompletionRequest {
   taskId: number;
   data?: any;
@@ -193,18 +185,6 @@ export type TaskGetAllOptions = RequestOptions & PaginationOptions & {
 export type TaskGetByIdOptions = BaseOptions
 
 /**
- * Options for getting a form task by ID
- */
-export interface TaskGetFormOptions {
-  expandOnFormLayout?: boolean;
-}
-
-/**
  * Options for getting users with task permissions
  */
 export type TaskGetUsersOptions = RequestOptions & PaginationOptions;
-
-/**
- * Collection response for user login info
- */
-export type UserLoginInfoCollection = CollectionResponse<UserLoginInfo>;
