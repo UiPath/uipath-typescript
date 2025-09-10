@@ -179,8 +179,8 @@ export interface FieldMetaData {
   isHiddenField: boolean;
   isUnique: boolean;
   referenceName?: string;
-  referenceEntity?: RawEntityGetByIdResponse;
-  referenceChoiceSet?: RawEntityGetByIdResponse;
+  referenceEntity?: RawEntityGetResponse;
+  referenceChoiceSet?: RawEntityGetResponse;
   referenceField?: Field;
   referenceType: ReferenceType;
   fieldDataType: FieldDataType;
@@ -270,7 +270,7 @@ export interface SourceJoinCriteria {
 /**
  * Entity metadata returned by getById
  */
-export interface RawEntityGetByIdResponse {
+export interface RawEntityGetResponse {
   name: string;
   displayName: string;
   entityType: EntityType;
