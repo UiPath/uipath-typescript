@@ -2,7 +2,7 @@ import type {
   RawTaskCreateResponse,
   RawTaskGetResponse, 
   TaskType,
-  TaskAssignmentResult, 
+  TaskAssignmentResponse, 
   TaskAssignmentRequest,
   TaskCompletionRequest,
   TaskCompleteOptions,
@@ -29,11 +29,11 @@ export interface TaskServiceModel {
 
   create(request: TaskCreateRequest, folderId: number): Promise<TaskCreateResponse>;
 
-  assign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResult[]>;
+  assign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResponse[]>;
   
-  reassign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResult[]>;
+  reassign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResponse[]>;
   
-  unassign(taskId: number, folderId?: number): Promise<TaskAssignmentResult[]>;
+  unassign(taskId: number, folderId?: number): Promise<TaskAssignmentResponse[]>;
   
   complete(
     taskType: TaskType,
@@ -68,7 +68,7 @@ export interface TaskMethods {
    * @param options - Assignment options (requires at least one of: userId, userNameOrEmail)
    * @returns Promise resolving to task assignment results
    */
-  assign(options: TaskAssignOptions): Promise<TaskAssignmentResult[]>;
+  assign(options: TaskAssignOptions): Promise<TaskAssignmentResponse[]>;
 
   /**
    * Reassigns this task to a new user
@@ -76,14 +76,14 @@ export interface TaskMethods {
    * @param options - Assignment options (requires at least one of: userId, userNameOrEmail)
    * @returns Promise resolving to task assignment results
    */
-  reassign(options: TaskAssignOptions): Promise<TaskAssignmentResult[]>;
+  reassign(options: TaskAssignOptions): Promise<TaskAssignmentResponse[]>;
 
   /**
    * Unassigns this task (removes current assignee)
    * 
    * @returns Promise resolving to task assignment results
    */
-  unassign(): Promise<TaskAssignmentResult[]>;
+  unassign(): Promise<TaskAssignmentResponse[]>;
 
   /**
    * Completes this task with optional data and action
@@ -107,25 +107,31 @@ export type TaskCreateResponse = RawTaskCreateResponse & TaskMethods;
  */
 function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse, service: TaskServiceModel): TaskMethods {
   return {
-    async assign(options: TaskAssignOptions): Promise<TaskAssignmentResult[]> {
+    async assign(options: TaskAssignOptions): Promise<TaskAssignmentResponse[]> {
       if (!taskData.id) throw new Error('Task ID is undefined');
       
-      return service.assign({
+      const request: TaskAssignmentRequest = {
         taskId: taskData.id,
-        ...options
-      }, taskData.organizationUnitId);
+        userId: options.userId || 0, // Will be handled by userNameOrEmail if userId is not provided, 0 is considered as invalid user id
+        userNameOrEmail: options.userNameOrEmail
+      };
+      
+      return service.assign(request, taskData.organizationUnitId);
     },
     
-    async reassign(options: TaskAssignOptions): Promise<TaskAssignmentResult[]> {
+    async reassign(options: TaskAssignOptions): Promise<TaskAssignmentResponse[]> {
       if (!taskData.id) throw new Error('Task ID is undefined');
       
-      return service.reassign({
+      const request: TaskAssignmentRequest = {
         taskId: taskData.id,
-        ...options
-      }, taskData.organizationUnitId);
+        userId: options.userId || 0, // Will be handled by userNameOrEmail if userId is not provided, 0 is considered as invalid user id
+        userNameOrEmail: options.userNameOrEmail
+      };
+      
+      return service.reassign(request, taskData.organizationUnitId);
     },
 
-    async unassign(): Promise<TaskAssignmentResult[]> {
+    async unassign(): Promise<TaskAssignmentResponse[]> {
       if (!taskData.id) throw new Error('Task ID is undefined');
       
       return service.unassign(taskData.id, taskData.organizationUnitId);

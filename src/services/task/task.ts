@@ -5,17 +5,13 @@ import { TokenManager } from '../../core/auth/token-manager';
 import { 
   TaskCreateRequest, 
   TaskAssignmentRequest,
-  TasksAssignRequest,
   TasksUnassignRequest,
-  TaskAssignmentResult,
-  TaskAssignmentResultCollection,
+  TaskAssignmentResponse,
   TaskCompletionRequest,
   TaskType,
   TaskGetAllOptions,
   TaskGetByIdOptions,
-  TaskGetFormOptions,
   UserLoginInfo,
-  UserLoginInfoCollection,
   TaskGetUsersOptions,
 } from '../../models/task/task.types';
 import {
@@ -33,6 +29,7 @@ import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
+import { TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignRequest } from '../../models/task/task.internal-types';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -292,7 +289,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ]);
    * ```
    */
-  async assign(taskAssignments: TaskAssignmentRequest | TaskAssignmentRequest[], folderId?: number): Promise<TaskAssignmentResult[]> {
+  async assign(taskAssignments: TaskAssignmentRequest | TaskAssignmentRequest[], folderId?: number): Promise<TaskAssignmentResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const request: TasksAssignRequest = {
@@ -302,7 +299,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     // Convert request to PascalCase for API
     const pascalRequest = camelToPascalCaseKeys(request);
     
-    const response = await this.post<TaskAssignmentResultCollection>(
+    const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.ASSIGN_TASKS,
       pascalRequest,
       { headers }
@@ -348,7 +345,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ]);
    * ```
    */
-  async reassign(taskAssignments: TaskAssignmentRequest | TaskAssignmentRequest[], folderId?: number): Promise<TaskAssignmentResult[]> {
+  async reassign(taskAssignments: TaskAssignmentRequest | TaskAssignmentRequest[], folderId?: number): Promise<TaskAssignmentResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const request: TasksAssignRequest = {
@@ -358,7 +355,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     // Convert request to PascalCase for API
     const pascalRequest = camelToPascalCaseKeys(request);
     
-    const response = await this.post<TaskAssignmentResultCollection>(
+    const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.REASSIGN_TASKS,
       pascalRequest,
       { headers }
@@ -386,14 +383,14 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * const result = await sdk.task.unassign([123, 456, 789]);
    * ```
    */
-  async unassign(taskIds: number | number[], folderId?: number): Promise<TaskAssignmentResult[]> {
+  async unassign(taskIds: number | number[], folderId?: number): Promise<TaskAssignmentResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const request: TasksUnassignRequest = {
       taskIds: Array.isArray(taskIds) ? taskIds : [taskIds]
     };
     
-    const response = await this.post<TaskAssignmentResultCollection>(
+    const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.UNASSIGN_TASKS,
       request,
       { headers }
