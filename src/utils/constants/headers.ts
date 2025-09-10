@@ -13,7 +13,8 @@ export const  INSTANCE_ID = 'X-UIPATH-InstanceId';
  */
 export const CONTENT_TYPES = {
   JSON: 'application/json',
-  XML: 'application/xml'
+  XML: 'application/xml',
+  OCTET_STREAM: 'application/octet-stream'
 } as const;
 
 /**
