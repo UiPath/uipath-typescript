@@ -123,42 +123,42 @@ export class UiPath {
   /**
    * Access to Entity service
    */
-  get entity(): EntityService {
+  get entities(): EntityService {
     return this.getService(EntityService);
   }
 
   /**
    * Access to Tasks service
    */
-  get task(): TaskService {
+  get tasks(): TaskService {
     return this.getService(TaskService);
   }
 
   /**
    * Access to Orchestrator Processes service
    */
-  get process(): ProcessService {
+  get processes(): ProcessService {
     return this.getService(ProcessService);
   }
 
   /**
    * Access to Orchestrator Buckets service
    */
-  get bucket(): BucketService {
+  get buckets(): BucketService {
     return this.getService(BucketService);
   }
   
   /**
    * Access to Orchestrator Queues service
    */
-  get queue(): QueueService {
+  get queues(): QueueService {
     return this.getService(QueueService);
   }
 
   /**
    * Access to Orchestrator Assets service
    */
-  get asset(): AssetService {
+  get assets(): AssetService {
     return this.getService(AssetService);
   }
 }

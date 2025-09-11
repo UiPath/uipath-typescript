@@ -37,21 +37,21 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * @example
    * ```typescript
    * // Standard array return
-   * const assets = await sdk.asset.getAll();
+   * const assets = await sdk.assets.getAll();
    * 
    * // With folder
-   * const folderAssets = await sdk.asset.getAll({ folderId: 123 });
+   * const folderAssets = await sdk.assets.getAll({ folderId: 123 });
    * 
    * // First page with pagination
-   * const page1 = await sdk.asset.getAll({ pageSize: 10 });
+   * const page1 = await sdk.assets.getAll({ pageSize: 10 });
    * 
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.asset.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await sdk.assets.getAll({ cursor: page1.nextCursor });
    * }
    * 
    * // Jump to specific page
-   * const page5 = await sdk.asset.getAll({
+   * const page5 = await sdk.assets.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -97,7 +97,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * @example
    * ```typescript
    * // Get asset by ID
-   * const asset = await sdk.asset.getById(123, 456);
+   * const asset = await sdk.assets.getById(123, 456);
    * ```
    */
   async getById(id: number, folderId: number, options: AssetGetByIdOptions = {}): Promise<AssetGetResponse> {

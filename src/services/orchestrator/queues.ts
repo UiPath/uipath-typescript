@@ -39,28 +39,28 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * @example
    * ```typescript
    * // Standard array return
-   * const queues = await sdk.queue.getAll();
+   * const queues = await sdk.queues.getAll();
    * 
    * // Get queues within a specific folder
-   * const queues = await sdk.queue.getAll({ 
+   * const queues = await sdk.queues.getAll({ 
    *   folderId: 123
    * });
    * 
    * // Get queues with filtering
-   * const queues = await sdk.queue.getAll({ 
+   * const queues = await sdk.queues.getAll({ 
    *   filter: "name eq 'MyQueue'"
    * });
    * 
    * // First page with pagination
-   * const page1 = await sdk.queue.getAll({ pageSize: 10 });
+   * const page1 = await sdk.queues.getAll({ pageSize: 10 });
    * 
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.queue.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await sdk.queues.getAll({ cursor: page1.nextCursor });
    * }
    * 
    * // Jump to specific page
-   * const page5 = await sdk.queue.getAll({
+   * const page5 = await sdk.queues.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -105,7 +105,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * @example
    * ```typescript
    * // Get queue by ID 
-   * const queue = await sdk.queue.getById(123, 456);
+   * const queue = await sdk.queues.getById(123, 456);
    * ```
    */
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {

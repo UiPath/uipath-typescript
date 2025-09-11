@@ -41,7 +41,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @example
    * ```typescript
    * // Get entity metadata with methods
-   * const entity = await sdk.entity.getById("<entityId>");
+   * const entity = await sdk.entities.getById("<entityId>");
    * 
    * // Call operations directly on the entity
    * const records = await entity.getRecords();
@@ -154,21 +154,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage (non-paginated)
-   * const records = await sdk.entity.getRecordsById(<entityId>);
+   * const records = await sdk.entities.getRecordsById(<entityId>);
    * 
    * // With expansion level
-   * const records = await sdk.entity.getRecordsById(<entityId>, {
+   * const records = await sdk.entities.getRecordsById(<entityId>, {
    *   expansionLevel: 1
    * });
    * 
    * // With pagination
-   * const paginatedResponse = await sdk.entity.getRecordsById(<entityId>, {
+   * const paginatedResponse = await sdk.entities.getRecordsById(<entityId>, {
    *   pageSize: 50,
    *   expansionLevel: 1
    * });
    * 
    * // Navigate to next page
-   * const nextPage = await sdk.entity.getRecordsById(<entityId>, {
+   * const nextPage = await sdk.entities.getRecordsById(<entityId>, {
    *   cursor: paginatedResponse.nextCursor,
    *   expansionLevel: 1
    * });
@@ -211,13 +211,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entity.insertById(<entityId>, [
+   * const result = await sdk.entities.insertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
    * 
    * // With options
-   * const result = await sdk.entity.insertById(<entityId>, [
+   * const result = await sdk.entities.insertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -258,13 +258,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entity.updateById(<entityId>, [
+   * const result = await sdk.entities.updateById(<entityId>, [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ]);
    * 
    * // With options
-   * const result = await sdk.entity.updateById(<entityId>, [
+   * const result = await sdk.entities.updateById(<entityId>, [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ], {
@@ -304,7 +304,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entity.deleteById(<entityId>, [
+   * const result = await sdk.entities.deleteById(<entityId>, [
    *   <recordId-1>, <recordId-2>
    * ]);
    * ```
@@ -336,7 +336,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @example
    * ```typescript
    * // Get all entities
-   * const entities = await sdk.entity.getAll();
+   * const entities = await sdk.entities.getAll();
    * 
    * // Call operations on an entity
    * const records = await entities[0].getRecords();
