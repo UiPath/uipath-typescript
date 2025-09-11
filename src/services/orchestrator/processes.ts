@@ -42,28 +42,28 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * @example
    * ```typescript
    * // Standard array return
-   * const processes = await sdk.process.getAll();
+   * const processes = await sdk.processes.getAll();
    * 
    * // Get processes within a specific folder
-   * const processes = await sdk.process.getAll({ 
+   * const processes = await sdk.processes.getAll({ 
    *   folderId: 123
    * });
    * 
    * // Get processes with filtering
-   * const processes = await sdk.process.getAll({ 
+   * const processes = await sdk.processes.getAll({ 
    *   filter: "name eq 'MyProcess'"
    * });
    * 
    * // First page with pagination
-   * const page1 = await sdk.process.getAll({ pageSize: 10 });
+   * const page1 = await sdk.processes.getAll({ pageSize: 10 });
    * 
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.process.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await sdk.processes.getAll({ cursor: page1.nextCursor });
    * }
    * 
    * // Jump to specific page
-   * const page5 = await sdk.process.getAll({
+   * const page5 = await sdk.processes.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -109,12 +109,12 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * @example
    * ```typescript
    * // Start a process by process key
-   * const jobs = await sdk.process.start({
+   * const jobs = await sdk.processes.start({
    *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
    * }, 123); // folderId is required
    * 
    * // Start a process by name with specific robots
-   * const jobs = await sdk.process.start({
+   * const jobs = await sdk.processes.start({
    *   processName: "MyProcess"
    * }, 123); // folderId is required
    * ```
@@ -175,7 +175,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * @example
    * ```typescript
    * // Get process by ID
-   * const process = await sdk.process.getById(123, 456);
+   * const process = await sdk.processes.getById(123, 456);
    * ```
    */
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {

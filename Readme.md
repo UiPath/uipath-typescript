@@ -25,7 +25,7 @@ const sdk = new UiPath({
 
 // Use the services
 const processes = await sdk.maestro.processes.getAll();
-const tasks = await sdk.task.getAll();
+const tasks = await sdk.tasks.getAll();
 ```
 
 ## Authentication
@@ -78,7 +78,7 @@ const sdk = new UiPath({
 });
 
 // Ready to use immediately - no initialize() needed
-const tasks = await sdk.task.getAll();
+const tasks = await sdk.tasks.getAll();
 ```
 
 ### Example: OAuth Authentication (Requires initialize)
@@ -98,7 +98,7 @@ try {
   console.log('SDK initialized successfully');
   
   // Now you can use the SDK
-  const tasks = await sdk.task.getAll();
+  const tasks = await sdk.tasks.getAll();
 } catch (error) {
   console.error('Failed to initialize SDK:', error);
 }
@@ -110,12 +110,12 @@ The SDK provides access to the following services through a consistent API:
 
 - `sdk.maestro.processes` - Manage agentic maestro processes
 - `sdk.maestro.processes.instances` - Manage maestro process executions
-- `sdk.task` - Create and manage tasks
-- `sdk.entity` - Data Fabric entity operations
-- `sdk.process` - Manage Orchestrator processes
-- `sdk.bucket` - Manage storage buckets in Orchestrator
-- `sdk.queue` - Manage Orchestrator queues
-- `sdk.asset` - Manage Orchestrator assets
+- `sdk.tasks` - Create and manage tasks
+- `sdk.entities` - Data Fabric entity operations
+- `sdk.processes` - Manage Orchestrator processes
+- `sdk.buckets` - Manage storage buckets in Orchestrator
+- `sdk.queues` - Manage Orchestrator queues
+- `sdk.assets` - Manage Orchestrator assets
 
 ### Consistent Method Naming
 
@@ -129,32 +129,32 @@ All services follow a consistent method naming pattern:
 Example usage:
 ```typescript
 // Get all processes
-const bpmnProcesses = await sdk.maestro.process.getAll();
+const bpmnProcesses = await sdk.maestro.processes.getAll();
 
 // Get a specific task
-const task = await sdk.task.getById('task-id');
+const task = await sdk.tasks.getById('task-id');
 
 // Create a new entity
-const entity = await sdk.entity.create({...});
+const entity = await sdk.entities.create({...});
 
 // Get all buckets 
-const buckets = await sdk.bucket.getAll();
+const buckets = await sdk.buckets.getAll();
 
 // Get a specific process and start it
-const process = await sdk.process.getAll({ 
+const process = await sdk.processes.getAll({ 
   filter: "name eq 'MyProcess'" 
 });
-const job = await sdk.process.start({
+const job = await sdk.processes.start({
   processKey: process[0].key
 }, 'folder-id');
 
 // Get all queues
-const queues = await sdk.queue.getAll();
+const queues = await sdk.queues.getAll();
 
 // Get all assets
-const assets = await sdk.asset.getAll();
+const assets = await sdk.assets.getAll();
 //Get assets in a folder
-const assets = await sdk.asset.getAll({folderId: 'folder-id'});
+const assets = await sdk.assets.getAll({folderId: 'folder-id'});
 ```
 
 ## TypeScript Support
@@ -185,7 +185,7 @@ const createTaskRequest: CreateTaskRequest = {
   assigneeId: 'user-id'
 };
 
-const task: TaskResponse = await sdk.task.create(createTaskRequest);
+const task: TaskResponse = await sdk.tasks.create(createTaskRequest);
 ```
 
 ## Development
@@ -238,7 +238,7 @@ The SDK provides typed errors for better error handling:
 
 ```typescript
 try {
-  const process = await sdk.maestro.process.getById('invalid-id');
+  const process = await sdk.maestro.processes.getById('invalid-id');
 } catch (error) {
   if (error.code === 'PROCESS_NOT_FOUND') {
     console.error('Process not found');
