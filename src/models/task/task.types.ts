@@ -1,4 +1,4 @@
-import { BaseOptions, CollectionResponse, RequestOptions } from "../common/common-types";
+import { BaseOptions, RequestOptions } from "../common/common-types";
 import { PaginationOptions } from '../../utils/pagination';
 import { JobState } from "../common/common-types";
 
@@ -94,7 +94,7 @@ export interface TaskBaseResponse {
   lastModificationTime: string | null;
 }
 
-export interface TaskCreateRequest {
+export interface TaskCreateOptions {
   title: string;
   priority?: TaskPriority;
 }
@@ -132,12 +132,12 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
   processingTime?: number | null;
 }
 
-export interface TaskAssignmentRequest {
+export interface TaskAssignmentOptions {
   taskId: number;
   userId: number;
   userNameOrEmail?: string;
 }
-export interface TasksUnassignRequest {
+export interface TasksUnassignOptions {
   taskIds: number[];
 }
 
@@ -148,7 +148,7 @@ export interface TaskAssignmentResponse {
   errorMessage?: string;
   userNameOrEmail?: string;
 } 
-export interface TaskCompletionRequest {
+export interface TaskCompletionOptions {
   taskId: number;
   data?: any;
   action?: string;

@@ -1,8 +1,8 @@
 import { CollectionResponse } from "../common/common-types";
-import { TaskAssignmentRequest, TaskAssignmentResponse } from "./task.types";
+import { TaskAssignmentOptions, TaskAssignmentResponse } from "./task.types";
 
-export interface TasksAssignRequest {
-    taskAssignments: TaskAssignmentRequest[];
+export interface TasksAssignOptions {
+    taskAssignments: TaskAssignmentOptions[];
 }
 
 export type TaskAssignmentResponseCollection = CollectionResponse<TaskAssignmentResponse>;
