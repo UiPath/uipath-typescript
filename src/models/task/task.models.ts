@@ -3,13 +3,13 @@ import type {
   RawTaskGetResponse, 
   TaskType,
   TaskAssignmentResponse, 
-  TaskAssignmentRequest,
-  TaskCompletionRequest,
+  TaskAssignmentOptions,
+  TaskCompletionOptions,
   TaskCompleteOptions,
   TaskAssignOptions,
   TaskGetAllOptions,
   TaskGetByIdOptions,
-  TaskCreateRequest,
+  TaskCreateOptions,
   TaskGetUsersOptions,
   UserLoginInfo
 } from './task.types';
@@ -27,17 +27,17 @@ export interface TaskServiceModel {
 
   getById(id: number, options?: TaskGetByIdOptions, folderId?: number): Promise<TaskGetResponse>;
 
-  create(request: TaskCreateRequest, folderId: number): Promise<TaskCreateResponse>;
+  create(options: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse>;
 
-  assign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResponse[]>;
+  assign(options: TaskAssignmentOptions, folderId?: number): Promise<TaskAssignmentResponse[]>;
   
-  reassign(request: TaskAssignmentRequest, folderId?: number): Promise<TaskAssignmentResponse[]>;
+  reassign(options: TaskAssignmentOptions, folderId?: number): Promise<TaskAssignmentResponse[]>;
   
   unassign(taskId: number, folderId?: number): Promise<TaskAssignmentResponse[]>;
   
   complete(
     taskType: TaskType,
-    request: TaskCompletionRequest,
+    options: TaskCompletionOptions,
     folderId: number
   ): Promise<void>;
 
@@ -110,25 +110,25 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
     async assign(options: TaskAssignOptions): Promise<TaskAssignmentResponse[]> {
       if (!taskData.id) throw new Error('Task ID is undefined');
       
-      const request: TaskAssignmentRequest = {
+      const assignmentOptions: TaskAssignmentOptions = {
         taskId: taskData.id,
         userId: options.userId || 0, // Will be handled by userNameOrEmail if userId is not provided, 0 is considered as invalid user id
         userNameOrEmail: options.userNameOrEmail
       };
       
-      return service.assign(request, taskData.organizationUnitId);
+      return service.assign(assignmentOptions, taskData.organizationUnitId);
     },
     
     async reassign(options: TaskAssignOptions): Promise<TaskAssignmentResponse[]> {
       if (!taskData.id) throw new Error('Task ID is undefined');
       
-      const request: TaskAssignmentRequest = {
+      const assignmentOptions: TaskAssignmentOptions = {
         taskId: taskData.id,
         userId: options.userId || 0, // Will be handled by userNameOrEmail if userId is not provided, 0 is considered as invalid user id
         userNameOrEmail: options.userNameOrEmail
       };
       
-      return service.reassign(request, taskData.organizationUnitId);
+      return service.reassign(assignmentOptions, taskData.organizationUnitId);
     },
 
     async unassign(): Promise<TaskAssignmentResponse[]> {

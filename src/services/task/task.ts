@@ -3,11 +3,11 @@ import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { 
-  TaskCreateRequest, 
-  TaskAssignmentRequest,
-  TasksUnassignRequest,
+  TaskCreateOptions, 
+  TaskAssignmentOptions,
+  TasksUnassignOptions,
   TaskAssignmentResponse,
-  TaskCompletionRequest,
+  TaskCompletionOptions,
   TaskType,
   TaskGetAllOptions,
   TaskGetByIdOptions,
@@ -29,7 +29,7 @@ import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
-import { TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignRequest } from '../../models/task/task.internal-types';
+import { TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/task/task.internal-types';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -54,7 +54,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async create(task: TaskCreateRequest, folderId: number): Promise<TaskCreateResponse> {
+  async create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     const externalTask = {
@@ -289,19 +289,19 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ]);
    * ```
    */
-  async assign(taskAssignments: TaskAssignmentRequest | TaskAssignmentRequest[], folderId?: number): Promise<TaskAssignmentResponse[]> {
+  async assign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<TaskAssignmentResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
-    const request: TasksAssignRequest = {
+    const options: TasksAssignOptions = {
       taskAssignments: Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments]
     };
     
-    // Convert request to PascalCase for API
-    const pascalRequest = camelToPascalCaseKeys(request);
+    // Convert options to PascalCase for API
+    const pascalOptions = camelToPascalCaseKeys(options);
     
     const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.ASSIGN_TASKS,
-      pascalRequest,
+      pascalOptions,
       { headers }
     );
     
@@ -345,19 +345,19 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ]);
    * ```
    */
-  async reassign(taskAssignments: TaskAssignmentRequest | TaskAssignmentRequest[], folderId?: number): Promise<TaskAssignmentResponse[]> {
+  async reassign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<TaskAssignmentResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
-    const request: TasksAssignRequest = {
+    const options: TasksAssignOptions = {
       taskAssignments: Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments]
     };
     
-    // Convert request to PascalCase for API
-    const pascalRequest = camelToPascalCaseKeys(request);
+    // Convert options to PascalCase for API
+    const pascalOptions = camelToPascalCaseKeys(options);
     
     const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.REASSIGN_TASKS,
-      pascalRequest,
+      pascalOptions,
       { headers }
     );
     
@@ -386,13 +386,13 @@ export class TaskService extends BaseService implements TaskServiceModel {
   async unassign(taskIds: number | number[], folderId?: number): Promise<TaskAssignmentResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
-    const request: TasksUnassignRequest = {
+    const options: TasksUnassignOptions = {
       taskIds: Array.isArray(taskIds) ? taskIds : [taskIds]
     };
     
     const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.UNASSIGN_TASKS,
-      request,
+      options,
       { headers }
     );
     
@@ -406,7 +406,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * Completes a task with the specified type and data
    * 
    * @param completionType - The type of task (Form, App, or Generic)
-   * @param request - The completion request data
+   * @param options - The completion options
    * @param folderId - Required folder ID
    * @returns Promise resolving to void
    * 
@@ -425,7 +425,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async complete(completionType: TaskType, request: TaskCompletionRequest, folderId: number): Promise<void> {
+  async complete(completionType: TaskType, options: TaskCompletionOptions, folderId: number): Promise<void> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     let endpoint: string;
@@ -442,7 +442,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
         break;
     }
     
-    await this.post<void>(endpoint, request, { headers });
+    await this.post<void>(endpoint, options, { headers });
   }
 
   /**
