@@ -1,6 +1,8 @@
 # UiPath TypeScript SDK
 
-A comprehensive TypeScript SDK for interacting with the UiPath Platform services.
+[View Full API Reference ↗](https://uipath.github.io/uipath-typescript/getting-started/)
+
+A comprehensive TypeScript SDK for interacting with UiPath Platform services.
 
 ## Installation
 
@@ -8,7 +10,10 @@ A comprehensive TypeScript SDK for interacting with the UiPath Platform services
 npm install @uipath/uipath-typescript
 # or
 yarn add @uipath/uipath-typescript
+# or
+pnpm add @uipath/uipath-typescript
 ```
+
 
 ## Quick Start
 
@@ -117,16 +122,8 @@ The SDK provides access to the following services through a consistent API:
 - `sdk.queues` - Manage Orchestrator queues
 - `sdk.assets` - Manage Orchestrator assets
 
-### Consistent Method Naming
 
-All services follow a consistent method naming pattern:
-- `getAll()` - Retrieve all resources
-- `getById(id)` - Get a specific resource
-- `create()` - Create a new resource
-- `update()` - Update an existing resource
-- `delete()` - Delete a resource
-
-Example usage:
+**Example usage**:
 ```typescript
 // Get all processes
 const bpmnProcesses = await sdk.maestro.processes.getAll();
@@ -159,97 +156,103 @@ const assets = await sdk.assets.getAll({folderId: 'folder-id'});
 
 ## TypeScript Support
 
-The SDK is fully typed and exports all request and response types for better developer experience and LLM-friendly coding:
+The SDK is fully typed and exports all types for better developer experience and LLM-friendly coding:
 
 ```typescript
 import { 
   UiPath,
-  // Request types
-  CreateTaskRequest,
-  UpdateProcessRequest,
-  CreateEntityRequest,
+  // Task types
+  TaskCreateOptions,
+  TaskPriority,
+  TaskStatus,
   
-  // Response types
-  TaskResponse,
-  ProcessResponse,
-  EntityResponse,
-  ProcessInstanceResponse,
+  // Process types  
+  ProcessStartRequest,
   ProcessStartResponse,
+  ProcessGetResponse,
+  
+  // Entity types
+  EntityGetResponse,
+  EntityInsertOptions,
+  
+  // Asset/Queue/Bucket types
+  AssetGetResponse,
+  QueueGetResponse,
   BucketGetResponse,
+  
+  // Maestro types
+  ProcessInstanceGetResponse,
+  MaestroProcessGetAllResponse
 } from '@uipath/uipath-typescript';
 
 // TypeScript will provide full intellisense
-const createTaskRequest: CreateTaskRequest = {
+const taskOptions: TaskCreateOptions = {
   title: 'Review Document',
-  priority: 'High',
-  assigneeId: 'user-id'
+  priority: TaskPriority.High
 };
 
-const task: TaskResponse = await sdk.tasks.create(createTaskRequest);
-```
-
-## Development
-
-### Setup
-```bash
-npm install
-```
-
-### Build
-```bash
-npm run build
-```
-
-### Test
-```bash
-npm test        # Unit tests
-npm run test:e2e # End-to-end tests
-```
-
-### Generate Documentation
-```bash
-npm run docs
-```
-
-## Configuration
-
-The SDK can be configured with the following options:
-
-```typescript
-interface UiPathConfig {
-  baseUrl: string;        // UiPath platform URL
-  orgName: string;        // Organization name
-  tenantName: string;     // Tenant name
-  
-  // Authentication options (choose one):
-  // Option 1: Secret-based authentication
-  secret?: string;        // Secret for authentication (PAT Token or Bearer Token)
-  
-  // Option 2: OAuth authentication (all three required together)
-  clientId?: string;      // OAuth client ID (required with redirectUri and scope)
-  redirectUri?: string;   // OAuth redirect URI (required with clientId and scope)
-  scope?: string;         // OAuth scopes (required with clientId and redirectUri)
-}
+const task = await sdk.tasks.create(taskOptions);
 ```
 
 ## Error Handling
 
-The SDK provides typed errors for better error handling:
+The SDK provides comprehensive error handling with typed errors:
 
 ```typescript
+import { UiPathError } from '@uipath/uipath-typescript';
+
 try {
   const process = await sdk.maestro.processes.getById('invalid-id');
 } catch (error) {
-  if (error.code === 'PROCESS_NOT_FOUND') {
-    console.error('Process not found');
-  }
+  if (error instanceof UiPathError) {
+    // Access common error properties
+    console.log('Error Type:', error.type);
+    console.log('Message:', error.message);
+    console.log('Status Code:', error.statusCode);
+    console.log('Request ID:', error.requestId);
+    console.log('Timestamp:', error.timestamp);
+    console.log('error stack trace:', error.stack);
+
+    // Get detailed debug information including stack trace
+    const debugInfo = error.getDebugInfo();
+```
+
+## Pagination
+
+The SDK provides built-in pagination support:
+
+### Cursor-based Navigation
+
+```typescript
+// Navigate through pages using cursors
+let currentPage = await sdk.assets.getAll({ pageSize: 10 }) as PaginatedResponse<AssetGetResponse>;
+
+while (currentPage.hasNextPage) {
+  // Process current page items
+  currentPage.items.forEach(item => console.log(item.name));
+  
+  // Get next page using cursor
+    currentPage = await sdk.assets.getAll({ 
+    cursor: currentPage.nextCursor 
+  }) as PaginatedResponse<AssetGetResponse>;
 }
 ```
 
-## License
+### Page Jumping
 
-[License information to be added]
+```typescript
+// Jump directly to page 5 (when supported)
+const page5 = await sdk.assets.getAll({
+  jumpToPage: 5,
+  pageSize: 20
+});
 
-## Contributing
+// Check if page jumping is supported
+if (page5.supportsPageJump) {
+  console.log(`Currently on page ${page5.currentPage} of ${page5.totalPages}`);
+}
+```
 
-[Contributing guidelines to be added]
+## Development
+
+Before submitting a pull request, please review our [Contribution Guidelines](https://uipath.github.io/uipath-typescript/CONTRIBUTING/).
