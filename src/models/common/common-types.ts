@@ -3,6 +3,22 @@ export interface CollectionResponse<T> {
 }
 
 /**
+ * Standardized result interface for all action methods (pause, cancel, complete, update, upload, etc.)
+ * Success responses include data from the request context or API response
+ */
+export interface OperationResponse<TData> {
+  /**
+   * Whether the action was successful
+   */
+  success: boolean;
+  
+  /**
+   * Response data (can contain error details in case of failure)
+   */
+  data: TData;
+}
+
+/**
  * Common enum for job state used across services
  */
 export enum JobState {

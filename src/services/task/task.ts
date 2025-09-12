@@ -5,8 +5,8 @@ import { TokenManager } from '../../core/auth/token-manager';
 import { 
   TaskCreateOptions, 
   TaskAssignmentOptions,
-  TasksUnassignOptions,
   TaskAssignmentResponse,
+  TasksUnassignOptions,
   TaskCompletionOptions,
   TaskType,
   TaskGetAllOptions,
@@ -20,6 +20,7 @@ import {
   TaskCreateResponse,
   createTaskWithMethods
 } from '../../models/task/task.models';
+import { OperationResponse } from '../../models/common/common-types';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, applyDataTransforms, addPrefixToKeys } from '../../utils/transform';
 import { TaskStatusMap, TaskTimeMap } from '../../models/task/task.constants';
 import { createHeaders } from '../../utils/http/headers';
@@ -31,6 +32,7 @@ import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 import { TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/task/task.internal-types';
 import { track } from '../../core/telemetry';
+import { processODataArrayResponse } from '../../utils/object-utils';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -291,11 +293,14 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ]);
    * ```
    */
-  async assign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<TaskAssignmentResponse[]> {
+  async assign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
+    // Normalize input to array
+    const assignmentArray = Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments];
+    
     const options: TasksAssignOptions = {
-      taskAssignments: Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments]
+      taskAssignments: assignmentArray
     };
     
     // Convert options to PascalCase for API
@@ -307,10 +312,11 @@ export class TaskService extends BaseService implements TaskServiceModel {
       { headers }
     );
     
-    // Transform response from PascalCase to camelCase and map 'value' to 'error'
-    const transformedResponse = pascalToCamelCaseKeys(response.data) as any;
-    const result = transformData(transformedResponse, { value: 'error' });
-    return result.error;
+    // Transform response from PascalCase to camelCase
+    const transformedResponse = pascalToCamelCaseKeys(response.data) as TaskAssignmentResponseCollection;
+    
+    // Process OData array response - empty array = success, non-empty = error
+    return processODataArrayResponse(transformedResponse, assignmentArray);
   }
 
   /**
@@ -347,11 +353,14 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ]);
    * ```
    */
-  async reassign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<TaskAssignmentResponse[]> {
+  async reassign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
+    // Normalize input to array
+    const assignmentArray = Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments];
+    
     const options: TasksAssignOptions = {
-      taskAssignments: Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments]
+      taskAssignments: assignmentArray
     };
     
     // Convert options to PascalCase for API
@@ -363,10 +372,11 @@ export class TaskService extends BaseService implements TaskServiceModel {
       { headers }
     );
     
-    // Transform response from PascalCase to camelCase and map 'value' to 'error'
-    const transformedResponse = pascalToCamelCaseKeys(response.data) as any;
-    const result = transformData(transformedResponse, { value: 'error' });
-    return result.error;
+    // Transform response from PascalCase to camelCase
+    const transformedResponse = pascalToCamelCaseKeys(response.data) as TaskAssignmentResponseCollection;
+    
+    // Process OData array response - empty array = success, non-empty = error
+    return processODataArrayResponse(transformedResponse, assignmentArray);
   }
 
   /**
@@ -385,11 +395,14 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * const result = await sdk.tasks.unassign([123, 456, 789]);
    * ```
    */
-  async unassign(taskIds: number | number[], folderId?: number): Promise<TaskAssignmentResponse[]> {
+  async unassign(taskIds: number | number[], folderId?: number): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
+    // Normalize input to array
+    const taskIdArray = Array.isArray(taskIds) ? taskIds : [taskIds];
+    
     const options: TasksUnassignOptions = {
-      taskIds: Array.isArray(taskIds) ? taskIds : [taskIds]
+      taskIds: taskIdArray
     };
     
     const response = await this.post<TaskAssignmentResponseCollection>(
@@ -398,10 +411,12 @@ export class TaskService extends BaseService implements TaskServiceModel {
       { headers }
     );
     
-    // Transform response from PascalCase to camelCase and map 'value' to 'error'
-    const transformedResponse = pascalToCamelCaseKeys(response.data) as any;
-    const result = transformData(transformedResponse, { value: 'error' });
-    return result.error;
+    // Transform response from PascalCase to camelCase
+    const transformedResponse = pascalToCamelCaseKeys(response.data) as TaskAssignmentResponseCollection;
+    
+    // Process OData array response - empty array = success, non-empty = error
+    // Return the task IDs that were unassigned
+    return processODataArrayResponse(transformedResponse, taskIdArray.map(id => ({ taskId: id })));
   }
 
   /**
@@ -427,7 +442,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  async complete(completionType: TaskType, options: TaskCompletionOptions, folderId: number): Promise<void> {
+  async complete(completionType: TaskType, options: TaskCompletionOptions, folderId: number): Promise<OperationResponse<TaskCompletionOptions>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     let endpoint: string;
@@ -444,7 +459,14 @@ export class TaskService extends BaseService implements TaskServiceModel {
         break;
     }
     
+    // CompleteAppTask returns 204 no content
     await this.post<void>(endpoint, options, { headers });
+    
+    // Return success with the request context data
+    return {
+      success: true,
+      data: options
+    };
   }
 
   /**
