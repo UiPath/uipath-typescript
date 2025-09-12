@@ -23,6 +23,7 @@ import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createParams } from '../../utils/http/params';
 import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entity.constants';
+import { track } from '../../core/telemetry';
 
 /**
  * Service for interacting with the Data Fabric Entity API
@@ -51,6 +52,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ]);
    * ```
    */
+  @track('GetById')
   async getById(id: string): Promise<EntityGetResponse> {
     // Get entity metadata
     const response = await this.get<RawEntityGetResponse>(
@@ -174,6 +176,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
+  @track('GetRecordsById')
   async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
     entityId: string, 
     options?: T
@@ -226,6 +229,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
+  @track('InsertById')
   async insertById(id: string, data: Record<string, any>[], options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
@@ -273,6 +277,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
+  @track('UpdateById')
   async updateById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
@@ -309,6 +314,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ]);
    * ```
    */
+  @track('DeleteById')
   async deleteById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
     const params = createParams({
       failOnFirst: options.failOnFirst
@@ -342,6 +348,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const records = await entities[0].getRecords();
    * ```
    */
+  @track('GetAll')
   async getAll(): Promise<EntityGetResponse[]> {
     const response = await this.get<RawEntityGetResponse[]>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL
