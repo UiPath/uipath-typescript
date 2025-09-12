@@ -24,6 +24,9 @@ import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../.
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
+  /**
+   * @hideconstructor
+   */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }

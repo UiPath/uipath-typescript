@@ -35,6 +35,9 @@ import { TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOption
  * Service for interacting with UiPath Tasks API
  */
 export class TaskService extends BaseService implements TaskServiceModel {
+  /**
+   * @hideconstructor
+   */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }

@@ -44,12 +44,12 @@ if (!isBrowser) {
   });
 }
 
-/**
- * Service for interacting with UiPath Orchestrator Buckets API
- */
 export class BucketService extends FolderScopedService implements BucketServiceModel {
   protected readonly tokenManager: TokenManager;
   
+  /**
+   * @hideconstructor
+   */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
     this.tokenManager = tokenManager;

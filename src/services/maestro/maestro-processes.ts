@@ -10,6 +10,9 @@ import type { MaestroProcessesServiceModel } from '../../models/maestro/process.
  * Service for interacting with Maestro Processes
  */
 export class MaestroProcessesService extends BaseService implements MaestroProcessesServiceModel {
+  /**
+   * @hideconstructor
+   */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }

@@ -15,8 +15,20 @@ import type {
 } from './task.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
-// Define the task service interface
+/**
+ * Service for managing UiPath Action Center
+ * 
+ * Tasks are task-based automation components that can be integrated into applications and processes. They represent discrete units of work that can be triggered and monitored through the UiPath API. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
+ *
+*/
 export interface TaskServiceModel {
+  /**
+   * Gets all tasks across folders with optional filtering
+   * 
+   * @param options - Query options including optional folderId and pagination options
+   * @returns Promise resolving to either an array of tasks NonPaginatedResponse<TaskGetResponse> or a PaginatedResponse<TaskGetResponse> when pagination options are used.
+   * {@link TaskGetResponse}
+   */
   getAll<T extends TaskGetAllOptions = TaskGetAllOptions>(
     options?: T
   ): Promise<
