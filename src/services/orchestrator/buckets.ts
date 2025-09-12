@@ -30,6 +30,7 @@ import axios, { AxiosResponse } from 'axios';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
+import { track } from '../../core/telemetry';
 
 // Import file-type dynamically to avoid issues in browser environment
 // This variable will hold the fileTypeFromBuffer function when in Node.js environment
@@ -68,6 +69,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * const bucket = await sdk.buckets.getById(123, 456);
    * ```
    */
+  @track('GetById')
   async getById(id: number, folderId: number, options: BucketGetByIdOptions = {}): Promise<BucketGetResponse> {
     if (!id) {
       throw new ValidationError({ message: 'bucketId is required for getById' });
@@ -135,6 +137,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
+  @track('GetAll')
   async getAll<T extends BucketGetAllOptions = BucketGetAllOptions>(
     options?: T
   ): Promise<
@@ -195,6 +198,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * }
    * ```
    */
+  @track('GetFileMetaData')
   async getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
     bucketId: number, 
     folderId: number, 
@@ -261,6 +265,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
+  @track('UploadFile')
   async uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse> {
     const { bucketId, folderId, path, content, contentType } = options;
     
@@ -484,6 +489,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
+  @track('GetReadUri')
   async getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse> {
     const { bucketId, folderId, path, expiryInMinutes, ...restOptions } = options;
     

@@ -20,6 +20,7 @@ import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
+import { track } from '../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -69,6 +70,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * });
    * ```
    */
+  @track('GetAll')
   async getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(
     options?: T
   ): Promise<
@@ -119,6 +121,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * }, 123); // folderId is required
    * ```
    */
+  @track('Start')
   async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
@@ -178,6 +181,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * const process = await sdk.processes.getById(123, 456);
    * ```
    */
+  @track('GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     

@@ -17,6 +17,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 import { QueueMap } from '../../models/orchestrator/queues.constants';
+import { track } from '../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Queues API
@@ -66,6 +67,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * });
    * ```
    */
+  @track('GetAll')
   async getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(
     options?: T
   ): Promise<
@@ -108,6 +110,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * const queue = await sdk.queues.getById(123, 456);
    * ```
    */
+  @track('GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
