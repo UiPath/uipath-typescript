@@ -11,6 +11,7 @@ import { API_ENDPOINTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
 import { validateEnvironment } from '../utils/env-validator.js';
 import { handleHttpError } from '../utils/error-handler.js';
+import { track } from '../telemetry/index.js';
 
 export default class Publish extends Command {
   static override description = 'Publish NuGet packages to UiPath Orchestrator';
@@ -27,6 +28,7 @@ export default class Publish extends Command {
     }),
   };
 
+  @track('Publish')
   public async run(): Promise<void> {
     const { flags } = await this.parse(Publish);
     

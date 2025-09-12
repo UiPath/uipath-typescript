@@ -30,6 +30,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
 import { TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/task/task.internal-types';
+import { track } from '../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -109,6 +110,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * });
    * ```
    */
+  @track('GetUsers')
   async getUsers<T extends TaskGetUsersOptions = TaskGetUsersOptions>(
     folderId: number,
     options?: T

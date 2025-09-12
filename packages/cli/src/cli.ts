@@ -4,6 +4,7 @@ import { config } from 'dotenv';
 import { run } from '@oclif/core';
 import { MESSAGES } from './constants/messages.js';
 import { VERSION_CONSTANTS } from './constants/commands.js';
+import { cliTelemetryClient } from './telemetry/index.js';
 import chalk from 'chalk';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
@@ -14,6 +15,9 @@ const __dirname = dirname(__filename);
 
 // Load environment variables from .env file
 config({ quiet: true });
+
+// Initialize telemetry client
+cliTelemetryClient.initialize();
 
 // Handle --version and -v flags with custom format (OCLIF doesn't support customizing the default format)
 // Only intercept if --version/-v is the first/only argument, not a subcommand flag

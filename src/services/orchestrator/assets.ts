@@ -1,11 +1,7 @@
 import { FolderScopedService } from '../folder-scoped-service';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution-context';
-import { 
-  AssetGetResponse, 
-  AssetGetAllOptions,
-  AssetGetByIdOptions
-} from '../../models/orchestrator/asset.types';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../models/orchestrator/asset.types';
 import { AssetServiceModel } from '../../models/orchestrator/asset.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
@@ -18,6 +14,7 @@ import { ODATA_PAGINATION } from '../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/pagination-helpers';
 import { PaginationType } from '../../utils/pagination/pagination.internal-types';
+import { track } from '../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
@@ -57,6 +54,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * });
    * ```
    */
+  @track('GetAll')
   async getAll<T extends AssetGetAllOptions = AssetGetAllOptions>(
     options?: T
   ): Promise<
@@ -100,6 +98,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * const asset = await sdk.assets.getById(123, 456);
    * ```
    */
+  @track('GetById')
   async getById(id: number, folderId: number, options: AssetGetByIdOptions = {}): Promise<AssetGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
