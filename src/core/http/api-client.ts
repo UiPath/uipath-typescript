@@ -145,7 +145,7 @@ export class ApiClient {
       return response.json();
     } catch (error: any) {
       // If it's already one of our errors, re-throw it
-      if (error.name && error.name.includes('Error')) {
+      if (error.type && error.type.includes('Error')) {
         throw error;
       }
       
