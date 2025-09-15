@@ -1,0 +1,29 @@
+name: 'Update Telemetry Constants'
+description: 'Updates telemetry constants with connection string and version information'
+inputs:
+  connection-string:
+    description: 'Application Insights connection string'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Update Telemetry Constants
+      shell: bash
+      run: |
+        # Get versions from respective package.json files
+        CLI_VERSION=$(node -p "require('./packages/cli/package.json').version")
+        SDK_VERSION=$(node -p "require('./package.json').version")
+        
+        # Replace placeholders in both telemetry constants files
+        # CLI constants - uses CLI_VERSION from CLI package.json
+        sed -i 's/\$CONNECTION_STRING/${{ inputs.connection-string }}/g' packages/cli/src/telemetry/constants.ts
+        sed -i "s/\$CLI_VERSION/$CLI_VERSION/g" packages/cli/src/telemetry/constants.ts
+        
+        # SDK core constants - uses SDK_VERSION from root package.json
+        sed -i 's/\$CONNECTION_STRING/${{ inputs.connection-string }}/g' src/core/telemetry/constants.ts
+        sed -i "s/\$SDK_VERSION/$SDK_VERSION/g" src/core/telemetry/constants.ts
+        
+        echo "Updated telemetry constants with:"
+        echo "CONNECTION_STRING: ${{ inputs.connection-string }}"
+        echo "- CLI_VERSION (from CLI package): $CLI_VERSION"
+        echo "- SDK_VERSION (from root package): $SDK_VERSION"

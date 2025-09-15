@@ -1,0 +1,71 @@
+name: Publish to GitHub Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (leave empty to use current package.json version)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-to-github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Update Telemetry Constants
+        uses: ./.github/common/update-telemetry
+        with:
+          connection-string: ${{ secrets.CONNECTION_STRING }}
+
+      - name: Build
+        run: npm run build
+
+      - name: Set Version (if provided)
+        if: inputs.version != ''
+        run: |
+          echo "Setting version to ${{ inputs.version }}"
+          npm version ${{ inputs.version }} --no-git-tag-version
+
+      - name: Get Current Version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Publishing version: $CURRENT_VERSION"
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Pack
+        run: npm pack
+
+      - name: Publish to GitHub Packages
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Summary
+        run: |
+          echo "## GitHub Packages Published Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version: $CURRENT_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 Package: @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔗 [View Package](https://github.com/UiPath/uipath-typescript/pkgs/npm/uipath-typescript)" >> $GITHUB_STEP_SUMMARY

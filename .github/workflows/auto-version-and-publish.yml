@@ -1,0 +1,82 @@
+name: Auto Version and Publish SDK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  publish-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Update Telemetry Constants
+        uses: ./.github/common/update-telemetry
+        with:
+          connection-string: ${{ secrets.CONNECTION_STRING }}          
+
+      - name: Build
+        run: npm run build
+
+      - name: Auto-increment Beta Version
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Extract beta number and increment it
+          if [[ $CURRENT_VERSION =~ ([0-9]+\.[0-9]+\.[0-9]+)-beta\.([0-9]+) ]]; then
+            BASE_VERSION="${BASH_REMATCH[1]}"
+            BETA_NUM="${BASH_REMATCH[2]}"
+            NEW_BETA_NUM=$((BETA_NUM + 1))
+            NEW_VERSION="${BASE_VERSION}-beta.${NEW_BETA_NUM}"
+          else
+            # If not a beta version, start with beta.1
+            NEW_VERSION="${CURRENT_VERSION}-beta.1"
+          fi
+          
+          echo "New version: $NEW_VERSION"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          
+          # Update package.json version
+          npm version $NEW_VERSION --no-git-tag-version
+
+      - name: Pack
+        run: npm pack
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Generate Summary
+        run: |
+          echo "## SDK Published Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version: $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Published to npm registry" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Git tag created and pushed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Manual Actions Available:" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 To publish to GitHub Packages, run the 'Publish to GitHub Packages' workflow manually" >> $GITHUB_STEP_SUMMARY

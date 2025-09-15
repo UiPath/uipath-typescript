@@ -3,23 +3,20 @@ name: Deploy Documentation
 on:
   push:
     branches:
-      - main  # or your default branch name
+      - main
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
   actions: write
   deployments: write
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,25 +26,32 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Dependencies
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Node Dependencies
         run: |
           npm install --legacy-peer-deps
           npm install --no-save typedoc@0.24.8 --legacy-peer-deps
           npm install --no-save @types/node --legacy-peer-deps
 
-      - name: Generate Documentation
-        run: npm run docs:generate
+      - name: Setup Python Virtual Environment
+        run: |
+          python3 -m venv docs-env
+          source docs-env/bin/activate
+          pip install -r docs/requirements.txt
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-        with:
-          enablement: true
+      - name: Generate API Documentation
+        run: npm run docs:api
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './docs'
+      - name: Build MkDocs Documentation
+        run: |
+          source docs-env/bin/activate
+          mkdocs build
 
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4 
+        run: |
+          source docs-env/bin/activate
+          mkdocs gh-deploy --force

@@ -18,19 +18,13 @@
         "README.md"
     ],
     "scripts": {
-        "clean": "rm -rf dist && npm run clean --workspaces",
+        "clean": "rimraf dist && npm run clean --workspaces",
         "prebuild": "npm run clean",
         "build": "tsc && npm run build --workspaces",
         "build:sdk": "tsc",
-        "build:cli": "npm run build --workspace=packages/cli",
-        "docs": "typedoc --out docs src/index.ts",
-        "prepare": "npm run build",
-        "test": "jest --testPathIgnorePatterns=tests/e2e && npm run test --workspaces",
-        "test:e2e": "jest --testPathPattern=tests/e2e",
-        "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-        "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
         "lint": "eslint src/**/*.ts && npm run lint --workspaces",
-        "dev:cli": "npm run dev --workspace=packages/cli"
+        "docs:api": "typedoc",
+        "verify": "./scripts/verify-packages.sh"
     },
     "dependencies": {
         "@opentelemetry/sdk-logs": "^0.204.0",
@@ -48,9 +42,15 @@
         "@types/node": "^20.11.19",
         "@types/uuid": "^9.0.8",
         "@types/ws": "^8.5.10",
+        "@typescript-eslint/eslint-plugin": "^8.39.0",
+        "@typescript-eslint/parser": "^8.39.0",
         "dotenv": "^17.2.0",
+        "eslint": "^8.57.1",
         "jest": "^29.7.0",
+        "rimraf": "^6.0.1",
         "ts-jest": "^29.4.0",
+        "typedoc": "^0.28.13",
+        "typedoc-plugin-markdown": "^4.8.1",
         "typescript": "^5.3.3"
     },
     "repository": {
