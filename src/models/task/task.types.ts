@@ -106,6 +106,7 @@ export interface RawTaskCreateResponse extends TaskBaseResponse {
   completedByUser: UserLoginInfo | null;
   taskAssignees: UserLoginInfo[] | null;
   processingTime: number | null;
+  data: Record<string, unknown> | null;
 }
 
 export interface RawTaskGetResponse extends TaskBaseResponse {
@@ -130,6 +131,7 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
   taskAssignees?: UserLoginInfo[] | null;
   taskSource?: TaskSource | null;
   processingTime?: number | null;
+  data?: Record<string, unknown> | null;
 }
 
 export interface TaskAssignmentOptions {
