@@ -18,19 +18,10 @@
         "README.md"
     ],
     "scripts": {
-        "clean": "rm -rf dist && npm run clean --workspaces",
-        "prebuild": "npm run clean",
-        "build": "tsc && npm run build --workspaces",
+        "build": "tsc && npm run build",
         "build:sdk": "tsc",
-        "build:cli": "npm run build --workspace=packages/cli",
         "docs": "typedoc --out docs src/index.ts",
-        "prepare": "npm run build",
-        "test": "jest --testPathIgnorePatterns=tests/e2e && npm run test --workspaces",
-        "test:e2e": "jest --testPathPattern=tests/e2e",
-        "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-        "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-        "lint": "eslint src/**/*.ts && npm run lint --workspaces",
-        "dev:cli": "npm run dev --workspace=packages/cli"
+        "lint": "eslint src/**/*.ts && npm run lint --workspaces"
     },
     "dependencies": {
         "@opentelemetry/sdk-logs": "^0.204.0",
