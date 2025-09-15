@@ -57,6 +57,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * }, 123); // folderId is required
    * ```
    */
+  @track('Create')
   async create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
@@ -181,6 +182,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * });
    * ```
    */
+  @track('GetAll')
   async getAll<T extends TaskGetAllOptions = TaskGetAllOptions>(
     options?: T
   ): Promise<
@@ -232,6 +234,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * // If the task is a form task, it will automatically return form-specific data
    * ```
    */
+  @track('GetById')
   async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<TaskGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     // prefix all keys in options
@@ -293,6 +296,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ]);
    * ```
    */
+  @track('Assign')
   async assign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
@@ -353,6 +357,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ]);
    * ```
    */
+  @track('Reassign')
   async reassign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
@@ -395,6 +400,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * const result = await sdk.tasks.unassign([123, 456, 789]);
    * ```
    */
+  @track('Unassign')
   async unassign(taskIds: number | number[], folderId?: number): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
@@ -442,6 +448,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * }, 123); // folderId is required
    * ```
    */
+  @track('Complete')
   async complete(completionType: TaskType, options: TaskCompletionOptions, folderId: number): Promise<OperationResponse<TaskCompletionOptions>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     

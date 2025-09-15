@@ -5,6 +5,7 @@ import { ExecutionContext } from '../../core/context/execution-context';
 import { TokenManager } from '../../core/auth/token-manager';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../models/maestro/process.models';
+import { track } from '../../core/telemetry';
 
 /**
  * Service for interacting with Maestro Processes
@@ -32,6 +33,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * 
    * ```
    */
+  @track('GetAll')
   async getAll(): Promise<MaestroProcessGetAllResponse[]> {
     const response = await this.get<MaestroProcessGetAllResponse[]>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
     

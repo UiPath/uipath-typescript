@@ -3,12 +3,12 @@ export interface CollectionResponse<T> {
 }
 
 /**
- * Standardized result interface for all action methods (pause, cancel, complete, update, upload, etc.)
+ * Standardized result interface for all operation methods (pause, cancel, complete, update, upload, etc.)
  * Success responses include data from the request context or API response
  */
 export interface OperationResponse<TData> {
   /**
-   * Whether the action was successful
+   * Whether the operation was successful
    */
   success: boolean;
   
