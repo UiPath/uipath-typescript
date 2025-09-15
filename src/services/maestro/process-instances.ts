@@ -25,6 +25,9 @@ import { track } from '../../core/telemetry';
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
+  /**
+   * @hideconstructor
+   */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }

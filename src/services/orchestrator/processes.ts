@@ -26,6 +26,9 @@ import { track } from '../../core/telemetry';
  * Service for interacting with UiPath Orchestrator Processes API
  */
 export class ProcessService extends BaseService implements ProcessServiceModel {
+  /**
+   * @hideconstructor
+   */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }

@@ -20,6 +20,9 @@ import { track } from '../../core/telemetry';
  * Service for interacting with UiPath Orchestrator Assets API
  */
 export class AssetService extends FolderScopedService implements AssetServiceModel {
+  /**
+   * @hideconstructor
+   */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }
@@ -27,9 +30,9 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
   /**
    * Gets all assets across folders with optional filtering and folder scoping
    * 
-   * The method returns either:
-   * - An array of assets (when no pagination parameters are provided)
-   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * @signature getAll(options?) -> Promise<AssetGetResponse[]>
+   * @param options Query options including optional folderId and pagination options
+   * @returns Promise resolving to array of assets or paginated response
    * 
    * @example
    * ```typescript

@@ -23,6 +23,9 @@ import { track } from '../../core/telemetry';
  * Service for interacting with UiPath Orchestrator Queues API
  */
 export class QueueService extends FolderScopedService implements QueueServiceModel {
+  /**
+   * @hideconstructor
+   */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
   }

@@ -56,7 +56,8 @@ logs/
 npm-debug.log* 
 
 dist/
-docs/
+docs/api/
+site/
 
 tests/
 jest.config.*
