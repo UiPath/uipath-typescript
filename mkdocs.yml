@@ -1,0 +1,164 @@
+site_name: UiPath TypeScript SDK
+site_url: https://uipath.github.io/uipath-typescript/
+site_author: UiPath
+
+# Repository
+repo_name: UiPath/uipath-typescript
+repo_url: https://github.com/UiPath/uipath-typescript
+
+# Copyright
+copyright: Copyright &copy; 2025 UiPath
+
+
+# Configuration
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/logo-light.svg
+  custom_logo:
+    light: assets/logo-light.svg
+    dark: assets/logo-dark.svg
+  favicon: assets/favicon.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  icon:
+    repo: fontawesome/brands/github
+    
+  # Default values, taken from mkdocs_theme.yml
+  language: en
+  features:
+    - announce.dismiss
+    - content.code.annotate
+    - content.footnote.tooltips
+    - content.tabs.link
+    - content.tooltips
+    - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.copy
+    - content.footnote.tooltips
+    - content.tabs.link
+    - content.tooltips
+    - navigation.expand
+    - navigation.footer
+    - navigation.sections
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - llmstxt:
+      full_output: "llms-full-content.txt"
+      sections:
+        Getting Started:
+          - getting-started.md: Introduction to UiPath TypeScript SDK
+          - authentication.md: Authentication setup
+          - pagination.md: Pagination guide
+        API Reference:
+          - api/interfaces/AssetServiceModel.md: Asset service methods
+          - api/interfaces/ProcessServiceModel.md: Process service methods
+          - api/interfaces/QueueServiceModel.md: Queue service methods
+          - api/interfaces/BucketServiceModel.md: Bucket service methods
+          - api/interfaces/TaskServiceModel.md: Task service methods
+          - api/interfaces/EntityServiceModel.md: Entity service methods
+          - api/interfaces/MaestroProcessesServiceModel.md: Maestro process methods
+          - api/interfaces/ProcessInstancesServiceModel.md: Process instance methods
+  - termynal:
+      prompt_literal_start:
+        - "$"
+        - ">"
+
+extra:
+  status:
+    new: Recently added
+    deprecated: Deprecated
+
+# Additional configuration
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - overrides/assets/javascripts/extra.js
+
+# Extensions
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.blocks.tab:
+      alternate_style: true
+  - pymdownx.blocks.admonition:
+      types:
+        - note
+        - attention
+        - caution
+        - danger
+        - error
+        - tip
+        - hint
+        - warning
+        - info
+        - check
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.snippets
+  - pymdownx.fancylists
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      title: On this page
+      permalink: true
+      toc_depth: 3
+  
+
+# Page tree
+nav:
+  - TypeScript SDK:
+      - Getting Started: getting-started.md
+      - Authentication: authentication.md
+      - OAuth Scopes: oauth-scopes.md
+      - Pagination: pagination.md
+  - API Reference:
+      - Services:
+          - Assets: api/interfaces/AssetServiceModel.md
+          - Buckets: api/interfaces/BucketServiceModel.md
+          - Entities: api/interfaces/EntityServiceModel.md
+          - Maestro:
+            - Processes: api/interfaces/MaestroProcessesServiceModel.md
+            - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
+          - Processes: api/interfaces/ProcessServiceModel.md
+          - Queues: api/interfaces/QueueServiceModel.md
+          - Tasks: api/interfaces/TaskServiceModel.md
+  - How To Contribute: CONTRIBUTING.md
+  - FAQ: FAQ.md
+  - Release Policy: release-policy.md

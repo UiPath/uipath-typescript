@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UiPath CLI Authentication</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #FA4616;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success {
+            color: #4caf50;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .error {
+            color: #f44336;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-top: 20px;
+        }
+
+        .error-details {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: left;
+            word-break: break-all;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#FA4616" rx="10"/>
+            <text x="50" y="65" font-family="Arial" font-size="40" font-weight="bold" fill="white" text-anchor="middle">UI</text>
+        </svg>
+
+        <div id="loading">
+            <h1>Authenticating...</h1>
+            <p class="status">Please wait while we complete the authentication process</p>
+            <div class="spinner"></div>
+        </div>
+
+        <div id="success" class="hidden">
+            <div class="success">✓</div>
+            <h1>Authentication Successful!</h1>
+            <p class="message">You have been successfully authenticated. You can now close this window and return to your terminal.</p>
+        </div>
+
+        <div id="error" class="hidden">
+            <div class="error">✗</div>
+            <h1>Authentication Failed</h1>
+            <p class="message">There was an error during authentication. Please try again.</p>
+            <div id="error-details" class="error-details"></div>
+        </div>
+    </div>
+
+    <script>
+        const showSuccess = () => {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('success').classList.remove('hidden');
+            setTimeout(() => window.close(), 3000);
+        };
+
+        const showError = (error) => {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('error-details').textContent = error;
+        };
+
+        const exchangeCodeForToken = async (code, state) => {
+            try {
+                const response = await fetch('/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code, state }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Token exchange failed');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    showSuccess();
+                } else {
+                    showError(data.error || 'Unknown error');
+                }
+            } catch (error) {
+                showError(error.message);
+                
+                // Log error to server
+                try {
+                    await fetch('/error', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ error: error.message }),
+                    });
+                } catch (e) {
+                    console.error('Failed to log error:', e);
+                }
+            }
+        };
+
+        // Parse URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+        const error = params.get('error');
+        const errorDescription = params.get('error_description');
+
+        if (error) {
+            showError(`${error}: ${errorDescription || 'No description provided'}`);
+        } else if (code && state) {
+            exchangeCodeForToken(code, state);
+        } else {
+            showError('Missing required parameters');
+        }
+    </script>
+</body>
+</html>
