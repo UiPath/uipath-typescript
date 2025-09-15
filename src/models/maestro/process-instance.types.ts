@@ -51,6 +51,14 @@ export interface ProcessInstanceOperationOptions {
 }
 
 /**
+ * Response from PIMS operations (cancel, pause, resume)
+ */
+export interface ProcessInstanceOperationResponse {
+  instanceId: string;
+  status: string;
+}
+
+/**
  * Response for process instance execution history
  */
 export interface ProcessInstanceExecutionHistoryResponse {

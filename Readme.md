@@ -215,6 +215,8 @@ try {
 
     // Get detailed debug information including stack trace
     const debugInfo = error.getDebugInfo();
+  }
+}
 ```
 
 ## Pagination
