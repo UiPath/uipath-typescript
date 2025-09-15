@@ -1,0 +1,316 @@
+import { JobState, RequestOptions, BaseOptions } from '../common/types';
+import { PaginationOptions } from '../../utils/pagination';
+
+/**
+ * Enum for package types
+ */
+export enum PackageType {
+  Undefined = 'Undefined',
+  Process = 'Process',
+  ProcessOrchestration = 'ProcessOrchestration',
+  WebApp = 'WebApp',
+  Agent = 'Agent',
+  TestAutomationProcess = 'TestAutomationProcess',
+  Api = 'Api',
+  MCPServer = 'MCPServer',
+  BusinessRules = 'BusinessRules'
+}
+
+/**
+ * Enum for job priority
+ */
+export enum JobPriority {
+  Low = 'Low',
+  Normal = 'Normal',
+  High = 'High'
+}
+
+/**
+ * Enum for target framework
+ */
+export enum TargetFramework {
+  Legacy = 'Legacy',
+  Windows = 'Windows',
+  Portable = 'Portable'
+}
+
+/**
+ * Enum for robot size
+ */
+export enum RobotSize {
+  Small = 'Small',
+  Standard = 'Standard',
+  Medium = 'Medium',
+  Large = 'Large'
+}
+
+/**
+ * Enum for remote control access
+ */
+export enum RemoteControlAccess {
+  None = 'None',
+  ReadOnly = 'ReadOnly',
+  Full = 'Full'
+}
+
+/**
+ * Enum for process start strategy
+ */
+export enum StartStrategy {
+  All = 'All',
+  Specific = 'Specific',
+  RobotCount = 'RobotCount',
+  JobsCount = 'JobsCount',
+  ModernJobsCount = 'ModernJobsCount'
+}
+
+/**
+ * Enum for package source type
+ */
+export enum PackageSourceType {
+  Manual = 'Manual',
+  Schedule = 'Schedule',
+  Queue = 'Queue',
+  StudioWeb = 'StudioWeb',
+  IntegrationTrigger = 'IntegrationTrigger',
+  StudioDesktop = 'StudioDesktop',
+  AutomationOpsPipelines = 'AutomationOpsPipelines',
+  Apps = 'Apps',
+  SAP = 'SAP',
+  HttpTrigger = 'HttpTrigger',
+  HttpTriggerWithCallback = 'HttpTriggerWithCallback',
+  RobotAPI = 'RobotAPI',
+  Assistant = 'Assistant',
+  CommandLine = 'CommandLine',
+  RobotNetAPI = 'RobotNetAPI',
+  Autopilot = 'Autopilot',
+  TestManager = 'TestManager',
+  AgentService = 'AgentService',
+  ProcessOrchestration = 'ProcessOrchestration',
+  PluginEcosystem = 'PluginEcosystem',
+  PerformanceTesting = 'PerformanceTesting',
+  AgentHub = 'AgentHub',
+  ApiWorkflow = 'ApiWorkflow'
+}
+
+/**
+ * Enum for stop strategy
+ */
+export enum StopStrategy {
+  SoftStop = 'SoftStop',
+  Kill = 'Kill'
+}
+
+
+/**
+ * Interface for Job Attachment
+ */
+export interface JobAttachment {
+  attachmentId: string;
+  jobKey?: string;
+  category?: string;
+  attachmentName?: string;
+}
+
+/**
+ * Interface for common process properties shared across multiple interfaces
+ */
+export interface ProcessProperties {
+  jobPriority?: JobPriority;
+  specificPriorityValue?: number;
+  inputArguments?: string;
+  environmentVariables?: string;
+  entryPointPath?: string;
+  remoteControlAccess?: RemoteControlAccess;
+  requiresUserInteraction?: boolean;
+}
+
+/**
+ * Interface for common folder properties
+ */
+export interface FolderProperties {
+  folderId?: number;
+  folderName?: string;
+}
+
+/**
+ * Base interface for process start request
+ */
+interface BaseProcessStartRequest extends ProcessProperties {
+  strategy?: StartStrategy;
+  robotIds?: number[];
+  machineSessionIds?: number[];
+  noOfRobots?: number;
+  jobsCount?: number;
+  source?: PackageSourceType;
+  runtimeType?: string;
+  inputFile?: string;
+  reference?: string;
+  attachments?: JobAttachment[];
+  targetFramework?: TargetFramework;
+  resumeOnSameContext?: boolean;
+  batchExecutionKey?: string;
+  stopProcessExpression?: string;
+  stopStrategy?: StopStrategy;
+  killProcessExpression?: string;
+  alertPendingExpression?: string;
+  alertRunningExpression?: string;
+  runAsMe?: boolean;
+  parentOperationId?: string;
+}
+
+/**
+ * Interface for start process request with processKey
+ */
+interface ProcessStartRequestWithKey extends BaseProcessStartRequest {
+  processKey: string;
+  processName?: string;
+}
+
+/**
+ * Interface for start process request with processName
+ */
+interface ProcessStartRequestWithName extends BaseProcessStartRequest {
+  processKey?: string;
+  processName: string;
+}
+
+/**
+ * Interface for start process request
+ * Either processKey or processName must be provided
+ */
+export type ProcessStartRequest = ProcessStartRequestWithKey | ProcessStartRequestWithName;
+
+/**
+ * Interface for robot metadata
+ */
+export interface RobotMetadata {
+  id: number;
+  name?: string;
+  username?: string;
+}
+
+/**
+ * Interface for machine
+ */
+export interface Machine {
+  id: number;
+  name?: string;
+}
+
+/**
+ * Interface for job error
+ */
+export interface JobError {
+  code?: string;
+  title?: string;
+  detail?: string;
+  category?: string;
+  status?: number;
+  timestamp?: string;
+}
+
+/**
+ * Enum for job type
+ */
+export enum JobType {
+  Unattended = 'Unattended',
+  Attended = 'Attended',
+  ServerlessGeneric = 'ServerlessGeneric'
+}
+
+/**
+ * Interface for argument metadata
+ */
+export interface ArgumentMetadata {
+  input?: string;
+  output?: string;
+}
+
+/**
+ * Interface for job response
+ */
+export interface ProcessStartResponse extends ProcessProperties, FolderProperties {
+  key: string;
+  startTime: string | null;
+  endTime: string | null;
+  state: JobState;
+  source: string;
+  sourceType: string;
+  batchExecutionKey: string;
+  info: string | null;
+  createdTime: string; 
+  startingScheduleId: number | null;
+  processName: string;
+  type: JobType;
+  inputFile: string | null;
+  outputArguments: string | null;
+  outputFile: string | null;
+  hostMachineName: string | null;
+  persistenceId: string | null;
+  resumeVersion: number | null;
+  stopStrategy: StopStrategy | null;
+  runtimeType: string;
+  processVersionId: number | null;
+  reference: string;
+  packageType: PackageType;
+  machine?: Machine;
+  resumeOnSameContext: boolean;
+  localSystemAccount: string;
+  orchestratorUserIdentity: string | null;
+  startingTriggerId: string | null;
+  maxExpectedRunningTimeSeconds: number | null;
+  parentJobKey: string | null;
+  resumeTime: string | null;
+  lastModifiedTime: string | null;  
+  jobError: JobError | null;
+  errorCode: string | null;
+  robot?: RobotMetadata;
+  id: number;
+}
+
+/**
+ * Interface for process response
+ */
+export interface ProcessGetResponse extends ProcessProperties, FolderProperties {
+  key: string;
+  packageKey: string;
+  packageVersion: string;
+  isLatestVersion: boolean;
+  isPackageDeleted: boolean;
+  description: string;
+  name: string;
+  entryPointId: number;
+  packageType: PackageType;
+  supportsMultipleEntryPoints: boolean;
+  isConversational: boolean | null;
+  minRequiredRobotVersion: string | null;
+  isCompiled: boolean;
+  arguments: ArgumentMetadata;
+  autoUpdate: boolean;
+  hiddenForAttendedUser: boolean;
+  feedId: string;
+  folderKey: string;
+  targetFramework: TargetFramework;
+  robotSize: RobotSize | null;
+  lastModifiedTime: string | null;  
+  lastModifierUserId: number | null;
+  createdTime: string;              
+  creatorUserId: number;
+  id: number;
+}
+
+/**
+ * Options for getting processes across folders
+ */
+export type ProcessGetAllOptions = RequestOptions & PaginationOptions & {
+  /**
+   * Optional folder ID to filter processes by folder
+   */
+  folderId?: number;
+}
+
+/**
+ * Options for getting a single process by ID
+ */
+export type ProcessGetByIdOptions = BaseOptions;
