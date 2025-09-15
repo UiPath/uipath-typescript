@@ -7,10 +7,12 @@ import {
   RawProcessInstanceGetResponse,
   ProcessInstanceGetAllWithPaginationOptions,
   ProcessInstanceOperationOptions,
+  ProcessInstanceOperationResponse,
   ProcessInstanceExecutionHistoryResponse,
   ProcessInstancesServiceModel,
   createProcessInstanceWithMethods
 } from '../../models/maestro';
+import { OperationResponse } from '../../models/common/common-types';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../utils/constants/headers';
@@ -149,38 +151,56 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * Cancel a process instance
    * @param instanceId The ID of the instance to cancel
    * @param folderKey The folder key for authorization
-   * @returns Promise<void>
+   * @param options Optional cancellation options with comment
+   * @returns Promise resolving to operation result with updated instance data
    */
   @track('Cancel')
-  async cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<void> {
-    await this.post(MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId), options || {}, {
+  async cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
+    const response = await this.post<ProcessInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
+    
+    return {
+      success: true,
+      data: response.data
+    };
   }
 
   /**
    * Pause a process instance
    * @param instanceId The ID of the instance to pause
    * @param folderKey The folder key for authorization
-   * @returns Promise<void>
+   * @param options Optional pause options with comment
+   * @returns Promise resolving to operation result with updated instance data
    */
   @track('Pause')
-  async pause(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<void> {
-    await this.post(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), options || {}, {
+  async pause(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
+    const response = await this.post<ProcessInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
+    
+    return {
+      success: true,
+      data: response.data
+    };
   }
 
   /**
    * Resume a process instance
    * @param instanceId The ID of the instance to resume
    * @param folderKey The folder key for authorization
-   * @returns Promise<void>
+   * @param options Optional resume options with comment
+   * @returns Promise resolving to operation result with updated instance data
    */
   @track('Resume')
-  async resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<void> {
-    await this.post(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
+  async resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
+    const response = await this.post<ProcessInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
+    
+    return {
+      success: true,
+      data: response.data
+    };
   }
 } 

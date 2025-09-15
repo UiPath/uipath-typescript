@@ -2,9 +2,11 @@ import type {
   RawProcessInstanceGetResponse,
   ProcessInstanceGetAllWithPaginationOptions,
   ProcessInstanceOperationOptions,
+  ProcessInstanceOperationResponse,
   ProcessInstanceExecutionHistoryResponse,
   BpmnXmlString
 } from './process-instance.types';
+import { OperationResponse } from '../common/common-types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -135,17 +137,21 @@ export interface ProcessInstancesServiceModel {
    * @param instanceId The ID of the instance to cancel
    * @param folderKey The folder key for authorization
    * @param options Optional cancellation options with comment
-   * @returns Promise<void>
+   * @returns Promise resolving to operation result with instance data
    * @example
    * ```typescript
    * // Cancel a process instance
-   * await sdk.maestro.processes.instances.cancel(
+   * const result = await sdk.maestro.processes.instances.cancel(
    *   <instanceId>,
    *   <folderKey>
    * );
    * 
+   * if (result.success) {
+   *   console.log(`Instance ${result.data.instanceId} now has status: ${result.data.status}`);
+   * }
+   * 
    * // Cancel with a comment
-   * await sdk.maestro.processes.instances.cancel(
+   * const result = await sdk.maestro.processes.instances.cancel(
    *   <instanceId>,
    *   <folderKey>,
    *   { comment: <comment> }
@@ -157,34 +163,37 @@ export interface ProcessInstancesServiceModel {
    * });
    * 
    * for (const instance of instances.items) {
-   *   await sdk.maestro.processes.instances.cancel(
+   *   const result = await sdk.maestro.processes.instances.cancel(
    *     instance.instanceId,
    *     instance.folderKey,
    *     { comment: <comment> }
    *   );
+   *   
+   *   if (result.success) {
+   *     console.log(`Cancelled instance: ${result.data.instanceId}`);
+   *   }
    * }
    * ```
    */
-  cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<void>;
+  cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
   /**
    * Pause a process instance
    * @param instanceId The ID of the instance to pause
    * @param folderKey The folder key for authorization
    * @param options Optional pause options with comment
-   * @returns Promise<void>
+   * @returns Promise resolving to operation result with instance data
    */
-  pause(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<void>;
+  pause(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>
 
   /**
    * Resume a process instance
    * @param instanceId The ID of the instance to resume
    * @param folderKey The folder key for authorization
    * @param options Optional resume options with comment
-   * @returns Promise<void>
-   *
+   * @returns Promise resolving to operation result with instance data
    */
-  resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<void>;
+  resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 }
 
 // Method interface that will be added to process instance objects
@@ -193,25 +202,25 @@ export interface ProcessInstanceMethods {
    * Cancels this process instance
    * 
    * @param options - Optional cancellation options with comment
-   * @returns Promise resolving to void
+   * @returns Promise resolving to operation result
    */
-  cancel(options?: ProcessInstanceOperationOptions): Promise<void>;
+  cancel(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
   /**
    * Pauses this process instance
    * 
    * @param options - Optional pause options with comment
-   * @returns Promise resolving to void
+   * @returns Promise resolving to operation result
    */
-  pause(options?: ProcessInstanceOperationOptions): Promise<void>;
+  pause(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
   /**
    * Resumes this process instance
    * 
    * @param options - Optional resume options with comment
-   * @returns Promise resolving to void
+   * @returns Promise resolving to operation result
    */
-  resume(options?: ProcessInstanceOperationOptions): Promise<void>;
+  resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 }
 
 // Combined type for process instance data with methods
@@ -226,19 +235,19 @@ export type ProcessInstanceGetResponse = RawProcessInstanceGetResponse & Process
  */
 function createProcessInstanceMethods(instanceData: RawProcessInstanceGetResponse, service: ProcessInstancesServiceModel): ProcessInstanceMethods {
   return {
-    async cancel(options?: ProcessInstanceOperationOptions): Promise<void> {
+    async cancel(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       
       return service.cancel(instanceData.instanceId, instanceData.folderKey, options);
     },
     
-    async pause(options?: ProcessInstanceOperationOptions): Promise<void> {
+    async pause(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       
       return service.pause(instanceData.instanceId, instanceData.folderKey, options);
     },
 
-    async resume(options?: ProcessInstanceOperationOptions): Promise<void> {
+    async resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
