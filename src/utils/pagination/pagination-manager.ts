@@ -1,6 +1,7 @@
 import { PaginatedResponse, PaginationCursor } from './types';
 import { CursorData, PaginationType, PaginationInfo } from './internal-types';
 import { filterUndefined } from '../object';
+import { encodeBase64 } from '../encoding/base64';
 
 /**
  * PaginationManager handles the conversion between uniform cursor-based pagination
@@ -39,7 +40,7 @@ export class PaginationManager {
     }
     
     return {
-      value: Buffer.from(JSON.stringify(cursorData)).toString('base64')
+      value: encodeBase64(JSON.stringify(cursorData))
     };
   }
 
@@ -63,7 +64,7 @@ export class PaginationManager {
       };
       
       previousCursor = {
-        value: Buffer.from(JSON.stringify(prevCursorData)).toString('base64')
+        value: encodeBase64(JSON.stringify(prevCursorData))
       };
     }
     

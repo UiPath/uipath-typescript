@@ -187,6 +187,11 @@ class TelemetryClient {
      */
     public track(eventName: string, name?: string, extraAttributes: TelemetryAttributes = {}): void {
         try {
+            // Skip if logger not initialized
+            if (!this.logger) {
+                return;
+            }
+            
             const finalDisplayName = name || eventName;
             
             const attributes = this.getEnrichedAttributes(extraAttributes, eventName);

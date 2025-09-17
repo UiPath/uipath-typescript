@@ -13,6 +13,7 @@ import { ODATA_PREFIX } from '../constants/common';
 import { addPrefixToKeys } from '../transform';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './constants';
 import { filterUndefined } from '../object';
+import { decodeBase64 } from '../encoding/base64';
 
 /**
  * Helper functions for pagination that can be used across services
@@ -35,7 +36,7 @@ export class PaginationHelpers {
   static parseCursor(cursorString: string): CursorData {
     try {
       const cursorData: CursorData = JSON.parse(
-        Buffer.from(cursorString, 'base64').toString('utf-8')
+        decodeBase64(cursorString)
       );
       return cursorData;
     } catch (error) {
