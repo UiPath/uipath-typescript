@@ -70,7 +70,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * });
    * ```
    */
-  @track('GetAll')
+  @track('Queues.GetAll')
   async getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(
     options?: T
   ): Promise<
@@ -113,7 +113,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * const queue = await sdk.queues.getById(123, 456);
    * ```
    */
-  @track('GetById')
+  @track('Queues.GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     

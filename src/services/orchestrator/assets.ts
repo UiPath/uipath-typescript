@@ -57,7 +57,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * });
    * ```
    */
-  @track('GetAll')
+  @track('Assets.GetAll')
   async getAll<T extends AssetGetAllOptions = AssetGetAllOptions>(
     options?: T
   ): Promise<
@@ -101,7 +101,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * const asset = await sdk.assets.getById(123, 456);
    * ```
    */
-  @track('GetById')
+  @track('Assets.GetById')
   async getById(id: number, folderId: number, options: AssetGetByIdOptions = {}): Promise<AssetGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     

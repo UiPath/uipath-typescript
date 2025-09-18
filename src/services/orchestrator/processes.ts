@@ -73,7 +73,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * });
    * ```
    */
-  @track('GetAll')
+  @track('Processes.GetAll')
   async getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(
     options?: T
   ): Promise<
@@ -124,7 +124,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * }, 123); // folderId is required
    * ```
    */
-  @track('Start')
+  @track('Processes.Start')
   async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
@@ -184,7 +184,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * const process = await sdk.processes.getById(123, 456);
    * ```
    */
-  @track('GetById')
+  @track('Processes.GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     

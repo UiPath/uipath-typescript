@@ -69,7 +69,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * const bucket = await sdk.buckets.getById(123, 456);
    * ```
    */
-  @track('GetById')
+  @track('Buckets.GetById')
   async getById(id: number, folderId: number, options: BucketGetByIdOptions = {}): Promise<BucketGetResponse> {
     if (!id) {
       throw new ValidationError({ message: 'bucketId is required for getById' });
@@ -137,7 +137,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
-  @track('GetAll')
+  @track('Buckets.GetAll')
   async getAll<T extends BucketGetAllOptions = BucketGetAllOptions>(
     options?: T
   ): Promise<
@@ -198,7 +198,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * }
    * ```
    */
-  @track('GetFileMetaData')
+  @track('Buckets.GetFileMetaData')
   async getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
     bucketId: number, 
     folderId: number, 
@@ -265,7 +265,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
-  @track('UploadFile')
+  @track('Buckets.UploadFile')
   async uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse> {
     const { bucketId, folderId, path, content, contentType } = options;
     
@@ -489,7 +489,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
-  @track('GetReadUri')
+  @track('Buckets.GetReadUri')
   async getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse> {
     const { bucketId, folderId, path, expiryInMinutes, ...restOptions } = options;
     

@@ -36,7 +36,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * 
    * ```
    */
-  @track('GetAll')
+  @track('MaestroProcesses.GetAll')
   async getAll(): Promise<MaestroProcessGetAllResponse[]> {
     const response = await this.get<MaestroProcessGetAllResponse[]>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
     

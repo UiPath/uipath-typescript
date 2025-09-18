@@ -28,9 +28,10 @@ function createTrackedFunction<T extends (...args: any[]) => any>(
 
         // Track the event if enabled
         if (shouldTrack) {
-            const serviceName = this?.constructor?.name?.replace(/Service$/, '') || 'Unknown';
-            const methodName = typeof nameOrOptions === 'string' ? nameOrOptions : fallbackName;
-            const serviceMethod = `${serviceName}.${methodName}`;
+            // Use the full name provided in the decorator (e.g., "Queue.GetAll")
+            const serviceMethod = typeof nameOrOptions === 'string' 
+                ? nameOrOptions 
+                : fallbackName;
             
             // Use 'Sdk.Run' as the name and serviceMethod as the service
             telemetryClient.track(serviceMethod, SDK_RUN_EVENT, opts.attributes);
@@ -45,16 +46,19 @@ function createTrackedFunction<T extends (...args: any[]) => any>(
  * Track decorator that can be used to automatically track function calls
  * 
  * Usage:
- * @track
+ * @track("Service.Method")
  * function myFunction() { ... }
  * 
- * @track("custom_event_name")
+ * @track("Queue.GetAll")
+ * async getAll() { ... }
+ * 
+ * @track("Tasks.Create")
+ * async create() { ... }
+ * 
+ * @track("Assets.Update", { condition: false })
  * function myFunction() { ... }
  * 
- * @track({ condition: false })
- * function myFunction() { ... }
- * 
- * @track({ attributes: { customProp: "value" } })
+ * @track("Processes.Start", { attributes: { customProp: "value" } })
  * function myFunction() { ... }
  */
 export function track(

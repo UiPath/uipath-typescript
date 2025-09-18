@@ -71,7 +71,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * }
    * ```
    */
-  @track('GetAll')
+  @track('ProcessInstances.GetAll')
   async getAll<T extends ProcessInstanceGetAllWithPaginationOptions = ProcessInstanceGetAllWithPaginationOptions>(
     options?: T
   ): Promise<
@@ -108,7 +108,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @param folderKey The folder key for authorization
    * @returns Promise<ProcessInstanceGetResponse>
    */
-  @track('GetById')
+  @track('ProcessInstances.GetById')
   async getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse> {
     const response = await this.get<RawProcessInstanceGetResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(id), {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
@@ -122,7 +122,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @param instanceId The ID of the instance to get history for
    * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
    */
-  @track('GetExecutionHistory')
+  @track('ProcessInstances.GetExecutionHistory')
   async getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
     const response = await this.get<ProcessInstanceExecutionHistoryResponse[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
     return response.data.map(historyItem => 
@@ -136,7 +136,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @param folderKey The folder key for authorization
    * @returns Promise<BpmnXmlString> The BPMN XML contents as a string
    */
-  @track('GetBpmn')
+  @track('ProcessInstances.GetBpmn')
   async getBpmn(instanceId: string, folderKey: string): Promise<BpmnXmlString> {
     const response = await this.get<string>(MAESTRO_ENDPOINTS.INSTANCES.GET_BPMN(instanceId), {
       headers: createHeaders({ 
@@ -154,7 +154,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @param options Optional cancellation options with comment
    * @returns Promise resolving to operation result with updated instance data
    */
-  @track('Cancel')
+  @track('ProcessInstances.Cancel')
   async cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
     const response = await this.post<ProcessInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
@@ -173,7 +173,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @param options Optional pause options with comment
    * @returns Promise resolving to operation result with updated instance data
    */
-  @track('Pause')
+  @track('ProcessInstances.Pause')
   async pause(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
     const response = await this.post<ProcessInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
@@ -192,7 +192,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @param options Optional resume options with comment
    * @returns Promise resolving to operation result with updated instance data
    */
-  @track('Resume')
+  @track('ProcessInstances.Resume')
   async resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
     const response = await this.post<ProcessInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
