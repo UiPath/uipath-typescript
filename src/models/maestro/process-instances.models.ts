@@ -4,7 +4,9 @@ import type {
   ProcessInstanceOperationOptions,
   ProcessInstanceOperationResponse,
   ProcessInstanceExecutionHistoryResponse,
-  BpmnXmlString
+  BpmnXmlString,
+  ProcessInstanceGetVariablesResponse,
+  ProcessInstanceGetVariablesOptions
 } from './process-instances.types';
 import { OperationResponse } from '../common/types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
@@ -194,6 +196,43 @@ export interface ProcessInstancesServiceModel {
    * @returns Promise resolving to operation result with instance data
    */
   resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+
+  /**
+   * Get global variables for a process instance
+   * 
+   * @param instanceId The ID of the instance to get variables for
+   * @param folderKey The folder key for authorization
+   * @param options Optional options including parentElementId to filter by parent element
+   * @returns Promise resolving to variables response with elements and globals
+   * {@link ProcessInstanceGetVariablesResponse}
+   * @example
+   * ```typescript
+   * // Get all variables for a process instance
+   * const variables = await sdk.maestro.processes.instances.getVariables(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   * 
+   * // Access global variables
+   * console.log('Global variables:', variables.globalVariables);
+   * 
+   * // Iterate through global variables with metadata
+   * variables.globalVariables?.forEach(variable => {
+   *   console.log(`Variable: ${variable.name} (${variable.id})`);
+   *   console.log(`  Type: ${variable.type}`);
+   *   console.log(`  Element: ${variable.elementId}`);
+   *   console.log(`  Value: ${variable.value}`);
+   * });
+   * 
+   * // Get variables for a specific parent element
+   * const variables = await sdk.maestro.processes.instances.getVariables(
+   *   <instanceId>,
+   *   <folderKey>,
+   *   { parentElementId: <parentElementId> }
+   * );
+   * ```
+   */
+  getVariables(instanceId: string, folderKey: string, options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse>;
 }
 
 // Method interface that will be added to process instance objects

@@ -86,3 +86,49 @@ export interface ProcessInstanceRun {
 }
 
 export type BpmnXmlString = string;
+
+/**
+ * Process Instance element metadata
+ */
+export interface ElementMetaData {
+  elementId: string;
+  elementRunId: string;
+  isMarker: boolean;
+  inputs: Record<string, any>;
+  inputDefinitions: Record<string, any>;
+  outputs: Record<string, any>;
+}
+
+/**
+ * Process Instance global variable metadata
+ */
+export interface GlobalVariableMetaData {
+  id: string;
+  name: string;
+  /** 
+   * Common values: "integer", "string", "boolean"
+   * May also contain custom types or "any" when type cannot be determined
+   */
+  type: string;
+  elementId: string;
+  /** Name of the BPMN node/element */
+  source: string;
+  value: any;
+}
+
+/**
+ * Response for getting global variables for process instance
+ */
+export interface ProcessInstanceGetVariablesResponse {
+  elements: ElementMetaData[];
+  globalVariables: GlobalVariableMetaData[];
+  instanceId: string;
+  parentElementId: string | null;
+}
+
+/**
+ * Options for getting global variables
+ */
+export interface ProcessInstanceGetVariablesOptions {
+  parentElementId?: string;
+}
