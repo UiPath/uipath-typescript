@@ -17,6 +17,7 @@ export const MAESTRO_ENDPOINTS = {
     GET_BY_ID: (instanceId: string) => `pims_/api/v1/instances/${instanceId}`,
     GET_EXECUTION_HISTORY: (instanceId: string) => `pims_/api/v1/spans/${instanceId}`,
     GET_BPMN: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/bpmn`,
+    GET_VARIABLES: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/variables`,
     CANCEL: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/cancel`,
     PAUSE: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/pause`,
     RESUME: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/resume`,
