@@ -4,6 +4,7 @@ import { AuthService } from './core/auth/service';
 import { 
   MaestroProcessesService,
   ProcessInstancesService,
+  CasesService,
   EntityService,
   TaskService,
   ProcessService,
@@ -129,7 +130,11 @@ export class UiPath {
          * Access to Process Instances service
          */
         instances: this.getService(ProcessInstancesService)
-      })
+      }),
+      /**
+       * Access to Maestro Cases service
+       */
+      cases: this.getService(CasesService)
     };
   }
 
