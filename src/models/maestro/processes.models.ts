@@ -6,7 +6,7 @@
 import { MaestroProcessGetAllResponse } from './processes.types';
 
 /**
- * Service for managing Maestro Processes
+ * Service for managing UiPath Maestro Processes
  * 
  * UiPath Maestro is a cloud-native orchestration layer that coordinates bots, AI agents, and humans for seamless, intelligent automation of complex workflows. [UiPath Maestro Guide](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/introduction-to-maestro)
  */

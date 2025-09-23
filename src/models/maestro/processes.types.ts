@@ -11,6 +11,8 @@ export interface MaestroProcessGetAllResponse {
   processKey: string;
   /** Package identifier */
   packageId: string;
+  /** Process name */
+  name: string;
   /** Folder key where process is located */
   folderKey: string;
   /** Folder name */
