@@ -38,9 +38,15 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    */
   @track('MaestroProcesses.GetAll')
   async getAll(): Promise<MaestroProcessGetAllResponse[]> {
-    const response = await this.get<MaestroProcessGetAllResponse[]>(MAESTRO_ENDPOINTS.PROCESSES.GET_ALL);
+    const response = await this.get<{ processes: Omit<MaestroProcessGetAllResponse, 'name'>[] }>(
+      MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
+    );
     
-    // Return the data directly with null safety
-    return response.data || [];
+    // Extract processes array from response data and add name field
+    const processes = response.data?.processes || [];
+    return processes.map(process => ({
+      ...process,
+      name: process.packageId
+    }));
   }
 } 
