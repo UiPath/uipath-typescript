@@ -11,3 +11,7 @@ export * from './process-instances.models';
 // Cases types and models
 export * from './cases.types';
 export * from './cases.models';
+
+// Case instance types and models
+export * from './case-instances.types';
+export * from './case-instances.models';
