@@ -5,6 +5,7 @@ import {
   MaestroProcessesService,
   ProcessInstancesService,
   CasesService,
+  CaseInstancesService,
   EntityService,
   TaskService,
   ProcessService,
@@ -134,7 +135,12 @@ export class UiPath {
       /**
        * Access to Maestro Cases service
        */
-      cases: this.getService(CasesService)
+      cases: Object.assign(this.getService(CasesService), {
+        /**
+         * Access to Case Instances service
+         */
+        instances: this.getService(CaseInstancesService)
+      })
     };
   }
 

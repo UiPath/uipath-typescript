@@ -22,6 +22,9 @@ export const MAESTRO_ENDPOINTS = {
     PAUSE: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/pause`,
     RESUME: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/resume`,
   },
+  CASES: {
+    GET_CASE_JSON: (instanceId: string) => `pims_/api/v1/cases/${instanceId}/case-json`,
+  },
 } as const;
 
 /**
