@@ -24,6 +24,7 @@ export const MAESTRO_ENDPOINTS = {
   },
   CASES: {
     GET_CASE_JSON: (instanceId: string) => `pims_/api/v1/cases/${instanceId}/case-json`,
+    GET_ELEMENT_EXECUTIONS: (instanceId: string) => `pims_/api/v1alpha1/element-executions/case-instances/${instanceId}`,
   },
 } as const;
 

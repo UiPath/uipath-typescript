@@ -9,13 +9,19 @@ import {
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
   CaseInstancesServiceModel,
-  createCaseInstanceWithMethods
+  createCaseInstanceWithMethods,
+  CaseGetStageResponse,
+  StageTask,
+  CaseExecutionMetadata,
+  CaseInstanceElementExecutionsResponse
 } from '../../models/maestro';
-import { CaseJsonResponse } from '../../models/maestro/case-instances.internal-types';
+import { 
+  CaseJsonResponse
+} from '../../models/maestro/case-instances.internal-types';
 import { OperationResponse } from '../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { transformData } from '../../utils/transform';
-import { CaseInstanceMap, CaseAppConfigMap } from '../../models/maestro/case-instances.constants';
+import { CaseInstanceMap, CaseAppConfigMap, StageSLAMap, CASE_STAGE_CONSTANTS } from '../../models/maestro/case-instances.constants';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -268,5 +274,173 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
       success: true,
       data: response.data
     };
+  }
+
+  /**
+   * Get case stages with their associated tasks and execution status
+   * @param caseInstanceId - The ID of the case instance
+   * @param folderKey - Required folder key
+   * @returns Promise resolving to an array of case stages, each containing their tasks with execution details
+   */
+  @track('CaseInstances.GetStages')
+  async getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]> {
+    // Fetch both execution history and case JSON in parallel, but handle execution failures gracefully
+    const [executionHistoryResponse, caseJsonResponse] = await Promise.allSettled([
+      this.get<CaseInstanceElementExecutionsResponse>(
+        MAESTRO_ENDPOINTS.CASES.GET_ELEMENT_EXECUTIONS(caseInstanceId),
+        {
+          headers: createHeaders({ [FOLDER_KEY]: folderKey })
+        }
+      ),
+      this.getCaseJson(caseInstanceId, folderKey)
+    ]);
+
+    // Extract execution history if successful, otherwise use null
+    const executionHistory = executionHistoryResponse.status === 'fulfilled' 
+      ? executionHistoryResponse.value.data 
+      : null;
+
+    // Extract case JSON - the null check below will handle failures
+    const caseJson = caseJsonResponse.status === 'fulfilled' 
+      ? caseJsonResponse.value 
+      : null;
+    
+    if (!caseJson || !caseJson.nodes) {
+      return [];
+    }
+
+    // Create lookup maps for efficient data access
+    const executionMap = this.createExecutionMap(executionHistory);
+    const bindingsMap = this.createBindingsMap(caseJson);
+
+    // Process nodes to extract stages (exclude triggers)
+    const stages: CaseGetStageResponse[] = caseJson.nodes
+      .filter((node: any) => node.type !== CASE_STAGE_CONSTANTS.TRIGGER_NODE_TYPE)
+      .map((node: any) => this.createStageFromNode(node, executionMap, bindingsMap));
+
+    return stages;
+  }
+
+  /**
+   * Create a map of element ID to execution data 
+   * @param executionHistory - The execution history response
+   * @returns Map of elementId to execution metadata
+   * @private
+   */
+  private createExecutionMap(executionHistory: any): Map<string, CaseExecutionMetadata> {
+    const executionMap = new Map<string, CaseExecutionMetadata>();
+    if (executionHistory?.elementExecutions) {
+      for (const execution of executionHistory.elementExecutions) {
+        executionMap.set(execution.elementId, execution);
+      }
+    }
+    return executionMap;
+  }
+
+  /**
+   * Create a map of binding IDs to their values 
+   * @param caseJsonResponse - The case JSON response
+   * @returns Map of binding ID to binding object
+   * @private
+   */
+  private createBindingsMap(caseJsonResponse: any): Map<string, any> {
+    const bindingsMap = new Map<string, any>();
+    if (caseJsonResponse?.root?.data?.uipath?.bindings) {
+      for (const binding of caseJsonResponse.root.data.uipath.bindings) {
+        if (binding.id) {
+          bindingsMap.set(binding.id, binding);
+        }
+      }
+    }
+    return bindingsMap;
+  }
+
+  /**
+   * Resolve binding values from binding expressions
+   * @param value - The value that may contain binding references
+   * @param bindingsMap - Map of binding IDs to binding objects
+   * @returns Resolved value
+   * @private
+   */
+  private resolveBinding(value: any, bindingsMap: Map<string, any>): string {
+    if (typeof value === 'string' && value.startsWith('=bindings.')) {
+      const bindingId = value.substring('=bindings.'.length);
+      const binding = bindingsMap.get(bindingId);
+      return binding?.default || binding?.name || value;
+    }
+    return value;
+  }
+
+  /**
+   * Process tasks for a stage node
+   * @param node - The stage node containing tasks
+   * @param executionMap - Map of element IDs to execution data
+   * @param bindingsMap - Map of binding IDs to binding objects
+   * @returns Processed tasks array
+   * @private
+   */
+  private processTasks(
+    node: any, 
+    executionMap: Map<string, CaseExecutionMetadata>, 
+    bindingsMap: Map<string, any>
+  ): StageTask[][] {
+    if (!node.data?.tasks || !Array.isArray(node.data.tasks)) {
+      return [];
+    }
+
+    return node.data.tasks.map((taskGroup: any[]) => {
+      if (Array.isArray(taskGroup)) {
+        return taskGroup.map((task: any) => {
+          const taskId = task.id;
+          
+          // Find the execution data using the task's id
+          const taskExecution = taskId ? executionMap.get(taskId) : undefined;
+          
+          // Resolve task name from bindings
+          let taskName = task.displayName;
+          if (!taskName && task.data?.name) {
+            taskName = this.resolveBinding(task.data.name, bindingsMap);
+          }
+          
+          const stageTask: StageTask = {
+            id: taskId || task.elementId || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
+            name: taskName || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
+            completedTime: taskExecution?.completedTimeUtc || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
+            startedTime: taskExecution?.startedTimeUtc || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
+            status: taskExecution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
+            type: task.type || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE
+          };
+          
+          return stageTask;
+        });
+      }
+      return [];
+    });
+  }
+
+  /**
+   * Create a stage from a case node
+   * @param node - The case node to process
+   * @param executionMap - Map of element IDs to execution data
+   * @param bindingsMap - Map of binding IDs to binding objects
+   * @returns CaseGetStageResponse object
+   * @private
+   */
+  private createStageFromNode(
+    node: any,
+    executionMap: Map<string, CaseExecutionMetadata>,
+    bindingsMap: Map<string, any>
+  ): CaseGetStageResponse {
+    const execution = executionMap.get(node.id);
+    
+    const stage: CaseGetStageResponse = {
+      id: node.id,
+      name: node.data?.label || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
+      sla: node.data?.sla ? transformData(node.data.sla, StageSLAMap) : undefined,
+      status: execution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
+      tasks: this.processTasks(node, executionMap, bindingsMap)
+    };
+
+    return stage;
   }
 }
