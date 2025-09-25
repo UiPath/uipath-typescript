@@ -2,7 +2,8 @@ import {
   RawCaseInstanceGetResponse,
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
-  CaseInstanceOperationResponse
+  CaseInstanceOperationResponse,
+  CaseGetStageResponse
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -136,6 +137,34 @@ export interface CaseInstancesServiceModel {
    * @returns Promise resolving to operation result with instance data
    */
   resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
+   * Get stages and its associated tasks information for a case instance 
+   * @param caseInstanceId - The ID of the case instance
+   * @param folderKey - Required folder key
+   * @returns Promise resolving to an array of case stages with their tasks and status
+   * @example
+   * ```typescript
+   * // Get stages for a case instance
+   * const stages = await sdk.maestro.cases.instances.getStages(
+   *   <caseInstanceId>,
+   *   <folderKey>
+   * );
+   * 
+   * // Iterate through stages
+   * for (const stage of stages) {
+   *   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
+   *   
+   *   // Check tasks in the stage
+   *   for (const taskGroup of stage.tasks) {
+   *     for (const task of taskGroup) {
+   *       console.log(`  Task: ${task.name} - Status: ${task.status}`);
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]>;
 }
 
 // Method interface that will be added to case instance objects
