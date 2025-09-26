@@ -15,6 +15,7 @@ import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
 import { TokenManager } from './core/auth/token-manager';
 import { telemetryClient, trackEvent } from './core/telemetry';
+import { OAuthContext } from './core/auth/types';
 
 type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
@@ -26,18 +27,37 @@ export class UiPath {
   private readonly _services: Map<string, any> = new Map();
 
   constructor(config: UiPathSDKConfig) {
+    // Check if we're in OAuth callback and can use stored context
+    const storedContext = this.getStoredOAuthContext();
+    const isInOAuthCallback = this.isInOAuthCallback();
+    
+    // Use stored context if available and in OAuth callback, otherwise use provided config
+    let effectiveConfig: UiPathSDKConfig;
+    if (isInOAuthCallback && storedContext) {
+      effectiveConfig = {
+        baseUrl: storedContext.baseUrl,
+        orgName: storedContext.orgName,
+        tenantName: storedContext.tenantName,
+        clientId: storedContext.clientId,
+        redirectUri: storedContext.redirectUri,
+        scope: storedContext.scope
+      } as UiPathSDKConfig;
+    } else {
+      effectiveConfig = config;
+    }
+    
     // Validate and normalize the configuration
-    validateConfig(config);
+    validateConfig(effectiveConfig);
     
     // Initialize core components
     this.config = new UiPathConfig({
-      baseUrl: normalizeBaseUrl(config.baseUrl),
-      orgName: config.orgName,
-      tenantName: config.tenantName,
-      secret: hasSecretConfig(config) ? config.secret : undefined,
-      clientId: hasOAuthConfig(config) ? config.clientId : undefined,
-      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined,
-      scope: hasOAuthConfig(config) ? config.scope : undefined
+      baseUrl: normalizeBaseUrl(effectiveConfig.baseUrl),
+      orgName: effectiveConfig.orgName,
+      tenantName: effectiveConfig.tenantName,
+      secret: hasSecretConfig(effectiveConfig) ? effectiveConfig.secret : undefined,
+      clientId: hasOAuthConfig(effectiveConfig) ? effectiveConfig.clientId : undefined,
+      redirectUri: hasOAuthConfig(effectiveConfig) ? effectiveConfig.redirectUri : undefined,
+      scope: hasOAuthConfig(effectiveConfig) ? effectiveConfig.scope : undefined
     });
 
     this.executionContext = new ExecutionContext();
@@ -45,47 +65,59 @@ export class UiPath {
 
     // Initialize telemetry with SDK configuration
     telemetryClient.initialize({
-      baseUrl: config.baseUrl,
-      orgName: config.orgName,
-      tenantName: config.tenantName,
-      clientId: hasOAuthConfig(config) ? config.clientId : undefined,
-      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined
+      baseUrl: effectiveConfig.baseUrl,
+      orgName: effectiveConfig.orgName,
+      tenantName: effectiveConfig.tenantName,
+      clientId: hasOAuthConfig(effectiveConfig) ? effectiveConfig.clientId : undefined,
+      redirectUri: hasOAuthConfig(effectiveConfig) ? effectiveConfig.redirectUri : undefined
     });
 
     // Track SDK initialization
     trackEvent('Sdk.Auth');
 
     // Auto-initialize for secret-based auth
-    if (hasSecretConfig(config)) {
-      this.authService.authenticateWithSecret(config.secret);
+    if (hasSecretConfig(effectiveConfig)) {
+      this.authService.authenticateWithSecret(effectiveConfig.secret);
+      this.initialized = true;
+    }
+    
+    // Mark as initialized if in OAuth callback with stored context
+    if (isInOAuthCallback && storedContext) {
       this.initialized = true;
     }
   }
 
   /**
    * Initialize the SDK based on the provided configuration.
-   * This method is only required for OAuth-based authentication.
+   * This method handles both OAuth flow initiation and completion automatically.
    * For secret-based authentication, initialization is automatic.
    */
   public async initialize(): Promise<void> {
-    // If already initialized or using secret auth, return immediately
-    if (this.initialized || hasSecretConfig(this.config)) {
+    // For secret-based auth, it's already initialized in constructor
+    if (hasSecretConfig(this.config)) {
       return;
     }
 
     try {
-      // If the OAuth flow redirects, the promise from `authenticate` will not resolve,
-      // and execution will stop here.
-      const success = await this.authService.authenticate(this.config);
-
-      if (!success || !this.authService.hasValidToken()) {
-        // If authenticate() returns false, it means a valid token could not be obtained.
-        // This could be due to invalid config or a failure in the OAuth callback.
-        // We don't throw an error for the initial OAuth redirect because that won't return.
-        throw new Error('Failed to obtain a valid authentication token.');
+      // Check for OAuth callback first
+      if (this.isInOAuthCallback()) {
+        if (await this.completeOAuth()) {
+          return;
+        }
       }
 
-      this.initialized = true;
+      // Check if already authenticated
+      if (this.isAuthenticated()) {
+        this.initialized = true;
+        return;
+      }
+
+      // Start new OAuth flow
+      await this.authService.authenticate(this.config);
+
+      if (this.authService.hasValidToken()) {
+        this.initialized = true;
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       throw new Error(`Failed to initialize UiPath SDK: ${errorMessage}`);
@@ -97,6 +129,47 @@ export class UiPath {
    */
   public isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * Check if we're in an OAuth callback state
+   */
+  public isInOAuthCallback(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const hasCodeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    
+    return !!(code && hasCodeVerifier);
+  }
+
+  /**
+   * Complete OAuth authentication flow (only call if isInOAuthCallback() is true)
+   */
+  public async completeOAuth(): Promise<boolean> {
+    if (!this.isInOAuthCallback()) {
+      throw new Error('Not in OAuth callback state. Call initialize() first to start OAuth flow.');
+    }
+
+    try {
+      const success = await this.authService.authenticate(this.config);
+      if (success && this.authService.hasValidToken()) {
+        this.initialized = true;
+        return true;
+      }
+      return false;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      throw new Error(`Failed to complete OAuth: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Check if the user is authenticated (has valid token)
+   */
+  public isAuthenticated(): boolean {
+    return this.authService.hasValidToken();
   }
 
   /**
@@ -173,6 +246,21 @@ export class UiPath {
    */
   get assets(): AssetService {
     return this.getService(AssetService);
+  }
+
+  /**
+   * Get stored OAuth context from session storage
+   */
+  private getStoredOAuthContext(): OAuthContext | null {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const stored = sessionStorage.getItem('uipath_sdk_oauth_context');
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.warn('Failed to parse stored OAuth context:', error);
+      return null;
+    }
   }
 }
 
