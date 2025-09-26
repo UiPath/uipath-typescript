@@ -3,7 +3,8 @@ import {
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
-  CaseGetStageResponse
+  CaseGetStageResponse,
+  CaseInstanceExecutionHistoryResponse
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -137,6 +138,33 @@ export interface CaseInstancesServiceModel {
    * @returns Promise resolving to operation result with instance data
    */
   resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
+   * Get execution history for a case instance
+   * @param instanceId - The ID of the case instance
+   * @param folderKey - Required folder key 
+   * @returns Promise resolving to instance execution history
+   * {@link CaseInstanceExecutionHistoryResponse}
+   * @example
+   * ```typescript
+   * // Get execution history for a case instance
+   * const history = await sdk.maestro.cases.instances.getExecutionHistory(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   * 
+   * // Access element executions
+   * if (history.elementExecutions) {
+   *   for (const execution of history.elementExecutions) {
+   *     console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);
+   *   }
+   * }
+   * ```
+   */
+  getExecutionHistory(
+    instanceId: string, 
+    folderKey: string
+  ): Promise<CaseInstanceExecutionHistoryResponse>;
 
   /**
    * Get stages and its associated tasks information for a case instance 

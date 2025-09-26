@@ -26,6 +26,15 @@ export const StageSLAMap: { [key: string]: string } = {
   };
 
 /**
+ * Maps UTC time fields to simpler field names
+ * Used for transforming execution history responses
+ */
+export const TimeFieldTransformMap: { [key: string]: string } = {
+  startedTimeUtc: 'startedTime',
+  completedTimeUtc: 'completedTime',
+};
+
+/**
  * Constants for case instance stage processing
  */
 export const CASE_STAGE_CONSTANTS = {

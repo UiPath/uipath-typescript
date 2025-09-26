@@ -203,16 +203,48 @@ export interface CaseGetStageResponse {
 /**
  * Case element execution metadata
  */
-export interface CaseExecutionMetadata {
+export interface ElementExecutionMetadata {
+  completedTime: string | null;
   elementId: string;
+  elementName: string;
+  parentElementId: string | null;
+  startedTime: string;
+  /** Element status (e.g., "Completed", "Faulted", "Running") */
   status: string;
-  startedTimeUtc: string;
-  completedTimeUtc: string;
+  processKey: string;
+  /** External reference link, eg link to the HITL task in Action Center */
+  externalLink: string;
+  /** List of element runs for the element */
+  elementRuns: ElementRunMetadata[];
 }
 
 /**
- * Case instance element execution response
+ * Response for getting case instance element executions
  */
-export interface CaseInstanceElementExecutionsResponse {
-  elementExecutions: CaseExecutionMetadata[];
+export interface CaseInstanceExecutionHistoryResponse {
+  creationUserKey: string | null;
+  folderKey: string;
+  instanceDisplayName: string;
+  instanceId: string;
+  packageId: string;
+  packageKey: string;
+  packageVersion: string;
+  processKey: string;
+  source: string;
+  /** Element status (e.g., "Completed", "Faulted", "Running", "Pausing", "Canceling") */
+  status: string;
+  startedTime: string;
+  completedTime: string | null;
+  elementExecutions: ElementExecutionMetadata[];
+}
+
+/**
+ * Element run metadata
+ */
+export interface ElementRunMetadata {
+  status: string;
+  startedTime: string;
+  completedTime: string | null;
+  elementRunId: string;
+  parentElementRunId: string | null;
 }
