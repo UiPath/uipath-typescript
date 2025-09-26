@@ -8,6 +8,7 @@ import {
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
+import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
 
 /**
  * Service model for managing Maestro Case Instances
@@ -193,6 +194,53 @@ export interface CaseInstancesServiceModel {
    * ```
    */
   getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]>;
+
+  /**
+   * Get human in the loop tasks associated with a case instance
+   * 
+   * The method returns either:
+   * - An array of tasks (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   * 
+   * @param caseInstanceId - The ID of the case instance
+   * @param options - Optional filtering and pagination options
+   * @returns Promise resolving to human in the loop tasks associated with the case instance
+   * @example
+   * ```typescript
+   * // Get all tasks for a case instance (non-paginated)
+   * const tasks = await sdk.maestro.cases.instances.getActionTasks(
+   *   <caseInstanceId>,
+   * );
+   * 
+   * // First page with pagination
+   * const page1 = await sdk.maestro.cases.instances.getActionTasks(
+   *   <caseInstanceId>,
+   *   { pageSize: 10 }
+   * );
+   * // Iterate through tasks
+   * for (const task of page1.items) {
+   *   console.log(`Task: ${task.title}`);
+   *   console.log(`Task: ${task.status}`);
+   * }
+   * 
+   * // Jump to specific page
+   * const page5 = await sdk.maestro.cases.instances.getActionTasks(
+   *   <caseInstanceId>,
+   *   {
+   *     jumpToPage: 5,
+   *     pageSize: 10
+   *   }
+   * );
+   * ```
+   */
+  getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
+    caseInstanceId: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskGetResponse>
+      : NonPaginatedResponse<TaskGetResponse>
+  >;
 }
 
 // Method interface that will be added to case instance objects

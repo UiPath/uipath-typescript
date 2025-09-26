@@ -42,3 +42,14 @@ export const CASE_STAGE_CONSTANTS = {
   UNDEFINED_VALUE: 'Undefined',
   NOT_STARTED_STATUS: 'Not Started'
 } as const;
+
+/**
+ * Function to generate case instance task filter by case instance ID
+ */
+export const CASE_INSTANCE_TASK_FILTER = (caseInstanceId: string) => 
+  `Tags/any(tags:tags/DisplayName eq '${caseInstanceId}') and (IsDeleted eq false)`;
+
+/**
+ * Default expand parameters for case instance tasks
+ */
+export const CASE_INSTANCE_TASK_EXPAND = 'AssignedToUser,Activities';
