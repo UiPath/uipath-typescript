@@ -56,6 +56,47 @@ export interface TaskSource {
   taskSourceMetadata: Record<string, unknown>;
 }
 
+/**
+ * Task activity types
+ */
+export enum TaskActivityType {
+  Created = 'Created',
+  Assigned = 'Assigned',
+  Reassigned = 'Reassigned',
+  Unassigned = 'Unassigned',
+  Saved = 'Saved',
+  Forwarded = 'Forwarded',
+  Completed = 'Completed',
+  Commented = 'Commented',
+  Deleted = 'Deleted',
+  BulkSaved = 'BulkSaved',
+  BulkCompleted = 'BulkCompleted',
+  FirstOpened = 'FirstOpened'
+}
+
+/**
+ * Tag information for tasks
+ */
+export interface Tag {
+  name: string;
+  displayName: string;
+  displayValue: string;
+}
+
+/**
+ * Task activity information
+ */
+export interface TaskActivity {
+  task?: RawTaskGetResponse;
+  organizationUnitId: number;
+  taskId: number;
+  taskKey: string;
+  activityType: TaskActivityType;
+  creatorUserId: number;
+  targetUserId: number | null;
+  creationTime: string;
+}
+
 export interface TaskSlaDetail {
   expiryTime?: string;
   startCriteria?: TaskSlaCriteria;
@@ -121,6 +162,8 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
   creatorUser?: UserLoginInfo;
   lastModifierUser?: UserLoginInfo;
   taskAssignments?: TaskAssignment[];
+  activities?: TaskActivity[];
+  tags?: Tag[];
 
   //additional fields for form tasks
   formLayout?: Record<string, unknown>;

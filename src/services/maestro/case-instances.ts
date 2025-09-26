@@ -15,6 +15,7 @@ import {
   ElementExecutionMetadata,
   CaseInstanceExecutionHistoryResponse
 } from '../../models/maestro';
+import { TaskGetResponse } from '../../models/action-center';
 import { 
   CaseJsonResponse
 } from '../../models/maestro/case-instances.internal-types';
@@ -26,7 +27,9 @@ import {
   CaseAppConfigMap, 
   StageSLAMap, 
   CASE_STAGE_CONSTANTS,
-  TimeFieldTransformMap
+  TimeFieldTransformMap,
+  CASE_INSTANCE_TASK_FILTER,
+  CASE_INSTANCE_TASK_EXPAND
 } from '../../models/maestro/case-instances.constants';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
@@ -36,14 +39,18 @@ import { track } from '../../core/telemetry';
 import { ProcessType } from '../../models/maestro/cases.internal-types';
 import { FOLDER_KEY } from '../../utils/constants/headers';
 import { createHeaders } from '../../utils/http/headers';
-
+import { TaskService } from '../action-center/tasks';
+import { TaskGetAllOptions } from '../../models/action-center';
 
 export class CaseInstancesService extends BaseService implements CaseInstancesServiceModel {
+  private taskService: TaskService;
+  
   /**
    * @hideconstructor
    */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
+    this.taskService = new TaskService(config, executionContext, tokenManager);
   }
 
   /**
@@ -492,5 +499,41 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     };
 
     return stage;
+  }
+
+  /**
+   * Get human in the loop tasks associated with a case instance
+   * @param caseInstanceId - The ID of the case instance
+   * @param options - Optional filtering and pagination options
+   * @returns Promise resolving to human in the loop tasks associated with the case instance
+   */ 
+  @track('CaseInstances.GetActionTasks')
+  async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
+    caseInstanceId: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskGetResponse>
+      : NonPaginatedResponse<TaskGetResponse>
+  > {
+    // Build filter to match tasks by case instance ID using tags
+    const tagFilter = CASE_INSTANCE_TASK_FILTER(caseInstanceId);
+    
+    // Combine with any existing filter
+    const filter = options?.filter 
+      ? `(${tagFilter}) and (${options.filter})`
+      : tagFilter;
+
+    // Add expand to include AssignedToUser and Activities
+    const expand = CASE_INSTANCE_TASK_EXPAND;
+    
+    // Prepare the enhanced options with proper typing
+    const enhancedOptions: T = {
+      ...options,
+      filter,
+      expand
+    } as T;
+  
+    return await this.taskService.getAll(enhancedOptions) as any;
   }
 }
