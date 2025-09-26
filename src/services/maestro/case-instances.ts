@@ -12,8 +12,8 @@ import {
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
   StageTask,
-  CaseExecutionMetadata,
-  CaseInstanceElementExecutionsResponse
+  ElementExecutionMetadata,
+  CaseInstanceExecutionHistoryResponse
 } from '../../models/maestro';
 import { 
   CaseJsonResponse
@@ -21,7 +21,13 @@ import {
 import { OperationResponse } from '../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { transformData } from '../../utils/transform';
-import { CaseInstanceMap, CaseAppConfigMap, StageSLAMap, CASE_STAGE_CONSTANTS } from '../../models/maestro/case-instances.constants';
+import { 
+  CaseInstanceMap, 
+  CaseAppConfigMap, 
+  StageSLAMap, 
+  CASE_STAGE_CONSTANTS,
+  TimeFieldTransformMap
+} from '../../models/maestro/case-instances.constants';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -277,6 +283,55 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   }
 
   /**
+   * Get execution history for a case instance
+   * @param instanceId - The ID of the case instance
+   * @param folderKey - Required folder key
+   * @returns Promise resolving to instance execution history
+   * @example
+   * ```typescript
+   * // Get execution history for a case instance
+   * const history = await sdk.maestro.cases.instances.getExecutionHistory(
+   *   'instance-id',
+   *   'folder-key'
+   * );
+   * ```
+   */
+  @track('CaseInstances.GetExecutionHistory')
+  async getExecutionHistory(
+    instanceId: string, 
+    folderKey: string
+  ): Promise<CaseInstanceExecutionHistoryResponse> {
+    const response = await this.get<any>(
+      MAESTRO_ENDPOINTS.CASES.GET_ELEMENT_EXECUTIONS(instanceId),
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey })
+      }
+    );
+    
+    // Transform the main response
+    const transformedResponse = transformData(response.data, TimeFieldTransformMap);
+    
+    // Transform each element execution and its nested element runs
+    if (transformedResponse.elementExecutions && Array.isArray(transformedResponse.elementExecutions)) {
+      transformedResponse.elementExecutions = transformedResponse.elementExecutions.map((execution: any) => {
+        // Transform the element execution itself
+        const transformedExecution = transformData(execution, TimeFieldTransformMap);
+        
+        // Transform nested element runs if they exist
+        if (transformedExecution.elementRuns && Array.isArray(transformedExecution.elementRuns)) {
+          transformedExecution.elementRuns = transformedExecution.elementRuns.map((run: any) => 
+            transformData(run, TimeFieldTransformMap)
+          );
+        }
+        
+        return transformedExecution;
+      });
+    }
+    
+    return transformedResponse as CaseInstanceExecutionHistoryResponse;
+  }
+
+  /**
    * Get case stages with their associated tasks and execution status
    * @param caseInstanceId - The ID of the case instance
    * @param folderKey - Required folder key
@@ -286,18 +341,13 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   async getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]> {
     // Fetch both execution history and case JSON in parallel, but handle execution failures gracefully
     const [executionHistoryResponse, caseJsonResponse] = await Promise.allSettled([
-      this.get<CaseInstanceElementExecutionsResponse>(
-        MAESTRO_ENDPOINTS.CASES.GET_ELEMENT_EXECUTIONS(caseInstanceId),
-        {
-          headers: createHeaders({ [FOLDER_KEY]: folderKey })
-        }
-      ),
+      this.getExecutionHistory(caseInstanceId, folderKey),
       this.getCaseJson(caseInstanceId, folderKey)
     ]);
 
     // Extract execution history if successful, otherwise use null
     const executionHistory = executionHistoryResponse.status === 'fulfilled' 
-      ? executionHistoryResponse.value.data 
+      ? executionHistoryResponse.value 
       : null;
 
     // Extract case JSON - the null check below will handle failures
@@ -327,8 +377,8 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @returns Map of elementId to execution metadata
    * @private
    */
-  private createExecutionMap(executionHistory: any): Map<string, CaseExecutionMetadata> {
-    const executionMap = new Map<string, CaseExecutionMetadata>();
+  private createExecutionMap(executionHistory: any): Map<string, ElementExecutionMetadata> {
+    const executionMap = new Map<string, ElementExecutionMetadata>();
     if (executionHistory?.elementExecutions) {
       for (const execution of executionHistory.elementExecutions) {
         executionMap.set(execution.elementId, execution);
@@ -381,7 +431,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    */
   private processTasks(
     node: any, 
-    executionMap: Map<string, CaseExecutionMetadata>, 
+    executionMap: Map<string, ElementExecutionMetadata>, 
     bindingsMap: Map<string, any>
   ): StageTask[][] {
     if (!node.data?.tasks || !Array.isArray(node.data.tasks)) {
@@ -405,8 +455,8 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
           const stageTask: StageTask = {
             id: taskId || task.elementId || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
             name: taskName || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
-            completedTime: taskExecution?.completedTimeUtc || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
-            startedTime: taskExecution?.startedTimeUtc || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
+            completedTime: taskExecution?.completedTime || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
+            startedTime: taskExecution?.startedTime || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
             status: taskExecution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
             type: task.type || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE
           };
@@ -428,7 +478,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    */
   private createStageFromNode(
     node: any,
-    executionMap: Map<string, CaseExecutionMetadata>,
+    executionMap: Map<string, ElementExecutionMetadata>,
     bindingsMap: Map<string, any>
   ): CaseGetStageResponse {
     const execution = executionMap.get(node.id);
