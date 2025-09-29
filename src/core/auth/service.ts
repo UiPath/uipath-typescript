@@ -2,7 +2,7 @@ import { BaseService } from '../../services/base';
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from './token-manager';
-import { AuthToken, TokenInfo } from './types';
+import { AuthToken, TokenInfo, OAuthContext } from './types';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -11,10 +11,73 @@ export class AuthService extends BaseService {
   private tokenManager: TokenManager;
 
   constructor(config: Config, executionContext: ExecutionContext) {
-    const isOAuth = hasOAuthConfig(config);
-    const tokenManager = new TokenManager(executionContext, config, isOAuth);
-    super(config, executionContext, tokenManager);
+    // Check if we should use stored OAuth context instead of provided config
+    const storedContext = AuthService.getStoredOAuthContext();
+    const effectiveConfig = storedContext ? AuthService._mergeConfigWithContext(config, storedContext) : config;
+    
+    const isOAuth = hasOAuthConfig(effectiveConfig);
+    const tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
+    super(effectiveConfig, executionContext, tokenManager);
     this.tokenManager = tokenManager;
+  }
+
+  /**
+   * Check if we're in an OAuth callback state
+   */
+  public static isInOAuthCallback(): boolean {
+    if (!isBrowser) return false;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const hasCodeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    
+    return !!(code && hasCodeVerifier);
+  }
+
+  /**
+   * Get stored OAuth context
+   */
+  public static getStoredOAuthContext(): OAuthContext | null {
+    if (!isBrowser) {
+      return null;
+    }
+    
+    try {
+      const stored = sessionStorage.getItem('uipath_sdk_oauth_context');
+      if (!stored) {
+        return null;
+      }
+      
+      const context = JSON.parse(stored) as OAuthContext;
+      
+      // Validate required fields
+      if (!context.codeVerifier || !context.clientId || !context.redirectUri || 
+          !context.baseUrl || !context.orgName) {
+        sessionStorage.removeItem('uipath_sdk_oauth_context');
+        return null;
+      }
+      
+      return context;
+    } catch (error) {
+      sessionStorage.removeItem('uipath_sdk_oauth_context');
+      console.warn('Failed to parse stored OAuth context from session storage', error);
+      return null;
+    }
+  }
+
+  /**
+   * Merges provided config with stored OAuth context, prioritizing stored values
+   */
+  private static _mergeConfigWithContext(config: Config, context: OAuthContext): Config {
+    return {
+      ...config,
+      baseUrl: context.baseUrl,
+      orgName: context.orgName,
+      tenantName: context.tenantName,
+      clientId: context.clientId,
+      redirectUri: context.redirectUri,
+      scope: context.scope
+    };
   }
 
   /**
@@ -33,7 +96,33 @@ export class AuthService extends BaseService {
    * In an OAuth flow, this method will trigger a page redirect and the promise will not resolve.
    */
   public async authenticate(config: Config): Promise<boolean> {
-    // Try to load token from storage first (only works for OAuth tokens)
+    if (!isBrowser) {
+      return false;
+    }
+    
+    // First priority: Complete OAuth callback if we detect it
+    if (AuthService.isInOAuthCallback()) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      
+      if (!code) {
+        throw new Error('Authorization code missing in OAuth callback');
+      }
+      // Check if token already exists (prevents duplicate processing)
+      if (this.tokenManager.hasValidToken()) {
+        return true;
+      }
+      
+      // Ensure we have OAuth config for callback completion
+      if (!hasOAuthConfig(config)) {
+        throw new Error('OAuth configuration incomplete: clientId, redirectUri, and scope are required for OAuth callback');
+      }
+      
+      const result = await this._authenticateWithOAuth(config.clientId, config.redirectUri, config.scope);
+      return result;
+    }
+    
+    // Secondly: Try to load existing valid token from storage
     const loadedFromStorage = this.tokenManager.loadFromStorage();
     
     // If we have a valid token from storage, return true
@@ -41,7 +130,7 @@ export class AuthService extends BaseService {
       return true;
     }
     
-    // If we don't have a valid token from storage, authenticate with OAuth
+    // Start new OAuth flow if config has OAuth fields
     if (hasOAuthConfig(config)) {
       return await this._authenticateWithOAuth(config.clientId, config.redirectUri, config.scope);
     }
@@ -257,6 +346,18 @@ export class AuthService extends BaseService {
     const codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
 
+    // Store complete OAuth context for callback completion
+    const oauthContext: OAuthContext = {
+      codeVerifier,
+      clientId,
+      redirectUri,
+      baseUrl: this.config.baseUrl,
+      orgName: this.config.orgName,
+      tenantName: this.config.tenantName,
+      scope
+    };
+    
+    sessionStorage.setItem('uipath_sdk_oauth_context', JSON.stringify(oauthContext));
     sessionStorage.setItem('uipath_sdk_code_verifier', codeVerifier);
 
     const authUrl = this.getAuthorizationUrl({
@@ -274,7 +375,6 @@ export class AuthService extends BaseService {
     if (!codeVerifier) {
       throw new Error('Code verifier not found in session storage. Authentication may have been interrupted.');
     }
-    sessionStorage.removeItem('uipath_sdk_code_verifier');
 
     await this._getAccessToken({
       clientId,
@@ -282,6 +382,10 @@ export class AuthService extends BaseService {
       code,
       codeVerifier
     });
+
+    // Clear OAuth context and code verifier after successful token exchange
+    sessionStorage.removeItem('uipath_sdk_oauth_context');
+    sessionStorage.removeItem('uipath_sdk_code_verifier');
 
     const url = new URL(window.location.href);
     url.searchParams.delete('code');

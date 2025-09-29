@@ -93,6 +93,42 @@ try {
 }
 ```
 
+## OAuth Integration Patterns
+
+### Auto-login on App Load
+```typescript
+useEffect(() => {
+  const initSDK = async () => {
+    const sdk = new UiPath({...oauthConfig});
+    await sdk.initialize();
+  };
+  initSDK();
+}, []);
+```
+
+### User-Triggered Login
+```typescript
+const onLogin = async () => {
+  await sdk.initialize();
+};
+
+// Handle OAuth callback
+const oauthCompleted = useRef(false);
+useEffect(() => {
+  if (sdk.isInitialized() && !oauthCompleted.current) {
+    oauthCompleted.current = true;
+    sdk.completeOAuth();
+  }
+}, []);
+```
+
+### Available OAuth Methods
+- `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
+- `sdk.isInitialized()` - Check if SDK initialization completed
+- `sdk.isAuthenticated()` - Check if user has valid token
+- `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
+- `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
+
 ---
 
 ## Quick Test Script

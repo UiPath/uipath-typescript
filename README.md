@@ -37,19 +37,9 @@ const tasks = await sdk.tasks.getAll();
 
 The SDK supports two authentication methods:
 
-### 1. Secret-based Authentication
-```typescript
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgName: 'your-organization',
-  tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token 
-});
-```
-
 For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the required scopes and provide the clientId, redirectUri, and scope here.
 
-### 2. OAuth Authentication
+### 1. OAuth Authentication
 ```typescript
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
@@ -62,6 +52,17 @@ const sdk = new UiPath({
 
 // IMPORTANT: OAuth requires calling initialize()
 await sdk.initialize();
+```
+
+
+### 2. Secret-based Authentication
+```typescript
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  secret: 'your-secret' //PAT Token or Bearer Token 
+});
 ```
 
 ## SDK Initialization - The initialize() Method
@@ -108,6 +109,42 @@ try {
   console.error('Failed to initialize SDK:', error);
 }
 ```
+
+## OAuth Integration Patterns
+
+### Auto-login on App Load
+```typescript
+useEffect(() => {
+  const initSDK = async () => {
+    const sdk = new UiPath({...oauthConfig});
+    await sdk.initialize();
+  };
+  initSDK();
+}, []);
+```
+
+### User-Triggered Login
+```typescript
+const onLogin = async () => {
+  await sdk.initialize();
+};
+
+// Handle OAuth callback
+const oauthCompleted = useRef(false);
+useEffect(() => {
+  if (sdk.isInitialized() && !oauthCompleted.current) {
+    oauthCompleted.current = true;
+    sdk.completeOAuth();
+  }
+}, []);
+```
+
+### Available OAuth Methods
+- `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
+- `sdk.isInitialized()` - Check if SDK initialization completed
+- `sdk.isAuthenticated()` - Check if user has valid token
+- `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
+- `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 
 ## Available Services
 
