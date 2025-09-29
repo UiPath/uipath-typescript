@@ -255,6 +255,12 @@ if (page5.supportsPageJump) {
 }
 ```
 
+## Samples
+
+Check out the [`/samples`](./samples) folder to see sample applications built using the SDK:
+
+- **[process-app](./samples/process-app)**: A Maestro process management application demonstrating OAuth authentication and SDK usage
+
 ## Development
 
 Before submitting a pull request, please review our [Contribution Guidelines](https://uipath.github.io/uipath-typescript/CONTRIBUTING/).

@@ -159,6 +159,7 @@ nav:
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
-  - How To Contribute: CONTRIBUTING.md
+  - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
   - FAQ: FAQ.md
+  - How To Contribute: CONTRIBUTING.md
   - Release Policy: release-policy.md
