@@ -17,6 +17,7 @@ import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
 import { TokenManager } from './core/auth/token-manager';
 import { telemetryClient, trackEvent } from './core/telemetry';
+import { isBrowser } from './utils/platform';
 
 type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
@@ -66,28 +67,35 @@ export class UiPath {
 
   /**
    * Initialize the SDK based on the provided configuration.
-   * This method is only required for OAuth-based authentication.
+   * This method handles both OAuth flow initiation and completion automatically.
    * For secret-based authentication, initialization is automatic.
    */
   public async initialize(): Promise<void> {
-    // If already initialized or using secret auth, return immediately
-    if (this.initialized || hasSecretConfig(this.config)) {
+    // For secret-based auth, it's already initialized in constructor
+    if (hasSecretConfig(this.config)) {
       return;
     }
 
     try {
-      // If the OAuth flow redirects, the promise from `authenticate` will not resolve,
-      // and execution will stop here.
-      const success = await this.authService.authenticate(this.config);
-
-      if (!success || !this.authService.hasValidToken()) {
-        // If authenticate() returns false, it means a valid token could not be obtained.
-        // This could be due to invalid config or a failure in the OAuth callback.
-        // We don't throw an error for the initial OAuth redirect because that won't return.
-        throw new Error('Failed to obtain a valid authentication token.');
+      // Check for OAuth callback first
+      if (AuthService.isInOAuthCallback()) {
+        if (await this.completeOAuth()) {
+          return;
+        }
       }
 
-      this.initialized = true;
+      // Check if already authenticated
+      if (this.isAuthenticated()) {
+        this.initialized = true;
+        return;
+      }
+
+      // Start new OAuth flow
+      await this.authService.authenticate(this.config);
+
+      if (this.isAuthenticated()) {
+        this.initialized = true;
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       throw new Error(`Failed to initialize UiPath SDK: ${errorMessage}`);
@@ -99,6 +107,41 @@ export class UiPath {
    */
   public isInitialized(): boolean {
     return this.initialized;
+  }
+
+  /**
+   * Check if we're in an OAuth callback state
+   */
+  public isInOAuthCallback(): boolean {
+    return AuthService.isInOAuthCallback();
+  }
+
+  /**
+   * Complete OAuth authentication flow (only call if isInOAuthCallback() is true)
+   */
+  public async completeOAuth(): Promise<boolean> {
+    if (!AuthService.isInOAuthCallback()) {
+      throw new Error('Not in OAuth callback state. Call initialize() first to start OAuth flow.');
+    }
+
+    try {
+      const success = await this.authService.authenticate(this.config);
+      if (success && this.isAuthenticated()) {
+        this.initialized = true;
+        return true;
+      }
+      return false;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      throw new Error(`Failed to complete OAuth: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Check if the user is authenticated (has valid token)
+   */
+  public isAuthenticated(): boolean {
+    return this.authService.hasValidToken();
   }
 
   /**

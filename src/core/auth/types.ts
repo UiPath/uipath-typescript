@@ -18,3 +18,16 @@ export interface AuthToken {
   scope: string;
   refresh_token?: string;
 }
+
+/**
+ * OAuth context stored during authentication flow
+ */
+export interface OAuthContext {
+  codeVerifier: string;
+  clientId: string;
+  redirectUri: string;
+  baseUrl: string;
+  orgName: string;
+  tenantName: string;
+  scope: string;
+}
