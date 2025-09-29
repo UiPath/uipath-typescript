@@ -22,7 +22,7 @@ import {
 } from '../../models/action-center/tasks.models';
 import { OperationResponse } from '../../models/common/types';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, applyDataTransforms, addPrefixToKeys } from '../../utils/transform';
-import { TaskStatusMap, TaskTimeMap } from '../../models/action-center/tasks.constants';
+import { TaskStatusMap, TaskMap } from '../../models/action-center/tasks.constants';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -75,7 +75,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
       { headers }
     );
     // Transform time fields for consistency
-    const normalizedData = transformData(response.data, TaskTimeMap);
+    const normalizedData = transformData(response.data, TaskMap);
     const transformedData = applyDataTransforms(normalizedData, { field: 'status', valueMap: TaskStatusMap });
     return createTaskWithMethods(transformedData, this) as TaskCreateResponse;
   }
@@ -195,7 +195,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
   > {
     // Transformation function for tasks
     const transformTaskResponse = (task: any) => {
-      const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskTimeMap);
+      const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskMap);
       return createTaskWithMethods(
         applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
         this
@@ -252,7 +252,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     );
     
     // Transform response from PascalCase to camelCase and normalize time fields
-    const transformedTask = transformData(pascalToCamelCaseKeys(response.data) as TaskGetResponse, TaskTimeMap);
+    const transformedTask = transformData(pascalToCamelCaseKeys(response.data) as TaskGetResponse, TaskMap);
     
     // Check if this is a form task and get form-specific data if it is
     if (transformedTask.type === TaskType.Form) {
@@ -501,7 +501,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
         headers
       }
     );
-    const transformedFormTask = transformData(response.data, TaskTimeMap);
+    const transformedFormTask = transformData(response.data, TaskMap);
     return createTaskWithMethods(
       applyDataTransforms(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
       this

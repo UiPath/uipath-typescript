@@ -11,9 +11,10 @@ export const TaskStatusMap: { [key: number]: TaskStatus } = {
 };
 
 // Field mapping for time-related fields to ensure consistent naming
-export const TaskTimeMap: { [key: string]: string } = {
+export const TaskMap: { [key: string]: string } = {
   completionTime: 'completedTime',
   deletionTime: 'deletedTime',
   lastModificationTime: 'lastModifiedTime',
   creationTime: 'createdTime',
+  organizationUnitId: 'folderId'
 }; 
