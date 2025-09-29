@@ -22,6 +22,10 @@ export const MAESTRO_ENDPOINTS = {
     PAUSE: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/pause`,
     RESUME: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/resume`,
   },
+  CASES: {
+    GET_CASE_JSON: (instanceId: string) => `pims_/api/v1/cases/${instanceId}/case-json`,
+    GET_ELEMENT_EXECUTIONS: (instanceId: string) => `pims_/api/v1alpha1/element-executions/case-instances/${instanceId}`,
+  },
 } as const;
 
 /**
@@ -30,7 +34,7 @@ export const MAESTRO_ENDPOINTS = {
 export const TASK_ENDPOINTS = {
   CREATE_GENERIC_TASK: '/tasks/GenericTasks/CreateTask',
   GET_TASK_USERS: (folderId: number) => `/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId=${folderId})`,
-  GET_TASKS_ACROSS_FOLDERS: '/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders',
+  GET_TASKS_ACROSS_FOLDERS: '/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFoldersForAdmin',
   GET_BY_ID: (id: number) => `/odata/Tasks(${id})`,
   ASSIGN_TASKS: '/odata/Tasks/UiPath.Server.Configuration.OData.AssignTasks',
   REASSIGN_TASKS: '/odata/Tasks/UiPath.Server.Configuration.OData.ReassignTasks',

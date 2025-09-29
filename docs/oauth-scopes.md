@@ -41,6 +41,15 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `sdk.maestro.processes.instances.cancel` | `PIMS` |
 | `sdk.maestro.processes.instances.pause` | `PIMS` |
 | `sdk.maestro.processes.instances.resume` | `PIMS` |
+| `sdk.maestro.cases.getAll` | `PIMS` |
+| `sdk.maestro.cases.instances.getAll` | `PIMS` |
+| `sdk.maestro.cases.instances.getById` | `PIMS` |
+| `sdk.maestro.cases.instances.close` | `PIMS` |
+| `sdk.maestro.cases.instances.pause` | `PIMS` |
+| `sdk.maestro.cases.instances.resume` | `PIMS` |
+| `sdk.maestro.cases.instances.getExecutionHistory` | `PIMS` |
+| `sdk.maestro.cases.instances.getStages` | `PIMS` |
+| `sdk.maestro.cases.instances.getActionTasks` | `OR.Tasks` or `OR.Tasks.Read` |
 
 ## Processes
 
