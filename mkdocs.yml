@@ -150,6 +150,7 @@ nav:
       - Authentication: authentication.md
       - OAuth Scopes: oauth-scopes.md
       - Pagination: pagination.md
+      - Error Handling: error-handling.md
   - API Reference:
       - Services:
           - Assets: api/interfaces/AssetServiceModel.md
