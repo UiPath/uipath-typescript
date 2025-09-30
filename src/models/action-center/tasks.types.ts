@@ -122,10 +122,8 @@ export interface TaskBaseResponse {
   key: string;
   isDeleted: boolean;
   creationTime: string;
-  creatorUserId: number;
   id: number;
   action: string | null;
-  assignedToUserId: number | null;
   externalTag: string | null;
   lastAssignedTime: string | null;
   completionTime: string | null;
@@ -158,7 +156,7 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
   taskSlaDetail: TaskSlaDetail | null;
   taskAssigneeName: string | null;
   lastModifierUserId: number | null;
-  assignedToUser?: UserLoginInfo;
+  assignedToUser: UserLoginInfo | null;
   creatorUser?: UserLoginInfo;
   lastModifierUser?: UserLoginInfo;
   taskAssignments?: TaskAssignment[];
