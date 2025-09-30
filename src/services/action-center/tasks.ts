@@ -275,7 +275,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * Assigns tasks to users
    * 
    * @param taskAssignments - Single task assignment or array of task assignments
-   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of task assignment results
    * 
    * @example
@@ -306,9 +305,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   @track('Tasks.Assign')
-  async assign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+  async assign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
     // Normalize input to array
     const assignmentArray = Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments];
     
@@ -321,8 +318,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.ASSIGN_TASKS,
-      pascalOptions,
-      { headers }
+      pascalOptions
     );
     
     // Transform response from PascalCase to camelCase
@@ -336,7 +332,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * Reassigns tasks to new users
    * 
    * @param taskAssignments - Single task assignment or array of task assignments
-   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of task assignment results
    * 
    * @example
@@ -367,9 +362,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   @track('Tasks.Reassign')
-  async reassign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+  async reassign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
     // Normalize input to array
     const assignmentArray = Array.isArray(taskAssignments) ? taskAssignments : [taskAssignments];
     
@@ -382,8 +375,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.REASSIGN_TASKS,
-      pascalOptions,
-      { headers }
+      pascalOptions
     );
     
     // Transform response from PascalCase to camelCase
@@ -397,7 +389,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * Unassigns tasks (removes current assignees)
    * 
    * @param taskIds - Single task ID or array of task IDs to unassign
-   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of task assignment results
    * 
    * @example
@@ -410,9 +401,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```
    */
   @track('Tasks.Unassign')
-  async unassign(taskIds: number | number[], folderId?: number): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+  async unassign(taskIds: number | number[]): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>> {
     // Normalize input to array
     const taskIdArray = Array.isArray(taskIds) ? taskIds : [taskIds];
     
@@ -422,8 +411,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     
     const response = await this.post<TaskAssignmentResponseCollection>(
       TASK_ENDPOINTS.UNASSIGN_TASKS,
-      options,
-      { headers }
+      options
     );
     
     // Transform response from PascalCase to camelCase

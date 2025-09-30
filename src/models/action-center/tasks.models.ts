@@ -106,7 +106,6 @@ export interface TaskServiceModel {
    * Assigns tasks to users
    * 
    * @param options - Single task assignment or array of task assignments
-   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of task assignment results
    * {@link TaskAssignmentResponse}
    * @example
@@ -130,13 +129,12 @@ export interface TaskServiceModel {
    * ]);
    * ```
    */
-  assign(options: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
+  assign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
   
   /**
    * Reassigns tasks to new users
    * 
    * @param options - Single task assignment or array of task assignments
-   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of task assignment results
    * {@link TaskAssignmentResponse}
    * @example
@@ -160,13 +158,12 @@ export interface TaskServiceModel {
    * ]);
    * ```
    */
-  reassign(options: TaskAssignmentOptions | TaskAssignmentOptions[], folderId?: number): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
+  reassign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
   
   /**
    * Unassigns tasks (removes current assignees)
    * 
    * @param taskId - Single task ID or array of task IDs to unassign
-   * @param folderId - Optional folder ID
    * @returns Promise resolving to array of task assignment results
    * {@link TaskAssignmentResponse}
    * @example
@@ -178,7 +175,7 @@ export interface TaskServiceModel {
    * const result = await sdk.tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
    * ```
    */
-  unassign(taskId: number | number[], folderId?: number): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>>;
+  unassign(taskId: number | number[]): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>>;
   
   /**
    * Completes a task with the specified type and data
@@ -294,7 +291,7 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
         userNameOrEmail: options.userNameOrEmail
       };
       
-      return service.assign(assignmentOptions, taskData.organizationUnitId);
+      return service.assign(assignmentOptions);
     },
     
     async reassign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
@@ -306,13 +303,13 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
         userNameOrEmail: options.userNameOrEmail
       };
       
-      return service.reassign(assignmentOptions, taskData.organizationUnitId);
+      return service.reassign(assignmentOptions);
     },
 
     async unassign(): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
       
-      return service.unassign(taskData.id, taskData.organizationUnitId);
+      return service.unassign(taskData.id);
     },
 
     async complete(options: TaskCompleteOptions): Promise<OperationResponse<TaskCompletionOptions>> {
