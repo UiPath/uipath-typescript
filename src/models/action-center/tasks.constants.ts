@@ -17,4 +17,9 @@ export const TaskMap: { [key: string]: string } = {
   lastModificationTime: 'lastModifiedTime',
   creationTime: 'createdTime',
   organizationUnitId: 'folderId'
-}; 
+};
+
+/**
+ * Default expand parameters
+ */
+export const DEFAULT_TASK_EXPAND = 'AssignedToUser,CreatorUser,LastModifierUser'; 

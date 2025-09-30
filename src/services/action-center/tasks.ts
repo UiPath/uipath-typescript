@@ -22,7 +22,7 @@ import {
 } from '../../models/action-center/tasks.models';
 import { OperationResponse } from '../../models/common/types';
 import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, applyDataTransforms, addPrefixToKeys } from '../../utils/transform';
-import { TaskStatusMap, TaskMap } from '../../models/action-center/tasks.constants';
+import { TaskStatusMap, TaskMap, DEFAULT_TASK_EXPAND } from '../../models/action-center/tasks.constants';
 import { createHeaders } from '../../utils/http/headers';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -223,10 +223,11 @@ export class TaskService extends BaseService implements TaskServiceModel {
 
   /**
    * Gets a task by ID
+   * IMPORTANT: For form tasks, folderId must be provided.
    * 
    * @param id - The ID of the task to retrieve
    * @param options - Optional query parameters
-   * @param folderId - Optional folder ID
+   * @param folderId - Optional folder ID (REQUIRED for form tasks)
    * @returns Promise resolving to the task (form tasks will return form-specific data)
    * 
    * @example
@@ -240,9 +241,13 @@ export class TaskService extends BaseService implements TaskServiceModel {
   @track('Tasks.GetById')
   async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<TaskGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
+    
+    // Add default expand parameters
+    const modifiedOptions = this.addDefaultExpand(options);
+    
     // prefix all keys in options
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
+    const keysToPrefix = Object.keys(modifiedOptions);
+    const apiOptions = addPrefixToKeys(modifiedOptions, ODATA_PREFIX, keysToPrefix);
     const response = await this.get<TaskGetResponse>(
       TASK_ENDPOINTS.GET_BY_ID(id),
       { 
@@ -516,7 +521,9 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * @private
    */
   private processTaskParameters = (options: Record<string, any>, folderId?: number): Record<string, any> => {
-    const processedOptions = { ...options };
+    // Add default expand parameters
+    const processedOptions = this.addDefaultExpand(options);
+    
     if (folderId) {
       // Create or add to existing filter for folder-specific queries
       if (processedOptions.filter) {
@@ -526,5 +533,21 @@ export class TaskService extends BaseService implements TaskServiceModel {
       }
     }
     return processedOptions;
+  }
+
+  /**
+   * Adds default expand parameters to options
+   * @param options - The options object to add default expand to
+   * @returns Options with default expand parameters added
+   * @private
+   */
+  private addDefaultExpand<T extends Record<string, any>>(options: T): T {
+    const processedOptions: any = { ...options };
+    
+    processedOptions.expand = processedOptions.expand 
+      ? `${DEFAULT_TASK_EXPAND},${processedOptions.expand}`
+      : DEFAULT_TASK_EXPAND;
+    
+    return processedOptions as T;
   }
 } 
