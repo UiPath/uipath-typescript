@@ -12,14 +12,19 @@
         "agentic-ai"
     ],
     "type": "module",
-    "main": "./dist/index.js",
-    "module": "./dist/index.esm.js",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
-            "import": "./dist/index.esm.js",
-            "require": "./dist/index.js",
-            "types": "./dist/index.d.ts"
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
         }
     },
     "files": [
@@ -28,6 +33,7 @@
     ],
     "scripts": {
         "build": "rollup -c",
+        "build:watch": "rollup -c -w",
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
         "docs:api": "typedoc"
     },
@@ -37,17 +43,18 @@
         "eventemitter3": "^5.0.1",
         "file-type": "^21.0.0",
         "mime-types": "^3.0.1",
-        "uuid": "^9.0.1",
-        "ws": "^8.16.0",
-        "zod": "^3.22.4",
+        "rimraf": "^6.0.1",
         "typedoc": "^0.28.13",
         "typedoc-plugin-markdown": "^4.8.1",
-        "rimraf": "^6.0.1"
+        "uuid": "^9.0.1",
+        "ws": "^8.16.0",
+        "zod": "^3.22.4"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.2.0",
+        "@rollup/plugin-replace": "^5.0.7",
         "@rollup/plugin-typescript": "^11.1.0",
         "@types/jest": "^29.5.14",
         "@types/mime-types": "^3.0.1",
