@@ -94,16 +94,6 @@ export interface BucketGetUriOptions extends BaseOptions {
 export type BucketGetReadUriOptions = BucketGetUriOptions;
 
 /**
- * Request options for getting a write URI for a file in a bucket
- */
-export interface BucketGetWriteUriOptions extends BucketGetUriOptions {
-  /**
-   * ContentType for S3 access policy
-   */
-  contentType?: string;
-}
-
-/**
  * Request options for getting files in a bucket
  */
 export interface BucketGetFileMetaDataOptions {
@@ -181,12 +171,6 @@ export interface BucketUploadFileOptions {
    * File content to upload 
    */
   content: Blob | Buffer | File;
-
-  /**
-   * Optional MIME type of the file
-   * If not provided, it will be auto-detected
-   */
-  contentType?: string;
 }
 
 /**
