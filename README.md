@@ -1,45 +1,115 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="./docs/assets/logo-light.svg">
+  <img src="./docs/assets/logo-dark.svg" alt="UiPath Logo" width="200">
+</picture>
+
+
+
+
 # UiPath TypeScript SDK
 
-[View Full API Reference ↗](https://uipath.github.io/uipath-typescript/getting-started/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![npm](https://img.shields.io/npm/v/@uipath/uipath-typescript?logo=npm)](https://www.npmjs.com/package/@uipath/uipath-typescript)
+[![GitHub](https://img.shields.io/github/stars/UiPath/uipath-typescript?style=social)](https://github.com/UiPath/uipath-typescript)
+
+[Documentation](https://uipath.github.io/uipath-typescript/) • [Getting Started](#getting-started) • [Usage](#usage) • [Samples](#samples)
 
 A comprehensive TypeScript SDK for interacting with UiPath Platform services.
 
-## Installation
+</div>
+
+<details>
+<summary><strong>Table of Contents</strong></summary>
+
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
+- [Authentication](#authentication)
+  - [Authentication Methods](#authentication-methods)
+  - [SDK Initialization](#sdk-initialization)
+  - [OAuth Integration Patterns](#oauth-integration-patterns)
+- [Usage](#usage)
+- [Samples](#samples)
+- [Development](#development)
+
+</details>
+
+## Overview
+
+The **UiPath TypeScript SDK** is a comprehensive, type-safe library for interacting with UiPath Platform services. Built with modern TypeScript, it provides seamless integration for both browser and Node.js applications, enabling developers to build sophisticated automation solutions with enterprise-grade reliability.
+
+<div align="right">
+
+</div>
+
+## Getting Started
+
+### Prerequisites
+
+- **Node.js** 18.x or higher
+- **npm** 8.x or higher (or yarn/pnpm)
+- **TypeScript** 4.5+ (for TypeScript projects)
+
+### Installation
 
 ```bash
+# Using npm
 npm install @uipath/uipath-typescript
-# or
+
+# Using yarn
 yarn add @uipath/uipath-typescript
-# or
+
+# Using pnpm
 pnpm add @uipath/uipath-typescript
 ```
 
-
-## Quick Start
+### Quick Start
 
 ```typescript
 import { UiPath } from '@uipath/uipath-typescript';
 
-// Initialize the SDK
+// Initialize the SDK with OAuth
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token 
+  clientId: 'your-client-id',
+  redirectUri: 'your-redirect-uri',
+  scope: 'your-scopes'
 });
+
+// Initialize OAuth flow
+await sdk.initialize();
 
 // Use the services
 const processes = await sdk.maestro.processes.getAll();
 const tasks = await sdk.tasks.getAll();
 ```
 
+<div align="right">
+
+[↑ Back to top](#uipath-typescript-sdk)
+
+</div>
+
 ## Authentication
+
+### Authentication Methods
 
 The SDK supports two authentication methods:
 
 For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the required scopes and provide the clientId, redirectUri, and scope here.
 
-### 1. OAuth Authentication
+<details>
+<summary><strong>1. OAuth Authentication (Recommended)</strong></summary>
+
 ```typescript
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
@@ -54,8 +124,11 @@ const sdk = new UiPath({
 await sdk.initialize();
 ```
 
+</details>
 
-### 2. Secret-based Authentication
+<details>
+<summary><strong>2. Secret-based Authentication</strong></summary>
+
 ```typescript
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
@@ -65,16 +138,19 @@ const sdk = new UiPath({
 });
 ```
 
-## SDK Initialization - The initialize() Method
+</details>
 
-### When to Use initialize()
+### SDK Initialization
+
+<details>
+<summary><strong>When to Use initialize()</strong></summary>
 
 The `initialize()` method completes the authentication process for the SDK:
 
 - **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
 - **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
 
-### Example: Secret Authentication (Auto-initialized)
+#### Example: Secret Authentication (Auto-initialized)
 ```typescript
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
@@ -87,7 +163,7 @@ const sdk = new UiPath({
 const tasks = await sdk.tasks.getAll();
 ```
 
-### Example: OAuth Authentication (Requires initialize)
+#### Example: OAuth Authentication (Requires initialize)
 ```typescript
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
@@ -110,9 +186,14 @@ try {
 }
 ```
 
-## OAuth Integration Patterns
+</details>
 
-### Auto-login on App Load
+### OAuth Integration Patterns
+
+<details>
+<summary><strong>View Integration Patterns</strong></summary>
+
+#### Auto-login on App Load
 ```typescript
 useEffect(() => {
   const initSDK = async () => {
@@ -123,7 +204,7 @@ useEffect(() => {
 }, []);
 ```
 
-### User-Triggered Login
+#### User-Triggered Login
 ```typescript
 const onLogin = async () => {
   await sdk.initialize();
@@ -139,19 +220,29 @@ useEffect(() => {
 }, []);
 ```
 
-### Available OAuth Methods
+#### Available OAuth Methods
 - `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
 - `sdk.isInitialized()` - Check if SDK initialization completed
 - `sdk.isAuthenticated()` - Check if user has valid token
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 
-## Available Services
+</details>
+
+<div align="right">
+
+[↑ Back to top](#uipath-typescript-sdk)
+
+</div>
+
+## Usage
 
 The SDK provides access to the following services through a consistent API:
 
 - `sdk.maestro.processes` - Manage agentic maestro processes
 - `sdk.maestro.processes.instances` - Manage maestro process executions
+- `sdk.maestro.cases` - Manage maestro case management processes
+- `sdk.maestro.cases.instances` - Manage maestro case executions
 - `sdk.tasks` - Create and manage tasks
 - `sdk.entities` - Data Fabric entity operations
 - `sdk.processes` - Manage Orchestrator processes
@@ -159,138 +250,104 @@ The SDK provides access to the following services through a consistent API:
 - `sdk.queues` - Manage Orchestrator queues
 - `sdk.assets` - Manage Orchestrator assets
 
-
-**Example usage**:
-```typescript
-// Get all processes
-const bpmnProcesses = await sdk.maestro.processes.getAll();
-
-// Get a specific task
-const task = await sdk.tasks.getById('task-id');
-
-// Create a new entity
-const entity = await sdk.entities.create({...});
-
-// Get all buckets 
-const buckets = await sdk.buckets.getAll();
-
-// Get a specific process and start it
-const process = await sdk.processes.getAll({ 
-  filter: "name eq 'MyProcess'" 
-});
-const job = await sdk.processes.start({
-  processKey: process[0].key
-}, 'folder-id');
-
-// Get all queues
-const queues = await sdk.queues.getAll();
-
-// Get all assets
-const assets = await sdk.assets.getAll();
-//Get assets in a folder
-const assets = await sdk.assets.getAll({folderId: 'folder-id'});
-```
-
-## TypeScript Support
-
-The SDK is fully typed and exports all types for better developer experience and LLM-friendly coding:
+<details>
+<summary><strong>View Example Usage</strong></summary>
 
 ```typescript
-import { 
-  UiPath,
-  // Task types
-  TaskCreateOptions,
-  TaskPriority,
-  TaskStatus,
-  
-  // Process types  
-  ProcessStartRequest,
-  ProcessStartResponse,
-  ProcessGetResponse,
-  
-  // Entity types
-  EntityGetResponse,
-  EntityInsertOptions,
-  
-  // Asset/Queue/Bucket types
-  AssetGetResponse,
-  QueueGetResponse,
-  BucketGetResponse,
-  
-  // Maestro types
-  ProcessInstanceGetResponse,
-  MaestroProcessGetAllResponse
-} from '@uipath/uipath-typescript';
-
-// TypeScript will provide full intellisense
-const taskOptions: TaskCreateOptions = {
-  title: 'Review Document',
-  priority: TaskPriority.High
-};
-
-const task = await sdk.tasks.create(taskOptions);
-```
-
-## Error Handling
-
-The SDK provides comprehensive error handling with typed errors:
-
-```typescript
-import { UiPathError } from '@uipath/uipath-typescript';
-
-try {
-  const process = await sdk.maestro.processes.getById('invalid-id');
-} catch (error) {
-  if (error instanceof UiPathError) {
-    // Access common error properties
-    console.log('Error Type:', error.type);
-    console.log('Message:', error.message);
-    console.log('Status Code:', error.statusCode);
-    console.log('Request ID:', error.requestId);
-    console.log('Timestamp:', error.timestamp);
-    console.log('error stack trace:', error.stack);
-
-    // Get detailed debug information including stack trace
-    const debugInfo = error.getDebugInfo();
-  }
-}
-```
-
-## Pagination
-
-The SDK provides built-in pagination support:
-
-### Cursor-based Navigation
-
-```typescript
-// Navigate through pages using cursors
-let currentPage = await sdk.assets.getAll({ pageSize: 10 }) as PaginatedResponse<AssetGetResponse>;
-
-while (currentPage.hasNextPage) {
-  // Process current page items
-  currentPage.items.forEach(item => console.log(item.name));
-  
-  // Get next page using cursor
-    currentPage = await sdk.assets.getAll({ 
-    cursor: currentPage.nextCursor 
-  }) as PaginatedResponse<AssetGetResponse>;
-}
-```
-
-### Page Jumping
-
-```typescript
-// Jump directly to page 5 (when supported)
-const page5 = await sdk.assets.getAll({
-  jumpToPage: 5,
-  pageSize: 20
+// Maestro - Get processes and their instances
+const processes = await sdk.maestro.processes.getAll();
+const instances = await sdk.maestro.processes.instances.getAll({
+  processKey: 'my-process',
+  pageSize: 10
 });
 
-// Check if page jumping is supported
-if (page5.supportsPageJump) {
-  console.log(`Currently on page ${page5.currentPage} of ${page5.totalPages}`);
-}
+// Control Process Instances
+await sdk.maestro.processes.instances.pause(instanceId, 'folder-key');
+await sdk.maestro.processes.instances.resume(instanceId, 'folder-key');
+await sdk.maestro.processes.instances.cancel(instanceId, 'folder-key', {
+  comment: 'Cancelled due to error'
+});
+
+// Maestro Case Instances
+const caseInstance = await sdk.maestro.cases.instances.getById(instanceId, 'folder-key');
+const stages = await sdk.maestro.cases.instances.getStages(instanceId, 'folder-key');
+
+// Control Case Instances
+await sdk.maestro.cases.instances.close(instanceId, 'folder-key', {
+  comment: 'Case resolved successfully'
+});
+
+// Orchestrator Processes - Start a process
+const result = await sdk.processes.start({
+  processKey: 'MyProcess_Key',
+}, folderId);
+
+// Tasks - Create, assign, and complete
+const task = await sdk.tasks.create({
+  title: 'Review Invoice',
+  priority: 'High'
+}, folderId);
+
+await sdk.tasks.assign({
+  taskId: task.id,
+  userNameOrEmail: 'user@company.com'
+}, folderId);
+
+await sdk.tasks.complete(TaskType.App, {
+  taskId: task.id,
+  data: {},
+  action: 'submit'
+}, folderId);
+
+// Buckets - File operations
+const bucket = await sdk.buckets.getById(bucketId, folderId);
+const fileMetadata = await sdk.buckets.getFileMetaData(bucketId, folderId, {
+  prefix: '/invoices/'
+});
+
+// Upload file
+await sdk.buckets.uploadFile({
+  bucketId: bucketId,
+  folderId: folderId,
+  prefix: '/folder1'
+});
+
+// Get download URL
+const downloadUrl = await sdk.buckets.getReadUri({
+  bucketId: bucketId,
+  folderId: folderId,
+  path: '/folder/file.pdf'
+});
+
+// Data Fabric Entities - CRUD operations
+const entity = await sdk.entities.getById('entity-uuid');
+const records = await sdk.entities.getRecordsById('entity-uuid', {
+  pageSize: 100,
+  expansionLevel: 1
+});
+
+// Insert records
+await sdk.entities.insertById('entity-uuid', [
+  { name: 'John Doe', email: 'john@company.com', status: 'Active' },
+  { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' }
+]);
+
+// Update records
+await sdk.entities.updateById('entity-uuid', [
+  { Id: 'record-id-1', status: 'Inactive' }
+]);
+
+// Delete records
+await sdk.entities.deleteById('entity-uuid', ['record-id-1', 'record-id-2']);
 ```
+
+</details>
+
+<div align="right">
+
+[↑ Back to top](#uipath-typescript-sdk)
+
+</div>
 
 ## Samples
 
@@ -298,6 +355,18 @@ Check out the [`/samples`](./samples) folder to see sample applications built us
 
 - **[process-app](./samples/process-app)**: A Maestro process management application demonstrating OAuth authentication and SDK usage
 
+<div align="right">
+
+[↑ Back to top](#uipath-typescript-sdk)
+
+</div>
+
 ## Development
 
 Before submitting a pull request, please review our [Contribution Guidelines](https://uipath.github.io/uipath-typescript/CONTRIBUTING/).
+
+<div align="right">
+
+[↑ Back to top](#uipath-typescript-sdk)
+
+</div>
