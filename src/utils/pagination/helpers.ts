@@ -117,14 +117,15 @@ export class PaginationHelpers {
     }
     
     // Get processed parameters
-    return PaginationHelpers.getRequestParameters(options);
+    return PaginationHelpers.getRequestParameters(options, paginationType);
   }
   
   /**
    * Convert a unified pagination options to service-specific parameters
    */
   static getRequestParameters(
-    options: PaginationOptions
+    options: PaginationOptions,
+    paginationType?: PaginationType
   ): InternalPaginationOptions {
     // Handle jumpToPage
     if (options.jumpToPage !== undefined) {
@@ -139,7 +140,8 @@ export class PaginationHelpers {
     if (!options.cursor) {
       const firstPageOptions: InternalPaginationOptions = {
         pageSize: options.pageSize,
-        pageNumber: 1
+        // Only set pageNumber for OFFSET pagination
+        pageNumber: paginationType === PaginationType.OFFSET ? 1 : undefined
       };
       return filterUndefined(firstPageOptions);
     }
