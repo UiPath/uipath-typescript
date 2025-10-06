@@ -228,7 +228,7 @@ export class BaseService {
         pageInfo: {
           hasMore,
           totalCount,
-          currentPage: params.pageNumber || 1,
+          currentPage: params.pageNumber,
           pageSize: params.pageSize,
           continuationToken
         },
