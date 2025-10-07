@@ -145,14 +145,13 @@ export interface BucketServiceModel {
    *   content: file
    * });
    * 
-   * // In Node env with explicit content type
+   * // In Node env with Buffer
    * const buffer = Buffer.from('file content');
    * const result = await sdk.buckets.uploadFile({
    *   bucketId: <bucketId>,
    *   folderId: <folderId>,
    *   path: '/folder/example.txt',
    *   content: buffer,
-   *   contentType: 'text/plain'
    * });
    * ```
    */
