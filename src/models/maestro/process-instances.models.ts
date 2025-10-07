@@ -260,6 +260,28 @@ export interface ProcessInstanceMethods {
    * @returns Promise resolving to operation result
    */
   resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+
+  /**
+   * Gets execution history (spans) for this process instance
+   *
+   * @returns Promise resolving to execution history
+   */
+  getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+
+  /**
+   * Gets BPMN XML file for this process instance
+   *
+   * @returns Promise resolving to BPMN XML file
+   */
+  getBpmn(): Promise<BpmnXmlString>;
+
+  /**
+   * Gets global variables for this process instance
+   *
+   * @param options - Optional options including parentElementId to filter by parent element
+   * @returns Promise resolving to variables response with elements and globals
+   */
+  getVariables(options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse>;
 }
 
 // Combined type for process instance data with methods
@@ -276,20 +298,43 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
   return {
     async cancel(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
-      
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+
       return service.cancel(instanceData.instanceId, instanceData.folderKey, options);
     },
     
     async pause(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
-      
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+
       return service.pause(instanceData.instanceId, instanceData.folderKey, options);
     },
 
     async resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
       
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+
+      return service.getExecutionHistory(instanceData.instanceId);
+    },
+
+    async getBpmn(): Promise<BpmnXmlString> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+
+      return service.getBpmn(instanceData.instanceId, instanceData.folderKey);
+    },
+
+    async getVariables(options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+
+      return service.getVariables(instanceData.instanceId, instanceData.folderKey, options);
     }
   };
 }

@@ -268,6 +268,34 @@ export interface CaseInstanceMethods {
    * @returns Promise resolving to operation result
    */
   resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
+   * Gets execution history for this case instance
+   *
+   * @returns Promise resolving to instance execution history
+   */
+  getExecutionHistory(): Promise<CaseInstanceExecutionHistoryResponse>;
+
+  /**
+   * Gets stages and their associated tasks for this case instance
+   *
+   * @returns Promise resolving to an array of case stages with their tasks and status
+   */
+  getStages(): Promise<CaseGetStageResponse[]>;
+
+  /**
+   * Gets human in the loop tasks associated with this case instance
+   *
+   * @param options - Optional filtering and pagination options
+   * @returns Promise resolving to human in the loop tasks associated with the case instance
+   */
+  getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskGetResponse>
+      : NonPaginatedResponse<TaskGetResponse>
+  >;
 }
 
 // Combined type for case instance data with methods
@@ -284,20 +312,49 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
   return {
     async close(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
       
       return service.close(instanceData.instanceId, instanceData.folderKey, options);
     },
     
     async pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
-      
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
       return service.pause(instanceData.instanceId, instanceData.folderKey, options);
     },
 
     async resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
-      
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async getExecutionHistory(): Promise<CaseInstanceExecutionHistoryResponse> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.getExecutionHistory(instanceData.instanceId, instanceData.folderKey);
+    },
+
+    async getStages(): Promise<CaseGetStageResponse[]> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.getStages(instanceData.instanceId, instanceData.folderKey);
+    },
+
+    async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
+      options?: T
+    ): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<TaskGetResponse>
+        : NonPaginatedResponse<TaskGetResponse>
+    > {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+
+      return service.getActionTasks(instanceData.instanceId, options);
     }
   };
 }
