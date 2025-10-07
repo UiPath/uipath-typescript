@@ -262,7 +262,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
     // Check if this is a form task and get form-specific data if it is
     if (transformedTask.type === TaskType.Form) {
       const formOptions: TaskGetFormOptions = { expandOnFormLayout: true };
-      return this.getFormTaskById(id, folderId || transformedTask.organizationUnitId, formOptions);
+      return this.getFormTaskById(id, folderId || transformedTask.folderId, formOptions);
     }
     
     return createTaskWithMethods(

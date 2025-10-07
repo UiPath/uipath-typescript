@@ -91,32 +91,23 @@ export interface CaseInstancesServiceModel {
    *   <folderKey>
    * );
    * 
-   * if (result.success) {
-   *   console.log(`Instance ${result.data.instanceId} now has status: ${result.data.status}`);
-   * }
+   * or
    * 
-   * // Close with a comment
-   * const result = await sdk.maestro.cases.instances.close(
+   * const instance = await sdk.maestro.cases.instances.getById(
    *   <instanceId>,
-   *   <folderKey>,
-   *   { comment: <comment> }
+   *   <folderKey>
    * );
+   * const result = await instance.close();
    * 
-   * // Close multiple faulted instances
-   * const instances = await sdk.maestro.cases.instances.getAll({
-   *   latestRunStatus: "Faulted"
+   * console.log(`Closed: ${result.success}`);
+   *
+   * // Close with a comment
+   * const result = await instance.close({
+   *   comment: 'Closing due to invalid input data'
    * });
-   * 
-   * for (const instance of instances.items) {
-   *   const result = await sdk.maestro.cases.instances.close(
-   *     instance.instanceId,
-   *     instance.folderKey,
-   *     { comment: <comment> }
-   *   );
-   *   
-   *   if (result.success) {
-   *     console.log(`Closed instance: ${result.data.instanceId}`);
-   *   }
+   *
+   * if (result.success) {
+   *   console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
    * }
    * ```
    */

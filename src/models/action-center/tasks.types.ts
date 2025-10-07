@@ -118,7 +118,7 @@ export interface TaskBaseResponse {
   title: string;
   type: TaskType;
   priority: TaskPriority;
-  organizationUnitId: number;
+  folderId: number;
   key: string;
   isDeleted: boolean;
   creationTime: string;
