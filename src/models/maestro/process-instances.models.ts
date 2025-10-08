@@ -148,32 +148,23 @@ export interface ProcessInstancesServiceModel {
    *   <folderKey>
    * );
    * 
-   * if (result.success) {
-   *   console.log(`Instance ${result.data.instanceId} now has status: ${result.data.status}`);
-   * }
+   * or
    * 
-   * // Cancel with a comment
-   * const result = await sdk.maestro.processes.instances.cancel(
+   * const instance = await sdk.maestro.processes.instances.getById(
    *   <instanceId>,
-   *   <folderKey>,
-   *   { comment: <comment> }
+   *   <folderKey>
    * );
+   * const result = await instance.cancel();
    * 
-   * // Cancel multiple faulted instances
-   * const instances = await sdk.maestro.processes.instances.getAll({
-   *   latestRunStatus: "Faulted"
+   * console.log(`Cancelled: ${result.success}`);
+   *
+   * // Cancel with a comment
+   * const result = await instance.cancel({
+   *   comment: 'Cancelling due to invalid input data'
    * });
-   * 
-   * for (const instance of instances.items) {
-   *   const result = await sdk.maestro.processes.instances.cancel(
-   *     instance.instanceId,
-   *     instance.folderKey,
-   *     { comment: <comment> }
-   *   );
-   *   
-   *   if (result.success) {
-   *     console.log(`Cancelled instance: ${result.data.instanceId}`);
-   *   }
+   *
+   * if (result.success) {
+   *   console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
    * }
    * ```
    */

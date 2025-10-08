@@ -116,6 +116,13 @@ export interface TaskServiceModel {
    *   userId: <userId>
    * });
    * 
+   * or
+   * 
+   * const task = await sdk.tasks.getById(<taskId>);
+   * const result = await task.assign({
+   *   userId: <userId>
+   * });
+   * 
    * // Assign a single task to a user by email
    * const result = await sdk.tasks.assign({
    *   taskId: <taskId>,
@@ -145,6 +152,13 @@ export interface TaskServiceModel {
    *   userId: <userId>
    * });
    * 
+   * or
+   * 
+   * const task = await sdk.tasks.getById(<taskId>);
+   * const result = await task.reassign({
+   *   userId: <userId>
+   * });
+   * 
    * // Reassign a single task to a user by email
    * const result = await sdk.tasks.reassign({
    *   taskId: <taskId>,
@@ -170,6 +184,11 @@ export interface TaskServiceModel {
    * ```typescript
    * // Unassign a single task
    * const result = await sdk.tasks.unassign(<taskId>);
+   * 
+   * or
+   * 
+   * const task = await sdk.tasks.getById(<taskId>);
+   * const result = await task.unassign();
    * 
    * // Unassign multiple tasks
    * const result = await sdk.tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
@@ -314,7 +333,7 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
 
     async complete(options: TaskCompleteOptions): Promise<OperationResponse<TaskCompletionOptions>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
-      const folderId = taskData.organizationUnitId;
+      const folderId = taskData.folderId;
       if (!folderId) throw new Error('Folder ID is required');
       
       return service.complete(
