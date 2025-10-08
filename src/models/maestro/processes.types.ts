@@ -6,7 +6,7 @@
 /**
  * Process information with instance statistics
  */
-export interface MaestroProcessGetAllResponse {
+export interface RawMaestroProcessGetAllResponse {
   /** Unique key identifying the process */
   processKey: string;
   /** Package identifier */
