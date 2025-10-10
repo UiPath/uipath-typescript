@@ -1,0 +1,2350 @@
+# UiPath TypeScript SDK
+
+# Getting Started
+
+# Getting Started
+
+## Prerequisites
+
+- **Node.js** 18.x or higher
+- **npm** 8.x or higher (or yarn/pnpm)
+- **TypeScript** 4.5+ (for TypeScript projects)
+
+## Install the SDK
+
+npm install @uipath/uipath-typescript\
+found 0 vulnerabilities
+
+yarn add @uipath/uipath-typescript✨ Done in 1.85s.
+
+pnpm add @uipath/uipath-typescript
+
+## Project Setup
+
+mkdir my-uipath-project && cd my-uipath-projectnpm init -yWrote to package.jsonnpm install typescript @types/node ts-node --save-dev\
+added x packages in 1snpx tsc --initCreated a new tsconfig.jsonnpm install @uipath/uipath-typescript\
+added x packages in 1s
+
+mkdir my-uipath-project && cd my-uipath-projectnpm init -yWrote to package.jsonnpm install @uipath/uipath-typescript\
+added x packages in 1s
+
+## **Quick Examples**
+
+### Working with Tasks
+
+```
+// Get all tasks
+const tasks = await sdk.tasks.getAll();
+
+// Assign task to user
+await tasks[0].assign({ 
+  userNameOrEmail: 'john@example.com' 
+});
+```
+
+### Working with Entities
+
+```
+// Get entity metadata
+const entity = await sdk.entities.getById('entity-id');
+
+// Fetch records 
+const customers = await entity.getRecords({ pageSize: 10 });
+
+// Insert new data
+await entity.insert([
+  { name: 'John Doe', email: 'john@example.com', status: 'Active' }
+]);
+```
+
+## **Telemetry**
+
+To improve the developer experience, the SDK collects basic usage data about method invocations. For details on UiPath’s privacy practices, see our [privacy policy](https://www.uipath.com/legal/privacy-policy).
+
+## **Vibe Coding**
+
+The SDK is designed for rapid prototyping and development, making it perfect for vibe coding. Here are two ways to get started:
+
+### **Option 1: AI IDE Integration**
+
+After installing the SDK, supercharge your development with AI IDEs:
+
+1. **Install the SDK**: `npm install @uipath/uipath-typescript`
+1. **Drag & Drop**: From your `node_modules/@uipath/uipath-typescript` folder, drag the entire package into your AI IDE
+1. **Start Prompting**: Your AI assistant now has full context of the SDK!
+
+**Works with:**
+
+- **GitHub Copilot**
+- **Cursor**
+- **Claude**
+- **Any AI coding assistant**
+
+### **Option 2: Copy Documentation for LLMs**
+
+Give your AI assistant complete context by copying our documentation:
+
+**For Maximum Context:**
+
+1. **Download Complete Documentation**: [llms-full-content.txt](/uipath-typescript/llms-full-content.txt)
+1. **Copy and Paste**: Copy the entire content and paste it into your AI chat
+1. **Start Prompting**: Your AI now has complete SDK knowledge!
+
+**For Specific Features:**
+
+1. **Use the copy button** (📋) on any documentation page
+1. **Paste into your AI chat**
+1. **Ask specific questions** about that feature
+
+# Authentication
+
+The SDK supports two authentication methods:
+
+## OAuth Authentication (Recommended)
+
+For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications).
+
+1. In UiPath Cloud: **Admin** → **External Applications**
+1. Click **Add Application** → **Non Confidential Application**
+1. Configure:
+
+- **Name**: Your app name
+- **Redirect URI**: For eg, `http://localhost:3000` (for development)
+- **Scopes**: Select permissions you need ([see scopes guide](/uipath-typescript/oauth-scopes))
+
+4. Save and copy the **Client ID**
+
+```
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  clientId: 'your-client-id',
+  redirectUri: 'your-redirect-uri',
+  scope: 'your-scopes'
+});
+
+// IMPORTANT: OAuth requires calling initialize()
+await sdk.initialize();
+```
+
+## Secret-based Authentication
+
+```
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  secret: 'your-secret' //PAT Token or Bearer Token 
+});
+```
+
+To Generate a PAT Token:
+
+1. Log in to [UiPath Cloud](https://cloud.uipath.com)
+1. Go to **User Profile** → **Preferences** → **Personal Access Token**
+1. Click **Create Token**
+1. Give it a name and expiration date
+1. Provide relevant scopes
+
+## SDK Initialization - The initialize() Method
+
+### When to Use initialize()
+
+The `initialize()` method completes the authentication process for the SDK:
+
+- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
+- **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
+
+### Example: Secret Authentication (Auto-initialized)
+
+```
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  secret: 'your-secret' //PAT Token or Bearer Token 
+});
+
+// Ready to use immediately - no initialize() needed
+const tasks = await sdk.tasks.getAll();
+```
+
+### Example: OAuth Authentication (Requires initialize)
+
+```
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  clientId: 'your-client-id',
+  redirectUri: 'http://localhost:3000',
+  scope: 'your-scopes'
+});
+
+// Must initialize before using services
+try {
+  await sdk.initialize();
+  console.log('SDK initialized successfully');
+
+  // Now you can use the SDK
+  const tasks = await sdk.tasks.getAll();
+} catch (error) {
+  console.error('Failed to initialize SDK:', error);
+}
+```
+
+## OAuth Integration Patterns
+
+### Auto-login on App Load
+
+```
+useEffect(() => {
+  const initSDK = async () => {
+    const sdk = new UiPath({...oauthConfig});
+    await sdk.initialize();
+  };
+  initSDK();
+}, []);
+```
+
+### User-Triggered Login
+
+```
+const onLogin = async () => {
+  await sdk.initialize();
+};
+
+// Handle OAuth callback
+const oauthCompleted = useRef(false);
+useEffect(() => {
+  if (sdk.isInitialized() && !oauthCompleted.current) {
+    oauthCompleted.current = true;
+    sdk.completeOAuth();
+  }
+}, []);
+```
+
+### Available OAuth Methods
+
+- `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
+- `sdk.isInitialized()` - Check if SDK initialization completed
+- `sdk.isAuthenticated()` - Check if user has valid token
+- `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
+- `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
+
+______________________________________________________________________
+
+## Quick Test Script
+
+Create `.env` file:
+
+```
+# .env
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_NAME=your-organization-name
+UIPATH_TENANT_NAME=your-tenant-name
+UIPATH_SECRET=your-pat-token
+```
+
+Verify your authentication setup:
+
+```
+// test-auth.ts
+import 'dotenv/config';
+import { UiPath } from '@uipath/uipath-typescript';
+
+async function testAuthentication() {
+  const sdk = new UiPath({
+    baseUrl: process.env.UIPATH_BASE_URL!,
+    orgName: process.env.UIPATH_ORG_NAME!,
+    tenantName: process.env.UIPATH_TENANT_NAME!,
+    secret: process.env.UIPATH_SECRET!
+  });
+
+  try {
+    // Test with a simple API call
+    const assets = await sdk.assets.getAll();
+    console.log('🎉 Authentication successful!');
+    console.log(`✅ Connected to ${process.env.UIPATH_ORG_NAME}/${process.env.UIPATH_TENANT_NAME}`);
+    console.log(`✅ Found ${assets.length} assets`);
+
+  } catch (error) {
+    console.error('❌ Authentication failed:');
+    console.error(error.message);
+  }
+}
+
+testAuthentication();
+```
+
+Run it: `npx ts-node test-auth.ts`
+
+# Pagination
+
+## Overview
+
+The SDK supports two pagination approaches:
+
+1. **Cursor-based Navigation**: Use opaque cursors to navigate between pages
+1. **Page Jump**: Jump directly to specific page numbers (when supported) [↗ Refer to the Quick Reference Table](#quick-reference-table)
+
+You can specify either cursor OR jumpToPage, but **not** both.
+
+All paginated methods return a [`PaginatedResponse<T>`](/uipath-typescript/api/interfaces/PaginatedResponse) when pagination parameters are provided, or a [`NonPaginatedResponse<T>`](/uipath-typescript/api/interfaces/NonPaginatedResponse) when no pagination parameters are specified.
+
+## Types
+
+### [PaginationOptions](/uipath-typescript/api/type-aliases/PaginationOptions)
+
+```
+type PaginationOptions = {
+  pageSize?: number;      // Size of the page to fetch (items per page)
+  cursor?: string;        // Opaque string containing all information needed to fetch next page
+  jumpToPage?: number;    // Direct page number navigation
+}
+```
+
+### [PaginatedResponse](/uipath-typescript/api/interfaces/PaginatedResponse)
+
+```
+interface PaginatedResponse<T> {
+  items: T[];                           // The items in the current page
+  totalCount?: number;                  // Total count of items across all pages (if available)
+  hasNextPage: boolean;                 // Whether more pages are available
+  nextCursor?: PaginationCursor;        // Cursor to fetch the next page (if available)
+  previousCursor?: PaginationCursor;    // Cursor to fetch the previous page (if available)
+  currentPage?: number;                 // Current page number (1-based, if available)
+  totalPages?: number;                  // Total number of pages (if available)
+  supportsPageJump: boolean;            // Whether this pagination type supports jumping to arbitrary pages
+}
+```
+
+## Usage Examples
+
+### Basic Pagination
+
+```
+// Get first page with 10 items
+const firstPage = await sdk.assets.getAll({ pageSize: 10 });
+
+console.log(`Got ${firstPage.items.length} items`);
+console.log(`Total items: ${firstPage.totalCount}`);
+console.log(`Has next page: ${firstPage.hasNextPage}`);
+```
+
+### Cursor-based Navigation
+
+```
+// Navigate through pages using cursors
+let currentPage = await sdk.assets.getAll({ pageSize: 10 }) as PaginatedResponse<AssetGetResponse>;
+
+while (currentPage.hasNextPage) {
+  // Process current page items
+  currentPage.items.forEach(item => console.log(item.name));
+
+  // Get next page using cursor
+    currentPage = await sdk.assets.getAll({ 
+    cursor: currentPage.nextCursor 
+  }) as PaginatedResponse<AssetGetResponse>;
+}
+```
+
+### Page Jumping
+
+```
+// Jump directly to page 5 (when supported)
+const page5 = await sdk.assets.getAll({
+  jumpToPage: 5,
+  pageSize: 20
+});
+
+// Check if page jumping is supported
+if (page5.supportsPageJump) {
+  console.log(`Currently on page ${page5.currentPage} of ${page5.totalPages}`);
+}
+```
+
+### Non-paginated Requests
+
+```
+// Get all items without pagination
+const allAssets = await sdk.assets.getAll();
+
+console.log(`Retrieved ${allAssets.items.length} assets`);
+console.log(`Total count: ${allAssets.totalCount}`);
+```
+
+## Quick Reference Table
+
+| Service                | Method       | Supports `jumpToPage`? |
+| ---------------------- | ------------ | ---------------------- |
+| `sdk.assets`           | `getAll()`   | ✅ Yes                 |
+| `sdk.buckets`          | `getAll()`   | ✅ Yes                 |
+| `sdk.buckets`          | `getFiles()` | ❌ No                  |
+| `sdk.entities`         | `getAll()`   | ✅ Yes                 |
+| `sdk.processes`        | `getAll()`   | ✅ Yes                 |
+| `sdk.processInstances` | `getAll()`   | ❌ No                  |
+| `sdk.queues`           | `getAll()`   | ✅ Yes                 |
+| `sdk.tasks`            | `getAll()`   | ✅ Yes                 |
+| `sdk.tasks`            | `getUsers()` | ✅ Yes                 |
+# API Reference
+
+Service for managing UiPath Assets.
+
+Assets are key-value pairs that can be used to store configuration data, credentials, and other settings used by automation processes. [UiPath Assets Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-assets)
+
+## Methods
+
+### getAll()
+
+```
+getAll<T>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<AssetGetResponse> : NonPaginatedResponse<AssetGetResponse>>;
+```
+
+Gets all assets across folders with optional filtering
+
+#### Type Parameters
+
+| Type Parameter                                                               | Default type                                                   |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `T` *extends* [`AssetGetAllOptions`](../../type-aliases/AssetGetAllOptions/) | [`AssetGetAllOptions`](../../type-aliases/AssetGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`AssetGetResponse`](../AssetGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`AssetGetResponse`](../AssetGetResponse/)>>
+
+Promise resolving to either an array of assets NonPaginatedResponse or a PaginatedResponse when pagination options are used. [AssetGetResponse](../AssetGetResponse/)
+
+#### Example
+
+```
+// Standard array return
+const assets = await sdk.assets.getAll();
+
+// With folder
+const folderAssets = await sdk.assets.getAll({ folderId: <folderId> });
+
+// First page with pagination
+const page1 = await sdk.assets.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await sdk.assets.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await sdk.assets.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+```
+getById(
+   id: number, 
+   folderId: number, 
+   options?: BaseOptions): Promise<AssetGetResponse>;
+```
+
+Gets a single asset by ID
+
+#### Parameters
+
+| Parameter  | Type                             | Description                                |
+| ---------- | -------------------------------- | ------------------------------------------ |
+| `id`       | `number`                         | Asset ID                                   |
+| `folderId` | `number`                         | Required folder ID                         |
+| `options?` | [`BaseOptions`](../BaseOptions/) | Optional query parameters (expand, select) |
+
+#### Returns
+
+`Promise`\<[`AssetGetResponse`](../AssetGetResponse/)>
+
+Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
+
+#### Example
+
+```
+// Get asset by ID
+const asset = await sdk.assets.getById(<assetId>, <folderId>);
+```
+
+Service for managing and executing UiPath Automation Processes.
+
+Processes (also known as automations or workflows) are the core units of automation in UiPath, representing sequences of activities that perform specific business tasks. [UiPath Processes Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-processes)
+
+## Methods
+
+### getAll()
+
+```
+getAll<T>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<ProcessGetResponse> : NonPaginatedResponse<ProcessGetResponse>>;
+```
+
+Gets all processes across folders with optional filtering Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided, or a PaginatedResponse when any pagination parameter is provided
+
+#### Type Parameters
+
+| Type Parameter                                                                   | Default type                                                       |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `T` *extends* [`ProcessGetAllOptions`](../../type-aliases/ProcessGetAllOptions/) | [`ProcessGetAllOptions`](../../type-aliases/ProcessGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ProcessGetResponse`](../ProcessGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ProcessGetResponse`](../ProcessGetResponse/)>>
+
+Promise resolving to either an array of processes NonPaginatedResponse or a PaginatedResponse when pagination options are used. [ProcessGetResponse](../ProcessGetResponse/)
+
+#### Example
+
+```
+// Standard array return
+const processes = await sdk.processes.getAll();
+
+// Get processes within a specific folder
+const processes = await sdk.processes.getAll({ 
+  folderId: <folderId>
+});
+
+// Get processes with filtering
+const processes = await sdk.processes.getAll({ 
+  filter: "name eq 'MyProcess'"
+});
+
+// First page with pagination
+const page1 = await sdk.processes.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await sdk.processes.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await sdk.processes.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+```
+getById(
+   id: number, 
+   folderId: number, 
+   options?: BaseOptions): Promise<ProcessGetResponse>;
+```
+
+Gets a single process by ID
+
+#### Parameters
+
+| Parameter  | Type                             | Description               |
+| ---------- | -------------------------------- | ------------------------- |
+| `id`       | `number`                         | Process ID                |
+| `folderId` | `number`                         | Required folder ID        |
+| `options?` | [`BaseOptions`](../BaseOptions/) | Optional query parameters |
+
+#### Returns
+
+`Promise`\<[`ProcessGetResponse`](../ProcessGetResponse/)>
+
+Promise resolving to a single process [ProcessGetResponse](../ProcessGetResponse/)
+
+#### Example
+
+```
+// Get process by ID
+const process = await sdk.processes.getById(<processId>, <folderId>);
+```
+
+______________________________________________________________________
+
+### start()
+
+```
+start(
+   request: ProcessStartRequest, 
+   folderId: number, 
+   options?: RequestOptions): Promise<ProcessStartResponse[]>;
+```
+
+Starts a process with the specified configuration
+
+#### Parameters
+
+| Parameter  | Type                                                             | Description                 |
+| ---------- | ---------------------------------------------------------------- | --------------------------- |
+| `request`  | [`ProcessStartRequest`](../../type-aliases/ProcessStartRequest/) | Process start configuration |
+| `folderId` | `number`                                                         | Required folder ID          |
+| `options?` | [`RequestOptions`](../RequestOptions/)                           | Optional request options    |
+
+#### Returns
+
+`Promise`\<[`ProcessStartResponse`](../ProcessStartResponse/)[]>
+
+Promise resolving to array of started process instances [ProcessStartResponse](../ProcessStartResponse/)
+
+#### Example
+
+```
+// Start a process by process key
+const process = await sdk.processes.start({
+  processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}, <folderId>); // folderId is required
+
+// Start a process by name with specific robots
+const process = await sdk.processes.start({
+  processName: "MyProcess"
+}, <folderId>); // folderId is required
+```
+
+Service for managing UiPath Queues
+
+Queues are a fundamental component of UiPath automation that enable distributed and scalable processing of work items. [UiPath Queues Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-queues-and-transactions)
+
+## Methods
+
+### getAll()
+
+```
+getAll<T>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<QueueGetResponse> : NonPaginatedResponse<QueueGetResponse>>;
+```
+
+Gets all queues across folders with optional filtering and folder scoping
+
+#### Type Parameters
+
+| Type Parameter                                                               | Default type                                                   |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `T` *extends* [`QueueGetAllOptions`](../../type-aliases/QueueGetAllOptions/) | [`QueueGetAllOptions`](../../type-aliases/QueueGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`QueueGetResponse`](../QueueGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`QueueGetResponse`](../QueueGetResponse/)>>
+
+Promise resolving to either an array of queues NonPaginatedResponse or a PaginatedResponse when pagination options are used. [QueueGetResponse](../QueueGetResponse/)
+
+#### Signature
+
+getAll(options?) → Promise\<QueueGetResponse[]>
+
+#### Example
+
+```
+// Standard array return
+const queues = await sdk.queues.getAll();
+
+// Get queues within a specific folder
+const queues = await sdk.queues.getAll({ 
+  folderId: <folderId>
+});
+
+// Get queues with filtering
+const queues = await sdk.queues.getAll({ 
+  filter: "name eq 'MyQueue'"
+});
+
+// First page with pagination
+const page1 = await sdk.queues.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await sdk.queues.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await sdk.queues.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+```
+getById(
+   id: number, 
+   folderId: number, 
+   options?: BaseOptions): Promise<QueueGetResponse>;
+```
+
+Gets a single queue by ID
+
+#### Parameters
+
+| Parameter  | Type                             | Description        |
+| ---------- | -------------------------------- | ------------------ |
+| `id`       | `number`                         | Queue ID           |
+| `folderId` | `number`                         | Required folder ID |
+| `options?` | [`BaseOptions`](../BaseOptions/) | -                  |
+
+#### Returns
+
+`Promise`\<[`QueueGetResponse`](../QueueGetResponse/)>
+
+Promise resolving to a queue definition
+
+#### Example
+
+```
+// Get queue by ID 
+const queue = await sdk.queues.getById(<queueId>, <folderId>);
+```
+
+Service for managing UiPath storage Buckets.
+
+Buckets are cloud storage containers that can be used to store and manage files used by automation processes. [UiPath Buckets Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-storage-buckets)
+
+## Methods
+
+### getAll()
+
+```
+getAll<T>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<BucketGetResponse> : NonPaginatedResponse<BucketGetResponse>>;
+```
+
+Gets all buckets across folders with optional filtering
+
+The method returns either:
+
+- A NonPaginatedResponse with data and totalCount (when no pagination parameters are provided)
+- A paginated result with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                                 | Default type                                                     |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `T` *extends* [`BucketGetAllOptions`](../../type-aliases/BucketGetAllOptions/) | [`BucketGetAllOptions`](../../type-aliases/BucketGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`BucketGetResponse`](../BucketGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`BucketGetResponse`](../BucketGetResponse/)>>
+
+Promise resolving to either an array of buckets NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BucketGetResponse](../BucketGetResponse/)
+
+#### Example
+
+```
+// Get all buckets across folders
+const buckets = await sdk.buckets.getAll();
+
+// Get buckets within a specific folder
+const buckets = await sdk.buckets.getAll({ 
+  folderId: <folderId>
+});
+
+// Get buckets with filtering
+const buckets = await sdk.buckets.getAll({ 
+  filter: "name eq 'MyBucket'"
+});
+
+// First page with pagination
+const page1 = await sdk.buckets.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await sdk.buckets.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await sdk.buckets.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+```
+getById(
+   bucketId: number, 
+   folderId: number, 
+   options?: BaseOptions): Promise<BucketGetResponse>;
+```
+
+Gets a single bucket by ID
+
+#### Parameters
+
+| Parameter  | Type                             | Description               |
+| ---------- | -------------------------------- | ------------------------- |
+| `bucketId` | `number`                         | Bucket ID                 |
+| `folderId` | `number`                         | Required folder ID        |
+| `options?` | [`BaseOptions`](../BaseOptions/) | Optional query parameters |
+
+#### Returns
+
+`Promise`\<[`BucketGetResponse`](../BucketGetResponse/)>
+
+Promise resolving to a bucket definition [BucketGetResponse](../BucketGetResponse/)
+
+#### Example
+
+```
+// Get bucket by ID
+const bucket = await sdk.buckets.getById(<bucketId>, <folderId>);
+```
+
+______________________________________________________________________
+
+### getFileMetaData()
+
+```
+getFileMetaData<T>(
+   bucketId: number, 
+   folderId: number, 
+   options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<BlobItem> : NonPaginatedResponse<BlobItem>>;
+```
+
+Gets metadata for files in a bucket with optional filtering and pagination
+
+The method returns either:
+
+- A NonPaginatedResponse with items array (when no pagination parameters are provided)
+- A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                                                                               | Default type                                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `T` *extends* [`BucketGetFileMetaDataWithPaginationOptions`](../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/) | [`BucketGetFileMetaDataWithPaginationOptions`](../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/) |
+
+#### Parameters
+
+| Parameter  | Type     | Description                                                             |
+| ---------- | -------- | ----------------------------------------------------------------------- |
+| `bucketId` | `number` | The ID of the bucket to get file metadata from                          |
+| `folderId` | `number` | Required folder ID for organization unit context                        |
+| `options?` | `T`      | Optional parameters for filtering, pagination and access URL generation |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`BlobItem`](../BlobItem/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`BlobItem`](../BlobItem/)>>
+
+Promise resolving to either an array of files metadata NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BlobItem](../BlobItem/)
+
+#### Example
+
+```
+// Get metadata for all files in a bucket
+const fileMetadata = await sdk.buckets.getFileMetaData(<bucketId>, <folderId>);
+
+// Get file metadata with a specific prefix
+const fileMetadata = await sdk.buckets.getFileMetaData(<bucketId>, <folderId>, {
+  prefix: '/folder1'
+});
+
+// First page with pagination
+const page1 = await sdk.buckets.getFileMetaData(<bucketId>, <folderId>, { pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await sdk.buckets.getFileMetaData(<bucketId>, <folderId>, { cursor: page1.nextCursor });
+}
+```
+
+______________________________________________________________________
+
+### getReadUri()
+
+```
+getReadUri(options: BucketGetUriOptions): Promise<BucketGetUriResponse>;
+```
+
+Gets a direct download URL for a file in the bucket
+
+#### Parameters
+
+| Parameter | Type                                             | Description                                                     |
+| --------- | ------------------------------------------------ | --------------------------------------------------------------- |
+| `options` | [`BucketGetUriOptions`](../BucketGetUriOptions/) | Contains bucketId, folderId, file path and optional expiry time |
+
+#### Returns
+
+`Promise`\<[`BucketGetUriResponse`](../BucketGetUriResponse/)>
+
+Promise resolving to blob file access information [BucketGetUriResponse](../BucketGetUriResponse/)
+
+#### Example
+
+```
+// Get download URL for a file
+const fileAccess = await sdk.buckets.getReadUri({
+  bucketId: <bucketId>, 
+  folderId: <folderId>,
+  path: '/folder/file.pdf'
+});
+```
+
+______________________________________________________________________
+
+### uploadFile()
+
+```
+uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse>;
+```
+
+Uploads a file to a bucket
+
+#### Parameters
+
+| Parameter | Type                                                     | Description                                                                                    |
+| --------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `options` | [`BucketUploadFileOptions`](../BucketUploadFileOptions/) | Options for file upload including bucket ID, folder ID, path, content, and optional parameters |
+
+#### Returns
+
+`Promise`\<[`BucketUploadResponse`](../BucketUploadResponse/)>
+
+Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadResponse/)
+
+#### Example
+
+```
+// Upload a file from browser
+const file = new File(['file content'], 'example.txt');
+const result = await sdk.buckets.uploadFile({
+  bucketId: <bucketId>,
+  folderId: <folderId>, 
+  path: '/folder/example.txt',
+  content: file
+});
+
+// In Node env with Buffer
+const buffer = Buffer.from('file content');
+const result = await sdk.buckets.uploadFile({
+  bucketId: <bucketId>,
+  folderId: <folderId>,
+  path: '/folder/example.txt',
+  content: buffer,
+});
+```
+
+Service for managing UiPath Action Center
+
+Tasks are task-based automation components that can be integrated into applications and processes. They represent discrete units of work that can be triggered and monitored through the UiPath API. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
+
+## Methods
+
+### getAll()
+
+```
+getAll<T>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>>;
+```
+
+Gets all tasks across folders with optional filtering
+
+#### Type Parameters
+
+| Type Parameter                                                             | Default type                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `T` *extends* [`TaskGetAllOptions`](../../type-aliases/TaskGetAllOptions/) | [`TaskGetAllOptions`](../../type-aliases/TaskGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>>
+
+Promise resolving to either an array of tasks NonPaginatedResponse or a PaginatedResponse when pagination options are used. [TaskGetResponse](../../type-aliases/TaskGetResponse/)
+
+#### Example
+
+```
+// Standard array return
+const tasks = await sdk.tasks.getAll();
+
+// Get tasks within a specific folder
+const tasks = await sdk.tasks.getAll({ 
+  folderId: 123
+});
+
+// First page with pagination
+const page1 = await sdk.tasks.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await sdk.tasks.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await sdk.tasks.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+```
+getById(
+   id: number, 
+   options?: BaseOptions, 
+   folderId?: number): Promise<TaskGetResponse>;
+```
+
+Gets a task by ID IMPORTANT: For form tasks, folderId must be provided.
+
+#### Parameters
+
+| Parameter   | Type                             | Description                                  |
+| ----------- | -------------------------------- | -------------------------------------------- |
+| `id`        | `number`                         | The ID of the task to retrieve               |
+| `options?`  | [`BaseOptions`](../BaseOptions/) | Optional query parameters                    |
+| `folderId?` | `number`                         | Optional folder ID (REQUIRED for form tasks) |
+
+#### Returns
+
+`Promise`\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>
+
+Promise resolving to the task [TaskGetResponse](../../type-aliases/TaskGetResponse/)
+
+#### Example
+
+```
+// Get a task by ID
+const task = await sdk.tasks.getById(<taskId>);
+
+// Get a form task by ID
+const formTask = await sdk.tasks.getById(<taskId>, <folderId>);
+
+// Access form task properties
+console.log(formTask.formLayout);
+```
+
+______________________________________________________________________
+
+### create()
+
+```
+create(options: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse>;
+```
+
+Creates a new task
+
+#### Parameters
+
+| Parameter  | Type                                         | Description            |
+| ---------- | -------------------------------------------- | ---------------------- |
+| `options`  | [`TaskCreateOptions`](../TaskCreateOptions/) | The task to be created |
+| `folderId` | `number`                                     | Required folder ID     |
+
+#### Returns
+
+`Promise`\<[`TaskCreateResponse`](../../type-aliases/TaskCreateResponse/)>
+
+Promise resolving to the created task [TaskCreateResponse](../../type-aliases/TaskCreateResponse/)
+
+#### Example
+
+```
+import { TaskPriority } from '@uipath/uipath-typescript';
+const task = await sdk.tasks.create({
+  title: "My Task",
+  priority: TaskPriority.Medium
+}, <folderId>); // folderId is required
+```
+
+______________________________________________________________________
+
+### assign()
+
+```
+assign(options: 
+  | TaskAssignmentOptions
+  | TaskAssignmentOptions[]): Promise<OperationResponse<
+  | TaskAssignmentOptions[]
+  | TaskAssignmentResponse[]>>;
+```
+
+Assigns tasks to users
+
+#### Parameters
+
+| Parameter | Type | Description                                          |
+| --------- | ---- | ---------------------------------------------------- |
+| `options` |      | [`TaskAssignmentOptions`](../TaskAssignmentOptions/) |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)< | [`TaskAssignmentOptions`](../TaskAssignmentOptions/)[] | [`TaskAssignmentResponse`](../TaskAssignmentResponse/)[]>>
+
+Promise resolving to array of task assignment results [TaskAssignmentResponse](../TaskAssignmentResponse/)
+
+#### Example
+
+```
+// Assign a single task to a user by ID
+const result = await sdk.tasks.assign({
+  taskId: <taskId>,
+  userId: <userId>
+});
+
+or
+
+const task = await sdk.tasks.getById(<taskId>);
+const result = await task.assign({
+  userId: <userId>
+});
+
+// Assign a single task to a user by email
+const result = await sdk.tasks.assign({
+  taskId: <taskId>,
+  userNameOrEmail: "user@example.com"
+});
+
+// Assign multiple tasks
+const result = await sdk.tasks.assign([
+  { taskId: <taskId1>, userId: <userId> },
+  { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
+]);
+```
+
+______________________________________________________________________
+
+### reassign()
+
+```
+reassign(options: 
+  | TaskAssignmentOptions
+  | TaskAssignmentOptions[]): Promise<OperationResponse<
+  | TaskAssignmentOptions[]
+  | TaskAssignmentResponse[]>>;
+```
+
+Reassigns tasks to new users
+
+#### Parameters
+
+| Parameter | Type | Description                                          |
+| --------- | ---- | ---------------------------------------------------- |
+| `options` |      | [`TaskAssignmentOptions`](../TaskAssignmentOptions/) |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)< | [`TaskAssignmentOptions`](../TaskAssignmentOptions/)[] | [`TaskAssignmentResponse`](../TaskAssignmentResponse/)[]>>
+
+Promise resolving to array of task assignment results [TaskAssignmentResponse](../TaskAssignmentResponse/)
+
+#### Example
+
+```
+// Reassign a single task to a user by ID
+const result = await sdk.tasks.reassign({
+  taskId: <taskId>,
+  userId: <userId>
+});
+
+or
+
+const task = await sdk.tasks.getById(<taskId>);
+const result = await task.reassign({
+  userId: <userId>
+});
+
+// Reassign a single task to a user by email
+const result = await sdk.tasks.reassign({
+  taskId: <taskId>,
+  userNameOrEmail: "user@example.com"
+});
+
+// Reassign multiple tasks
+const result = await sdk.tasks.reassign([
+  { taskId: <taskId1>, userId: <userId> },
+  { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
+]);
+```
+
+______________________________________________________________________
+
+### unassign()
+
+```
+unassign(taskId: number | number[]): Promise<OperationResponse<
+  | TaskAssignmentResponse[]
+  | {
+  taskId: number;
+}[]>>;
+```
+
+Unassigns tasks (removes current assignees)
+
+#### Parameters
+
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `taskId`  | `number` | `number`[]  |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)< | [`TaskAssignmentResponse`](../TaskAssignmentResponse/)[] | { `taskId`: `number`; }[]>>
+
+Promise resolving to array of task assignment results [TaskAssignmentResponse](../TaskAssignmentResponse/)
+
+#### Example
+
+```
+// Unassign a single task
+const result = await sdk.tasks.unassign(<taskId>);
+
+or
+
+const task = await sdk.tasks.getById(<taskId>);
+const result = await task.unassign();
+
+// Unassign multiple tasks
+const result = await sdk.tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
+```
+
+______________________________________________________________________
+
+### complete()
+
+```
+complete(
+   taskType: TaskType, 
+   options: TaskCompletionOptions, 
+   folderId: number): Promise<OperationResponse<TaskCompletionOptions>>;
+```
+
+Completes a task with the specified type and data
+
+#### Parameters
+
+| Parameter  | Type                                                 | Description                               |
+| ---------- | ---------------------------------------------------- | ----------------------------------------- |
+| `taskType` | [`TaskType`](../../enumerations/TaskType/)           | The type of task (Form, App, or External) |
+| `options`  | [`TaskCompletionOptions`](../TaskCompletionOptions/) | The completion options                    |
+| `folderId` | `number`                                             | Required folder ID                        |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskCompletionOptions`](../TaskCompletionOptions/)>>
+
+Promise resolving to completion result [TaskCompletionOptions](../TaskCompletionOptions/)
+
+#### Example
+
+```
+// Complete an app task
+await sdk.tasks.complete(TaskType.App, {
+  taskId: <taskId>,
+  data: {},
+  action: "submit"
+}, <folderId>); // folderId is required
+
+// Complete an external task
+await sdk.tasks.complete(TaskType.External, {
+  taskId: <taskId>
+}, <folderId>); // folderId is required
+```
+
+______________________________________________________________________
+
+### getUsers()
+
+```
+getUsers<T>(folderId: number, options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<UserLoginInfo> : NonPaginatedResponse<UserLoginInfo>>;
+```
+
+Gets users in the given folder who have Tasks.View and Tasks.Edit permissions Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided, or a PaginatedResponse when any pagination parameter is provided
+
+#### Type Parameters
+
+| Type Parameter                                                                 | Default type                                                     |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `T` *extends* [`TaskGetUsersOptions`](../../type-aliases/TaskGetUsersOptions/) | [`TaskGetUsersOptions`](../../type-aliases/TaskGetUsersOptions/) |
+
+#### Parameters
+
+| Parameter  | Type     | Description                              |
+| ---------- | -------- | ---------------------------------------- |
+| `folderId` | `number` | The folder ID to get users from          |
+| `options?` | `T`      | Optional query and pagination parameters |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`UserLoginInfo`](../UserLoginInfo/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`UserLoginInfo`](../UserLoginInfo/)>>
+
+Promise resolving to either an array of users NonPaginatedResponse or a PaginatedResponse when pagination options are used. [UserLoginInfo](../UserLoginInfo/)
+
+#### Example
+
+```
+// Get users from a folder
+const users = await sdk.tasks.getUsers(<folderId>);
+
+// Access user properties
+console.log(users.items[0].name);
+console.log(users.items[0].emailAddress);
+```
+
+Service for managing UiPath Data Fabric Entities.
+
+Entities are collections of records that can be used to store and manage data in the Data Fabric. [UiPath Data Fabric Guide](https://docs.uipath.com/data-service/automation-cloud/latest/user-guide/introduction)
+
+## Methods
+
+### getAll()
+
+```
+getAll(): Promise<EntityGetResponse[]>;
+```
+
+Gets all entities in the system
+
+#### Returns
+
+`Promise`\<[`EntityGetResponse`](../../type-aliases/EntityGetResponse/)[]>
+
+Promise resolving to either an array of entities NonPaginatedResponse or a PaginatedResponse when pagination options are used. [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+
+#### Example
+
+```
+// Get all entities
+const entities = await sdk.entities.getAll();
+
+// Iterate through entities
+entities.forEach(entity => {
+  console.log(`Entity: ${entity.displayName} (${entity.name})`);
+  console.log(`Type: ${entity.entityType}`);
+});
+
+// Find a specific entity by name
+const customerEntity = entities.find(e => e.name === 'Customer');
+
+// Use entity methods directly
+if (customerEntity) {
+  const records = await customerEntity.getRecords();
+  console.log(`Customer records: ${records.items.length}`);
+
+  const insertResult = await customerEntity.insert([
+    { name: "John", age: 30 }
+  ]);
+}
+```
+
+______________________________________________________________________
+
+### getById()
+
+```
+getById(id: string): Promise<EntityGetResponse>;
+```
+
+Gets entity metadata by entity ID with attached operation methods
+
+#### Parameters
+
+| Parameter | Type     | Description        |
+| --------- | -------- | ------------------ |
+| `id`      | `string` | UUID of the entity |
+
+#### Returns
+
+`Promise`\<[`EntityGetResponse`](../../type-aliases/EntityGetResponse/)>
+
+Promise resolving to entity metadata with operation methods [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+
+#### Example
+
+```
+// Get entity metadata with methods
+const entity = await sdk.entities.getById(<entityId>);
+
+// Call operations directly on the entity
+const records = await entity.getRecords();
+
+const insertResult = await entity.insert([
+  { name: "John", age: 30 }
+]);
+```
+
+______________________________________________________________________
+
+### getRecordsById()
+
+```
+getRecordsById<T>(entityId: string, options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>>;
+```
+
+Gets entity records by entity ID
+
+#### Type Parameters
+
+| Type Parameter                                                                                 | Default type                                                                     |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `T` *extends* [`EntityGetRecordsByIdOptions`](../../type-aliases/EntityGetRecordsByIdOptions/) | [`EntityGetRecordsByIdOptions`](../../type-aliases/EntityGetRecordsByIdOptions/) |
+
+#### Parameters
+
+| Parameter  | Type     | Description        |
+| ---------- | -------- | ------------------ |
+| `entityId` | `string` | UUID of the entity |
+| `options?` | `T`      | Query options      |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`EntityRecord`](../EntityRecord/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`EntityRecord`](../EntityRecord/)>>
+
+Promise resolving to either an array of entity records NonPaginatedResponse or a PaginatedResponse when pagination options are used. [EntityRecord](../EntityRecord/)
+
+#### Example
+
+```
+// Basic usage (non-paginated)
+const records = await sdk.entities.getRecordsById(<entityId>);
+
+// With expansion level
+const records = await sdk.entities.getRecordsById(<entityId>, {
+  expansionLevel: 1
+});
+
+// With pagination
+const paginatedResponse = await sdk.entities.getRecordsById(<entityId>, {
+  pageSize: 50,
+  expansionLevel: 1
+});
+
+// Navigate to next page
+const nextPage = await sdk.entities.getRecordsById(<entityId>, {
+  cursor: paginatedResponse.nextCursor,
+  expansionLevel: 1
+});
+```
+
+______________________________________________________________________
+
+### insertById()
+
+```
+insertById(
+   id: string, 
+   data: Record<string, any>[], 
+   options?: EntityOperationOptions): Promise<EntityOperationResponse>;
+```
+
+Inserts data into an entity by entity ID
+
+#### Parameters
+
+| Parameter  | Type                                                   | Description                |
+| ---------- | ------------------------------------------------------ | -------------------------- |
+| `id`       | `string`                                               | UUID of the entity         |
+| `data`     | `Record`\<`string`, `any`>[]                           | Array of records to insert |
+| `options?` | [`EntityOperationOptions`](../EntityOperationOptions/) | Insert options             |
+
+#### Returns
+
+`Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Promise resolving to insert response [EntityInsertResponse](../../type-aliases/EntityInsertResponse/)
+
+#### Example
+
+```
+// Basic usage
+const result = await sdk.entities.insertById(<entityId>, [
+  { name: "John", age: 30 },
+  { name: "Jane", age: 25 }
+]);
+
+// With options
+const result = await sdk.entities.insertById(<entityId>, [
+  { name: "John", age: 30 },
+  { name: "Jane", age: 25 }
+], {
+  expansionLevel: 1,
+  failOnFirst: true
+});
+```
+
+______________________________________________________________________
+
+### updateById()
+
+```
+updateById(
+   id: string, 
+   data: EntityRecord[], 
+   options?: EntityOperationOptions): Promise<EntityOperationResponse>;
+```
+
+Updates data in an entity by entity ID
+
+#### Parameters
+
+| Parameter  | Type                                                   | Description                                                         |
+| ---------- | ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `id`       | `string`                                               | UUID of the entity                                                  |
+| `data`     | [`EntityRecord`](../EntityRecord/)[]                   | Array of records to update. Each record MUST contain the record Id. |
+| `options?` | [`EntityOperationOptions`](../EntityOperationOptions/) | Update options                                                      |
+
+#### Returns
+
+`Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Promise resolving to update response [EntityUpdateResponse](../../type-aliases/EntityUpdateResponse/)
+
+#### Example
+
+```
+// Basic usage
+const result = await sdk.entities.updateById(<entityId>, [
+  { Id: "123", name: "John Updated", age: 31 },
+  { Id: "456", name: "Jane Updated", age: 26 }
+]);
+
+// With options
+const result = await sdk.entities.updateById(<entityId>, [
+  { Id: "123", name: "John Updated", age: 31 },
+  { Id: "456", name: "Jane Updated", age: 26 }
+], {
+  expansionLevel: 1,
+  failOnFirst: true
+});
+```
+
+______________________________________________________________________
+
+### deleteById()
+
+```
+deleteById(
+   id: string, 
+   recordIds: string[], 
+   options?: EntityDeleteOptions): Promise<EntityOperationResponse>;
+```
+
+Deletes data from an entity by entity ID
+
+#### Parameters
+
+| Parameter   | Type                                             | Description                     |
+| ----------- | ------------------------------------------------ | ------------------------------- |
+| `id`        | `string`                                         | UUID of the entity              |
+| `recordIds` | `string`[]                                       | Array of record UUIDs to delete |
+| `options?`  | [`EntityDeleteOptions`](../EntityDeleteOptions/) | Delete options                  |
+
+#### Returns
+
+`Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Promise resolving to delete response [EntityDeleteResponse](../../type-aliases/EntityDeleteResponse/)
+
+#### Example
+
+```
+// Basic usage
+const result = await sdk.entities.deleteById(<entityId>, [
+  <recordId-1>, <recordId-2>
+]);
+```
+
+Service for managing UiPath Maestro Processes
+
+UiPath Maestro is a cloud-native orchestration layer that coordinates bots, AI agents, and humans for seamless, intelligent automation of complex workflows. [UiPath Maestro Guide](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/introduction-to-maestro)
+
+## Methods
+
+### getAll()
+
+```
+getAll(): Promise<MaestroProcessGetAllResponse[]>;
+```
+
+#### Returns
+
+`Promise`\<[`MaestroProcessGetAllResponse`](../MaestroProcessGetAllResponse/)[]>
+
+Promise resolving to array of MaestroProcess objects [MaestroProcessGetAllResponse](../MaestroProcessGetAllResponse/)
+
+#### Example
+
+```
+// Get all processes
+const processes = await sdk.maestro.processes.getAll();
+
+// Access process information
+for (const process of processes) {
+  console.log(`Process: ${process.processKey}`);
+  console.log(`Running instances: ${process.runningCount}`);
+  console.log(`Faulted instances: ${process.faultedCount}`);
+}
+```
+
+Service for managing UiPath Maestro Process instances
+
+Maestro process instances are the running instances of Maestro processes. [UiPath Maestro Process Instances Guide](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/all-instances-view)
+
+## Methods
+
+### getAll()
+
+```
+getAll<T>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<ProcessInstanceGetResponse> : NonPaginatedResponse<ProcessInstanceGetResponse>>;
+```
+
+Get all process instances with optional filtering and pagination
+
+The method returns either:
+
+- A NonPaginatedResponse with items array (when no pagination parameters are provided)
+- A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                                                                               | Default type                                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `T` *extends* [`ProcessInstanceGetAllWithPaginationOptions`](../../type-aliases/ProcessInstanceGetAllWithPaginationOptions/) | [`ProcessInstanceGetAllWithPaginationOptions`](../../type-aliases/ProcessInstanceGetAllWithPaginationOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                             |
+| ---------- | ---- | ------------------------------------------------------- |
+| `options?` | `T`  | Query parameters for filtering instances and pagination |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)>>
+
+Promise resolving to either an array of process instances NonPaginatedResponse or a PaginatedResponse when pagination options are used. [ProcessInstanceGetResponse](../../type-aliases/ProcessInstanceGetResponse/)
+
+#### Example
+
+```
+// Get all instances (non-paginated)
+const instances = await sdk.maestro.processes.instances.getAll();
+
+// Cancel faulted instances using methods directly on instances
+for (const instance of instances.items) {
+  if (instance.latestRunStatus === 'Faulted') {
+    await instance.cancel({ comment: 'Cancelling faulted instance' });
+  }
+}
+
+// With filtering
+const instances = await sdk.maestro.processes.instances.getAll({
+  processKey: 'MyProcess'
+});
+
+// First page with pagination
+const page1 = await sdk.maestro.processes.instances.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await sdk.maestro.processes.instances.getAll({ cursor: page1.nextCursor });
+}
+```
+
+______________________________________________________________________
+
+### getById()
+
+```
+getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse>;
+```
+
+Get a process instance by ID with operation methods (cancel, pause, resume)
+
+#### Parameters
+
+| Parameter   | Type     | Description                        |
+| ----------- | -------- | ---------------------------------- |
+| `id`        | `string` | The ID of the instance to retrieve |
+| `folderKey` | `string` | The folder key for authorization   |
+
+#### Returns
+
+`Promise`\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)>
+
+Promise resolving to a process instance [ProcessInstanceGetResponse](../../type-aliases/ProcessInstanceGetResponse/)
+
+#### Example
+
+```
+// Get a specific process instance
+const instance = await sdk.maestro.processes.instances.getById(
+  <instanceId>,
+  <folderKey>
+);
+
+// Access instance properties
+console.log(`Status: ${instance.latestRunStatus}`);
+```
+
+______________________________________________________________________
+
+### getExecutionHistory()
+
+```
+getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+```
+
+Get execution history (spans) for a process instance
+
+#### Parameters
+
+| Parameter    | Type     | Description                               |
+| ------------ | -------- | ----------------------------------------- |
+| `instanceId` | `string` | The ID of the instance to get history for |
+
+#### Returns
+
+`Promise`\<[`ProcessInstanceExecutionHistoryResponse`](../ProcessInstanceExecutionHistoryResponse/)[]>
+
+Promise resolving to execution history [ProcessInstanceExecutionHistoryResponse](../ProcessInstanceExecutionHistoryResponse/)
+
+#### Example
+
+```
+// Get execution history for a process instance
+const history = await sdk.maestro.processes.instances.getExecutionHistory(
+  <instanceId>
+);
+
+// Analyze execution timeline
+history.forEach(span => {
+  console.log(`Activity: ${span.name}`);
+  console.log(`Start: ${span.startTime}`);
+  console.log(`Duration: ${span.duration}ms`);
+});
+```
+
+______________________________________________________________________
+
+### getBpmn()
+
+```
+getBpmn(instanceId: string, folderKey: string): Promise<string>;
+```
+
+Get BPMN XML file for a process instance
+
+#### Parameters
+
+| Parameter    | Type     | Description                            |
+| ------------ | -------- | -------------------------------------- |
+| `instanceId` | `string` | The ID of the instance to get BPMN for |
+| `folderKey`  | `string` | The folder key for authorization       |
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to BPMN XML file [BpmnXmlString](../../type-aliases/BpmnXmlString/)
+
+#### Example
+
+```
+// Get BPMN XML for a process instance
+const bpmnXml = await sdk.maestro.processes.instances.getBpmn(
+  <instanceId>,
+  <folderKey>
+);
+
+// Render BPMN diagram in frontend using bpmn-js
+import BpmnViewer from 'bpmn-js/lib/Viewer';
+
+const viewer = new BpmnViewer({
+  container: '#bpmn-diagram'
+});
+
+await viewer.importXML(bpmnXml);
+
+// Zoom to fit the diagram
+viewer.get('canvas').zoom('fit-viewport');
+```
+
+______________________________________________________________________
+
+### cancel()
+
+```
+cancel(
+   instanceId: string, 
+   folderKey: string, 
+   options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+```
+
+Cancel a process instance
+
+#### Parameters
+
+| Parameter    | Type                                                                     | Description                                |
+| ------------ | ------------------------------------------------------------------------ | ------------------------------------------ |
+| `instanceId` | `string`                                                                 | The ID of the instance to cancel           |
+| `folderKey`  | `string`                                                                 | The folder key for authorization           |
+| `options?`   | [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/) | Optional cancellation options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+#### Example
+
+```
+// Cancel a process instance
+const result = await sdk.maestro.processes.instances.cancel(
+  <instanceId>,
+  <folderKey>
+);
+
+or
+
+const instance = await sdk.maestro.processes.instances.getById(
+  <instanceId>,
+  <folderKey>
+);
+const result = await instance.cancel();
+
+console.log(`Cancelled: ${result.success}`);
+
+// Cancel with a comment
+const result = await instance.cancel({
+  comment: 'Cancelling due to invalid input data'
+});
+
+if (result.success) {
+  console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
+}
+```
+
+______________________________________________________________________
+
+### pause()
+
+```
+pause(
+   instanceId: string, 
+   folderKey: string, 
+   options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+```
+
+Pause a process instance
+
+#### Parameters
+
+| Parameter    | Type                                                                     | Description                         |
+| ------------ | ------------------------------------------------------------------------ | ----------------------------------- |
+| `instanceId` | `string`                                                                 | The ID of the instance to pause     |
+| `folderKey`  | `string`                                                                 | The folder key for authorization    |
+| `options?`   | [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/) | Optional pause options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+______________________________________________________________________
+
+### resume()
+
+```
+resume(
+   instanceId: string, 
+   folderKey: string, 
+   options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+```
+
+Resume a process instance
+
+#### Parameters
+
+| Parameter    | Type                                                                     | Description                          |
+| ------------ | ------------------------------------------------------------------------ | ------------------------------------ |
+| `instanceId` | `string`                                                                 | The ID of the instance to resume     |
+| `folderKey`  | `string`                                                                 | The folder key for authorization     |
+| `options?`   | [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/) | Optional resume options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+______________________________________________________________________
+
+### getVariables()
+
+```
+getVariables(
+   instanceId: string, 
+   folderKey: string, 
+   options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse>;
+```
+
+Get global variables for a process instance
+
+#### Parameters
+
+| Parameter    | Type                                                                           | Description                                                            |
+| ------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `instanceId` | `string`                                                                       | The ID of the instance to get variables for                            |
+| `folderKey`  | `string`                                                                       | The folder key for authorization                                       |
+| `options?`   | [`ProcessInstanceGetVariablesOptions`](../ProcessInstanceGetVariablesOptions/) | Optional options including parentElementId to filter by parent element |
+
+#### Returns
+
+`Promise`\<[`ProcessInstanceGetVariablesResponse`](../ProcessInstanceGetVariablesResponse/)>
+
+Promise resolving to variables response with elements and globals [ProcessInstanceGetVariablesResponse](../ProcessInstanceGetVariablesResponse/)
+
+#### Example
+
+```
+// Get all variables for a process instance
+const variables = await sdk.maestro.processes.instances.getVariables(
+  <instanceId>,
+  <folderKey>
+);
+
+// Access global variables
+console.log('Global variables:', variables.globalVariables);
+
+// Iterate through global variables with metadata
+variables.globalVariables?.forEach(variable => {
+  console.log(`Variable: ${variable.name} (${variable.id})`);
+  console.log(`  Type: ${variable.type}`);
+  console.log(`  Element: ${variable.elementId}`);
+  console.log(`  Value: ${variable.value}`);
+});
+
+// Get variables for a specific parent element
+const variables = await sdk.maestro.processes.instances.getVariables(
+  <instanceId>,
+  <folderKey>,
+  { parentElementId: <parentElementId> }
+);
+```
+
+Service for managing UiPath Maestro Cases
+
+UiPath Maestro Case Management describes solutions that help manage and automate the full flow of complex E2E scenarios.
+
+## Methods
+
+### getAll()
+
+```
+getAll(): Promise<CaseGetAllResponse[]>;
+```
+
+#### Returns
+
+`Promise`\<[`CaseGetAllResponse`](../CaseGetAllResponse/)[]>
+
+Promise resolving to array of Case objects [CaseGetAllResponse](../CaseGetAllResponse/)
+
+#### Example
+
+```
+// Get all case management processes
+const cases = await sdk.maestro.cases.getAll();
+
+// Access case information
+for (const caseProcess of cases) {
+  console.log(`Case Process: ${caseProcess.processKey}`);
+  console.log(`Running instances: ${caseProcess.runningCount}`);
+  console.log(`Completed instances: ${caseProcess.completedCount}`);
+}
+```
+
+Service model for managing Maestro Case Instances
+
+Maestro case instances are the running instances of Maestro cases.
+
+## Methods
+
+### getAll()
+
+```
+getAll<T>(options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<CaseInstanceGetResponse> : NonPaginatedResponse<CaseInstanceGetResponse>>;
+```
+
+Get all case instances with optional filtering and pagination
+
+#### Type Parameters
+
+| Type Parameter                                                                                                         | Default type                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `T` *extends* [`CaseInstanceGetAllWithPaginationOptions`](../../type-aliases/CaseInstanceGetAllWithPaginationOptions/) | [`CaseInstanceGetAllWithPaginationOptions`](../../type-aliases/CaseInstanceGetAllWithPaginationOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                             |
+| ---------- | ---- | ------------------------------------------------------- |
+| `options?` | `T`  | Query parameters for filtering instances and pagination |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)>>
+
+Promise resolving to either an array of case instances NonPaginatedResponse or a PaginatedResponse when pagination options are used. [CaseInstanceGetResponse](../../type-aliases/CaseInstanceGetResponse/)
+
+#### Example
+
+```
+// Get all case instances (non-paginated)
+const instances = await sdk.maestro.cases.instances.getAll();
+
+// Cancel/Close faulted instances using methods directly on instances
+for (const instance of instances.items) {
+  if (instance.latestRunStatus === 'Faulted') {
+    await instance.close({ comment: 'Closing faulted case instance' });
+  }
+}
+
+// With filtering
+const instances = await sdk.maestro.cases.instances.getAll({
+  processKey: 'MyCaseProcess'
+});
+
+// First page with pagination
+const page1 = await sdk.maestro.cases.instances.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await sdk.maestro.cases.instances.getAll({ cursor: page1.nextCursor });
+}
+```
+
+______________________________________________________________________
+
+### getById()
+
+```
+getById(instanceId: string, folderKey: string): Promise<CaseInstanceGetResponse>;
+```
+
+Get a specific case instance by ID
+
+#### Parameters
+
+| Parameter    | Type     | Description          |
+| ------------ | -------- | -------------------- |
+| `instanceId` | `string` | The case instance ID |
+| `folderKey`  | `string` | Required folder key  |
+
+#### Returns
+
+`Promise`\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)>
+
+Promise resolving to case instance with methods [CaseInstanceGetResponse](../../type-aliases/CaseInstanceGetResponse/)
+
+#### Example
+
+```
+// Get a specific case instance
+const instance = await sdk.maestro.cases.instances.getById(
+  <instanceId>,
+  <folderKey>
+);
+
+// Access instance properties
+console.log(`Status: ${instance.latestRunStatus}`);
+```
+
+______________________________________________________________________
+
+### close()
+
+```
+close(
+   instanceId: string, 
+   folderKey: string, 
+   options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+```
+
+Close/Cancel a case instance
+
+#### Parameters
+
+| Parameter    | Type                                                               | Description                         |
+| ------------ | ------------------------------------------------------------------ | ----------------------------------- |
+| `instanceId` | `string`                                                           | The ID of the instance to cancel    |
+| `folderKey`  | `string`                                                           | Required folder key                 |
+| `options?`   | [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/) | Optional close options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+#### Example
+
+```
+// Close a case instance
+const result = await sdk.maestro.cases.instances.close(
+  <instanceId>,
+  <folderKey>
+);
+
+or
+
+const instance = await sdk.maestro.cases.instances.getById(
+  <instanceId>,
+  <folderKey>
+);
+const result = await instance.close();
+
+console.log(`Closed: ${result.success}`);
+
+// Close with a comment
+const result = await instance.close({
+  comment: 'Closing due to invalid input data'
+});
+
+if (result.success) {
+  console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
+}
+```
+
+______________________________________________________________________
+
+### pause()
+
+```
+pause(
+   instanceId: string, 
+   folderKey: string, 
+   options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+```
+
+Pause a case instance
+
+#### Parameters
+
+| Parameter    | Type                                                               | Description                         |
+| ------------ | ------------------------------------------------------------------ | ----------------------------------- |
+| `instanceId` | `string`                                                           | The ID of the instance to pause     |
+| `folderKey`  | `string`                                                           | Required folder key                 |
+| `options?`   | [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/) | Optional pause options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+______________________________________________________________________
+
+### resume()
+
+```
+resume(
+   instanceId: string, 
+   folderKey: string, 
+   options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+```
+
+Resume a case instance
+
+#### Parameters
+
+| Parameter    | Type                                                               | Description                          |
+| ------------ | ------------------------------------------------------------------ | ------------------------------------ |
+| `instanceId` | `string`                                                           | The ID of the instance to resume     |
+| `folderKey`  | `string`                                                           | Required folder key                  |
+| `options?`   | [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/) | Optional resume options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+______________________________________________________________________
+
+### getExecutionHistory()
+
+```
+getExecutionHistory(instanceId: string, folderKey: string): Promise<CaseInstanceExecutionHistoryResponse>;
+```
+
+Get execution history for a case instance
+
+#### Parameters
+
+| Parameter    | Type     | Description                 |
+| ------------ | -------- | --------------------------- |
+| `instanceId` | `string` | The ID of the case instance |
+| `folderKey`  | `string` | Required folder key         |
+
+#### Returns
+
+`Promise`\<[`CaseInstanceExecutionHistoryResponse`](../CaseInstanceExecutionHistoryResponse/)>
+
+Promise resolving to instance execution history [CaseInstanceExecutionHistoryResponse](../CaseInstanceExecutionHistoryResponse/)
+
+#### Example
+
+```
+// Get execution history for a case instance
+const history = await sdk.maestro.cases.instances.getExecutionHistory(
+  <instanceId>,
+  <folderKey>
+);
+
+// Access element executions
+if (history.elementExecutions) {
+  for (const execution of history.elementExecutions) {
+    console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);
+  }
+}
+```
+
+______________________________________________________________________
+
+### getStages()
+
+```
+getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]>;
+```
+
+Get stages and its associated tasks information for a case instance
+
+#### Parameters
+
+| Parameter        | Type     | Description                 |
+| ---------------- | -------- | --------------------------- |
+| `caseInstanceId` | `string` | The ID of the case instance |
+| `folderKey`      | `string` | Required folder key         |
+
+#### Returns
+
+`Promise`\<[`CaseGetStageResponse`](../CaseGetStageResponse/)[]>
+
+Promise resolving to an array of case stages with their tasks and status
+
+#### Example
+
+```
+// Get stages for a case instance
+const stages = await sdk.maestro.cases.instances.getStages(
+  <caseInstanceId>,
+  <folderKey>
+);
+
+// Iterate through stages
+for (const stage of stages) {
+  console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
+
+  // Check tasks in the stage
+  for (const taskGroup of stage.tasks) {
+    for (const task of taskGroup) {
+      console.log(`  Task: ${task.name} - Status: ${task.status}`);
+    }
+  }
+}
+```
+
+______________________________________________________________________
+
+### getActionTasks()
+
+```
+getActionTasks<T>(caseInstanceId: string, options?: T): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>>;
+```
+
+Get human in the loop tasks associated with a case instance
+
+The method returns either:
+
+- An array of tasks (when no pagination parameters are provided)
+- A paginated result with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                             | Default type                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `T` *extends* [`TaskGetAllOptions`](../../type-aliases/TaskGetAllOptions/) | [`TaskGetAllOptions`](../../type-aliases/TaskGetAllOptions/) |
+
+#### Parameters
+
+| Parameter        | Type     | Description                               |
+| ---------------- | -------- | ----------------------------------------- |
+| `caseInstanceId` | `string` | The ID of the case instance               |
+| `options?`       | `T`      | Optional filtering and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>>
+
+Promise resolving to human in the loop tasks associated with the case instance
+
+#### Example
+
+```
+// Get all tasks for a case instance (non-paginated)
+const tasks = await sdk.maestro.cases.instances.getActionTasks(
+  <caseInstanceId>,
+);
+
+// First page with pagination
+const page1 = await sdk.maestro.cases.instances.getActionTasks(
+  <caseInstanceId>,
+  { pageSize: 10 }
+);
+// Iterate through tasks
+for (const task of page1.items) {
+  console.log(`Task: ${task.title}`);
+  console.log(`Task: ${task.status}`);
+}
+
+// Jump to specific page
+const page5 = await sdk.maestro.cases.instances.getActionTasks(
+  <caseInstanceId>,
+  {
+    jumpToPage: 5,
+    pageSize: 10
+  }
+);
+```
