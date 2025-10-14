@@ -94,7 +94,7 @@ export interface TaskActivity {
   activityType: TaskActivityType;
   creatorUserId: number;
   targetUserId: number | null;
-  creationTime: string;
+  createdTime: string;
 }
 
 export interface TaskSlaDetail {
@@ -121,20 +121,21 @@ export interface TaskBaseResponse {
   folderId: number;
   key: string;
   isDeleted: boolean;
-  creationTime: string;
+  createdTime: string;
   id: number;
   action: string | null;
   externalTag: string | null;
   lastAssignedTime: string | null;
-  completionTime: string | null;
+  completedTime: string | null;
   parentOperationId: string | null;
   deleterUserId: number | null;
-  deletionTime: string | null;
-  lastModificationTime: string | null;
+  deletedTime: string | null;
+  lastModifiedTime: string | null;
 }
 
 export interface TaskCreateOptions {
   title: string;
+  data?: Record<string, unknown>;
   priority?: TaskPriority;
 }
 

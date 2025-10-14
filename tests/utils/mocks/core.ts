@@ -5,6 +5,38 @@ import { vi } from 'vitest';
 import { TEST_CONSTANTS } from '../constants/common';
 
 /**
+ * Ready-to-use mock for transform utilities
+ * Import and spread this in your vi.mock() call
+ * 
+ * @example
+ * vi.mock('../../../src/utils/transform', () => mockTransformUtils);
+ */
+export const mockTransformUtils = {
+  pascalToCamelCaseKeys: vi.fn((obj) => obj),
+  camelToPascalCaseKeys: vi.fn((obj) => obj),
+  transformData: vi.fn((data) => data),
+  applyDataTransforms: vi.fn((data) => data),
+  addPrefixToKeys: vi.fn((obj) => obj),
+};
+
+/**
+ * Ready-to-use mock for PaginationHelpers
+ * Import and spread this in your vi.mock() call
+ * 
+ * @example
+ * vi.mock('../../../src/utils/pagination/helpers', () => mockPaginationHelpers);
+ */
+export const mockPaginationHelpers = {
+  PaginationHelpers: {
+    getAll: vi.fn(),
+    hasPaginationParameters: vi.fn((options = {}) => {
+      const { cursor, pageSize, jumpToPage } = options;
+      return cursor !== undefined || pageSize !== undefined || jumpToPage !== undefined;
+    })
+  }
+};
+
+/**
  * Generic factory for creating mock base response objects
  * Use this as a building block for service-specific responses
  * 
@@ -16,6 +48,8 @@ import { TEST_CONSTANTS } from '../constants/common';
  * ```typescript
  * const mockResponse = createMockBaseResponse(
  *   { id: 'test', name: 'Test' },
+ * const mockTask = createMockBaseResponse(
+ *   { id: 123, title: 'Test', folderId: 456 },
  *   { customField: 'value' }
  * );
  * ```
@@ -59,25 +93,25 @@ export const createMockOperationResponse = <T>(data: T): { success: boolean; dat
 });
 
 /**
- * Pagination helpers mock - Used across all services that need pagination
- * This provides a consistent mock for PaginationHelpers across all test files
+ * Generic factory for creating a collection of mock responses
+ * Useful for testing list/getAll endpoints
  * 
- * Usage in test files:
+ * @param count - Number of mock items to create
+ * @param factory - Function that creates a single mock item given an index
+ * @returns Array of mock items
+ * 
+ * @example
  * ```typescript
- * // Use vi.hoisted to ensure mockPaginationHelpers is available during hoisting
- * const mocks = vi.hoisted(() => {
- *   return import('../../../utils/mocks/core');
- * });
- * 
- * vi.mock('../../../../src/utils/pagination/helpers', async () => (await mocks).mockPaginationHelpers);
+ * const mockTasks = createMockCollection(3, (i) => ({
+ *   id: i + 1,
+ *   title: `Task ${i + 1}`,
+ *   status: 'Active'
+ * }));
  * ```
  */
-export const mockPaginationHelpers = {
-  PaginationHelpers: {
-    getAll: vi.fn(),
-    hasPaginationParameters: vi.fn((options = {}) => {
-      const { cursor, pageSize, jumpToPage } = options;
-      return cursor !== undefined || pageSize !== undefined || jumpToPage !== undefined;
-    })
-  }
+export const createMockCollection = <T>(
+  count: number,
+  factory: (index: number) => T
+): T[] => {
+  return Array.from({ length: count }, (_, i) => factory(i));
 };
