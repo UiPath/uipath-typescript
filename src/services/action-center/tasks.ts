@@ -424,34 +424,35 @@ export class TaskService extends BaseService implements TaskServiceModel {
 
   /**
    * Completes a task with the specified type and data
-   * 
-   * @param completionType - The type of task (Form, App, or Generic)
-   * @param options - The completion options
+   *
+   * @param options - The completion options including task type, taskId, data, and action
    * @param folderId - Required folder ID
-   * @returns Promise resolving to void
-   * 
+   * @returns Promise resolving to completion result
+   *
    * @example
    * ```typescript
    * // Complete an app task
-   * await sdk.tasks.complete(TaskType.App, {
+   * await sdk.tasks.complete({
+   *   type: TaskType.App,
    *   taskId: 456,
    *   data: {},
    *   action: "submit"
    * }, 123); // folderId is required
    * 
    * // Complete an external task
-   * await sdk.tasks.complete(TaskType.ExternalTask, {
+   * await sdk.tasks.complete({
+   *   type: TaskType.External,
    *   taskId: 789
    * }, 123); // folderId is required
    * ```
    */
   @track('Tasks.Complete')
-  async complete(completionType: TaskType, options: TaskCompletionOptions, folderId: number): Promise<OperationResponse<TaskCompletionOptions>> {
+  async complete(options: TaskCompletionOptions, folderId: number): Promise<OperationResponse<TaskCompletionOptions>> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     let endpoint: string;
-    
-    switch (completionType) {
+
+    switch (options.type) {
       case TaskType.Form:
         endpoint = TASK_ENDPOINTS.COMPLETE_FORM_TASK;
         break;
