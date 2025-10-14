@@ -201,11 +201,6 @@ export interface TaskAssignmentResponse {
   errorCode?: number;
   errorMessage?: string;
   userNameOrEmail?: string;
-} 
-export interface TaskCompletionOptions {
-  taskId: number;
-  data?: any;
-  action?: string;
 }
 
 /**
@@ -213,7 +208,13 @@ export interface TaskCompletionOptions {
  */
 export type TaskCompleteOptions =
   | { type: TaskType.External; data?: any; action?: string }
-  | { type: Exclude<TaskType, TaskType.External>; data: any; action: string }; 
+  | { type: Exclude<TaskType, TaskType.External>; data: any; action: string };
+
+/**
+ * Options for completing a task when called from the service
+ * Extends TaskCompleteOptions with the required taskId field
+ */
+export type TaskCompletionOptions = TaskCompleteOptions & { taskId: number }; 
 
 /**
  * Options for getting tasks across folders

@@ -1,7 +1,6 @@
 import type { 
   RawTaskCreateResponse,
   RawTaskGetResponse, 
-  TaskType,
   TaskAssignmentOptions,
   TaskAssignmentResponse,
   TaskCompletionOptions,
@@ -198,29 +197,29 @@ export interface TaskServiceModel {
   
   /**
    * Completes a task with the specified type and data
-   * 
-   * @param taskType - The type of task (Form, App, or External)
-   * @param options - The completion options
+   *
+   * @param options - The completion options including task type, taskId, data, and action
    * @param folderId - Required folder ID
    * @returns Promise resolving to completion result
-   * {@link TaskCompletionOptions}
+   * {@link TaskCompleteOptions}
    * @example
    * ```typescript
    * // Complete an app task
-   * await sdk.tasks.complete(TaskType.App, {
+   * await sdk.tasks.complete({
+   *   type: TaskType.App,
    *   taskId: <taskId>,
    *   data: {},
    *   action: "submit"
    * }, <folderId>); // folderId is required
-   * 
+   *
    * // Complete an external task
-   * await sdk.tasks.complete(TaskType.External, {
+   * await sdk.tasks.complete({
+   *   type: TaskType.External,
    *   taskId: <taskId>
    * }, <folderId>); // folderId is required
    * ```
    */
   complete(
-    taskType: TaskType,
     options: TaskCompletionOptions,
     folderId: number
   ): Promise<OperationResponse<TaskCompletionOptions>>;
@@ -333,12 +332,12 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
       if (!folderId) throw new Error('Folder ID is required');
       
       return service.complete(
-        options.type,
         {
+          type: options.type,
           taskId: taskData.id,
           data: options.data,
           action: options.action
-        },
+        } as TaskCompletionOptions,
         folderId
       );
     }
