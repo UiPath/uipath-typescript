@@ -303,25 +303,21 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
   return {
     async assign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
-      
-      const assignmentOptions: TaskAssignmentOptions = {
-        taskId: taskData.id,
-        userId: options.userId || 0, // Will be handled by userNameOrEmail if userId is not provided, 0 is considered as invalid user id
-        userNameOrEmail: options.userNameOrEmail
-      };
-      
+
+      const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
+        ? { taskId: taskData.id, userId: options.userId }
+        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
+
       return service.assign(assignmentOptions);
     },
     
     async reassign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
-      
-      const assignmentOptions: TaskAssignmentOptions = {
-        taskId: taskData.id,
-        userId: options.userId || 0, // Will be handled by userNameOrEmail if userId is not provided, 0 is considered as invalid user id
-        userNameOrEmail: options.userNameOrEmail
-      };
-      
+
+      const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
+        ? { taskId: taskData.id, userId: options.userId }
+        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
+
       return service.reassign(assignmentOptions);
     },
 

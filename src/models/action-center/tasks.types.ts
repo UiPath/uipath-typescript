@@ -175,11 +175,22 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
   data?: Record<string, unknown> | null;
 }
 
-export interface TaskAssignmentOptions {
+/**
+ * Options for task assignment operations when called from a task instance
+ * Requires either userId or userNameOrEmail, but not both
+ */
+export type TaskAssignOptions =
+  | { userId: number; userNameOrEmail?: never }
+  | { userId?: never; userNameOrEmail: string };
+
+/**
+ * Options for task assignment operations when called from the service
+ * Extends TaskAssignOptions with the required taskId field
+ */
+export type TaskAssignmentOptions = {
   taskId: number;
-  userId: number;
-  userNameOrEmail?: string;
-}
+} & TaskAssignOptions;
+
 export interface TasksUnassignOptions {
   taskIds: number[];
 }
@@ -196,14 +207,6 @@ export interface TaskCompletionOptions {
   data?: any;
   action?: string;
 }
-
-/**
- * Options for task assignment operations in the Task class
- * At least one identification parameter is required
- */
-export type TaskAssignOptions = 
-  | { userId: number; userNameOrEmail?: string}
-  | { userId?: number; userNameOrEmail: string};
 
 /**
  * Options for completing a task
