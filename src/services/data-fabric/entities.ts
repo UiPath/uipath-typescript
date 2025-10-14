@@ -73,83 +73,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Orchestrates all field mapping transformations
-   * 
-   * @param metadata - Entity metadata to transform
-   * @private
-   */
-  private applyFieldMappings(metadata: RawEntityGetResponse): void {
-    this.mapFieldTypes(metadata);
-    this.mapExternalFields(metadata);
-  }
-
-  /**
-   * Maps SQL field types to friendly EntityFieldTypes
-   * 
-   * @param metadata - Entity metadata with fields
-   * @private
-   */
-  private mapFieldTypes(metadata: RawEntityGetResponse): void {
-    if (!metadata.fields?.length) return;
-    
-    metadata.fields = metadata.fields.map(field => {
-      // Rename sqlType to fieldDataType
-      let transformedField = transformData(field, EntityMap);
-      
-      // Map SQL field type to friendly name
-      if (transformedField.fieldDataType?.name) {
-        const sqlTypeName = transformedField.fieldDataType.name as unknown as SqlFieldType;
-        if (EntityFieldTypeMap[sqlTypeName]) {
-          transformedField.fieldDataType.name = EntityFieldTypeMap[sqlTypeName] as unknown as EntityFieldDataType;
-        }
-      }
-      
-      this.transformNestedReferences(transformedField);
-      
-      return transformedField;
-    });
-  }
-
-  /**
-   * Transforms nested reference objects in field metadata
-   */
-  private transformNestedReferences(field: any): void {
-    if (field.referenceEntity) {
-      field.referenceEntity = transformData(field.referenceEntity, EntityMap);
-    }
-    if (field.referenceChoiceSet) {
-      field.referenceChoiceSet = transformData(field.referenceChoiceSet, EntityMap);
-    }
-    if (field.referenceField?.definition) {
-      field.referenceField.definition = transformData(field.referenceField.definition, EntityMap);
-    }
-  }
-
-  /**
-   * Maps external field names to consistent naming
-   * 
-   * @param metadata - Entity metadata with externalFields
-   * @private
-   */
-  private mapExternalFields(metadata: RawEntityGetResponse): void {
-    if (!metadata.externalFields?.length) return;
-    
-    metadata.externalFields = metadata.externalFields.map(externalSource => {
-      if (externalSource.fields?.length) {
-        externalSource.fields = externalSource.fields.map(field => {
-          const transformedField = transformData(field, EntityMap);
-          if (transformedField.fieldMetaData) {
-            transformedField.fieldMetaData = transformData(transformedField.fieldMetaData, EntityMap);
-            this.transformNestedReferences(transformedField.fieldMetaData);
-          }
-          return transformedField;
-        });
-      }
-      return externalSource;
-    });
-  }
-
-  /**
    * Gets entity records by entity ID
    * 
    * @param entityId - UUID of the entity
@@ -191,7 +114,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
-      transformFn: (item: Record<string, unknown>) => pascalToCamelCaseKeys(item) as EntityRecord,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
@@ -367,5 +289,82 @@ export class EntityService extends BaseService implements EntityServiceModel {
     });
     
     return entities;
+  }
+
+  /**
+   * Orchestrates all field mapping transformations
+   * 
+   * @param metadata - Entity metadata to transform
+   * @private
+   */
+  private applyFieldMappings(metadata: RawEntityGetResponse): void {
+    this.mapFieldTypes(metadata);
+    this.mapExternalFields(metadata);
+  }
+
+  /**
+   * Maps SQL field types to friendly EntityFieldTypes
+   * 
+   * @param metadata - Entity metadata with fields
+   * @private
+   */
+  private mapFieldTypes(metadata: RawEntityGetResponse): void {
+    if (!metadata.fields?.length) return;
+    
+    metadata.fields = metadata.fields.map(field => {
+      // Rename sqlType to fieldDataType
+      let transformedField = transformData(field, EntityMap);
+      
+      // Map SQL field type to friendly name
+      if (transformedField.fieldDataType?.name) {
+        const sqlTypeName = transformedField.fieldDataType.name as unknown as SqlFieldType;
+        if (EntityFieldTypeMap[sqlTypeName]) {
+          transformedField.fieldDataType.name = EntityFieldTypeMap[sqlTypeName] as unknown as EntityFieldDataType;
+        }
+      }
+      
+      this.transformNestedReferences(transformedField);
+      
+      return transformedField;
+    });
+  }
+
+  /**
+   * Transforms nested reference objects in field metadata
+   */
+  private transformNestedReferences(field: any): void {
+    if (field.referenceEntity) {
+      field.referenceEntity = transformData(field.referenceEntity, EntityMap);
+    }
+    if (field.referenceChoiceSet) {
+      field.referenceChoiceSet = transformData(field.referenceChoiceSet, EntityMap);
+    }
+    if (field.referenceField?.definition) {
+      field.referenceField.definition = transformData(field.referenceField.definition, EntityMap);
+    }
+  }
+
+  /**
+   * Maps external field names to consistent naming
+   * 
+   * @param metadata - Entity metadata with externalFields
+   * @private
+   */
+  private mapExternalFields(metadata: RawEntityGetResponse): void {
+    if (!metadata.externalFields?.length) return;
+    
+    metadata.externalFields = metadata.externalFields.map(externalSource => {
+      if (externalSource.fields?.length) {
+        externalSource.fields = externalSource.fields.map(field => {
+          const transformedField = transformData(field, EntityMap);
+          if (transformedField.fieldMetaData) {
+            transformedField.fieldMetaData = transformData(transformedField.fieldMetaData, EntityMap);
+            this.transformNestedReferences(transformedField.fieldMetaData);
+          }
+          return transformedField;
+        });
+      }
+      return externalSource;
+    });
   }
 }
