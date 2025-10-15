@@ -22,7 +22,7 @@ export class ErrorFactory {
     statusCode: number,
     errorInfo: ParsedErrorInfo,
   ): HttpError {
-    const { message, requestId, details } = errorInfo;
+    const { message, requestId } = errorInfo;
 
     // Map status codes to error types
     switch (statusCode) {

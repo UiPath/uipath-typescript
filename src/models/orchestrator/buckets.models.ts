@@ -1,4 +1,4 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetFileMetaDataResponse, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
