@@ -2,6 +2,12 @@
 
 A sample React TypeScript application for managing UiPath Maestro processes with OAuth authentication.
 
+## Installation
+
+To install the sdk do
+```bash
+npm install @uipath/uipath-typescript
+```
 
 ## Setup Instructions
 
