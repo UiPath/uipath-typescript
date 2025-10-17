@@ -13,6 +13,7 @@ export const TEST_CONSTANTS = {
   
   // Common values
   PAGE_SIZE: 10,
+  CURSOR_VALUE: 'test-cursor-value',
   ERROR_MESSAGE: 'API Error',
   
   // User Information
