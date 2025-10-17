@@ -9,6 +9,7 @@ export * from './core';
 // Service-specific mock utilities
 export * from './maestro';
 export * from './tasks';
+export * from './entities';
 
 // Re-export constants for convenience
 export * from '../constants';

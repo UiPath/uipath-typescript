@@ -15,6 +15,12 @@ export const TEST_CONSTANTS = {
   PAGE_SIZE: 10,
   ERROR_MESSAGE: 'API Error',
   
+  // User Information
+  USER_EMAIL: 'testuser@uipath.com',
+  
+  // Pagination Values
+  NEXT_CURSOR: 'next-cursor',
+  
   // Base URLs and Endpoints
   BASE_URL: 'https://test.uipath.com',
   CLIENT_ID: 'test-client-id',
