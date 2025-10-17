@@ -97,7 +97,7 @@ describe('ProcessInstancesService', () => {
       const options: ProcessInstanceGetAllWithPaginationOptions = {
         pageSize: TEST_CONSTANTS.PAGE_SIZE,
         cursor: {
-          value: 'test-cursor-value'
+          value: TEST_CONSTANTS.CURSOR_VALUE
         }
       };
 
@@ -114,7 +114,7 @@ describe('ProcessInstancesService', () => {
         expect.objectContaining({
           pageSize: TEST_CONSTANTS.PAGE_SIZE,
           cursor: expect.objectContaining({
-            value: 'test-cursor-value'
+            value: TEST_CONSTANTS.CURSOR_VALUE
           })
         })
       );
@@ -197,11 +197,11 @@ describe('ProcessInstancesService', () => {
 
     it('should handle API errors', async () => {
       
-      const error = new Error('API Error');
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
       
-      await expect(service.getById(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow('API Error');
+      await expect(service.getById(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -230,11 +230,11 @@ describe('ProcessInstancesService', () => {
 
     it('should handle API errors', async () => {
       
-      const error = new Error('API Error');
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
       
-      await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID)).rejects.toThrow('API Error');
+      await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -266,11 +266,11 @@ describe('ProcessInstancesService', () => {
 
     it('should handle API errors', async () => {
       
-      const error = new Error('API Error');
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
       
-      await expect(service.getBpmn(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow('API Error');
+      await expect(service.getBpmn(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -336,11 +336,11 @@ describe('ProcessInstancesService', () => {
 
     it('should handle API errors', async () => {
       
-      const error = new Error('API Error');
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
       
-      await expect(service.cancel(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow('API Error');
+      await expect(service.cancel(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -378,11 +378,11 @@ describe('ProcessInstancesService', () => {
 
     it('should handle API errors', async () => {
       
-      const error = new Error('API Error');
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
       
-      await expect(service.pause(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow('API Error');
+      await expect(service.pause(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -420,11 +420,11 @@ describe('ProcessInstancesService', () => {
 
     it('should handle API errors', async () => {
       
-      const error = new Error('API Error');
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
       
-      await expect(service.resume(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow('API Error');
+      await expect(service.resume(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -558,11 +558,11 @@ describe('ProcessInstancesService', () => {
 
     it('should handle API errors', async () => {
       
-      const error = new Error('API Error');
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
       
-      await expect(service.getVariables(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow('API Error');
+      await expect(service.getVariables(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
