@@ -22,6 +22,11 @@ export const MAESTRO_ENDPOINTS = {
     PAUSE: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/pause`,
     RESUME: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/resume`,
   },
+  INCIDENTS: {
+    GET_ALL: 'pims_/api/v1/incidents/summary',
+    GET_BY_PROCESS: (processKey: string) => `pims_/api/v1/incidents/process/${processKey}`,
+    GET_BY_INSTANCE: (instanceId: string) => `pims_/api/v1/instances/${instanceId}/incidents`,
+  },
   CASES: {
     GET_CASE_JSON: (instanceId: string) => `pims_/api/v1/cases/${instanceId}/case-json`,
     GET_ELEMENT_EXECUTIONS: (instanceId: string) => `pims_/api/v1alpha1/element-executions/case-instances/${instanceId}`,

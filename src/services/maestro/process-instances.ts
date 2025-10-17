@@ -13,8 +13,10 @@ import {
   createProcessInstanceWithMethods,
   ProcessInstanceGetVariablesResponse,
   ProcessInstanceGetVariablesOptions,
-  GlobalVariableMetaData
+  GlobalVariableMetaData,
+  ProcessIncidentGetResponse
 } from '../../models/maestro';
+import { BpmnHelpers } from './helpers';
 import { OperationResponse } from '../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createHeaders } from '../../utils/http/headers';
@@ -349,4 +351,24 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     
     return variablesResponse;
   }
+
+  /**
+   * Get incidents for a process instance
+   * @param instanceId The ID of the instance to get incidents for
+   * @param folderKey The folder key for authorization
+   * @returns Promise<ProcessIncidentGetResponse[]>
+   */
+  @track('ProcessInstances.GetIncidents')
+  async getIncidents(instanceId: string, folderKey: string): Promise<ProcessIncidentGetResponse[]> {
+    const rawResponse = await this.get<any[]>(
+      MAESTRO_ENDPOINTS.INCIDENTS.GET_BY_INSTANCE(instanceId),
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey })
+      }
+    );
+
+    // Filter out excluded fields and transform response, then enrich with BPMN data
+    return BpmnHelpers.enrichIncidentsWithBpmnData(rawResponse.data || [], folderKey, this);
+  }
+
 } 

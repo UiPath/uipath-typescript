@@ -8,6 +8,7 @@ import type {
   ProcessInstanceGetVariablesResponse,
   ProcessInstanceGetVariablesOptions
 } from './process-instances.types';
+import type { ProcessIncidentGetResponse } from './process-incidents.types';
 import { OperationResponse } from '../common/types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
@@ -224,6 +225,28 @@ export interface ProcessInstancesServiceModel {
    * ```
    */
   getVariables(instanceId: string, folderKey: string, options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse>;
+
+  /**
+   * Get incidents for a process instance
+   * 
+   * @param instanceId The ID of the instance to get incidents for
+   * @param folderKey The folder key for authorization
+   * @returns Promise resolving to array of incidents for the processinstance
+   * {@link ProcessIncidentGetResponse}
+   * @example
+   * ```typescript
+   * // Get incidents for a specific instance
+   * const incidents = await sdk.maestro.processes.instances.getIncidents('<instanceId>', '<folderKey>');
+   * 
+   * // Access process incident details 
+   * for (const incident of incidents) {
+   *   console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);
+   *   console.log(`Severity: ${incident.incidentSeverity}`);
+   *   console.log(`Error: ${incident.errorMessage}`);
+   * }
+   * ```
+   */
+  getIncidents(instanceId: string, folderKey: string): Promise<ProcessIncidentGetResponse[]>;
 }
 
 // Method interface that will be added to process instance objects
@@ -252,6 +275,13 @@ export interface ProcessInstanceMethods {
    */
   resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
+  /**
+   * Gets incidents for this process instance
+   * 
+   * @returns Promise resolving to array of incidents for this instance
+   */
+  getIncidents(): Promise<ProcessIncidentGetResponse[]>;
+   
   /**
    * Gets execution history (spans) for this process instance
    *
@@ -306,6 +336,13 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
       
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async getIncidents(): Promise<ProcessIncidentGetResponse[]> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+      
+      return service.getIncidents(instanceData.instanceId, instanceData.folderKey);
     },
 
     async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]> {
