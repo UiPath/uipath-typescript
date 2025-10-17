@@ -8,6 +8,10 @@ export * from './processes.models';
 export * from './process-instances.types';
 export * from './process-instances.models';
 
+// Incidents types and models
+export * from './process-incidents.types';
+export * from './process-incidents.models';
+
 // Cases types and models
 export * from './cases.types';
 export * from './cases.models';

@@ -7,6 +7,10 @@
  */
 export const ODATA_PREFIX = '$';
 
+export const UNKNOWN = 'Unknown';
+
+export const NO_INSTANCE = 'no-instance';
+
 /**
  * OData pagination constants
  */
