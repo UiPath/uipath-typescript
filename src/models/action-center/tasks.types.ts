@@ -244,3 +244,47 @@ export type TaskGetByIdOptions = BaseOptions
  * Options for getting users with task permissions
  */
 export type TaskGetUsersOptions = RequestOptions & PaginationOptions;
+
+export enum ActionCenterEventNames {
+  INIT = 'init',
+  COMPLETE = 'complete',
+  DATACHANGED = 'dataChanged',
+  LOADAPP = 'loadApp',
+  ERROR = 'error',
+  TOKENREFRESHED = 'tokenRefreshed',
+  LANGUAGECHANGED = 'languageChanged',
+  THEMECHANGED = 'themeChanged',
+}
+
+enum Theme {
+    autoTheme = 'autoTheme',
+    light = 'light',
+    dark = 'dark',
+    lighthc = 'light-hc',
+    darkhc = 'dark-hc',
+}
+
+export type ActionCenterData = {
+  taskId: number,
+  title: string,
+  status: TaskStatus,
+  isReadOnly: boolean,
+  data: any,
+  action: string,
+  organizationUnitId: number,
+  organizationUnitFullyQualifiedName: string,
+  baseUrl: string,
+  orgName: string,
+  tenantName: string,
+  token: string,
+  language: string,
+  theme: Theme,
+  newToken: string,
+  newLanguage: string,
+  newTheme: string,
+}
+
+export type ActionCenterEventResponsePayload = {
+  eventType: ActionCenterEventNames,
+  content: ActionCenterData,
+}
