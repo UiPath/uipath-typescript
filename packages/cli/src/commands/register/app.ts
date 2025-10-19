@@ -63,7 +63,7 @@ export default class RegisterApp extends Command {
     }),
     type: Flags.string({
       char: 't',
-      description: 'App Type',
+      description: 'App Type (Web or Action)',
       default: AppType.Web,
       options: [AppType.Web, AppType.Action]
     })

@@ -352,17 +352,18 @@ export class BucketService extends FolderScopedService implements BucketServiceM
         }
         
         let token: string;
+
+        const isInActionCenter = window.self != window.top && window.location.href.includes('?basedomain');
         
         // For secret-based tokens, they never expire so use directly
-        if (tokenInfo.type === 'secret') {
+        if (tokenInfo.type === 'secret' && !isInActionCenter) {
           token = tokenInfo.token;
         } 
         // For non-secret tokens, check expiration and refresh if needed
         else if (!this.tokenManager.isTokenExpired(tokenInfo)) {
           token = tokenInfo.token;
         } else {
-          const newToken = await this.tokenManager.refreshAccessToken();
-          token = newToken.access_token;
+          token = await this.tokenManager.refreshAccessToken();
         }
         
         requestHeaders['Authorization'] = `Bearer ${token}`;
