@@ -4,3 +4,7 @@ export const VERSION_CONSTANTS = {
   UNKNOWN_VERSION: 'unknown',
   ERROR_READING_VERSION: 'Error reading version information',
 } as const;
+
+export const ActionSchemaConstants = {
+  actionSchemaFileName: 'action-schema.json'
+}
