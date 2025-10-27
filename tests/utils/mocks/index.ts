@@ -12,6 +12,7 @@ export * from './tasks';
 export * from './entities';
 export * from './processes';
 export * from './assets';
+export * from './queues';
 
 // Re-export constants for convenience
 export * from '../constants';
