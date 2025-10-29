@@ -10,6 +10,7 @@ export * from './core';
 export * from './maestro';
 export * from './tasks';
 export * from './entities';
+export * from './assets';
 
 // Re-export constants for convenience
 export * from '../constants';
