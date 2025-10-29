@@ -37,6 +37,29 @@ export const mockPaginationHelpers = {
 };
 
 /**
+ * mock for ExecutionContext
+ * Import and spread this in vi.mock() call
+ * 
+ * @example
+ * vi.mock('../../../src/core/context/execution', () => mockExecutionContext);
+ */
+export const mockExecutionContext = {
+  ExecutionContext: vi.fn().mockImplementation(() => ({
+    get: vi.fn().mockImplementation((key: string) => {
+      if (key === 'tokenInfo') {
+        return { type: TEST_CONSTANTS.SECRET_TOKEN_TYPE, token: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN };
+      }
+      return undefined;
+    }),
+    set: vi.fn(),
+    setHeaders: vi.fn(),
+    getHeaders: vi.fn().mockReturnValue({}),
+    clear: vi.fn(),
+    createRequestSpec: vi.fn().mockReturnValue({})
+  }))
+};
+
+/**
  * Generic factory for creating mock base response objects
  * Use this as a building block for service-specific responses
  * 
