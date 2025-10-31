@@ -58,3 +58,14 @@ npm-debug.log*
 dist/
 docs/api/
 site/
+
+# E2E test artifacts
+playwright-report/
+test-results/
+playwright/.cache/
+tests/e2e/test-apps/**/dist/
+tests/e2e/test-apps/**/build/
+tests/e2e/test-apps/**/.next/
+tests/e2e/test-apps/**/.nuxt/
+tests/e2e/test-apps/**/.angular/
+tests/e2e/test-apps/**/node_modules/
