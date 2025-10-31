@@ -40,7 +40,8 @@ export class UiPath {
       secret: hasSecretConfig(config) ? config.secret : undefined,
       clientId: hasOAuthConfig(config) ? config.clientId : undefined,
       redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined,
-      scope: hasOAuthConfig(config) ? config.scope : undefined
+      scope: hasOAuthConfig(config) ? config.scope : undefined,
+      tokenStorage: hasOAuthConfig(config) ? config.tokenStorage : undefined
     });
 
     this.executionContext = new ExecutionContext();
@@ -149,6 +150,15 @@ export class UiPath {
    */
   public getToken(): string | undefined {
     return this.authService.getToken();
+  }
+
+  /**
+   * Logout the user and clear all authentication state
+   * Removes tokens from storage and clears OAuth context
+   */
+  public logout(): void {
+    this.authService.logout();
+    this.initialized = false; // Reset initialized state
   }
 
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
