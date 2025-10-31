@@ -40,7 +40,9 @@
         "test:unit": "vitest tests/unit",
         "test:watch": "vitest --watch",
         "test:ui": "vitest --ui",
-        "test:coverage": "vitest --coverage"
+        "test:coverage": "vitest --coverage",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui"
     },
     "dependencies": {
         "@opentelemetry/sdk-logs": "^0.204.0",
@@ -48,6 +50,7 @@
         "zod": "^3.22.4"
     },
     "devDependencies": {
+        "@playwright/test": "^1.56.1",
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.2.0",

@@ -1,0 +1,6 @@
+{
+    "name": "@uipath/e2e-tests",
+    "private": true,
+    "type": "commonjs",
+    "description": "End-to-end tests for UiPath TypeScript SDK"
+  }
