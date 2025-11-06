@@ -249,6 +249,7 @@ The SDK provides access to the following services through a consistent API:
 - `sdk.buckets` - Manage storage buckets in Orchestrator
 - `sdk.queues` - Manage Orchestrator queues
 - `sdk.assets` - Manage Orchestrator assets
+- `sdk.folders` - Manage Orchestrator folder operations
 
 <details>
 <summary><strong>View Example Usage</strong></summary>
@@ -317,6 +318,22 @@ const downloadUrl = await sdk.buckets.getReadUri({
   bucketId: bucketId,
   folderId: folderId,
   path: '/folder/file.pdf'
+});
+
+// Folders - Get machines for a folder
+const machines = await sdk.folders.getMachinesForFolder(2466968, {
+  filter: "contains(Name,'[Default] Cloud Robots - Serverless')",
+  orderby: "IsAssignedToFolder DESC,UnattendedSlots DESC,TestAutomationSlots DESC,NonProductionSlots DESC,Name ASC",
+  pageSize: 25
+});
+
+// Folders - Update machine to folder associations
+await sdk.folders.updateMachinesToFolderAssociations({
+  associations: {
+    folderId: 377502,
+    addedMachineIds: [244099],
+    removedMachineIds: []
+  }
 });
 
 // Data Fabric Entities - CRUD operations

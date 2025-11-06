@@ -12,7 +12,8 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService
+  AssetService,
+  FolderService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
@@ -231,6 +232,13 @@ export class UiPath {
    */
   get assets(): AssetService {
     return this.getService(AssetService);
+  }
+
+  /**
+   * Access to Orchestrator Folders service
+   */
+  get folders(): FolderService {
+    return this.getService(FolderService);
   }
 }
 

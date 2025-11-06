@@ -111,3 +111,13 @@ export const ASSET_ENDPOINTS = {
   GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders',
   GET_BY_ID: (id: number) => `/odata/Assets(${id})`,
 } as const;
+
+/**
+ * Orchestrator Folder Service Endpoints
+ */
+export const FOLDER_ENDPOINTS = {
+  GET_MACHINES_FOR_FOLDER: (folderId: number) => `orchestrator_/odata/Folders/UiPath.Server.Configuration.OData.GetMachinesForFolder(key=${folderId})`,
+  UPDATE_MACHINES_TO_FOLDER_ASSOCIATIONS: 'orchestrator_/odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations',
+} as const;
+
+
