@@ -5,6 +5,9 @@ import { TokenManager } from '../../core/auth/token-manager';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
+  EntityQueryOptions,
+  EntityQuery,
+  EntityQueryResponse,
   EntityInsertOptions,
   EntityInsertResponse,
   EntityUpdateOptions,
@@ -13,17 +16,21 @@ import {
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  EntityFieldDataType
+  EntityFieldDataType,
+  FilterLogicalOperator
 } from '../../models/data-fabric/entities.types';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions, PaginationCursor } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
+import { PaginationManager } from '../../utils/pagination/pagination-manager';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { createParams } from '../../utils/http/params';
 import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
+import { getLimitedPageSize, DEFAULT_PAGE_SIZE } from '../../utils/pagination/constants';
+import { filterUndefined } from '../../utils/object';
 
 /**
  * Service for interacting with the Data Fabric Entity API
@@ -335,6 +342,214 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // Convert PascalCase response to camelCase
     const camelResponse = pascalToCamelCaseKeys(response.data);
     return camelResponse;
+  }
+
+  /**
+   * Queries entity records with advanced filtering, sorting, and field selection
+   * 
+   * @param entityId - UUID of the entity
+   * @param options - Query options including filters, sorting, pagination, etc.
+   * @returns Promise resolving to an array of entity records or paginated response
+   * 
+   * @example
+   * ```typescript
+   * // Basic query with filtering
+   * const records = await sdk.entities.queryRecords(<entityId>, {
+   *   filterGroup: {
+   *     queryFilters: [
+   *       { fieldName: 'status', operator: '=', value: 'Active' },
+   *       { fieldName: 'age', operator: '>=', value: 18 }
+   *     ],
+   *     logicalOperator: FilterLogicalOperator.AND
+   *   }
+   * });
+   * 
+   * // With sorting and pagination
+   * const paginatedResponse = await sdk.entities.queryRecords(<entityId>, {
+   *   filterGroup: {
+   *     queryFilters: [
+   *       { fieldName: 'status', operator: '=', value: 'Active' }
+   *     ]
+   *   },
+   *   sortOptions: [
+   *     { fieldName: 'createdTime', isDescending: true }
+   *   ],
+   *   selectedFields: ['id', 'name', 'email'],
+   *   pageSize: 50
+   * });
+   * 
+   * // Navigate to next page
+   * const nextPage = await sdk.entities.queryRecords(<entityId>, {
+   *   cursor: paginatedResponse.nextCursor,
+   *   filterGroup: {
+   *     queryFilters: [
+   *       { fieldName: 'status', operator: '=', value: 'Active' }
+   *     ]
+   *   }
+   * });
+   * 
+   * // Complex nested filters
+   * const complexQuery = await sdk.entities.queryRecords(<entityId>, {
+   *   filterGroup: {
+   *     logicalOperator: FilterLogicalOperator.AND,
+   *     queryFilters: [
+   *       { fieldName: 'status', operator: '=', value: 'Active' }
+   *     ],
+   *     filterGroups: [
+   *       {
+   *         logicalOperator: FilterLogicalOperator.OR,
+   *         queryFilters: [
+   *           { fieldName: 'age', operator: '>=', value: 18 },
+   *           { fieldName: 'isVerified', operator: '=', value: true }
+   *         ]
+   *       }
+   *     ]
+   *   }
+   * });
+   * ```
+   */
+  @track('Entities.QueryRecords')
+  async queryRecords<T extends EntityQueryOptions = EntityQueryOptions>(
+    entityId: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  > {
+    // Determine if pagination is requested
+    const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
+    
+    // Build EntityQuery from options
+    const entityQuery = this.buildEntityQuery(options || {});
+    
+    // Make POST request with EntityQuery body
+    const response = await this.post<EntityQueryResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_ENTITY_RECORDS(entityId),
+      entityQuery
+    );
+    
+    // Transform response data
+    const jsonParsedResponse = response.data?.jsonValue != null ? JSON.parse(response.data.jsonValue): [];
+    const records = jsonParsedResponse.map((item: any) => pascalToCamelCaseKeys(item));
+    console.log('records', records);
+    
+    // Handle pagination
+    if (isPaginationRequested) {
+      return this.createPaginatedQueryResponse(
+        records,
+        response.data.totalRecordCount,
+        options || {},
+        entityQuery
+      ) as any;
+    }
+    
+    // Non-paginated response
+    return {
+      items: records,
+      totalCount: response.data.totalRecordCount
+    } as any;
+  }
+
+  /**
+   * Builds an EntityQuery object from query options, handling pagination conversion
+   * 
+   * @param options - Query options
+   * @returns EntityQuery object ready for API request
+   * @private
+   */
+  private buildEntityQuery(options: EntityQueryOptions): EntityQuery {
+    const query: EntityQuery = {
+      selectedFields: options.selectedFields,
+      sortOptions: options.sortOptions,
+      filterGroup: options.filterGroup,
+      expansions: options.expansions
+    };
+    
+    // Handle pagination: convert pageSize/pageNumber to start/limit
+    if (options.pageSize !== undefined || options.cursor !== undefined || options.jumpToPage !== undefined) {
+      const pageSize = getLimitedPageSize(options.pageSize);
+      
+      let start = options.start;
+      
+      // Handle cursor-based pagination
+      if (options.cursor) {
+        try {
+          const cursorData = PaginationHelpers.parseCursor(options.cursor.value);
+          // Convert pageNumber back to start (0-based index)
+          if (cursorData.pageNumber !== undefined) {
+            const effectivePageSize = cursorData.pageSize || pageSize || DEFAULT_PAGE_SIZE;
+            start = (cursorData.pageNumber - 1) * effectivePageSize;
+            query.limit = effectivePageSize;
+          } else {
+            // Fallback: use start/limit if provided directly in cursor
+            start = (cursorData as any).start || 0;
+            query.limit = (cursorData as any).limit || cursorData.pageSize || pageSize;
+          }
+        } catch (error) {
+          throw new Error('Invalid pagination cursor');
+        }
+      } 
+      // Handle jumpToPage
+      else if (options.jumpToPage !== undefined) {
+        const effectivePageSize = pageSize || DEFAULT_PAGE_SIZE;
+        start = (options.jumpToPage - 1) * effectivePageSize;
+        query.limit = effectivePageSize;
+      }
+      // First page or pageSize specified
+      else {
+        start = options.start || 0;
+        query.limit = pageSize;
+      }
+      
+      query.start = start;
+    } else {
+      // If no pagination options, use start/limit from options directly
+      query.start = options.start;
+      query.limit = options.limit;
+    }
+    
+    return filterUndefined(query);
+  }
+
+  /**
+   * Creates a paginated response from query results
+   * 
+   * @param items - Array of records
+   * @param totalCount - Total count of records
+   * @param options - Original query options
+   * @param entityQuery - The EntityQuery that was sent
+   * @returns PaginatedResponse
+   * @private
+   */
+  private createPaginatedQueryResponse(
+    items: EntityRecord[],
+    totalCount: number | undefined,
+    options: EntityQueryOptions,
+    entityQuery: EntityQuery
+  ): PaginatedResponse<EntityRecord> {
+    const pageSize = entityQuery.limit || getLimitedPageSize(options.pageSize) || DEFAULT_PAGE_SIZE;
+    const start = entityQuery.start || 0;
+    const currentPage = Math.floor(start / pageSize) + 1;
+    
+    // Calculate if there are more pages
+    const hasMore = totalCount !== undefined 
+      ? (start + items.length) < totalCount
+      : items.length === pageSize;
+    
+    return PaginationManager.createPaginatedResponse<EntityRecord>(
+      {
+        pageInfo: {
+          hasMore,
+          totalCount,
+          currentPage,
+          pageSize,
+          continuationToken: undefined
+        },
+        type: PaginationType.OFFSET,
+      },
+      items
+    );
   }
 
   /**

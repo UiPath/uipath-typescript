@@ -34,6 +34,98 @@ export interface EntityRecord {
 }
 
 /**
+ * Filter operators for query filters
+ */
+export type FilterOperator =
+  | 'contains'
+  | 'not contains'
+  | 'startswith'
+  | 'endswith'
+  | '='
+  | '!='
+  | '>'
+  | '<'
+  | '>='
+  | '<='
+  | 'in'
+  | 'not in';
+
+/**
+ * Logical operators for combining filter groups
+ */
+export enum FilterLogicalOperator {
+  AND = 0,
+  OR = 1,
+}
+
+/**
+ * Represents a single query filter condition
+ */
+export interface QueryFilter {
+  /** Name of the field to filter on */
+  fieldName: string;
+  /** Operator to use for the filter */
+  operator: FilterOperator;
+  /** Value to compare against */
+  value: any;
+}
+
+/**
+ * Represents a group of filters that can be combined with logical operators
+ */
+export interface FilterGroup {
+  /** Logical operator to combine filters (AND/OR) */
+  logicalOperator?: FilterLogicalOperator;
+  /** Array of query filters */
+  queryFilters: QueryFilter[];
+  /** Nested filter groups for complex filtering */
+  filterGroups?: FilterGroup[];
+}
+
+/**
+ * Sort option for query results
+ */
+export interface SortOption {
+  /** Name of the field to sort by */
+  fieldName: string;
+  /** Whether to sort in descending order */
+  isDescending: boolean;
+}
+
+/**
+ * Expansion configuration for related entities
+ */
+export interface Expansion {
+  /** Name of the field to expand */
+  expandedField: string;
+  /** Optional list of fields to select from the expanded entity */
+  selectedFields?: string[];
+}
+
+/**
+ * Entity query configuration for advanced querying
+ */
+export interface EntityQuery {
+  /** Optional list of field names to select */
+  selectedFields?: string[];
+  /** Starting index for pagination (0-based) */
+  start?: number;
+  /** Maximum number of records to return */
+  limit?: number;
+  /** Sort options for ordering results */
+  sortOptions?: SortOption[];
+  /** Filter group for complex filtering */
+  filterGroup?: FilterGroup;
+  /** Expansion configurations for related entities */
+  expansions?: Expansion[];
+}
+
+/**
+ * Options for querying entity records with advanced filtering and sorting
+ */
+export type EntityQueryOptions = EntityQuery & PaginationOptions;
+
+/**
  * Options for getting an entity by Id
  */
 export type EntityGetRecordsByIdOptions = {
@@ -288,4 +380,16 @@ export interface RawEntityGetResponse {
   createdTime: string;
   updatedTime?: string;
   updatedBy?: string;
+}
+
+/**
+ * Response from entity query API
+ */
+export interface EntityQueryResponse {
+  /** Total number of records matching the query */
+  totalRecordCount: number;
+  /** Array of entity records */
+  value: EntityRecord[];
+  /** Optional JSON string representation of the data */
+  jsonValue?: string;
 }

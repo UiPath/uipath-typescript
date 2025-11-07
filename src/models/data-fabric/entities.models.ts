@@ -1,5 +1,6 @@
 import { 
-  EntityGetRecordsByIdOptions, 
+  EntityGetRecordsByIdOptions,
+  EntityQueryOptions,
   EntityInsertOptions, 
   EntityInsertResponse,
   EntityUpdateOptions,
@@ -180,6 +181,47 @@ export interface EntityServiceModel {
    * ```
    */
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Queries entity records with advanced filtering, sorting, and field selection
+   * 
+   * @param entityId - UUID of the entity
+   * @param options - Query options including filters, sorting, pagination, etc.
+   * @returns Promise resolving to either an array of entity records NonPaginatedResponse<EntityRecord> or a PaginatedResponse<EntityRecord> when pagination options are used.
+   * {@link EntityRecord}
+   * @example
+   * ```typescript
+   * // Basic query with filtering
+   * const records = await sdk.entities.queryRecords(<entityId>, {
+   *   filterGroup: {
+   *     queryFilters: [
+   *       { fieldName: 'status', operator: '=', value: 'Active' },
+   *       { fieldName: 'age', operator: '>=', value: 18 }
+   *     ],
+   *     logicalOperator: FilterLogicalOperator.AND
+   *   }
+   * });
+   * 
+   * // With sorting and pagination
+   * const paginatedResponse = await sdk.entities.queryRecords(<entityId>, {
+   *   filterGroup: {
+   *     queryFilters: [
+   *       { fieldName: 'status', operator: '=', value: 'Active' }
+   *     ]
+   *   },
+   *   sortOptions: [
+   *     { fieldName: 'createdTime', isDescending: true }
+   *   ],
+   *   selectedFields: ['id', 'name', 'email'],
+   *   pageSize: 50
+   * });
+   * ```
+   */
+  queryRecords<T extends EntityQueryOptions = EntityQueryOptions>(entityId: string, options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
 }
 
 /**
@@ -221,6 +263,18 @@ export interface EntityMethods {
    * @returns Promise resolving to query response
    */
   getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
+
+  /**
+   * Query records from this entity with advanced filtering, sorting, and field selection
+   * 
+   * @param options - Query options including filters, sorting, pagination, etc.
+   * @returns Promise resolving to query response
+   */
+  query<T extends EntityQueryOptions = EntityQueryOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
@@ -267,6 +321,16 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       if (!entityData.id) throw new Error('Entity ID is undefined');
       
       return service.getRecordsById(entityData.id, options) as any;
+    },
+
+    async query<T extends EntityQueryOptions = EntityQueryOptions>(options?: T): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<EntityRecord>
+        : NonPaginatedResponse<EntityRecord>
+    > {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      
+      return service.queryRecords(entityData.id, options) as any;
     }
   };
 }
