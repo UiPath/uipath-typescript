@@ -359,22 +359,22 @@ export const InstanceDetails = ({ selectedInstance, instanceDetails, onRefreshDa
         )}
 
         {/* Attachments Section */}
-        {instanceDetails.attachment && (
-          <div className="px-4 pb-4">
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                  </div>
-                  Attachments
-                </h3>
-                <p className="text-blue-700 mt-1">Documents and files associated with this process</p>
-              </div>
-              
-              <div className="p-4">
+        <div className="px-4 pb-4">
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </div>
+                Attachments
+              </h3>
+              <p className="text-blue-700 mt-1">Documents and files associated with this process</p>
+            </div>
+
+            <div className="p-4">
+              {instanceDetails.attachment ? (
                 <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-blue-100 rounded-lg">
@@ -386,7 +386,7 @@ export const InstanceDetails = ({ selectedInstance, instanceDetails, onRefreshDa
                       <h4 className="font-semibold text-blue-900">{instanceDetails.attachment.name}</h4>
                     </div>
                   </div>
-                  <a 
+                  <a
                     href={`${import.meta.env.VITE_UIPATH_BASE_URL}/${import.meta.env.VITE_UIPATH_ORG_NAME}/${import.meta.env.VITE_UIPATH_TENANT_NAME}/dataservice_/entities/${import.meta.env.VITE_UIPATH_ENTITY_ID}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -398,10 +398,26 @@ export const InstanceDetails = ({ selectedInstance, instanceDetails, onRefreshDa
                     Open File
                   </a>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="p-3 bg-gray-100 rounded-lg">
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">No Attachments</h4>
+                    <p className="text-gray-600 text-sm">
+                      {import.meta.env.VITE_UIPATH_ENTITY_ID
+                        ? 'No attachments found for this process instance'
+                        : 'Add VITE_UIPATH_ENTITY_ID to environment variables to fetch attachments from Data Fabric'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
       
       {/* Task Popup */}

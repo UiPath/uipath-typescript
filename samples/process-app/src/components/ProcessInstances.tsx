@@ -147,17 +147,34 @@ export const ProcessInstances = () => {
     if (!sdk) return;
 
     setSelectedInstanceDetails({ loading: true });
+
+    // Initialize result object with basic info
+    const result: {
+      requestor?: string;
+      endDate?: string;
+      activityType?: string;
+      attachment?: { name: string; url: string };
+      taskLink?: string;
+      variables?: Record<string, Array<{ name: string; value: string; type: string }>>;
+      loading: boolean;
+      error?: string;
+    } = {
+      loading: false,
+      requestor: instance.startedByUser,
+      endDate: instance.completedTime || 'Not Completed',
+    };
+
+    // Fetch variables (with error handling)
+    let elementId: string | undefined;
     try {
-      // Get execution variables to find the last element and applicant files
       const variables: ProcessInstanceGetVariablesResponse = await sdk.maestro.processes.instances.getVariables(instance.instanceId, instance.folderKey);
       console.log('Variables:', variables);
       const lastElement = variables.elements[variables.elements.length - 1];
-      const elementId = lastElement?.elementId;
-
+      elementId = lastElement?.elementId;
 
       // Group variables by source, excluding certain types
       const groupedVariables: Record<string, Array<{ name: string; value: string; type: string }>> = {};
-      
+
       variables.globalVariables
         .filter(variable => {
           // Filter out variables with unwanted types
@@ -167,9 +184,9 @@ export const ProcessInstances = () => {
         .filter(variable => {
           // Filter out variables with null, empty, or 'null' string values
           const value = String(variable.value).trim().toLowerCase();
-          return variable.value !== null && 
-                 variable.value !== undefined && 
-                 value !== '' && 
+          return variable.value !== null &&
+                 variable.value !== undefined &&
+                 value !== '' &&
                  value !== 'null' &&
                  value !== 'undefined';
         })
@@ -192,86 +209,93 @@ export const ProcessInstances = () => {
         }
       });
 
-      // Get BPMN, execution history, and entity attachment using proper SDK types
-      const entityId = import.meta.env.VITE_UIPATH_ENTITY_ID;
-      if (!entityId) {
-        throw new Error('VITE_UIPATH_ENTITY_ID environment variable is not set');
-      }
-      
-      const [bpmnXml, executionHistory, entity]: [BpmnXmlString, ProcessInstanceExecutionHistoryResponse[], EntityGetResponse] = await Promise.all([
-        sdk.maestro.processes.instances.getBpmn(instance.instanceId, instance.folderKey),
-        sdk.maestro.processes.instances.getExecutionHistory(instance.instanceId),
-        sdk.entities.getById(entityId)
-      ]);
-
-      // Get the first record from the entity
-      const entityRecords = await entity.getRecords({expansionLevel: 2});
-
-      // Parse BPMN XML to find activity type
-      let activityType = 'Unknown';
-      let taskLink = undefined;
-
-      if (elementId) {
-        const match = bpmnXml.match(new RegExp(`<bpmn:(\\w+)\\s+id="${elementId}"`));
-        if (match && match[1]) {
-          activityType = match[1].replace(/([A-Z])/g, ' $1').trim(); // Add spaces between camelCase
-          
-          // If it's a user task, look for the action center task link
-          if (activityType.toLowerCase() === 'user task') {
-            // Find the history entry with matching elementId
-            console.log('Looking for elementId:', elementId);
-            console.log('Execution History:', executionHistory);
-            const taskEntry = executionHistory.find((entry: ProcessInstanceExecutionHistoryResponse) => {
-              // Parse attributes JSON if it's a string
-              const attributes = typeof entry.attributes === 'string' 
-                ? JSON.parse(entry.attributes) 
-                : entry.attributes;
-              return attributes?.elementId === elementId;
-            });
-
-            if (taskEntry) {
-              const attributes = typeof taskEntry.attributes === 'string' 
-                ? JSON.parse(taskEntry.attributes) 
-                : taskEntry.attributes;
-              taskLink = attributes?.actionCenterTaskLink;
-              console.log('Found task link:', taskLink);
-            }
-          }
-
-          }
-        }
-
-      // Get attachment from entity records
-      let attachment = undefined;
-      if (entityRecords?.items && entityRecords.items.length > 0) {
-        // Find the first record with an attachment
-        const recordWithAttachment = entityRecords.items.find((record: EntityRecord) => record.attatchments);
-        console.log('Record with attachment:', recordWithAttachment);
-        
-        if (recordWithAttachment?.attatchments) {
-          attachment = {
-            name: recordWithAttachment.attatchments.name,
-            url: recordWithAttachment.attatchments.path
-          };
-        }
-      }
-
-      setSelectedInstanceDetails({
-        loading: false,
-        requestor: instance.startedByUser || 'Trigger',
-        endDate: instance.completedTime || 'Not completed',
-        activityType,
-        attachment,
-        taskLink,
-        variables: groupedVariables
-      });
+      result.variables = groupedVariables;
     } catch (err) {
-      console.error('Error fetching instance details:', err);
-      setSelectedInstanceDetails({
-        loading: false,
-        error: err instanceof Error ? err.message : 'Failed to fetch instance details'
-      });
+      console.error('Error fetching variables:', err);
+      // Continue with other data fetching
     }
+
+    // Fetch BPMN and execution history (with individual error handling)
+    let bpmnXml: BpmnXmlString | null = null;
+    let executionHistory: ProcessInstanceExecutionHistoryResponse[] = [];
+
+    try {
+      bpmnXml = await sdk.maestro.processes.instances.getBpmn(instance.instanceId, instance.folderKey);
+    } catch (err) {
+      console.error('Error fetching BPMN:', err);
+      // Continue without BPMN data
+    }
+
+    try {
+      executionHistory = await sdk.maestro.processes.instances.getExecutionHistory(instance.instanceId);
+    } catch (err) {
+      console.error('Error fetching execution history:', err);
+      // Continue without execution history
+    }
+
+    // Parse BPMN XML to find activity type
+    let activityType = 'Unknown';
+    let taskLink = undefined;
+
+    if (elementId && bpmnXml) {
+      const match = bpmnXml.match(new RegExp(`<bpmn:(\\w+)\\s+id="${elementId}"`));
+      if (match && match[1]) {
+        activityType = match[1].replace(/([A-Z])/g, ' $1').trim(); // Add spaces between camelCase
+
+        // If it's a user task, look for the action center task link
+        if (activityType.toLowerCase() === 'user task' && executionHistory.length > 0) {
+          // Find the history entry with matching elementId
+          console.log('Looking for elementId:', elementId);
+          console.log('Execution History:', executionHistory);
+          const taskEntry = executionHistory.find((entry: ProcessInstanceExecutionHistoryResponse) => {
+            // Parse attributes JSON if it's a string
+            const attributes = typeof entry.attributes === 'string'
+              ? JSON.parse(entry.attributes)
+              : entry.attributes;
+            return attributes?.elementId === elementId;
+          });
+
+          if (taskEntry) {
+            const attributes = typeof taskEntry.attributes === 'string'
+              ? JSON.parse(taskEntry.attributes)
+              : taskEntry.attributes;
+            taskLink = attributes?.actionCenterTaskLink;
+            console.log('Found task link:', taskLink);
+          }
+        }
+      }
+    }
+
+    result.activityType = activityType;
+    result.taskLink = taskLink;
+
+    // Fetch entity attachment (with error handling)
+    const entityId = import.meta.env.VITE_UIPATH_ENTITY_ID;
+
+    if (entityId) {
+      try {
+        const entity: EntityGetResponse = await sdk.entities.getById(entityId);
+        const entityRecords = await entity.getRecords({expansionLevel: 2});
+
+        if (entityRecords?.items && entityRecords.items.length > 0) {
+          // Find the first record with an attachment
+          const recordWithAttachment = entityRecords.items.find((record: EntityRecord) => record.attatchments);
+          console.log('Record with attachment:', recordWithAttachment);
+
+          if (recordWithAttachment?.attatchments) {
+            result.attachment = {
+              name: recordWithAttachment.attatchments.name,
+              url: recordWithAttachment.attatchments.path
+            };
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching entity attachments:', err);
+        // Don't set attachment - will show "No attachments" message in UI
+      }
+    }
+
+    setSelectedInstanceDetails(result);
   };
 
 
