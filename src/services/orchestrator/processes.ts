@@ -10,7 +10,7 @@ import {
   ProcessGetByIdOptions
 } from '../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../models/orchestrator/processes.models';
-import { addPrefixToKeys, camelToPascalCaseKeys, pascalToCamelCaseKeys, reverseMap, transformData } from '../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, reverseMap, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
 import { ProcessMap } from '../../models/orchestrator/processes.constants';
 import { TokenManager } from '../../core/auth/token-manager';
@@ -142,12 +142,9 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
       }
     });
     
-    // Convert to PascalCase for API
-    const pascalOptions = camelToPascalCaseKeys(apiRequest);   
-    
     // Create the request object according to API spec
     const requestBody = {
-      startInfo: pascalOptions
+      startInfo: apiRequest
     };
 
     // Prefix all query parameter keys with '$' for OData
