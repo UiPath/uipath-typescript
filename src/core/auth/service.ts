@@ -232,12 +232,16 @@ export class AuthService extends BaseService {
       return this._base64URLEncode(array);
     } else {
       // In Node.js environment
+      try {
       const crypto = require('crypto');
       return crypto.randomBytes(32)
         .toString('base64')
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
+      } catch(e) {
+        throw new Error("crypto not available in browser")
+      }
     }
   }
 
@@ -252,6 +256,7 @@ export class AuthService extends BaseService {
       return this._base64URLEncode(new Uint8Array(hash));
     } else {
       // In Node.js environment
+      try {
       const crypto = require('crypto');
       return crypto.createHash('sha256')
         .update(codeVerifier)
@@ -259,6 +264,9 @@ export class AuthService extends BaseService {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
+      } catch (e) {
+        throw new Error("crypto not available in browser")
+      }
     }
   }
 
