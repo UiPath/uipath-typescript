@@ -1,6 +1,6 @@
 {
   "name": "@uipath/uipath-ts-cli",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "UiPath CLI tool for authentication, packaging, publishing, and deployment",
   "type": "module",
   "main": "./dist/index.js",
@@ -44,7 +44,8 @@
     "node-fetch": "^3.3.2",
     "open": "^10.2.0",
     "ora": "^8.1.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@oclif/test": "^4.0.9",
