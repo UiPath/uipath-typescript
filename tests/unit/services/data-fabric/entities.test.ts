@@ -304,7 +304,6 @@ describe('EntityService Unit Tests', () => {
         expect.objectContaining({
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
-          transformFn: expect.any(Function),
           pagination: expect.any(Object),
           excludeFromPrefix: ['expansionLevel']
         }),
@@ -340,7 +339,6 @@ describe('EntityService Unit Tests', () => {
         expect.objectContaining({
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
-          transformFn: expect.any(Function),
           pagination: expect.any(Object)
         }),
         expect.objectContaining({
@@ -375,7 +373,6 @@ describe('EntityService Unit Tests', () => {
         expect.objectContaining({
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
-          transformFn: expect.any(Function),
           pagination: expect.any(Object),
           excludeFromPrefix: ['expansionLevel']
         }),
