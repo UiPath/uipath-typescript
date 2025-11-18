@@ -1,4 +1,4 @@
-import { EVENT_NAMES } from "./codedActionEvents";
+import { ActionCenterData, EVENT_NAMES } from "./codedActionTypes";
 
 const searchParams = new URLSearchParams(window.location.search);
 const PARENT_ORIGIN = searchParams.get('basedomain');
@@ -22,13 +22,9 @@ export class TaskEventsService {
     this.sendMessageToParent(EVENT_NAMES.COMPLETE, content);
   }
 
-  sendError(content: any): void {
-    this.sendMessageToParent(EVENT_NAMES.ERROR, content);
-  }
-
-  getTaskDetailsFromActionCenter(callback: (data: any) => void): void {
+  getTaskDetailsFromActionCenter(callback: (data: ActionCenterData) => void): void {
     window.addEventListener('message', (event) => {
-      if (subscribedEvents.includes(event.data.eventType)) {
+      if (event.origin === PARENT_ORIGIN && subscribedEvents.includes(event.data.eventType)) {
         callback(event.data.content);
       }
     });
