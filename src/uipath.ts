@@ -152,6 +152,10 @@ export class UiPath {
     return this.authService.getToken();
   }
 
+  public updateToken(token: string) {
+    return this.authService.authenticateWithSecret(token);
+  }
+
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
     const serviceName = serviceConstructor.name;
     if (!this._services.has(serviceName)) {
