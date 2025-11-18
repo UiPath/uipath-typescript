@@ -46,7 +46,8 @@ export const MAESTRO_ENDPOINTS = {
 export const TASK_ENDPOINTS = {
   CREATE_GENERIC_TASK: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/CreateTask`,
   GET_TASK_USERS: (folderId: number) => `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId=${folderId})`,
-  GET_TASKS_ACROSS_FOLDERS: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFoldersForAdmin`,
+  GET_TASKS_ACROSS_FOLDERS: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders`,
+  GET_TASKS_ACROSS_FOLDERS_ADMIN: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFoldersForAdmin`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Tasks(${id})`,
   ASSIGN_TASKS: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.AssignTasks`,
   REASSIGN_TASKS: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.ReassignTasks`,
