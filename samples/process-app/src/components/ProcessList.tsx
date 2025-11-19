@@ -45,6 +45,9 @@ export const ProcessList = () => {
       console.log('Processes response:', processesResponse);
       console.log('Instances response:', instancesResponse);
 
+      const entity = await sdk.entities.getAll();
+      console.log('--------------Entity details--------------', entity[0].fields);
+
       // processesResponse is already MaestroProcessGetAllResponse[] from the SDK
       const processes: MaestroProcessGetAllResponse[] = processesResponse;
       

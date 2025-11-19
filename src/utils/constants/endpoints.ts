@@ -37,17 +37,17 @@ export const MAESTRO_ENDPOINTS = {
  * Task Service (Action Center) Endpoints
  */
 export const TASK_ENDPOINTS = {
-  CREATE_GENERIC_TASK: '/tasks/GenericTasks/CreateTask',
-  GET_TASK_USERS: (folderId: number) => `/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId=${folderId})`,
-  GET_TASKS_ACROSS_FOLDERS: '/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFoldersForAdmin',
-  GET_BY_ID: (id: number) => `/odata/Tasks(${id})`,
-  ASSIGN_TASKS: '/odata/Tasks/UiPath.Server.Configuration.OData.AssignTasks',
-  REASSIGN_TASKS: '/odata/Tasks/UiPath.Server.Configuration.OData.ReassignTasks',
-  UNASSIGN_TASKS: '/odata/Tasks/UiPath.Server.Configuration.OData.UnassignTasks',
-  COMPLETE_FORM_TASK: '/forms/TaskForms/CompleteTask',
-  COMPLETE_APP_TASK: '/tasks/AppTasks/CompleteAppTask',
-  COMPLETE_GENERIC_TASK: '/tasks/GenericTasks/CompleteTask',
-  GET_TASK_FORM_BY_ID: '/forms/TaskForms/GetTaskFormById',
+  CREATE_GENERIC_TASK: 'orchestrator_/tasks/GenericTasks/CreateTask',
+  GET_TASK_USERS: (folderId: number) => `orchestrator_/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId=${folderId})`,
+  GET_TASKS_ACROSS_FOLDERS: 'orchestrator_/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFoldersForAdmin',
+  GET_BY_ID: (id: number) => `orchestrator_/odata/Tasks(${id})`,
+  ASSIGN_TASKS: 'orchestrator_/odata/Tasks/UiPath.Server.Configuration.OData.AssignTasks',
+  REASSIGN_TASKS: 'orchestrator_/odata/Tasks/UiPath.Server.Configuration.OData.ReassignTasks',
+  UNASSIGN_TASKS: 'orchestrator_/odata/Tasks/UiPath.Server.Configuration.OData.UnassignTasks',
+  COMPLETE_FORM_TASK: 'orchestrator_/forms/TaskForms/CompleteTask',
+  COMPLETE_APP_TASK: 'orchestrator_/tasks/AppTasks/CompleteAppTask',
+  COMPLETE_GENERIC_TASK: 'orchestrator_/tasks/GenericTasks/CompleteTask',
+  GET_TASK_FORM_BY_ID: 'orchestrator_/forms/TaskForms/GetTaskFormById',
 } as const;
 
 /**
@@ -68,12 +68,12 @@ export const DATA_FABRIC_ENDPOINTS = {
  * Orchestrator Bucket Endpoints
  */
 export const BUCKET_ENDPOINTS = {
-  GET_BY_FOLDER: '/odata/Buckets',
-  GET_ALL: '/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders',
-  GET_BY_ID: (id: number) => `/odata/Buckets(${id})`,
-  GET_FILE_META_DATA: (id: number) => `/api/Buckets/${id}/ListFiles`,
-  GET_READ_URI: (id: number) => `/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetReadUri`,
-  GET_WRITE_URI: (id: number) => `/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetWriteUri`,
+  GET_BY_FOLDER: 'orchestrator_/odata/Buckets',
+  GET_ALL: 'orchestrator_/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders',
+  GET_BY_ID: (id: number) => `orchestrator_/odata/Buckets(${id})`,
+  GET_FILE_META_DATA: (id: number) => `orchestrator_/api/Buckets/${id}/ListFiles`,
+  GET_READ_URI: (id: number) => `orchestrator_/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetReadUri`,
+  GET_WRITE_URI: (id: number) => `orchestrator_/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetWriteUri`,
 } as const;
 
 /**
@@ -89,25 +89,25 @@ export const IDENTITY_ENDPOINTS = {
  * Orchestrator Process Service Endpoints
  */
 export const PROCESS_ENDPOINTS = {
-  GET_ALL: '/odata/Releases',
-  START_PROCESS: '/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs',
-  GET_BY_ID: (id: number) => `/odata/Releases(${id})`,
+  GET_ALL: 'orchestrator_/odata/Releases',
+  START_PROCESS: 'orchestrator_/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs',
+  GET_BY_ID: (id: number) => `orchestrator_/odata/Releases(${id})`,
 } as const;
 
 /**
  * Orchestrator Queue Service Endpoints
  */
 export const QUEUE_ENDPOINTS = {
-  GET_BY_FOLDER: '/odata/QueueDefinitions',
-  GET_ALL: '/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueuesAcrossFolders',
-  GET_BY_ID: (id: number) => `/odata/QueueDefinitions(${id})`,
+  GET_BY_FOLDER: 'orchestrator_/odata/QueueDefinitions',
+  GET_ALL: 'orchestrator_/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueuesAcrossFolders',
+  GET_BY_ID: (id: number) => `orchestrator_/odata/QueueDefinitions(${id})`,
 } as const;
 
 /**
  * Orchestrator Asset Service Endpoints
  */
 export const ASSET_ENDPOINTS = {
-  GET_BY_FOLDER: '/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered',
-  GET_ALL: '/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders',
-  GET_BY_ID: (id: number) => `/odata/Assets(${id})`,
+  GET_BY_FOLDER: 'orchestrator_/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered',
+  GET_ALL: 'orchestrator_/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders',
+  GET_BY_ID: (id: number) => `orchestrator_/odata/Assets(${id})`,
 } as const;

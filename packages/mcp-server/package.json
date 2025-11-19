@@ -1,0 +1,50 @@
+{
+  "name": "@uipath/mcp-server",
+  "version": "1.0.0-beta.1",
+  "description": "Model Context Protocol (MCP) server for UiPath SDK - enables AI assistants to interact with UiPath automation platform",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "uipath-mcp-server": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "ARCHITECTURE.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "uipath",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "automation",
+    "claude",
+    "llm"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@uipath/uipath-typescript": "file:../../uipath-uipath-typescript-1.0.0-beta.14.tgz",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UiPath/uipath-typescript.git",
+    "directory": "packages/mcp-server"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
