@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TokenStorage, TOKEN_STORAGE_OPTIONS } from './sdk-config';
 
 export const ConfigSchema = z.object({
   baseUrl: z.string().url().default('https://cloud.uipath.com'),
@@ -7,7 +8,8 @@ export const ConfigSchema = z.object({
   secret: z.string().optional(),
   clientId: z.string().optional(),
   redirectUri: z.string().url().optional(),
-  scope: z.string().optional()
+  scope: z.string().optional(),
+  tokenStorage: z.enum(TOKEN_STORAGE_OPTIONS).optional()
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -20,6 +22,7 @@ interface ConfigOptions {
   clientId?: string;
   redirectUri?: string;
   scope?: string;
+  tokenStorage?: TokenStorage;
 }
 
 export class UiPathConfig {
@@ -30,6 +33,7 @@ export class UiPathConfig {
   public readonly clientId?: string;
   public readonly redirectUri?: string;
   public readonly scope?: string;
+  public readonly tokenStorage: TokenStorage; // Always defined (defaults to 'sessionStorage')
 
   constructor(options: ConfigOptions) {
     this.baseUrl = options.baseUrl;
@@ -39,6 +43,7 @@ export class UiPathConfig {
     this.clientId = options.clientId;
     this.redirectUri = options.redirectUri;
     this.scope = options.scope;
+    this.tokenStorage = options.tokenStorage || 'sessionStorage'; // Default to sessionStorage
   }
 }
 
