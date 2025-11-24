@@ -29,7 +29,10 @@ const createPlugins = (isBrowser) => [
     tsconfig: './tsconfig.json',
     declaration: false,
     sourceMap: false,
-    declarationMap: false
+    declarationMap: false,
+    compilerOptions: {
+      removeComments: true           // Strip comments from output
+    }
   })
 ];
 
@@ -48,7 +51,10 @@ const createBrowserPlugins = () => [
     tsconfig: './tsconfig.json',
     declaration: false,
     sourceMap: false,
-    declarationMap: false
+    declarationMap: false,
+    compilerOptions: {
+      removeComments: true           // Strip comments from output
+    }
   })
 ];
 
@@ -60,12 +66,15 @@ const configs = [
     output: {
       file: 'dist/index.mjs',          // Output as .mjs for explicit ESM
       format: 'es',
-      inlineDynamicImports: true
+      inlineDynamicImports: true,
+      generatedCode: {
+        constBindings: true
+      }
     },
     plugins: createPlugins(false),
     external: allDependencies
   },
-  
+
   // CommonJS bundle (for Node.js and older bundlers)
   {
     input: 'src/index.ts',              // Entry point of the SDK
@@ -73,12 +82,15 @@ const configs = [
       file: 'dist/index.cjs',          // Output as .cjs for explicit CommonJS
       format: 'cjs',
       exports: 'named',
-      inlineDynamicImports: true
+      inlineDynamicImports: true,
+      generatedCode: {
+        constBindings: true
+      }
     },
     plugins: createPlugins(false),
     external: allDependencies
   },
-  
+
   // UMD bundle (for browsers via script tag or older bundlers)
   {
     input: 'src/index.ts',              // Entry point of the SDK
@@ -86,9 +98,13 @@ const configs = [
       file: 'dist/index.umd.js',       // Output as UMD for universal compatibility
       format: 'umd',                    // Universal Module Definition format
       name: 'UiPath',                   // Global variable name when loaded via script tag
-      inlineDynamicImports: true
+      inlineDynamicImports: true,
+      generatedCode: {
+        constBindings: true
+      }
     },
-    plugins: createBrowserPlugins()
+    plugins: createBrowserPlugins(),
+    external: allDependencies            // Also externalize dependencies for UMD
   },
   
   // Type definitions for ESM (.mts extension for ESM types)
