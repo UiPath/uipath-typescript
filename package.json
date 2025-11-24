@@ -25,6 +25,16 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
+        },
+        "./entities": {
+            "import": {
+                "types": "./dist/services/data-fabric/index.d.mts",
+                "default": "./dist/services/data-fabric/index.mjs"
+            },
+            "require": {
+                "types": "./dist/services/data-fabric/index.d.cts",
+                "default": "./dist/services/data-fabric/index.cjs"
+            }
         }
     },
     "files": [
