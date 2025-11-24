@@ -14,124 +14,59 @@ const allDependencies = [
   ...builtins                                     // Node.js built-in modules - part of Node.js core, no installation needed (crypto, fs, path, etc.)
 ];
 
-// Base plugins configuration for Node.js and ESM/CJS builds
-const createPlugins = (isBrowser) => [
+// Plugins configuration for Node.js ESM build
+const createPlugins = () => [
   resolve({
-    browser: isBrowser,        // When true: resolve browser-compatible versions of modules (e.g., polyfills)
-    preferBuiltins: !isBrowser // When false: prefer Node.js built-ins (crypto, fs) over browser polyfills
+    preferBuiltins: true  // Prefer Node.js built-ins (crypto, fs, path, etc.)
   }),
   commonjs({
-    transformMixedEsModules: true, // Handle packages that mix ESM and CommonJS
-    ignoreTryCatch: false          // Don't ignore try-catch when transforming
-  }),
-  json(),                          // Allow importing JSON files as modules
-  typescript({
-    tsconfig: './tsconfig.json',
-    declaration: false,
-    sourceMap: false,
-    declarationMap: false,
-    compilerOptions: {
-      removeComments: true           // Strip comments from output
-    }
-  })
-];
-
-// Browser-specific plugins for UMD build
-const createBrowserPlugins = () => [
-  resolve({
-    browser: true,
-    preferBuiltins: false
-  }),
-  commonjs({
-    transformMixedEsModules: true,
+    transformMixedEsModules: true,  // Handle packages that mix ESM and CommonJS
     ignoreTryCatch: false
   }),
-  json(),
+  json(),  // Allow importing JSON files as modules
   typescript({
     tsconfig: './tsconfig.json',
     declaration: false,
     sourceMap: false,
     declarationMap: false,
     compilerOptions: {
-      removeComments: true           // Strip comments from output
+      removeComments: true  // Strip comments from output
     }
   })
 ];
 
 // Rollup build configurations for different output formats
 const configs = [
-  // ESM bundle (for Node.js and modern bundlers like Vite, Webpack etc.)
+  // ESM bundle (for Node.js and modern bundlers)
   {
-    input: 'src/index.ts',              // Entry point of the SDK
+    input: 'src/index.ts',
     output: {
-      file: 'dist/index.mjs',          // Output as .mjs for explicit ESM
+      file: 'dist/index.mjs',
       format: 'es',
       inlineDynamicImports: true,
       generatedCode: {
         constBindings: true
       }
     },
-    plugins: createPlugins(false),
+    plugins: createPlugins(),
     external: allDependencies
   },
 
-  // CommonJS bundle (for Node.js and older bundlers)
+  // Type definitions for ESM
   {
-    input: 'src/index.ts',              // Entry point of the SDK
+    input: 'src/index.ts',
     output: {
-      file: 'dist/index.cjs',          // Output as .cjs for explicit CommonJS
-      format: 'cjs',
-      exports: 'named',
-      inlineDynamicImports: true,
-      generatedCode: {
-        constBindings: true
-      }
-    },
-    plugins: createPlugins(false),
-    external: allDependencies
-  },
-
-  // UMD bundle (for browsers via script tag or older bundlers)
-  {
-    input: 'src/index.ts',              // Entry point of the SDK
-    output: {
-      file: 'dist/index.umd.js',       // Output as UMD for universal compatibility
-      format: 'umd',                    // Universal Module Definition format
-      name: 'UiPath',                   // Global variable name when loaded via script tag
-      inlineDynamicImports: true,
-      generatedCode: {
-        constBindings: true
-      }
-    },
-    plugins: createBrowserPlugins(),
-    external: allDependencies            // Also externalize dependencies for UMD
-  },
-  
-  // Type definitions for ESM (.mts extension for ESM types)
-  {
-    input: 'src/index.ts',              // Entry point for types
-    output: {
-      file: 'dist/index.d.mts',        // TypeScript declaration file for ESM
+      file: 'dist/index.d.mts',
       format: 'es'
     },
     plugins: [dts()]
   },
-  
-  // Type definitions for CommonJS (.cts extension for CJS types)
+
+  // Main type definitions (for package.json "types" field)
   {
-    input: 'src/index.ts',              // Entry point for types
+    input: 'src/index.ts',
     output: {
-      file: 'dist/index.d.cts',        // TypeScript declaration file for CJS
-      format: 'es'
-    },
-    plugins: [dts()]
-  },
-  
-  // Main type definitions (for legacy TypeScript and package.json "types" field)
-  {
-    input: 'src/index.ts',              // Entry point for types
-    output: {
-      file: 'dist/index.d.ts',         // Main TypeScript declaration file
+      file: 'dist/index.d.ts',
       format: 'es'
     },
     plugins: [dts()]
