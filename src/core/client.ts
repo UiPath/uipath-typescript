@@ -5,13 +5,7 @@ import { TokenManager } from './auth/token-manager';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
-
-/**
- * Type for service constructors that can be instantiated via .get()
- */
-export interface ServiceConstructor<T> {
-  new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager): T;
-}
+import { ServiceRegistry, ServiceConstructor } from './registry/service-registry';
 
 /**
  * UiPath Client - Core client for authentication and configuration management.
@@ -24,7 +18,7 @@ export class UiPathClient {
   private executionContext: ExecutionContext;
   private authService: AuthService;
   private initialized: boolean = false;
-  private serviceRegistry: Map<ServiceConstructor<any>, any> = new Map();
+  private serviceRegistry: ServiceRegistry;
 
   constructor(config: UiPathSDKConfig) {
     // Validate and normalize the configuration
@@ -43,6 +37,13 @@ export class UiPathClient {
 
     this.executionContext = new ExecutionContext();
     this.authService = new AuthService(this.config, this.executionContext);
+
+    // Initialize ServiceRegistry (explicit registration, lazy instantiation)
+    this.serviceRegistry = new ServiceRegistry(
+      this.config,
+      this.executionContext,
+      this.authService.getTokenManager()
+    );
 
     // Initialize telemetry with SDK configuration
     telemetryClient.initialize({
@@ -171,24 +172,29 @@ export class UiPathClient {
   }
 
   /**
-   * Get a service instance. Services are cached per client instance.
+   * Get a service instance. Services are lazily instantiated on first access and cached.
    *
    * @param ServiceClass - The service class constructor
    * @returns Cached or newly created service instance
+   *
+   * @example
+   * ```typescript
+   * import { EntityService } from '@uipath/uipath-typescript';
+   *
+   * const client = await UiPathClient.connect(config);
+   * const entities = client.get(EntityService);  // Created on first access
+   * const entities2 = client.get(EntityService); // Returns cached instance
+   * ```
    */
   public get<T>(ServiceClass: ServiceConstructor<T>): T {
-    // Check if service instance already exists in registry
+    // Delegate to ServiceRegistry
+    // If not registered, will register on first access (backward compatible)
     if (!this.serviceRegistry.has(ServiceClass)) {
-      // Create new instance and cache it - uses same pattern as legacy UiPath class
-      const instance = new ServiceClass(
-        this.getConfig(),
-        this.getContext(),
-        this.getTokenManager()
-      );
-      this.serviceRegistry.set(ServiceClass, instance);
+      // Auto-register on first access for backward compatibility
+      this.serviceRegistry.register(ServiceClass);
     }
 
-    return this.serviceRegistry.get(ServiceClass)!;
+    return this.serviceRegistry.get(ServiceClass);
   }
 
   /**
