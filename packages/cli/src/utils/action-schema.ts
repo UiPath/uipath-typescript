@@ -2,12 +2,12 @@ import path from "path";
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import { z } from 'zod';
-import { JsonDataType, JsonFormatType, VBDataType, VbArgumentDataTypeNamespace, VbArgumentCollectionType } from "../types/index.js";
-import { ActionSchemaConstants } from "../constants/commands.js";
+import { JsonActionSchema, JsonActionSchemaValidator, JsonDataType, JsonFormatType, JsonSchemaProperty, ParsedActionPropertySchema, ParsedActionSchema, VbArgumentCollectionType, VbArgumentDataTypeNamespace, VBDataType } from "../types/index.js";
+import { ACTION_SCHEMA_CONSTANTS } from "../constants/index.js";
 import { MESSAGES } from '../constants/messages.js';
 
 export function readAndParseActionSchema(): ParsedActionSchema {
-    const actionSchemaPath = path.join(process.cwd(), ActionSchemaConstants.actionSchemaFileName);
+    const actionSchemaPath = path.join(process.cwd(), ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME);
 
     const jsonActionSchema = fs.readFileSync(actionSchemaPath, 'utf-8');
     const rawSchema = JSON.parse(jsonActionSchema);
@@ -21,91 +21,6 @@ export function readAndParseActionSchema(): ParsedActionSchema {
 function generateGuid(): string {
   return uuidv4();
 }
-
-const JsonSchemaPropertySchema: z.ZodType<any> = z.lazy(() =>
-  z.object({
-    type: z.enum([
-      JsonDataType.string,
-      JsonDataType.integer,
-      JsonDataType.number,
-      JsonDataType.boolean,
-      JsonDataType.array,
-      JsonDataType.object,
-    ], { message: MESSAGES.ERRORS.INVALID_PROPERTY_TYPE }),
-    required: z.boolean().optional(),
-    description: z.string().optional(),
-    format: z.enum([JsonFormatType.uuid, JsonFormatType.date], {
-      message: MESSAGES.ERRORS.INVALID_PROPERTY_FORMAT
-    }).optional(),
-    items: JsonSchemaPropertySchema.optional(),
-    properties: z.record(z.string(), JsonSchemaPropertySchema).optional(),
-  })
-  .refine((data) => {
-    if (data.type === JsonDataType.array) {
-      return !!data.items;
-    }
-    return true;
-  }, {
-    message: MESSAGES.ERRORS.MISSING_ITEMS_ARRAY
-  })
-  .refine((data) => {
-    if (data.type === JsonDataType.array && data.items) {   // for preventing nested arrays
-      return data.items.type !== JsonDataType.array;
-    }
-    return true;
-  }, {
-    message: MESSAGES.ERRORS.NESTED_ARRAYS_NOT_SUPPORTED,
-  })
-);
-
-const JsonSchemaObjectSchema = z.object({
-  type: z.literal('object', { message: MESSAGES.ERRORS.SECTION_TYPE_INVALID }),
-  properties: z.record(z.string(), JsonSchemaPropertySchema, {
-    message: MESSAGES.ERRORS.INVALID_PROPERTIES_OBJECT
-  }),
-});
-
-const JsonActionSchemaValidator = z.object({
-  inputs: JsonSchemaObjectSchema,
-  outputs: JsonSchemaObjectSchema,
-  inOuts: JsonSchemaObjectSchema,
-  outcomes: JsonSchemaObjectSchema,
-}, {
-  message: MESSAGES.ERRORS.MISSING_ACTION_SCHEMA_SECTION
-});
-
-type JsonSchemaProperty = z.infer<typeof JsonSchemaPropertySchema>;
-type JsonActionSchema = z.infer<typeof JsonActionSchemaValidator>;
-
-const ParsedActionPropertySchema: z.ZodType<any> = z.lazy(() =>
-  z.object({
-    key: z.string(),
-    name: z.string(),
-    type: z.enum(VBDataType),
-    isList: z.boolean(),
-    typeNamespace: z.enum(VbArgumentDataTypeNamespace),
-    version: z.number(),
-    required: z.boolean(),
-    properties: z.array(ParsedActionPropertySchema).optional(),
-    collectionDataType: z.enum(VbArgumentCollectionType).nullable().optional(),
-    description: z.string().optional(),
-  })
-);
-
-const ParsedActionSchemaValidator = z.object({
-  id: z.string(),
-  name: z.string(),
-  key: z.string(),
-  description: z.string(),
-  inputs: z.array(ParsedActionPropertySchema),
-  outputs: z.array(ParsedActionPropertySchema),
-  inOuts: z.array(ParsedActionPropertySchema),
-  outcomes: z.array(ParsedActionPropertySchema),
-  version: z.number(),
-});
-
-type ParsedActionPropertySchema = z.infer<typeof ParsedActionPropertySchema>;
-type ParsedActionSchema = z.infer<typeof ParsedActionSchemaValidator>;
 
 function validateActionSchema(schema: any): JsonActionSchema {
   try {
@@ -137,7 +52,7 @@ function mapJsonTypeToSystemType(type: JsonDataType, format?: JsonFormatType): V
   }
 }
 
-function transformProperty(name: string, propDef: JsonSchemaProperty): any {
+function transformProperty(name: string, propDef: JsonSchemaProperty): ParsedActionPropertySchema {
   const isArray = propDef.type === JsonDataType.array;
   const itemType = isArray && propDef.items ? propDef.items.type : propDef.type;
   const itemFormat = isArray && propDef.items ? propDef.items.format : propDef.format;
@@ -145,11 +60,11 @@ function transformProperty(name: string, propDef: JsonSchemaProperty): any {
 
   if (propDef.type === JsonDataType.object && propDef.properties) {
     properties = Object.keys(propDef.properties).map(childName =>
-      transformProperty(childName, propDef.properties!![childName])
+      transformProperty(childName, propDef.properties![childName])
     );
   } else if (propDef.type === JsonDataType.array && propDef.items && propDef.items.type === JsonDataType.object && propDef.items.properties) {
     properties = Object.keys(propDef.items.properties).map(childName =>
-      transformProperty(childName, propDef.items!!.properties!![childName])
+      transformProperty(childName, propDef.items!.properties![childName])
     );
   } else {
     properties = [];

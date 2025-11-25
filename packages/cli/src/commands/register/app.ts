@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
 import { EnvironmentConfig, AppConfig, AppType } from '../../types/index.js';
-import { ActionSchemaConstants, API_ENDPOINTS } from '../../constants/index.js';
+import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS } from '../../constants/index.js';
 import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
 import { validateEnvironment } from '../../utils/env-validator.js';
@@ -67,7 +67,7 @@ export default class RegisterApp extends Command {
     const appVersion = flags.version;
     const isActionApp = flags.type as AppType === AppType.Action;
 
-    if (isActionApp && !fs.existsSync(path.join(process.cwd(), ActionSchemaConstants.actionSchemaFileName))) {
+    if (isActionApp && !fs.existsSync(path.join(process.cwd(), ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME))) {
       this.log(chalk.red(`${MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED}`));
       this.log(chalk.yellow(MESSAGES.INFO.CREATE_ACTION_SCHEMA_FIRST));
       return;

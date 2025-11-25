@@ -5,6 +5,6 @@ export const VERSION_CONSTANTS = {
   ERROR_READING_VERSION: 'Error reading version information',
 } as const;
 
-export const ActionSchemaConstants = {
-  actionSchemaFileName: 'action-schema.json'
+export const ACTION_SCHEMA_CONSTANTS = {
+  ACTION_SCHEMA_FILENAME: 'action-schema.json'
 }
