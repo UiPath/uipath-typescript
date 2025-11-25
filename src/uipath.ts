@@ -1,7 +1,7 @@
 import { UiPathConfig } from './core/config/config';
 import { ExecutionContext } from './core/context/execution';
 import { AuthService } from './core/auth/service';
-import { 
+import {
   MaestroProcessesService,
   ProcessInstancesService,
   ProcessIncidentsService,
@@ -18,6 +18,7 @@ import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
 import { TokenManager } from './core/auth/token-manager';
 import { telemetryClient, trackEvent } from './core/telemetry';
+import { loadExtendedConfig, ConfigLoaderOptions, ConfigResult } from './core/config/loader';
 
 type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
@@ -149,6 +150,59 @@ export class UiPath {
    */
   public getToken(): string | undefined {
     return this.authService.getToken();
+  }
+
+  /**
+   * Load configuration from a JSON file.
+   * Returns both SDK config and helpers to access custom properties defined in the same file.
+   *
+   * For browser applications: Place the config file in the public folder (e.g., public/uipath-config.json).
+   * After building, you can edit this file in the dist folder without rebuilding.
+   *
+   * For Node.js applications: Place the config file in the root directory or specify a custom path.
+   *
+   * @param options - Configuration loader options
+   * @returns Promise that resolves to ConfigResult with SDK config and helpers to access custom properties
+   * @throws Error if the config file cannot be loaded or parsed
+   *
+   * @example
+   * ```typescript
+   * // uipath-config.json:
+   * {
+   *   "clientId": "your-client-id",
+   *   "orgName": "your-org",
+   *   "tenantName": "your-tenant",
+   *   "baseUrl": "https://cloud.uipath.com",
+   *   "redirectUri": "http://localhost:5173",
+   *   "scope": "offline_access",
+   *
+   *   "apiTimeout": 5000,
+   *   "maxRetries": 3,
+   *   "featureFlags": {
+   *     "enableNewUI": true
+   *   }
+   * }
+   *
+   * // Load and use:
+   * const { config, get } = await UiPath.getConfig();
+   * const sdk = new UiPath(config);
+   *
+   * // Access custom properties
+   * const timeout = get('apiTimeout'); // 5000
+   * const flags = get('featureFlags'); // { enableNewUI: true }
+   *
+   * // With TypeScript types:
+   * interface MyConfig {
+   *   apiTimeout: number;
+   *   featureFlags: { enableNewUI: boolean };
+   * }
+   * const { config, get } = await UiPath.getConfig<MyConfig>();
+   * ```
+   */
+  public static async getConfig<TCustom = Record<string, any>>(
+    options?: ConfigLoaderOptions
+  ): Promise<ConfigResult<TCustom>> {
+    return loadExtendedConfig<TCustom>(options);
   }
 
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
