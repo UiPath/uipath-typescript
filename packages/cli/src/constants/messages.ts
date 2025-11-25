@@ -112,7 +112,7 @@ export const MESSAGES = {
     RUN_WITHOUT_DRY_RUN: '💡 Run without --dry-run to create the package',
     USE_PUBLISH_TO_UPLOAD: '💡 Use "uipath publish" to upload to UiPath Orchestrator',
     APP_URL_SAVED_TO_ENV: '💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI',
-    NO_APP_URL_FOR_ACTION_APP: '💡 Action apps do not have an App URL',
+    NO_APP_URL_FOR_ACTION_APP: '💡 Action apps do not have an App URL. Action apps will render only inside Action Center',
     APP_CONFIG_SAVED: '💡 App configuration has been saved and will be used by pack command',
     URL_FOR_OAUTH_CONFIG: '💡 You can use this URL as the redirect URI for OAuth configuration in your SDK',
     CREDENTIALS_SAVED: 'Credentials have been saved to .env file',

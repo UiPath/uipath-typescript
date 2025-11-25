@@ -7,4 +7,4 @@ export const VERSION_CONSTANTS = {
 
 export const ACTION_SCHEMA_CONSTANTS = {
   ACTION_SCHEMA_FILENAME: 'action-schema.json'
-}
+} as const;

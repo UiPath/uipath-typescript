@@ -65,12 +65,12 @@ export default class RegisterApp extends Command {
     // Get app details
     const appName = flags.name || await this.promptForAppName();
     const appVersion = flags.version;
-    const isActionApp = flags.type as AppType === AppType.Action;
+    const isActionApp = (flags.type as AppType) === AppType.Action;
 
     if (isActionApp && !fs.existsSync(path.join(process.cwd(), ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME))) {
       this.log(chalk.red(`${MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED}`));
       this.log(chalk.yellow(MESSAGES.INFO.CREATE_ACTION_SCHEMA_FIRST));
-      return;
+      process.exit(1);
     }
 
     // Register the app
@@ -156,8 +156,7 @@ export default class RegisterApp extends Command {
       this.log(chalk.blue(MESSAGES.INFO.APP_REGISTERED));
       if (isActionApp) {
         this.log(chalk.yellow(MESSAGES.INFO.NO_APP_URL_FOR_ACTION_APP));
-      }
-      else {
+      } else {
         this.log(chalk.yellow(MESSAGES.INFO.APP_URL_SAVED_TO_ENV));
       }
       this.log(chalk.yellow(MESSAGES.INFO.APP_CONFIG_SAVED));

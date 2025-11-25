@@ -73,12 +73,12 @@ function transformProperty(name: string, propDef: JsonSchemaProperty): ParsedAct
   const baseProperty: ParsedActionPropertySchema = {
     name,
     key: generateGuid(),
-    required: propDef.required || false,
+    required: propDef.required ?? false,
     description: propDef.description,
     version: 0,
     typeNamespace: VbArgumentDataTypeNamespace.system,
     isList: isArray,
-    collectionDataType: isArray ? VbArgumentCollectionType.array : null,
+    collectionDataType: isArray ? VbArgumentCollectionType.array : undefined,
     type: mapJsonTypeToSystemType(itemType, itemFormat),
     properties,
   };
