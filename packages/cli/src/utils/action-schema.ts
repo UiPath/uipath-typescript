@@ -78,7 +78,7 @@ function transformProperty(name: string, propDef: JsonSchemaProperty): ParsedAct
     version: 0,
     typeNamespace: VbArgumentDataTypeNamespace.system,
     isList: isArray,
-    collectionDataType: isArray ? VbArgumentCollectionType.array : undefined,
+    collectionDataType: isArray ? VbArgumentCollectionType.array : null,
     type: mapJsonTypeToSystemType(itemType, itemFormat),
     properties,
   };

@@ -119,7 +119,7 @@ export const ParsedActionPropertySchema: z.ZodType<ParsedActionPropertySchema> =
     version: z.number(),
     required: z.boolean(),
     properties: z.array(ParsedActionPropertySchema).optional(),
-    collectionDataType: z.enum([VbArgumentCollectionType.array]).optional(),
+    collectionDataType: z.enum([VbArgumentCollectionType.array]).nullable().optional(),
     description: z.string().optional(),
   })
 );
@@ -145,7 +145,7 @@ export type ParsedActionPropertySchema = {
   version: number;
   required: boolean;
   properties?: ParsedActionPropertySchema[];
-  collectionDataType?: VbArgumentCollectionType;
+  collectionDataType?: VbArgumentCollectionType | null;
   description?: string;
 };
 
