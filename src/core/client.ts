@@ -187,13 +187,6 @@ export class UiPathClient {
    * ```
    */
   public get<T>(ServiceClass: ServiceConstructor<T>): T {
-    // Delegate to ServiceRegistry
-    // If not registered, will register on first access (backward compatible)
-    if (!this.serviceRegistry.has(ServiceClass)) {
-      // Auto-register on first access for backward compatibility
-      this.serviceRegistry.register(ServiceClass);
-    }
-
     return this.serviceRegistry.get(ServiceClass);
   }
 

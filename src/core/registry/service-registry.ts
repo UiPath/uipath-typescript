@@ -4,8 +4,12 @@
  * @example
  * ```typescript
  * const registry = new ServiceRegistry(config, context, tokenManager);
- * registry.register(EntityService);
- * const entities = registry.get(EntityService); // Created on first access
+ *
+ * // Auto-registers and creates on first access
+ * const entities = registry.get(EntityService);
+ *
+ * // Returns cached instance on subsequent calls
+ * const entities2 = registry.get(EntityService); // Same instance
  * ```
  */
 
@@ -43,7 +47,7 @@ export class ServiceRegistry {
   ) {}
 
   /**
-   * Register a service for lazy loading (idempotent - safe to call multiple times)
+   * Register a service (called internally by get() if needed)
    */
   register<T>(serviceConstructor: ServiceConstructor<T>): void {
     if (this.services.has(serviceConstructor)) {
@@ -57,22 +61,23 @@ export class ServiceRegistry {
   }
 
   /**
-   * Get service instance (creates on first access, returns cached instance after)
+   * Get service instance (auto-registers if needed, creates on first access, returns cached after)
    */
   get<T>(serviceConstructor: ServiceConstructor<T>): T {
-    const serviceEntry = this.services.get(serviceConstructor);
+    let serviceEntry = this.services.get(serviceConstructor);
 
+    // Auto-register if not found
     if (!serviceEntry) {
-      throw new Error(
-        `Service ${serviceConstructor.name} is not registered. ` +
-        `Call registry.register(${serviceConstructor.name}) before accessing it.`
-      );
+      this.register(serviceConstructor);
+      serviceEntry = this.services.get(serviceConstructor)!;
     }
 
+    // Return cached instance if exists
     if (serviceEntry.instance) {
       return serviceEntry.instance as T;
     }
 
+    // Lazy instantiation: Create on first access
     serviceEntry.instance = this.instantiate(serviceConstructor);
     return serviceEntry.instance as T;
   }
