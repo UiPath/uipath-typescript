@@ -5,13 +5,14 @@ import ora from 'ora';
 import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
-import { EnvironmentConfig, AppConfig } from '../../types/index.js';
-import { API_ENDPOINTS } from '../../constants/index.js';
+import { EnvironmentConfig, AppConfig, AppType } from '../../types/index.js';
+import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS } from '../../constants/index.js';
 import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
 import { validateEnvironment } from '../../utils/env-validator.js';
 import { handleHttpError } from '../../utils/error-handler.js';
 import { track } from '../../telemetry/index.js';
+import { readAndParseActionSchema } from '../../utils/action-schema.js';
 
 interface RegisterResponse {
   definition: {
@@ -27,6 +28,7 @@ export default class RegisterApp extends Command {
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> --name MyApp',
     '<%= config.bin %> <%= command.id %> --name MyApp --version 1.0.0',
+    '<%= config.bin %> <%= command.id %> --name MyApp --version 1.0.0 --type Action',
   ];
 
   static override flags = {
@@ -40,6 +42,12 @@ export default class RegisterApp extends Command {
       description: 'App version',
       default: '1.0.0',
     }),
+    type: Flags.string({
+      char: 't',
+      description: 'App Type',
+      default: AppType.Web,
+      options: [AppType.Web, AppType.Action]
+    })
   };
 
   @track('RegisterApp')
@@ -57,9 +65,16 @@ export default class RegisterApp extends Command {
     // Get app details
     const appName = flags.name || await this.promptForAppName();
     const appVersion = flags.version;
+    const isActionApp = (flags.type as AppType) === AppType.Action;
+
+    if (isActionApp && !fs.existsSync(path.join(process.cwd(), ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME))) {
+      this.log(chalk.red(`${MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED}`));
+      this.log(chalk.yellow(MESSAGES.INFO.CREATE_ACTION_SCHEMA_FIRST));
+      process.exit(1);
+    }
 
     // Register the app
-    await this.registerApp(appName, appVersion, envConfig);
+    await this.registerApp(appName, appVersion, isActionApp, envConfig);
   }
 
   private async validateEnvironment(): Promise<EnvironmentConfig | null> {
@@ -95,19 +110,19 @@ export default class RegisterApp extends Command {
     return response.name;
   }
 
-  private async registerApp(appName: string, appVersion: string, envConfig: EnvironmentConfig): Promise<void> {
+  private async registerApp(appName: string, appVersion: string, isActionApp: boolean, envConfig: EnvironmentConfig): Promise<void> {
     const spinner = ora(MESSAGES.INFO.REGISTERING_APP).start();
     
     try {
       // Call the publish coded app API
-      const response = await this.publishAppToUiPath(appName, appVersion, envConfig);
+      const response = await this.publishAppToUiPath(appName, appVersion, isActionApp, envConfig);
       
       // Extract the systemName from the response
       const appSystemName = response.definition.systemName;
       
       // Construct the app URL
       const folderKey = envConfig.folderKey!; // We know this is defined because validateEnvironment checks for it
-      const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgId, envConfig.tenantId, folderKey, appSystemName);
+      const appUrl = isActionApp ? null : buildAppUrl(envConfig.baseUrl, envConfig.orgId, envConfig.tenantId, folderKey, appSystemName);
       
       // Save app configuration
       const appConfig: AppConfig = {
@@ -119,9 +134,11 @@ export default class RegisterApp extends Command {
       };
       await this.saveAppConfig(appConfig);
       
-      // Update .env file with the redirect URL
-      await this.updateEnvFile('UIPATH_APP_URL', appUrl);
-      await this.updateEnvFile('UIPATH_APP_REDIRECT_URI', appUrl);
+      if (!isActionApp) {
+        // Update .env file with the redirect URL
+        await this.updateEnvFile('UIPATH_APP_URL', appUrl!);
+        await this.updateEnvFile('UIPATH_APP_REDIRECT_URI', appUrl!);
+      }
       
       spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_REGISTERED_SUCCESS));
       
@@ -131,13 +148,21 @@ export default class RegisterApp extends Command {
       this.log(`  ${chalk.cyan('Version:')} ${appVersion}`);
       this.log(`  ${chalk.cyan('System Name:')} ${appSystemName}`);
       this.log('');
-      this.log(chalk.bold('App URL:'));
-      this.log(`  ${chalk.green(appUrl)}`);
-      this.log('');
+      if (!isActionApp) {
+        this.log(chalk.bold('App URL:'));
+        this.log(`  ${chalk.green(appUrl)}`);
+        this.log('');
+      }
       this.log(chalk.blue(MESSAGES.INFO.APP_REGISTERED));
-      this.log(chalk.yellow(MESSAGES.INFO.APP_URL_SAVED_TO_ENV));
+      if (isActionApp) {
+        this.log(chalk.yellow(MESSAGES.INFO.NO_APP_URL_FOR_ACTION_APP));
+      } else {
+        this.log(chalk.yellow(MESSAGES.INFO.APP_URL_SAVED_TO_ENV));
+      }
       this.log(chalk.yellow(MESSAGES.INFO.APP_CONFIG_SAVED));
-      this.log(chalk.yellow(MESSAGES.INFO.URL_FOR_OAUTH_CONFIG));
+      if (!isActionApp) {
+        this.log(chalk.yellow(MESSAGES.INFO.URL_FOR_OAUTH_CONFIG));
+      }
       this.log('');
       this.log(chalk.dim(MESSAGES.INFO.NEXT_STEPS));
       this.log(chalk.dim(MESSAGES.INFO.STEP_BUILD_APP));
@@ -152,15 +177,25 @@ export default class RegisterApp extends Command {
     }
   }
 
-  private async publishAppToUiPath(packageName: string, packageVersion: string, envConfig: EnvironmentConfig): Promise<RegisterResponse> {
+  private async publishAppToUiPath(packageName: string, packageVersion: string, isActionApp: boolean, envConfig: EnvironmentConfig): Promise<RegisterResponse> {
     const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.PUBLISH_CODED_APP}`;
-    
+    let actionSchema;
+    if (isActionApp) {
+      try {
+        actionSchema = readAndParseActionSchema();
+      } catch (error) {
+        this.log('')
+        this.log(chalk.red(`${MESSAGES.ERRORS.FAILED_TO_PARSE_ACTION_SCHEMA} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+        process.exit(1);
+      }
+    }
+
     const payload = {
       tenantName: envConfig.tenantName,
       packageName: packageName,
       packageVersion: packageVersion,
       title: packageName,
-      schema: {}
+      schema: isActionApp ? actionSchema : {},
     };
 
     const response = await fetch(url, {

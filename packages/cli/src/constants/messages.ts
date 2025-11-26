@@ -6,6 +6,7 @@ export const MESSAGES = {
     // File/Directory validation
     INVALID_DIST_DIRECTORY: 'Invalid dist directory',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
+    ACTION_SCHEMA_REQUIRED: '❌ action-schema.json file not found in current working directory',
     
     // Authentication & Authorization  
     AUTHENTICATION_FAILED: 'Authentication failed. Please check your UIPATH_BEARER_TOKEN or run "uipath auth" to authenticate',
@@ -57,6 +58,19 @@ export const MESSAGES = {
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',
     MANUAL_ENV_INSTRUCTION: 'Please add the following to your .env file manually:',
     FAILED_TO_SAVE_APP_CONFIG: 'Failed to save app configuration:',
+    FAILED_TO_PARSE_ACTION_SCHEMA: 'Failed to parse Action Schema:',
+
+    //Action schema validations
+    INVALID_PROPERTY_TYPE: 'Invalid type. Must be one of: string, integer, number, boolean, array, object',
+    INVALID_PROPERTY_FORMAT: 'Invalid format. Must be one of: uuid, date',
+    MISSING_ITEMS_ARRAY: 'Array properties must have an "items" field',
+    NESTED_ARRAYS_NOT_SUPPORTED: 'Nested arrays are not allowed. Array items cannot be of type array',
+    SECTION_TYPE_INVALID: 'Section type must be "object"',
+    INVALID_PROPERTIES_OBJECT: 'Properties must be a valid object',
+    MISSING_ACTION_SCHEMA_SECTION: 'Action schema must have inputs, outputs, inOuts, and outcomes sections',
+    INVALID_ACTION_SCHEMA: 'Action schema validation failed:',
+    UNSUPPORTED_JSON_DATA_TYPE: 'Unsupported JSON data type:'
+
   },
   
   SUCCESS: {
@@ -98,10 +112,12 @@ export const MESSAGES = {
     RUN_WITHOUT_DRY_RUN: '💡 Run without --dry-run to create the package',
     USE_PUBLISH_TO_UPLOAD: '💡 Use "uipath publish" to upload to UiPath Orchestrator',
     APP_URL_SAVED_TO_ENV: '💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI',
+    NO_APP_URL_FOR_ACTION_APP: '💡 Action apps do not have an App URL. Action apps will render only inside Action Center',
     APP_CONFIG_SAVED: '💡 App configuration has been saved and will be used by pack command',
     URL_FOR_OAUTH_CONFIG: '💡 You can use this URL as the redirect URI for OAuth configuration in your SDK',
     CREDENTIALS_SAVED: 'Credentials have been saved to .env file',
     CREDENTIALS_REMOVED: 'Credentials have been removed',
+    CREATE_ACTION_SCHEMA_FIRST: '💡 Please create an action-schema.json file in the current directory before registering an Action app',
     
     // Directory/File operations
     CREATED_OUTPUT_DIRECTORY: 'Created output directory:',
