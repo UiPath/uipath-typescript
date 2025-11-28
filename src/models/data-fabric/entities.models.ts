@@ -108,6 +108,42 @@ export interface EntityServiceModel {
   >;
 
   /**
+   * Gets entity records by entity name
+   *
+   * @param entityName - Name of the entity
+   * @param options - Query options
+   * @returns Promise resolving to either an array of entity records NonPaginatedResponse<EntityRecord> or a PaginatedResponse<EntityRecord> when pagination options are used.
+   * {@link EntityRecord}
+   * @example
+   * ```typescript
+   * // Basic usage (non-paginated)
+   * const records = await sdk.entities.getRecordsByName('testsdk');
+   *
+   * // With expansion level
+   * const records = await sdk.entities.getRecordsByName('testsdk', {
+   *   expansionLevel: 1
+   * });
+   *
+   * // With pagination
+   * const paginatedResponse = await sdk.entities.getRecordsByName('testsdk', {
+   *   pageSize: 50,
+   *   expansionLevel: 1
+   * });
+   *
+   * // Navigate to next page
+   * const nextPage = await sdk.entities.getRecordsByName('testsdk', {
+   *   cursor: paginatedResponse.nextCursor,
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  getRecordsByName<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityName: string, options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
+
+  /**
    * Inserts data into an entity by entity ID
    * 
    * @param id - UUID of the entity

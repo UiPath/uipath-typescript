@@ -104,7 +104,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.GetRecordsById')
   async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
-    entityId: string, 
+    entityId: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -119,9 +119,66 @@ export class EntityService extends BaseService implements EntityServiceModel {
         itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
         totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
-          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,    
-          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,         
-          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM            
+          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
+        }
+      },
+      excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
+    }, options);
+  }
+
+  /**
+   * Gets entity records by entity name
+   *
+   * @param entityName - Name of the entity
+   * @param options - Query options including expansionLevel and pagination options
+   * @returns Promise resolving to an array of entity records or paginated response
+   *
+   * @example
+   * ```typescript
+   * // Basic usage (non-paginated)
+   * const records = await sdk.entities.getRecordsByName('testsdk');
+   *
+   * // With expansion level
+   * const records = await sdk.entities.getRecordsByName('testsdk', {
+   *   expansionLevel: 1
+   * });
+   *
+   * // With pagination
+   * const paginatedResponse = await sdk.entities.getRecordsByName('testsdk', {
+   *   pageSize: 50,
+   *   expansionLevel: 1
+   * });
+   *
+   * // Navigate to next page
+   * const nextPage = await sdk.entities.getRecordsByName('testsdk', {
+   *   cursor: paginatedResponse.nextCursor,
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  @track('Entities.GetRecordsByName')
+  async getRecordsByName<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+    entityName: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  > {
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS_BY_NAME(entityName),
+      transformFn: (item: Record<string, unknown>) => pascalToCamelCaseKeys(item) as EntityRecord,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
+        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
       excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
