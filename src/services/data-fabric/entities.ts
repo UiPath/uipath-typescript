@@ -24,6 +24,8 @@ import { createParams } from '../../utils/http/params';
 import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
+import { mcpTool } from '../../core/mcp/metadata';
+import { cliCommand } from '../../core/cli/metadata';
 
 /**
  * Service for interacting with the Data Fabric Entity API
@@ -56,6 +58,25 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.GetById')
+  @mcpTool({
+    name: 'entities_getById',
+    description: 'Gets entity metadata by entity ID with attached operation methods'
+  })
+  @cliCommand({
+    command: 'entities get-by-id',
+    description: 'Get entity metadata by ID',
+    examples: [
+      'uipath entities get-by-id <entity-id>'
+    ],
+    params: [
+      {
+        name: 'id',
+        positional: true,
+        description: 'Entity UUID',
+        required: true
+      }
+    ]
+  })
   async getById(id: string): Promise<EntityGetResponse> {
     // Get entity metadata
     const response = await this.get<RawEntityGetResponse>(
@@ -103,6 +124,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.GetRecordsById')
+  @mcpTool({
+    name: 'entities_getRecordsById',
+    description: 'Gets entity records by entity ID with optional pagination and expansion level'
+  })
   async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
     entityId: string, 
     options?: T
