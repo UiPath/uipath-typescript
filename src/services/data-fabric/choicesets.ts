@@ -6,7 +6,7 @@ import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.model
 import { ChoiceSetGetResponse } from '../../models/data-fabric/choicesets.types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { transformData } from '../../utils/transform';
-import { ChoiceSetMap } from '../../models/data-fabric/choicesets.constants';
+import { EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
 
 /**
@@ -45,7 +45,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
     
     // Transform API response to normalized field names
     const choiceSets = response.data.map(choiceSet => {
-      return transformData(choiceSet, ChoiceSetMap) as ChoiceSetGetResponse;
+      return transformData(choiceSet, EntityMap) as ChoiceSetGetResponse;
     });
     
     return choiceSets;
