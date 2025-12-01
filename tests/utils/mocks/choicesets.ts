@@ -41,12 +41,62 @@ export const createMockChoiceSetResponse = (overrides: Partial<any> = {}): any =
  * @returns Array of mock ChoiceSet responses
  */
 export const createMockChoiceSets = (count: number): any[] => {
-  return createMockCollection(count, (i) => 
+  return createMockCollection(count, (i) =>
     createMockChoiceSetResponse({
       id: `${CHOICESET_TEST_CONSTANTS.CHOICESET_ID.slice(0, -1)}${i}`,
       name: `${CHOICESET_TEST_CONSTANTS.CHOICESET_NAME}${i > 0 ? i : ''}`,
       displayName: `${CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME}${i > 0 ? ` ${i}` : ''}`,
     })
   );
+};
+
+/**
+ * Creates a mock ChoiceSet Value response with RAW API format (PascalCase)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock ChoiceSet Value response object as it comes from the API (before transformation)
+ */
+export const createMockChoiceSetValueResponse = (overrides: Partial<any> = {}): any => {
+  return {
+    Id: CHOICESET_TEST_CONSTANTS.VALUE_ID,
+    Name: CHOICESET_TEST_CONSTANTS.VALUE_NAME,
+    DisplayName: CHOICESET_TEST_CONSTANTS.VALUE_DISPLAY_NAME,
+    NumberId: CHOICESET_TEST_CONSTANTS.VALUE_NUMBER_ID,
+    CreateTime: CHOICESET_TEST_CONSTANTS.VALUE_CREATED_TIME,
+    UpdateTime: CHOICESET_TEST_CONSTANTS.VALUE_UPDATED_TIME,
+    ...overrides
+  };
+};
+
+/**
+ * Creates multiple mock ChoiceSet Value responses
+ * @param count - Number of choice set values to create
+ * @returns Array of mock ChoiceSet Value responses
+ */
+export const createMockChoiceSetValues = (count: number): any[] => {
+  const valueNames = ['User', 'Group', 'Robot', 'Application'];
+  return createMockCollection(count, (i) =>
+    createMockChoiceSetValueResponse({
+      Id: `${CHOICESET_TEST_CONSTANTS.VALUE_ID.slice(0, -1)}${i}`,
+      Name: valueNames[i % valueNames.length],
+      DisplayName: valueNames[i % valueNames.length],
+      NumberId: i,
+    })
+  );
+};
+
+/**
+ * Creates a mock paginated response for choice set values
+ * @param values - Array of choice set values
+ * @param totalCount - Total count of items
+ * @returns Mock paginated response
+ */
+export const createMockChoiceSetValuePaginatedResponse = (
+  values: any[],
+  totalCount: number
+): any => {
+  return {
+    value: values,
+    totalCount
+  };
 };
 

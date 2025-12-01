@@ -19,13 +19,25 @@ export enum SqlFieldType {
 }
 
 /**
- * Maps fields for Entities 
+ * Maps fields for Entities
  */
 export const EntityMap = {
   createTime: 'createdTime',
   updateTime: 'updatedTime',
   sqlType: 'fieldDataType',
-  fieldDefinition: 'fieldMetaData' 
+  fieldDefinition: 'fieldMetaData'
+};
+
+/**
+ * Maps fields for Choice Set Values (PascalCase API → camelCase SDK)
+ */
+export const ChoiceSetValueMap = {
+  Id: 'id',
+  Name: 'name',
+  DisplayName: 'displayName',
+  NumberId: 'numberId',
+  CreateTime: 'createdTime',
+  UpdateTime: 'updatedTime'
 };
 
 /**
