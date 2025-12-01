@@ -1,4 +1,9 @@
-import { ChoiceSetGetAllResponse } from './choicesets.types';
+import {
+  ChoiceSetGetAllResponse,
+  ChoiceSetValue,
+  ChoiceSetGetByIdOptions
+} from './choicesets.types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
 /**
  * Service for managing UiPath Data Fabric Choice Sets
@@ -34,5 +39,44 @@ export interface ChoiceSetServiceModel {
    * ```
    */
   getAll(): Promise<ChoiceSetGetAllResponse[]>;
+
+  /**
+   * Gets choice set values by choice set ID
+   *
+   * @param choicesetId - UUID of the choice set
+   * @param options - Query options including expansionLevel and pagination options
+   * @returns Promise resolving to an array of choice set values or paginated response
+   * {@link ChoiceSetValue}
+   * @example
+   * ```typescript
+   * // Basic usage (non-paginated)
+   * const values = await sdk.entities.choicesets.getById(<choicesetId>);
+   *
+   * // With expansion level
+   * const values = await sdk.entities.choicesets.getById(<choicesetId>, {
+   *   expansionLevel: 1
+   * });
+   *
+   * // With pagination
+   * const paginatedResponse = await sdk.entities.choicesets.getById(<choicesetId>, {
+   *   pageSize: 50,
+   *   expansionLevel: 1
+   * });
+   *
+   * // Navigate to next page
+   * const nextPage = await sdk.entities.choicesets.getById(<choicesetId>, {
+   *   cursor: paginatedResponse.nextCursor,
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  getById<T extends ChoiceSetGetByIdOptions = ChoiceSetGetByIdOptions>(
+    choicesetId: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<ChoiceSetValue>
+      : NonPaginatedResponse<ChoiceSetValue>
+  >;
 }
 
