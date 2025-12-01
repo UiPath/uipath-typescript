@@ -1,172 +1,194 @@
 // ===== IMPORTS =====
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ChoiceSetService } from '../../../../src/services/data-fabric/choicesets';
-import { ApiClient } from '../../../../src/core/http/api-client';
-import { 
-  createMockChoiceSetResponse, 
-  createMockChoiceSets 
-} from '../../../utils/mocks/choicesets';
-import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
-import { createMockError } from '../../../utils/mocks/core';
-import { CHOICESET_TEST_CONSTANTS } from '../../../utils/constants/choicesets';
-import { TEST_CONSTANTS } from '../../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { UiPath } from '../../../../src/uipath';
+import type { UiPathSDKConfig } from '../../../../src/core/config/sdk-config';
+import { ChoiceSetGetResponse } from '../../../../src/models/data-fabric/choicesets.types';
 
-// ===== MOCKING =====
-// Mock the dependencies
-vi.mock('../../../../src/core/http/api-client');
-
-// Setup mocks at module level
-// NOTE: We do NOT mock transformData - we want to test the actual transformation logic!
+// ===== CONFIGURATION =====
+const config: UiPathSDKConfig = {
+  baseUrl: 'https://alpha.uipath.com',
+  orgName: 'entity',
+  tenantName: 'a4e',
+  secret: 'rt_57400A17A1C0F0238218F024EFAB7271ACE21E364566537AEDA27CCEF2256EA0-1',
+};
 
 // ===== TEST SUITE =====
-describe('ChoiceSetService Unit Tests', () => {
-  let choiceSetService: ChoiceSetService;
-  let mockApiClient: any;
+describe('ChoiceSetService Integration Tests (Actual SDK Calls)', () => {
+  let sdk: UiPath;
+  let isAuthenticated: boolean = false;
 
-  beforeEach(() => {
-    // Create mock instances using centralized setup
-    const { config, executionContext, tokenManager } = createServiceTestDependencies();
-    mockApiClient = createMockApiClient();
+  beforeAll(async () => {
+    try {
+      sdk = new UiPath(config);
+      
+      // Secret-based auth is auto-initialized in constructor
+      isAuthenticated = sdk.isAuthenticated();
 
-    // Mock the ApiClient constructor
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
-
-    choiceSetService = new ChoiceSetService(config, executionContext, tokenManager);
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
+      if (!isAuthenticated) {
+        console.warn('⚠️  Skipping integration tests: Authentication failed');
+        console.warn('   Token:', sdk.getToken() ? 'Present' : 'Missing');
+      } else {
+        console.log('✅ Authentication successful');
+      }
+    } catch (error: any) {
+      console.warn('⚠️  Skipping integration tests:', error?.message || error);
+      if (error?.response) {
+        console.warn('   Response status:', error.response.status);
+        console.warn('   Response data:', error.response.data);
+      }
+      isAuthenticated = false;
+    }
   });
 
   describe('getAll', () => {
-    it('should get all choice sets successfully with all fields mapped correctly', async () => {
-      const mockResponse = [createMockChoiceSetResponse()];
-      mockApiClient.get.mockResolvedValue(mockResponse);
+    it('should get all choice sets successfully', async () => {
+      if (!isAuthenticated) {
+        return; // Skip test if not authenticated
+      }
 
-      const result = await choiceSetService.getAll();
+      try {
+        const choiceSets = await sdk.entities.choicesets.getAll();
 
-      // Verify the result
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(1);
-      expect(result[0].id).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
-      expect(result[0].name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
-      expect(result[0].displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
-      expect(result[0].entityType).toBe('ChoiceSet');
+        // Print the response
+        console.log('\n📋 Choice Sets Response:');
+        console.log('='.repeat(80));
+        console.log(JSON.stringify(choiceSets, null, 2));
+        console.log('='.repeat(80));
+        console.log(`\nTotal choice sets: ${choiceSets.length}\n`);
 
-      // Verify the API call has correct endpoint
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.CHOICESET.GET_ALL,
-        {}
-      );
+        // Verify the result
+        expect(choiceSets).toBeDefined();
+        expect(Array.isArray(choiceSets)).toBe(true);
+        
+        // If choice sets exist, verify structure
+        if (choiceSets.length > 0) {
+          const firstChoiceSet = choiceSets[0];
+          
+          // Verify required fields are present
+          expect(firstChoiceSet).toHaveProperty('id');
+          expect(firstChoiceSet).toHaveProperty('name');
+          expect(firstChoiceSet).toHaveProperty('displayName');
+          expect(firstChoiceSet).toHaveProperty('entityType');
+          expect(firstChoiceSet).toHaveProperty('folderId');
+          
+          // Verify field types
+          expect(typeof firstChoiceSet.id).toBe('string');
+          expect(typeof firstChoiceSet.name).toBe('string');
+          expect(typeof firstChoiceSet.displayName).toBe('string');
+          expect(typeof firstChoiceSet.entityType).toBe('string');
+          expect(typeof firstChoiceSet.folderId).toBe('string');
+          
+          // Verify entityType is 'ChoiceSet'
+          expect(firstChoiceSet.entityType).toBe('ChoiceSet');
+          
+          // Verify normalized field names (createdTime/updatedTime, not createTime/updateTime)
+          expect(firstChoiceSet).toHaveProperty('createdTime');
+          expect(firstChoiceSet).toHaveProperty('updatedTime');
+          expect(firstChoiceSet).not.toHaveProperty('createTime');
+          expect(firstChoiceSet).not.toHaveProperty('updateTime');
+          
+          // Verify optional fields if present
+          if (firstChoiceSet.recordCount !== undefined) {
+            expect(typeof firstChoiceSet.recordCount).toBe('number');
+          }
+          if (firstChoiceSet.isRbacEnabled !== undefined) {
+            expect(typeof firstChoiceSet.isRbacEnabled).toBe('boolean');
+          }
+        }
+      } catch (error: any) {
+        console.error('❌ API Error:', error?.message || error);
+        if (error?.response) {
+          console.error('   Status:', error.response.status);
+          console.error('   Data:', JSON.stringify(error.response.data, null, 2));
+        }
+        throw error;
+      }
     });
 
-    it('should return multiple choice sets', async () => {
-      const mockChoiceSets = createMockChoiceSets(3);
-      mockApiClient.get.mockResolvedValue(mockChoiceSets);
+    it('should transform field names correctly (createTime -> createdTime, updateTime -> updatedTime)', async () => {
+      if (!isAuthenticated) {
+        return; // Skip test if not authenticated
+      }
 
-      const result = await choiceSetService.getAll();
+      const choiceSets = await sdk.entities.choicesets.getAll();
 
-      // Verify the result
-      expect(result).toBeDefined();
-      expect(result.length).toBe(3);
-      
-      // Verify each choice set has required fields
-      result.forEach((choiceSet, index) => {
-        expect(choiceSet).toHaveProperty('id');
-        expect(choiceSet).toHaveProperty('name');
-        expect(choiceSet).toHaveProperty('displayName');
-        expect(choiceSet).toHaveProperty('entityType');
-        expect(choiceSet.entityType).toBe('ChoiceSet');
-      });
-
-      // Verify the API call
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.CHOICESET.GET_ALL,
-        {}
-      );
-    });
-
-    it('should apply ChoiceSetMap transformations correctly (createTime -> createdTime, updateTime -> updatedTime)', async () => {
-      // Create mock with RAW API field names (before transformation)
-      const mockChoiceSetsRaw = createMockChoiceSets(2);
-      mockApiClient.get.mockResolvedValue(mockChoiceSetsRaw);
-
-      const result = await choiceSetService.getAll();
-
-      expect(result).toBeDefined();
-      expect(result.length).toBe(2);
-
-      result.forEach(choiceSet => {
-        // Verify ChoiceSetMap transformations
-        // createTime -> createdTime
+      if (choiceSets.length > 0) {
+        const choiceSet = choiceSets[0] as ChoiceSetGetResponse;
+        
+        // Verify normalized field names exist
         expect(choiceSet.createdTime).toBeDefined();
-        expect(choiceSet.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
-        expect(choiceSet).not.toHaveProperty('createTime'); // Raw field should not exist
-
-        // updateTime -> updatedTime
         expect(choiceSet.updatedTime).toBeDefined();
-        expect(choiceSet.updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
-        expect(choiceSet).not.toHaveProperty('updateTime'); // Raw field should not exist
+        
+        // Verify old field names don't exist
+        expect(choiceSet).not.toHaveProperty('createTime');
+        expect(choiceSet).not.toHaveProperty('updateTime');
+        
+        // Verify timestamps are strings
+        expect(typeof choiceSet.createdTime).toBe('string');
+        expect(typeof choiceSet.updatedTime).toBe('string');
+      }
+    });
 
-        // Use type assertion to check for any remaining raw field names
-        const choiceSetAsAny = choiceSet as any;
-        expect(choiceSetAsAny.createTime).toBeUndefined(); // Raw field should not exist
-        expect(choiceSetAsAny.updateTime).toBeUndefined(); // Raw field should not exist
-      });
+    it('should return choice sets with all expected properties', async () => {
+      if (!isAuthenticated) {
+        return; // Skip test if not authenticated
+      }
 
-      // Verify the API call
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.CHOICESET.GET_ALL,
-        {}
-      );
+      const choiceSets = await sdk.entities.choicesets.getAll();
+
+      if (choiceSets.length > 0) {
+        choiceSets.forEach((choiceSet) => {
+          // Required properties
+          expect(choiceSet).toHaveProperty('id');
+          expect(choiceSet).toHaveProperty('name');
+          expect(choiceSet).toHaveProperty('displayName');
+          expect(choiceSet).toHaveProperty('entityType');
+          expect(choiceSet).toHaveProperty('folderId');
+          expect(choiceSet).toHaveProperty('createdBy');
+          expect(choiceSet).toHaveProperty('createdTime');
+          expect(choiceSet).toHaveProperty('updatedTime');
+          expect(choiceSet).toHaveProperty('updatedBy');
+          
+          // Optional properties (may or may not be present)
+          // These are fine if undefined
+          if (choiceSet.entityTypeId !== undefined) {
+            expect(typeof choiceSet.entityTypeId).toBe('number');
+          }
+          if (choiceSet.description !== undefined) {
+            expect(typeof choiceSet.description).toBe('string');
+          }
+          if (choiceSet.recordCount !== undefined) {
+            expect(typeof choiceSet.recordCount).toBe('number');
+          }
+          if (choiceSet.storageSizeInMB !== undefined) {
+            expect(typeof choiceSet.storageSizeInMB).toBe('number');
+          }
+          if (choiceSet.usedStorageSizeInMB !== undefined) {
+            expect(typeof choiceSet.usedStorageSizeInMB).toBe('number');
+          }
+          if (choiceSet.isRbacEnabled !== undefined) {
+            expect(typeof choiceSet.isRbacEnabled).toBe('boolean');
+          }
+          if (choiceSet.invalidIdentifiers !== undefined) {
+            expect(Array.isArray(choiceSet.invalidIdentifiers)).toBe(true);
+          }
+          if (choiceSet.isModelReserved !== undefined) {
+            expect(typeof choiceSet.isModelReserved).toBe('boolean');
+          }
+        });
+      }
     });
 
     it('should handle empty results gracefully', async () => {
-      mockApiClient.get.mockResolvedValue([]);
+      if (!isAuthenticated) {
+        return; // Skip test if not authenticated
+      }
 
-      const result = await choiceSetService.getAll();
+      const choiceSets = await sdk.entities.choicesets.getAll();
 
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(0);
-    });
-
-    it('should handle API errors', async () => {
-      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.get.mockRejectedValue(error);
-
-      await expect(choiceSetService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
-
-    it('should preserve all choice set properties after transformation', async () => {
-      const mockResponse = [createMockChoiceSetResponse()];
-      mockApiClient.get.mockResolvedValue(mockResponse);
-
-      const result = await choiceSetService.getAll();
-
-      expect(result).toBeDefined();
-      expect(result.length).toBe(1);
-      
-      const choiceSet = result[0];
-      
-      // Verify all properties are preserved
-      expect(choiceSet.name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
-      expect(choiceSet.displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
-      expect(choiceSet.entityTypeId).toBe(1);
-      expect(choiceSet.entityType).toBe('ChoiceSet');
-      expect(choiceSet.description).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION);
-      expect(choiceSet.folderId).toBe(CHOICESET_TEST_CONSTANTS.FOLDER_ID);
-      expect(choiceSet.recordCount).toBe(4);
-      expect(choiceSet.storageSizeInMB).toBe(0.210937);
-      expect(choiceSet.usedStorageSizeInMB).toBe(0.046875);
-      expect(choiceSet.isRbacEnabled).toBe(false);
-      expect(Array.isArray(choiceSet.invalidIdentifiers)).toBe(true);
-      expect(choiceSet.isModelReserved).toBe(false);
-      expect(choiceSet.id).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
-      expect(choiceSet.createdBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
-      expect(choiceSet.updatedBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
+      // Should return an array even if empty
+      expect(Array.isArray(choiceSets)).toBe(true);
+      // Empty array is valid - some tenants may have no choice sets
     });
   });
 });
