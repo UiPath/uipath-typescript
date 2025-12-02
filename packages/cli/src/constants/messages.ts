@@ -160,6 +160,7 @@ export const MESSAGES = {
   
   VALIDATIONS: {
     APP_NAME_REQUIRED: 'App name is required',
+    APP_NAME_INVALID_CHARS: 'App name can only contain letters, numbers, underscores (_), and hyphens (-). Please remove invalid special characters and try again.',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
   }
 } as const;
