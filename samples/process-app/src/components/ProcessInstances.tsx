@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { usePolling } from '../hooks/usePolling';
 import { InstanceList } from './InstanceList';
 import { InstanceDetails } from './InstanceDetails';
 import { formatProcessName } from '../utils/formatters';
-import type { 
-  ProcessInstanceGetResponse, 
+import type {
+  ProcessInstanceGetResponse,
   MaestroProcessGetAllResponse,
   PaginatedResponse,
   ProcessInstanceGetVariablesResponse,
@@ -21,7 +22,7 @@ export const ProcessInstances = () => {
   const [selectedProcess, setSelectedProcess] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -43,6 +44,80 @@ export const ProcessInstances = () => {
     error?: string;
   }>({ loading: false });
 
+  // ============== POLLING CONFIGURATION ==============
+  const pollingInterval = 5000; // 5 seconds
+  const selectedInstanceRef = useRef<ProcessInstanceGetResponse | null>(null);
+
+  // Keep ref in sync with state for polling callback
+  useEffect(() => {
+    selectedInstanceRef.current = selectedInstance;
+  }, [selectedInstance]);
+
+  // Polling: fetch variables for the selected instance
+  const fetchVariablesForPolling = useCallback(async () => {
+    const instance = selectedInstanceRef.current;
+    if (!sdk || !instance) return null;
+
+    const variables = await sdk.maestro.processes.instances.getVariables(
+      instance.instanceId,
+      instance.folderKey
+    );
+    return variables;
+  }, [sdk]);
+
+  // Polling hook: auto-refresh variables every 5 seconds
+  usePolling<ProcessInstanceGetVariablesResponse | null>({
+    fetchFn: fetchVariablesForPolling,
+    interval: pollingInterval,
+    enabled: !!selectedInstance && isAuthenticated,
+    immediate: false, // fetchInstanceDetails handles initial fetch; polling starts after 5s
+    onSuccess: (data) => {
+      if (data) {
+        // Process variables - same logic as in fetchInstanceDetails
+        const groupedVariables: Record<string, Array<{ name: string; value: string; type: string }>> = {};
+        data.globalVariables
+          .filter(variable => {
+            const type = variable.type?.toLowerCase();
+            return type !== 'any' && type !== 'jsonschema' && type !== 'object';
+          })
+          .filter(variable => {
+            const value = String(variable.value).trim().toLowerCase();
+            return variable.value !== null &&
+                   variable.value !== undefined &&
+                   value !== '' &&
+                   value !== 'null' &&
+                   value !== 'undefined';
+          })
+          .forEach(variable => {
+            const source = variable.source || 'Unknown';
+            if (!groupedVariables[source]) {
+              groupedVariables[source] = [];
+            }
+            groupedVariables[source].push({
+              name: variable.name,
+              value: String(variable.value),
+              type: variable.type
+            });
+          });
+        Object.keys(groupedVariables).forEach(source => {
+          if (groupedVariables[source].length === 0) {
+            delete groupedVariables[source];
+          }
+        });
+
+        console.log(`[Variables Poll] ✓ Received ${data.globalVariables?.length || 0} raw variables, ${Object.values(groupedVariables).flat().length} after filtering`);
+        setSelectedInstanceDetails(prev => ({
+          ...prev,
+          variables: groupedVariables,
+        }));
+      }
+    },
+    onError: (error) => {
+      console.error('[Variables Poll] ✗ Error:', error.message);
+    },
+  });
+  // ============== END POLLING ==============
+
 
   useEffect(() => {
     if (isAuthenticated && sdk) {
@@ -62,10 +137,10 @@ export const ProcessInstances = () => {
 
   const fetchInstancesPage = async (cursor?: { value: string }) => {
     if (!sdk) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Build options with filtering and pagination
       const options = {
@@ -73,31 +148,31 @@ export const ProcessInstances = () => {
         ...(cursor && { cursor }),
         ...(selectedProcess !== 'all' && { packageId: selectedProcess })
       };
-          
+
       // The SDK method is overloaded, but since we always pass pageSize, it will return PaginatedResponse
       const response = await sdk.maestro.processes.instances.getAll(options);
       const paginatedResponse = response as PaginatedResponse<ProcessInstanceGetResponse>;
-      
+
       // Set instances for current page only
       setInstances(paginatedResponse.items);
-      
+
       // Update pagination state
       setHasNextPage(paginatedResponse.hasNextPage);
       setNextCursor(paginatedResponse.nextCursor);
       setPreviousCursor(paginatedResponse.previousCursor);
       setHasPreviousPage(!!paginatedResponse.previousCursor);
-      
+
       // Update total count if available
       if (paginatedResponse.totalCount) {
         setTotalCount(paginatedResponse.totalCount);
         setTotalPages(Math.ceil(paginatedResponse.totalCount / pageSize));
       }
-      
+
       // Update current page if available
       if (paginatedResponse.currentPage) {
         setCurrentPage(paginatedResponse.currentPage);
       }
-        
+
     } catch (err) {
       console.error('Error fetching instances page:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch instances');
@@ -109,15 +184,15 @@ export const ProcessInstances = () => {
 
   const fetchData = async () => {
     if (!sdk) return;
-    
+
     try {
       // Fetch processes - returns MaestroProcessGetAllResponse[] directly
       const processesResponse = await sdk.maestro.processes.getAll();
       setProcesses(processesResponse);
-      
+
       // Fetch first page of instances
       await fetchInstancesPage();
-      
+
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -380,7 +455,7 @@ export const ProcessInstances = () => {
                 {totalCount > 0 ? `${totalCount} total` : `${instances.length} instance${instances.length !== 1 ? 's' : ''}`}
               </span>
             </div>
-            
+
             {/* Pagination Info */}
             {totalPages > 1 && (
               <div className="text-sm text-gray-600">
@@ -401,7 +476,7 @@ export const ProcessInstances = () => {
             </svg>
             <h3 className="font-semibold text-gray-900">Process Instances</h3>
           </div>
-          
+
           <InstanceList
             instances={instances}
             loading={loading}
