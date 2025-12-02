@@ -1,6 +1,5 @@
 import { FolderScopedService } from '../folder-scoped';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
+import type { UiPath } from '../../core/uipath';
 import { TokenManager } from '../../core/auth/token-manager';
 import { ValidationError, AuthenticationError, HttpStatus } from '../../core/errors';
 import { 
@@ -32,13 +31,15 @@ import { track } from '../../core/telemetry';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
   protected readonly tokenManager: TokenManager;
-  
+
   /**
-   * @hideconstructor
+   * Creates an instance of the Buckets service.
+   *
+   * @param uiPath - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-    this.tokenManager = tokenManager;
+  constructor(uiPath: UiPath) {
+    super(uiPath);
+    this.tokenManager = uiPath.getTokenManager();
   }
 
   /**
