@@ -125,9 +125,14 @@ const configs = [
 // Service-level entry points for modular imports
 const serviceEntries = [
   {
+    name: 'core',
+    input: 'src/core/index.ts',
+    output: 'core/index'
+  },
+  {
     name: 'entities',
     input: 'src/services/data-fabric/index.ts',
-    output: 'services/data-fabric/index'
+    output: 'entities/index'
   }
 ];
 

@@ -1,6 +1,4 @@
-import { UiPathConfig } from './core/config/config';
-import { ExecutionContext } from './core/context/execution';
-import { UiPathClient } from './core/client';
+import { UiPath as UiPathCore } from './core/uipath';
 import {
   MaestroProcessesService,
   ProcessInstancesService,
@@ -15,16 +13,37 @@ import {
   AssetService
 } from './services';
 import { UiPathSDKConfig } from './core/config/sdk-config';
-import { TokenManager } from './core/auth/token-manager';
 
-type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
+type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
 
 /**
  * UiPath SDK - Legacy class providing all services through property getters.
  *
- * Extends UiPathClient. For modular usage, use UiPathClient.connect() with .get() instead.
+ * Extends core UiPath. For modular usage, import from specific service modules.
+ *
+ * @example
+ * ```typescript
+ * // Legacy pattern (still supported)
+ * import { UiPath } from '@uipath/uipath-typescript';
+ *
+ * const uiPath = new UiPath(config);
+ * await uiPath.initialize();
+ * const data = await uiPath.entities.getAll();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // New modular pattern
+ * import { UiPath } from '@uipath/uipath-typescript/core';
+ * import { Entities } from '@uipath/uipath-typescript/entities';
+ *
+ * const uiPath = new UiPath(config);
+ * await uiPath.initialize();
+ * const entitiesService = new Entities(uiPath);
+ * const data = await entitiesService.getAll();
+ * ```
  */
-export class UiPath extends UiPathClient {
+export class UiPath extends UiPathCore {
   private readonly _services: Map<string, any> = new Map();
 
   constructor(config: UiPathSDKConfig) {
@@ -34,11 +53,7 @@ export class UiPath extends UiPathClient {
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
     const serviceName = serviceConstructor.name;
     if (!this._services.has(serviceName)) {
-      const serviceInstance = new serviceConstructor(
-        this.getConfig(),
-        this.getContext(),
-        this.getTokenManager()
-      );
+      const serviceInstance = new serviceConstructor(this);
       this._services.set(serviceName, serviceInstance);
     }
 

@@ -5,60 +5,74 @@ import { TokenManager } from './auth/token-manager';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
-import { ServiceRegistry, ServiceConstructor } from './registry/service-registry';
 
 /**
- * UiPath Client - Core client for authentication and configuration management.
+ * UiPath - Core SDK class for authentication and configuration management.
  *
- * Handles authentication, configuration, and service instance management.
- * Use `UiPathClient.connect()` to create authenticated instances.
+ * Handles authentication, configuration, and provides access to SDK internals
+ * for service instantiation in the modular pattern.
+ *
+ * @example
+ * ```typescript
+ * // Modular pattern
+ * import { UiPath } from '@uipath/uipath-typescript/core';
+ * import { Entities } from '@uipath/uipath-typescript/entities';
+ *
+ * const uiPath = new UiPath({
+ *   baseUrl: 'https://cloud.uipath.com',
+ *   orgName: 'myorg',
+ *   tenantName: 'mytenant',
+ *   clientId: 'xxx',
+ *   redirectUri: 'http://localhost:3000/callback'
+ * });
+ *
+ * await uiPath.initialize();
+ *
+ * const entitiesService = new Entities(uiPath);
+ * const allEntities = await entitiesService.getAll();
+ * ```
  */
-export class UiPathClient {
+export class UiPath {
   private config: UiPathConfig;
   private executionContext: ExecutionContext;
   private authService: AuthService;
   private initialized: boolean = false;
-  private serviceRegistry: ServiceRegistry;
 
   constructor(config: UiPathSDKConfig) {
     // Validate and normalize the configuration
     validateConfig(config);
+
+    const hasSecretAuth = hasSecretConfig(config);
+    const hasOAuthAuth = hasOAuthConfig(config);
 
     // Initialize core components
     this.config = new UiPathConfig({
       baseUrl: normalizeBaseUrl(config.baseUrl),
       orgName: config.orgName,
       tenantName: config.tenantName,
-      secret: hasSecretConfig(config) ? config.secret : undefined,
-      clientId: hasOAuthConfig(config) ? config.clientId : undefined,
-      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined,
-      scope: hasOAuthConfig(config) ? config.scope : undefined
+      secret: hasSecretAuth ? config.secret : undefined,
+      clientId: hasOAuthAuth ? config.clientId : undefined,
+      redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
+      scope: hasOAuthAuth ? config.scope : undefined
     });
 
     this.executionContext = new ExecutionContext();
     this.authService = new AuthService(this.config, this.executionContext);
-
-    // Initialize ServiceRegistry (explicit registration, lazy instantiation)
-    this.serviceRegistry = new ServiceRegistry(
-      this.config,
-      this.executionContext,
-      this.authService.getTokenManager()
-    );
 
     // Initialize telemetry with SDK configuration
     telemetryClient.initialize({
       baseUrl: config.baseUrl,
       orgName: config.orgName,
       tenantName: config.tenantName,
-      clientId: hasOAuthConfig(config) ? config.clientId : undefined,
-      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined
+      clientId: hasOAuthAuth ? config.clientId : undefined,
+      redirectUri: hasOAuthAuth ? config.redirectUri : undefined
     });
 
     // Track SDK initialization
     trackEvent('Sdk.Auth');
 
     // Auto-initialize for secret-based auth
-    if (hasSecretConfig(config)) {
+    if (hasSecretAuth) {
       this.authService.authenticateWithSecret(config.secret);
       this.initialized = true;
     }
@@ -151,80 +165,72 @@ export class UiPathClient {
   }
 
   /**
-   * Get the UiPath configuration
+   * Get the SDK configuration object.
+   *
+   * Returns the configuration containing base URL, organization name, tenant name,
+   * and authentication settings. This method is used internally by services via
+   * dependency injection to access SDK configuration.
+   *
+   * @returns The UiPath configuration containing baseUrl, orgName, tenantName, and auth settings
+   *
+   * @remarks
+   * In the modular pattern, services access this via dependency injection through BaseService.
+   * Most users won't need to call this directly unless accessing configuration details.
+   *
+   * @example
+   * ```typescript
+   * const uiPath = new UiPath(config);
+   * const currentConfig = uiPath.getConfig();
+   * console.log(`Connected to: ${currentConfig.baseUrl}`);
+   * console.log(`Organization: ${currentConfig.orgName}`);
+   * console.log(`Tenant: ${currentConfig.tenantName}`);
+   * ```
    */
   public getConfig(): UiPathConfig {
     return this.config;
   }
 
   /**
-   * Get the execution context
+   * Get the execution context for request tracking and metadata.
+   *
+   * Returns the execution context used internally by services to track request lifecycle
+   * and add contextual information to API calls. This method is used by services via
+   * dependency injection.
+   *
+   * @returns The execution context providing request tracking and metadata capabilities
+   *
+   * @remarks
+   * In the modular pattern, services receive this via dependency injection through BaseService.
+   * This is primarily used internally by the API client. Most users won't need to call this directly.
    */
   public getContext(): ExecutionContext {
     return this.executionContext;
   }
 
   /**
-   * Get the token manager
+   * Get the token manager for authentication token operations.
+   *
+   * Returns the token manager that handles OAuth and secret-based authentication tokens.
+   * This method is used internally by services via dependency injection to create
+   * authenticated API clients.
+   *
+   * @returns The token manager handling authentication tokens (OAuth or secret-based)
+   *
+   * @remarks
+   * In the modular pattern, services receive this via dependency injection through BaseService.
+   * The token manager is used by the API client to add authentication headers to requests.
+   * Most users won't need to call this directly unless implementing custom authentication logic.
+   *
+   * @example
+   * ```typescript
+   * // Advanced usage - custom authentication logic
+   * const uiPath = new UiPath(config);
+   * await uiPath.initialize();
+   * const tokenManager = uiPath.getTokenManager();
+   * const currentToken = tokenManager.getToken();
+   * ```
    */
   public getTokenManager(): TokenManager {
     return this.authService.getTokenManager();
-  }
-
-  /**
-   * Get a service instance. Services are lazily instantiated on first access and cached.
-   *
-   * @param ServiceClass - The service class constructor
-   * @returns Cached or newly created service instance
-   *
-   * @example
-   * ```typescript
-   * import { EntityService } from '@uipath/uipath-typescript';
-   *
-   * const client = await UiPathClient.connect(config);
-   * const entities = client.get(EntityService);  // Created on first access
-   * const entities2 = client.get(EntityService); // Returns cached instance
-   * ```
-   */
-  public get<T>(ServiceClass: ServiceConstructor<T>): T {
-    return this.serviceRegistry.get(ServiceClass);
-  }
-
-  /**
-   * Static method to connect to UiPath and initialize authentication.
-   * This is the recommended way to create a UiPathClient instance.
-   *
-   * @param config - SDK configuration
-   * @returns Promise resolving to authenticated UiPath client instance
-   *
-   * @example
-   * ```typescript
-   * // Secret auth (Node.js)
-   * const uipath = await UiPath.connect({
-   *   baseUrl: 'https://cloud.uipath.com',
-   *   orgName: 'myorg',
-   *   tenantName: 'mytenant',
-   *   secret: process.env.UIPATH_SECRET
-   * });
-   *
-   * // OAuth (Browser)
-   * const uipath = await UiPath.connect({
-   *   baseUrl: 'https://cloud.uipath.com',
-   *   orgName: 'myorg',
-   *   tenantName: 'mytenant',
-   *   clientId: 'xxx',
-   *   redirectUri: 'http://localhost:3000/callback',
-   *   scope: 'OR.Execution'
-   * });
-   *
-   * // Get services
-   * const entities = uipath.get(Entities);
-   * const tasks = uipath.get(Tasks);
-   * ```
-   */
-  public static async connect(config: UiPathSDKConfig): Promise<UiPathClient> {
-    const client = new UiPathClient(config);
-    await client.initialize();
-    return client;
   }
 }
