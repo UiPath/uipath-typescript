@@ -1,13 +1,14 @@
 import { UiPathConfig } from './core/config/config';
 import { ExecutionContext } from './core/context/execution';
 import { AuthService } from './core/auth/service';
-import { 
+import {
   MaestroProcessesService,
   ProcessInstancesService,
   ProcessIncidentsService,
   CasesService,
   CaseInstancesService,
   EntityService,
+  ChoiceSetService,
   TaskService,
   ProcessService,
   BucketService,
@@ -194,8 +195,13 @@ export class UiPath {
   /**
    * Access to Entity service
    */
-  get entities(): EntityService {
-    return this.getService(EntityService);
+  get entities() {
+    return Object.assign(this.getService(EntityService), {
+      /**
+       * Access to ChoiceSet service for managing choice sets
+       */
+      choicesets: this.getService(ChoiceSetService)
+    });
   }
 
   /**

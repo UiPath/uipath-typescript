@@ -40,7 +40,7 @@ describe('ChoiceSetService Unit Tests', () => {
   });
 
   describe('getAll', () => {
-    it('should get all choice sets successfully with all fields mapped correctly', async () => {
+    it('should get all choice sets successfully with only 7 exposed fields', async () => {
       const mockResponse = [createMockChoiceSetResponse()];
       mockApiClient.get.mockResolvedValue(mockResponse);
 
@@ -50,19 +50,31 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(1);
-      expect(result[0].id).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
+
+      // Verify only 7 fields are exposed
       expect(result[0].name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
       expect(result[0].displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
-      expect(result[0].entityType).toBe('ChoiceSet');
+      expect(result[0].description).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION);
+      expect(result[0].createdBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
+      expect(result[0].updatedBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
+      expect(result[0].createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
+      expect(result[0].updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
+
+      // Verify internal fields are NOT exposed
+      expect((result[0] as any).id).toBeUndefined();
+      expect((result[0] as any).entityType).toBeUndefined();
+      expect((result[0] as any).entityTypeId).toBeUndefined();
+      expect((result[0] as any).folderId).toBeUndefined();
+      expect((result[0] as any).recordCount).toBeUndefined();
 
       // Verify the API call has correct endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.CHOICESET.GET_ALL,
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
         {}
       );
     });
 
-    it('should return multiple choice sets', async () => {
+    it('should return multiple choice sets with only 7 fields each', async () => {
       const mockChoiceSets = createMockChoiceSets(3);
       mockApiClient.get.mockResolvedValue(mockChoiceSets);
 
@@ -72,18 +84,25 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result.length).toBe(3);
 
-      // Verify each choice set has required fields
+      // Verify each choice set has only the 7 exposed fields
       result.forEach((choiceSet) => {
-        expect(choiceSet).toHaveProperty('id');
         expect(choiceSet).toHaveProperty('name');
         expect(choiceSet).toHaveProperty('displayName');
-        expect(choiceSet).toHaveProperty('entityType');
-        expect(choiceSet.entityType).toBe('ChoiceSet');
+        expect(choiceSet).toHaveProperty('description');
+        expect(choiceSet).toHaveProperty('createdBy');
+        expect(choiceSet).toHaveProperty('updatedBy');
+        expect(choiceSet).toHaveProperty('createdTime');
+        expect(choiceSet).toHaveProperty('updatedTime');
+
+        // Verify internal fields are NOT exposed
+        expect((choiceSet as any).id).toBeUndefined();
+        expect((choiceSet as any).entityType).toBeUndefined();
+        expect((choiceSet as any).recordCount).toBeUndefined();
       });
 
       // Verify the API call
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.CHOICESET.GET_ALL,
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
         {}
       );
     });
@@ -98,16 +117,15 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result.length).toBe(2);
 
       result.forEach(choiceSet => {
-        // Verify field transformations
-        // createTime -> createdTime
+        // Verify transformed fields are exposed
         expect(choiceSet.createdTime).toBeDefined();
         expect(choiceSet.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
-        expect((choiceSet as any).createTime).toBeUndefined(); // Raw field should not exist
-
-        // updateTime -> updatedTime
         expect(choiceSet.updatedTime).toBeDefined();
         expect(choiceSet.updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
-        expect((choiceSet as any).updateTime).toBeUndefined(); // Raw field should not exist
+
+        // Verify raw fields from API are not exposed
+        expect((choiceSet as any).createTime).toBeUndefined();
+        expect((choiceSet as any).updateTime).toBeUndefined();
       });
     });
 
@@ -128,7 +146,7 @@ describe('ChoiceSetService Unit Tests', () => {
       await expect(choiceSetService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
-    it('should preserve all choice set properties after transformation', async () => {
+    it('should only expose 7 fields and filter out internal fields', async () => {
       const mockResponse = [createMockChoiceSetResponse()];
       mockApiClient.get.mockResolvedValue(mockResponse);
 
@@ -139,27 +157,28 @@ describe('ChoiceSetService Unit Tests', () => {
 
       const choiceSet = result[0];
 
-      // Verify all properties are preserved
+      // Verify the 7 exposed properties
       expect(choiceSet.name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
       expect(choiceSet.displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
-      expect(choiceSet.entityTypeId).toBe(1);
-      expect(choiceSet.entityType).toBe('ChoiceSet');
       expect(choiceSet.description).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION);
-      expect(choiceSet.folderId).toBe(CHOICESET_TEST_CONSTANTS.FOLDER_ID);
-      expect(choiceSet.recordCount).toBe(4);
-      expect(choiceSet.storageSizeInMB).toBe(0.210937);
-      expect(choiceSet.usedStorageSizeInMB).toBe(0.046875);
-      expect(choiceSet.isRbacEnabled).toBe(false);
-      expect(Array.isArray(choiceSet.invalidIdentifiers)).toBe(true);
-      expect(choiceSet.isModelReserved).toBe(false);
-      expect(choiceSet.id).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
       expect(choiceSet.createdBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
       expect(choiceSet.updatedBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
+      expect(choiceSet.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
+      expect(choiceSet.updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
 
-      // Verify field transformations
-      // CreatedTime and UpdatedTime should be transformed, not the original fields
-      expect((choiceSet as any).createTime).toBeUndefined(); // Original field should be removed
-      expect((choiceSet as any).updateTime).toBeUndefined(); // Original field should be removed
+      // Verify internal fields are NOT exposed
+      expect((choiceSet as any).entityTypeId).toBeUndefined();
+      expect((choiceSet as any).entityType).toBeUndefined();
+      expect((choiceSet as any).folderId).toBeUndefined();
+      expect((choiceSet as any).recordCount).toBeUndefined();
+      expect((choiceSet as any).storageSizeInMB).toBeUndefined();
+      expect((choiceSet as any).usedStorageSizeInMB).toBeUndefined();
+      expect((choiceSet as any).isRbacEnabled).toBeUndefined();
+      expect((choiceSet as any).invalidIdentifiers).toBeUndefined();
+      expect((choiceSet as any).isModelReserved).toBeUndefined();
+      expect((choiceSet as any).id).toBeUndefined();
+      expect((choiceSet as any).createTime).toBeUndefined();
+      expect((choiceSet as any).updateTime).toBeUndefined();
     });
   });
 });

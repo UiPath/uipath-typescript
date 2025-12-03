@@ -24,33 +24,16 @@ import { createParams } from '../../utils/http/params';
 import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
-import { ChoiceSetService } from './choicesets';
 
 /**
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
-  private choiceSetsService: ChoiceSetService;
-
   /**
    * @hideconstructor
    */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
-    this.choiceSetsService = new ChoiceSetService(config, executionContext, tokenManager);
-  }
-
-  /**
-   * Access to ChoiceSet service for managing choice sets
-   *
-   * @example
-   * ```typescript
-   * // Get all choice sets
-   * const choiceSets = await sdk.entities.choicesets.getAll();
-   * ```
-   */
-  get choicesets(): ChoiceSetService {
-    return this.choiceSetsService;
   }
 
   /**
