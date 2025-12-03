@@ -2,9 +2,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChoiceSetService } from '../../../../src/services/data-fabric/choicesets';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { 
-  createMockChoiceSetResponse, 
-  createMockChoiceSets 
+import {
+  createMockChoiceSetResponse,
+  createMockChoiceSets
 } from '../../../utils/mocks/choicesets';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
@@ -73,7 +73,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result.length).toBe(3);
 
       // Verify each choice set has required fields
-      result.forEach((choiceSet, index) => {
+      result.forEach((choiceSet) => {
         expect(choiceSet).toHaveProperty('id');
         expect(choiceSet).toHaveProperty('name');
         expect(choiceSet).toHaveProperty('displayName');
@@ -88,10 +88,9 @@ describe('ChoiceSetService Unit Tests', () => {
       );
     });
 
-    it('should apply ChoiceSetMap transformations correctly (createTime -> createdTime, updateTime -> updatedTime)', async () => {
-      // Create mock with RAW API field names (before transformation)
-      const mockChoiceSetsRaw = createMockChoiceSets(2);
-      mockApiClient.get.mockResolvedValue(mockChoiceSetsRaw);
+    it('should apply EntityMap transformations correctly (createTime -> createdTime, updateTime -> updatedTime)', async () => {
+      const mockResponse = createMockChoiceSets(2);
+      mockApiClient.get.mockResolvedValue(mockResponse);
 
       const result = await choiceSetService.getAll();
 
@@ -99,28 +98,17 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result.length).toBe(2);
 
       result.forEach(choiceSet => {
-        // Verify ChoiceSetMap transformations
+        // Verify field transformations
         // createTime -> createdTime
         expect(choiceSet.createdTime).toBeDefined();
         expect(choiceSet.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
-        expect(choiceSet).not.toHaveProperty('createTime'); // Raw field should not exist
+        expect((choiceSet as any).createTime).toBeUndefined(); // Raw field should not exist
 
         // updateTime -> updatedTime
         expect(choiceSet.updatedTime).toBeDefined();
         expect(choiceSet.updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
-        expect(choiceSet).not.toHaveProperty('updateTime'); // Raw field should not exist
-
-        // Use type assertion to check for any remaining raw field names
-        const choiceSetAsAny = choiceSet as any;
-        expect(choiceSetAsAny.createTime).toBeUndefined(); // Raw field should not exist
-        expect(choiceSetAsAny.updateTime).toBeUndefined(); // Raw field should not exist
+        expect((choiceSet as any).updateTime).toBeUndefined(); // Raw field should not exist
       });
-
-      // Verify the API call
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.CHOICESET.GET_ALL,
-        {}
-      );
     });
 
     it('should handle empty results gracefully', async () => {
@@ -167,6 +155,11 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(choiceSet.id).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
       expect(choiceSet.createdBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
       expect(choiceSet.updatedBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
+
+      // Verify field transformations
+      // CreatedTime and UpdatedTime should be transformed, not the original fields
+      expect((choiceSet as any).createTime).toBeUndefined(); // Original field should be removed
+      expect((choiceSet as any).updateTime).toBeUndefined(); // Original field should be removed
     });
   });
 });
