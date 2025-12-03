@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { CaseInstancesService } from '../../../../src/services/maestro/case-instances';
+import { CaseInstancesService } from '../../../../src/services/maestro/cases/case-instances';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { FOLDER_KEY } from '../../../../src/utils/constants/headers';

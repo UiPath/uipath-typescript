@@ -2,7 +2,6 @@ import { ApiClient } from '../core/http/api-client';
 import { Config } from '../core/config/config';
 import { ExecutionContext } from '../core/context/execution';
 import { RequestSpec } from '../models/common/request-spec';
-import { TokenManager } from '../core/auth/token-manager';
 import { PaginatedResponse, PaginationOptions } from '../utils/pagination/types';
 import {
   InternalPaginationOptions,
