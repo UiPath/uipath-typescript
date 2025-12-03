@@ -30,20 +30,19 @@ import { ChoiceSetService } from './choicesets';
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
-  private _choicesets: ChoiceSetService | null = null;
-  protected readonly tokenManager: TokenManager;
+  private choiceSetsService: ChoiceSetService;
 
   /**
    * @hideconstructor
    */
   constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
     super(config, executionContext, tokenManager);
-    this.tokenManager = tokenManager;
+    this.choiceSetsService = new ChoiceSetService(config, executionContext, tokenManager);
   }
 
   /**
    * Access to ChoiceSet service for managing choice sets
-   * 
+   *
    * @example
    * ```typescript
    * // Get all choice sets
@@ -51,10 +50,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   get choicesets(): ChoiceSetService {
-    if (!this._choicesets) {
-      this._choicesets = new ChoiceSetService(this.config, this.executionContext, this.tokenManager);
-    }
-    return this._choicesets;
+    return this.choiceSetsService;
   }
 
   /**

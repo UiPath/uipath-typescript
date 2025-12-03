@@ -1,7 +1,7 @@
 /**
- * ChoiceSet response from the API
+ * ChoiceSet Get All Response
  */
-export interface ChoiceSetGetResponse {
+export interface ChoiceSetGetAllResponse {
   /** Name identifier of the choice set */
   name: string;
   /** Human-readable display name */

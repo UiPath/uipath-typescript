@@ -3,7 +3,7 @@
  * Uses generic utilities from core.ts for base functionality
  */
 
-import { ChoiceSetGetResponse } from '../../../src/models/data-fabric/choicesets.types';
+import { ChoiceSetGetAllResponse } from '../../../src/models/data-fabric/choicesets.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { CHOICESET_TEST_CONSTANTS } from '../constants/choicesets';
 

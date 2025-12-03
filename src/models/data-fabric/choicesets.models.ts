@@ -1,28 +1,36 @@
-import { ChoiceSetGetResponse } from './choicesets.types';
+import { ChoiceSetGetAllResponse } from './choicesets.types';
 
 /**
- * Service for managing UiPath Data Fabric Choice Sets.
- * 
- * Choice Sets are predefined lists of values that can be used across entities in the Data Fabric.
+ * Service for managing UiPath Data Service Choice Sets
+ *
+ * Choice Sets are enumerated lists of values that can be used as field types in entities. They enable single-select or multi-select fields, such as expense types, categories, or status values. [UiPath Choice Sets Guide](https://docs.uipath.com/data-service/automation-cloud/latest/user-guide/choice-sets)
  */
 export interface ChoiceSetServiceModel {
   /**
    * Gets all choice sets in the system
-   * 
+   *
    * @returns Promise resolving to an array of choice set metadata
-   * {@link ChoiceSetGetResponse}
+   * {@link ChoiceSetGetAllResponse}
    * @example
    * ```typescript
    * // Get all choice sets
    * const choiceSets = await sdk.entities.choicesets.getAll();
-   * 
+   *
    * // Iterate through choice sets
    * choiceSets.forEach(choiceSet => {
    *   console.log(`ChoiceSet: ${choiceSet.displayName} (${choiceSet.name})`);
-   *   console.log(`Record count: ${choiceSet.recordCount}`);
+   *   console.log(`Type: ${choiceSet.entityType}`);
    * });
+   *
+   * // Find a specific choice set by name
+   * const expenseTypes = choiceSets.find(cs => cs.name === 'ExpenseTypes');
+   *
+   * // Check choice set details
+   * if (expenseTypes) {
+   *   console.log(`Record count: ${expenseTypes.recordCount}`);
+   * }
    * ```
    */
-  getAll(): Promise<ChoiceSetGetResponse[]>;
+  getAll(): Promise<ChoiceSetGetAllResponse[]>;
 }
 

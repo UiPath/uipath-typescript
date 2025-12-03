@@ -71,7 +71,7 @@ describe('ChoiceSetService Unit Tests', () => {
       // Verify the result
       expect(result).toBeDefined();
       expect(result.length).toBe(3);
-      
+
       // Verify each choice set has required fields
       result.forEach((choiceSet, index) => {
         expect(choiceSet).toHaveProperty('id');
@@ -148,9 +148,9 @@ describe('ChoiceSetService Unit Tests', () => {
 
       expect(result).toBeDefined();
       expect(result.length).toBe(1);
-      
+
       const choiceSet = result[0];
-      
+
       // Verify all properties are preserved
       expect(choiceSet.name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
       expect(choiceSet.displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
