@@ -70,6 +70,10 @@ export const DATA_FABRIC_ENDPOINTS = {
     UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update-batch`,
     DELETE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/delete-batch`,
   },
+  CHOICESET: {
+    GET_ALL: `${DATAFABRIC_BASE}/api/Entity/choiceset`,
+    GET_BY_ID: (choicesetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choicesetId}/query_expansion`,
+  },
 } as const;
 
 /**
