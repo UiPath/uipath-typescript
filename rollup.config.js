@@ -1,7 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';  // Resolves node_modules dependencies
 import commonjs from '@rollup/plugin-commonjs';     // Converts CommonJS modules to ES6
 import typescript from '@rollup/plugin-typescript'; // Compiles TypeScript to JavaScript
-import dts from 'rollup-plugin-dts';              // Generates TypeScript declaration files
 import json from '@rollup/plugin-json';           // Imports JSON files as ES6 modules
 import builtins from 'builtin-modules';           // List of Node.js built-in modules (fs, crypto, etc.)
 import { readFileSync } from 'fs'; 
@@ -27,7 +26,8 @@ const createPlugins = (isBrowser) => [
   json(),                          // Allow importing JSON files as modules
   typescript({
     tsconfig: './tsconfig.json',
-    declaration: false,
+    declaration: true,              // ✅ Enable native TypeScript declaration generation
+    declarationDir: './dist',       // ✅ Output types to dist folder
     sourceMap: false,
     declarationMap: false
   })
@@ -89,36 +89,6 @@ const configs = [
       inlineDynamicImports: true
     },
     plugins: createBrowserPlugins()
-  },
-  
-  // Type definitions for ESM (.mts extension for ESM types)
-  {
-    input: 'src/index.ts',              // Entry point for types
-    output: {
-      file: 'dist/index.d.mts',        // TypeScript declaration file for ESM
-      format: 'es'
-    },
-    plugins: [dts()]
-  },
-  
-  // Type definitions for CommonJS (.cts extension for CJS types)
-  {
-    input: 'src/index.ts',              // Entry point for types
-    output: {
-      file: 'dist/index.d.cts',        // TypeScript declaration file for CJS
-      format: 'es'
-    },
-    plugins: [dts()]
-  },
-  
-  // Main type definitions (for legacy TypeScript and package.json "types" field)
-  {
-    input: 'src/index.ts',              // Entry point for types
-    output: {
-      file: 'dist/index.d.ts',         // Main TypeScript declaration file
-      format: 'es'
-    },
-    plugins: [dts()]
   }
 ];
 
@@ -133,6 +103,41 @@ const serviceEntries = [
     name: 'entities',
     input: 'src/services/data-fabric/index.ts',
     output: 'entities/index'
+  },
+  {
+    name: 'tasks',
+    input: 'src/services/action-center/index.ts',
+    output: 'tasks/index'
+  },
+  {
+    name: 'assets',
+    input: 'src/services/orchestrator/assets/index.ts',
+    output: 'assets/index'
+  },
+  {
+    name: 'queues',
+    input: 'src/services/orchestrator/queues/index.ts',
+    output: 'queues/index'
+  },
+  {
+    name: 'buckets',
+    input: 'src/services/orchestrator/buckets/index.ts',
+    output: 'buckets/index'
+  },
+  {
+    name: 'orchestrator-processes',
+    input: 'src/services/orchestrator/processes/index.ts',
+    output: 'orchestrator-processes/index'
+  },
+  {
+    name: 'maestro-cases',
+    input: 'src/services/maestro/cases/index.ts',
+    output: 'maestro-cases/index'
+  },
+  {
+    name: 'maestro-processes',
+    input: 'src/services/maestro/processes/index.ts',
+    output: 'maestro-processes/index'
   }
 ];
 
@@ -161,36 +166,6 @@ serviceEntries.forEach(({ input, output }) => {
     },
     plugins: createPlugins(false),
     external: allDependencies
-  });
-
-  // ESM type definitions
-  configs.push({
-    input,
-    output: {
-      file: `dist/${output}.d.mts`,
-      format: 'es'
-    },
-    plugins: [dts()]
-  });
-
-  // CommonJS type definitions
-  configs.push({
-    input,
-    output: {
-      file: `dist/${output}.d.cts`,
-      format: 'es'
-    },
-    plugins: [dts()]
-  });
-
-  // Main type definitions
-  configs.push({
-    input,
-    output: {
-      file: `dist/${output}.d.ts`,
-      format: 'es'
-    },
-    plugins: [dts()]
   });
 });
 
