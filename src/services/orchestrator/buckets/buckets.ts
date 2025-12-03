@@ -1,9 +1,9 @@
-import { FolderScopedService } from '../folder-scoped';
-import type { UiPath } from '../../core/uipath';
-import { ValidationError, HttpStatus } from '../../core/errors';
-import { 
-  BucketGetResponse, 
-  BucketGetAllOptions, 
+import { FolderScopedService } from '../../folder-scoped';
+import type { UiPath } from '../../../core/uipath';
+import { ValidationError, HttpStatus } from '../../../core/errors';
+import {
+  BucketGetResponse,
+  BucketGetAllOptions,
   BucketGetByIdOptions,
   BucketGetUriResponse,
   BucketGetReadUriOptions,
@@ -12,21 +12,21 @@ import {
   BucketUploadResponse,
   BlobItem,
   BucketGetUriOptions
-} from '../../models/orchestrator/buckets.types';
-import { BucketServiceModel } from '../../models/orchestrator/buckets.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../utils/transform';
-import { filterUndefined } from '../../utils/object';
-import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_ID } from '../../utils/constants/headers';
-import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../utils/constants/common';
-import { BucketMap } from '../../models/orchestrator/buckets.constants';
-import { ODATA_PAGINATION } from '../../utils/constants/common';
+} from '../../../models/orchestrator/buckets.types';
+import { BucketServiceModel } from '../../../models/orchestrator/buckets.models';
+import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
+import { filterUndefined } from '../../../utils/object';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
+import { BUCKET_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../../utils/constants/common';
+import { BucketMap } from '../../../models/orchestrator/buckets.constants';
+import { ODATA_PAGINATION } from '../../../utils/constants/common';
 import axios, { AxiosResponse } from 'axios';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { track } from '../../core/telemetry';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { track } from '../../../core/telemetry';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
   /**

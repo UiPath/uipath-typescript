@@ -1,5 +1,5 @@
-import { BaseService } from '../base';
-import type { UiPath } from '../../core/uipath';
+import { BaseService } from '../../base';
+import type { UiPath } from '../../../core/uipath';
 import {
   ProcessInstanceGetResponse,
   RawProcessInstanceGetResponse,
@@ -13,21 +13,21 @@ import {
   ProcessInstanceGetVariablesOptions,
   GlobalVariableMetaData,
   ProcessIncidentGetResponse
-} from '../../models/maestro';
+} from '../../../models/maestro';
 import { BpmnHelpers } from './helpers';
-import { OperationResponse } from '../../models/common/types';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
-import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_KEY, CONTENT_TYPES } from '../../utils/constants/headers';
-import { transformData } from '../../utils/transform';
-import { ProcessInstanceMap, ProcessInstanceExecutionHistoryMap } from '../../models/maestro/process-instances.constants';
-import { BpmnXmlString } from '../../models/maestro/process-instances.types';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../utils/constants/common';
-import { track } from '../../core/telemetry';
-import { BpmnVariableMetadata } from '../../models/maestro/process-instances.internal-types';
+import { OperationResponse } from '../../../models/common/types';
+import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_KEY, CONTENT_TYPES } from '../../../utils/constants/headers';
+import { transformData } from '../../../utils/transform';
+import { ProcessInstanceMap, ProcessInstanceExecutionHistoryMap } from '../../../models/maestro/process-instances.constants';
+import { BpmnXmlString } from '../../../models/maestro/process-instances.types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
+import { track } from '../../../core/telemetry';
+import { BpmnVariableMetadata } from '../../../models/maestro/process-instances.internal-types';
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
