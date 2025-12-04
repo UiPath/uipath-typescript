@@ -20,6 +20,7 @@ export const AUTH_CONSTANTS = {
   CONTENT_TYPES: {
     JSON: 'application/json',
     FORM_URLENCODED: 'application/x-www-form-urlencoded',
+    TEXT_HTML: 'text/html',
   },
   ROUTES: {
     OIDC_LOGIN: '/oidc/login',
@@ -32,8 +33,12 @@ export const AUTH_CONSTANTS = {
   },
   OAUTH: {
     GRANT_TYPE: 'authorization_code',
+    GRANT_TYPE_CLIENT_CREDENTIALS: 'client_credentials',
     RESPONSE_TYPE: 'code',
     CODE_CHALLENGE_METHOD: 'S256',
+    DEFAULT_CLIENT_ID: '36dea5b8-e8bb-423d-8e7b-c808df8f1c00',
+    REDIRECT_URI_TEMPLATE: 'http://localhost:{PORT}/oidc/login',
+    DEFAULT_SCOPE: 'offline_access ProcessMining OrchestratorApiUserAccess StudioWebBackend IdentityServerApi ConnectionService DataService DocumentUnderstanding EnterpriseContextService Directory JamJamApi LLMGateway LLMOps OMS RCS.FolderAuthorization TM.Projects TM.TestCases TM.Requirements TM.TestSets',
   },
   CRYPTO: {
     RANDOM_BYTES_LENGTH: 32,
@@ -100,8 +105,4 @@ export const BASE_URLS: Record<string, string> = {
   alpha: 'https://alpha.uipath.com',
   cloud: 'https://cloud.uipath.com',
   staging: 'https://staging.uipath.com',
-} as const;
-
-export const CLIENT_IDS: Record<string, string> = {
-  default: '36dea5b8-e8bb-423d-8e7b-c808df8f1c00',
 } as const;
