@@ -29,6 +29,7 @@ export default class RegisterApp extends Command {
     '<%= config.bin %> <%= command.id %> --name MyApp',
     '<%= config.bin %> <%= command.id %> --name MyApp --version 1.0.0',
     '<%= config.bin %> <%= command.id %> --name MyApp --version 1.0.0 --type Action',
+    '<%= config.bin %> <%= command.id %> --name MyApp --orgId abc123 --tenantId xyz789 --tenantName MyTenant --folderKey DefaultFolder --authToken your_token',
   ];
 
   static override flags = {
@@ -42,6 +43,24 @@ export default class RegisterApp extends Command {
       description: 'App version',
       default: '1.0.0',
     }),
+    baseUrl: Flags.string({
+      description: 'UiPath base URL (default: https://cloud.uipath.com)',
+    }),
+    orgId: Flags.string({
+      description: 'UiPath organization ID',
+    }),
+    tenantId: Flags.string({
+      description: 'UiPath tenant ID',
+    }),
+    tenantName: Flags.string({
+      description: 'UiPath tenant name',
+    }),
+    folderKey: Flags.string({
+      description: 'UiPath folder key',
+    }),
+    authToken: Flags.string({
+      description: 'UiPath authentication token',
+    }),
     type: Flags.string({
       char: 't',
       description: 'App Type',
@@ -53,11 +72,11 @@ export default class RegisterApp extends Command {
   @track('RegisterApp')
   public async run(): Promise<void> {
     const { flags } = await this.parse(RegisterApp);
-    
+
     this.log(chalk.blue(MESSAGES.INFO.APP_REGISTRATION));
 
-    // Validate environment variables
-    const envConfig = await this.validateEnvironment();
+    // Validate environment variables or flags
+    const envConfig = await this.validateEnvironment(flags);
     if (!envConfig) {
       return;
     }
@@ -77,18 +96,27 @@ export default class RegisterApp extends Command {
     await this.registerApp(appName, appVersion, isActionApp, envConfig);
   }
 
-  private async validateEnvironment(): Promise<EnvironmentConfig | null> {
+  private async validateEnvironment(flags: any): Promise<EnvironmentConfig | null> {
     const requiredEnvVars = [
       'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID', 
+      'UIPATH_ORG_ID',
       'UIPATH_TENANT_ID',
       'UIPATH_TENANT_NAME',
       'UIPATH_FOLDER_KEY',
       'UIPATH_BEARER_TOKEN'
     ];
 
-    const result = validateEnvironment(requiredEnvVars, this);
-    
+    // Build config from flags (takes precedence over env vars)
+    const flagConfig: Partial<EnvironmentConfig> = {};
+    if (flags.baseUrl) flagConfig.baseUrl = flags.baseUrl;
+    if (flags.orgId) flagConfig.orgId = flags.orgId;
+    if (flags.tenantId) flagConfig.tenantId = flags.tenantId;
+    if (flags.tenantName) flagConfig.tenantName = flags.tenantName;
+    if (flags.folderKey) flagConfig.folderKey = flags.folderKey;
+    if (flags.authToken) flagConfig.bearerToken = flags.authToken;
+
+    const result = validateEnvironment(requiredEnvVars, this, flagConfig);
+
     return result.isValid ? result.config! : null;
   }
 
