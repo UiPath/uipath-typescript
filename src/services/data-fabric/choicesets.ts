@@ -20,7 +20,6 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
 
   /**
    * Transforms raw choice set data to expose only essential public fields
-   * Similar to transformGlobalVariables in process-instances service
    * @param rawChoiceSet The raw choice set with all internal fields (after EntityMap transformation)
    * @returns Choice set with only public fields exposed
    * @private

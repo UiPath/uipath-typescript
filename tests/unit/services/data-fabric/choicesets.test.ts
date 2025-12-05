@@ -40,7 +40,7 @@ describe('ChoiceSetService Unit Tests', () => {
   });
 
   describe('getAll', () => {
-    it('should get all choice sets successfully with only 7 exposed fields', async () => {
+    it('should get all choice sets successfully', async () => {
       const mockResponse = [createMockChoiceSetResponse()];
       mockApiClient.get.mockResolvedValue(mockResponse);
 
@@ -51,7 +51,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(1);
 
-      // Verify only 7 fields are exposed
+      // Verify public fields are exposed
       expect(result[0].name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
       expect(result[0].displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
       expect(result[0].description).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION);
@@ -74,7 +74,7 @@ describe('ChoiceSetService Unit Tests', () => {
       );
     });
 
-    it('should return multiple choice sets with only 7 fields each', async () => {
+    it('should return multiple choice sets', async () => {
       const mockChoiceSets = createMockChoiceSets(3);
       mockApiClient.get.mockResolvedValue(mockChoiceSets);
 
@@ -84,7 +84,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result.length).toBe(3);
 
-      // Verify each choice set has only the 7 exposed fields
+      // Verify each choice set has the public fields
       result.forEach((choiceSet) => {
         expect(choiceSet).toHaveProperty('name');
         expect(choiceSet).toHaveProperty('displayName');
@@ -146,7 +146,7 @@ describe('ChoiceSetService Unit Tests', () => {
       await expect(choiceSetService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
-    it('should only expose 7 fields and filter out internal fields', async () => {
+    it('should expose public fields and filter out internal fields', async () => {
       const mockResponse = [createMockChoiceSetResponse()];
       mockApiClient.get.mockResolvedValue(mockResponse);
 
@@ -157,7 +157,7 @@ describe('ChoiceSetService Unit Tests', () => {
 
       const choiceSet = result[0];
 
-      // Verify the 7 exposed properties
+      // Verify public properties are exposed
       expect(choiceSet.name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
       expect(choiceSet.displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
       expect(choiceSet.description).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION);
