@@ -3,25 +3,27 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EntityService } from '../../../../src/services/data-fabric/entities';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
-import { 
-  createMockEntityResponse, 
-  createMockEntities, 
-  createMockEntityRecords, 
-  createMockInsertResponse, 
-  createMockUpdateResponse, 
+import {
+  createMockEntityResponse,
+  createMockEntities,
+  createMockEntityRecords,
+  createMockInsertResponse,
+  createMockUpdateResponse,
   createMockDeleteResponse,
   createMockEntityWithExternalFields,
   createMockEntityWithNestedReferences,
-  createMockEntityWithSqlFieldTypes 
+  createMockEntityWithSqlFieldTypes,
+  createMockAttachmentsResponse
 } from '../../../utils/mocks/entities';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
-import type { 
+import type {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
   EntityUpdateOptions,
   EntityDeleteOptions,
-  EntityRecord 
+  EntityRecord,
+  EntityGetAttachmentsOptions
 } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -677,6 +679,82 @@ describe('EntityService Unit Tests', () => {
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         [ENTITY_TEST_CONSTANTS.RECORD_ID]
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getAttachments', () => {
+    it('should get attachments successfully', async () => {
+      const mockResponse = createMockAttachmentsResponse(2);
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      const options: EntityGetAttachmentsOptions = {
+        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      };
+
+      const result = await entityService.getAttachments(options);
+
+      // Verify the result
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(2);
+      expect(result[0].fileName).toBe(ENTITY_TEST_CONSTANTS.ATTACHMENT_FILE_NAME_1);
+      expect(result[0].fileSize).toBe(ENTITY_TEST_CONSTANTS.ATTACHMENT_FILE_SIZE_1);
+      expect(result[0].contentType).toBe(ENTITY_TEST_CONSTANTS.ATTACHMENT_CONTENT_TYPE_PDF);
+      expect(result[0].downloadUrl).toBe(ENTITY_TEST_CONSTANTS.ATTACHMENT_DOWNLOAD_URL_1);
+
+      expect(result[1].fileName).toBe(ENTITY_TEST_CONSTANTS.ATTACHMENT_FILE_NAME_2);
+      expect(result[1].fileSize).toBe(ENTITY_TEST_CONSTANTS.ATTACHMENT_FILE_SIZE_2);
+      expect(result[1].contentType).toBe(ENTITY_TEST_CONSTANTS.ATTACHMENT_CONTENT_TYPE_JPEG);
+      expect(result[1].downloadUrl).toBe(ENTITY_TEST_CONSTANTS.ATTACHMENT_DOWNLOAD_URL_2);
+
+      // Verify the API call has correct endpoint
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ATTACHMENT.GET_ATTACHMENTS(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        {}
+      );
+    });
+
+    it('should get attachments for empty field', async () => {
+      const mockResponse = createMockAttachmentsResponse(0);
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      const options: EntityGetAttachmentsOptions = {
+        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      };
+
+      const result = await entityService.getAttachments(options);
+
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(0);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ATTACHMENT.GET_ATTACHMENTS(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      const options: EntityGetAttachmentsOptions = {
+        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      };
+
+      await expect(entityService.getAttachments(options)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

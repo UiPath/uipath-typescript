@@ -13,7 +13,9 @@ import {
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  EntityFieldDataType
+  EntityFieldDataType,
+  EntityGetAttachmentsOptions,
+  AttachmentMetadata
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -261,14 +263,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Gets all entities in the system
-   * 
+   *
    * @returns Promise resolving to an array of entity metadata
-   * 
+   *
    * @example
    * ```typescript
    * // Get all entities
    * const entities = await sdk.entities.getAll();
-   * 
+   *
    * // Call operations on an entity
    * const records = await entities[0].getRecords();
    * ```
@@ -278,7 +280,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const response = await this.get<RawEntityGetResponse[]>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL
     );
-    
+
     // Apply transformations
     const entities = response.data.map(entity => {
       // Transform each entity
@@ -287,8 +289,42 @@ export class EntityService extends BaseService implements EntityServiceModel {
       // Attach entity methods
       return createEntityWithMethods(metadata, this);
     });
-    
+
     return entities;
+  }
+
+  /**
+   * Gets attachments from an entity record field
+   *
+   * @param options - Options containing entityName, recordId, and fieldName
+   * @returns Promise resolving to an array of attachment metadata
+   *
+   * @example
+   * ```typescript
+   * // Get attachments for a specific record and field
+   * const attachments = await sdk.entities.getAttachments({
+   *   entityName: 'Invoice',
+   *   recordId: '<record-uuid>',
+   *   fieldName: 'Documents'
+   * });
+   *
+   * // Access attachment information
+   * attachments.forEach(attachment => {
+   *   console.log(`File: ${attachment.fileName}`);
+   *   console.log(`Size: ${attachment.fileSize}`);
+   *   console.log(`URL: ${attachment.downloadUrl}`);
+   * });
+   * ```
+   */
+  @track('Entities.GetAttachments')
+  async getAttachments(options: EntityGetAttachmentsOptions): Promise<AttachmentMetadata[]> {
+    const { entityName, recordId, fieldName } = options;
+
+    const response = await this.get<AttachmentMetadata[]>(
+      DATA_FABRIC_ENDPOINTS.ATTACHMENT.GET_ATTACHMENTS(entityName, recordId, fieldName)
+    );
+
+    return response.data;
   }
 
   /**

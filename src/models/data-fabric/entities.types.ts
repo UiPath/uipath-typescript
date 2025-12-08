@@ -1,4 +1,5 @@
 import { PaginationOptions } from '../../utils/pagination/types';
+import { AxiosRequestConfig } from 'axios';
 
 /**
  * Entity field type names 
@@ -67,6 +68,33 @@ export type EntityUpdateOptions = EntityOperationOptions;
 export interface EntityDeleteOptions {
   /** Whether to fail on first error (default: false) */
   failOnFirst?: boolean;
+}
+
+/**
+ * Options for getting attachments from an entity
+ */
+export interface EntityGetAttachmentsOptions {
+  /** Entity name */
+  entityName: string;
+  /** Record ID */
+  recordId: string;
+  /** Field name */
+  fieldName: string;
+}
+
+/**
+ * Attachment metadata
+ */
+export interface AttachmentMetadata {
+  /** File name */
+  fileName?: string;
+  /** File size in bytes */
+  fileSize?: number;
+  /** Content type */
+  contentType?: string;
+  /** Download URL */
+  downloadUrl?: string;
+  [key: string]: any;
 }
 
 /**
