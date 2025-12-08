@@ -19,26 +19,6 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
   }
 
   /**
-   * Transforms raw choice set data to expose only essential public fields
-   * @param rawChoiceSet The raw choice set with all internal fields (after EntityMap transformation)
-   * @returns Choice set with only public fields exposed
-   * @private
-   */
-  private transformChoiceSet(rawChoiceSet: any): ChoiceSetGetAllResponse {
-    return {
-      name: rawChoiceSet.name,
-      displayName: rawChoiceSet.displayName,
-      description: rawChoiceSet.description,
-      recordCount: rawChoiceSet.recordCount,
-      folderId: rawChoiceSet.folderId,
-      createdBy: rawChoiceSet.createdBy,
-      updatedBy: rawChoiceSet.updatedBy,
-      createdTime: rawChoiceSet.createdTime,
-      updatedTime: rawChoiceSet.updatedTime
-    };
-  }
-
-  /**
    * Gets all choice sets in the system
    *
    * @returns Promise resolving to an array of choice set metadata
@@ -57,14 +37,14 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    */
   @track('Choicesets.GetAll')
   async getAll(): Promise<ChoiceSetGetAllResponse[]> {
-    const response = await this.get<RawChoiceSetGetAllResponse[]>(
+    const rawResponse = await this.get<RawChoiceSetGetAllResponse[]>(
       DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL
     );
 
-    // Transform API response to normalized field names (createTime -> createdTime, updateTime -> updatedTime)
-    // and filter to only expose essential public fields
-    return response.data.map(choiceSet =>
-      this.transformChoiceSet(transformData(choiceSet, EntityMap))
+    // Transform field names
+    const data = rawResponse.data || [];
+    return data.map(choiceSet =>
+      transformData(choiceSet, EntityMap) as unknown as ChoiceSetGetAllResponse
     );
   }
 }
