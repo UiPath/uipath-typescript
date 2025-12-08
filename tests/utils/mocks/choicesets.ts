@@ -5,6 +5,7 @@
 
 import { createMockBaseResponse, createMockCollection } from './core';
 import { CHOICESET_TEST_CONSTANTS } from '../constants/choicesets';
+import { TEST_CONSTANTS } from '../constants/common';
 
 /**
  * Creates a mock ChoiceSet response with RAW API format (before transformation)
@@ -19,19 +20,18 @@ export const createMockChoiceSetResponse = (overrides: Partial<any> = {}): any =
     entityTypeId: 1,
     entityType: 'ChoiceSet',
     description: CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION,
-    folderId: CHOICESET_TEST_CONSTANTS.FOLDER_ID,
-    recordCount: CHOICESET_TEST_CONSTANTS.RECORD_COUNT,
+    folderId: String(TEST_CONSTANTS.FOLDER_ID),
     storageSizeInMB: 0.210937,
     usedStorageSizeInMB: 0.046875,
     isRbacEnabled: false,
     invalidIdentifiers: [],
     isModelReserved: false,
     id: CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
-    createdBy: CHOICESET_TEST_CONSTANTS.USER_ID,
+    createdBy: String(TEST_CONSTANTS.USER_ID),
     // RAW API field names: createTime/updateTime (will be transformed to createdTime/updatedTime)
     createTime: CHOICESET_TEST_CONSTANTS.CREATED_TIME,
     updateTime: CHOICESET_TEST_CONSTANTS.UPDATED_TIME,
-    updatedBy: CHOICESET_TEST_CONSTANTS.USER_ID,
+    updatedBy: String(TEST_CONSTANTS.USER_ID),
   }, overrides);
 };
 

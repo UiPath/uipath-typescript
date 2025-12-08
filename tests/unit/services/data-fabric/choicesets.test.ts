@@ -55,10 +55,9 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result[0].name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
       expect(result[0].displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
       expect(result[0].description).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION);
-      expect(result[0].recordCount).toBe(CHOICESET_TEST_CONSTANTS.RECORD_COUNT);
-      expect(result[0].folderId).toBe(CHOICESET_TEST_CONSTANTS.FOLDER_ID);
-      expect(result[0].createdBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
-      expect(result[0].updatedBy).toBe(CHOICESET_TEST_CONSTANTS.USER_ID);
+      expect(result[0].folderId).toBe(String(TEST_CONSTANTS.FOLDER_ID));
+      expect(result[0].createdBy).toBe(String(TEST_CONSTANTS.USER_ID));
+      expect(result[0].updatedBy).toBe(String(TEST_CONSTANTS.USER_ID));
       expect(result[0].createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
       expect(result[0].updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
 
@@ -84,7 +83,6 @@ describe('ChoiceSetService Unit Tests', () => {
         expect(choiceSet).toHaveProperty('name');
         expect(choiceSet).toHaveProperty('displayName');
         expect(choiceSet).toHaveProperty('description');
-        expect(choiceSet).toHaveProperty('recordCount');
         expect(choiceSet).toHaveProperty('folderId');
         expect(choiceSet).toHaveProperty('createdBy');
         expect(choiceSet).toHaveProperty('updatedBy');
