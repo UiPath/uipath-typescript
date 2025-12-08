@@ -20,7 +20,7 @@ export const createMockChoiceSetResponse = (overrides: Partial<any> = {}): any =
     entityType: 'ChoiceSet',
     description: CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION,
     folderId: CHOICESET_TEST_CONSTANTS.FOLDER_ID,
-    recordCount: 4,
+    recordCount: CHOICESET_TEST_CONSTANTS.RECORD_COUNT,
     storageSizeInMB: 0.210937,
     usedStorageSizeInMB: 0.046875,
     isRbacEnabled: false,

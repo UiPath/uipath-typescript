@@ -29,6 +29,8 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
       name: rawChoiceSet.name,
       displayName: rawChoiceSet.displayName,
       description: rawChoiceSet.description,
+      recordCount: rawChoiceSet.recordCount,
+      folderId: rawChoiceSet.folderId,
       createdBy: rawChoiceSet.createdBy,
       updatedBy: rawChoiceSet.updatedBy,
       createdTime: rawChoiceSet.createdTime,

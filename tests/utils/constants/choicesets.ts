@@ -11,6 +11,7 @@ export const CHOICESET_TEST_CONSTANTS = {
   CHOICESET_NAME: 'UserType',
   CHOICESET_DISPLAY_NAME: 'User Type',
   CHOICESET_DESCRIPTION: 'Denotes the type of user record in the System User entity',
+  RECORD_COUNT: 4,
 
   // User Information
   USER_ID: '123',
