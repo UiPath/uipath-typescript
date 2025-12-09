@@ -9,11 +9,11 @@ export class TaskEventsService {
     this.sendMessageToParent(ActionCenterEventNames.INIT);
   }
 
-  dataChanged(data: any): void {
+  dataChanged(data: unknown): void {
     this.sendMessageToParent(ActionCenterEventNames.DATACHANGED, data);
   }
 
-  completeTask(actionTaken: string, data: any): void {
+  completeTask(actionTaken: string, data: unknown): void {
     const content = {
       data: data,
       action: actionTaken,
@@ -35,7 +35,7 @@ export class TaskEventsService {
     }
   }
 
-  private sendMessageToParent(eventType: string, content?: any): void {
+  private sendMessageToParent(eventType: string, content?: unknown): void {
     if (window.parent && this.isValidOrigin(this.parentOrigin)) {
       try {
         window.parent.postMessage(

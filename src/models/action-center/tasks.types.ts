@@ -269,7 +269,7 @@ export type ActionCenterData = {
   title: string,
   status: TaskStatus,
   isReadOnly: boolean,
-  data: any,
+  data: unknown,
   action: string,
   organizationUnitId: number,
   organizationUnitFullyQualifiedName: string,
