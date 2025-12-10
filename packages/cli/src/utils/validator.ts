@@ -1,10 +1,20 @@
 import chalk from 'chalk';
 import { EnvironmentConfig } from '../types/index.js';
+import { VALID_NAME_REGEX } from '../constants/index.js';
 
 interface ValidationResult {
   isValid: boolean;
   config?: EnvironmentConfig;
   missingVars?: string[];
+}
+
+/**
+ * Validates app/package name to ensure it only contains allowed characters.
+ * Allowed: letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-)
+ */
+export function isValidAppName(name: string): boolean {
+  const validNameRegex = VALID_NAME_REGEX;
+  return validNameRegex.test(name);
 }
 
 export function validateEnvironment(

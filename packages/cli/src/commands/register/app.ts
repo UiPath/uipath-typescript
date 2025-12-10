@@ -9,7 +9,7 @@ import { EnvironmentConfig, AppConfig, AppType } from '../../types/index.js';
 import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS } from '../../constants/index.js';
 import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
-import { validateEnvironment } from '../../utils/env-validator.js';
+import { validateEnvironment, isValidAppName } from '../../utils/validator.js';
 import { handleHttpError } from '../../utils/error-handler.js';
 import { track } from '../../telemetry/index.js';
 import { readAndParseActionSchema } from '../../utils/action-schema.js';
@@ -53,13 +53,19 @@ export default class RegisterApp extends Command {
   @track('RegisterApp')
   public async run(): Promise<void> {
     const { flags } = await this.parse(RegisterApp);
-    
+
     this.log(chalk.blue(MESSAGES.INFO.APP_REGISTRATION));
 
     // Validate environment variables
     const envConfig = await this.validateEnvironment();
     if (!envConfig) {
       return;
+    }
+
+    // Validate name flag if provided
+    if (flags.name && !isValidAppName(flags.name)) {
+      this.log(chalk.red(MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS));
+      process.exit(1);
     }
 
     // Get app details
@@ -102,11 +108,14 @@ export default class RegisterApp extends Command {
           if (!input.trim()) {
             return MESSAGES.VALIDATIONS.APP_NAME_REQUIRED;
           }
+          if (!isValidAppName(input)) {
+            return MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS;
+          }
           return true;
         },
       },
     ]);
-    
+
     return response.name;
   }
 

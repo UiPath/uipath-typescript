@@ -9,7 +9,7 @@ import fetch from 'node-fetch';
 import { EnvironmentConfig } from '../types/index.js';
 import { API_ENDPOINTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
-import { validateEnvironment } from '../utils/env-validator.js';
+import { validateEnvironment } from '../utils/validator.js';
 import { handleHttpError } from '../utils/error-handler.js';
 import { track } from '../telemetry/index.js';
 
