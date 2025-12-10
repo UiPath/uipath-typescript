@@ -59,17 +59,17 @@ export const saveTokensWithTenant = async (
 
   // Update .env file with environment variables
   const envVars: Record<string, string> = {
-    [AUTH_CONSTANTS.ENV_VARS.ACCESS_TOKEN]: tokens.accessToken,
-    [AUTH_CONSTANTS.ENV_VARS.BASE_URL]: baseUrl,
-    [AUTH_CONSTANTS.ENV_VARS.TENANT_ID]: tenant.tenantId,
-    [AUTH_CONSTANTS.ENV_VARS.ORG_ID]: tenant.organizationId,
-    [AUTH_CONSTANTS.ENV_VARS.TENANT_NAME]: tenant.tenantName,
-    [AUTH_CONSTANTS.ENV_VARS.ORG_NAME]: tenant.organizationName,
+    [AUTH_CONSTANTS.ENV_CONFIG.ACCESS_TOKEN.envVar]: tokens.accessToken,
+    [AUTH_CONSTANTS.ENV_CONFIG.BASE_URL.envVar]: baseUrl,
+    [AUTH_CONSTANTS.ENV_CONFIG.TENANT_ID.envVar]: tenant.tenantId,
+    [AUTH_CONSTANTS.ENV_CONFIG.ORG_ID.envVar]: tenant.organizationId,
+    [AUTH_CONSTANTS.ENV_CONFIG.TENANT_NAME.envVar]: tenant.tenantName,
+    [AUTH_CONSTANTS.ENV_CONFIG.ORG_NAME.envVar]: tenant.organizationName,
   };
 
   // Add folder key if provided
   if (folderKey) {
-    envVars[AUTH_CONSTANTS.ENV_VARS.FOLDER_KEY] = folderKey;
+    envVars[AUTH_CONSTANTS.ENV_CONFIG.FOLDER_KEY.envVar] = folderKey;
   }
 
   await updateEnvFile(envVars);
@@ -93,13 +93,13 @@ export const clearTokens = async (): Promise<void> => {
     }
     // Clear from .env
     await updateEnvFile({
-      [AUTH_CONSTANTS.ENV_VARS.ACCESS_TOKEN]: '',
-      [AUTH_CONSTANTS.ENV_VARS.BASE_URL]: '',
-      [AUTH_CONSTANTS.ENV_VARS.TENANT_ID]: '',
-      [AUTH_CONSTANTS.ENV_VARS.ORG_ID]: '',
-      [AUTH_CONSTANTS.ENV_VARS.TENANT_NAME]: '',
-      [AUTH_CONSTANTS.ENV_VARS.ORG_NAME]: '',
-      [AUTH_CONSTANTS.ENV_VARS.FOLDER_KEY]: '',
+      [AUTH_CONSTANTS.ENV_CONFIG.ACCESS_TOKEN.envVar]: '',
+      [AUTH_CONSTANTS.ENV_CONFIG.BASE_URL.envVar]: '',
+      [AUTH_CONSTANTS.ENV_CONFIG.TENANT_ID.envVar]: '',
+      [AUTH_CONSTANTS.ENV_CONFIG.ORG_ID.envVar]: '',
+      [AUTH_CONSTANTS.ENV_CONFIG.TENANT_NAME.envVar]: '',
+      [AUTH_CONSTANTS.ENV_CONFIG.ORG_NAME.envVar]: '',
+      [AUTH_CONSTANTS.ENV_CONFIG.FOLDER_KEY.envVar]: '',
     });
   } catch (error) {
     console.error('Error clearing auth tokens:', error);

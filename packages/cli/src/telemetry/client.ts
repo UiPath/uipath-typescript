@@ -156,9 +156,9 @@ class CliTelemetryClient {
      * Create cloud URL from base URL, organization ID, and tenant ID
      */
     private createCloudUrl(): string {
-        const baseUrl = process.env[AUTH_CONSTANTS.ENV_VARS.BASE_URL];
-        const orgId = process.env[AUTH_CONSTANTS.ENV_VARS.ORG_ID];
-        const tenantId = process.env[AUTH_CONSTANTS.ENV_VARS.TENANT_ID];
+        const baseUrl = process.env[AUTH_CONSTANTS.ENV_CONFIG.BASE_URL.envVar];
+        const orgId = process.env[AUTH_CONSTANTS.ENV_CONFIG.ORG_ID.envVar];
+        const tenantId = process.env[AUTH_CONSTANTS.ENV_CONFIG.TENANT_ID.envVar];
 
         if (!baseUrl || !orgId || !tenantId) {
             return UNKNOWN;
@@ -173,8 +173,8 @@ class CliTelemetryClient {
     private getEnrichedAttributes(extraAttributes: TelemetryAttributes): TelemetryAttributes {
         const attributes: TelemetryAttributes = {
             ...extraAttributes,
-            [CLOUD_TENANT_ID]: process.env[AUTH_CONSTANTS.ENV_VARS.TENANT_ID] || UNKNOWN,
-            [CLOUD_ORGANIZATION_ID]: process.env[AUTH_CONSTANTS.ENV_VARS.ORG_ID] || UNKNOWN,
+            [CLOUD_TENANT_ID]: process.env[AUTH_CONSTANTS.ENV_CONFIG.TENANT_ID.envVar] || UNKNOWN,
+            [CLOUD_ORGANIZATION_ID]: process.env[AUTH_CONSTANTS.ENV_CONFIG.ORG_ID.envVar] || UNKNOWN,
             [CLOUD_URL]: this.createCloudUrl(),
             [APP_NAME]: CLI_SERVICE_NAME,
             [VERSION]: CLI_VERSION || UNKNOWN,

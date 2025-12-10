@@ -1,7 +1,10 @@
 import crypto from 'crypto';
+import fetch from 'node-fetch';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
-import { getAuthorizationBaseUrl, getTokenEndpointUrl } from '../utils/url.js';
+import { getAuthorizationBaseUrl, getTokenEndpointUrl, buildRedirectUri } from '../utils/url.js';
 import { validateJWT, validateTokenResponse } from '../utils/validation.js';
+import { handleHttpError } from '../../utils/error-handler.js';
+import { MESSAGES } from '../../constants/messages.js';
 
 export interface PKCEChallenge {
   codeVerifier: string;
@@ -40,6 +43,13 @@ export interface AccessTokenData {
   organizationId?: string;  // Optional organization identifier
 }
 
+export interface ConfidentialClientConfig {
+  clientId: string;
+  clientSecret: string;
+  domain: string;
+  scope?: string;
+}
+
 const base64URLEncode = (str: Buffer): string => {
   return str
     .toString('base64')
@@ -59,10 +69,6 @@ export const generatePKCEChallenge = (): PKCEChallenge => {
     codeChallenge,
     state,
   };
-};
-
-const buildRedirectUri = (port: number): string => {
-  return AUTH_CONSTANTS.OAUTH.REDIRECT_URI_TEMPLATE.replace('{PORT}', port.toString());
 };
 
 export const getAuthorizationUrl = (
@@ -110,13 +116,6 @@ export const parseJWT = (token: string): AccessTokenData => {
   };
 };
 
-export interface ConfidentialClientConfig {
-  clientId: string;
-  clientSecret: string;
-  domain: string;
-  scope?: string;
-}
-
 /**
  * Authenticate using OAuth2 Client Credentials flow (confidential client).
  * This flow is used for machine-to-machine authentication where client_id and client_secret are provided.
@@ -151,8 +150,7 @@ export const authenticateWithClientCredentials = async (
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Authentication failed: ${errorText || response.status}`);
+    await handleHttpError(response, MESSAGES.ERROR_CONTEXT.CLIENT_CREDENTIALS_AUTH);
   }
 
   const data = await response.json();

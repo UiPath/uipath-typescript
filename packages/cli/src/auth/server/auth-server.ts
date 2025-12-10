@@ -5,7 +5,7 @@ import { Server } from 'http';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { TokenResponse } from '../core/oidc.js';
-import { getTokenEndpointUrl } from '../utils/url.js';
+import { getTokenEndpointUrl, buildRedirectUri } from '../utils/url.js';
 import { validateTokenExchangeRequest, validateTokenResponse } from '../utils/validation.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { authRateLimiter, tokenRateLimiter, errorRateLimiter } from './rate-limiter.js';
@@ -145,13 +145,9 @@ export class AuthServer {
     });
   }
 
-  private buildRedirectUri(): string {
-    return AUTH_CONSTANTS.OAUTH.REDIRECT_URI_TEMPLATE.replace('{PORT}', this.port.toString());
-  }
-
   private async exchangeCodeForTokens(code: string): Promise<TokenResponse> {
     const tokenEndpoint = getTokenEndpointUrl(this.domain);
-    const redirectUri = this.buildRedirectUri();
+    const redirectUri = buildRedirectUri(this.port);
 
     const params = new URLSearchParams({
       grant_type: AUTH_CONSTANTS.OAUTH.GRANT_TYPE,

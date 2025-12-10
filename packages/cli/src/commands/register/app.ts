@@ -6,10 +6,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
 import { EnvironmentConfig, AppConfig, AppType } from '../../types/index.js';
-import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS } from '../../constants/index.js';
+import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS, AUTH_CONSTANTS } from '../../constants/index.js';
 import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
-import { validateEnvironment } from '../../utils/env-validator.js';
+import { getEnvironmentConfig, isValidAppName } from '../../utils/env-config.js';
 import { handleHttpError } from '../../utils/error-handler.js';
 import { track } from '../../telemetry/index.js';
 import { readAndParseActionSchema } from '../../utils/action-schema.js';
@@ -29,7 +29,7 @@ export default class RegisterApp extends Command {
     '<%= config.bin %> <%= command.id %> --name MyApp',
     '<%= config.bin %> <%= command.id %> --name MyApp --version 1.0.0',
     '<%= config.bin %> <%= command.id %> --name MyApp --version 1.0.0 --type Action',
-    '<%= config.bin %> <%= command.id %> --name MyApp --orgId abc123 --tenantId xyz789 --tenantName MyTenant --folderKey DefaultFolder --authToken your_token',
+    "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
   ];
 
   static override flags = {
@@ -58,8 +58,8 @@ export default class RegisterApp extends Command {
     folderKey: Flags.string({
       description: 'UiPath folder key',
     }),
-    authToken: Flags.string({
-      description: 'UiPath authentication token',
+    accessToken: Flags.string({
+      description: 'UiPath bearer token for authentication',
     }),
     type: Flags.string({
       char: 't',
@@ -76,9 +76,15 @@ export default class RegisterApp extends Command {
     this.log(chalk.blue(MESSAGES.INFO.APP_REGISTRATION));
 
     // Validate environment variables or flags
-    const envConfig = await this.validateEnvironment(flags);
+    const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.REGISTER_APP, this, flags);
     if (!envConfig) {
       return;
+    }
+
+    // Validate name flag if provided
+    if (flags.name && !isValidAppName(flags.name)) {
+      this.log(chalk.red(MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS));
+      process.exit(1);
     }
 
     // Get app details
@@ -96,30 +102,6 @@ export default class RegisterApp extends Command {
     await this.registerApp(appName, appVersion, isActionApp, envConfig);
   }
 
-  private async validateEnvironment(flags: any): Promise<EnvironmentConfig | null> {
-    const requiredEnvVars = [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID',
-      'UIPATH_TENANT_ID',
-      'UIPATH_TENANT_NAME',
-      'UIPATH_FOLDER_KEY',
-      'UIPATH_BEARER_TOKEN'
-    ];
-
-    // Build config from flags (takes precedence over env vars)
-    const flagConfig: Partial<EnvironmentConfig> = {};
-    if (flags.baseUrl) flagConfig.baseUrl = flags.baseUrl;
-    if (flags.orgId) flagConfig.orgId = flags.orgId;
-    if (flags.tenantId) flagConfig.tenantId = flags.tenantId;
-    if (flags.tenantName) flagConfig.tenantName = flags.tenantName;
-    if (flags.folderKey) flagConfig.folderKey = flags.folderKey;
-    if (flags.authToken) flagConfig.bearerToken = flags.authToken;
-
-    const result = validateEnvironment(requiredEnvVars, this, flagConfig);
-
-    return result.isValid ? result.config! : null;
-  }
-
   private async promptForAppName(): Promise<string> {
     const response = await inquirer.prompt([
       {
@@ -130,11 +112,14 @@ export default class RegisterApp extends Command {
           if (!input.trim()) {
             return MESSAGES.VALIDATIONS.APP_NAME_REQUIRED;
           }
+          if (!isValidAppName(input)) {
+            return MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS;
+          }
           return true;
         },
       },
     ]);
-    
+
     return response.name;
   }
 
@@ -229,14 +214,14 @@ export default class RegisterApp extends Command {
     const response = await fetch(url, {
       method: 'POST',
       headers: createHeaders({ 
-        bearerToken: envConfig.bearerToken,
+        bearerToken: envConfig.accessToken,
         tenantId: envConfig.tenantId 
       }),
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      await handleHttpError(response, 'app registration');
+      await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_REGISTRATION);
     }
 
     return await response.json() as RegisterResponse;
