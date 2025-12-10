@@ -1,10 +1,10 @@
 /**
  * UiPath Core Module
  *
- * Provides core SDK functionality including authentication and configuration.
- * Use this module to create UiPath instances for the modular pattern.
+ * Provides authentication, configuration management, and the base UiPath client class.
+ * Use this module when following the modular import pattern to create a configured SDK client instance.
  *
- * @example
+ * @example OAuth Authentication
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { Entities } from '@uipath/uipath-typescript/entities';
@@ -13,12 +13,29 @@
  *   baseUrl: 'https://cloud.uipath.com',
  *   orgName: 'myorg',
  *   tenantName: 'mytenant',
- *   clientId: 'xxx',
- *   redirectUri: 'http://localhost:3000/callback'
+ *   clientId: 'your-client-id',
+ *   redirectUri: 'http://localhost:3000/callback',
+ *   scope: 'OR.Users OR.Robots'
  * });
  *
  * await uiPath.initialize();
  *
+ * const entitiesService = new Entities(uiPath);
+ * ```
+ *
+ * @example Secret-based Authentication
+ * ```typescript
+ * import { UiPath } from '@uipath/uipath-typescript/core';
+ * import { Entities } from '@uipath/uipath-typescript/entities';
+ *
+ * const uiPath = new UiPath({
+ *   baseUrl: 'https://cloud.uipath.com',
+ *   orgName: 'myorg',
+ *   tenantName: 'mytenant',
+ *   secret: 'your-api-secret'
+ * });
+ *
+ * // No need to call initialize() for secret-based auth
  * const entitiesService = new Entities(uiPath);
  * ```
  *
@@ -27,5 +44,12 @@
 
 export { UiPath } from './uipath';
 export type { UiPathSDKConfig } from './config/sdk-config';
-export { UiPathError } from './errors';
-export type { UiPathConfig } from './config/config';
+export * from './errors';
+
+// Pagination types (common across all services)
+export type {
+  PaginatedResponse,
+  NonPaginatedResponse,
+  PaginationOptions,
+  PaginationCursor
+} from '../utils/pagination';

@@ -2,7 +2,6 @@ import { ApiClient } from '../core/http/api-client';
 import { Config } from '../core/config/config';
 import { ExecutionContext } from '../core/context/execution';
 import { RequestSpec } from '../models/common/request-spec';
-import { TokenManager } from '../core/auth/token-manager';
 import { PaginatedResponse, PaginationOptions } from '../utils/pagination/types';
 import {
   InternalPaginationOptions,
@@ -17,6 +16,7 @@ import { PaginationHelpers } from '../utils/pagination/helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/constants';
 import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
 import type { UiPath } from '../core/uipath';
+import { __PRIVATE__ } from '../core/internals';
 
 export interface ApiResponse<T> {
   data: T;
@@ -40,8 +40,8 @@ export interface ApiResponse<T> {
  * ```typescript
  * // Creating a custom service
  * export class MyService extends BaseService {
- *   constructor(uiPath: UiPath) {
- *     super(uiPath);
+ *   constructor(uiPathClient: UiPath) {
+ *     super(uiPathClient);
  *   }
  *
  *   async myMethod() {
@@ -68,20 +68,20 @@ export class BaseService {
    * Extracts configuration, execution context, and token manager from the UiPath instance
    * to initialize an authenticated API client for making HTTP requests to UiPath services.
    *
-   * @param uiPath - UiPath SDK instance providing authentication and configuration.
-   *                 Services receive this via dependency injection in the modular pattern.
+   * @param uiPathClient - UiPath SDK instance providing authentication and configuration.
+   *                    Services receive this via dependency injection in the modular pattern.
    *
    * @remarks
    * This constructor implements the dependency injection pattern used throughout the SDK,
    * allowing services to receive a fully configured UiPath instance instead of multiple
-   * individual parameters. This pattern matches industry standards (AWS SDK v3, Azure SDK).
+   * individual parameters.
    *
    * @example
    * ```typescript
    * // Services automatically call this via super()
    * export class EntityService extends BaseService {
-   *   constructor(uiPath: UiPath) {
-   *     super(uiPath); // Initializes config, context, and apiClient
+   *   constructor(uiPathClient: UiPath) {
+   *     super(uiPathClient); // Initializes config, context, and apiClient
    *   }
    * }
    *
@@ -89,19 +89,16 @@ export class BaseService {
    * import { UiPath } from '@uipath/uipath-typescript/core';
    * import { Entities } from '@uipath/uipath-typescript/entities';
    *
-   * const uiPath = new UiPath(config);
-   * await uiPath.initialize();
-   * const entitiesService = new Entities(uiPath);
+   * const uiPathClient = new UiPath(config);
+   * await uiPathClient.initialize();
+   * const entitiesService = new Entities(uiPathClient);
    * ```
    */
-  constructor(uiPath: UiPath) {
-    this.config = uiPath.getConfig();
-    this.executionContext = uiPath.getContext();
-    this.apiClient = new ApiClient(
-      uiPath.getConfig(),
-      uiPath.getContext(),
-      uiPath.getTokenManager()
-    );
+  constructor(uiPathClient: UiPath) {
+    const { config, context, tokenManager } = uiPathClient[__PRIVATE__];
+    this.config = config;
+    this.executionContext = context;
+    this.apiClient = new ApiClient(config, context, tokenManager);
   }
 
   /**

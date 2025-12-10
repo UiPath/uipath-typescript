@@ -30,10 +30,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Creates an instance of the Entities service.
    *
-   * @param uiPath - UiPath SDK instance providing authentication and configuration
+   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPath: UiPath) {
-    super(uiPath);
+  constructor(uiPathClient: UiPath) {
+    super(uiPathClient);
   }
 
   /**

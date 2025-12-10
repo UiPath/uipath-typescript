@@ -21,12 +21,6 @@
 // Export service with cleaner name and keep EntityService for legacy UiPath class
 export { EntityService as Entities, EntityService } from './entities';
 
-// Re-export types for convenience
+// Re-export service-specific types
 export type * from '../../models/data-fabric/entities.types';
 export type * from '../../models/data-fabric/entities.models';
-
-// Re-export common utilities users might need
-export { UiPathError } from '../../core/errors';
-export type { PaginatedResponse, NonPaginatedResponse } from '../../utils/pagination';
-export type { UiPathSDKConfig } from '../../core/config/sdk-config';
-export type { UiPath } from '../../core/uipath';

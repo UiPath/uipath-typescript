@@ -1,10 +1,10 @@
 import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
-import { TokenManager } from './auth/token-manager';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
+import { __PRIVATE__, PrivateSDK } from './internals';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -33,8 +33,9 @@ import { telemetryClient, trackEvent } from './telemetry';
  * ```
  */
 export class UiPath {
-  private config: UiPathConfig;
-  private executionContext: ExecutionContext;
+  /** @internal - Private SDK components, not for public use */
+  readonly [__PRIVATE__]: PrivateSDK;
+
   private authService: AuthService;
   private initialized: boolean = false;
 
@@ -46,7 +47,7 @@ export class UiPath {
     const hasOAuthAuth = hasOAuthConfig(config);
 
     // Initialize core components
-    this.config = new UiPathConfig({
+    const internalConfig = new UiPathConfig({
       baseUrl: normalizeBaseUrl(config.baseUrl),
       orgName: config.orgName,
       tenantName: config.tenantName,
@@ -56,8 +57,15 @@ export class UiPath {
       scope: hasOAuthAuth ? config.scope : undefined
     });
 
-    this.executionContext = new ExecutionContext();
-    this.authService = new AuthService(this.config, this.executionContext);
+    const executionContext = new ExecutionContext();
+    this.authService = new AuthService(internalConfig, executionContext);
+
+    // Store private components using Symbol key (hidden from public API)
+    this[__PRIVATE__] = {
+      config: internalConfig,
+      context: executionContext,
+      tokenManager: this.authService.getTokenManager()
+    };
 
     // Initialize telemetry with SDK configuration
     telemetryClient.initialize({
@@ -85,7 +93,7 @@ export class UiPath {
    */
   public async initialize(): Promise<void> {
     // For secret-based auth, it's already initialized in constructor
-    if (hasSecretConfig(this.config)) {
+    if (hasSecretConfig(this[__PRIVATE__].config)) {
       return;
     }
 
@@ -104,7 +112,7 @@ export class UiPath {
       }
 
       // Start new OAuth flow
-      await this.authService.authenticate(this.config);
+      await this.authService.authenticate(this[__PRIVATE__].config);
 
       if (this.isAuthenticated()) {
         this.initialized = true;
@@ -138,7 +146,7 @@ export class UiPath {
     }
 
     try {
-      const success = await this.authService.authenticate(this.config);
+      const success = await this.authService.authenticate(this[__PRIVATE__].config);
       if (success && this.isAuthenticated()) {
         this.initialized = true;
         return true;
@@ -164,73 +172,4 @@ export class UiPath {
     return this.authService.getToken();
   }
 
-  /**
-   * Get the SDK configuration object.
-   *
-   * Returns the configuration containing base URL, organization name, tenant name,
-   * and authentication settings. This method is used internally by services via
-   * dependency injection to access SDK configuration.
-   *
-   * @returns The UiPath configuration containing baseUrl, orgName, tenantName, and auth settings
-   *
-   * @remarks
-   * In the modular pattern, services access this via dependency injection through BaseService.
-   * Most users won't need to call this directly unless accessing configuration details.
-   *
-   * @example
-   * ```typescript
-   * const uiPath = new UiPath(config);
-   * const currentConfig = uiPath.getConfig();
-   * console.log(`Connected to: ${currentConfig.baseUrl}`);
-   * console.log(`Organization: ${currentConfig.orgName}`);
-   * console.log(`Tenant: ${currentConfig.tenantName}`);
-   * ```
-   */
-  public getConfig(): UiPathConfig {
-    return this.config;
-  }
-
-  /**
-   * Get the execution context for request tracking and metadata.
-   *
-   * Returns the execution context used internally by services to track request lifecycle
-   * and add contextual information to API calls. This method is used by services via
-   * dependency injection.
-   *
-   * @returns The execution context providing request tracking and metadata capabilities
-   *
-   * @remarks
-   * In the modular pattern, services receive this via dependency injection through BaseService.
-   * This is primarily used internally by the API client. Most users won't need to call this directly.
-   */
-  public getContext(): ExecutionContext {
-    return this.executionContext;
-  }
-
-  /**
-   * Get the token manager for authentication token operations.
-   *
-   * Returns the token manager that handles OAuth and secret-based authentication tokens.
-   * This method is used internally by services via dependency injection to create
-   * authenticated API clients.
-   *
-   * @returns The token manager handling authentication tokens (OAuth or secret-based)
-   *
-   * @remarks
-   * In the modular pattern, services receive this via dependency injection through BaseService.
-   * The token manager is used by the API client to add authentication headers to requests.
-   * Most users won't need to call this directly unless implementing custom authentication logic.
-   *
-   * @example
-   * ```typescript
-   * // Advanced usage - custom authentication logic
-   * const uiPath = new UiPath(config);
-   * await uiPath.initialize();
-   * const tokenManager = uiPath.getTokenManager();
-   * const currentToken = tokenManager.getToken();
-   * ```
-   */
-  public getTokenManager(): TokenManager {
-    return this.authService.getTokenManager();
-  }
 }

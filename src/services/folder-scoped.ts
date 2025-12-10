@@ -20,10 +20,10 @@ export class FolderScopedService extends BaseService {
   /**
    * Creates a folder-scoped service instance.
    *
-   * @param uiPath - UiPath SDK instance providing authentication and configuration
+   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPath: UiPath) {
-    super(uiPath);
+  constructor(uiPathClient: UiPath) {
+    super(uiPathClient);
   }
 
   /**

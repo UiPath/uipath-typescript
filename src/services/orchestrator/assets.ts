@@ -21,10 +21,10 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
   /**
    * Creates an instance of the Assets service.
    *
-   * @param uiPath - UiPath SDK instance providing authentication and configuration
+   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPath: UiPath) {
-    super(uiPath);
+  constructor(uiPathClient: UiPath) {
+    super(uiPathClient);
   }
 
   /**

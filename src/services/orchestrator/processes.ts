@@ -27,10 +27,10 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
   /**
    * Creates an instance of the Processes service.
    *
-   * @param uiPath - UiPath SDK instance providing authentication and configuration
+   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPath: UiPath) {
-    super(uiPath);
+  constructor(uiPathClient: UiPath) {
+    super(uiPathClient);
   }
 
   /**

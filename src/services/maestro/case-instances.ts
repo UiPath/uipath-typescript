@@ -46,11 +46,11 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   /**
    * Creates an instance of the Case Instances service.
    *
-   * @param uiPath - UiPath SDK instance providing authentication and configuration
+   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPath: UiPath) {
-    super(uiPath);
-    this.taskService = new TaskService(uiPath);
+  constructor(uiPathClient: UiPath) {
+    super(uiPathClient);
+    this.taskService = new TaskService(uiPathClient);
   }
 
   /**

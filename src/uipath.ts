@@ -21,9 +21,13 @@ type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
  *
  * Extends core UiPath. For modular usage, import from specific service modules.
  *
+ * @deprecated This class is provided for backward compatibility only.
+ * Use the modular pattern with `@uipath/uipath-typescript/core` instead.
+ * Note: Services receive the full UiPath instance but only access `[__PRIVATE__]` internally.
+ *
  * @example
  * ```typescript
- * // Legacy pattern (still supported)
+ * // Legacy pattern (deprecated)
  * import { UiPath } from '@uipath/uipath-typescript';
  *
  * const uiPath = new UiPath(config);
@@ -33,7 +37,7 @@ type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
  *
  * @example
  * ```typescript
- * // New modular pattern
+ * // New modular pattern (recommended)
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { Entities } from '@uipath/uipath-typescript/entities';
  *
