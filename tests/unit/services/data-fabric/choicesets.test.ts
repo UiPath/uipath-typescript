@@ -233,11 +233,11 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(transformed.name).toBe(CHOICESET_TEST_CONSTANTS.VALUE_NAME);
       expect(transformed.displayName).toBe(CHOICESET_TEST_CONSTANTS.VALUE_DISPLAY_NAME);
       expect(transformed.numberId).toBe(CHOICESET_TEST_CONSTANTS.VALUE_NUMBER_ID);
-      expect(transformed.createdTime).toBe(CHOICESET_TEST_CONSTANTS.VALUE_CREATED_TIME);
-      expect(transformed.updatedTime).toBe(CHOICESET_TEST_CONSTANTS.VALUE_UPDATED_TIME);
-      expect(transformed.createdBy).toBe(CHOICESET_TEST_CONSTANTS.VALUE_CREATED_BY);
-      expect(transformed.updatedBy).toBe(CHOICESET_TEST_CONSTANTS.VALUE_UPDATED_BY);
-      expect(transformed.recordOwner).toBe(CHOICESET_TEST_CONSTANTS.VALUE_RECORD_OWNER);
+      expect(transformed.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
+      expect(transformed.updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
+      expect(transformed.createdBy).toBe(String(TEST_CONSTANTS.USER_ID));
+      expect(transformed.updatedBy).toBe(String(TEST_CONSTANTS.USER_ID));
+      expect(transformed.recordOwner).toBe(String(TEST_CONSTANTS.USER_ID));
 
       // Verify raw PascalCase fields are not present
       expect((transformed as any).Id).toBeUndefined();

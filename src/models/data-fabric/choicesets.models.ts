@@ -41,33 +41,38 @@ export interface ChoiceSetServiceModel {
   getAll(): Promise<ChoiceSetGetAllResponse[]>;
 
   /**
-   * Gets choice set values by choice set ID
+   * Gets choice set values by choice set ID with optional pagination
+   *
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
    * @param choicesetId - UUID of the choice set
    * @param options - Query options including expansionLevel and pagination options
-   * @returns Promise resolving to an array of choice set values or paginated response
+   * @returns Promise resolving to choice set values or paginated result
    * {@link ChoiceSetValue}
    * @example
    * ```typescript
-   * // Basic usage (non-paginated)
-   * const values = await sdk.entities.choicesets.getById(<choicesetId>);
+   * // Get all values (non-paginated)
+   * const values = await sdk.entities.choicesets.getById('choiceset-uuid');
+   *
+   * // Iterate through choice set values
+   * for (const value of values.items) {
+   *   console.log(`Value: ${value.displayName} (${value.name})`);
+   * }
    *
    * // With expansion level
-   * const values = await sdk.entities.choicesets.getById(<choicesetId>, {
+   * const values = await sdk.entities.choicesets.getById('choiceset-uuid', {
    *   expansionLevel: 1
    * });
    *
-   * // With pagination
-   * const paginatedResponse = await sdk.entities.choicesets.getById(<choicesetId>, {
-   *   pageSize: 50,
-   *   expansionLevel: 1
-   * });
+   * // First page with pagination
+   * const page1 = await sdk.entities.choicesets.getById('choiceset-uuid', { pageSize: 10 });
    *
-   * // Navigate to next page
-   * const nextPage = await sdk.entities.choicesets.getById(<choicesetId>, {
-   *   cursor: paginatedResponse.nextCursor,
-   *   expansionLevel: 1
-   * });
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.entities.choicesets.getById('choiceset-uuid', { cursor: page1.nextCursor });
+   * }
    * ```
    */
   getById<T extends ChoiceSetGetByIdOptions = ChoiceSetGetByIdOptions>(
