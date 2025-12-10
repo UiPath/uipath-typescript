@@ -84,5 +84,16 @@ export const ENTITY_TEST_CONSTANTS = {
   ERROR_MESSAGE: 'Record not found',
   ERROR_MESSAGE_INSERT_UNIQUENESS: 'Insert data failed. Value uniqueness violation.',
   ERROR_MESSAGE_ENTITY_ID_UNDEFINED: 'Entity ID is undefined',
+
+  // Attachment Constants
+  ATTACHMENT_FIELD_NAME: 'Documents',
+  ATTACHMENT_FILE_NAME_1: 'invoice.pdf',
+  ATTACHMENT_FILE_NAME_2: 'receipt.jpg',
+  ATTACHMENT_FILE_SIZE_1: 1024000,
+  ATTACHMENT_FILE_SIZE_2: 512000,
+  ATTACHMENT_CONTENT_TYPE_PDF: 'application/pdf',
+  ATTACHMENT_CONTENT_TYPE_JPEG: 'image/jpeg',
+  ATTACHMENT_DOWNLOAD_URL_1: 'https://example.com/attachments/invoice.pdf',
+  ATTACHMENT_DOWNLOAD_URL_2: 'https://example.com/attachments/receipt.jpg',
 } as const;
 

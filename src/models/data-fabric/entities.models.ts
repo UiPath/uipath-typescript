@@ -1,13 +1,15 @@
-import { 
-  EntityGetRecordsByIdOptions, 
-  EntityInsertOptions, 
+import {
+  EntityGetRecordsByIdOptions,
+  EntityInsertOptions,
   EntityInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
-  RawEntityGetResponse
+  RawEntityGetResponse,
+  EntityGetAttachmentsOptions,
+  AttachmentMetadata
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -165,7 +167,7 @@ export interface EntityServiceModel {
 
   /**
    * Deletes data from an entity by entity ID
-   * 
+   *
    * @param id - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
@@ -180,6 +182,31 @@ export interface EntityServiceModel {
    * ```
    */
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Gets attachments from an entity record field
+   *
+   * @param options - Options containing entityName, recordId, and fieldName
+   * @returns Promise resolving to attachment metadata array
+   * {@link AttachmentMetadata}
+   * @example
+   * ```typescript
+   * // Get attachments for a specific record and field
+   * const attachments = await sdk.entities.getAttachments({
+   *   entityName: 'Invoice',
+   *   recordId: '<record-uuid>',
+   *   fieldName: 'Documents'
+   * });
+   *
+   * // Access attachment information
+   * attachments.forEach(attachment => {
+   *   console.log(`File: ${attachment.fileName}`);
+   *   console.log(`Size: ${attachment.fileSize}`);
+   *   console.log(`URL: ${attachment.downloadUrl}`);
+   * });
+   * ```
+   */
+  getAttachments(options: EntityGetAttachmentsOptions): Promise<AttachmentMetadata[]>;
 }
 
 /**

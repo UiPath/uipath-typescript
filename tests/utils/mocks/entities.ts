@@ -3,19 +3,20 @@
  * Uses generic utilities from core.ts for base functionality
  */
 
-import { 
-  EntityType, 
-  EntityFieldDataType, 
+import {
+  EntityType,
+  EntityFieldDataType,
   ReferenceType,
   FieldDisplayType,
   DataDirectionType,
-  RawEntityGetResponse, 
+  RawEntityGetResponse,
   EntityRecord,
   EntityInsertResponse,
   EntityUpdateResponse,
-  EntityDeleteResponse
+  EntityDeleteResponse,
+  AttachmentMetadata
 } from '../../../src/models/data-fabric/entities.types';
-import { createMockBaseResponse, createMockCollection } from './core';
+import { createMockBaseResponse, createMockCollection, createMockOperationResponse } from './core';
 import { ENTITY_TEST_CONSTANTS } from '../constants/entities';
 import { TEST_CONSTANTS } from '../constants/common';
 
@@ -647,5 +648,44 @@ export const createMockEntityWithExternalFields = (): any => {
       }
     ]
   });
+};
+
+/**
+ * Creates a mock attachment metadata object
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock AttachmentMetadata object
+ */
+export const createMockAttachmentMetadata = (overrides: Partial<AttachmentMetadata> = {}): AttachmentMetadata => {
+  return {
+    fileName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FILE_NAME_1,
+    fileSize: ENTITY_TEST_CONSTANTS.ATTACHMENT_FILE_SIZE_1,
+    contentType: ENTITY_TEST_CONSTANTS.ATTACHMENT_CONTENT_TYPE_PDF,
+    downloadUrl: ENTITY_TEST_CONSTANTS.ATTACHMENT_DOWNLOAD_URL_1,
+    ...overrides
+  };
+};
+
+/**
+ * Creates a mock attachments response
+ * @param count - Number of attachments to create
+ * @returns Mock attachments response with array of AttachmentMetadata (raw, will be wrapped by BaseService)
+ */
+export const createMockAttachmentsResponse = (count: number = 2): AttachmentMetadata[] => {
+  const attachments: AttachmentMetadata[] = [];
+
+  for (let i = 0; i < count; i++) {
+    if (i === 0) {
+      attachments.push(createMockAttachmentMetadata());
+    } else {
+      attachments.push(createMockAttachmentMetadata({
+        fileName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FILE_NAME_2,
+        fileSize: ENTITY_TEST_CONSTANTS.ATTACHMENT_FILE_SIZE_2,
+        contentType: ENTITY_TEST_CONSTANTS.ATTACHMENT_CONTENT_TYPE_JPEG,
+        downloadUrl: ENTITY_TEST_CONSTANTS.ATTACHMENT_DOWNLOAD_URL_2
+      }));
+    }
+  }
+
+  return attachments;
 };
 
