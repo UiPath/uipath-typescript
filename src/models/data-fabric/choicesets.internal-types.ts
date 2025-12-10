@@ -31,4 +31,7 @@ export interface RawChoiceSetValue {
   NumberId: number;
   CreateTime: string;
   UpdateTime: string;
+  CreatedBy: string;
+  UpdatedBy: string;
+  RecordOwner: string;
 }

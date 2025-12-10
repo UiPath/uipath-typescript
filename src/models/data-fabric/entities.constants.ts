@@ -37,7 +37,10 @@ export const ChoiceSetValueMap = {
   DisplayName: 'displayName',
   NumberId: 'numberId',
   CreateTime: 'createdTime',
-  UpdateTime: 'updatedTime'
+  UpdateTime: 'updatedTime',
+  CreatedBy: 'createdBy',
+  UpdatedBy: 'updatedBy',
+  RecordOwner: 'recordOwner'
 };
 
 /**

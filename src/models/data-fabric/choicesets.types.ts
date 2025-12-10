@@ -39,6 +39,12 @@ export interface ChoiceSetValue {
   createdTime: string;
   /** Last update timestamp */
   updatedTime: string;
+  /** User ID who created this value */
+  createdBy: string;
+  /** User ID who last updated this value */
+  updatedBy: string;
+  /** User ID of the record owner */
+  recordOwner: string;
 }
 
 /**
