@@ -181,8 +181,10 @@ describe('ChoiceSetService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           transformFn: expect.any(Function),
+          parseItemsFn: expect.any(Function),
+          method: 'POST',
           pagination: expect.objectContaining({
-            itemsField: 'value',
+            itemsField: 'jsonValue',
             totalCountField: 'totalRecordCount'
           }),
           excludeFromPrefix: ['expansionLevel']

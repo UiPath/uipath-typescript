@@ -6,13 +6,13 @@ import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.model
 import { ChoiceSetGetAllResponse, ChoiceSetValue, ChoiceSetGetByIdOptions } from '../../models/data-fabric/choicesets.types';
 import { RawChoiceSetGetAllResponse, RawChoiceSetValue } from '../../models/data-fabric/choicesets.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
-import { transformData } from '../../utils/transform';
+import { transformData, parseJsonArray } from '../../utils/transform';
 import { EntityMap, ChoiceSetValueMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
+import { CHOICESET_VALUES_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
 
 export class ChoiceSetService extends BaseService implements ChoiceSetServiceModel {
   /**
@@ -105,10 +105,12 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(choicesetId),
       transformFn: transformChoiceSetValue,
+      parseItemsFn: parseJsonArray<RawChoiceSetValue>,
+      method: 'POST',
       pagination: {
         paginationType: PaginationType.OFFSET,
-        itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
-        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
+        itemsField: CHOICESET_VALUES_PAGINATION.ITEMS_FIELD,
+        totalCountField: CHOICESET_VALUES_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
           pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
           offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,

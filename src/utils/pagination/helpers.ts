@@ -164,7 +164,7 @@ export class PaginationHelpers {
 
   /**
    * Helper method for paginated resource retrieval
-   * 
+   *
    * @param params - Parameters for pagination
    * @returns Promise resolving to a paginated result
    */
@@ -178,14 +178,16 @@ export class PaginationHelpers {
       paginationParams,
       additionalParams,
       transformFn,
+      parseItemsFn,
+      method = 'GET',
       options = {}
     } = params;
 
     const endpoint = getEndpoint(folderId);
     const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
-    
+
     const paginatedResponse = await serviceAccess.requestWithPagination<T>(
-      'GET',
+      method,
       endpoint,
       paginationParams,
       {
@@ -196,16 +198,17 @@ export class PaginationHelpers {
           itemsField: options.itemsField || DEFAULT_ITEMS_FIELD,
           totalCountField: options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD,
           continuationTokenField: options.continuationTokenField,
-          paginationParams: options.paginationParams
+          paginationParams: options.paginationParams,
+          parseItemsFn: parseItemsFn
         }
       }
     );
-    
+
     // Transform items only if a transform function is provided
-    const transformedItems = transformFn 
+    const transformedItems = transformFn
       ? paginatedResponse.items.map(transformFn)
       : paginatedResponse.items as unknown as R[];
-    
+
     return {
       ...paginatedResponse,
       items: transformedItems
@@ -214,7 +217,7 @@ export class PaginationHelpers {
 
   /**
    * Helper method for non-paginated resource retrieval
-   * 
+   *
    * @param params - Parameters for non-paginated resource retrieval
    * @returns Promise resolving to an object with data and totalCount
    */
@@ -228,28 +231,40 @@ export class PaginationHelpers {
       folderId,
       additionalParams,
       transformFn,
+      parseItemsFn,
+      method = 'GET',
       options = {}
     } = params;
 
     // Set default field names
     const itemsField = options.itemsField || DEFAULT_ITEMS_FIELD;
     const totalCountField = options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD;
-  
+
     // Determine endpoint and headers based on folderId
     const endpoint = folderId ? getByFolderEndpoint : getAllEndpoint;
     const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
-    
-    // Make the API call
-    const response = await serviceAccess.get<any>(
-      endpoint,
-      { 
-        params: additionalParams,
-        headers
-      }
-    );
 
-    // Extract data
-    const items = response.data?.[itemsField] || [];
+    // Make the API call based on method
+    let response: { data: any };
+    if (method === 'POST') {
+      response = await serviceAccess.post<any>(
+        endpoint,
+        additionalParams,
+        { headers }
+      );
+    } else {
+      response = await serviceAccess.get<any>(
+        endpoint,
+        {
+          params: additionalParams,
+          headers
+        }
+      );
+    }
+
+    // Extract data - use parseItemsFn if provided (e.g., for JSON string responses)
+    const rawItems = response.data?.[itemsField];
+    const items: T[] = parseItemsFn ? parseItemsFn(rawItems) : (rawItems || []);
     
     // Transform items if a transform function is provided
     const data = transformFn 
@@ -316,13 +331,15 @@ export class PaginationHelpers {
         paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
         transformFn: config.transformFn,
+        parseItemsFn: config.parseItemsFn,
+        method: config.method,
         options: {
           ...paginationOptions,
           paginationParams: config.pagination?.paginationParams
         }
       }) as any; // Type assertion needed due to conditional return
     }
-    
+
     // Non-paginated flow
     const byFolderEndpoint = config.getByFolderEndpoint || config.getEndpoint(folderId);
     return PaginationHelpers.getAllNonPaginated<TRaw, TTransformed>({
@@ -332,6 +349,8 @@ export class PaginationHelpers {
       folderId,
       additionalParams: prefixedOptions,
       transformFn: config.transformFn,
+      parseItemsFn: config.parseItemsFn,
+      method: config.method,
       options: {
         itemsField: paginationOptions.itemsField,
         totalCountField: paginationOptions.totalCountField
