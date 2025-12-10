@@ -51,14 +51,70 @@ export const AUTH_CONSTANTS = {
     SKIP_LABEL: '⏭ Skip folder selection',
     PAGE_SIZE: 10,
   },
-  ENV_VARS: {
-    ACCESS_TOKEN: 'UIPATH_BEARER_TOKEN',
-    BASE_URL: 'UIPATH_BASE_URL',
-    TENANT_ID: 'UIPATH_TENANT_ID',
-    ORG_ID: 'UIPATH_ORG_ID',
-    TENANT_NAME: 'UIPATH_TENANT_NAME',
-    ORG_NAME: 'UIPATH_ORG_NAME',
-    FOLDER_KEY: 'UIPATH_FOLDER_KEY',
+
+  // Environment variable configuration
+  ENV_CONFIG: {
+    BASE_URL: {
+      envVar: 'UIPATH_BASE_URL',
+      configKey: 'baseUrl' as const,
+      flag: '--baseUrl',
+      example: "'https://cloud.uipath.com'",
+    },
+    ORG_ID: {
+      envVar: 'UIPATH_ORG_ID',
+      configKey: 'orgId' as const,
+      flag: '--orgId',
+      example: "'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'",
+    },
+    TENANT_ID: {
+      envVar: 'UIPATH_TENANT_ID',
+      configKey: 'tenantId' as const,
+      flag: '--tenantId',
+      example: "'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'",
+    },
+    TENANT_NAME: {
+      envVar: 'UIPATH_TENANT_NAME',
+      configKey: 'tenantName' as const,
+      flag: '--tenantName',
+      example: "'YourTenantName'",
+    },
+    FOLDER_KEY: {
+      envVar: 'UIPATH_FOLDER_KEY',
+      configKey: 'folderKey' as const,
+      flag: '--folderKey',
+      example: "'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'",
+    },
+    ACCESS_TOKEN: {
+      envVar: 'UIPATH_ACCESS_TOKEN',
+      configKey: 'accessToken' as const,
+      flag: '--accessToken',
+      example: "'your-access-token'",
+    },
+    ORG_NAME: {
+      envVar: 'UIPATH_ORG_NAME',
+      configKey: 'orgName' as const,
+      flag: '--orgName',
+      example: "'YourOrgName'",
+    },
+  },
+  REQUIRED_ENV_VARS: {
+    // Required for register app command
+    REGISTER_APP: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_TENANT_NAME',
+      'UIPATH_FOLDER_KEY',
+      'UIPATH_ACCESS_TOKEN'
+    ],
+    // Required for publish command (no folder key needed)
+    PUBLISH: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_TENANT_NAME',
+      'UIPATH_ACCESS_TOKEN'
+    ],
   },
   API_ENDPOINTS: {
     FOLDERS_NAVIGATION: '/Folders/GetAllForCurrentUser',

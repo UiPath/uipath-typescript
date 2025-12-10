@@ -9,7 +9,7 @@ import fetch from 'node-fetch';
 import { EnvironmentConfig } from '../types/index.js';
 import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
-import { validateEnvironment } from '../utils/env-validator.js';
+import { getEnvironmentConfig } from '../utils/env-config.js';
 import { handleHttpError } from '../utils/error-handler.js';
 import { track } from '../telemetry/index.js';
 
@@ -19,7 +19,7 @@ export default class Publish extends Command {
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> --uipathDir ./packages',
-    '<%= config.bin %> <%= command.id %> --orgId abc123 --tenantId xyz789 --tenantName MyTenant --authToken your_token',
+    "<%= config.bin %> <%= command.id %> --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --accessToken 'your_token'",
   ];
 
   static override flags = {
@@ -40,7 +40,7 @@ export default class Publish extends Command {
     tenantName: Flags.string({
       description: 'UiPath tenant name',
     }),
-    authToken: Flags.string({
+    accessToken: Flags.string({
       description: 'UiPath authentication token',
     }),
   };
@@ -52,41 +52,20 @@ export default class Publish extends Command {
     this.log(chalk.blue(MESSAGES.INFO.PUBLISHER));
 
     // Validate environment variables or flags
-    const envConfig = await this.validateEnvironment(flags);
+    const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.PUBLISH, this, flags);
     if (!envConfig) {
       return;
     }
 
-    await this.publishPackage(flags, envConfig);
+    await this.publishPackage(flags.uipathDir, envConfig);
   }
 
-  private async validateEnvironment(flags: any): Promise<EnvironmentConfig | null> {
-    const requiredEnvVars = [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID',
-      'UIPATH_TENANT_ID',
-      'UIPATH_TENANT_NAME',
-      'UIPATH_BEARER_TOKEN'
-    ];
-
-    // Build config from flags (takes precedence over env vars)
-    const flagConfig: Partial<EnvironmentConfig> = {};
-    if (flags.baseUrl) flagConfig.baseUrl = flags.baseUrl;
-    if (flags.orgId) flagConfig.orgId = flags.orgId;
-    if (flags.tenantId) flagConfig.tenantId = flags.tenantId;
-    if (flags.tenantName) flagConfig.tenantName = flags.tenantName;
-    if (flags.authToken) flagConfig.bearerToken = flags.authToken;
-
-    const result = validateEnvironment(requiredEnvVars, this, flagConfig);
-    return result.isValid ? result.config! : null;
-  }
-
-  private async publishPackage(flags: any, envConfig: EnvironmentConfig): Promise<void> {
+  private async publishPackage(uipathDir: string, envConfig: EnvironmentConfig): Promise<void> {
     const spinner = ora(MESSAGES.INFO.PUBLISHING_PACKAGE).start();
-    
+
     try {
       // Check if .uipath directory exists
-      if (!fs.existsSync(flags.uipathDir)) {
+      if (!fs.existsSync(uipathDir)) {
         spinner.fail(chalk.red(`${MESSAGES.ERRORS.UIPATH_DIR_NOT_FOUND}`));
         this.log('');
         this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
@@ -94,9 +73,9 @@ export default class Publish extends Command {
       }
 
       // Find .nupkg files
-      const nupkgFiles = fs.readdirSync(flags.uipathDir)
+      const nupkgFiles = fs.readdirSync(uipathDir)
         .filter(file => file.endsWith('.nupkg'))
-        .map(file => path.join(flags.uipathDir, file));
+        .map(file => path.join(uipathDir, file));
 
       if (nupkgFiles.length === 0) {
         spinner.fail(chalk.red(`${MESSAGES.ERRORS.NO_NUPKG_FILES_FOUND}`));
@@ -151,13 +130,13 @@ export default class Publish extends Command {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'authorization': `Bearer ${envConfig.bearerToken}`,
+        'authorization': `Bearer ${envConfig.accessToken}`,
         ...form.getHeaders(),
       },
       body: form,
     });
     if (!response.ok) {
-      await handleHttpError(response, 'package publishing');
+      await handleHttpError(response, MESSAGES.ERROR_CONTEXT.PACKAGE_PUBLISHING);
     }
 
     // Validate that we got a proper API response, not HTML

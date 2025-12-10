@@ -308,7 +308,7 @@ export default class Auth extends Command {
       spinner.succeed(MESSAGES.SUCCESS.AUTHENTICATION_SUCCESS.replace('✓ ', ''));
 
       // For client credentials flow, just output the token
-      this.log(chalk.green('\nAccess Token:'));
+      this.log(chalk.green(`\n${MESSAGES.INFO.ACCESS_TOKEN_HEADER}`));
       this.log(tokens.accessToken);
 
     } catch (error) {

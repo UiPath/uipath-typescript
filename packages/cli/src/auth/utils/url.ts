@@ -4,6 +4,10 @@ export const getBaseUrl = (domain: string): string => {
   return BASE_URLS[domain] || BASE_URLS.cloud;
 };
 
+export const buildRedirectUri = (port: number): string => {
+  return AUTH_CONSTANTS.OAUTH.REDIRECT_URI_TEMPLATE.replace('{PORT}', port.toString());
+};
+
 export const getAuthorizationBaseUrl = (domain: string): string => {
   const baseUrl = getBaseUrl(domain);
   return `${baseUrl}${AUTH_CONSTANTS.IDENTITY_ENDPOINTS.AUTHORIZE}`;

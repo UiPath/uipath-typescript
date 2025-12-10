@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import { AppConfig } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
+import { isValidAppName } from '../utils/env-config.js';
 import { track } from '../telemetry/index.js';
 
 export default class Pack extends Command {
@@ -105,7 +106,7 @@ export default class Pack extends Command {
     
     // If we have app config but user provided different values, show warning
     if (appConfig && (packageName !== appConfig.appName || version !== appConfig.appVersion)) {
-      this.log(chalk.yellow(`⚠️  Warning: You registered app "${appConfig.appName}" v${appConfig.appVersion} but are packaging as "${packageName}" v${version}`));
+      this.log(chalk.yellow(`⚠️  Warning: You registered app "${appConfig.appName}" v${appConfig.appVersion} but are packaging as "${packageName}" v${version}. Remove --name flag to automatically use registered app details.`));
       const response = await inquirer.prompt([{
         type: 'confirm',
         name: 'continue',
@@ -124,7 +125,13 @@ export default class Pack extends Command {
       this.log(chalk.red(MESSAGES.ERRORS.PACKAGE_NAME_REQUIRED));
       process.exit(1);
     }
-    
+
+    // Validate package name characters
+    if (!isValidAppName(packageName)) {
+      this.log(chalk.red(MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS));
+      process.exit(1);
+    }
+
     const sanitizedName = this.sanitizePackageName(packageName);
     
     // Get package description
@@ -160,11 +167,14 @@ export default class Pack extends Command {
           if (!input.trim()) {
             return MESSAGES.VALIDATIONS.PACKAGE_NAME_REQUIRED;
           }
+          if (!isValidAppName(input)) {
+            return MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS;
+          }
           return true;
         },
       },
     ]);
-    
+
     return response.name;
   }
 
