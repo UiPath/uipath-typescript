@@ -163,7 +163,10 @@ describe('ChoiceSetService Unit Tests', () => {
           displayName: v.DisplayName,
           numberId: v.NumberId,
           createdTime: v.CreateTime,
-          updatedTime: v.UpdateTime
+          updatedTime: v.UpdateTime,
+          createdBy: v.CreatedBy,
+          updatedBy: v.UpdatedBy,
+          recordOwner: v.RecordOwner
         })),
         totalCount: 4
       };
@@ -208,7 +211,10 @@ describe('ChoiceSetService Unit Tests', () => {
           displayName: mockRawValue.DisplayName,
           numberId: mockRawValue.NumberId,
           createdTime: mockRawValue.CreateTime,
-          updatedTime: mockRawValue.UpdateTime
+          updatedTime: mockRawValue.UpdateTime,
+          createdBy: mockRawValue.CreatedBy,
+          updatedBy: mockRawValue.UpdatedBy,
+          recordOwner: mockRawValue.RecordOwner
         }],
         totalCount: 1
       };
@@ -270,7 +276,10 @@ describe('ChoiceSetService Unit Tests', () => {
           displayName: v.DisplayName,
           numberId: v.NumberId,
           createdTime: v.CreateTime,
-          updatedTime: v.UpdateTime
+          updatedTime: v.UpdateTime,
+          createdBy: v.CreatedBy,
+          updatedBy: v.UpdatedBy,
+          recordOwner: v.RecordOwner
         })),
         totalCount: 10,
         hasNextPage: true,
