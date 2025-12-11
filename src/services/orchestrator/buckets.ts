@@ -1,7 +1,5 @@
 import { FolderScopedService } from '../folder-scoped';
 import type { UiPath } from '../../core/uipath';
-import { TokenManager } from '../../core/auth/token-manager';
-import { __PRIVATE__ } from '../../core/internals';
 import { ValidationError, AuthenticationError, HttpStatus } from '../../core/errors';
 import { 
   BucketGetResponse, 
@@ -31,8 +29,6 @@ import { PaginationType } from '../../utils/pagination/internal-types';
 import { track } from '../../core/telemetry';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
-  protected readonly tokenManager: TokenManager;
-
   /**
    * Creates an instance of the Buckets service.
    *
@@ -40,7 +36,6 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    */
   constructor(instance: UiPath) {
     super(instance);
-    this.tokenManager = instance[__PRIVATE__].tokenManager;
   }
 
   /**

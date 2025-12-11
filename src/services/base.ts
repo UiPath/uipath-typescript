@@ -1,6 +1,7 @@
 import { ApiClient } from '../core/http/api-client';
 import { Config } from '../core/config/config';
 import { ExecutionContext } from '../core/context/execution';
+import { TokenManager } from '../core/auth/token-manager';
 import { RequestSpec } from '../models/common/request-spec';
 import { PaginatedResponse, PaginationOptions } from '../utils/pagination/types';
 import {
@@ -62,6 +63,9 @@ export class BaseService {
   /** HTTP client for making authenticated API requests */
   protected readonly apiClient: ApiClient;
 
+  /** Token manager for authentication - available to subclasses that need direct token access */
+  protected readonly tokenManager: TokenManager;
+
   /**
    * Creates a base service instance with dependency injection.
    *
@@ -98,6 +102,7 @@ export class BaseService {
     const { config, context, tokenManager } = instance[__PRIVATE__];
     this.config = config;
     this.executionContext = context;
+    this.tokenManager = tokenManager;
     this.apiClient = new ApiClient(config, context, tokenManager);
   }
 
