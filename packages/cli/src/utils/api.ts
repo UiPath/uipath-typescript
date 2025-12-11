@@ -5,6 +5,7 @@ export interface HeaderOptions {
   contentType?: string;
   bearerToken?: string;
   tenantId?: string;
+  folderKey?: string;
   additionalHeaders?: Record<string, string>;
 }
 
@@ -18,6 +19,7 @@ export function createHeaders(options: HeaderOptions = {}): Record<string, strin
     contentType = AUTH_CONSTANTS.CONTENT_TYPES.JSON,
     bearerToken,
     tenantId,
+    folderKey,
     additionalHeaders = {}
   } = options;
 
@@ -32,6 +34,10 @@ export function createHeaders(options: HeaderOptions = {}): Record<string, strin
 
   if (tenantId) {
     headers['x-uipath-internal-tenantid'] = tenantId;
+  }
+
+  if (folderKey) {
+    headers['x-uipath-folderkey'] = folderKey;
   }
 
   return headers;

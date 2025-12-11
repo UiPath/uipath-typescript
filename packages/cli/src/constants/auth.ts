@@ -115,6 +115,14 @@ export const AUTH_CONSTANTS = {
       'UIPATH_TENANT_NAME',
       'UIPATH_ACCESS_TOKEN'
     ],
+    // Required for deploy command
+    DEPLOY: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_FOLDER_KEY',
+      'UIPATH_ACCESS_TOKEN'
+    ],
   },
   API_ENDPOINTS: {
     FOLDERS_NAVIGATION: '/Folders/GetAllForCurrentUser',
