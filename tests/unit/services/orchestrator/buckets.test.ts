@@ -46,7 +46,7 @@ describe('BucketService Unit Tests', () => {
 
   beforeEach(() => {
     // Create mock instances using centralized setup
-    const { config, executionContext, tokenManager } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
@@ -57,7 +57,7 @@ describe('BucketService Unit Tests', () => {
 
     // executionContext.get is now mocked at module level
 
-    bucketService = new BucketService(config, executionContext, tokenManager);
+    bucketService = new BucketService(instance);
   });
 
   afterEach(() => {

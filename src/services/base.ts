@@ -1,35 +1,109 @@
 import { ApiClient } from '../core/http/api-client';
 import { Config } from '../core/config/config';
 import { ExecutionContext } from '../core/context/execution';
-import { RequestSpec } from '../models/common/request-spec';
 import { TokenManager } from '../core/auth/token-manager';
+import { RequestSpec } from '../models/common/request-spec';
 import { PaginatedResponse, PaginationOptions } from '../utils/pagination/types';
-import { 
-  InternalPaginationOptions, 
-  PaginationType, 
+import {
+  InternalPaginationOptions,
+  PaginationType,
   PaginationServiceAccess,
   PaginationFieldNames,
   PaginationDetectionInfo,
-  RequestWithPaginationOptions 
+  RequestWithPaginationOptions
 } from '../utils/pagination/internal-types';
 import { PaginationManager } from '../utils/pagination/pagination-manager';
 import { PaginationHelpers } from '../utils/pagination/helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/constants';
 import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
+import type { UiPath } from '../core/uipath';
+import { __PRIVATE__ } from '../core/internals';
 
 export interface ApiResponse<T> {
   data: T;
 }
 
+/**
+ * Base class for all UiPath SDK services.
+ *
+ * Provides common functionality for authentication, configuration, and API communication.
+ * All service classes extend this base to inherit dependency injection and HTTP client access.
+ *
+ * This class implements the dependency injection pattern where services receive a configured
+ * UiPath instance and extract the necessary dependencies (config, context, token manager)
+ * to create an authenticated API client.
+ *
+ * @remarks
+ * Service classes should extend this base and call `super(uiPath)` in their constructor.
+ * The protected members (config, executionContext, apiClient) are available to all subclasses.
+ *
+ * @example
+ * ```typescript
+ * // Creating a custom service
+ * export class MyService extends BaseService {
+ *   constructor(instance: UiPath) {
+ *     super(instance);
+ *   }
+ *
+ *   async myMethod() {
+ *     // Access inherited protected members
+ *     const response = await this.get('/my-endpoint');
+ *     return response.data;
+ *   }
+ * }
+ * ```
+ */
 export class BaseService {
+  /** Configuration including base URL, organization name, and tenant name */
   protected readonly config: Config;
+
+  /** Execution context for request tracking and metadata */
   protected readonly executionContext: ExecutionContext;
+
+  /** HTTP client for making authenticated API requests */
   protected readonly apiClient: ApiClient;
 
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
+  /** Token manager for authentication - available to subclasses that need direct token access */
+  protected readonly tokenManager: TokenManager;
+
+  /**
+   * Creates a base service instance with dependency injection.
+   *
+   * Extracts configuration, execution context, and token manager from the UiPath instance
+   * to initialize an authenticated API client for making HTTP requests to UiPath services.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration.
+   *                    Services receive this via dependency injection in the modular pattern.
+   *
+   * @remarks
+   * This constructor implements the dependency injection pattern used throughout the SDK,
+   * allowing services to receive a fully configured UiPath instance instead of multiple
+   * individual parameters.
+   *
+   * @example
+   * ```typescript
+   * // Services automatically call this via super()
+   * export class EntityService extends BaseService {
+   *   constructor(instance: UiPath) {
+   *     super(instance); // Initializes config, context, and apiClient
+   *   }
+   * }
+   *
+   * // Usage in modular pattern
+   * import { UiPath } from '@uipath/uipath-typescript/core';
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const sdk = new UiPath(config);
+   * await sdk.initialize();
+   * const entitiesService = new Entities(sdk);
+   * ```
+   */
+  constructor(instance: UiPath) {
+    const { config, context, tokenManager } = instance[__PRIVATE__];
     this.config = config;
-    this.executionContext = executionContext;
-    this.apiClient = new ApiClient(config, executionContext, tokenManager);
+    this.executionContext = context;
+    this.tokenManager = tokenManager;
+    this.apiClient = new ApiClient(config, context, tokenManager);
   }
 
   /**

@@ -25,6 +25,26 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
+        },
+        "./core": {
+            "import": {
+                "types": "./dist/core/index.d.mts",
+                "default": "./dist/core/index.mjs"
+            },
+            "require": {
+                "types": "./dist/core/index.d.cts",
+                "default": "./dist/core/index.cjs"
+            }
+        },
+        "./entities": {
+            "import": {
+                "types": "./dist/entities/index.d.mts",
+                "default": "./dist/entities/index.mjs"
+            },
+            "require": {
+                "types": "./dist/entities/index.d.cts",
+                "default": "./dist/entities/index.cjs"
+            }
         }
     },
     "files": [

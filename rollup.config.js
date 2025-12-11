@@ -122,5 +122,77 @@ const configs = [
   }
 ];
 
+// Service-level entry points for modular imports
+const serviceEntries = [
+  {
+    name: 'core',
+    input: 'src/core/index.ts',
+    output: 'core/index'
+  },
+  {
+    name: 'entities',
+    input: 'src/services/data-fabric/index.ts',
+    output: 'entities/index'
+  }
+];
+
+// Generate build configs for each service entry
+serviceEntries.forEach(({ input, output }) => {
+  // ESM bundle
+  configs.push({
+    input,
+    output: {
+      file: `dist/${output}.mjs`,
+      format: 'es',
+      inlineDynamicImports: true
+    },
+    plugins: createPlugins(false),
+    external: allDependencies
+  });
+
+  // CommonJS bundle
+  configs.push({
+    input,
+    output: {
+      file: `dist/${output}.cjs`,
+      format: 'cjs',
+      exports: 'named',
+      inlineDynamicImports: true
+    },
+    plugins: createPlugins(false),
+    external: allDependencies
+  });
+
+  // ESM type definitions
+  configs.push({
+    input,
+    output: {
+      file: `dist/${output}.d.mts`,
+      format: 'es'
+    },
+    plugins: [dts()]
+  });
+
+  // CommonJS type definitions
+  configs.push({
+    input,
+    output: {
+      file: `dist/${output}.d.cts`,
+      format: 'es'
+    },
+    plugins: [dts()]
+  });
+
+  // Main type definitions
+  configs.push({
+    input,
+    output: {
+      file: `dist/${output}.d.ts`,
+      format: 'es'
+    },
+    plugins: [dts()]
+  });
+});
+
 // Export all build configurations
 export default configs; 

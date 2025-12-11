@@ -2,6 +2,8 @@ import { vi } from 'vitest';
 import { Config } from '../../src/core/config/config';
 import { ExecutionContext } from '../../src/core/context/execution';
 import { TokenManager } from '../../src/core/auth/token-manager';
+import type { UiPath } from '../../src/core/uipath';
+import { __PRIVATE__ } from '../../src/core/internals';
 
 // Mock console methods to avoid test output noise
 global.console = {
@@ -68,24 +70,72 @@ export const createMockApiClient = () => ({
 });
 
 /**
+ * Creates a mock UiPath instance for testing services
+ * @param configOverrides - Optional config overrides
+ * @param tokenManagerOverrides - Optional token manager overrides
+ * @returns Mock UiPath object with SDK_INTERNALS symbol for internal access
+ *
+ * @example
+ * ```typescript
+ * const mockUiPath = createMockUiPath();
+ * const service = new MyService(mockUiPath);
+ * ```
+ */
+export const createMockUiPath = (
+  configOverrides?: Partial<Config>,
+  tokenManagerOverrides?: Partial<TokenManager>
+): UiPath => {
+  const config = createMockConfig(configOverrides);
+  const executionContext = createMockExecutionContext();
+  const tokenManager = createMockTokenManager(tokenManagerOverrides);
+
+  return {
+    [__PRIVATE__]: {
+      config,
+      context: executionContext,
+      tokenManager
+    },
+    isAuthenticated: () => true,
+    isInitialized: () => true,
+  } as unknown as UiPath;
+};
+
+/**
  * Creates all common service test dependencies at once
  * @param configOverrides - Optional config overrides
  * @param tokenManagerOverrides - Optional token manager overrides
- * @returns Object containing all common mocks
- * 
+ * @returns Object containing all common mocks including UiPath mock
+ *
  * @example
  * ```typescript
+ * // New pattern (recommended)
+ * const { instance } = createServiceTestDependencies();
+ * const service = new MyService(instance);
+ *
+ * // Old pattern (for backward compatibility during migration)
  * const { config, executionContext, tokenManager } = createServiceTestDependencies();
- * const service = new MyService(config, executionContext, tokenManager);
  * ```
  */
 export const createServiceTestDependencies = (
   configOverrides?: Partial<Config>,
   tokenManagerOverrides?: Partial<TokenManager>
 ) => {
+  const config = createMockConfig(configOverrides);
+  const executionContext = createMockExecutionContext();
+  const tokenManager = createMockTokenManager(tokenManagerOverrides);
+
   return {
-    config: createMockConfig(configOverrides),
-    executionContext: createMockExecutionContext(),
-    tokenManager: createMockTokenManager(tokenManagerOverrides),
+    config,
+    executionContext,
+    tokenManager,
+    instance: {
+      [__PRIVATE__]: {
+        config,
+        context: executionContext,
+        tokenManager
+      },
+      isAuthenticated: () => true,
+      isInitialized: () => true,
+    } as unknown as UiPath,
   };
 };
