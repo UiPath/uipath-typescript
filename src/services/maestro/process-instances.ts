@@ -34,10 +34,10 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
   /**
    * Creates an instance of the Process Instances service.
    *
-   * @param uipathInstance - UiPath SDK instance providing authentication and configuration
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uipathInstance: UiPath) {
-    super(uipathInstance);
+  constructor(instance: UiPath) {
+    super(instance);
   }
 
 

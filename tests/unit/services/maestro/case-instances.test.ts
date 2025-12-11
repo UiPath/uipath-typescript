@@ -45,7 +45,7 @@ describe('CaseInstancesService', () => {
 
   beforeEach(async () => {
     // Create mock instances using centralized setup
-    const { uiPath } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
@@ -54,7 +54,7 @@ describe('CaseInstancesService', () => {
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    service = new CaseInstancesService(uiPath);
+    service = new CaseInstancesService(instance);
   });
 
   afterEach(() => {

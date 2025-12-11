@@ -46,10 +46,5 @@ export { UiPath } from './uipath';
 export type { UiPathSDKConfig } from './config/sdk-config';
 export * from './errors';
 
-// Pagination types (common across all services)
-export type {
-  PaginatedResponse,
-  NonPaginatedResponse,
-  PaginationOptions,
-  PaginationCursor
-} from '../utils/pagination';
+// Pagination (common across all services)
+export * from '../utils/pagination';

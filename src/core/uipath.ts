@@ -23,7 +23,8 @@ import { __PRIVATE__, PrivateSDK } from './internals';
  *   orgName: 'myorg',
  *   tenantName: 'mytenant',
  *   clientId: 'xxx',
- *   redirectUri: 'http://localhost:3000/callback'
+ *   redirectUri: 'http://localhost:3000/callback',
+ *   scope: 'OR.Users OR.Robots'
  * });
  *
  * await sdk.initialize();

@@ -23,7 +23,6 @@ type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
  *
  * @deprecated This class is provided for backward compatibility only.
  * Use the modular pattern with `@uipath/uipath-typescript/core` instead.
- * Note: Services receive the full UiPath instance but only access `[__PRIVATE__]` internally.
  *
  * @example
  * ```typescript

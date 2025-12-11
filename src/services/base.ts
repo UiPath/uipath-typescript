@@ -40,8 +40,8 @@ export interface ApiResponse<T> {
  * ```typescript
  * // Creating a custom service
  * export class MyService extends BaseService {
- *   constructor(uipathInstance: UiPath) {
- *     super(uipathInstance);
+ *   constructor(instance: UiPath) {
+ *     super(instance);
  *   }
  *
  *   async myMethod() {
@@ -68,7 +68,7 @@ export class BaseService {
    * Extracts configuration, execution context, and token manager from the UiPath instance
    * to initialize an authenticated API client for making HTTP requests to UiPath services.
    *
-   * @param uipathInstance - UiPath SDK instance providing authentication and configuration.
+   * @param instance - UiPath SDK instance providing authentication and configuration.
    *                    Services receive this via dependency injection in the modular pattern.
    *
    * @remarks
@@ -80,8 +80,8 @@ export class BaseService {
    * ```typescript
    * // Services automatically call this via super()
    * export class EntityService extends BaseService {
-   *   constructor(uipathInstance: UiPath) {
-   *     super(uipathInstance); // Initializes config, context, and apiClient
+   *   constructor(instance: UiPath) {
+   *     super(instance); // Initializes config, context, and apiClient
    *   }
    * }
    *
@@ -94,8 +94,8 @@ export class BaseService {
    * const entitiesService = new Entities(sdk);
    * ```
    */
-  constructor(uipathInstance: UiPath) {
-    const { config, context, tokenManager } = uipathInstance[__PRIVATE__];
+  constructor(instance: UiPath) {
+    const { config, context, tokenManager } = instance[__PRIVATE__];
     this.config = config;
     this.executionContext = context;
     this.apiClient = new ApiClient(config, context, tokenManager);

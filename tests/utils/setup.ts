@@ -109,8 +109,8 @@ export const createMockUiPath = (
  * @example
  * ```typescript
  * // New pattern (recommended)
- * const { uiPath } = createServiceTestDependencies();
- * const service = new MyService(uiPath);
+ * const { instance } = createServiceTestDependencies();
+ * const service = new MyService(instance);
  *
  * // Old pattern (for backward compatibility during migration)
  * const { config, executionContext, tokenManager } = createServiceTestDependencies();
@@ -128,7 +128,7 @@ export const createServiceTestDependencies = (
     config,
     executionContext,
     tokenManager,
-    uiPath: {
+    instance: {
       [__PRIVATE__]: {
         config,
         context: executionContext,
