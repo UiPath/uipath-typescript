@@ -14,10 +14,10 @@ export class CasesService extends BaseService implements CasesServiceModel {
   /**
    * Creates an instance of the Cases service.
    *
-   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
+   * @param uipathInstance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPathClient: UiPath) {
-    super(uiPathClient);
+  constructor(uipathInstance: UiPath) {
+    super(uipathInstance);
   }
 
   /**

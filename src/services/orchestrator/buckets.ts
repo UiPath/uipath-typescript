@@ -36,11 +36,11 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   /**
    * Creates an instance of the Buckets service.
    *
-   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
+   * @param uipathInstance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPathClient: UiPath) {
-    super(uiPathClient);
-    this.tokenManager = uiPathClient[__PRIVATE__].tokenManager;
+  constructor(uipathInstance: UiPath) {
+    super(uipathInstance);
+    this.tokenManager = uipathInstance[__PRIVATE__].tokenManager;
   }
 
   /**

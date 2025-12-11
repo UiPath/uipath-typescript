@@ -18,7 +18,7 @@ import { __PRIVATE__, PrivateSDK } from './internals';
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { Entities } from '@uipath/uipath-typescript/entities';
  *
- * const uiPath = new UiPath({
+ * const sdk = new UiPath({
  *   baseUrl: 'https://cloud.uipath.com',
  *   orgName: 'myorg',
  *   tenantName: 'mytenant',
@@ -26,9 +26,9 @@ import { __PRIVATE__, PrivateSDK } from './internals';
  *   redirectUri: 'http://localhost:3000/callback'
  * });
  *
- * await uiPath.initialize();
+ * await sdk.initialize();
  *
- * const entitiesService = new Entities(uiPath);
+ * const entitiesService = new Entities(sdk);
  * const allEntities = await entitiesService.getAll();
  * ```
  */

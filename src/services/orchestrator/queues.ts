@@ -24,10 +24,10 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   /**
    * Creates an instance of the Queues service.
    *
-   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
+   * @param uipathInstance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPathClient: UiPath) {
-    super(uiPathClient);
+  constructor(uipathInstance: UiPath) {
+    super(uipathInstance);
   }
 
   /**

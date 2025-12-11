@@ -19,11 +19,11 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   /**
    * Creates an instance of the Maestro Processes service.
    *
-   * @param uiPathClient - UiPath SDK instance providing authentication and configuration
+   * @param uipathInstance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(uiPathClient: UiPath) {
-    super(uiPathClient);
-    this.processInstancesService = new ProcessInstancesService(uiPathClient);
+  constructor(uipathInstance: UiPath) {
+    super(uipathInstance);
+    this.processInstancesService = new ProcessInstancesService(uipathInstance);
   }
 
   /**

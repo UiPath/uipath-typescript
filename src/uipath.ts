@@ -30,9 +30,9 @@ type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
  * // Legacy pattern (deprecated)
  * import { UiPath } from '@uipath/uipath-typescript';
  *
- * const uiPath = new UiPath(config);
- * await uiPath.initialize();
- * const data = await uiPath.entities.getAll();
+ * const sdk = new UiPath(config);
+ * await sdk.initialize();
+ * const data = await sdk.entities.getAll();
  * ```
  *
  * @example
@@ -41,9 +41,9 @@ type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { Entities } from '@uipath/uipath-typescript/entities';
  *
- * const uiPath = new UiPath(config);
- * await uiPath.initialize();
- * const entitiesService = new Entities(uiPath);
+ * const sdk = new UiPath(config);
+ * await sdk.initialize();
+ * const entitiesService = new Entities(sdk);
  * const data = await entitiesService.getAll();
  * ```
  */

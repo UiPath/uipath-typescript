@@ -40,8 +40,8 @@ export interface ApiResponse<T> {
  * ```typescript
  * // Creating a custom service
  * export class MyService extends BaseService {
- *   constructor(uiPathClient: UiPath) {
- *     super(uiPathClient);
+ *   constructor(uipathInstance: UiPath) {
+ *     super(uipathInstance);
  *   }
  *
  *   async myMethod() {
@@ -68,7 +68,7 @@ export class BaseService {
    * Extracts configuration, execution context, and token manager from the UiPath instance
    * to initialize an authenticated API client for making HTTP requests to UiPath services.
    *
-   * @param uiPathClient - UiPath SDK instance providing authentication and configuration.
+   * @param uipathInstance - UiPath SDK instance providing authentication and configuration.
    *                    Services receive this via dependency injection in the modular pattern.
    *
    * @remarks
@@ -80,8 +80,8 @@ export class BaseService {
    * ```typescript
    * // Services automatically call this via super()
    * export class EntityService extends BaseService {
-   *   constructor(uiPathClient: UiPath) {
-   *     super(uiPathClient); // Initializes config, context, and apiClient
+   *   constructor(uipathInstance: UiPath) {
+   *     super(uipathInstance); // Initializes config, context, and apiClient
    *   }
    * }
    *
@@ -89,13 +89,13 @@ export class BaseService {
    * import { UiPath } from '@uipath/uipath-typescript/core';
    * import { Entities } from '@uipath/uipath-typescript/entities';
    *
-   * const uiPathClient = new UiPath(config);
-   * await uiPathClient.initialize();
-   * const entitiesService = new Entities(uiPathClient);
+   * const sdk = new UiPath(config);
+   * await sdk.initialize();
+   * const entitiesService = new Entities(sdk);
    * ```
    */
-  constructor(uiPathClient: UiPath) {
-    const { config, context, tokenManager } = uiPathClient[__PRIVATE__];
+  constructor(uipathInstance: UiPath) {
+    const { config, context, tokenManager } = uipathInstance[__PRIVATE__];
     this.config = config;
     this.executionContext = context;
     this.apiClient = new ApiClient(config, context, tokenManager);

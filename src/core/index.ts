@@ -9,7 +9,7 @@
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { Entities } from '@uipath/uipath-typescript/entities';
  *
- * const uiPath = new UiPath({
+ * const sdk = new UiPath({
  *   baseUrl: 'https://cloud.uipath.com',
  *   orgName: 'myorg',
  *   tenantName: 'mytenant',
@@ -18,9 +18,9 @@
  *   scope: 'OR.Users OR.Robots'
  * });
  *
- * await uiPath.initialize();
+ * await sdk.initialize();
  *
- * const entitiesService = new Entities(uiPath);
+ * const entitiesService = new Entities(sdk);
  * ```
  *
  * @example Secret-based Authentication
@@ -28,7 +28,7 @@
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { Entities } from '@uipath/uipath-typescript/entities';
  *
- * const uiPath = new UiPath({
+ * const sdk = new UiPath({
  *   baseUrl: 'https://cloud.uipath.com',
  *   orgName: 'myorg',
  *   tenantName: 'mytenant',
@@ -36,7 +36,7 @@
  * });
  *
  * // No need to call initialize() for secret-based auth
- * const entitiesService = new Entities(uiPath);
+ * const entitiesService = new Entities(sdk);
  * ```
  *
  * @module

@@ -8,10 +8,10 @@
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { Entities } from '@uipath/uipath-typescript/entities';
  *
- * const uiPath = new UiPath(config);
- * await uiPath.initialize();
+ * const sdk = new UiPath(config);
+ * await sdk.initialize();
  *
- * const entitiesService = new Entities(uiPath);
+ * const entitiesService = new Entities(sdk);
  * const allEntities = await entitiesService.getAll();
  * ```
  *
