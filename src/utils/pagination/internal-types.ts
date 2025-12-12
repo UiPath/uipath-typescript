@@ -48,6 +48,7 @@ export enum PaginationType {
  */
 export interface PaginationServiceAccess {
   get<T>(path: string, options?: any): Promise<{ data: T }>;
+  post<T>(path: string, body?: any, options?: any): Promise<{ data: T }>;
   requestWithPagination<T>(
     method: string,
     path: string,
@@ -62,13 +63,20 @@ export interface PaginationServiceAccess {
 export interface GetAllPaginatedParams<T, R = T> {
   serviceAccess: PaginationServiceAccess;
   getEndpoint: (folderId?: number) => string;
-  folderId?: number; 
+  folderId?: number;
   paginationParams: PaginationOptions;
   additionalParams: Record<string, any>;
-  /** 
+  /**
    * Optional function to transform API response items.
    */
   transformFn?: (item: T) => R;
+  /**
+   * Optional function to parse items from the raw field value.
+   * Use this when the API returns items as a JSON string instead of an array.
+   */
+  parseItemsFn?: (rawValue: unknown) => T[];
+  /** HTTP method to use for the request (default: 'GET') */
+  method?: 'GET' | 'POST';
   options?: {
     paginationType?: PaginationType;
     itemsField?: string;
@@ -90,12 +98,19 @@ export interface GetAllNonPaginatedParams<T, R = T> {
   serviceAccess: PaginationServiceAccess;
   getAllEndpoint: string;
   getByFolderEndpoint: string;
-  folderId?: number; 
+  folderId?: number;
   additionalParams: Record<string, any>;
-  /** 
+  /**
    * Optional function to transform API response items.
    */
   transformFn?: (item: T) => R;
+  /**
+   * Optional function to parse items from the raw field value.
+   * Use this when the API returns items as a JSON string instead of an array.
+   */
+  parseItemsFn?: (rawValue: unknown) => T[];
+  /** HTTP method to use for the request (default: 'GET') */
+  method?: 'GET' | 'POST';
   options?: {
     itemsField?: string;
     totalCountField?: string;
@@ -133,6 +148,11 @@ export interface PaginationFieldNames {
   itemsField?: string;
   totalCountField?: string;
   continuationTokenField?: string;
+  /**
+   * Optional function to parse items from the raw field value.
+   * Use this when the API returns items as a JSON string instead of an array.
+   */
+  parseItemsFn?: (rawValue: unknown) => unknown[];
 }
 
 /**
@@ -189,24 +209,33 @@ export interface PaginationConfig {
 export interface GetAllConfig<TRaw, TTransformed = TRaw> {
   /** Service access for making API calls */
   serviceAccess: PaginationServiceAccess;
-  
+
   /** Endpoint function for getting all items (takes optional folderId) */
   getEndpoint: (folderId?: number) => string;
-  
+
   /** Alternative endpoint for folder-specific queries (optional) */
   getByFolderEndpoint?: string;
-  
-  /** 
+
+  /**
    * Optional function to transform raw API items to client format.
    */
   transformFn?: (item: TRaw) => TTransformed;
-  
+
+  /**
+   * Optional function to parse items from the raw field value.
+   * Use this when the API returns items as a JSON string instead of an array.
+   */
+  parseItemsFn?: (rawValue: unknown) => TRaw[];
+
   /** Pagination configuration */
   pagination?: PaginationConfig;
-  
+
   /** Custom parameter processing function */
   processParametersFn?: (options: Record<string, any>, folderId?: number) => Record<string, any>;
-  
+
   /** Keys to exclude from ODATA prefix transformation */
   excludeFromPrefix?: string[];
+
+  /** HTTP method to use for the request (default: 'GET') */
+  method?: 'GET' | 'POST';
 } 

@@ -72,6 +72,7 @@ export const DATA_FABRIC_ENDPOINTS = {
   },
   CHOICESETS: {
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity/choiceset`,
+    GET_BY_ID: (choicesetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choicesetId}/query_expansion`,
   },
 } as const;
 
