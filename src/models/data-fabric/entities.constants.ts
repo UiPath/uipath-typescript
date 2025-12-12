@@ -29,21 +29,6 @@ export const EntityMap = {
 };
 
 /**
- * Maps fields for Choice Set Values (PascalCase API → camelCase SDK)
- */
-export const ChoiceSetValueMap = {
-  Id: 'id',
-  Name: 'name',
-  DisplayName: 'displayName',
-  NumberId: 'numberId',
-  CreateTime: 'createdTime',
-  UpdateTime: 'updatedTime',
-  CreatedBy: 'createdBy',
-  UpdatedBy: 'updatedBy',
-  RecordOwner: 'recordOwner'
-};
-
-/**
  * Maps SQL field types to friendly display names
  */
 export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldDataType> = {
