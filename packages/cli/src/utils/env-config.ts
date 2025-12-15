@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { EnvironmentConfig } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
-import { VALID_NAME_REGEX, AUTH_CONSTANTS } from '../constants/index.js';
+import { VALID_NAME_REGEX, AUTH_CONSTANTS, BASE_URLS } from '../constants/index.js';
 
 interface ValidationResult {
   isValid: boolean;
@@ -29,8 +29,7 @@ const ENV_VAR_TO_FLAG = Object.fromEntries(
  * Allowed: letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-)
  */
 export function isValidAppName(name: string): boolean {
-  const validNameRegex = VALID_NAME_REGEX;
-  return validNameRegex.test(name);
+  return VALID_NAME_REGEX.test(name);
 }
 
 /**
@@ -100,7 +99,7 @@ function logMissingConfigError(
  * Normalizes base URL to ensure it has a protocol
  */
 function normalizeBaseUrl(url: string | undefined): string {
-  let baseUrl = url || 'https://cloud.uipath.com';
+  let baseUrl = url || BASE_URLS.cloud;
   if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
     baseUrl = `https://${baseUrl}`;
   }
@@ -112,25 +111,15 @@ function normalizeBaseUrl(url: string | undefined): string {
  */
 function buildConfig(
   mergedValues: Record<string, string | undefined>,
-  requiredVars: readonly string[]
 ): EnvironmentConfig {
-  const config: EnvironmentConfig = {
+  return {
     baseUrl: normalizeBaseUrl(mergedValues[ENV_CONFIG.BASE_URL.envVar]),
     orgId: mergedValues[ENV_CONFIG.ORG_ID.envVar]!,
     tenantId: mergedValues[ENV_CONFIG.TENANT_ID.envVar]!,
+    tenantName: mergedValues[ENV_CONFIG.TENANT_NAME.envVar],
+    folderKey: mergedValues[ENV_CONFIG.FOLDER_KEY.envVar],
     accessToken: mergedValues[ENV_CONFIG.ACCESS_TOKEN.envVar]!,
   };
-
-  // Optional fields based on required vars
-  if (requiredVars.includes(ENV_CONFIG.TENANT_NAME.envVar)) {
-    config.tenantName = mergedValues[ENV_CONFIG.TENANT_NAME.envVar]!;
-  }
-
-  if (requiredVars.includes(ENV_CONFIG.FOLDER_KEY.envVar)) {
-    config.folderKey = mergedValues[ENV_CONFIG.FOLDER_KEY.envVar]!;
-  }
-
-  return config;
 }
 
 /**
@@ -150,7 +139,7 @@ export function validateEnvironment(
     return { isValid: false, missingVars: missing };
   }
 
-  return { isValid: true, config: buildConfig(mergedValues, requiredVars) };
+  return { isValid: true, config: buildConfig(mergedValues) };
 }
 
 /**
