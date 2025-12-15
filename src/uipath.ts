@@ -14,25 +14,52 @@ import {
   QueueService,
   AssetService
 } from './services';
-import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
-import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
+import { UiPathSDKConfig, PartialUiPathConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
+import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './core/config/config-utils';
 import { TokenManager } from './core/auth/token-manager';
 import { telemetryClient, trackEvent } from './core/telemetry';
-import { loadExtendedConfig, ConfigLoaderOptions, ConfigResult } from './core/config/loader';
+import { loadFromMetaTags } from './core/config/runtime';
 
 type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
 export class UiPath {
-  private config: UiPathConfig;
-  private executionContext: ExecutionContext;
-  private authService: AuthService;
+  private config?: UiPathConfig;
+  private executionContext?: ExecutionContext;
+  private authService?: AuthService;
   private initialized: boolean = false;
   private readonly _services: Map<string, any> = new Map();
+  private partialConfig?: PartialUiPathConfig;
 
-  constructor(config: UiPathSDKConfig) {
+  constructor(config?: PartialUiPathConfig) {
+    // Try to load from meta tags
+    const metaConfig = loadFromMetaTags();
+
+    if (config) {
+      if (isCompleteConfig(config)) {
+        // Full config provided - initialize directly
+        this.initializeWithConfig(config);
+      } else {
+        // Partial config - merge with meta tags
+        const merged: PartialUiPathConfig = { ...metaConfig, ...config }; // Constructor config overrides meta tags
+
+        if (isCompleteConfig(merged)) {
+          this.initializeWithConfig(merged);
+        } else {
+          // Store partial config to merge later in initialize()
+          this.partialConfig = config;
+        }
+      }
+    } else if (metaConfig && isCompleteConfig(metaConfig)) {
+      // No config provided but meta tags have complete config - auto-initialize
+      this.initializeWithConfig(metaConfig);
+    }
+    // If still not initialized, wait for initialize() to be called
+  }
+
+  private initializeWithConfig(config: UiPathSDKConfig): void {
     // Validate and normalize the configuration
     validateConfig(config);
-    
+
     // Initialize core components
     this.config = new UiPathConfig({
       baseUrl: normalizeBaseUrl(config.baseUrl),
@@ -66,14 +93,38 @@ export class UiPath {
     }
   }
 
+  private loadConfig(): UiPathSDKConfig {
+    // Load from meta tags only (no fetch fallback)
+    const metaConfig = loadFromMetaTags();
+
+    // Merge with any partial config from constructor (constructor overrides meta tags)
+    const merged = { ...metaConfig, ...this.partialConfig };
+
+    if (!isCompleteConfig(merged)) {
+      throw new Error(
+        'UiPath SDK configuration not found. ' +
+        'Ensure @uipath/apps-runtime-config is set up in your bundler to inject configuration during development and build.'
+      );
+    }
+
+    return merged;
+  }
+
   /**
    * Initialize the SDK based on the provided configuration.
    * This method handles both OAuth flow initiation and completion automatically.
    * For secret-based authentication, initialization is automatic.
+   * If no config was provided in constructor, loads from meta tags.
    */
   public async initialize(): Promise<void> {
-    // For secret-based auth, it's already initialized in constructor
-    if (hasSecretConfig(this.config)) {
+    // Load config from meta tags if not provided in constructor
+    if (!this.config) {
+      const loadedConfig = this.loadConfig();
+      this.initializeWithConfig(loadedConfig);
+    }
+
+    // For secret-based auth, it's already initialized
+    if (hasSecretConfig(this.config!)) {
       return;
     }
 
@@ -92,7 +143,7 @@ export class UiPath {
       }
 
       // Start new OAuth flow
-      await this.authService.authenticate(this.config);
+      await this.authService!.authenticate(this.config!);
 
       if (this.isAuthenticated()) {
         this.initialized = true;
@@ -125,8 +176,14 @@ export class UiPath {
       throw new Error('Not in OAuth callback state. Call initialize() first to start OAuth flow.');
     }
 
+    // Load config if not yet initialized
+    if (!this.config) {
+      const loadedConfig = this.loadConfig();
+      this.initializeWithConfig(loadedConfig);
+    }
+
     try {
-      const success = await this.authService.authenticate(this.config);
+      const success = await this.authService!.authenticate(this.config!);
       if (success && this.isAuthenticated()) {
         this.initialized = true;
         return true;
@@ -142,70 +199,21 @@ export class UiPath {
    * Check if the user is authenticated (has valid token)
    */
   public isAuthenticated(): boolean {
-    return this.authService.hasValidToken();
+    return this.authService?.hasValidToken() ?? false;
   }
 
   /**
    * Get the current authentication token
    */
   public getToken(): string | undefined {
-    return this.authService.getToken();
-  }
-
-  /**
-   * Load configuration from a JSON file.
-   * Returns both SDK config and helpers to access custom properties defined in the same file.
-   *
-   * For browser applications: Place the config file in the public folder (e.g., public/uipath-config.json).
-   * After building, you can edit this file in the dist folder without rebuilding.
-   *
-   * For Node.js applications: Place the config file in the root directory or specify a custom path.
-   *
-   * @param options - Configuration loader options
-   * @returns Promise that resolves to ConfigResult with SDK config and helpers to access custom properties
-   * @throws Error if the config file cannot be loaded or parsed
-   *
-   * @example
-   * ```typescript
-   * // uipath-config.json:
-   * {
-   *   "clientId": "your-client-id",
-   *   "orgName": "your-org",
-   *   "tenantName": "your-tenant",
-   *   "baseUrl": "https://cloud.uipath.com",
-   *   "redirectUri": "http://localhost:5173",
-   *   "scope": "offline_access",
-   *
-   *   "apiTimeout": 5000,
-   *   "maxRetries": 3,
-   *   "featureFlags": {
-   *     "enableNewUI": true
-   *   }
-   * }
-   *
-   * // Load and use:
-   * const { config, get } = await UiPath.getConfig();
-   * const sdk = new UiPath(config);
-   *
-   * // Access custom properties
-   * const timeout = get('apiTimeout'); // 5000
-   * const flags = get('featureFlags'); // { enableNewUI: true }
-   *
-   * // With TypeScript types:
-   * interface MyConfig {
-   *   apiTimeout: number;
-   *   featureFlags: { enableNewUI: boolean };
-   * }
-   * const { config, get } = await UiPath.getConfig<MyConfig>();
-   * ```
-   */
-  public static async getConfig<TCustom = Record<string, any>>(
-    options?: ConfigLoaderOptions
-  ): Promise<ConfigResult<TCustom>> {
-    return loadExtendedConfig<TCustom>(options);
+    return this.authService?.getToken();
   }
 
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
+    if (!this.config || !this.executionContext || !this.authService) {
+      throw new Error('SDK not initialized. Call initialize() first.');
+    }
+
     const serviceName = serviceConstructor.name;
     if (!this._services.has(serviceName)) {
       const serviceInstance = new serviceConstructor(this.config, this.executionContext, this.authService.getTokenManager());
@@ -289,6 +297,6 @@ export class UiPath {
 }
 
 // Factory function for creating UiPath instance
-export default function uipath(config: UiPathSDKConfig): UiPath {
+export default function uipath(config?: PartialUiPathConfig): UiPath {
   return new UiPath(config);
 }

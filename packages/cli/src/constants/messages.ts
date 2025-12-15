@@ -1,4 +1,9 @@
 /**
+ * Config file name constant
+ */
+export const CONFIG_FILE_NAME = 'uipath.json';
+
+/**
  * Common CLI error and success messages
  */
 export const MESSAGES = {
@@ -48,6 +53,9 @@ export const MESSAGES = {
     NO_NUPKG_FILES_FOUND: '❌ No .nupkg files found',
     UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
     PACKAGE_TOO_LARGE: '❌ Package file is too large for upload',
+    CONFIG_FILE_NOT_FOUND: `❌ ${CONFIG_FILE_NAME} not found in project root`,
+    CONFIG_FILE_INVALID_JSON: `❌ ${CONFIG_FILE_NAME} is not valid JSON`,
+    CONFIG_FILE_MISSING_SCOPE: `❌ ${CONFIG_FILE_NAME} is missing required "scope" field`,
     
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
@@ -72,6 +80,7 @@ export const MESSAGES = {
     // Packaging
     PACKAGE_CREATED_SUCCESS: '✅ NuGet package created successfully!',
     PACKAGE_CONFIG_VALIDATED: '✅ Package configuration validated',
+    CONFIG_FILE_INCLUDED: `✅ Included ${CONFIG_FILE_NAME} in package`,
     
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
