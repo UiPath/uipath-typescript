@@ -1,7 +1,9 @@
 import chalk from 'chalk';
+import * as fs from 'fs';
+import fsExtra from 'fs-extra';
 import { EnvironmentConfig } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
-import { VALID_NAME_REGEX, AUTH_CONSTANTS } from '../constants/index.js';
+import { VALID_NAME_REGEX, AUTH_CONSTANTS, BASE_URLS } from '../constants/index.js';
 
 interface ValidationResult {
   isValid: boolean;
@@ -29,8 +31,7 @@ const ENV_VAR_TO_FLAG = Object.fromEntries(
  * Allowed: letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-)
  */
 export function isValidAppName(name: string): boolean {
-  const validNameRegex = VALID_NAME_REGEX;
-  return validNameRegex.test(name);
+  return VALID_NAME_REGEX.test(name);
 }
 
 /**
@@ -100,7 +101,7 @@ function logMissingConfigError(
  * Normalizes base URL to ensure it has a protocol
  */
 function normalizeBaseUrl(url: string | undefined): string {
-  let baseUrl = url || 'https://cloud.uipath.com';
+  let baseUrl = url || BASE_URLS.cloud;
   if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
     baseUrl = `https://${baseUrl}`;
   }
@@ -112,25 +113,15 @@ function normalizeBaseUrl(url: string | undefined): string {
  */
 function buildConfig(
   mergedValues: Record<string, string | undefined>,
-  requiredVars: readonly string[]
 ): EnvironmentConfig {
-  const config: EnvironmentConfig = {
+  return {
     baseUrl: normalizeBaseUrl(mergedValues[ENV_CONFIG.BASE_URL.envVar]),
     orgId: mergedValues[ENV_CONFIG.ORG_ID.envVar]!,
     tenantId: mergedValues[ENV_CONFIG.TENANT_ID.envVar]!,
+    tenantName: mergedValues[ENV_CONFIG.TENANT_NAME.envVar],
+    folderKey: mergedValues[ENV_CONFIG.FOLDER_KEY.envVar],
     accessToken: mergedValues[ENV_CONFIG.ACCESS_TOKEN.envVar]!,
   };
-
-  // Optional fields based on required vars
-  if (requiredVars.includes(ENV_CONFIG.TENANT_NAME.envVar)) {
-    config.tenantName = mergedValues[ENV_CONFIG.TENANT_NAME.envVar]!;
-  }
-
-  if (requiredVars.includes(ENV_CONFIG.FOLDER_KEY.envVar)) {
-    config.folderKey = mergedValues[ENV_CONFIG.FOLDER_KEY.envVar]!;
-  }
-
-  return config;
 }
 
 /**
@@ -150,7 +141,7 @@ export function validateEnvironment(
     return { isValid: false, missingVars: missing };
   }
 
-  return { isValid: true, config: buildConfig(mergedValues, requiredVars) };
+  return { isValid: true, config: buildConfig(mergedValues) };
 }
 
 /**
@@ -164,4 +155,34 @@ export function getEnvironmentConfig(
 ): EnvironmentConfig | null {
   const result = validateEnvironment(requiredVars, logger, flags);
   return result.isValid ? result.config! : null;
+}
+
+// Atomic File Write Utilities
+
+/**
+ * Generate a unique temp file path to avoid race conditions between processes
+ */
+function getTempPath(filePath: string): string {
+  return `${filePath}.${process.pid}.${Date.now()}.tmp`;
+}
+
+/**
+ * Write content to a file atomically (sync)
+ * Writes to a temp file first, then renames to avoid partial writes
+ * Accepts string content or object (which will be JSON stringified)
+ */
+export function atomicWriteFileSync(filePath: string, content: string | object): void {
+  const tempPath = getTempPath(filePath);
+  const data = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+  fs.writeFileSync(tempPath, data);
+  fs.renameSync(tempPath, filePath);
+}
+
+/**
+ * Write JSON data to a file atomically (async)
+ */
+export async function atomicWriteJson(filePath: string, data: unknown): Promise<void> {
+  const tempPath = getTempPath(filePath);
+  await fsExtra.writeJson(tempPath, data, { spaces: 2 });
+  await fsExtra.rename(tempPath, filePath);
 }

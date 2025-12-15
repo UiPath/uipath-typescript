@@ -9,9 +9,9 @@ import { EnvironmentConfig, AppConfig } from '../types/index.js';
 import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../utils/api.js';
-import { getEnvironmentConfig, isValidAppName } from '../utils/env-config.js';
+import { getEnvironmentConfig, isValidAppName, atomicWriteFileSync } from '../utils/env-config.js';
 import { handleHttpError } from '../utils/error-handler.js';
-import { track } from '../telemetry/index.js';
+import { cliTelemetryClient } from '../telemetry/index.js';
 
 interface DeployedApp {
   id: string;
@@ -21,7 +21,7 @@ interface DeployedApp {
   deployVersion: number;
 }
 
-interface DeployedAppsResponse {
+interface DeployedAppResponse {
   value: DeployedApp[];
 }
 
@@ -30,7 +30,7 @@ interface PublishedApp {
   title: string;
 }
 
-interface PublishedAppsResponse {
+interface PublishedAppResponse {
   value: PublishedApp[];
 }
 
@@ -70,7 +70,6 @@ export default class Deploy extends Command {
     }),
   };
 
-  @track('Deploy')
   public async run(): Promise<void> {
     const { flags } = await this.parse(Deploy);
 
@@ -128,7 +127,7 @@ export default class Deploy extends Command {
   }
 
   private loadAppConfig(): AppConfig | null {
-    const configPath = path.join(process.cwd(), '.uipath', 'app.config.json');
+    const configPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR, AUTH_CONSTANTS.FILES.APP_CONFIG);
     try {
       if (fs.existsSync(configPath)) {
         const content = fs.readFileSync(configPath, 'utf-8');
@@ -155,7 +154,11 @@ export default class Deploy extends Command {
         await this.upgradeApp(deployedApp.id, envConfig);
         spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_UPGRADED_SUCCESS));
         systemName = deployedApp.systemName;
-        version = deployedApp.semVersion;
+        // Get version from app config (has the new version being deployed)
+        const appConfig = this.loadAppConfig();
+        version = appConfig?.appVersion || deployedApp.semVersion;
+        // Track upgrade operation
+        cliTelemetryClient.track('Cli.Deploy', { operation: 'upgrade' });
       } else {
         // App not deployed, do initial deployment
         spinner.text = MESSAGES.INFO.DEPLOYING_APP;
@@ -177,6 +180,8 @@ export default class Deploy extends Command {
         // Get version from app config
         const appConfig = this.loadAppConfig();
         version = appConfig?.appVersion || '1.0.0';
+        // Track fresh deploy operation
+        cliTelemetryClient.track('Cli.Deploy', { operation: 'fresh_deploy' });
       }
 
       // Build and display app URL
@@ -211,7 +216,7 @@ export default class Deploy extends Command {
       await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_DEPLOYMENT);
     }
 
-    const data = await response.json() as DeployedAppsResponse;
+    const data = await response.json() as DeployedAppResponse;
 
     // Find exact match by title
     return data.value.find(app => app.title === appName) || null;
@@ -234,7 +239,7 @@ export default class Deploy extends Command {
       await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_DEPLOYMENT);
     }
 
-    const data = await response.json() as PublishedAppsResponse;
+    const data = await response.json() as PublishedAppResponse;
 
     // Find exact match by title
     const publishedApp = data.value.find(app => app.title === appName);
@@ -290,8 +295,8 @@ export default class Deploy extends Command {
   }
 
   private async updateAppConfig(deploymentId: string): Promise<void> {
-    const configDir = path.join(process.cwd(), '.uipath');
-    const configPath = path.join(configDir, 'app.config.json');
+    const configDir = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR);
+    const configPath = path.join(configDir, AUTH_CONSTANTS.FILES.APP_CONFIG);
 
     try {
       // Load existing config (should exist from register step)
@@ -307,9 +312,7 @@ export default class Deploy extends Command {
       }
 
       // Write atomically to avoid race conditions
-      const tempPath = `${configPath}.tmp`;
-      fs.writeFileSync(tempPath, JSON.stringify(config, null, 2));
-      fs.renameSync(tempPath, configPath);
+      atomicWriteFileSync(configPath, config);
 
     } catch (error) {
       this.warn(`${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);

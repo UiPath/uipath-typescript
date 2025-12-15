@@ -1,4 +1,12 @@
 export const AUTH_CONSTANTS = {
+  // File and directory names
+  FILES: {
+    UIPATH_DIR: '.uipath',
+    APP_CONFIG: 'app.config.json',
+    AUTH_FILE: '.auth.json',
+    ENV_FILE: '.env',
+    METADATA_FILE: 'metadata.json',
+  },
   DOMAINS: {
     CLOUD: 'cloud',
     ALPHA: 'alpha',
@@ -107,12 +115,11 @@ export const AUTH_CONSTANTS = {
       'UIPATH_FOLDER_KEY',
       'UIPATH_ACCESS_TOKEN'
     ],
-    // Required for publish command (no folder key needed)
+    // Required for publish command (no folder key or tenant name needed)
     PUBLISH: [
       'UIPATH_BASE_URL',
       'UIPATH_ORG_ID',
       'UIPATH_TENANT_ID',
-      'UIPATH_TENANT_NAME',
       'UIPATH_ACCESS_TOKEN'
     ],
     // Required for deploy command

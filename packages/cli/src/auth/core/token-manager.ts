@@ -1,15 +1,15 @@
 import fs from 'fs-extra';
 import path from 'path';
-import os from 'os';
 import { TokenResponse } from './oidc.js';
 import { SelectedTenant } from '../services/portal.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { getBaseUrl } from '../utils/url.js';
 import { calculateExpirationTime } from '../utils/date.js';
+import { atomicWriteJson } from '../../utils/env-config.js';
 
-const UIPATH_DIR = path.join(process.cwd(), '.uipath');
-const AUTH_FILE = path.join(UIPATH_DIR, '.auth.json');
-const ENV_FILE = path.join(process.cwd(), '.env');
+const UIPATH_DIR = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR);
+const AUTH_FILE = path.join(UIPATH_DIR, AUTH_CONSTANTS.FILES.AUTH_FILE);
+const ENV_FILE = path.join(process.cwd(), AUTH_CONSTANTS.FILES.ENV_FILE);
 
 export interface StoredAuth {
   accessToken: string;
@@ -156,8 +156,3 @@ const updateEnvFile = async (vars: Record<string, string>): Promise<void> => {
   await fs.writeFile(ENV_FILE, newLines.join('\n') + '\n', 'utf-8');
 };
 
-const atomicWriteJson = async (filePath: string, data: any): Promise<void> => {
-  const tmpPath = `${filePath}.tmp`;
-  await fs.writeJson(tmpPath, data, { spaces: 2 });
-  await fs.rename(tmpPath, filePath);
-};

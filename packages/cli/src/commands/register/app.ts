@@ -9,7 +9,7 @@ import { EnvironmentConfig, AppConfig, AppType } from '../../types/index.js';
 import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS, AUTH_CONSTANTS } from '../../constants/index.js';
 import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
-import { getEnvironmentConfig, isValidAppName } from '../../utils/env-config.js';
+import { getEnvironmentConfig, isValidAppName, atomicWriteFileSync } from '../../utils/env-config.js';
 import { handleHttpError } from '../../utils/error-handler.js';
 import { track } from '../../telemetry/index.js';
 import { readAndParseActionSchema } from '../../utils/action-schema.js';
@@ -228,8 +228,8 @@ export default class RegisterApp extends Command {
   }
 
   private async saveAppConfig(config: AppConfig): Promise<void> {
-    const configDir = path.join(process.cwd(), '.uipath');
-    const configPath = path.join(configDir, 'app.config.json');
+    const configDir = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR);
+    const configPath = path.join(configDir, AUTH_CONSTANTS.FILES.APP_CONFIG);
     
     try {
       // Ensure directory exists
@@ -238,9 +238,7 @@ export default class RegisterApp extends Command {
       }
       
       // Write atomically to avoid race conditions
-      const tempPath = `${configPath}.tmp`;
-      fs.writeFileSync(tempPath, JSON.stringify(config, null, 2));
-      fs.renameSync(tempPath, configPath);
+      atomicWriteFileSync(configPath, config);
       
     } catch (error) {
       this.warn(`${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
@@ -248,7 +246,7 @@ export default class RegisterApp extends Command {
   }
 
   private async updateEnvFile(key: string, value: string): Promise<void> {
-    const envPath = path.join(process.cwd(), '.env');
+    const envPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.ENV_FILE);
     
     try {
       let envContent = '';
@@ -275,9 +273,7 @@ export default class RegisterApp extends Command {
       }
       
       // Write atomically to avoid race conditions
-      const tempPath = `${envPath}.tmp`;
-      fs.writeFileSync(tempPath, envContent);
-      fs.renameSync(tempPath, envPath);
+      atomicWriteFileSync(envPath, envContent);
       
     } catch (error) {
       this.warn(`${MESSAGES.ERRORS.FAILED_TO_UPDATE_ENV} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);

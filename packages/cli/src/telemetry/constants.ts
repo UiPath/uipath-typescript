@@ -3,10 +3,10 @@
  */
 
 // Connection string placeholder 
-export const CONNECTION_STRING = "$CONNECTION_STRING";
+export const CONNECTION_STRING = "InstrumentationKey=a6efa11d-1feb-4508-9738-e13e12dcae5e;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=7c58eb1c-9581-4ba6-839e-11725848a037";
 
 // Cli Version placeholder 
-export const CLI_VERSION = "$CLI_VERSION";
+export const CLI_VERSION = "test-version";
 
 
 export const CLOUD_ORGANIZATION_ID = "CloudOrganizationId";
