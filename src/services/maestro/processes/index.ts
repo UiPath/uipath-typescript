@@ -13,27 +13,25 @@
  * await sdk.initialize();
  *
  * // Get BPMN process definitions
- * const processesService = new Processes(sdk);
- * const allProcesses = await processesService.getAll();
+ * const processes = new Processes(sdk);
+ * const allProcesses = await processes.getAll();
  *
  * // Get process instances
- * const processInstancesService = new ProcessInstances(sdk);
- * const allInstances = await processInstancesService.getAll();
+ * const processInstances = new ProcessInstances(sdk);
+ * const allInstances = await processInstances.getAll();
  *
  * // Get all process incidents
- * const processIncidentsService = new ProcessIncidents(sdk);
- * const allIncidents = await processIncidentsService.getAll();
+ * const processIncidents = new ProcessIncidents(sdk);
+ * const allIncidents = await processIncidents.getAll();
  * ```
  *
  * @module
  */
 
-// Export services with clean names (flat structure, no hierarchy)
 export { MaestroProcessesService as Processes, MaestroProcessesService } from './processes';
 export { ProcessInstancesService as ProcessInstances, ProcessInstancesService } from './process-instances';
 export { ProcessIncidentsService as ProcessIncidents, ProcessIncidentsService } from './process-incidents';
 
-// Re-export service-specific types
 export type * from '../../../models/maestro/processes.types';
 export type * from '../../../models/maestro/processes.models';
 export type * from '../../../models/maestro/process-instances.types';

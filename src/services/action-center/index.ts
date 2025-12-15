@@ -1,5 +1,5 @@
 /**
- * Action Center Services Module
+ * Tasks Module
  *
  * Provides access to UiPath Action Center for task management.
  *
@@ -11,16 +11,14 @@
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const tasksService = new Tasks(sdk);
- * const allTasks = await tasksService.getAll();
+ * const tasks = new Tasks(sdk);
+ * const allTasks = await tasks.getAll();
  * ```
  *
  * @module
  */
 
-// Export service with cleaner name and keep TaskService for legacy UiPath class
 export { TaskService as Tasks, TaskService } from './tasks';
 
-// Re-export service-specific types
 export type * from '../../models/action-center/tasks.types';
 export type * from '../../models/action-center/tasks.models'; 

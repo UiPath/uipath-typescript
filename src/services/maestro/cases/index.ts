@@ -12,23 +12,19 @@
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * // Get case definitions
- * const casesService = new Cases(sdk);
- * const allCases = await casesService.getAll();
+ * const cases = new Cases(sdk);
+ * const allCases = await cases.getAll();
  *
- * // Get case instances
- * const caseInstancesService = new CaseInstances(sdk);
- * const allInstances = await caseInstancesService.getAll();
+ * const caseInstances = new CaseInstances(sdk);
+ * const allInstances = await caseInstances.getAll();
  * ```
  *
  * @module
  */
 
-// Export services with clean names (flat structure, no hierarchy)
 export { CasesService as Cases, CasesService } from './cases';
 export { CaseInstancesService as CaseInstances, CaseInstancesService } from './case-instances';
 
-// Re-export service-specific types
 export type * from '../../../models/maestro/cases.types';
 export type * from '../../../models/maestro/cases.models';
 export type * from '../../../models/maestro/case-instances.types';

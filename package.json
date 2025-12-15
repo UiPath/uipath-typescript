@@ -122,6 +122,7 @@
         "README.md"
     ],
     "scripts": {
+        "prebuild": "rimraf dist",
         "build": "rollup -c",
         "build:watch": "rollup -c -w",
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",

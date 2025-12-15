@@ -1,9 +1,10 @@
 import resolve from '@rollup/plugin-node-resolve';  // Resolves node_modules dependencies
 import commonjs from '@rollup/plugin-commonjs';     // Converts CommonJS modules to ES6
 import typescript from '@rollup/plugin-typescript'; // Compiles TypeScript to JavaScript
+import dts from 'rollup-plugin-dts';              // Generates TypeScript declaration files
 import json from '@rollup/plugin-json';           // Imports JSON files as ES6 modules
 import builtins from 'builtin-modules';           // List of Node.js built-in modules (fs, crypto, etc.)
-import { readFileSync } from 'fs'; 
+import { readFileSync } from 'fs';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
@@ -26,8 +27,7 @@ const createPlugins = (isBrowser) => [
   json(),                          // Allow importing JSON files as modules
   typescript({
     tsconfig: './tsconfig.json',
-    declaration: true,              // ✅ Enable native TypeScript declaration generation
-    declarationDir: './dist',       // ✅ Output types to dist folder
+    declaration: false,
     sourceMap: false,
     declarationMap: false
   })
@@ -89,6 +89,16 @@ const configs = [
       inlineDynamicImports: true
     },
     plugins: createBrowserPlugins()
+  },
+
+  // Main type definitions
+  {
+    input: 'src/index.ts',
+    output: {
+      file: 'dist/index.d.ts',
+      format: 'es'
+    },
+    plugins: [dts()]
   }
 ];
 
@@ -141,16 +151,12 @@ const serviceEntries = [
   }
 ];
 
-// Generate build configs for each service entry
+// Generate ESM, CJS, and DTS builds for each service entry
 serviceEntries.forEach(({ input, output }) => {
   // ESM bundle
   configs.push({
     input,
-    output: {
-      file: `dist/${output}.mjs`,
-      format: 'es',
-      inlineDynamicImports: true
-    },
+    output: { file: `dist/${output}.mjs`, format: 'es', inlineDynamicImports: true },
     plugins: createPlugins(false),
     external: allDependencies
   });
@@ -158,16 +164,18 @@ serviceEntries.forEach(({ input, output }) => {
   // CommonJS bundle
   configs.push({
     input,
-    output: {
-      file: `dist/${output}.cjs`,
-      format: 'cjs',
-      exports: 'named',
-      inlineDynamicImports: true
-    },
+    output: { file: `dist/${output}.cjs`, format: 'cjs', exports: 'named', inlineDynamicImports: true },
     plugins: createPlugins(false),
     external: allDependencies
+  });
+
+  // Type definitions
+  configs.push({
+    input,
+    output: { file: `dist/${output}.d.ts`, format: 'es' },
+    plugins: [dts()]
   });
 });
 
 // Export all build configurations
-export default configs; 
+export default configs;

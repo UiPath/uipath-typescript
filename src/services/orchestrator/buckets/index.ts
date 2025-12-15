@@ -1,5 +1,5 @@
 /**
- * Orchestrator Buckets Module
+ * Buckets Module
  *
  * Provides access to UiPath Orchestrator for storage bucket management.
  *
@@ -11,16 +11,14 @@
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const bucketsService = new Buckets(sdk);
- * const allBuckets = await bucketsService.getAll();
+ * const buckets = new Buckets(sdk);
+ * const allBuckets = await buckets.getAll();
  * ```
  *
  * @module
  */
 
-// Export service with cleaner name and keep BucketService for legacy UiPath class
 export { BucketService as Buckets, BucketService } from './buckets';
 
-// Re-export service-specific types
 export type * from '../../../models/orchestrator/buckets.types';
 export type * from '../../../models/orchestrator/buckets.models';

@@ -34,19 +34,19 @@ vi.mock('../../../src/core/http/api-client');
 describe('UiPath Core', () => {
   describe('Constructor', () => {
     it('should create instance with secret-based auth config', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      expect(uiPath).toBeInstanceOf(UiPath);
-      expect(uiPath.isInitialized()).toBe(true); // Secret auth auto-initializes
+      expect(sdk).toBeInstanceOf(UiPath);
+      expect(sdk.isInitialized()).toBe(true); // Secret auth auto-initializes
     });
 
     it('should create instance with OAuth config', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
@@ -55,8 +55,8 @@ describe('UiPath Core', () => {
         scope: 'offline_access'
       });
 
-      expect(uiPath).toBeInstanceOf(UiPath);
-      expect(uiPath.isInitialized()).toBe(false); // OAuth requires initialize()
+      expect(sdk).toBeInstanceOf(UiPath);
+      expect(sdk.isInitialized()).toBe(false); // OAuth requires initialize()
     });
 
     it('should validate required config fields', () => {
@@ -71,23 +71,23 @@ describe('UiPath Core', () => {
     });
 
     it('should normalize baseUrl', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: 'https://cloud.uipath.com/',
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const config = getConfig(uiPath);
+      const config = getConfig(sdk);
       expect(config.baseUrl).toBe('https://cloud.uipath.com');
     });
   });
 
   describe('Secret-based Authentication', () => {
-    let uiPath: UiPath;
+    let sdk: UiPath;
 
     beforeEach(() => {
-      uiPath = new UiPath({
+      sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
@@ -96,28 +96,28 @@ describe('UiPath Core', () => {
     });
 
     it('should auto-initialize with secret auth', () => {
-      expect(uiPath.isInitialized()).toBe(true);
+      expect(sdk.isInitialized()).toBe(true);
     });
 
     it('should return authenticated status', () => {
-      expect(uiPath.isAuthenticated()).toBe(true);
+      expect(sdk.isAuthenticated()).toBe(true);
     });
 
     it('should return immediately on initialize() call', async () => {
-      await expect(uiPath.initialize()).resolves.toBeUndefined();
+      await expect(sdk.initialize()).resolves.toBeUndefined();
     });
 
     it('should provide access token', () => {
-      const token = uiPath.getToken();
+      const token = sdk.getToken();
       expect(token).toBe('mock-access-token');
     });
   });
 
   describe('OAuth Authentication', () => {
-    let uiPath: UiPath;
+    let sdk: UiPath;
 
     beforeEach(() => {
-      uiPath = new UiPath({
+      sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
@@ -128,25 +128,25 @@ describe('UiPath Core', () => {
     });
 
     it('should not be initialized before initialize() is called', () => {
-      expect(uiPath.isInitialized()).toBe(false);
+      expect(sdk.isInitialized()).toBe(false);
     });
 
     it('should check if in OAuth callback', () => {
-      const isInCallback = uiPath.isInOAuthCallback();
+      const isInCallback = sdk.isInOAuthCallback();
       expect(typeof isInCallback).toBe('boolean');
     });
   });
 
   describe('Configuration Access', () => {
     it('should expose config via symbol pattern', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const config = getConfig(uiPath);
+      const config = getConfig(sdk);
 
       expect(config).toBeDefined();
       expect(config.baseUrl).toBe(TEST_CONSTANTS.BASE_URL);
@@ -155,14 +155,14 @@ describe('UiPath Core', () => {
     });
 
     it('should return UiPathConfig instance from symbol pattern', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const config = getConfig(uiPath);
+      const config = getConfig(sdk);
 
       expect(config).toBeInstanceOf(UiPathConfig);
     });
@@ -170,29 +170,29 @@ describe('UiPath Core', () => {
 
   describe('Context Access', () => {
     it('should expose context via symbol pattern', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const context = getContext(uiPath);
+      const context = getContext(sdk);
 
       expect(context).toBeDefined();
       expect(context).toBeInstanceOf(ExecutionContext);
     });
 
     it('should provide consistent context across accesses', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const context1 = getContext(uiPath);
-      const context2 = getContext(uiPath);
+      const context1 = getContext(sdk);
+      const context2 = getContext(sdk);
 
       expect(context1).toBe(context2);
     });
@@ -200,14 +200,14 @@ describe('UiPath Core', () => {
 
   describe('Token Manager Access', () => {
     it('should expose tokenManager via symbol pattern', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const tokenManager = getTokenManager(uiPath);
+      const tokenManager = getTokenManager(sdk);
 
       expect(tokenManager).toBeDefined();
       expect(tokenManager.getToken).toBeDefined();
@@ -215,29 +215,29 @@ describe('UiPath Core', () => {
     });
 
     it('should provide consistent token manager across accesses', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const tokenManager1 = getTokenManager(uiPath);
-      const tokenManager2 = getTokenManager(uiPath);
+      const tokenManager1 = getTokenManager(sdk);
+      const tokenManager2 = getTokenManager(sdk);
 
       expect(tokenManager1).toEqual(tokenManager2);
     });
 
     it('should use token manager for authentication', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const tokenManager = getTokenManager(uiPath);
-      const token = uiPath.getToken();
+      const tokenManager = getTokenManager(sdk);
+      const token = sdk.getToken();
 
       expect(tokenManager.getToken()).toBe(token);
     });
@@ -245,7 +245,7 @@ describe('UiPath Core', () => {
 
   describe('Dependency Injection Pattern', () => {
     it('should provide all necessary components via symbol pattern for service injection', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
@@ -253,7 +253,7 @@ describe('UiPath Core', () => {
       });
 
       // Services access these via the __PRIVATE__ symbol
-      const privateSDK = getPrivateSDK(uiPath);
+      const privateSDK = getPrivateSDK(sdk);
       expect(privateSDK).toBeDefined();
       expect(privateSDK.config).toBeDefined();
       expect(privateSDK.context).toBeDefined();
@@ -261,14 +261,14 @@ describe('UiPath Core', () => {
     });
 
     it('should allow services to access configuration via symbol pattern', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const config = getConfig(uiPath);
+      const config = getConfig(sdk);
 
       // Verify services can access organization details
       expect(config.orgName).toBe(TEST_CONSTANTS.ORGANIZATION_ID);
@@ -279,25 +279,25 @@ describe('UiPath Core', () => {
 
   describe('Authentication State', () => {
     it('should track authentication state', () => {
-      const uiPath = new UiPath({
+      const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      expect(uiPath.isAuthenticated()).toBe(true);
+      expect(sdk.isAuthenticated()).toBe(true);
     });
 
     it('should track initialization state', () => {
-      const secretUiPath = new UiPath({
+      const secretSdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const oauthUiPath = new UiPath({
+      const oauthSdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
@@ -306,30 +306,30 @@ describe('UiPath Core', () => {
         scope: 'offline_access'
       });
 
-      expect(secretUiPath.isInitialized()).toBe(true);
-      expect(oauthUiPath.isInitialized()).toBe(false);
+      expect(secretSdk.isInitialized()).toBe(true);
+      expect(oauthSdk.isInitialized()).toBe(false);
     });
   });
 
   describe('Multiple Instance Support', () => {
     it('should support creating multiple independent instances', () => {
-      const uiPath1 = new UiPath({
+      const sdk1 = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: 'org1',
         tenantName: 'tenant1',
         secret: 'secret1'
       });
 
-      const uiPath2 = new UiPath({
+      const sdk2 = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: 'org2',
         tenantName: 'tenant2',
         secret: 'secret2'
       });
 
-      expect(getConfig(uiPath1).orgName).toBe('org1');
-      expect(getConfig(uiPath2).orgName).toBe('org2');
-      expect(getContext(uiPath1)).not.toBe(getContext(uiPath2));
+      expect(getConfig(sdk1).orgName).toBe('org1');
+      expect(getConfig(sdk2).orgName).toBe('org2');
+      expect(getContext(sdk1)).not.toBe(getContext(sdk2));
     });
   });
 });
