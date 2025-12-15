@@ -2,7 +2,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { UiPath } from '../../../src/uipath';
 import { UiPath as CoreUiPath } from '../../../src/core/uipath';
-import { __PRIVATE__ } from '../../../src/core/internals';
 import {
   MaestroProcessesService,
   ProcessInstancesService,
@@ -17,7 +16,7 @@ import {
   AssetService
 } from '../../../src/services';
 import { ApiClient } from '../../../src/core/http/api-client';
-import { createMockApiClient } from '../../utils/setup';
+import { createMockApiClient, getPrivateSDK, getConfig } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 
 // ===== MOCKING =====
@@ -76,10 +75,11 @@ describe('UiPath Legacy Pattern', () => {
       expect(uiPath.isAuthenticated).toBeDefined();
       expect(uiPath.getToken).toBeDefined();
       // Symbol pattern provides access to internals
-      expect(uiPath[__PRIVATE__]).toBeDefined();
-      expect(uiPath[__PRIVATE__].config).toBeDefined();
-      expect(uiPath[__PRIVATE__].tokenManager).toBeDefined();
-      expect(uiPath[__PRIVATE__].context).toBeDefined();
+      const privateSDK = getPrivateSDK(uiPath);
+      expect(privateSDK).toBeDefined();
+      expect(privateSDK.config).toBeDefined();
+      expect(privateSDK.tokenManager).toBeDefined();
+      expect(privateSDK.context).toBeDefined();
     });
   });
 
@@ -223,7 +223,7 @@ describe('UiPath Legacy Pattern', () => {
       expect(tasks).toBeDefined();
 
       // Verify they share the same config via symbol pattern
-      expect(uiPath[__PRIVATE__].config).toBeDefined();
+      expect(getConfig(uiPath)).toBeDefined();
     });
 
     it('should provide equivalent functionality to modular pattern', () => {

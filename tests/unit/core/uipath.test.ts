@@ -1,9 +1,9 @@
 // ===== IMPORTS =====
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
-import { __PRIVATE__ } from '../../../src/core/internals';
+import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 
 // ===== MOCKING =====
@@ -78,7 +78,7 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const config = uiPath[__PRIVATE__].config;
+      const config = getConfig(uiPath);
       expect(config.baseUrl).toBe('https://cloud.uipath.com');
     });
   });
@@ -146,7 +146,7 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const config = uiPath[__PRIVATE__].config;
+      const config = getConfig(uiPath);
 
       expect(config).toBeDefined();
       expect(config.baseUrl).toBe(TEST_CONSTANTS.BASE_URL);
@@ -162,7 +162,7 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const config = uiPath[__PRIVATE__].config;
+      const config = getConfig(uiPath);
 
       expect(config).toBeInstanceOf(UiPathConfig);
     });
@@ -177,7 +177,7 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const context = uiPath[__PRIVATE__].context;
+      const context = getContext(uiPath);
 
       expect(context).toBeDefined();
       expect(context).toBeInstanceOf(ExecutionContext);
@@ -191,8 +191,8 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const context1 = uiPath[__PRIVATE__].context;
-      const context2 = uiPath[__PRIVATE__].context;
+      const context1 = getContext(uiPath);
+      const context2 = getContext(uiPath);
 
       expect(context1).toBe(context2);
     });
@@ -207,7 +207,7 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const tokenManager = uiPath[__PRIVATE__].tokenManager;
+      const tokenManager = getTokenManager(uiPath);
 
       expect(tokenManager).toBeDefined();
       expect(tokenManager.getToken).toBeDefined();
@@ -222,8 +222,8 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const tokenManager1 = uiPath[__PRIVATE__].tokenManager;
-      const tokenManager2 = uiPath[__PRIVATE__].tokenManager;
+      const tokenManager1 = getTokenManager(uiPath);
+      const tokenManager2 = getTokenManager(uiPath);
 
       expect(tokenManager1).toEqual(tokenManager2);
     });
@@ -236,7 +236,7 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const tokenManager = uiPath[__PRIVATE__].tokenManager;
+      const tokenManager = getTokenManager(uiPath);
       const token = uiPath.getToken();
 
       expect(tokenManager.getToken()).toBe(token);
@@ -253,7 +253,7 @@ describe('UiPath Core', () => {
       });
 
       // Services access these via the __PRIVATE__ symbol
-      const privateSDK = uiPath[__PRIVATE__];
+      const privateSDK = getPrivateSDK(uiPath);
       expect(privateSDK).toBeDefined();
       expect(privateSDK.config).toBeDefined();
       expect(privateSDK.context).toBeDefined();
@@ -268,7 +268,7 @@ describe('UiPath Core', () => {
         secret: TEST_CONSTANTS.CLIENT_SECRET
       });
 
-      const config = uiPath[__PRIVATE__].config;
+      const config = getConfig(uiPath);
 
       // Verify services can access organization details
       expect(config.orgName).toBe(TEST_CONSTANTS.ORGANIZATION_ID);
@@ -327,9 +327,9 @@ describe('UiPath Core', () => {
         secret: 'secret2'
       });
 
-      expect(uiPath1[__PRIVATE__].config.orgName).toBe('org1');
-      expect(uiPath2[__PRIVATE__].config.orgName).toBe('org2');
-      expect(uiPath1[__PRIVATE__].context).not.toBe(uiPath2[__PRIVATE__].context);
+      expect(getConfig(uiPath1).orgName).toBe('org1');
+      expect(getConfig(uiPath2).orgName).toBe('org2');
+      expect(getContext(uiPath1)).not.toBe(getContext(uiPath2));
     });
   });
 });

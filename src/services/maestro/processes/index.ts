@@ -9,23 +9,20 @@
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { Processes, ProcessInstances, ProcessIncidents } from '@uipath/uipath-typescript/maestro-processes';
  *
- * const uiPath = new UiPath(config);
- * await uiPath.initialize();
+ * const sdk = new UiPath(config);
+ * await sdk.initialize();
  *
  * // Get BPMN process definitions
- * const processes = new Processes(uiPath);
- * const allProcesses = await processes.getAll();
+ * const processesService = new Processes(sdk);
+ * const allProcesses = await processesService.getAll();
  *
  * // Get process instances
- * const instances = new ProcessInstances(uiPath);
- * const allInstances = await instances.getAll();
- *
- * // Cancel a specific process instance
- * await instances.cancel('instance-id', 'folder-key', { comment: 'Cancelling process' });
+ * const processInstancesService = new ProcessInstances(sdk);
+ * const allInstances = await processInstancesService.getAll();
  *
  * // Get all process incidents
- * const incidents = new ProcessIncidents(uiPath);
- * const allIncidents = await incidents.getAll();
+ * const processIncidentsService = new ProcessIncidents(sdk);
+ * const allIncidents = await processIncidentsService.getAll();
  * ```
  *
  * @module
@@ -36,19 +33,10 @@ export { MaestroProcessesService as Processes, MaestroProcessesService } from '.
 export { ProcessInstancesService as ProcessInstances, ProcessInstancesService } from './process-instances';
 export { ProcessIncidentsService as ProcessIncidents, ProcessIncidentsService } from './process-incidents';
 
-// Export helpers for advanced use cases
-export { BpmnHelpers } from './helpers';
-
-// Re-export types for convenience
+// Re-export service-specific types
 export type * from '../../../models/maestro/processes.types';
 export type * from '../../../models/maestro/processes.models';
 export type * from '../../../models/maestro/process-instances.types';
 export type * from '../../../models/maestro/process-instances.models';
 export type * from '../../../models/maestro/process-incidents.types';
 export type * from '../../../models/maestro/process-incidents.models';
-
-// Re-export common utilities users might need
-export { UiPathError } from '../../../core/errors';
-export type { PaginatedResponse, NonPaginatedResponse } from '../../../utils/pagination';
-export type { UiPathSDKConfig } from '../../../core/config/sdk-config';
-export type { UiPath } from '../../../core/uipath';
