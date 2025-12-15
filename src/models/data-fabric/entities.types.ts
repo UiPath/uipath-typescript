@@ -1,8 +1,7 @@
 import { PaginationOptions } from '../../utils/pagination/types';
-import { AxiosRequestConfig } from 'axios';
 
 /**
- * Entity field type names 
+ * Entity field type names
  */
 export enum EntityFieldDataType {
   UUID = 'UUID',
@@ -71,30 +70,15 @@ export interface EntityDeleteOptions {
 }
 
 /**
- * Options for getting attachments from an entity
+ * Options for downloading an attachment from an entity record
  */
-export interface EntityGetAttachmentsOptions {
+export interface DownloadAttachmentOptions {
   /** Entity name */
   entityName: string;
   /** Record ID */
   recordId: string;
-  /** Field name */
+  /** Field name containing the attachment */
   fieldName: string;
-}
-
-/**
- * Attachment metadata
- */
-export interface AttachmentMetadata {
-  /** File name */
-  fileName?: string;
-  /** File size in bytes */
-  fileSize?: number;
-  /** Content type */
-  contentType?: string;
-  /** Download URL */
-  downloadUrl?: string;
-  [key: string]: any;
 }
 
 /**

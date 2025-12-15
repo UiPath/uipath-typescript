@@ -8,8 +8,7 @@ import {
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  EntityGetAttachmentsOptions,
-  AttachmentMetadata
+  DownloadAttachmentOptions
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -184,29 +183,34 @@ export interface EntityServiceModel {
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
 
   /**
-   * Gets attachments from an entity record field
+   * Downloads an attachment from an entity record field
    *
    * @param options - Options containing entityName, recordId, and fieldName
-   * @returns Promise resolving to attachment metadata array
-   * {@link AttachmentMetadata}
+   * @returns Promise resolving to Blob containing the file content
    * @example
    * ```typescript
-   * // Get attachments for a specific record and field
-   * const attachments = await sdk.entities.getAttachments({
+   * // Download attachment for a specific record and field
+   * const blob = await sdk.entities.downloadAttachment({
    *   entityName: 'Invoice',
    *   recordId: '<record-uuid>',
    *   fieldName: 'Documents'
    * });
    *
-   * // Access attachment information
-   * attachments.forEach(attachment => {
-   *   console.log(`File: ${attachment.fileName}`);
-   *   console.log(`Size: ${attachment.fileSize}`);
-   *   console.log(`URL: ${attachment.downloadUrl}`);
-   * });
+   * // Display in browser
+   * const url = URL.createObjectURL(blob);
+   * img.src = url;
+   *
+   * // Download as file
+   * const a = document.createElement('a');
+   * a.href = URL.createObjectURL(blob);
+   * a.download = 'file.pdf';
+   * a.click();
+   *
+   * // Convert to ArrayBuffer if needed
+   * const buffer = await blob.arrayBuffer();
    * ```
    */
-  getAttachments(options: EntityGetAttachmentsOptions): Promise<AttachmentMetadata[]>;
+  downloadAttachment(options: DownloadAttachmentOptions): Promise<Blob>;
 }
 
 /**

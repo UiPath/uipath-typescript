@@ -135,6 +135,12 @@ export class ApiClient {
         return undefined as T;
       }
 
+      // Handle blob response type for binary data (e.g., file downloads)
+      if (options.responseType === 'blob') {
+        const blob = await response.blob();
+        return blob as T;
+      }
+
       // Check if we're expecting XML
       const acceptHeader = headers['Accept'] || headers['accept'];
       if (acceptHeader === CONTENT_TYPES.XML) {
