@@ -6,7 +6,9 @@
 
 // Export core functionality
 export { UiPath } from './uipath';
-export type { UiPathSDKConfig, BaseConfig, OAuthFields } from './core/config/sdk-config';
+export type { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, OAuthFields } from './core/config/sdk-config';
+export { loadFromMetaTags } from './core/config/runtime';
+export { META_TAG_NAMES } from './core/config/constants';
 
 // Export all models
 export * from './models/common';
@@ -17,7 +19,7 @@ export * from './models/action-center';
 
 // Export error handling functionality (public API only)
 export * from './core/errors';
-// Export utilities  
+// Export utilities
 export * from './utils/pagination';
 
 // Export telemetry

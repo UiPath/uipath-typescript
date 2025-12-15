@@ -7,7 +7,7 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import { AppConfig } from '../types/index.js';
-import { MESSAGES } from '../constants/messages.js';
+import { MESSAGES, CONFIG_FILE_NAME } from '../constants/messages.js';
 import { track } from '../telemetry/index.js';
 
 export default class Pack extends Command {
@@ -80,6 +80,12 @@ export default class Pack extends Command {
     // Validate dist directory
     if (!this.validateDistDirectory(distDir)) {
       this.log(chalk.red(`${MESSAGES.ERRORS.INVALID_DIST_DIRECTORY}: ${distDir}`));
+      process.exit(1);
+    }
+
+    // Validate uipath.json exists and is valid
+    const sdkConfig = this.validateAndLoadSdkConfig();
+    if (!sdkConfig) {
       process.exit(1);
     }
 
@@ -185,14 +191,42 @@ export default class Pack extends Command {
     if (!fs.existsSync(distDir)) {
       return false;
     }
-    
+
     if (!fs.statSync(distDir).isDirectory()) {
       return false;
     }
-    
+
     // Check if directory has files
     const files = fs.readdirSync(distDir);
     return files.length > 0;
+  }
+
+  private validateAndLoadSdkConfig(): Record<string, unknown> | null {
+    const configPath = path.join(process.cwd(), CONFIG_FILE_NAME);
+
+    if (!fs.existsSync(configPath)) {
+      this.log(chalk.red(MESSAGES.ERRORS.CONFIG_FILE_NOT_FOUND));
+      this.log(chalk.dim('  This file is required for deployment. Create it with your SDK configuration.'));
+      this.log(chalk.dim('  Example: { "scope": "OR.Execution OR.Folders", "orgName": "...", ... }'));
+      return null;
+    }
+
+    let config: Record<string, unknown>;
+    try {
+      const content = fs.readFileSync(configPath, 'utf-8');
+      config = JSON.parse(content);
+    } catch {
+      this.log(chalk.red(MESSAGES.ERRORS.CONFIG_FILE_INVALID_JSON));
+      return null;
+    }
+
+    if (!config.scope) {
+      this.log(chalk.red(MESSAGES.ERRORS.CONFIG_FILE_MISSING_SCOPE));
+      this.log(chalk.dim('  The scope field is required for OAuth client creation during deployment.'));
+      return null;
+    }
+
+    return config;
   }
 
   private sanitizePackageName(name: string): string {
@@ -231,13 +265,19 @@ export default class Pack extends Command {
 
   private async createNuGetPackage(config: any): Promise<void> {
     const spinner = ora(MESSAGES.INFO.CREATING_PACKAGE).start();
-    
+
     try {
       // Ensure output directory exists
       if (!fs.existsSync(config.outputDir)) {
         fs.mkdirSync(config.outputDir, { recursive: true });
         this.log(chalk.dim(`${MESSAGES.INFO.CREATED_OUTPUT_DIRECTORY} ${config.outputDir}`));
       }
+
+      // Copy uipath.json to dist directory
+      const configSrc = path.join(process.cwd(), CONFIG_FILE_NAME);
+      const configDest = path.join(config.distDir, CONFIG_FILE_NAME);
+      fs.copyFileSync(configSrc, configDest);
+      this.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_INCLUDED));
 
       // Create metadata files in dist directory
       spinner.text = MESSAGES.INFO.CREATING_METADATA_FILES;
