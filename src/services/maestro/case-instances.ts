@@ -1,7 +1,5 @@
 import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
+import type { UiPath } from '../../core/uipath';
 import { 
   CaseInstanceGetResponse, 
   RawCaseInstanceGetResponse,
@@ -44,13 +42,15 @@ import { TaskGetAllOptions } from '../../models/action-center';
 
 export class CaseInstancesService extends BaseService implements CaseInstancesServiceModel {
   private taskService: TaskService;
-  
+
   /**
-   * @hideconstructor
+   * Creates an instance of the Case Instances service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-    this.taskService = new TaskService(config, executionContext, tokenManager);
+  constructor(instance: UiPath) {
+    super(instance);
+    this.taskService = new TaskService(instance);
   }
 
   /**

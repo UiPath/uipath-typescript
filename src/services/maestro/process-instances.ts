@@ -1,9 +1,7 @@
 import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
-import { 
-  ProcessInstanceGetResponse, 
+import type { UiPath } from '../../core/uipath';
+import {
+  ProcessInstanceGetResponse,
   RawProcessInstanceGetResponse,
   ProcessInstanceGetAllWithPaginationOptions,
   ProcessInstanceOperationOptions,
@@ -34,10 +32,12 @@ import { BpmnVariableMetadata } from '../../models/maestro/process-instances.int
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Process Instances service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: UiPath) {
+    super(instance);
   }
 
 

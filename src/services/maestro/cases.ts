@@ -1,9 +1,7 @@
 import { CaseGetAllResponse } from '../../models/maestro';
 import { ProcessType } from '../../models/maestro/cases.internal-types';
 import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
+import type { UiPath } from '../../core/uipath';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../models/maestro/cases.models';
 import { track } from '../../core/telemetry';
@@ -14,10 +12,12 @@ import { createParams } from '../../utils/http/params';
  */
 export class CasesService extends BaseService implements CasesServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Cases service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: UiPath) {
+    super(instance);
   }
 
   /**

@@ -1,7 +1,5 @@
 import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
+import type { UiPath } from '../../core/uipath';
 import { 
   TaskCreateOptions, 
   TaskAssignmentOptions,
@@ -39,10 +37,12 @@ import { processODataArrayResponse } from '../../utils/object';
  */
 export class TaskService extends BaseService implements TaskServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Tasks service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: UiPath) {
+    super(instance);
   }
 
   /**

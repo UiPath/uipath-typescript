@@ -1,11 +1,9 @@
 import { FolderScopedService } from '../folder-scoped';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
+import type { UiPath } from '../../core/uipath';
 import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../models/orchestrator/assets.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { createHeaders } from '../../utils/http/headers';
-import { TokenManager } from '../../core/auth/token-manager';
 import { FOLDER_ID } from '../../utils/constants/headers';
 import { ASSET_ENDPOINTS } from '../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
@@ -21,10 +19,12 @@ import { track } from '../../core/telemetry';
  */
 export class AssetService extends FolderScopedService implements AssetServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Assets service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: UiPath) {
+    super(instance);
   }
 
   /**
