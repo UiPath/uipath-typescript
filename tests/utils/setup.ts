@@ -107,7 +107,8 @@ export const createMockApiClient = () => ({
   post: vi.fn(),
   put: vi.fn(),
   patch: vi.fn(),
-  delete: vi.fn()
+  delete: vi.fn(),
+  getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN)
 });
 
 /**

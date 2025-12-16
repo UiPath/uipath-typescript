@@ -1,8 +1,4 @@
 import { ApiClient } from '../core/http/api-client';
-import { ExecutionContext } from '../core/context/execution';
-import { TokenManager } from '../core/auth/token-manager';
-import { TokenInfo } from '../core/auth/types';
-import { AuthenticationError, HttpStatus } from '../core/errors';
 import { RequestSpec } from '../models/common/request-spec';
 import { PaginatedResponse, PaginationOptions } from '../utils/pagination/types';
 import {
@@ -31,55 +27,34 @@ export interface ApiResponse<T> {
  * All service classes extend this base to inherit dependency injection and HTTP client access.
  *
  * This class implements the dependency injection pattern where services receive a configured
- * UiPath instance and extract the necessary dependencies (config, context, token manager)
- * to create an authenticated API client.
+ * UiPath instance. The ApiClient is created internally and handles all HTTP operations
+ * including authentication token management.
  *
  * @remarks
  * Service classes should extend this base and call `super(uiPath)` in their constructor.
- * The protected members (config, executionContext, apiClient) are available to all subclasses.
+ * Protected HTTP methods (get, post, put, patch, delete) are available to all subclasses.
  *
- * @example
- * ```typescript
- * // Creating a custom service
- * export class MyService extends BaseService {
- *   constructor(instance: UiPath) {
- *     super(instance);
- *   }
- *
- *   async myMethod() {
- *     // Access inherited protected members
- *     const response = await this.get('/my-endpoint');
- *     return response.data;
- *   }
- * }
- * ```
  */
 export class BaseService {
-  //  private fields - not visible via Object.keys() or any reflection
-  #executionContext: ExecutionContext;
+  // Private field - not visible via Object.keys() or any reflection
   #apiClient: ApiClient;
-  #tokenManager: TokenManager;
 
   /**
    * Creates a base service instance with dependency injection.
    *
    * Extracts configuration, execution context, and token manager from the UiPath instance
-   * to initialize an authenticated API client for making HTTP requests to UiPath services.
+   * to initialize an authenticated API client. The ApiClient handles all HTTP operations
+   * and token management internally.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration.
    *                    Services receive this via dependency injection in the modular pattern.
-   *
-   * @remarks
-   * This constructor implements the dependency injection pattern used throughout the SDK,
-   * allowing services to receive a fully configured UiPath instance instead of multiple
-   * individual parameters.
    *
    * @example
    * ```typescript
    * // Services automatically call this via super()
    * export class EntityService extends BaseService {
    *   constructor(instance: UiPath) {
-   *     super(instance); // Initializes config, context, and apiClient
+   *     super(instance); // Initializes the internal ApiClient
    *   }
    * }
    *
@@ -94,8 +69,6 @@ export class BaseService {
    */
   constructor(instance: UiPath) {
     const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
-    this.#executionContext = context;
-    this.#tokenManager = tokenManager;
     this.#apiClient = new ApiClient(config, context, tokenManager);
   }
 
@@ -107,34 +80,7 @@ export class BaseService {
    * @throws AuthenticationError if no token is available or refresh fails
    */
   protected async getValidAuthToken(): Promise<string> {
-    const tokenInfo = this.#executionContext.get('tokenInfo') as TokenInfo | undefined;
-
-    if (!tokenInfo) {
-      throw new AuthenticationError({
-        message: 'No authentication token available. Make sure to initialize the SDK first.'
-      });
-    }
-
-    // For secret-based tokens, they never expire
-    if (tokenInfo.type === 'secret') {
-      return tokenInfo.token;
-    }
-
-    // If token is not expired, return it
-    if (!this.#tokenManager.isTokenExpired(tokenInfo)) {
-      return tokenInfo.token;
-    }
-
-    // Token is expired, refresh it
-    try {
-      const newToken = await this.#tokenManager.refreshAccessToken();
-      return newToken.access_token;
-    } catch (error: any) {
-      throw new AuthenticationError({
-        message: `Token refresh failed: ${error.message}. Please re-authenticate.`,
-        statusCode: HttpStatus.UNAUTHORIZED
-      });
-    }
+    return this.#apiClient.getValidToken();
   }
 
   /**
