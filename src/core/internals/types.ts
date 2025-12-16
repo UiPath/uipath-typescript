@@ -1,13 +1,11 @@
-import { UiPathConfig } from './config/config';
-import { ExecutionContext } from './context/execution';
-import { TokenManager } from './auth/token-manager';
-
 /**
- * Symbol key for accessing private SDK components.
- * Not exposed in public API - for internal SDK use only.
- * @internal
+ * Internal types for SDK components.
+ * @internal - Not for public use
  */
-export const __PRIVATE__ = Symbol.for('uipath.private');
+
+import { UiPathConfig } from '../config/config';
+import { ExecutionContext } from '../context/execution';
+import { TokenManager } from '../auth/token-manager';
 
 /**
  * Private SDK components used by services.
@@ -21,3 +19,6 @@ export interface PrivateSDK {
   /** Token manager for authentication */
   tokenManager: TokenManager;
 }
+
+// Re-export SDKClientConfig as PrivateSDK alias for compatibility
+export type { PrivateSDK as SDKClientConfig };

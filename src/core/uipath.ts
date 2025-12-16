@@ -4,7 +4,7 @@ import { AuthService } from './auth/service';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
-import { __PRIVATE__, PrivateSDK } from './internals';
+import { SDKInternalsRegistry } from './internals';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -34,11 +34,13 @@ import { __PRIVATE__, PrivateSDK } from './internals';
  * ```
  */
 export class UiPath {
-  /** @internal - Private SDK components, not for public use */
-  readonly [__PRIVATE__]: PrivateSDK;
+  // Private fields - true runtime privacy, not visible via Object.keys()
+  #config: UiPathConfig;
+  #authService: AuthService;
+  #initialized: boolean = false;
 
-  private authService: AuthService;
-  private initialized: boolean = false;
+  /** Read-only config for user convenience */
+  public readonly config: Readonly<{ baseUrl: string; orgName: string; tenantName: string }>;
 
   constructor(config: UiPathSDKConfig) {
     // Validate and normalize the configuration
@@ -59,13 +61,21 @@ export class UiPath {
     });
 
     const executionContext = new ExecutionContext();
-    this.authService = new AuthService(internalConfig, executionContext);
+    this.#authService = new AuthService(internalConfig, executionContext);
+    this.#config = internalConfig;
 
-    // Store private components using Symbol key (hidden from public API)
-    this[__PRIVATE__] = {
+    // Store internals in SDKInternalsRegistry (not visible on instance)
+    SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
-      tokenManager: this.authService.getTokenManager()
+      tokenManager: this.#authService.getTokenManager()
+    });
+
+    // Expose read-only config for user convenience
+    this.config = {
+      baseUrl: internalConfig.baseUrl,
+      orgName: internalConfig.orgName,
+      tenantName: internalConfig.tenantName
     };
 
     // Initialize telemetry with SDK configuration
@@ -82,8 +92,8 @@ export class UiPath {
 
     // Auto-initialize for secret-based auth
     if (hasSecretAuth) {
-      this.authService.authenticateWithSecret(config.secret);
-      this.initialized = true;
+      this.#authService.authenticateWithSecret(config.secret);
+      this.#initialized = true;
     }
   }
 
@@ -94,7 +104,7 @@ export class UiPath {
    */
   public async initialize(): Promise<void> {
     // For secret-based auth, it's already initialized in constructor
-    if (hasSecretConfig(this[__PRIVATE__].config)) {
+    if (hasSecretConfig(this.#config)) {
       return;
     }
 
@@ -108,15 +118,15 @@ export class UiPath {
 
       // Check if already authenticated
       if (this.isAuthenticated()) {
-        this.initialized = true;
+        this.#initialized = true;
         return;
       }
 
       // Start new OAuth flow
-      await this.authService.authenticate(this[__PRIVATE__].config);
+      await this.#authService.authenticate(this.#config);
 
       if (this.isAuthenticated()) {
-        this.initialized = true;
+        this.#initialized = true;
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -128,7 +138,7 @@ export class UiPath {
    * Check if the SDK has been initialized
    */
   public isInitialized(): boolean {
-    return this.initialized;
+    return this.#initialized;
   }
 
   /**
@@ -147,9 +157,9 @@ export class UiPath {
     }
 
     try {
-      const success = await this.authService.authenticate(this[__PRIVATE__].config);
+      const success = await this.#authService.authenticate(this.#config);
       if (success && this.isAuthenticated()) {
-        this.initialized = true;
+        this.#initialized = true;
         return true;
       }
       return false;
@@ -163,14 +173,14 @@ export class UiPath {
    * Check if the user is authenticated (has valid token)
    */
   public isAuthenticated(): boolean {
-    return this.authService.hasValidToken();
+    return this.#authService.hasValidToken();
   }
 
   /**
    * Get the current authentication token
    */
   public getToken(): string | undefined {
-    return this.authService.getToken();
+    return this.#authService.getToken();
   }
 
 }

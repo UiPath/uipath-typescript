@@ -1,7 +1,8 @@
 import { ApiClient } from '../core/http/api-client';
-import { Config } from '../core/config/config';
 import { ExecutionContext } from '../core/context/execution';
 import { TokenManager } from '../core/auth/token-manager';
+import { TokenInfo } from '../core/auth/types';
+import { AuthenticationError, HttpStatus } from '../core/errors';
 import { RequestSpec } from '../models/common/request-spec';
 import { PaginatedResponse, PaginationOptions } from '../utils/pagination/types';
 import {
@@ -17,7 +18,7 @@ import { PaginationHelpers } from '../utils/pagination/helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/constants';
 import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
 import type { UiPath } from '../core/uipath';
-import { __PRIVATE__ } from '../core/internals';
+import { SDKInternalsRegistry } from '../core/internals';
 
 export interface ApiResponse<T> {
   data: T;
@@ -54,17 +55,10 @@ export interface ApiResponse<T> {
  * ```
  */
 export class BaseService {
-  /** Configuration including base URL, organization name, and tenant name */
-  protected readonly config: Config;
-
-  /** Execution context for request tracking and metadata */
-  protected readonly executionContext: ExecutionContext;
-
-  /** HTTP client for making authenticated API requests */
-  protected readonly apiClient: ApiClient;
-
-  /** Token manager for authentication - available to subclasses that need direct token access */
-  protected readonly tokenManager: TokenManager;
+  //  private fields - not visible via Object.keys() or any reflection
+  #executionContext: ExecutionContext;
+  #apiClient: ApiClient;
+  #tokenManager: TokenManager;
 
   /**
    * Creates a base service instance with dependency injection.
@@ -99,11 +93,48 @@ export class BaseService {
    * ```
    */
   constructor(instance: UiPath) {
-    const { config, context, tokenManager } = instance[__PRIVATE__];
-    this.config = config;
-    this.executionContext = context;
-    this.tokenManager = tokenManager;
-    this.apiClient = new ApiClient(config, context, tokenManager);
+    const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
+    this.#executionContext = context;
+    this.#tokenManager = tokenManager;
+    this.#apiClient = new ApiClient(config, context, tokenManager);
+  }
+
+  /**
+   * Gets a valid authentication token, refreshing if necessary.
+   * Use this when you need to manually add Authorization headers (e.g., direct uploads).
+   *
+   * @returns Promise resolving to a valid access token string
+   * @throws AuthenticationError if no token is available or refresh fails
+   */
+  protected async getValidAuthToken(): Promise<string> {
+    const tokenInfo = this.#executionContext.get('tokenInfo') as TokenInfo | undefined;
+
+    if (!tokenInfo) {
+      throw new AuthenticationError({
+        message: 'No authentication token available. Make sure to initialize the SDK first.'
+      });
+    }
+
+    // For secret-based tokens, they never expire
+    if (tokenInfo.type === 'secret') {
+      return tokenInfo.token;
+    }
+
+    // If token is not expired, return it
+    if (!this.#tokenManager.isTokenExpired(tokenInfo)) {
+      return tokenInfo.token;
+    }
+
+    // Token is expired, refresh it
+    try {
+      const newToken = await this.#tokenManager.refreshAccessToken();
+      return newToken.access_token;
+    } catch (error: any) {
+      throw new AuthenticationError({
+        message: `Token refresh failed: ${error.message}. Please re-authenticate.`,
+        statusCode: HttpStatus.UNAUTHORIZED
+      });
+    }
   }
 
   /**
@@ -143,27 +174,27 @@ export class BaseService {
   }
 
   protected async get<T>(path: string, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.get<T>(path, options);
+    const response = await this.#apiClient.get<T>(path, options);
     return { data: response };
   }
 
   protected async post<T>(path: string, data?: unknown, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.post<T>(path, data, options);
+    const response = await this.#apiClient.post<T>(path, data, options);
     return { data: response };
   }
 
   protected async put<T>(path: string, data?: unknown, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.put<T>(path, data, options);
+    const response = await this.#apiClient.put<T>(path, data, options);
     return { data: response };
   }
 
   protected async patch<T>(path: string, data?: unknown, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.patch<T>(path, data, options);
+    const response = await this.#apiClient.patch<T>(path, data, options);
     return { data: response };
   }
 
   protected async delete<T>(path: string, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.delete<T>(path, options);
+    const response = await this.#apiClient.delete<T>(path, options);
     return { data: response };
   }
 

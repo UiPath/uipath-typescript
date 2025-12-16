@@ -459,24 +459,13 @@ describe('BucketService Unit Tests', () => {
     });
 
     it('should automatically refresh expired OAuth token during file upload', async () => {
-      // Override the mock to return non-secret token that is expired
-      bucketService['executionContext'].get = vi.fn().mockReturnValue({
-        type: TEST_CONSTANTS.OAUTH_TOKEN_TYPE,
-        token: TEST_CONSTANTS.EXPIRED_ACCESS_TOKEN,
-        expires_at: Date.now() - 1000 // Expired token
-      });
-
-      // Mock tokenManager methods by replacing the methods directly
-      bucketService['tokenManager'].isTokenExpired = vi.fn().mockReturnValue(true);
-      bucketService['tokenManager'].refreshAccessToken = vi.fn().mockResolvedValue({
-        access_token: TEST_CONSTANTS.REFRESHED_ACCESS_TOKEN,
-        token_type: 'Bearer',
-        expires_in: 3600
-      });
+      // Mock getValidAuthToken to return a refreshed token (simulating token refresh)
+      const getValidAuthTokenSpy = vi.spyOn(bucketService as any, 'getValidAuthToken')
+        .mockResolvedValue(TEST_CONSTANTS.REFRESHED_ACCESS_TOKEN);
 
       // Mock the internal _getWriteUri call with RequiresAuth: true
-      const mockUploadUriResponse = createMockWriteUriApiResponse({ 
-        Headers: { 
+      const mockUploadUriResponse = createMockWriteUriApiResponse({
+        Headers: {
           Keys: [BUCKET_TEST_CONSTANTS.CONTENT_TYPE_HEADER],
           Values: [BUCKET_TEST_CONSTANTS.CONTENT_TYPE]
         }
@@ -501,8 +490,8 @@ describe('BucketService Unit Tests', () => {
       expect(result.success).toBe(true);
       expect(result.statusCode).toBe(BUCKET_TEST_CONSTANTS.UPLOAD_SUCCESS_STATUS_CODE);
 
-      // Verify that token refresh was called since token was expired
-      expect(bucketService['tokenManager'].refreshAccessToken).toHaveBeenCalledTimes(1);
+      // Verify that getValidAuthToken was called
+      expect(getValidAuthTokenSpy).toHaveBeenCalledTimes(1);
 
       // Verify axios.put was called with refreshed token
       expect(axios.put).toHaveBeenCalledWith(
@@ -515,27 +504,18 @@ describe('BucketService Unit Tests', () => {
           })
         })
       );
+
+      getValidAuthTokenSpy.mockRestore();
     });
 
     it('should upload file with oauth token when not expired', async () => {
-      // Override the mock to return non-secret token that is not expired
-      bucketService['executionContext'].get = vi.fn().mockReturnValue({
-        type: TEST_CONSTANTS.OAUTH_TOKEN_TYPE,
-        token: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN,
-        expires_at: Date.now() + 3600000 // Valid token (1 hour from now)
-      });
-
-      // Mock tokenManager methods by replacing the methods directly
-      bucketService['tokenManager'].isTokenExpired = vi.fn().mockReturnValue(false);
-      bucketService['tokenManager'].refreshAccessToken = vi.fn().mockResolvedValue({
-        access_token: TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN, // refreshed token
-        token_type: 'Bearer',
-        expires_in: 3600
-      });
+      // Mock getValidAuthToken to return the current valid token
+      const getValidAuthTokenSpy = vi.spyOn(bucketService as any, 'getValidAuthToken')
+        .mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
 
       // Mock the internal _getWriteUri call with RequiresAuth: true
-      const mockUploadUriResponse = createMockWriteUriApiResponse({ 
-        Headers: { 
+      const mockUploadUriResponse = createMockWriteUriApiResponse({
+        Headers: {
           Keys: [BUCKET_TEST_CONSTANTS.CONTENT_TYPE_HEADER],
           Values: [BUCKET_TEST_CONSTANTS.CONTENT_TYPE]
         }
@@ -559,6 +539,9 @@ describe('BucketService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
       expect(result.statusCode).toBe(BUCKET_TEST_CONSTANTS.UPLOAD_SUCCESS_STATUS_CODE);
+
+      // Verify getValidAuthToken was called
+      expect(getValidAuthTokenSpy).toHaveBeenCalledTimes(1);
 
       // Verify axios.put was called with original token
       expect(axios.put).toHaveBeenCalledWith(
@@ -572,8 +555,7 @@ describe('BucketService Unit Tests', () => {
         })
       );
 
-      // Verify that token refresh was NOT called since token is still valid
-      expect(bucketService['tokenManager'].refreshAccessToken).not.toHaveBeenCalled();
+      getValidAuthTokenSpy.mockRestore();
     });
 
     it('should throw ValidationError when bucketId is missing', async () => {

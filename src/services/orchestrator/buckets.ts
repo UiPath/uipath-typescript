@@ -1,6 +1,6 @@
 import { FolderScopedService } from '../folder-scoped';
 import type { UiPath } from '../../core/uipath';
-import { ValidationError, AuthenticationError, HttpStatus } from '../../core/errors';
+import { ValidationError, HttpStatus } from '../../core/errors';
 import { 
   BucketGetResponse, 
   BucketGetAllOptions, 
@@ -341,34 +341,8 @@ export class BucketService extends FolderScopedService implements BucketServiceM
 
     // Add auth header if required
     if (requiresAuth) {
-      try {
-        const tokenInfo = this.executionContext.get('tokenInfo') as any;
-        
-        if (!tokenInfo) {
-          throw new AuthenticationError({ message: 'No authentication token available. Make sure to initialize the SDK first.' });
-        }
-        
-        let token: string;
-        
-        // For secret-based tokens, they never expire so use directly
-        if (tokenInfo.type === 'secret') {
-          token = tokenInfo.token;
-        } 
-        // For non-secret tokens, check expiration and refresh if needed
-        else if (!this.tokenManager.isTokenExpired(tokenInfo)) {
-          token = tokenInfo.token;
-        } else {
-          const newToken = await this.tokenManager.refreshAccessToken();
-          token = newToken.access_token;
-        }
-        
-        requestHeaders['Authorization'] = `Bearer ${token}`;
-      } catch (error) {
-        throw new AuthenticationError({ 
-          message: `Authentication required but failed: ${error instanceof Error ? error.message : ''}`, 
-          statusCode: HttpStatus.UNAUTHORIZED
-        });
-      }
+      const token = await this.getValidAuthToken();
+      requestHeaders['Authorization'] = `Bearer ${token}`;
     }
    
     return axios.put(uri, content, {
