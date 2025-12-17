@@ -1,6 +1,6 @@
 {
   "name": "@uipath/uipath-ts-cli",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.cli",
   "description": "UiPath CLI tool for authentication, packaging, publishing, and deployment",
   "type": "module",
   "main": "./dist/index.js",
@@ -20,7 +20,11 @@
     "copy-assets": "cp -r src/assets dist/",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "generate": "tsx src/generator/cli.ts generate",
+    "generate:watch": "tsx src/generator/cli.ts generate --watch",
+    "generate:clean": "rm -rf src/commands/generated && npm run generate",
+    "build:fresh": "rm -rf src/commands/generated dist && npm run generate && npm run build"
   },
   "dependencies": {
     "@azure/monitor-opentelemetry-exporter": "1.0.0-beta.32",
@@ -33,6 +37,8 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "chalk": "^5.3.0",
+    "cli-table3": "^0.6.3",
+    "commander": "^12.0.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
@@ -44,7 +50,9 @@
     "node-fetch": "^3.3.2",
     "open": "^10.2.0",
     "ora": "^8.1.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "yaml": "^2.3.4",
+    "@uipath/uipath-typescript": "file:../.."
   },
   "devDependencies": {
     "@oclif/test": "^4.0.9",
@@ -53,9 +61,13 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^20.11.19",
     "@types/uuid": "^9.0.8",
+    "chokidar": "^3.6.0",
     "eslint": "^8.57.1",
     "jest": "^29.7.0",
+    "rimraf": "^5.0.5",
     "ts-jest": "^29.4.0",
+    "ts-morph": "^23.0.0",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
   "oclif": {
@@ -66,7 +78,16 @@
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ],
-    "topicSeparator": " "
+    "topicSeparator": " ",
+    "topics": {
+      "tasks": { "description": "Manage Action Center tasks" },
+      "entities": { "description": "Manage Data Fabric entities" },
+      "assets": { "description": "Manage Orchestrator assets" },
+      "buckets": { "description": "Manage Orchestrator storage buckets" },
+      "processes": { "description": "Manage Orchestrator processes" },
+      "queues": { "description": "Manage Orchestrator queues" },
+      "maestro": { "description": "Manage Maestro workflows and cases" }
+    }
   },
   "engines": {
     "node": ">=18.0.0"

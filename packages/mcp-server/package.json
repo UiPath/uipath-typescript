@@ -1,0 +1,69 @@
+{
+  "name": "@uipath/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for UiPath SDK - Auto-generated tools for interacting with UiPath services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "bin": {
+    "uipath-mcp": "./bin/uipath-mcp.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "start:stdio": "node dist/index.js --transport stdio",
+    "start:http": "node dist/index.js --transport http",
+    "generate": "tsx src/generator/cli.ts generate",
+    "generate:watch": "tsx src/generator/cli.ts generate --watch",
+    "generate:clean": "rm -rf src/tools/generated && npm run generate",
+    "build:fresh": "rm -rf src/tools/generated dist && npm run generate && npm run build",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0",
+    "express": "^4.18.0",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "ts-morph": "^23.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "handlebars": "^4.7.8",
+    "chokidar": "^3.6.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@uipath/sdk": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@uipath/sdk": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "uipath",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "automation",
+    "rpa",
+    "claude",
+    "anthropic"
+  ],
+  "author": "UiPath",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "templates"
+  ]
+}
