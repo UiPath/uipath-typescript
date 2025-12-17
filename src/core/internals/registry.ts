@@ -60,18 +60,4 @@ export class SDKInternalsRegistry {
     }
     return internals;
   }
-
-  /**
-   * Check if an instance is registered
-   */
-  static has(instance: object): boolean {
-    return this.store.has(instance);
-  }
-
-  /**
-   * Remove an instance from registry (optional cleanup)
-   */
-  static delete(instance: object): boolean {
-    return this.store.delete(instance);
-  }
 }
