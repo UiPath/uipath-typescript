@@ -8,17 +8,21 @@ export const TOOL_DEFINITIONS = [
   {
     name: 'uipath_start_process',
     description:
-      'Start a UiPath Orchestrator process (job) execution. Use this to trigger automation workflows.',
+      'Start a UiPath Orchestrator process (job) execution. Use this to trigger automation workflows by process key or name. You must provide either processKey OR processName (not both).',
     inputSchema: {
       type: 'object',
       properties: {
         processKey: {
           type: 'string',
-          description: 'The process key or name to start',
+          description: 'The process key/ID to start (provide either this OR processName)',
+        },
+        processName: {
+          type: 'string',
+          description: 'The process name to start (provide either this OR processKey)',
         },
         folderId: {
           type: 'number',
-          description: 'The folder ID where the process is located',
+          description: 'The folder ID where the process is located (required)',
         },
         inputArguments: {
           type: 'object',
@@ -26,15 +30,15 @@ export const TOOL_DEFINITIONS = [
         },
         strategy: {
           type: 'string',
-          description: 'Execution strategy: Specific, JobsCount, or All',
+          description: 'Execution strategy: All, Specific, RobotCount, JobsCount, or ModernJobsCount (optional)',
         },
         robotIds: {
           type: 'array',
           items: { type: 'number' },
-          description: 'Specific robot IDs to run the process on (optional)',
+          description: 'Specific robot IDs to run the process on (optional, used with Specific strategy)',
         },
       },
-      required: ['processKey', 'folderId'],
+      required: ['folderId'],
     },
   },
 
@@ -191,9 +195,13 @@ export const TOOL_DEFINITIONS = [
     inputSchema: {
       type: 'object',
       properties: {
-        entityId: {
+        // entityId: {
+        //   type: 'string',
+        //   description: 'Entity ID (UUID) to query',
+        // },
+        entityName: {
           type: 'string',
-          description: 'Entity ID (UUID) to query',
+          description: 'Entity Name to query',
         },
         operation: {
           type: 'string',
@@ -225,7 +233,7 @@ export const TOOL_DEFINITIONS = [
           description: 'Page size for pagination',
         },
       },
-      required: ['entityId'],
+      // required: ['entityId'],
     },
   },
 
@@ -739,9 +747,9 @@ export const TOOL_DEFINITIONS = [
     inputSchema: {
       type: 'object',
       properties: {
-        entityId: {
+        entityName: {
           type: 'string',
-          description: 'Entity ID (UUID)',
+          description: 'Entity Name',
         },
         filter: {
           type: 'string',
@@ -768,7 +776,7 @@ export const TOOL_DEFINITIONS = [
           description: 'Page size for pagination (default: 100)',
         },
       },
-      required: ['entityId'],
+      required: ['entityName'],
     },
   },
 

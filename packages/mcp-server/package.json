@@ -31,7 +31,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
-    "@uipath/uipath-typescript": "file:../../uipath-uipath-typescript-1.0.0-beta.14.tgz",
+    "uipath-sdk": "^1.0.0-dev.3",
     "zod": "^3.22.4"
   },
   "devDependencies": {

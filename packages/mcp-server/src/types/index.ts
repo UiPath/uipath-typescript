@@ -16,10 +16,11 @@ export interface UiPathMCPConfig {
  * Tool call arguments for process start
  */
 export interface StartProcessArgs {
-  processKey: string; // Can also use processName
+  processKey?: string; // Process key/ID (provide either this or processName)
+  processName?: string; // Process name (provide either this or processKey)
   folderId: number;
   inputArguments?: Record<string, any>; // Will be JSON stringified
-  strategy?: string; // Strategy enum
+  strategy?: string; // Strategy enum: All, Specific, RobotCount, JobsCount, ModernJobsCount
   robotIds?: number[];
 }
 
@@ -60,7 +61,8 @@ export interface UpdateTaskArgs {
  * Tool call arguments for entity queries
  */
 export interface QueryEntityArgs {
-  entityId: string;
+  entityName: string
+  // entityId: string;
   operation?: 'list' | 'get' | 'records';
   filter?: string;
   select?: string;
@@ -198,7 +200,7 @@ export interface GetEntityByIdArgs {
  * Tool call arguments for getting entity records
  */
 export interface GetEntityRecordsArgs {
-  entityId: string;
+  entityName: string;
   filter?: string;
   select?: string;
   orderBy?: string;

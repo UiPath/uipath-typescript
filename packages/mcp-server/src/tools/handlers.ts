@@ -1,4 +1,4 @@
-import { UiPath } from '@uipath/uipath-typescript';
+import { UiPath } from 'uipath-sdk';
 import type {
   StartProcessArgs,
   ControlProcessInstanceArgs,
@@ -179,13 +179,26 @@ export class ToolHandlers {
   // === PROCESS EXECUTION HANDLERS ===
 
   private async startProcess(args: StartProcessArgs): Promise<ToolResponse> {
+    // Validate that at least one of processKey or processName is provided
+    if (!args.processKey && !args.processName) {
+      throw new Error('Either processKey or processName must be provided');
+    }
+
+    // Build the request object - support both processKey and processName
+    const startRequest: any = {
+      inputArguments: args.inputArguments ? JSON.stringify(args.inputArguments) : undefined
+    };
+
+    // Add processKey or processName based on what's provided
+    if (args.processKey) {
+      startRequest.processKey = args.processKey;
+    }
+    if (args.processName) {
+      startRequest.processName = args.processName;
+    }
+
     const results = await this.sdk.processes.start(
-      {
-        processKey: args.processKey,  // Use processKey directly, not nested in release
-        inputArguments: args.inputArguments ? JSON.stringify(args.inputArguments) : undefined,
-        strategy: args.strategy as any, // Strategy is optional and validated by SDK
-        robotIds: args.robotIds,
-      },
+      startRequest,
       args.folderId
     );
 
@@ -193,11 +206,12 @@ export class ToolHandlers {
     const result = Array.isArray(results) ? results[0] : results;
 
     return formatSuccess(
-      `Process started successfully!`,
+      `Process ${args.processName || args.processKey} started successfully!`,
       {
         jobKey: result.key,
         state: result.state,
         info: result.info,
+        processName: result.processName,
       }
     );
   }
@@ -348,16 +362,16 @@ export class ToolHandlers {
   // === ENTITY DATA HANDLERS ===
 
   private async queryEntity(args: QueryEntityArgs): Promise<ToolResponse> {
-    const { entityId, operation = 'records' } = args;
+    const { entityName, operation = 'records' } = args;
 
     switch (operation) {
       case 'list':
         const entities = await this.sdk.entities.getAll();
         return formatJsonResponse(entities);
 
-      case 'get':
-        const entity = await this.sdk.entities.getById(entityId);
-        return formatJsonResponse(entity);
+      // case 'get':
+      //   const entity = await this.sdk.entities.getById(entityId);
+      //   return formatJsonResponse(entity);
 
       case 'records':
         const options: any = {
@@ -381,7 +395,8 @@ export class ToolHandlers {
           options.skip = args.skip;
         }
 
-        const records = await this.sdk.entities.getRecordsById(entityId, options);
+        // const records = await this.sdk.entities.getRecordsById(entityId, options);
+        const records = await this.sdk.entities.getRecordsByName(entityName, options);
         return formatJsonResponse(records);
 
       default:
@@ -600,7 +615,7 @@ export class ToolHandlers {
       options.skip = args.skip;
     }
 
-    const records = await this.sdk.entities.getRecordsById(args.entityId, options);
+    const records = await this.sdk.entities.getRecordsByName(args.entityName, options);
     return formatJsonResponse(records);
   }
 

@@ -9,7 +9,7 @@ import {
   ListResourceTemplatesRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { UiPath } from '@uipath/uipath-typescript';
+import { UiPath } from 'uipath-sdk';
 import { TOOL_DEFINITIONS } from './tools/definitions.js';
 import { ToolHandlers } from './tools/handlers.js';
 import { STATIC_RESOURCES, RESOURCE_TEMPLATES } from './resources/definitions.js';

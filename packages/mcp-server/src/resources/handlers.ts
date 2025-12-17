@@ -1,4 +1,4 @@
-import { UiPath } from '@uipath/uipath-typescript';
+import { UiPath } from 'uipath-sdk';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -197,7 +197,8 @@ export class ResourceHandlers {
 
     if (subResource === 'records') {
       // uipath://entities/{entityId}/records
-      return await this.sdk.entities.getRecordsById(entityId, { pageSize: 100 });
+      // return await this.sdk.entities.getRecordsById(entityId, { pageSize: 100 });
+      return await this.sdk.entities.getRecordsByName(entityId, { pageSize: 100 });
     }
 
     throw new Error(`Unknown entity sub-resource: ${subResource}`);

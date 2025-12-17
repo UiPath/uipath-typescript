@@ -1,295 +1,162 @@
 # UiPath MCP Server
 
-> Model Context Protocol (MCP) server for the UiPath TypeScript SDK - enables AI assistants to interact with the UiPath automation platform
+Model Context Protocol (MCP) server for UiPath SDK - enables AI assistants to interact with UiPath automation platform.
 
-## Overview
-
-The UiPath MCP Server exposes UiPath automation capabilities to AI assistants like Claude through the Model Context Protocol. This allows natural language interaction with UiPath processes, tasks, data, and more.
-
-## Features
-
-- **16 Tools** - Action-oriented operations for starting processes, managing tasks, modifying data
-- **27 Resources** - Read-only data sources for browsing processes, tasks, entities, and more
-- **Full TypeScript** - Type-safe implementation with comprehensive error handling
-- **Easy Configuration** - Simple environment variable setup
-- **Production Ready** - Built on the official UiPath TypeScript SDK
-
-## Quick Start
-
-### Installation
-
-#### Option 1: NPM (Recommended)
+## Installation
 
 ```bash
-npm install -g @uipath/mcp-server
-```
+# Build the main SDK first
+cd ../..
+npm install
+npm run build
 
-#### Option 2: From Source
-
-```bash
+# Build the MCP server
 cd packages/mcp-server
 npm install
 npm run build
 ```
 
-### Configuration
+## Configuration
 
-Create a configuration file for Claude Desktop:
+The MCP server requires the following environment variables:
 
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- `UIPATH_BASE_URL`: Your UiPath Cloud URL (e.g., `https://cloud.uipath.com` or `https://alpha.uipath.com`)
+- `UIPATH_ORG_NAME`: Your organization name
+- `UIPATH_TENANT_NAME`: Your tenant name  
+- `UIPATH_SECRET`: Your authentication token (PAT or Bearer token)
 
-```json
-{
-  "mcpServers": {
-    "uipath": {
-      "command": "npx",
-      "args": ["-y", "@uipath/mcp-server"],
-      "env": {
-        "UIPATH_BASE_URL": "https://cloud.uipath.com",
-        "UIPATH_ORG_NAME": "your-org-name",
-        "UIPATH_TENANT_NAME": "your-tenant-name",
-        "UIPATH_SECRET": "your-personal-access-token"
-      }
-    }
-  }
-}
-```
+## Usage with Claude Desktop
 
-**For local development:**
+Add the following to your Claude Desktop configuration file:
+
+### macOS/Linux
+Location: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "uipath": {
       "command": "node",
-      "args": ["/absolute/path/to/packages/mcp-server/dist/index.js"],
+      "args": ["/Users/swatitiwari/UiPath/sdk-clone/uipath-typescript/packages/mcp-server/dist/index.js"],
       "env": {
-        "UIPATH_BASE_URL": "https://cloud.uipath.com",
+        "UIPATH_BASE_URL": "https://alpha.uipath.com",
         "UIPATH_ORG_NAME": "your-org-name",
         "UIPATH_TENANT_NAME": "your-tenant-name",
-        "UIPATH_SECRET": "your-personal-access-token"
+        "UIPATH_SECRET": "your-secret-token"
       }
     }
   }
 }
 ```
 
-### Getting Your Credentials
+### Alternative: Using npx
 
-1. **Base URL**: Your UiPath Cloud URL (e.g., `https://cloud.uipath.com`)
-2. **Org Name**: Found in your UiPath Cloud URL: `https://cloud.uipath.com/{orgName}/{tenantName}`
-3. **Tenant Name**: Found in your UiPath Cloud URL
-4. **Secret**: Generate a Personal Access Token:
-   - Go to UiPath Cloud → Admin → External Applications
-   - Create a new External Application
-   - Generate a Personal Access Token (PAT)
-   - Copy the token value
+If you've published the package to npm:
 
-### Testing
-
-Restart Claude Desktop, then try:
-
+```json
+{
+  "mcpServers": {
+    "uipath": {
+      "command": "npx",
+      "args": ["@uipath/mcp-server"],
+      "env": {
+        "UIPATH_BASE_URL": "https://alpha.uipath.com",
+        "UIPATH_ORG_NAME": "your-org-name",
+        "UIPATH_TENANT_NAME": "your-tenant-name",
+        "UIPATH_SECRET": "your-secret-token"
+      }
+    }
+  }
+}
 ```
-User: "Show me all my Action Center tasks"
-Claude: [Reads from uipath://tasks resource]
 
-User: "Start the MonthlyReport process in folder 123"
-Claude: [Calls uipath_start_process tool]
+## Testing Locally
+
+You can test the server locally with environment variables:
+
+```bash
+export UIPATH_BASE_URL="https://alpha.uipath.com"
+export UIPATH_ORG_NAME="your-org"
+export UIPATH_TENANT_NAME="your-tenant"
+export UIPATH_SECRET="your-secret"
+
+npm start
 ```
 
 ## Available Tools
 
-Tools are **actions** that modify state or perform operations:
+The MCP server exposes the following tools:
 
 ### Process Execution
-- `uipath_start_process` - Start an Orchestrator process
-- `uipath_cancel_process` - Cancel a running Maestro instance
-- `uipath_control_process_instance` - Pause or resume an instance
+- `uipath_start_process`: Start a process by key or name
+- `uipath_cancel_process`: Cancel a running process
+- `uipath_control_process_instance`: Pause/resume a process
 
-### Task Management
-- `uipath_create_task` - Create a new Action Center task
-- `uipath_update_task` - Assign, complete, or update a task
+### Task Management  
+- `uipath_get_tasks`: Retrieve Action Center tasks
+- `uipath_create_task`: Create a new task
+- `uipath_update_task`: Update task (assign, complete, etc.)
 
 ### Data Operations
-- `uipath_query_entity` - Query Data Fabric entities
-- `uipath_modify_entity` - Insert, update, or delete entity records
+- `uipath_query_entity`: Query Data Service entities
+- `uipath_modify_entity`: Insert/update/delete entity records
 
 ### File Operations
-- `uipath_upload_file` - Upload file to storage bucket
-- `uipath_get_file_url` - Get download URL for a file
+- `uipath_upload_file`: Upload files to buckets
+- `uipath_get_file_url`: Get download URLs for files
 
 ### Asset Management
-- `uipath_get_asset_value` - Retrieve asset value
+- `uipath_get_assets`: List assets
+- `uipath_get_asset_value`: Get asset values
 
-### Queue Operations
-- `uipath_add_queue_item` - Add item to queue
-- `uipath_get_queue_item` - Get queue item details
-
-## Available Resources
-
-Resources are **read-only** data sources that AI can browse:
-
-### Tasks
-- `uipath://tasks` - List all tasks
-- `uipath://tasks/{taskId}` - Task details
-- `uipath://tasks/users` - Task-eligible users
-
-### Processes
-- `uipath://processes` - Orchestrator processes
-- `uipath://processes/{processId}` - Process details
-- `uipath://maestro/processes` - Maestro processes
-- `uipath://maestro/processes/{key}` - Maestro process details
-
-### Process Instances
-- `uipath://maestro/instances` - All instances
-- `uipath://maestro/instances/{id}` - Instance details
-- `uipath://maestro/instances/{id}/variables` - Instance variables
-- `uipath://maestro/instances/{id}/history` - Execution history
-- `uipath://maestro/instances/{id}/incidents` - Instance incidents
-- `uipath://maestro/instances/{id}/bpmn` - BPMN XML
-
-### Data Fabric
-- `uipath://entities` - All entities
-- `uipath://entities/{id}` - Entity schema
-- `uipath://entities/{id}/records` - Entity data
-
-### Storage & Configuration
-- `uipath://assets` - All assets
-- `uipath://assets/{id}` - Asset details
-- `uipath://queues` - All queues
-- `uipath://queues/{id}` - Queue details
-- `uipath://buckets` - Storage buckets
-- `uipath://buckets/{id}/files` - Bucket files
-
-### Cases
-- `uipath://cases` - Case management processes
-- `uipath://case-instances/{id}` - Case instance details
-
-## Usage Examples
-
-### Starting a Process
-
-```
-User: "Start the InvoiceProcessing process in folder 12345 with input {invoiceId: 'INV-001'}"
-
-Claude uses: uipath_start_process
-{
-  "processKey": "InvoiceProcessing",
-  "folderId": 12345,
-  "inputArguments": {
-    "invoiceId": "INV-001"
-  }
-}
-
-Result: "Process started successfully! Job Key: abc-123-def"
-```
-
-### Managing Tasks
-
-```
-User: "Show me my high-priority tasks"
-Claude reads: uipath://tasks
-Filters for high priority tasks
-
-User: "Assign task 567 to user 890"
-Claude uses: uipath_update_task
-{
-  "action": "assign",
-  "taskId": 567,
-  "userId": 890,
-  "folderId": 12345
-}
-```
-
-### Querying Data
-
-```
-User: "Show me all customers from California"
-Claude uses: uipath_query_entity
-{
-  "entityId": "customer-entity-uuid",
-  "operation": "records",
-  "filter": "state eq 'CA'",
-  "pageSize": 100
-}
-```
-
-### Checking Process Status
-
-```
-User: "What's the status of process instance abc-123?"
-Claude reads: uipath://maestro/instances/abc-123
-
-User: "Show me the variables for that instance"
-Claude reads: uipath://maestro/instances/abc-123/variables
-```
-
-## Architecture
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed architectural decisions and design rationale.
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build
-npm run build
-
-# Development mode (watch)
-npm run dev
-
-# Clean
-npm run clean
-```
+And many more...
 
 ## Troubleshooting
 
-### Server doesn't start
+### Environment Variables Not Found
 
-1. Check that all environment variables are set correctly
-2. Verify your credentials have proper permissions
-3. Check the Claude Desktop logs (Help → View Logs)
+If you see an error about missing environment variables:
 
-### Tools/Resources not working
+1. **Check Claude Desktop is restarted**: After updating the config file, fully quit and restart Claude Desktop
+2. **Verify config file location**: Make sure the config file is in the correct location
+3. **Check JSON syntax**: Ensure the JSON is valid (no trailing commas, proper quotes)
+4. **Test locally first**: Run the server locally with environment variables to ensure it works
 
-1. Ensure your PAT has the required scopes
-2. Check folder IDs are correct
-3. Enable debug logging: `"DEBUG": "true"` in config
+### Permission Errors
 
-### Connection errors
+If you get permission errors:
+```bash
+chmod +x /path/to/dist/index.js
+```
 
-1. Verify `UIPATH_BASE_URL` is correct
-2. Check network connectivity to UiPath Cloud
-3. Ensure firewall/proxy settings allow connections
+### Build Errors
 
-## Security Best Practices
+Make sure to build both the main SDK and the MCP server:
+```bash
+# From repository root
+npm run build
 
-1. **Never commit credentials** - Use environment variables only
-2. **Use least-privilege PATs** - Grant only required permissions
-3. **Rotate tokens regularly** - Generate new PATs periodically
-4. **Secure config files** - Restrict access to Claude config file
-5. **Monitor usage** - Review audit logs in UiPath Cloud
+# Then build MCP server
+cd packages/mcp-server
+npm run build
+```
 
-## Contributing
+## Debug Mode
 
-Contributions are welcome! Please read the contributing guidelines in the main repository.
+To enable debug logging, set the `LOG_LEVEL` environment variable:
 
-## License
-
-MIT License - see LICENSE file for details
-
-## Resources
-
-- [UiPath TypeScript SDK](../../README.md)
-- [Model Context Protocol](https://modelcontextprotocol.io)
-- [Claude Desktop](https://claude.ai/download)
-- [UiPath Cloud](https://cloud.uipath.com)
-
-## Support
-
-For issues and questions:
-- [GitHub Issues](https://github.com/UiPath/uipath-typescript/issues)
-- [UiPath Community Forum](https://forum.uipath.com)
+```json
+{
+  "mcpServers": {
+    "uipath": {
+      "command": "node",
+      "args": ["/path/to/dist/index.js"],
+      "env": {
+        "LOG_LEVEL": "debug",
+        "UIPATH_BASE_URL": "...",
+        // ... other vars
+      }
+    }
+  }
+}
+```
