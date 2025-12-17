@@ -1,0 +1,21 @@
+{
+  "name": "@example/mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "start": "tsx src/server.ts",
+    "inspect": "npx @modelcontextprotocol/inspector tsx src/server.ts"
+  },
+  "dependencies": {
+    "@example/mcp-ui-components": "*",
+    "@example/shared-components": "*",
+    "@mcp-ui/server": "^5.16.1",
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}
