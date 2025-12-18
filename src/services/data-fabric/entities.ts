@@ -1,7 +1,5 @@
 import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
+import type { UiPath } from '../../core/uipath';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
@@ -34,10 +32,12 @@ import { track } from '../../core/telemetry';
  */
 export class EntityService extends BaseService implements EntityServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Entities service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: UiPath) {
+    super(instance);
   }
 
   /**

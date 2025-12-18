@@ -1,6 +1,4 @@
-import { UiPathConfig } from './core/config/config';
-import { ExecutionContext } from './core/context/execution';
-import { AuthService } from './core/auth/service';
+import { UiPath as UiPathCore } from './core/uipath';
 import {
   MaestroProcessesService,
   ProcessInstancesService,
@@ -15,147 +13,51 @@ import {
   QueueService,
   AssetService
 } from './services';
-import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
-import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
-import { TokenManager } from './core/auth/token-manager';
-import { telemetryClient, trackEvent } from './core/telemetry';
+import { UiPathSDKConfig } from './core/config/sdk-config';
 
-type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
+type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
 
-export class UiPath {
-  private config: UiPathConfig;
-  private executionContext: ExecutionContext;
-  private authService: AuthService;
-  private initialized: boolean = false;
+/**
+ * UiPath SDK - Legacy class providing all services through property getters.
+ *
+ * Extends core UiPath. For modular usage, import from specific service modules.
+ *
+ * @deprecated This class is provided for backward compatibility only.
+ * Use the modular pattern with `@uipath/uipath-typescript/core` instead.
+ *
+ * @example
+ * ```typescript
+ * // Legacy pattern (deprecated)
+ * import { UiPath } from '@uipath/uipath-typescript';
+ *
+ * const sdk = new UiPath(config);
+ * await sdk.initialize();
+ * const data = await sdk.entities.getAll();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // New modular pattern (recommended)
+ * import { UiPath } from '@uipath/uipath-typescript/core';
+ * import { Entities } from '@uipath/uipath-typescript/entities';
+ *
+ * const sdk = new UiPath(config);
+ * await sdk.initialize();
+ * const entitiesService = new Entities(sdk);
+ * const data = await entitiesService.getAll();
+ * ```
+ */
+export class UiPath extends UiPathCore {
   private readonly _services: Map<string, any> = new Map();
 
   constructor(config: UiPathSDKConfig) {
-    // Validate and normalize the configuration
-    validateConfig(config);
-    
-    // Initialize core components
-    this.config = new UiPathConfig({
-      baseUrl: normalizeBaseUrl(config.baseUrl),
-      orgName: config.orgName,
-      tenantName: config.tenantName,
-      secret: hasSecretConfig(config) ? config.secret : undefined,
-      clientId: hasOAuthConfig(config) ? config.clientId : undefined,
-      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined,
-      scope: hasOAuthConfig(config) ? config.scope : undefined
-    });
-
-    this.executionContext = new ExecutionContext();
-    this.authService = new AuthService(this.config, this.executionContext);
-
-    // Initialize telemetry with SDK configuration
-    telemetryClient.initialize({
-      baseUrl: config.baseUrl,
-      orgName: config.orgName,
-      tenantName: config.tenantName,
-      clientId: hasOAuthConfig(config) ? config.clientId : undefined,
-      redirectUri: hasOAuthConfig(config) ? config.redirectUri : undefined
-    });
-
-    // Track SDK initialization
-    trackEvent('Sdk.Auth');
-
-    // Auto-initialize for secret-based auth
-    if (hasSecretConfig(config)) {
-      this.authService.authenticateWithSecret(config.secret);
-      this.initialized = true;
-    }
-  }
-
-  /**
-   * Initialize the SDK based on the provided configuration.
-   * This method handles both OAuth flow initiation and completion automatically.
-   * For secret-based authentication, initialization is automatic.
-   */
-  public async initialize(): Promise<void> {
-    // For secret-based auth, it's already initialized in constructor
-    if (hasSecretConfig(this.config)) {
-      return;
-    }
-
-    try {
-      // Check for OAuth callback first
-      if (AuthService.isInOAuthCallback()) {
-        if (await this.completeOAuth()) {
-          return;
-        }
-      }
-
-      // Check if already authenticated
-      if (this.isAuthenticated()) {
-        this.initialized = true;
-        return;
-      }
-
-      // Start new OAuth flow
-      await this.authService.authenticate(this.config);
-
-      if (this.isAuthenticated()) {
-        this.initialized = true;
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      throw new Error(`Failed to initialize UiPath SDK: ${errorMessage}`);
-    }
-  }
-
-  /**
-   * Check if the SDK has been initialized
-   */
-  public isInitialized(): boolean {
-    return this.initialized;
-  }
-
-  /**
-   * Check if we're in an OAuth callback state
-   */
-  public isInOAuthCallback(): boolean {
-    return AuthService.isInOAuthCallback();
-  }
-
-  /**
-   * Complete OAuth authentication flow (only call if isInOAuthCallback() is true)
-   */
-  public async completeOAuth(): Promise<boolean> {
-    if (!AuthService.isInOAuthCallback()) {
-      throw new Error('Not in OAuth callback state. Call initialize() first to start OAuth flow.');
-    }
-
-    try {
-      const success = await this.authService.authenticate(this.config);
-      if (success && this.isAuthenticated()) {
-        this.initialized = true;
-        return true;
-      }
-      return false;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      throw new Error(`Failed to complete OAuth: ${errorMessage}`);
-    }
-  }
-
-  /**
-   * Check if the user is authenticated (has valid token)
-   */
-  public isAuthenticated(): boolean {
-    return this.authService.hasValidToken();
-  }
-
-  /**
-   * Get the current authentication token
-   */
-  public getToken(): string | undefined {
-    return this.authService.getToken();
+    super(config);
   }
 
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
     const serviceName = serviceConstructor.name;
     if (!this._services.has(serviceName)) {
-      const serviceInstance = new serviceConstructor(this.config, this.executionContext, this.authService.getTokenManager());
+      const serviceInstance = new serviceConstructor(this);
       this._services.set(serviceName, serviceInstance);
     }
 
