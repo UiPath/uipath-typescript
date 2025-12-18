@@ -27,11 +27,8 @@ const createPlugins = () => [
   typescript({
     tsconfig: './tsconfig.json',
     declaration: false,
-    sourceMap: false,
-    declarationMap: false,
-    compilerOptions: {
-      removeComments: true  // Strip comments from output
-    }
+    sourceMap: true,
+    declarationMap: false
   })
 ];
 
@@ -43,6 +40,7 @@ const configs = [
     output: {
       file: 'dist/index.mjs',
       format: 'es',
+      sourcemap: true,
       inlineDynamicImports: true,
       generatedCode: {
         constBindings: true
