@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import ora, { Ora } from 'ora';
 import open from 'open';
 import inquirer from 'inquirer';
-import { generatePKCEChallenge, getAuthorizationUrl, TokenResponse } from '../auth/core/oidc.js';
+import { generatePKCEChallenge, getAuthorizationUrl, TokenResponse, authenticateWithClientCredentials } from '../auth/core/oidc.js';
 import { AuthServer } from '../auth/server/auth-server.js';
 import { loadTokens, clearTokens, isTokenExpired, saveTokensWithTenant } from '../auth/core/token-manager.js';
 import { getTenantsAndOrganization, selectTenantInteractive, SelectedTenant } from '../auth/services/portal.js';
@@ -32,6 +32,7 @@ export default class Auth extends Command {
     '<%= config.bin %> <%= command.id %> --cloud',
     '<%= config.bin %> <%= command.id %> --staging',
     '<%= config.bin %> <%= command.id %> --logout',
+    '<%= config.bin %> <%= command.id %> --clientId <clientId> --clientSecret <clientSecret>',
   ];
 
   static flags = {
@@ -51,6 +52,17 @@ export default class Auth extends Command {
     force: Flags.boolean({
       char: 'f',
       description: 'Force re-authentication even if valid token exists',
+    }),
+    clientId: Flags.string({
+      description: 'OAuth client ID for confidential client flow',
+      dependsOn: ['clientSecret'],
+    }),
+    clientSecret: Flags.string({
+      description: 'OAuth client secret for confidential client flow',
+      dependsOn: ['clientId'],
+    }),
+    scope: Flags.string({
+      description: 'OAuth scope for confidential client flow (optional, uses application configured scopes if not provided)',
     }),
   };
 
@@ -74,6 +86,17 @@ export default class Auth extends Command {
       domain = AUTH_CONSTANTS.DOMAINS.STAGING;
     }
 
+    // Check if using confidential client flow (client credentials)
+    const clientId = flags.clientId;
+    const clientSecret = flags.clientSecret;
+    const scope = flags.scope;
+
+    if (clientId && clientSecret) {
+      // Use confidential client flow
+      await this.authenticateWithClientCredentials(domain!, clientId, clientSecret, scope);
+      return;
+    }
+
     // Check for existing valid token
     if (!flags.force) {
       const existingAuth = await loadTokens();
@@ -83,7 +106,7 @@ export default class Auth extends Command {
         this.log(chalk.gray(`Tenant: ${existingAuth.tenantName || 'Not selected'}`));
         this.log(chalk.gray(`Domain: ${existingAuth.domain}`));
         this.log(chalk.gray(`Token expires at: ${new Date(existingAuth.expiresAt).toLocaleString()}`));
-        
+
         const { reauth } = await inquirer.prompt([
           {
             type: 'confirm',
@@ -99,7 +122,7 @@ export default class Auth extends Command {
       }
     }
 
-    // Start authentication flow
+    // Start PKCE authentication flow (browser-based)
     await this.authenticate(domain);
   }
 
@@ -265,9 +288,39 @@ export default class Auth extends Command {
     this.log(chalk.gray(`\n${MESSAGES.INFO.CREDENTIALS_SAVED}`));
   }
 
+  private async authenticateWithClientCredentials(
+    domain: string,
+    clientId: string,
+    clientSecret: string,
+    scope?: string
+  ): Promise<void> {
+    const spinner = ora(MESSAGES.INFO.AUTHENTICATING_WITH_CLIENT_CREDENTIALS).start();
+
+    try {
+      // Authenticate using client credentials flow
+      const tokens = await authenticateWithClientCredentials({
+        clientId,
+        clientSecret,
+        domain,
+        scope,
+      });
+
+      spinner.succeed(MESSAGES.SUCCESS.AUTHENTICATION_SUCCESS.replace('✓ ', ''));
+
+      // For client credentials flow, just output the token
+      this.log(chalk.green(`\n${MESSAGES.INFO.ACCESS_TOKEN_HEADER}`));
+      this.log(tokens.accessToken);
+
+    } catch (error) {
+      spinner.fail(MESSAGES.ERRORS.AUTHENTICATION_PROCESS_FAILED);
+      this.log(chalk.red(error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR));
+      process.exit(1);
+    }
+  }
+
   private async logout(): Promise<void> {
     const spinner = ora(MESSAGES.INFO.LOGGING_OUT).start();
-    
+
     try {
       await clearTokens();
       spinner.succeed(MESSAGES.SUCCESS.LOGOUT_SUCCESS);

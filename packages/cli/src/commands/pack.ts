@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import { AppConfig } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
-import { isValidAppName } from '../utils/validator.js';
+import { isValidAppName } from '../utils/env-config.js';
 import { track } from '../telemetry/index.js';
 
 export default class Pack extends Command {

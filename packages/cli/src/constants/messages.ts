@@ -8,8 +8,8 @@ export const MESSAGES = {
     PACKAGE_NAME_REQUIRED: 'Package name is required',
     ACTION_SCHEMA_REQUIRED: '❌ action-schema.json file not found in current working directory',
     
-    // Authentication & Authorization  
-    AUTHENTICATION_FAILED: 'Authentication failed. Please check your UIPATH_BEARER_TOKEN or run "uipath auth" to authenticate',
+    // Authentication & Authorization
+    AUTHENTICATION_FAILED: 'Authentication failed. Please check your UIPATH_ACCESS_TOKEN, run "uipath auth" to authenticate, or pass credentials via CLI flags',
     ACCESS_DENIED: 'Access denied. You may not have permission to access this tenant/organization',
     API_ENDPOINT_NOT_FOUND: 'API endpoint not found. Please check your UIPATH_BASE_URL configuration',
     
@@ -49,6 +49,7 @@ export const MESSAGES = {
     NO_NUPKG_FILES_FOUND: '❌ No .nupkg files found',
     UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
     PACKAGE_TOO_LARGE: '❌ Package file is too large for upload',
+    PACKAGE_UPLOAD_FAILED: 'Package upload failed: An error occured',
     
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
@@ -105,6 +106,7 @@ export const MESSAGES = {
     WAITING_FOR_AUTH: 'Waiting for authentication...',
     FETCHING_ORG_TENANTS: 'Fetching organization and tenants...',
     LOGGING_OUT: 'Logging out...',
+    AUTHENTICATING_WITH_CLIENT_CREDENTIALS: 'Authenticating with client credentials...',
     
     // Tips
     RUN_PACK_FIRST: '💡 Run "uipath pack" first to create a package',
@@ -131,9 +133,10 @@ export const MESSAGES = {
     
     // Headers
     APP_REGISTRATION: '🚀 UiPath App Registration',
-    PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator', 
+    PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator',
     PUBLISHER: '🚀 UiPath Publisher',
     PACKAGE_PREVIEW: '🔍 Package Preview',
+    ACCESS_TOKEN_HEADER: 'Access Token:',
     
     // Success messages
     PACKAGE_READY: '🎉 Package is ready for publishing!',
@@ -162,7 +165,18 @@ export const MESSAGES = {
     APP_NAME_REQUIRED: 'App name is required',
     APP_NAME_INVALID_CHARS: 'App name can only contain letters, numbers, underscores (_), and hyphens (-). Please remove invalid special characters and try again.',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
-  }
+    MISSING_REQUIRED_CONFIG: '❌ Missing required configuration:',
+    PROVIDE_VIA_ENV_OR_FLAGS: '💡 Provide these via environment variables or CLI flags:',
+    ENV_VARIABLES_HEADER: 'Environment variables (.env file):',
+    ARGUMENTS_HEADER: 'Arguments',
+  },
+
+  // Error context strings for handleHttpError
+  ERROR_CONTEXT: {
+    APP_REGISTRATION: 'app registration',
+    PACKAGE_PUBLISHING: 'package publishing',
+    CLIENT_CREDENTIALS_AUTH: 'client credentials authentication',
+  },
 } as const;
 
 /**

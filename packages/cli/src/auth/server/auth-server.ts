@@ -5,11 +5,10 @@ import { Server } from 'http';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { TokenResponse } from '../core/oidc.js';
-import { getTokenEndpointUrl } from '../utils/url.js';
+import { getTokenEndpointUrl, buildRedirectUri } from '../utils/url.js';
 import { validateTokenExchangeRequest, validateTokenResponse } from '../utils/validation.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { authRateLimiter, tokenRateLimiter, errorRateLimiter } from './rate-limiter.js';
-import authConfig from '../config/auth.json' with { type: 'json' };
 import { createHeaders } from '../../utils/api.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,7 +38,7 @@ export class AuthServer {
   private authTimeout?: NodeJS.Timeout;
 
   constructor(options: AuthServerOptions) {
-    this.port = options.port || authConfig.port;
+    this.port = options.port || AUTH_CONSTANTS.DEFAULT_PORT;
     this.domain = options.domain;
     this.codeVerifier = options.codeVerifier;
     this.expectedState = options.expectedState;
@@ -148,13 +147,13 @@ export class AuthServer {
 
   private async exchangeCodeForTokens(code: string): Promise<TokenResponse> {
     const tokenEndpoint = getTokenEndpointUrl(this.domain);
-    const redirectUri = authConfig.redirect_uri.replace(AUTH_CONSTANTS.DEFAULT_PORT.toString(), this.port.toString());
+    const redirectUri = buildRedirectUri(this.port);
 
     const params = new URLSearchParams({
       grant_type: AUTH_CONSTANTS.OAUTH.GRANT_TYPE,
       code,
       redirect_uri: redirectUri,
-      client_id: authConfig.client_id,
+      client_id: AUTH_CONSTANTS.OAUTH.DEFAULT_CLIENT_ID,
       code_verifier: this.codeVerifier,
     });
 
