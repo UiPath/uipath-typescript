@@ -1,7 +1,7 @@
 import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
-import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
+import { UiPathSDKConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
@@ -40,7 +40,7 @@ export class UiPath {
   #initialized: boolean = false;
 
   /** Read-only config for user convenience */
-  public readonly config: Readonly<{ baseUrl: string; orgName: string; tenantName: string }>;
+  public readonly config: Readonly<BaseConfig>;
 
   constructor(config: UiPathSDKConfig) {
     // Validate and normalize the configuration

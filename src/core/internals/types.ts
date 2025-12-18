@@ -19,6 +19,3 @@ export interface PrivateSDK {
   /** Token manager for authentication */
   tokenManager: TokenManager;
 }
-
-// Re-export SDKClientConfig as PrivateSDK alias for compatibility
-export type { PrivateSDK as SDKClientConfig };
