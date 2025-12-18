@@ -13,7 +13,8 @@ import {
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  EntityFieldDataType
+  EntityFieldDataType,
+  DownloadAttachmentOptions
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -289,6 +290,35 @@ export class EntityService extends BaseService implements EntityServiceModel {
     });
     
     return entities;
+  }
+
+  /**
+   * Downloads an attachment from an entity record field
+   *
+   * @param options - Options containing entityName, recordId, and fieldName
+   * @returns Promise resolving to Blob containing the file content
+   *
+   * @example
+   * ```typescript
+   * // Download attachment for a specific record and field
+   * const blob = await sdk.entities.downloadAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: '<record-uuid>',
+   *   fieldName: 'Documents'
+   * });
+   */
+  @track('Entities.DownloadAttachment')
+  async downloadAttachment(options: DownloadAttachmentOptions): Promise<Blob> {
+    const { entityName, recordId, fieldName } = options;
+
+    const response = await this.get<Blob>(
+      DATA_FABRIC_ENDPOINTS.ATTACHMENT.DOWNLOAD(entityName, recordId, fieldName),
+      {
+        responseType: 'blob'
+      }
+    );
+
+    return response.data;
   }
 
   /**

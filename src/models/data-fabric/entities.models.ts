@@ -1,13 +1,14 @@
-import { 
-  EntityGetRecordsByIdOptions, 
-  EntityInsertOptions, 
+import {
+  EntityGetRecordsByIdOptions,
+  EntityInsertOptions,
   EntityInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
-  RawEntityGetResponse
+  RawEntityGetResponse,
+  DownloadAttachmentOptions
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -165,7 +166,7 @@ export interface EntityServiceModel {
 
   /**
    * Deletes data from an entity by entity ID
-   * 
+   *
    * @param id - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
@@ -180,6 +181,36 @@ export interface EntityServiceModel {
    * ```
    */
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Downloads an attachment from an entity record field
+   *
+   * @param options - Options containing entityName, recordId, and fieldName
+   * @returns Promise resolving to Blob containing the file content
+   * @example
+   * ```typescript
+   * // Download attachment for a specific record and field
+   * const blob = await sdk.entities.downloadAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: '<record-uuid>',
+   *   fieldName: 'Documents'
+   * });
+   *
+   * // Display in browser
+   * const url = URL.createObjectURL(blob);
+   * img.src = url;
+   *
+   * // Download as file
+   * const a = document.createElement('a');
+   * a.href = URL.createObjectURL(blob);
+   * a.download = 'file.pdf';
+   * a.click();
+   *
+   * // Convert to ArrayBuffer if needed
+   * const buffer = await blob.arrayBuffer();
+   * ```
+   */
+  downloadAttachment(options: DownloadAttachmentOptions): Promise<Blob>;
 }
 
 /**

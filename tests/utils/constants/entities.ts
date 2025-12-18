@@ -25,6 +25,7 @@ export const ENTITY_TEST_CONSTANTS = {
   FIELD_NAME: 'name',
   FIELD_AGE: 'age',
   FIELD_EXTERNAL_FIELD: 'externalField',
+  ATTACHMENT_FIELD_NAME: 'Documents',
   
   // Reference Entity Names
   REFERENCE_ENTITY_CUSTOMER: 'Customer',
