@@ -1,8 +1,6 @@
 import { FolderScopedService } from '../folder-scoped';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
-import { ValidationError, AuthenticationError, HttpStatus } from '../../core/errors';
+import type { UiPath } from '../../core/uipath';
+import { ValidationError, HttpStatus } from '../../core/errors';
 import { 
   BucketGetResponse, 
   BucketGetAllOptions, 
@@ -31,14 +29,13 @@ import { PaginationType } from '../../utils/pagination/internal-types';
 import { track } from '../../core/telemetry';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
-  protected readonly tokenManager: TokenManager;
-  
   /**
-   * @hideconstructor
+   * Creates an instance of the Buckets service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-    this.tokenManager = tokenManager;
+  constructor(instance: UiPath) {
+    super(instance);
   }
 
   /**
@@ -344,34 +341,8 @@ export class BucketService extends FolderScopedService implements BucketServiceM
 
     // Add auth header if required
     if (requiresAuth) {
-      try {
-        const tokenInfo = this.executionContext.get('tokenInfo') as any;
-        
-        if (!tokenInfo) {
-          throw new AuthenticationError({ message: 'No authentication token available. Make sure to initialize the SDK first.' });
-        }
-        
-        let token: string;
-        
-        // For secret-based tokens, they never expire so use directly
-        if (tokenInfo.type === 'secret') {
-          token = tokenInfo.token;
-        } 
-        // For non-secret tokens, check expiration and refresh if needed
-        else if (!this.tokenManager.isTokenExpired(tokenInfo)) {
-          token = tokenInfo.token;
-        } else {
-          const newToken = await this.tokenManager.refreshAccessToken();
-          token = newToken.access_token;
-        }
-        
-        requestHeaders['Authorization'] = `Bearer ${token}`;
-      } catch (error) {
-        throw new AuthenticationError({ 
-          message: `Authentication required but failed: ${error instanceof Error ? error.message : ''}`, 
-          statusCode: HttpStatus.UNAUTHORIZED
-        });
-      }
+      const token = await this.getValidAuthToken();
+      requestHeaders['Authorization'] = `Bearer ${token}`;
     }
    
     return axios.put(uri, content, {

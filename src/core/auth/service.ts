@@ -1,4 +1,3 @@
-import { BaseService } from '../../services/base';
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from './token-manager';
@@ -7,18 +6,18 @@ import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
-export class AuthService extends BaseService {
+export class AuthService {
+  private config: Config;
   private tokenManager: TokenManager;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     // Check if we should use stored OAuth context instead of provided config
     const storedContext = AuthService.getStoredOAuthContext();
     const effectiveConfig = storedContext ? AuthService._mergeConfigWithContext(config, storedContext) : config;
-    
+
+    this.config = effectiveConfig;
     const isOAuth = hasOAuthConfig(effectiveConfig);
-    const tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
-    super(effectiveConfig, executionContext, tokenManager);
-    this.tokenManager = tokenManager;
+    this.tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
   }
 
   /**
