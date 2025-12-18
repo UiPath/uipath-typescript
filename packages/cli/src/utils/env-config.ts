@@ -111,21 +111,15 @@ function normalizeBaseUrl(url: string | undefined): string {
  */
 function buildConfig(
   mergedValues: Record<string, string | undefined>,
-  requiredVars: readonly string[]
 ): EnvironmentConfig {
-  const config: EnvironmentConfig = {
+  return {
     baseUrl: normalizeBaseUrl(mergedValues[ENV_CONFIG.BASE_URL.envVar]),
     orgId: mergedValues[ENV_CONFIG.ORG_ID.envVar]!,
     tenantId: mergedValues[ENV_CONFIG.TENANT_ID.envVar]!,
-    tenantName: mergedValues[ENV_CONFIG.TENANT_NAME.envVar]!,
+    tenantName: mergedValues[ENV_CONFIG.TENANT_NAME.envVar],
+    folderKey: mergedValues[ENV_CONFIG.FOLDER_KEY.envVar],
     accessToken: mergedValues[ENV_CONFIG.ACCESS_TOKEN.envVar]!,
   };
-
-  if (requiredVars.includes(ENV_CONFIG.FOLDER_KEY.envVar)) {
-    config.folderKey = mergedValues[ENV_CONFIG.FOLDER_KEY.envVar]!;
-  }
-
-  return config;
 }
 
 /**
@@ -145,7 +139,7 @@ export function validateEnvironment(
     return { isValid: false, missingVars: missing };
   }
 
-  return { isValid: true, config: buildConfig(mergedValues, requiredVars) };
+  return { isValid: true, config: buildConfig(mergedValues) };
 }
 
 /**

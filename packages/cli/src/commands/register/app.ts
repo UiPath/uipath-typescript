@@ -228,8 +228,8 @@ export default class RegisterApp extends Command {
   }
 
   private async saveAppConfig(config: AppConfig): Promise<void> {
-    const configDir = path.join(process.cwd(), '.uipath');
-    const configPath = path.join(configDir, 'app.config.json');
+    const configDir = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR);
+    const configPath = path.join(configDir, AUTH_CONSTANTS.FILES.APP_CONFIG);
     
     try {
       // Ensure directory exists
@@ -237,8 +237,8 @@ export default class RegisterApp extends Command {
         fs.mkdirSync(configDir, { recursive: true });
       }
       
-      // Write atomically to avoid race conditions
-      const tempPath = `${configPath}.tmp`;
+      // Write atomically to avoid race conditions (unique temp file per process)
+      const tempPath = `${configPath}.${process.pid}.${Date.now()}.tmp`;
       fs.writeFileSync(tempPath, JSON.stringify(config, null, 2));
       fs.renameSync(tempPath, configPath);
       
@@ -248,7 +248,7 @@ export default class RegisterApp extends Command {
   }
 
   private async updateEnvFile(key: string, value: string): Promise<void> {
-    const envPath = path.join(process.cwd(), '.env');
+    const envPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.ENV_FILE);
     
     try {
       let envContent = '';
@@ -274,8 +274,8 @@ export default class RegisterApp extends Command {
         envContent += `${key}=${value}\n`;
       }
       
-      // Write atomically to avoid race conditions
-      const tempPath = `${envPath}.tmp`;
+      // Write atomically to avoid race conditions (unique temp file per process)
+      const tempPath = `${envPath}.${process.pid}.${Date.now()}.tmp`;
       fs.writeFileSync(tempPath, envContent);
       fs.renameSync(tempPath, envPath);
       
