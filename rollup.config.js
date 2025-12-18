@@ -135,14 +135,14 @@ const serviceEntries = [
     output: 'buckets/index'
   },
   {
-    name: 'orchestrator-processes',
+    name: 'processes',
     input: 'src/services/orchestrator/processes/index.ts',
-    output: 'orchestrator-processes/index'
+    output: 'processes/index'
   },
   {
-    name: 'maestro-cases',
+    name: 'cases',
     input: 'src/services/maestro/cases/index.ts',
-    output: 'maestro-cases/index'
+    output: 'cases/index'
   },
   {
     name: 'maestro-processes',

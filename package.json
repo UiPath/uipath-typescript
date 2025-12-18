@@ -86,24 +86,24 @@
                 "default": "./dist/buckets/index.cjs"
             }
         },
-        "./orchestrator-processes": {
+        "./processes": {
             "import": {
-                "types": "./dist/orchestrator-processes/index.d.ts",
-                "default": "./dist/orchestrator-processes/index.mjs"
+                "types": "./dist/processes/index.d.ts",
+                "default": "./dist/processes/index.mjs"
             },
             "require": {
-                "types": "./dist/orchestrator-processes/index.d.ts",
-                "default": "./dist/orchestrator-processes/index.cjs"
+                "types": "./dist/processes/index.d.ts",
+                "default": "./dist/processes/index.cjs"
             }
         },
-        "./maestro-cases": {
+        "./cases": {
             "import": {
-                "types": "./dist/maestro-cases/index.d.ts",
-                "default": "./dist/maestro-cases/index.mjs"
+                "types": "./dist/cases/index.d.ts",
+                "default": "./dist/cases/index.mjs"
             },
             "require": {
-                "types": "./dist/maestro-cases/index.d.ts",
-                "default": "./dist/maestro-cases/index.cjs"
+                "types": "./dist/cases/index.d.ts",
+                "default": "./dist/cases/index.cjs"
             }
         },
         "./maestro-processes": {
