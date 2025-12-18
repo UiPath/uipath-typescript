@@ -1,8 +1,18 @@
+// Token storage options
+export const TOKEN_STORAGE_OPTIONS = ['localStorage', 'sessionStorage'] as const;
+export type TokenStorage = typeof TOKEN_STORAGE_OPTIONS[number];
+
 // Base configuration with common required fields
 export interface BaseConfig {
   baseUrl: string;
   orgName: string;
   tenantName: string;
+  /**
+   * Token storage mechanism (optional, defaults to 'sessionStorage')
+   * - 'sessionStorage': Tokens isolated per tab, cleared when tab closes (default)
+   * - 'localStorage': Tokens shared across tabs, persists until cleared
+   */
+  tokenStorage?: TokenStorage;
 }
 
 // OAuth specific fields
