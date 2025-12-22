@@ -4,7 +4,7 @@ import typescript from '@rollup/plugin-typescript'; // Compiles TypeScript to Ja
 import dts from 'rollup-plugin-dts';              // Generates TypeScript declaration files
 import json from '@rollup/plugin-json';           // Imports JSON files as ES6 modules
 import builtins from 'builtin-modules';           // List of Node.js built-in modules (fs, crypto, etc.)
-import { readFileSync } from 'fs'; 
+import { readFileSync } from 'fs';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
@@ -90,32 +90,12 @@ const configs = [
     },
     plugins: createBrowserPlugins()
   },
-  
-  // Type definitions for ESM (.mts extension for ESM types)
+
+  // Main type definitions
   {
-    input: 'src/index.ts',              // Entry point for types
+    input: 'src/index.ts',
     output: {
-      file: 'dist/index.d.mts',        // TypeScript declaration file for ESM
-      format: 'es'
-    },
-    plugins: [dts()]
-  },
-  
-  // Type definitions for CommonJS (.cts extension for CJS types)
-  {
-    input: 'src/index.ts',              // Entry point for types
-    output: {
-      file: 'dist/index.d.cts',        // TypeScript declaration file for CJS
-      format: 'es'
-    },
-    plugins: [dts()]
-  },
-  
-  // Main type definitions (for legacy TypeScript and package.json "types" field)
-  {
-    input: 'src/index.ts',              // Entry point for types
-    output: {
-      file: 'dist/index.d.ts',         // Main TypeScript declaration file
+      file: 'dist/index.d.ts',
       format: 'es'
     },
     plugins: [dts()]
@@ -133,19 +113,50 @@ const serviceEntries = [
     name: 'entities',
     input: 'src/services/data-fabric/index.ts',
     output: 'entities/index'
+  },
+  {
+    name: 'tasks',
+    input: 'src/services/action-center/index.ts',
+    output: 'tasks/index'
+  },
+  {
+    name: 'assets',
+    input: 'src/services/orchestrator/assets/index.ts',
+    output: 'assets/index'
+  },
+  {
+    name: 'queues',
+    input: 'src/services/orchestrator/queues/index.ts',
+    output: 'queues/index'
+  },
+  {
+    name: 'buckets',
+    input: 'src/services/orchestrator/buckets/index.ts',
+    output: 'buckets/index'
+  },
+  {
+    name: 'processes',
+    input: 'src/services/orchestrator/processes/index.ts',
+    output: 'processes/index'
+  },
+  {
+    name: 'cases',
+    input: 'src/services/maestro/cases/index.ts',
+    output: 'cases/index'
+  },
+  {
+    name: 'maestro-processes',
+    input: 'src/services/maestro/processes/index.ts',
+    output: 'maestro-processes/index'
   }
 ];
 
-// Generate build configs for each service entry
+// Generate ESM, CJS, and DTS builds for each service entry
 serviceEntries.forEach(({ input, output }) => {
   // ESM bundle
   configs.push({
     input,
-    output: {
-      file: `dist/${output}.mjs`,
-      format: 'es',
-      inlineDynamicImports: true
-    },
+    output: { file: `dist/${output}.mjs`, format: 'es', inlineDynamicImports: true },
     plugins: createPlugins(false),
     external: allDependencies
   });
@@ -153,46 +164,18 @@ serviceEntries.forEach(({ input, output }) => {
   // CommonJS bundle
   configs.push({
     input,
-    output: {
-      file: `dist/${output}.cjs`,
-      format: 'cjs',
-      exports: 'named',
-      inlineDynamicImports: true
-    },
+    output: { file: `dist/${output}.cjs`, format: 'cjs', exports: 'named', inlineDynamicImports: true },
     plugins: createPlugins(false),
     external: allDependencies
   });
 
-  // ESM type definitions
+  // Type definitions
   configs.push({
     input,
-    output: {
-      file: `dist/${output}.d.mts`,
-      format: 'es'
-    },
-    plugins: [dts()]
-  });
-
-  // CommonJS type definitions
-  configs.push({
-    input,
-    output: {
-      file: `dist/${output}.d.cts`,
-      format: 'es'
-    },
-    plugins: [dts()]
-  });
-
-  // Main type definitions
-  configs.push({
-    input,
-    output: {
-      file: `dist/${output}.d.ts`,
-      format: 'es'
-    },
+    output: { file: `dist/${output}.d.ts`, format: 'es' },
     plugins: [dts()]
   });
 });
 
 // Export all build configurations
-export default configs; 
+export default configs;

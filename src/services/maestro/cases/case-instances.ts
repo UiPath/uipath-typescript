@@ -1,7 +1,7 @@
-import { BaseService } from '../base';
-import type { UiPath } from '../../core/uipath';
-import { 
-  CaseInstanceGetResponse, 
+import { BaseService } from '../../base';
+import type { UiPath } from '../../../core/uipath';
+import {
+  CaseInstanceGetResponse,
   RawCaseInstanceGetResponse,
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
@@ -12,33 +12,33 @@ import {
   StageTask,
   ElementExecutionMetadata,
   CaseInstanceExecutionHistoryResponse
-} from '../../models/maestro';
-import { TaskGetResponse } from '../../models/action-center';
-import { 
+} from '../../../models/maestro';
+import { TaskGetResponse } from '../../../models/action-center';
+import {
   CaseJsonResponse
-} from '../../models/maestro/case-instances.internal-types';
-import { OperationResponse } from '../../models/common/types';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
-import { transformData } from '../../utils/transform';
-import { 
-  CaseInstanceMap, 
-  CaseAppConfigMap, 
-  StageSLAMap, 
+} from '../../../models/maestro/case-instances.internal-types';
+import { OperationResponse } from '../../../models/common/types';
+import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { transformData } from '../../../utils/transform';
+import {
+  CaseInstanceMap,
+  CaseAppConfigMap,
+  StageSLAMap,
   CASE_STAGE_CONSTANTS,
   TimeFieldTransformMap,
   CASE_INSTANCE_TASK_FILTER,
   CASE_INSTANCE_TASK_EXPAND
-} from '../../models/maestro/case-instances.constants';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../utils/constants/common';
-import { track } from '../../core/telemetry';
-import { ProcessType } from '../../models/maestro/cases.internal-types';
-import { FOLDER_KEY } from '../../utils/constants/headers';
-import { createHeaders } from '../../utils/http/headers';
-import { TaskService } from '../action-center/tasks';
-import { TaskGetAllOptions } from '../../models/action-center';
+} from '../../../models/maestro/case-instances.constants';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
+import { track } from '../../../core/telemetry';
+import { ProcessType } from '../../../models/maestro/cases.internal-types';
+import { FOLDER_KEY } from '../../../utils/constants/headers';
+import { createHeaders } from '../../../utils/http/headers';
+import { TaskService } from '../../action-center/tasks';
+import { TaskGetAllOptions } from '../../../models/action-center';
 
 export class CaseInstancesService extends BaseService implements CaseInstancesServiceModel {
   private taskService: TaskService;

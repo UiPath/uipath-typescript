@@ -1,24 +1,24 @@
-import { BaseService } from '../base';
-import type { UiPath } from '../../core/uipath';
-import { CollectionResponse, RequestOptions } from '../../models/common/types';
+import { BaseService } from '../../base';
+import type { UiPath } from '../../../core/uipath';
+import { CollectionResponse, RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
   ProcessGetAllOptions,
   ProcessStartRequest,
   ProcessStartResponse,
   ProcessGetByIdOptions
-} from '../../models/orchestrator/processes.types';
-import { ProcessServiceModel } from '../../models/orchestrator/processes.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, reverseMap, transformData } from '../../utils/transform';
-import { createHeaders } from '../../utils/http/headers';
-import { ProcessMap } from '../../models/orchestrator/processes.constants';
-import { FOLDER_ID } from '../../utils/constants/headers';
-import { PROCESS_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { track } from '../../core/telemetry';
+} from '../../../models/orchestrator/processes.types';
+import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
+import { addPrefixToKeys, pascalToCamelCaseKeys, reverseMap, transformData } from '../../../utils/transform';
+import { createHeaders } from '../../../utils/http/headers';
+import { ProcessMap } from '../../../models/orchestrator/processes.constants';
+import { FOLDER_ID } from '../../../utils/constants/headers';
+import { PROCESS_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { track } from '../../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API

@@ -1,21 +1,21 @@
-import { FolderScopedService } from '../folder-scoped';
-import type { UiPath } from '../../core/uipath';
+import { FolderScopedService } from '../../folder-scoped';
+import type { UiPath } from '../../../core/uipath';
 import {
   QueueGetResponse,
   QueueGetAllOptions,
   QueueGetByIdOptions
-} from '../../models/orchestrator/queues.types';
-import { QueueServiceModel } from '../../models/orchestrator/queues.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
-import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_ID } from '../../utils/constants/headers';
-import { QUEUE_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { QueueMap } from '../../models/orchestrator/queues.constants';
-import { track } from '../../core/telemetry';
+} from '../../../models/orchestrator/queues.types';
+import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
+import { QUEUE_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { QueueMap } from '../../../models/orchestrator/queues.constants';
+import { track } from '../../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Queues API

@@ -4,7 +4,7 @@ import { ExecutionContext } from '../../src/core/context/execution';
 import { TokenManager } from '../../src/core/auth/token-manager';
 import type { UiPath } from '../../src/core/uipath';
 import type { BaseConfig } from '../../src/core/config/sdk-config';
-import { SDKInternalsRegistry } from '../../src/core/internals';
+import { SDKInternalsRegistry, type PrivateSDK } from '../../src/core/internals';
 
 /**
  * Interface for mockable UiPath properties used in tests.
@@ -86,6 +86,46 @@ export const createMockApiClient = () => ({
 });
 
 /**
+ * Creates a mock UiPath instance for testing services
+ * @param configOverrides - Optional config overrides
+ * @param tokenManagerOverrides - Optional token manager overrides
+ * @returns Mock UiPath object registered with SDKInternalsRegistry
+ *
+ * @example
+ * ```typescript
+ * const mockUiPath = createMockUiPath();
+ * const service = new MyService(mockUiPath);
+ * ```
+ */
+export const createMockUiPath = (
+  configOverrides?: Partial<UiPathConfig>,
+  tokenManagerOverrides?: Partial<TokenManager>
+): UiPath => {
+  const config = createMockConfig(configOverrides);
+  const executionContext = createMockExecutionContext();
+  const tokenManager = createMockTokenManager(tokenManagerOverrides);
+
+  const mockInstance = {
+    config: {
+      baseUrl: config.baseUrl,
+      orgName: config.orgName,
+      tenantName: config.tenantName
+    },
+    isAuthenticated: () => true,
+    isInitialized: () => true,
+  } as unknown as UiPath;
+
+  // Register with SDKInternalsRegistry
+  SDKInternalsRegistry.set(mockInstance, {
+    config,
+    context: executionContext,
+    tokenManager
+  });
+
+  return mockInstance;
+};
+
+/**
  * Creates all common service test dependencies at once
  * @param configOverrides - Optional config overrides
  * @param tokenManagerOverrides - Optional token manager overrides
@@ -136,4 +176,40 @@ export const createServiceTestDependencies = (
     tokenManager,
     instance: mockInstance,
   };
+};
+
+/**
+ * Test helper to get private SDK internals from a UiPath instance
+ * @param instance - UiPath instance
+ * @returns PrivateSDK internals
+ */
+export const getPrivateSDK = (instance: UiPath): PrivateSDK => {
+  return SDKInternalsRegistry.get(instance);
+};
+
+/**
+ * Test helper to get config from a UiPath instance
+ * @param instance - UiPath instance
+ * @returns UiPathConfig
+ */
+export const getConfig = (instance: UiPath): UiPathConfig => {
+  return SDKInternalsRegistry.get(instance).config;
+};
+
+/**
+ * Test helper to get execution context from a UiPath instance
+ * @param instance - UiPath instance
+ * @returns ExecutionContext
+ */
+export const getContext = (instance: UiPath): ExecutionContext => {
+  return SDKInternalsRegistry.get(instance).context;
+};
+
+/**
+ * Test helper to get token manager from a UiPath instance
+ * @param instance - UiPath instance
+ * @returns TokenManager
+ */
+export const getTokenManager = (instance: UiPath): TokenManager => {
+  return SDKInternalsRegistry.get(instance).tokenManager;
 };

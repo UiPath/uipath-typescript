@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ProcessInstancesService } from '../../../../src/services/maestro/process-instances';
+import { ProcessInstancesService } from '../../../../src/services/maestro/processes/process-instances';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../../../src/utils/constants/headers';
