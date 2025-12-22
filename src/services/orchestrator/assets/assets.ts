@@ -1,18 +1,18 @@
-import { FolderScopedService } from '../folder-scoped';
-import type { UiPath } from '../../core/uipath';
-import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../models/orchestrator/assets.types';
-import { AssetServiceModel } from '../../models/orchestrator/assets.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
-import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_ID } from '../../utils/constants/headers';
-import { ASSET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
-import { AssetMap } from '../../models/orchestrator/assets.constants';
-import { ODATA_PAGINATION } from '../../utils/constants/common';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { track } from '../../core/telemetry';
+import { FolderScopedService } from '../../folder-scoped';
+import type { UiPath } from '../../../core/uipath';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../../models/orchestrator/assets.types';
+import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
+import { ASSET_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { AssetMap } from '../../../models/orchestrator/assets.constants';
+import { ODATA_PAGINATION } from '../../../utils/constants/common';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { track } from '../../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
