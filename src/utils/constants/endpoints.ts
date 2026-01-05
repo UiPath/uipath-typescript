@@ -1,6 +1,6 @@
 /**
  * API Endpoint Constants
- * Centralized location for all API endpoints used throughout the SDK
+ * Re-exports from the endpoints folder for backward compatibility
  */
 
 /**
