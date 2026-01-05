@@ -179,6 +179,11 @@ const serviceEntries = [
     name: 'maestro-processes',
     input: 'src/services/maestro/processes/index.ts',
     output: 'maestro-processes/index'
+  },
+  {
+    name: 'conversational-agent',
+    input: 'src/services/conversational-agent/index.ts',
+    output: 'conversational-agent/index'
   }
 ];
 
