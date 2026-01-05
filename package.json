@@ -115,6 +115,16 @@
                 "types": "./dist/maestro-processes/index.d.ts",
                 "default": "./dist/maestro-processes/index.cjs"
             }
+        },
+        "./conversational-agent": {
+            "import": {
+                "types": "./dist/conversational-agent/index.d.ts",
+                "default": "./dist/conversational-agent/index.mjs"
+            },
+            "require": {
+                "types": "./dist/conversational-agent/index.d.ts",
+                "default": "./dist/conversational-agent/index.cjs"
+            }
         }
     },
     "files": [
@@ -136,9 +146,11 @@
     "dependencies": {
         "@opentelemetry/sdk-logs": "^0.204.0",
         "axios": "^1.12.0",
+        "socket.io-client": "^4.8.1",
         "zod": "^3.22.4"
     },
     "devDependencies": {
+        "@rollup/plugin-alias": "^6.0.0",
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.2.0",
