@@ -9,6 +9,24 @@ const CLOUD_WEBSOCKET_PATH = '/autopilotforeveryone_/websocket_/socket.io';
 /**
  * Parse a base URL into WebSocket host and path.
  * Converts HTTPS to WSS, HTTP to WS.
+ *
+ * For localhost URLs, uses default socket.io path.
+ * For cloud URLs, uses the UiPath Cloud WebSocket path.
+ *
+ * @example
+ * ```typescript
+ * const { host, path } = parseWebSocketUrl('https://alpha.uipath.com');
+ * // host: 'wss://alpha.uipath.com'
+ * // path: '/autopilotforeveryone_/websocket_/socket.io'
+ *
+ * const { host, path } = parseWebSocketUrl('http://localhost:3000');
+ * // host: 'ws://localhost:3000'
+ * // path: '/socket.io'
+ *
+ * const { host, path } = parseWebSocketUrl('http://localhost:3000', '/custom-path');
+ * // host: 'ws://localhost:3000'
+ * // path: '/custom-path'
+ * ```
  */
 export function parseWebSocketUrl(baseUrl: string, path?: string): ParsedWebSocketUrl {
   const url = new URL(baseUrl);
