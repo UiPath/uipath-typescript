@@ -2,18 +2,13 @@ import { ErrorParams } from './types';
 
 /**
  * Base error class for all UiPath SDK errors
- * Pure TypeScript class with clean interface
+ * Extends Error for standard error handling compatibility
  */
-export abstract class UiPathError {
+export abstract class UiPathError extends Error {
   /**
    * Error type identifier (e.g., "AuthenticationError", "ValidationError")
    */
   public readonly type: string;
-
-  /**
-   * Error message describing what went wrong
-   */
-  public readonly message: string;
 
   /**
    * HTTP status code (400, 401, 403, 404, 500, etc.)
@@ -30,20 +25,18 @@ export abstract class UiPathError {
    */
   public readonly timestamp: Date;
 
-  /**
-   * Stack trace for debugging
-   */
-  public readonly stack?: string;
-
   protected constructor(type: string, params: ErrorParams) {
+    super(params.message);
+    this.name = type;
     this.type = type;
-    this.message = params.message;
     this.statusCode = params.statusCode;
     this.requestId = params.requestId;
     this.timestamp = new Date();
-    
-    // Capture stack trace for debugging
-    this.stack = (new Error()).stack;
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 
   /**

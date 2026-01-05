@@ -3,8 +3,15 @@ import commonjs from '@rollup/plugin-commonjs';     // Converts CommonJS modules
 import typescript from '@rollup/plugin-typescript'; // Compiles TypeScript to JavaScript
 import dts from 'rollup-plugin-dts';              // Generates TypeScript declaration files
 import json from '@rollup/plugin-json';           // Imports JSON files as ES6 modules
+import alias from '@rollup/plugin-alias';         // Path alias support (@/ -> src/)
 import builtins from 'builtin-modules';           // List of Node.js built-in modules (fs, crypto, etc.)
 import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
@@ -14,8 +21,16 @@ const allDependencies = [
   ...builtins                                     // Node.js built-in modules - part of Node.js core, no installation needed (crypto, fs, path, etc.)
 ];
 
+// Path alias configuration (@/ -> src/)
+const aliasConfig = {
+  entries: [
+    { find: /^@\/(.*)/, replacement: path.resolve(__dirname, 'src/$1') }
+  ]
+};
+
 // Base plugins configuration for Node.js and ESM/CJS builds
 const createPlugins = (isBrowser) => [
+  alias(aliasConfig),              // Path alias resolution (@/ -> src/)
   resolve({
     browser: isBrowser,        // When true: resolve browser-compatible versions of modules (e.g., polyfills)
     preferBuiltins: !isBrowser // When false: prefer Node.js built-ins (crypto, fs) over browser polyfills
@@ -35,6 +50,7 @@ const createPlugins = (isBrowser) => [
 
 // Browser-specific plugins for UMD build
 const createBrowserPlugins = () => [
+  alias(aliasConfig),              // Path alias resolution (@/ -> src/)
   resolve({
     browser: true,
     preferBuiltins: false
@@ -98,7 +114,7 @@ const configs = [
       file: 'dist/index.d.ts',
       format: 'es'
     },
-    plugins: [dts()]
+    plugins: [alias(aliasConfig), dts()]
   }
 ];
 
@@ -148,6 +164,11 @@ const serviceEntries = [
     name: 'maestro-processes',
     input: 'src/services/maestro/processes/index.ts',
     output: 'maestro-processes/index'
+  },
+  {
+    name: 'conversational-agent',
+    input: 'src/services/conversational-agent/index.ts',
+    output: 'conversational-agent/index'
   }
 ];
 
@@ -173,7 +194,7 @@ serviceEntries.forEach(({ input, output }) => {
   configs.push({
     input,
     output: { file: `dist/${output}.d.ts`, format: 'es' },
-    plugins: [dts()]
+    plugins: [alias(aliasConfig), dts()]
   });
 });
 
