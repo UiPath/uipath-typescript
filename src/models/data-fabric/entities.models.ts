@@ -189,20 +189,30 @@ export interface EntityServiceModel {
    * @returns Promise resolving to Blob containing the file content
    * @example
    * ```typescript
-   * // Download attachment for a specific record and field
+   * // Download attachment
    * const blob = await sdk.entities.downloadAttachment({
    *   entityName: 'Invoice',
    *   recordId: '<record-uuid>',
    *   fieldName: 'Documents'
    * });
    *
-   * // In browser: Create a URL from the blob and render it
+   * // --- Browser: Display Image ---
+   * const img = document.getElementById('image');
+   * img.src = URL.createObjectURL(blob);
+   *
+   * // --- Browser: Display PDF (Option 1 - Blob URL) ---
    * const url = URL.createObjectURL(blob);
-   * iframe.src = url;    // Display PDF in iframe
-   * img.src = url;       // Display image
+   * iframe.src = url;
    * URL.revokeObjectURL(url); // Clean up when done
    *
-   * // In Node.js: Convert blob to buffer and save to file
+   * // --- Browser: Display PDF (Option 2 - PDF.js) ---
+   * const arrayBuffer = await blob.arrayBuffer();
+   * const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+   * const page = await pdf.getPage(1);
+   * const canvas = document.getElementById('canvas');
+   * await page.render({ canvasContext: canvas.getContext('2d'), viewport: page.getViewport({ scale: 1.5 }) }).promise;
+   *
+   * // --- Node.js: Save to file ---
    * const buffer = Buffer.from(await blob.arrayBuffer());
    * fs.writeFileSync('attachment.pdf', buffer);
    * ```
