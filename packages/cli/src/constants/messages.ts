@@ -27,17 +27,22 @@ export const MESSAGES = {
     REGISTRATION_ERROR_PREFIX: 'Registration error:',
     PACKAGING_ERROR_PREFIX: 'Packaging error:',
     PUBLISHING_ERROR_PREFIX: 'Publishing error:',
+    DEPLOYMENT_ERROR_PREFIX: 'Deployment error:',
     
     // Debug messages
     FAILED_TO_LOAD_APP_CONFIG: 'Failed to load app config:',
     
     // Operation-specific
     APP_REGISTRATION_FAILED: '❌ App registration failed',
-    PACKAGE_CREATION_FAILED: '❌ Package creation failed', 
+    PACKAGE_CREATION_FAILED: '❌ Package creation failed',
     PACKAGE_PUBLISHING_FAILED: '❌ Package publishing failed',
     AUTHENTICATION_PROCESS_FAILED: '❌ Authentication failed',
     LOGOUT_FAILED: '❌ Failed to logout',
     FAILED_TO_FETCH_ORG_TENANT: '❌ Failed to fetch organization/tenant information',
+    APP_DEPLOYMENT_FAILED: '❌ App deployment failed',
+    APP_UPGRADE_FAILED: '❌ App upgrade failed',
+    APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath register app" first',
+    DEPLOYMENT_ID_NOT_FOUND: '❌ Could not find deployment ID for the app',
     
     // Ports
     ALL_REGISTERED_PORTS_IN_USE: 'All registered ports are in use',
@@ -90,11 +95,18 @@ export const MESSAGES = {
     
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
+
+    // Deployment
+    APP_DEPLOYED_SUCCESS: '✅ App deployed successfully!',
+    APP_UPGRADED_SUCCESS: '✅ App upgraded successfully!',
   },
   
   INFO: {
     // Spinners/Progress
     REGISTERING_APP: 'Registering app with UiPath...',
+    DEPLOYING_APP: 'Deploying app...',
+    UPGRADING_APP: 'Upgrading app to latest version...',
+    CHECKING_DEPLOYMENT_STATUS: 'Checking deployment status...',
     CREATING_PACKAGE: 'Creating NuGet package...',
     CREATING_METADATA_FILES: 'Creating metadata files...',
     CREATING_NUPKG_PACKAGE: 'Creating .nupkg package...',
@@ -133,6 +145,7 @@ export const MESSAGES = {
     
     // Headers
     APP_REGISTRATION: '🚀 UiPath App Registration',
+    APP_DEPLOYMENT: '🚀 UiPath App Deployment',
     PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator',
     PUBLISHER: '🚀 UiPath Publisher',
     PACKAGE_PREVIEW: '🔍 Package Preview',
@@ -142,6 +155,7 @@ export const MESSAGES = {
     PACKAGE_READY: '🎉 Package is ready for publishing!',
     APP_REGISTERED: '🎉 Your app has been registered with UiPath!',
     PACKAGE_AVAILABLE: '🎉 Package is now available in UiPath Orchestrator',
+    APP_DEPLOYED: '🎉 Your app is now live!',
   },
   
   PROMPTS: {
@@ -176,6 +190,8 @@ export const MESSAGES = {
     APP_REGISTRATION: 'app registration',
     PACKAGE_PUBLISHING: 'package publishing',
     CLIENT_CREDENTIALS_AUTH: 'client credentials authentication',
+    APP_DEPLOYMENT: 'app deployment',
+    APP_UPGRADE: 'app upgrade',
   },
 } as const;
 

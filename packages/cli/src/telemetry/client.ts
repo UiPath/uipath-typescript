@@ -26,6 +26,7 @@ import {
 import { AUTH_CONSTANTS } from '../constants/auth.js';
 import { TelemetryAttributes } from './types.js';
 
+const { FILES } = AUTH_CONSTANTS;
 
 /**
  * Singleton CLI telemetry client
@@ -189,13 +190,12 @@ class CliTelemetryClient {
      */
     private getAppSystemName(): string {
         try {
-            // Look for .uipath folder in current working directory
-            const uipathFolderPath = join(process.cwd(), '.uipath');
+            const uipathFolderPath = join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR);
             if (!existsSync(uipathFolderPath)) {
                 return UNKNOWN;
             }
 
-            const appConfigPath = join(uipathFolderPath, 'app.config.json');
+            const appConfigPath = join(uipathFolderPath, AUTH_CONSTANTS.FILES.APP_CONFIG);
             if (!existsSync(appConfigPath)) {
                 return UNKNOWN;
             }

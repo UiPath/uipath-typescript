@@ -54,7 +54,7 @@ export default class Publish extends Command {
     // Validate environment variables or flags
     const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.PUBLISH, this, flags);
     if (!envConfig) {
-      return;
+      process.exit(1);
     }
 
     await this.publishPackage(flags.uipathDir, envConfig);
@@ -69,7 +69,7 @@ export default class Publish extends Command {
         spinner.fail(chalk.red(`${MESSAGES.ERRORS.UIPATH_DIR_NOT_FOUND}`));
         this.log('');
         this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
-        return;
+        process.exit(1);
       }
 
       // Find .nupkg files
@@ -81,7 +81,7 @@ export default class Publish extends Command {
         spinner.fail(chalk.red(`${MESSAGES.ERRORS.NO_NUPKG_FILES_FOUND}`));
         this.log('');
         this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
-        return;
+        process.exit(1);
       }
 
       let selectedPackage: string;
