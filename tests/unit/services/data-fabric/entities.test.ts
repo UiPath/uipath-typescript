@@ -391,7 +391,7 @@ describe('EntityService Unit Tests', () => {
   });
 
   describe('insertById', () => {
-    it('should insert records successfully', async () => {
+    it('should insert batch records successfully', async () => {
       const testData = [
         ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
         ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2
@@ -413,9 +413,9 @@ describe('EntityService Unit Tests', () => {
       expect(result.successRecords[1].name).toBe(testData[1].name);
       expect(result.successRecords[1]).toHaveProperty('id');
 
-      // Verify the API call has correct endpoint and body
+      // Verify the API call uses INSERT_BATCH_BY_ID endpoint for multiple records
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BATCH_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         testData,
         expect.objectContaining({
           params: expect.any(Object)
@@ -423,7 +423,7 @@ describe('EntityService Unit Tests', () => {
       );
     });
 
-    it('should insert records with options', async () => {
+    it('should insert single record successfully using INSERT_BY_ID endpoint', async () => {
       const testData = [{
         ...ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
         recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
@@ -435,8 +435,8 @@ describe('EntityService Unit Tests', () => {
       } as EntityInsertOptions;
 
       // With expansionLevel, reference fields should be expanded in the response
-      const mockResponse = createMockInsertResponse(testData, { 
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
+      const mockResponse = createMockInsertResponse(testData, {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
@@ -444,8 +444,8 @@ describe('EntityService Unit Tests', () => {
 
       // Verify options are passed in params
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(Array),
+        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        testData[0], // Single record sent as object, not array
         expect.objectContaining({
           params: expect.objectContaining({
             expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
@@ -457,6 +457,39 @@ describe('EntityService Unit Tests', () => {
       // Verify reference fields are expanded in the response
       expect(result.successRecords[0].recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
       expect(result.successRecords[0].createdBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+    });
+
+    it('should use INSERT_BY_ID endpoint for single record', async () => {
+      const testData = [ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA];
+      const mockResponse = createMockInsertResponse(testData);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+
+      // Verify INSERT_BY_ID endpoint is used for single record
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        testData[0], // Single object, not array
+        expect.any(Object)
+      );
+    });
+
+    it('should use INSERT_BATCH_BY_ID endpoint for multiple records', async () => {
+      const testData = [
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2
+      ];
+      const mockResponse = createMockInsertResponse(testData);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+
+      // Verify INSERT_BATCH_BY_ID endpoint is used for multiple records
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BATCH_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        testData, // Array as-is
+        expect.any(Object)
+      );
     });
 
     it('should handle partial insert failures', async () => {
