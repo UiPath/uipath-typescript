@@ -155,8 +155,17 @@ export class SessionManager {
    * @returns Promise that resolves with the connected socket
    */
   private async _getSocket(conversationId: ConversationId): Promise<Socket> {
-    let socket = this._sessionSockets.get(conversationId);
+    let socket: Socket | undefined = this._sessionSockets.get(conversationId);
 
+    // Check if existing socket is stale (disconnected)
+    // If so, clean up and clear so we get a fresh socket below
+    if (socket?.disconnected) {
+      this._removeConversationFromSocket(conversationId, socket);
+      this._sessionSockets.delete(conversationId);
+      socket = undefined; // Fall through to get new socket
+    }
+
+    // Get or create a connected socket
     if (!socket) {
       // Get a new connected socket (auto-connects if needed)
       socket = await this._session.getConnectedSocket();
@@ -195,11 +204,6 @@ export class SessionManager {
           }
         });
       }
-    } else if (socket.disconnected) {
-      // Socket was disconnected, remove from tracking and throw
-      this._removeConversationFromSocket(conversationId, socket);
-      this._sessionSockets.delete(conversationId);
-      throw new Error('WebSocket disconnected');
     }
 
     return socket;
