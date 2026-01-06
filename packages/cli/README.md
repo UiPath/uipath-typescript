@@ -1,6 +1,6 @@
 # @uipath/cli
 
-UiPath CLI tool for authentication, packaging, and publishing web applications to UiPath.
+UiPath CLI tool for authentication, packaging, publishing, and deploying web applications to UiPath.
 
 ## Installation
 
@@ -36,7 +36,7 @@ Authenticate with UiPath services:
 uipath auth
 
 # Authenticate with specific domain
-uipath auth --dalpha
+uipath auth --alpha
 uipath auth --cloud
 uipath auth --staging
 
@@ -102,7 +102,7 @@ This command will:
 
 ### Packaging
 
-Package your built web applications (Angular, React, Vue, Next.js, etc.) as UiPath NuGet packages:
+Package your built web applications (Angular, React, Vue, etc.) as UiPath NuGet packages:
 
 ```bash
 # Package a built application (uses registered app config)
@@ -111,8 +111,6 @@ uipath pack ./dist
 # Override registered name/version
 uipath pack ./dist --name MyApp --version 2.0.0
 
-# Package with custom output directory
-uipath pack ./dist --output ./.packages
 ```
 
 **Flags:**
@@ -153,6 +151,41 @@ uipath publish \
 | `--tenantName` | UiPath tenant name |
 | `--accessToken` | UiPath access token |
 
+### Deploying
+
+Deploy or upgrade apps to UiPath:
+
+```bash
+# Interactive deploy (uses .env or app config)
+uipath deploy
+
+# Deploy with app name
+uipath deploy --name MyApp
+
+# Non-interactive deploy (all flags)
+uipath deploy \
+  --name 'MyApp' \
+  --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' \
+  --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' \
+  --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' \
+  --accessToken 'your-access-token'
+```
+
+**Flags:**
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--name` | `-n` | App name |
+| `--baseUrl` | | UiPath base URL (default: https://cloud.uipath.com) |
+| `--orgId` | | UiPath organization ID |
+| `--tenantId` | | UiPath tenant ID |
+| `--folderKey` | | UiPath folder key |
+| `--accessToken` | | UiPath access token |
+
+This command will:
+- Check if the app is already deployed
+- If deployed: upgrade to the latest published version
+- If not deployed: perform initial deployment
+- Display the app URL after successful deployment
 
 ## Commands
 
@@ -160,13 +193,8 @@ uipath publish \
 - [`uipath register app`](#registering-apps) - Register app with UiPath and get the app URL
 - [`uipath pack`](#packaging) - Package web applications as UiPath NuGet packages
 - [`uipath publish`](#publishing) - Publish packages to Orchestrator
+- [`uipath deploy`](#deploying) - Deploy or upgrade apps to UiPath
 
-## Requirements
-
-- Node.js >= 18.0.0
-- Valid UiPath Cloud or On-Premises instance with API access
-- Access token with appropriate permissions for package upload and app deployment
-- Built web application (dist folder) for packaging
 
 ## Workflow
 
@@ -174,14 +202,13 @@ uipath publish \
 2. **Build your application**: Use your framework's build command (e.g., `npm run build`, `ng build`)
 3. **Pack the application**: `uipath pack ./dist` (uses saved app config)
 4. **Publish the package**: `uipath publish` (uploads to Orchestrator)
+5. **Deploy the app**: `uipath deploy` (deploys or upgrades the app)
 
 ## Framework Support
 
 This CLI works with any web framework that generates a `dist` folder:
 - Angular (`ng build`)
 - React (`npm run build`)
-- Vue (`npm run build`)
-- Next.js (`npm run build && npm run export`)
 - Static HTML/CSS/JS projects
 
 ## Development
@@ -192,14 +219,3 @@ This CLI is built using:
 - [Inquirer](https://www.npmjs.com/package/inquirer) - Interactive command line prompts
 - [Chalk](https://www.npmjs.com/package/chalk) - Terminal styling
 - [Ora](https://www.npmjs.com/package/ora) - Progress indicators
-
-## Troubleshooting
-
-### Missing Environment Variables
-If you see environment variable errors, ensure all required variables are set in your `.env` file.
-
-### Package Not Found
-If `uipath publish --app` says package not found, run `uipath publish` first to upload the package to Orchestrator.
-
-### Build Errors
-Ensure your application builds successfully before packaging. The CLI requires a valid `dist` directory with your built application files.
