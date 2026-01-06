@@ -6,10 +6,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
 import { EnvironmentConfig, AppConfig, AppType } from '../../types/index.js';
-import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS } from '../../constants/index.js';
+import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS, AUTH_CONSTANTS } from '../../constants/index.js';
 import { MESSAGES } from '../../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../../utils/api.js';
-import { validateEnvironment, isValidAppName } from '../../utils/validator.js';
+import { getEnvironmentConfig, isValidAppName, atomicWriteFileSync } from '../../utils/env-config.js';
 import { handleHttpError } from '../../utils/error-handler.js';
 import { track } from '../../telemetry/index.js';
 import { readAndParseActionSchema } from '../../utils/action-schema.js';
@@ -29,6 +29,7 @@ export default class RegisterApp extends Command {
     '<%= config.bin %> <%= command.id %> --name MyApp',
     '<%= config.bin %> <%= command.id %> --name MyApp --version 1.0.0',
     '<%= config.bin %> <%= command.id %> --name MyApp --version 1.0.0 --type Action',
+    "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
   ];
 
   static override flags = {
@@ -41,6 +42,24 @@ export default class RegisterApp extends Command {
       char: 'v',
       description: 'App version',
       default: '1.0.0',
+    }),
+    baseUrl: Flags.string({
+      description: 'UiPath base URL (default: https://cloud.uipath.com)',
+    }),
+    orgId: Flags.string({
+      description: 'UiPath organization ID',
+    }),
+    tenantId: Flags.string({
+      description: 'UiPath tenant ID',
+    }),
+    tenantName: Flags.string({
+      description: 'UiPath tenant name',
+    }),
+    folderKey: Flags.string({
+      description: 'UiPath folder key',
+    }),
+    accessToken: Flags.string({
+      description: 'UiPath bearer token for authentication',
     }),
     type: Flags.string({
       char: 't',
@@ -56,10 +75,10 @@ export default class RegisterApp extends Command {
 
     this.log(chalk.blue(MESSAGES.INFO.APP_REGISTRATION));
 
-    // Validate environment variables
-    const envConfig = await this.validateEnvironment();
+    // Validate environment variables or flags
+    const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.REGISTER_APP, this, flags);
     if (!envConfig) {
-      return;
+      process.exit(1);
     }
 
     // Validate name flag if provided
@@ -81,21 +100,6 @@ export default class RegisterApp extends Command {
 
     // Register the app
     await this.registerApp(appName, appVersion, isActionApp, envConfig);
-  }
-
-  private async validateEnvironment(): Promise<EnvironmentConfig | null> {
-    const requiredEnvVars = [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID', 
-      'UIPATH_TENANT_ID',
-      'UIPATH_TENANT_NAME',
-      'UIPATH_FOLDER_KEY',
-      'UIPATH_BEARER_TOKEN'
-    ];
-
-    const result = validateEnvironment(requiredEnvVars, this);
-    
-    return result.isValid ? result.config! : null;
   }
 
   private async promptForAppName(): Promise<string> {
@@ -210,22 +214,22 @@ export default class RegisterApp extends Command {
     const response = await fetch(url, {
       method: 'POST',
       headers: createHeaders({ 
-        bearerToken: envConfig.bearerToken,
+        bearerToken: envConfig.accessToken,
         tenantId: envConfig.tenantId 
       }),
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      await handleHttpError(response, 'app registration');
+      await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_REGISTRATION);
     }
 
     return await response.json() as RegisterResponse;
   }
 
   private async saveAppConfig(config: AppConfig): Promise<void> {
-    const configDir = path.join(process.cwd(), '.uipath');
-    const configPath = path.join(configDir, 'app.config.json');
+    const configDir = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR);
+    const configPath = path.join(configDir, AUTH_CONSTANTS.FILES.APP_CONFIG);
     
     try {
       // Ensure directory exists
@@ -234,9 +238,7 @@ export default class RegisterApp extends Command {
       }
       
       // Write atomically to avoid race conditions
-      const tempPath = `${configPath}.tmp`;
-      fs.writeFileSync(tempPath, JSON.stringify(config, null, 2));
-      fs.renameSync(tempPath, configPath);
+      atomicWriteFileSync(configPath, config);
       
     } catch (error) {
       this.warn(`${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
@@ -244,7 +246,7 @@ export default class RegisterApp extends Command {
   }
 
   private async updateEnvFile(key: string, value: string): Promise<void> {
-    const envPath = path.join(process.cwd(), '.env');
+    const envPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.ENV_FILE);
     
     try {
       let envContent = '';
@@ -271,9 +273,7 @@ export default class RegisterApp extends Command {
       }
       
       // Write atomically to avoid race conditions
-      const tempPath = `${envPath}.tmp`;
-      fs.writeFileSync(tempPath, envContent);
-      fs.renameSync(tempPath, envPath);
+      atomicWriteFileSync(envPath, envContent);
       
     } catch (error) {
       this.warn(`${MESSAGES.ERRORS.FAILED_TO_UPDATE_ENV} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);

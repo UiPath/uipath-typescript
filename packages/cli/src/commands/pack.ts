@@ -8,7 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import { AppConfig } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
-import { isValidAppName } from '../utils/validator.js';
+import { AUTH_CONSTANTS } from '../constants/index.js';
+import { isValidAppName } from '../utils/env-config.js';
 import { track } from '../telemetry/index.js';
 
 export default class Pack extends Command {
@@ -427,8 +428,8 @@ export default class Pack extends Command {
   }
 
   private async handleMetadataJson(config: any): Promise<void> {
-    const sourceMetadata = path.join(process.cwd(), 'metadata.json');
-    const targetMetadata = path.join(config.outputDir, 'metadata.json');
+    const sourceMetadata = path.join(process.cwd(), AUTH_CONSTANTS.FILES.METADATA_FILE);
+    const targetMetadata = path.join(config.outputDir, AUTH_CONSTANTS.FILES.METADATA_FILE);
     
     if (fs.existsSync(sourceMetadata)) {
       fs.copyFileSync(sourceMetadata, targetMetadata);
@@ -448,7 +449,7 @@ export default class Pack extends Command {
   }
 
   private async loadAppConfig(): Promise<AppConfig | null> {
-    const configPath = path.join(process.cwd(), '.uipath', 'app.config.json');
+    const configPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR, AUTH_CONSTANTS.FILES.APP_CONFIG);
     
     try {
       if (fs.existsSync(configPath)) {

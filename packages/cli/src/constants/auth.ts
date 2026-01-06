@@ -1,4 +1,12 @@
 export const AUTH_CONSTANTS = {
+  // File and directory names
+  FILES: {
+    UIPATH_DIR: '.uipath',
+    APP_CONFIG: 'app.config.json',
+    AUTH_FILE: '.auth.json',
+    ENV_FILE: '.env',
+    METADATA_FILE: 'metadata.json',
+  },
   DOMAINS: {
     CLOUD: 'cloud',
     ALPHA: 'alpha',
@@ -20,6 +28,7 @@ export const AUTH_CONSTANTS = {
   CONTENT_TYPES: {
     JSON: 'application/json',
     FORM_URLENCODED: 'application/x-www-form-urlencoded',
+    TEXT_HTML: 'text/html',
   },
   ROUTES: {
     OIDC_LOGIN: '/oidc/login',
@@ -32,8 +41,12 @@ export const AUTH_CONSTANTS = {
   },
   OAUTH: {
     GRANT_TYPE: 'authorization_code',
+    GRANT_TYPE_CLIENT_CREDENTIALS: 'client_credentials',
     RESPONSE_TYPE: 'code',
     CODE_CHALLENGE_METHOD: 'S256',
+    DEFAULT_CLIENT_ID: '36dea5b8-e8bb-423d-8e7b-c808df8f1c00',
+    REDIRECT_URI_TEMPLATE: 'http://localhost:{PORT}/oidc/login',
+    DEFAULT_SCOPE: 'offline_access ProcessMining OrchestratorApiUserAccess StudioWebBackend IdentityServerApi ConnectionService DataService DocumentUnderstanding EnterpriseContextService Directory JamJamApi LLMGateway LLMOps OMS RCS.FolderAuthorization TM.Projects TM.TestCases TM.Requirements TM.TestSets',
   },
   CRYPTO: {
     RANDOM_BYTES_LENGTH: 32,
@@ -46,14 +59,77 @@ export const AUTH_CONSTANTS = {
     SKIP_LABEL: '⏭ Skip folder selection',
     PAGE_SIZE: 10,
   },
-  ENV_VARS: {
-    ACCESS_TOKEN: 'UIPATH_BEARER_TOKEN',
-    BASE_URL: 'UIPATH_BASE_URL',
-    TENANT_ID: 'UIPATH_TENANT_ID',
-    ORG_ID: 'UIPATH_ORG_ID',
-    TENANT_NAME: 'UIPATH_TENANT_NAME',
-    ORG_NAME: 'UIPATH_ORG_NAME',
-    FOLDER_KEY: 'UIPATH_FOLDER_KEY',
+
+  // Environment variable configuration
+  ENV_CONFIG: {
+    BASE_URL: {
+      envVar: 'UIPATH_BASE_URL',
+      configKey: 'baseUrl' as const,
+      flag: '--baseUrl',
+      example: "'https://cloud.uipath.com'",
+    },
+    ORG_ID: {
+      envVar: 'UIPATH_ORG_ID',
+      configKey: 'orgId' as const,
+      flag: '--orgId',
+      example: "'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'",
+    },
+    TENANT_ID: {
+      envVar: 'UIPATH_TENANT_ID',
+      configKey: 'tenantId' as const,
+      flag: '--tenantId',
+      example: "'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'",
+    },
+    TENANT_NAME: {
+      envVar: 'UIPATH_TENANT_NAME',
+      configKey: 'tenantName' as const,
+      flag: '--tenantName',
+      example: "'YourTenantName'",
+    },
+    FOLDER_KEY: {
+      envVar: 'UIPATH_FOLDER_KEY',
+      configKey: 'folderKey' as const,
+      flag: '--folderKey',
+      example: "'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'",
+    },
+    ACCESS_TOKEN: {
+      envVar: 'UIPATH_ACCESS_TOKEN',
+      configKey: 'accessToken' as const,
+      flag: '--accessToken',
+      example: "'your-access-token'",
+    },
+    ORG_NAME: {
+      envVar: 'UIPATH_ORG_NAME',
+      configKey: 'orgName' as const,
+      flag: '--orgName',
+      example: "'YourOrgName'",
+    },
+  },
+  REQUIRED_ENV_VARS: {
+    // Required for register app command
+    REGISTER_APP: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_TENANT_NAME',
+      'UIPATH_FOLDER_KEY',
+      'UIPATH_ACCESS_TOKEN'
+    ],
+    // Required for publish command (no folder key or tenant name needed)
+    PUBLISH: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_ACCESS_TOKEN'
+    ],
+    // Required for deploy command
+    DEPLOY: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_FOLDER_KEY',
+      'UIPATH_ACCESS_TOKEN'
+    ],
   },
   API_ENDPOINTS: {
     FOLDERS_NAVIGATION: '/Folders/GetAllForCurrentUser',
@@ -100,8 +176,4 @@ export const BASE_URLS: Record<string, string> = {
   alpha: 'https://alpha.uipath.com',
   cloud: 'https://cloud.uipath.com',
   staging: 'https://staging.uipath.com',
-} as const;
-
-export const CLIENT_IDS: Record<string, string> = {
-  default: '36dea5b8-e8bb-423d-8e7b-c808df8f1c00',
 } as const;
