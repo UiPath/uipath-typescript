@@ -161,9 +161,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
       failOnFirst: options.failOnFirst
     });
 
+    const isBatch = data.length > 1;
+    const endpoint = isBatch 
+      ? DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BATCH_BY_ID(id) 
+      : DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id);
+    const payload = isBatch ? data : data[0];
+
     const response = await this.post<EntityInsertResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
-      data,
+      endpoint,
+      payload,
       {
         params,
         ...options
