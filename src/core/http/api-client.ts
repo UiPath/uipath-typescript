@@ -99,10 +99,15 @@ export class ApiClient {
   private async request<T>(method: string, path: string, options: RequestSpec = {}): Promise<T> {
     // Ensure path starts with a forward slash
     const normalizedPath = path.startsWith('/') ? path.substring(1) : path;
-    
-    // Construct URL with org and tenant names
+
+    // TEMPORARY HACK: Use organizationId/tenantId if available (for conversational service)
+    // TODO: Remove this once backend supports orgName/tenantName
+    const orgPart = this.config.organizationId || this.config.orgName;
+    const tenantPart = this.config.tenantId || this.config.tenantName;
+
+    // Construct URL with org and tenant
     const url = new URL(
-      `${this.config.orgName}/${this.config.tenantName}/${normalizedPath}`,
+      `${orgPart}/${tenantPart}/${normalizedPath}`,
       this.config.baseUrl
     ).toString();
 

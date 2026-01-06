@@ -6,15 +6,19 @@ import { Navigation } from './components/Navigation';
 import { LoginScreen } from './components/LoginScreen';
 import { ProcessList } from './components/ProcessList';
 import { ProcessInstances } from './components/ProcessInstances';
+import { ConversationalAgentTest } from './components/ConversationalAgent';
+
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript';
 
 const authConfig: UiPathSDKConfig = {
   clientId: import.meta.env.VITE_UIPATH_CLIENT_ID || 'your-client-id',
   orgName: import.meta.env.VITE_UIPATH_ORG_NAME || 'your-organization',
   tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME || 'your-tenant',
-  baseUrl: window.location.origin,
-  redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI || window.location.origin,
-  scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access',
+  baseUrl: import.meta.env.VITE_UIPATH_BASE_URL,
+  redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI,
+  scope: import.meta.env.VITE_UIPATH_SCOPE,
+  organizationId: import.meta.env.VITE_UIPATH_ORGANIZATION_ID,
+  tenantId: import.meta.env.VITE_UIPATH_TENANT_ID
 };
 
 function AppContent() {
@@ -40,6 +44,8 @@ function AppContent() {
     switch (activeTab) {
       case 'instances':
         return <ProcessInstances />;
+      case 'conversational':
+        return <ConversationalAgentTest />;
       case 'processes':
       default:
         return <ProcessList />;

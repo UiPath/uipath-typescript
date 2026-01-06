@@ -57,7 +57,10 @@ export class UiPath {
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
-      scope: hasOAuthAuth ? config.scope : undefined
+      scope: hasOAuthAuth ? config.scope : undefined,
+      // Pass through organizationId and tenantId for conversational service
+      organizationId: config.organizationId,
+      tenantId: config.tenantId
     });
 
     const executionContext = new ExecutionContext();

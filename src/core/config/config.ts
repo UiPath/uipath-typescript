@@ -7,7 +7,11 @@ export const ConfigSchema = z.object({
   secret: z.string().optional(),
   clientId: z.string().optional(),
   redirectUri: z.string().url().optional(),
-  scope: z.string().optional()
+  scope: z.string().optional(),
+  // Temporary: organizationId and tenantId for conversational service
+  // TODO: Remove once backend supports orgName/tenantName
+  organizationId: z.string().optional(),
+  tenantId: z.string().optional()
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -20,6 +24,9 @@ interface ConfigOptions {
   clientId?: string;
   redirectUri?: string;
   scope?: string;
+  // Temporary: for conversational service
+  organizationId?: string;
+  tenantId?: string;
 }
 
 export class UiPathConfig {
@@ -30,6 +37,8 @@ export class UiPathConfig {
   public readonly clientId?: string;
   public readonly redirectUri?: string;
   public readonly scope?: string;
+  public readonly organizationId?: string;
+  public readonly tenantId?: string;
 
   constructor(options: ConfigOptions) {
     this.baseUrl = options.baseUrl;
@@ -39,6 +48,8 @@ export class UiPathConfig {
     this.clientId = options.clientId;
     this.redirectUri = options.redirectUri;
     this.scope = options.scope;
+    this.organizationId = options.organizationId;
+    this.tenantId = options.tenantId;
   }
 }
 

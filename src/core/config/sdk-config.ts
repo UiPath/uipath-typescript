@@ -3,6 +3,10 @@ export interface BaseConfig {
   baseUrl: string;
   orgName: string;
   tenantName: string;
+  // Temporary: organizationId and tenantId for conversational service
+  // TODO: Remove once backend supports orgName/tenantName
+  organizationId?: string;
+  tenantId?: string;
 }
 
 // OAuth specific fields
