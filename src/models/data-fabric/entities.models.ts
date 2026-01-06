@@ -196,18 +196,15 @@ export interface EntityServiceModel {
    *   fieldName: 'Documents'
    * });
    *
-   * // Display in browser
+   * // In browser: Create a URL from the blob and render it
    * const url = URL.createObjectURL(blob);
-   * img.src = url;
+   * iframe.src = url;    // Display PDF in iframe
+   * img.src = url;       // Display image
+   * URL.revokeObjectURL(url); // Clean up when done
    *
-   * // Download as file
-   * const a = document.createElement('a');
-   * a.href = URL.createObjectURL(blob);
-   * a.download = 'file.pdf';
-   * a.click();
-   *
-   * // Convert to ArrayBuffer if needed
-   * const buffer = await blob.arrayBuffer();
+   * // In Node.js: Convert blob to buffer and save to file
+   * const buffer = Buffer.from(await blob.arrayBuffer());
+   * fs.writeFileSync('attachment.pdf', buffer);
    * ```
    */
   downloadAttachment(options: DownloadAttachmentOptions): Promise<Blob>;
