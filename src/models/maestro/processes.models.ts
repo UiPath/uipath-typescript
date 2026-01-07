@@ -8,8 +8,19 @@ import { ProcessIncidentGetResponse } from './process-incidents.types';
 
 /**
  * Service for managing UiPath Maestro Processes
- * 
+ *
  * UiPath Maestro is a cloud-native orchestration layer that coordinates bots, AI agents, and humans for seamless, intelligent automation of complex workflows. [UiPath Maestro Guide](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/introduction-to-maestro)
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ *
+ * ```typescript
+ * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+ *
+ * const maestroProcesses = new MaestroProcesses(sdk);
+ * const allProcesses = await maestroProcesses.getAll();
+ * ```
  */
 export interface MaestroProcessesServiceModel {
   /**
@@ -18,19 +29,18 @@ export interface MaestroProcessesServiceModel {
    * @example
    * ```typescript
    * // Get all processes
-   * const processes = await sdk.maestro.processes.getAll();
-   * 
+   * const allProcesses = await maestroProcesses.getAll();
+   *
    * // Access process information and incidents
-   * for (const process of processes) {
+   * for (const process of allProcesses) {
    *   console.log(`Process: ${process.processKey}`);
    *   console.log(`Running instances: ${process.runningCount}`);
    *   console.log(`Faulted instances: ${process.faultedCount}`);
-   *   
+   *
    *   // Get incidents for this process
    *   const incidents = await process.getIncidents();
    *   console.log(`Incidents: ${incidents.length}`);
    * }
-   * 
    * ```
    */
   getAll(): Promise<MaestroProcessGetAllResponse[]>;
@@ -45,8 +55,8 @@ export interface MaestroProcessesServiceModel {
    * @example
    * ```typescript
    * // Get incidents for a specific process
-   * const incidents = await sdk.maestro.processes.getIncidents('<processKey>', '<folderKey>');
-   * 
+   * const incidents = await maestroProcesses.getIncidents('<processKey>', '<folderKey>');
+   *
    * // Access incident details
    * for (const incident of incidents) {
    *   console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);

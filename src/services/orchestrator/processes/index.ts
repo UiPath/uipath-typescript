@@ -8,7 +8,7 @@
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Processes } from '@uipath/uipath-typescript/orchestrator-processes';
+ * import { Processes } from '@uipath/uipath-typescript/processes';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
