@@ -7,7 +7,7 @@
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Cases, CaseInstances } from '@uipath/uipath-typescript/maestro-cases';
+ * import { Cases, CaseInstances } from '@uipath/uipath-typescript/cases';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
