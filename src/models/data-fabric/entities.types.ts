@@ -72,7 +72,7 @@ export interface EntityDeleteOptions {
 /**
  * Options for downloading an attachment from an entity record
  */
-export interface DownloadAttachmentOptions {
+export interface EntityDownloadAttachmentOptions {
   /** Entity name */
   entityName: string;
   /** Record ID */

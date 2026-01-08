@@ -14,7 +14,7 @@ import {
   EntityRecord,
   RawEntityGetResponse,
   EntityFieldDataType,
-  DownloadAttachmentOptions
+  EntityDownloadAttachmentOptions
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -309,7 +309,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    */
   @track('Entities.DownloadAttachment')
-  async downloadAttachment(options: DownloadAttachmentOptions): Promise<Blob> {
+  async downloadAttachment(options: EntityDownloadAttachmentOptions): Promise<Blob> {
     const { entityName, recordId, fieldName } = options;
 
     const response = await this.get<Blob>(

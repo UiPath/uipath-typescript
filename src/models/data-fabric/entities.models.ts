@@ -8,7 +8,7 @@ import {
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  DownloadAttachmentOptions
+  EntityDownloadAttachmentOptions
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -217,7 +217,7 @@ export interface EntityServiceModel {
    * fs.writeFileSync('attachment.pdf', buffer);
    * ```
    */
-  downloadAttachment(options: DownloadAttachmentOptions): Promise<Blob>;
+  downloadAttachment(options: EntityDownloadAttachmentOptions): Promise<Blob>;
 }
 
 /**
