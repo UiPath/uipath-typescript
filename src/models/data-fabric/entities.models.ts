@@ -190,30 +190,29 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Download attachment
-   * const blob = await sdk.entities.downloadAttachment({
+   * const response = await sdk.entities.downloadAttachment({
    *   entityName: 'Invoice',
    *   recordId: '<record-uuid>',
    *   fieldName: 'Documents'
    * });
    *
-   * // --- Browser: Display Image ---
+   * // Browser: Display Image
+   * const url = URL.createObjectURL(response);
    * const img = document.getElementById('image');
-   * img.src = URL.createObjectURL(blob);
+   * img.src = url;
+   * // Call URL.revokeObjectURL(url) when done
    *
-   * // --- Browser: Display PDF (Option 1 - Blob URL) ---
-   * const url = URL.createObjectURL(blob);
+   * // Browser: Display PDF in iframe
+   * const url = URL.createObjectURL(response);
    * iframe.src = url;
-   * URL.revokeObjectURL(url); // Clean up when done
+   * // Call URL.revokeObjectURL(url) when done
    *
-   * // --- Browser: Display PDF (Option 2 - PDF.js) ---
-   * const arrayBuffer = await blob.arrayBuffer();
+   * // Browser: Render PDF with PDF.js
+   * const arrayBuffer = await response.arrayBuffer();
    * const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-   * const page = await pdf.getPage(1);
-   * const canvas = document.getElementById('canvas');
-   * await page.render({ canvasContext: canvas.getContext('2d'), viewport: page.getViewport({ scale: 1.5 }) }).promise;
    *
-   * // --- Node.js: Save to file ---
-   * const buffer = Buffer.from(await blob.arrayBuffer());
+   * // Node.js: Save to file
+   * const buffer = Buffer.from(await response.arrayBuffer());
    * fs.writeFileSync('attachment.pdf', buffer);
    * ```
    */
