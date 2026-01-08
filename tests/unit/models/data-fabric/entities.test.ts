@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createEntityWithMethods } from '../../../../src/models/data-fabric/entities.models';
 import type { EntityServiceModel } from '../../../../src/models/data-fabric/entities.models';
-import { createBasicEntity, createMockEntityRecords, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse } from '../../../utils/mocks/entities';
+import { createBasicEntity, createMockEntityRecords, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 
@@ -371,7 +371,7 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        const mockBlob = new Blob(['test content'], { type: 'application/pdf' });
+        const mockBlob = createMockBlob();
         mockService.downloadAttachment = vi.fn().mockResolvedValue(mockBlob);
 
         const result = await entity.downloadAttachment(
@@ -391,7 +391,7 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        const mockBlob = new Blob(['image data'], { type: 'image/png' });
+        const mockBlob = createMockBlob('image data', 'image/png');
         mockService.downloadAttachment = vi.fn().mockResolvedValue(mockBlob);
 
         const result = await entity.downloadAttachment(

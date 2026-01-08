@@ -649,3 +649,23 @@ export const createMockEntityWithExternalFields = (): any => {
   });
 };
 
+/**
+ * Creates a mock Blob for testing attachment downloads
+ * @param content - Content of the blob (default: 'test content')
+ * @param type - MIME type of the blob (default: 'application/pdf')
+ * @returns Mock Blob object
+ *
+ * @example
+ * // Default PDF blob
+ * const blob = createMockBlob();
+ *
+ * // Image blob
+ * const imageBlob = createMockBlob('image data', 'image/png');
+ */
+export const createMockBlob = (
+  content: string = 'test content',
+  type: string = 'application/pdf'
+): Blob => {
+  return new Blob([content], { type });
+};
+
