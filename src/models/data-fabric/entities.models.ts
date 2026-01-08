@@ -198,13 +198,12 @@ export interface EntityServiceModel {
    *
    * // Browser: Display Image
    * const url = URL.createObjectURL(response);
-   * const img = document.getElementById('image');
-   * img.src = url;
+   * document.getElementById('image').src = url;
    * // Call URL.revokeObjectURL(url) when done
    *
    * // Browser: Display PDF in iframe
    * const url = URL.createObjectURL(response);
-   * iframe.src = url;
+   * document.getElementById('pdf-viewer').src = url;
    * // Call URL.revokeObjectURL(url) when done
    *
    * // Browser: Render PDF with PDF.js
