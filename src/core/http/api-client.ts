@@ -6,7 +6,7 @@ import { TokenInfo } from '../auth/types';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
-import { CONTENT_TYPES } from '../../utils/constants/headers';
+import { CONTENT_TYPES, RESPONSE_TYPES } from '../../utils/constants/headers';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -136,7 +136,7 @@ export class ApiClient {
       }
 
       // Handle blob response type for binary data (e.g., file downloads)
-      if (options.responseType === 'blob') {
+      if (options.responseType === RESPONSE_TYPES.BLOB) {
         const blob = await response.blob();
         return blob as T;
       }

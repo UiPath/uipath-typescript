@@ -21,6 +21,7 @@ import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
+import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
@@ -314,7 +315,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const response = await this.get<Blob>(
       DATA_FABRIC_ENDPOINTS.ATTACHMENT.DOWNLOAD(entityName, recordId, fieldName),
       {
-        responseType: 'blob'
+        responseType: RESPONSE_TYPES.BLOB
       }
     );
 

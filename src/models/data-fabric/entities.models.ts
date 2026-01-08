@@ -183,7 +183,7 @@ export interface EntityServiceModel {
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
 
   /**
-   * Downloads an attachment from an entity record field
+   * Downloads an attachment stored in a File-type field of an entity record.
    *
    * @param options - Options containing entityName, recordId, and fieldName
    * @returns Promise resolving to Blob containing the file content
@@ -254,7 +254,7 @@ export interface EntityMethods {
 
   /**
    * Get records from this entity
-   * 
+   *
    * @param options - Query options
    * @returns Promise resolving to query response
    */
@@ -263,6 +263,15 @@ export interface EntityMethods {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   >;
+
+  /**
+   * Downloads an attachment stored in a File-type field of an entity record
+   *
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
+   * @returns Promise resolving to Blob containing the file content
+   */
+  downloadAttachment(recordId: string, fieldName: string): Promise<Blob>;
 }
 
 /**
@@ -303,8 +312,18 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
         : NonPaginatedResponse<EntityRecord>
     > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      
+
       return service.getRecordsById(entityData.id, options) as any;
+    },
+
+    async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
+      if (!entityData.name) throw new Error('Entity name is undefined');
+
+      return service.downloadAttachment({
+        entityName: entityData.name,
+        recordId,
+        fieldName
+      });
     }
   };
 }
