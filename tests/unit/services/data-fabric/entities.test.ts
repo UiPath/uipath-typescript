@@ -415,7 +415,7 @@ describe('EntityService Unit Tests', () => {
 
       // Verify the API call has correct endpoint and body
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BATCH_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         testData,
         expect.objectContaining({
           params: expect.any(Object)
