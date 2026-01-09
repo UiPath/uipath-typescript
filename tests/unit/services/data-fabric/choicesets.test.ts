@@ -15,7 +15,7 @@ import { CHOICESET_TEST_CONSTANTS } from '../../../utils/constants/choicesets';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { DATA_FABRIC_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
-import type { ChoiceSetValue } from '../../../../src/models/data-fabric/choicesets.types';
+import type { ChoiceSetValueGetResponse } from '../../../../src/models/data-fabric/choicesets.types';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -230,7 +230,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(config.transformFn).toBeDefined();
 
       // Test the transform function directly
-      const transformed = config.transformFn(mockRawValue) as ChoiceSetValue;
+      const transformed = config.transformFn(mockRawValue) as ChoiceSetValueGetResponse;
       expect(transformed.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
       expect(transformed.name).toBe(CHOICESET_TEST_CONSTANTS.VALUE_NAME);
       expect(transformed.displayName).toBe(CHOICESET_TEST_CONSTANTS.VALUE_DISPLAY_NAME);
@@ -271,7 +271,7 @@ describe('ChoiceSetService Unit Tests', () => {
 
     it('should return paginated response when pagination options provided', async () => {
       const mockValues = createMockChoiceSetValues(2);
-      const mockResponse: PaginatedResponse<ChoiceSetValue> = {
+      const mockResponse: PaginatedResponse<ChoiceSetValueGetResponse> = {
         items: mockValues.map((v: any) => ({
           id: v.Id,
           name: v.Name,
@@ -296,7 +296,7 @@ describe('ChoiceSetService Unit Tests', () => {
 
       const result = await choiceSetService.getById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
         pageSize: 2
-      }) as PaginatedResponse<ChoiceSetValue>;
+      }) as PaginatedResponse<ChoiceSetValueGetResponse>;
 
       // Verify pagination options were passed
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(

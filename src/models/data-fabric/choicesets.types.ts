@@ -26,7 +26,7 @@ export interface ChoiceSetGetAllResponse {
 /**
  * Represents a single choice set value/record
  */
-export interface ChoiceSetValue {
+export interface ChoiceSetValueGetResponse {
   /** Unique identifier for the choice set value */
   id: string;
   /** Name of the choice set value */

@@ -24,7 +24,7 @@ export interface RawChoiceSetGetAllResponse {
 /**
  * Raw ChoiceSet Value API Response (PascalCase from API)
  */
-export interface RawChoiceSetValue {
+export interface RawChoiceSetValueGetResponse {
   Id: string;
   Name: string;
   DisplayName: string;
