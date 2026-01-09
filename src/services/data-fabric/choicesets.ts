@@ -3,12 +3,16 @@ import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution';
 import { TokenManager } from '../../core/auth/token-manager';
 import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.models';
-import { ChoiceSetGetAllResponse } from '../../models/data-fabric/choicesets.types';
-import { RawChoiceSetGetAllResponse } from '../../models/data-fabric/choicesets.internal-types';
+import { ChoiceSetGetAllResponse, ChoiceSetValueGetResponse, ChoiceSetGetByIdOptions } from '../../models/data-fabric/choicesets.types';
+import { RawChoiceSetGetAllResponse, RawChoiceSetValueGetResponse } from '../../models/data-fabric/choicesets.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
-import { transformData } from '../../utils/transform';
+import { transformData, parseJsonArray, pascalToCamelCaseKeys } from '../../utils/transform';
 import { EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
+import { PaginationType } from '../../utils/pagination/internal-types';
+import { PaginationHelpers } from '../../utils/pagination/helpers';
+import { CHOICESET_VALUES_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
 
 export class ChoiceSetService extends BaseService implements ChoiceSetServiceModel {
   /**
@@ -46,6 +50,77 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
     return data.map(choiceSet =>
       transformData(choiceSet, EntityMap) as unknown as ChoiceSetGetAllResponse
     );
+  }
+
+  /**
+   * Gets choice set values by choice set ID with optional pagination
+   *
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   *
+   * @param choicesetId - UUID of the choice set
+   * @param options - Query options including expansionLevel and pagination options
+   * @returns Promise resolving to choice set values or paginated result
+   *
+   * @example
+   * ```typescript
+   * // Get all values (non-paginated)
+   * const values = await sdk.entities.choicesets.getById('<choicesetId>');
+   *
+   * // Iterate through choice set values
+   * for (const value of values.items) {
+   *   console.log(`Value: ${value.displayName} (${value.name})`);
+   * }
+   *
+   * // With expansion level
+   * const values = await sdk.entities.choicesets.getById('<choicesetId>', {
+   *   expansionLevel: 1
+   * });
+   *
+   * // First page with pagination
+   * const page1 = await sdk.entities.choicesets.getById('<choicesetId>', { pageSize: 10 });
+   *
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await sdk.entities.choicesets.getById('<choicesetId>', { cursor: page1.nextCursor });
+   * }
+   * ```
+   */
+  @track('Choicesets.GetById')
+  async getById<T extends ChoiceSetGetByIdOptions = ChoiceSetGetByIdOptions>(
+    choicesetId: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<ChoiceSetValueGetResponse>
+      : NonPaginatedResponse<ChoiceSetValueGetResponse>
+  > {
+    // Transformation function for choice set values
+    const transformChoiceSetValue = (item: RawChoiceSetValueGetResponse): ChoiceSetValueGetResponse => {
+      // First convert PascalCase to camelCase, then rename time fields
+      const camelCased = pascalToCamelCaseKeys(item);
+      return transformData(camelCased, EntityMap) as unknown as ChoiceSetValueGetResponse;
+    };
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(choicesetId),
+      transformFn: transformChoiceSetValue,
+      parseItemsFn: parseJsonArray<RawChoiceSetValueGetResponse>,
+      method: 'POST',
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: CHOICESET_VALUES_PAGINATION.ITEMS_FIELD,
+        totalCountField: CHOICESET_VALUES_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
+        }
+      },
+      excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
+    }, options) as any;
   }
 }
 
