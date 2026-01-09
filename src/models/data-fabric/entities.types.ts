@@ -1,7 +1,7 @@
 import { PaginationOptions } from '../../utils/pagination/types';
 
 /**
- * Entity field type names 
+ * Entity field type names
  */
 export enum EntityFieldDataType {
   UUID = 'UUID',
@@ -67,6 +67,18 @@ export type EntityUpdateOptions = EntityOperationOptions;
 export interface EntityDeleteOptions {
   /** Whether to fail on first error (default: false) */
   failOnFirst?: boolean;
+}
+
+/**
+ * Options for downloading an attachment from an entity record
+ */
+export interface EntityDownloadAttachmentOptions {
+  /** Entity name */
+  entityName: string;
+  /** Record ID */
+  recordId: string;
+  /** Field name containing the attachment */
+  fieldName: string;
 }
 
 /**
