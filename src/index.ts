@@ -6,7 +6,7 @@
 
 // Export core functionality
 export { UiPath } from './uipath';
-export type { UiPathSDKConfig, BaseConfig, OAuthFields } from './core/config/sdk-config';
+export type { UiPathSDKConfig, BaseConfig, OAuthFields, TokenStorage } from './core/config/sdk-config';
 
 // Export all models
 export * from './models/common';
