@@ -14,11 +14,15 @@ export class AuthService extends BaseService {
     // Check if we should use stored OAuth context instead of provided config
     const storedContext = AuthService.getStoredOAuthContext();
     const effectiveConfig = storedContext ? AuthService._mergeConfigWithContext(config, storedContext) : config;
-    
+
     const isOAuth = hasOAuthConfig(effectiveConfig);
     const tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
     super(effectiveConfig, executionContext, tokenManager);
     this.tokenManager = tokenManager;
+
+    // Auto-load token from storage on initialization
+    // This ensures isAuthenticated() returns true after page refresh if a valid token exists
+    this.tokenManager.loadFromStorage();
   }
 
   /**
