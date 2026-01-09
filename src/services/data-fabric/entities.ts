@@ -313,7 +313,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const { entityName, recordId, fieldName } = options;
 
     const response = await this.get<Blob>(
-      DATA_FABRIC_ENDPOINTS.ATTACHMENT.DOWNLOAD(entityName, recordId, fieldName),
+      DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(entityName, recordId, fieldName),
       {
         responseType: RESPONSE_TYPES.BLOB
       }

@@ -4,7 +4,6 @@ import { createEntityWithMethods } from '../../../../src/models/data-fabric/enti
 import type { EntityServiceModel } from '../../../../src/models/data-fabric/entities.models';
 import { createBasicEntity, createMockEntityRecords, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
-import { TEST_CONSTANTS } from '../../../utils/constants/common';
 
 // ===== TEST SUITE =====
 describe('Entity Models', () => {

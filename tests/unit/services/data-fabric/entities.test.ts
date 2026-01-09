@@ -22,7 +22,7 @@ import type {
   EntityUpdateOptions,
   EntityDeleteOptions,
   EntityRecord,
-  DownloadAttachmentOptions
+  EntityDownloadAttachmentOptions
 } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -686,7 +686,7 @@ describe('EntityService Unit Tests', () => {
       const mockBlob = new Blob(['test content'], { type: 'application/pdf' });
       mockApiClient.get.mockResolvedValue(mockBlob);
 
-      const options: DownloadAttachmentOptions = {
+      const options: EntityDownloadAttachmentOptions = {
         entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
         recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
         fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
@@ -701,7 +701,7 @@ describe('EntityService Unit Tests', () => {
 
       // Verify the API call has correct endpoint and responseType
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ATTACHMENT.DOWNLOAD(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(
           ENTITY_TEST_CONSTANTS.ENTITY_NAME,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
@@ -714,7 +714,7 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      const options: DownloadAttachmentOptions = {
+      const options: EntityDownloadAttachmentOptions = {
         entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
         recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
         fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
