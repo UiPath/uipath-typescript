@@ -1,33 +1,33 @@
-import { FolderScopedService } from '../folder-scoped';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { 
-  QueueGetResponse, 
-  QueueGetAllOptions, 
+import { FolderScopedService } from '../../folder-scoped';
+import type { UiPath } from '../../../core/uipath';
+import {
+  QueueGetResponse,
+  QueueGetAllOptions,
   QueueGetByIdOptions
-} from '../../models/orchestrator/queues.types';
-import { QueueServiceModel } from '../../models/orchestrator/queues.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
-import { createHeaders } from '../../utils/http/headers';
-import { TokenManager } from '../../core/auth/token-manager';
-import { FOLDER_ID } from '../../utils/constants/headers';
-import { QUEUE_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { QueueMap } from '../../models/orchestrator/queues.constants';
-import { track } from '../../core/telemetry';
+} from '../../../models/orchestrator/queues.types';
+import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
+import { QUEUE_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { QueueMap } from '../../../models/orchestrator/queues.constants';
+import { track } from '../../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Queues API
  */
 export class QueueService extends FolderScopedService implements QueueServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Queues service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: UiPath) {
+    super(instance);
   }
 
   /**

@@ -47,7 +47,7 @@ describe('TaskService Unit Tests', () => {
 
   beforeEach(() => {
     // Create mock instances using centralized setup
-    const { config, executionContext, tokenManager } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
@@ -56,7 +56,7 @@ describe('TaskService Unit Tests', () => {
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    taskService = new TaskService(config, executionContext, tokenManager);
+    taskService = new TaskService(instance);
   });
 
   afterEach(() => {

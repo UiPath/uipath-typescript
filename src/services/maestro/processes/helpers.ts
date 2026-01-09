@@ -1,7 +1,7 @@
-import { NO_INSTANCE, UNKNOWN } from '../../utils/constants/common';
-import { transformData } from '../../utils/transform';
-import { ProcessIncidentMap } from '../../models/maestro/process-incidents.constants';
-import type { ProcessIncidentGetResponse } from '../../models/maestro/process-incidents.types';
+import { NO_INSTANCE, UNKNOWN } from '../../../utils/constants/common';
+import { transformData } from '../../../utils/transform';
+import { ProcessIncidentMap } from '../../../models/maestro/process-incidents.constants';
+import type { ProcessIncidentGetResponse } from '../../../models/maestro/process-incidents.types';
 
 /**
 * Helpers for fetching BPMN XML and extracting element details used to annotate responses

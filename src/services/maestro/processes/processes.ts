@@ -1,15 +1,13 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse } from '../../models/maestro';
-import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
-import type { MaestroProcessesServiceModel } from '../../models/maestro/processes.models';
-import { createProcessWithMethods } from '../../models/maestro/processes.models';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse } from '../../../models/maestro';
+import { BaseService } from '../../base';
+import type { UiPath } from '../../../core/uipath';
+import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
+import { createProcessWithMethods } from '../../../models/maestro/processes.models';
 import { BpmnHelpers } from './helpers';
-import { track } from '../../core/telemetry';
-import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_KEY } from '../../utils/constants/headers';
+import { track } from '../../../core/telemetry';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_KEY } from '../../../utils/constants/headers';
 import { ProcessInstancesService } from './process-instances';
 
 /**
@@ -19,11 +17,13 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   private processInstancesService: ProcessInstancesService;
 
   /**
-   * @hideconstructor
+   * Creates an instance of the Maestro Processes service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-    this.processInstancesService = new ProcessInstancesService(config, executionContext, tokenManager);
+  constructor(instance: UiPath) {
+    super(instance);
+    this.processInstancesService = new ProcessInstancesService(instance);
   }
 
   /**
