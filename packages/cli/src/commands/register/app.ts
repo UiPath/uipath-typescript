@@ -63,9 +63,8 @@ export default class RegisterApp extends Command {
     }),
     type: Flags.string({
       char: 't',
-      description: 'App Type',
+      description: 'App Type (Web or Action)',
       default: AppType.Web,
-      options: [AppType.Web, AppType.Action]
     })
   };
 
@@ -90,7 +89,7 @@ export default class RegisterApp extends Command {
     // Get app details
     const appName = flags.name || await this.promptForAppName();
     const appVersion = flags.version;
-    const isActionApp = (flags.type as AppType) === AppType.Action;
+    const isActionApp = flags.type.toLowerCase() === AppType.Action.toLowerCase();
 
     if (isActionApp && !fs.existsSync(path.join(process.cwd(), ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME))) {
       this.log(chalk.red(`${MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED}`));
