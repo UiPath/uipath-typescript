@@ -162,7 +162,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     });
 
     const response = await this.post<EntityInsertResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
+      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BATCH_BY_ID(id),
       data,
       {
         params,
