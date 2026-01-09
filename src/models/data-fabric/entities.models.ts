@@ -189,16 +189,21 @@ export interface EntityServiceModel {
    * @returns Promise resolving to Blob containing the file content
    * @example
    * ```typescript
+   * // First, get records to obtain the record ID
+   * const records = await sdk.entities.getRecordsById(<entityId>);
+   * // Get the recordId for the record that contains the attachment
+   * const recordId = records.items[0].id;
+   *
    * // Download attachment using SDK method
    * const response = await sdk.entities.downloadAttachment({
    *   entityName: 'Invoice',
-   *   recordId: '<record-uuid>',
+   *   recordId: recordId,
    *   fieldName: 'Documents'
    * });
    *
    * // Or download using entity method
-   * const entity = await sdk.entities.getById('<entity-uuid>');
-   * const response = await entity.downloadAttachment('<record-uuid>', 'Documents');
+   * const entity = await sdk.entities.getById(<entityId>);
+   * const response = await entity.downloadAttachment(recordId, 'Documents');
    *
    * // Browser: Display Image
    * const url = URL.createObjectURL(response);
