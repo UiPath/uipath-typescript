@@ -28,6 +28,21 @@ function rewriteDtsImports() {
 }
 
 
+// Custom plugin to rewrite import paths in .d.ts files
+// This normalizes core import paths to '../core/index' for cleaner output
+function rewriteDtsImports() {
+  return {
+    name: 'rewrite-dts-imports',
+    renderChunk(code) {
+      return code.replace(
+        /from ['"](?:(?:\.\.\/)+|@\/)core\/(?:types|uipath|index)['"]/g,
+        "from '../core/index'"
+      );
+    }
+  };
+}
+
+
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 const allDependencies = [
