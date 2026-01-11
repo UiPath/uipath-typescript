@@ -1,6 +1,6 @@
 import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse } from '../../../models/maestro';
 import { BaseService } from '../../base';
-import type { UiPath } from '../../../core/uipath';
+import type { IUiPathSDK } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
@@ -21,7 +21,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
     this.processInstancesService = new ProcessInstancesService(instance);
   }

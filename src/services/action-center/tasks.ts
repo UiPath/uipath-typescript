@@ -1,5 +1,5 @@
 import { BaseService } from '../base';
-import type { UiPath } from '../../core/uipath';
+import type { IUiPathSDK } from '../../core/types';
 import { 
   TaskCreateOptions, 
   TaskAssignmentOptions,
@@ -41,7 +41,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
   }
 

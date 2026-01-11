@@ -1,5 +1,5 @@
 import { BaseService } from './base';
-import type { UiPath } from '../core/uipath';
+import type { IUiPathSDK } from '../core/types';
 import { CollectionResponse } from '../models/common/types';
 import { createHeaders } from '../utils/http/headers';
 import { FOLDER_ID } from '../utils/constants/headers';
@@ -22,7 +22,7 @@ export class FolderScopedService extends BaseService {
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
   }
 
