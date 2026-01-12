@@ -214,8 +214,8 @@ serviceEntries.forEach(({ name, input, output }) => {
     input,
     output: { file: `dist/${output}.d.ts`, format: 'es' },
     plugins: isCore
-      ? [dts()]
-      : [dts(), rewriteDtsImports()],
+      ? [alias(aliasConfig), dts()]
+      : [alias(aliasConfig), dts(), rewriteDtsImports()],
     external: dtsExternal
   });
 });
