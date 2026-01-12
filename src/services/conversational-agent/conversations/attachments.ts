@@ -6,7 +6,7 @@
  */
 
 // Core SDK imports
-import type { UiPath } from '@/core/uipath';
+import type { IUiPathSDK } from '@/core/types';
 import { NetworkError } from '@/core/errors';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
@@ -14,6 +14,7 @@ import { BaseService } from '@/services/base';
 // Models
 import type {
   AttachmentCreateApiResponse,
+  AttachmentOperationsServiceModel,
   AttachmentUploadResponse,
   ConversationId
 } from '@/models/conversational';
@@ -50,12 +51,12 @@ export interface InitializeFileOutput extends AttachmentCreateApiResponse {}
  * // Handle upload manually using initResult.fileUploadAccess
  * ```
  */
-export class AttachmentOperations extends BaseService {
+export class AttachmentOperations extends BaseService implements AttachmentOperationsServiceModel {
   /**
    * Creates a new AttachmentOperations instance
    * @param instance - UiPath SDK instance
    */
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
   }
 
