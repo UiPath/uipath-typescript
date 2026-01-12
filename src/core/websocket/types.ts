@@ -48,10 +48,10 @@ export interface BaseWebSocketConfig {
   reconnectionDelay?: number;
   /** Maximum delay between reconnection attempts (ms) */
   reconnectionDelayMax?: number;
-  /** Organization ID (passed from SDK config) */
-  organizationId?: string;
-  /** Tenant ID (passed from SDK config) */
-  tenantId?: string;
+  /** Organization name (passed from SDK config) */
+  orgName?: string;
+  /** Tenant name (passed from SDK config) */
+  tenantName?: string;
 }
 
 /**

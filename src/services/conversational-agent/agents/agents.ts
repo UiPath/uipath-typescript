@@ -3,12 +3,12 @@
  */
 
 // Core SDK imports
-import type { UiPath } from '@/core/uipath';
+import type { IUiPathSDK } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
-import type { AgentRelease, AgentReleaseWithAppearance } from '@/models/conversational';
+import type { AgentRelease, AgentReleaseWithAppearance, AgentsServiceModel } from '@/models/conversational';
 
 // Utils
 import { AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -36,12 +36,12 @@ import { AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
  * const agent = await agents.getById(folderId, agentId);
  * ```
  */
-export class Agents extends BaseService {
+export class Agents extends BaseService implements AgentsServiceModel {
   /**
    * Creates a new Agents service instance
    * @param instance - UiPath SDK instance
    */
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
   }
 

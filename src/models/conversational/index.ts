@@ -28,3 +28,6 @@ export * from './conversation-responses.types';
 
 // LLM Ops types (Tracing/Observability)
 export * from './llm-ops.types';
+
+// Service models (documented interfaces)
+export * from './conversational.models';
