@@ -7,7 +7,7 @@
  */
 
 // Core SDK imports
-import type { UiPath } from '@/core/uipath';
+import type { IUiPathSDK } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
@@ -18,7 +18,8 @@ import type {
   ConversationId,
   ExchangeId,
   Message,
-  MessageId
+  MessageId,
+  MessageOperationsServiceModel
 } from '@/models/conversational';
 
 // Utils
@@ -59,12 +60,12 @@ import {
  * );
  * ```
  */
-export class MessageOperations extends BaseService {
+export class MessageOperations extends BaseService implements MessageOperationsServiceModel {
   /**
    * Creates a new MessageOperations instance
    * @param instance - UiPath SDK instance
    */
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
   }
 
