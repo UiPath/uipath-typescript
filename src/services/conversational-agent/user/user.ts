@@ -3,13 +3,14 @@
  */
 
 // Core SDK imports
-import type { UiPath } from '@/core/uipath';
+import type { IUiPathSDK } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
 import type {
   UpdateUserSettingsInput,
+  UserServiceModel,
   UserSettings,
   UserSettingsGetResponse,
   UserSettingsUpdateResponse
@@ -50,8 +51,8 @@ import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
  * });
  * ```
  */
-export class User extends BaseService {
-  constructor(instance: UiPath) {
+export class User extends BaseService implements UserServiceModel {
+  constructor(instance: IUiPathSDK) {
     super(instance);
   }
 
