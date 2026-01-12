@@ -1,5 +1,5 @@
 import { BaseService } from '../../base';
-import type { UiPath } from '../../../core/uipath';
+import type { IUiPathSDK } from '../../../core/types';
 import {
   CaseInstanceGetResponse,
   RawCaseInstanceGetResponse,
@@ -48,7 +48,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
     this.taskService = new TaskService(instance);
   }

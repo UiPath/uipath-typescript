@@ -7,14 +7,14 @@
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Processes, ProcessInstances, ProcessIncidents } from '@uipath/uipath-typescript/maestro-processes';
+ * import { MaestroProcesses, ProcessInstances, ProcessIncidents } from '@uipath/uipath-typescript/maestro-processes';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
  * // Get BPMN process definitions
- * const processes = new Processes(sdk);
- * const allProcesses = await processes.getAll();
+ * const maestroProcesses = new MaestroProcesses(sdk);
+ * const allProcesses = await maestroProcesses.getAll();
  *
  * // Get process instances
  * const processInstances = new ProcessInstances(sdk);
@@ -28,7 +28,7 @@
  * @module
  */
 
-export { MaestroProcessesService as Processes, MaestroProcessesService } from './processes';
+export { MaestroProcessesService as MaestroProcesses, MaestroProcessesService } from './processes';
 export { ProcessInstancesService as ProcessInstances, ProcessInstancesService } from './process-instances';
 export { ProcessIncidentsService as ProcessIncidents, ProcessIncidentsService } from './process-incidents';
 
