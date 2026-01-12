@@ -7,12 +7,12 @@
  */
 
 // Core SDK imports
-import type { UiPath } from '@/core/uipath';
+import type { IUiPathSDK } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
-import type { LlmOpsSpan, RawLlmOpsSpan } from '@/models/conversational';
+import type { LlmOpsSpan, RawLlmOpsSpan, TracesServiceModel } from '@/models/conversational';
 
 // Utils
 import { TRACES_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -46,8 +46,8 @@ import { TRACES_ENDPOINTS } from '@/utils/constants/endpoints';
  * }
  * ```
  */
-export class Traces extends BaseService {
-  constructor(instance: UiPath) {
+export class Traces extends BaseService implements TracesServiceModel {
+  constructor(instance: IUiPathSDK) {
     super(instance);
   }
 

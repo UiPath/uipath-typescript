@@ -8,7 +8,7 @@
  */
 
 // Core SDK imports
-import type { UiPath } from '@/core/uipath';
+import type { IUiPathSDK } from '@/core/types';
 import { ValidationError } from '@/core/errors';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
@@ -20,6 +20,7 @@ import type {
   ConversationCreateResponse,
   ConversationDeleteResponse,
   ConversationResponse,
+  ConversationsServiceModel,
   CreateConversationInput,
   ListConversationsInput,
   UpdateConversationInput
@@ -74,7 +75,7 @@ import { MessageOperations } from './messages';
  * const attachment = await conversations.attachments.upload(conversationId, file);
  * ```
  */
-export class Conversations extends BaseService {
+export class Conversations extends BaseService implements ConversationsServiceModel {
   /** Exchange operations for conversations */
   public readonly exchanges: ExchangeOperations;
 
@@ -84,7 +85,7 @@ export class Conversations extends BaseService {
   /** Attachment operations for conversations */
   public readonly attachments: AttachmentOperations;
 
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
     this.exchanges = new ExchangeOperations(instance);
     this.messages = new MessageOperations(instance);

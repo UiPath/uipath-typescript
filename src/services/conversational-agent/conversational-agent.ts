@@ -10,13 +10,13 @@
  */
 
 // Core SDK imports
-import type { UiPath } from '@/core/uipath';
+import type { IUiPathSDK } from '@/core/types';
 import { ConnectionStatus } from '@/core/websocket';
 import type { ConnectionStatusChangedHandler, LogLevel } from '@/core/websocket';
 import { BaseService } from '@/services/base';
 
 // Models
-import type { FeatureFlags } from '@/models/conversational';
+import type { ConversationalAgentServiceModel, FeatureFlags } from '@/models/conversational';
 
 // Utils
 import { UTILITY_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -55,8 +55,6 @@ export interface ConversationalAgentOptions {
  *   baseUrl: 'https://cloud.uipath.com',
  *   orgName: 'myorg',
  *   tenantName: 'mytenant',
- *   organizationId: 'org-uuid',
- *   tenantId: 'tenant-uuid',
  *   secret: 'your-secret'
  * });
  * await sdk.initialize();
@@ -81,7 +79,7 @@ export interface ConversationalAgentOptions {
  * });
  * ```
  */
-export class ConversationalAgent extends BaseService {
+export class ConversationalAgent extends BaseService implements ConversationalAgentServiceModel {
   /** Session manager for WebSocket lifecycle */
   private _sessionManager: SessionManager;
 
@@ -106,7 +104,7 @@ export class ConversationalAgent extends BaseService {
    * @param instance - UiPath SDK instance
    * @param options - Optional configuration (externalUserId, logLevel)
    */
-  constructor(instance: UiPath, options?: ConversationalAgentOptions) {
+  constructor(instance: IUiPathSDK, options?: ConversationalAgentOptions) {
     super(instance);
 
     // Create HTTP services

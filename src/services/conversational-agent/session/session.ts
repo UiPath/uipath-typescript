@@ -6,7 +6,7 @@
  * - Automatic token refresh on reconnection (via BaseWebSocket.getValidToken())
  */
 
-import type { UiPath } from '@/core/uipath';
+import type { IUiPathSDK } from '@/core/types';
 import { BaseWebSocket } from '@/core/websocket';
 import type { LogLevel } from '@/core/websocket';
 import { SDKInternalsRegistry } from '@/core/internals';
@@ -48,7 +48,7 @@ export interface WebSocketSessionOptions {
 export class WebSocketSession extends BaseWebSocket {
   private _externalUserId?: string;
 
-  constructor(instance: UiPath, options?: WebSocketSessionOptions) {
+  constructor(instance: IUiPathSDK, options?: WebSocketSessionOptions) {
     const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
 
     super(
@@ -71,11 +71,11 @@ export class WebSocketSession extends BaseWebSocket {
   connect(): void {
     const query: Record<string, string> = {};
 
-    if (this._config.organizationId) {
-      query[WEBSOCKET_HEADERS.ORGANIZATION_ID] = this._config.organizationId;
+    if (this._config.orgName) {
+      query[WEBSOCKET_HEADERS.ORGANIZATION_ID] = this._config.orgName;
     }
-    if (this._config.tenantId) {
-      query[WEBSOCKET_HEADERS.TENANT_ID] = this._config.tenantId;
+    if (this._config.tenantName) {
+      query[WEBSOCKET_HEADERS.TENANT_ID] = this._config.tenantName;
     }
     if (this._externalUserId) {
       query[WEBSOCKET_HEADERS.EXTERNAL_USER_ID] = this._externalUserId;
