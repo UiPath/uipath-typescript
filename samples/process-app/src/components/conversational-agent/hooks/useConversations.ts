@@ -8,7 +8,7 @@ export function useConversations() {
   const { conversationalAgentService, agent, conversation: convState, chat, ui } = useConversationalAgentContext();
   const { selectedAgent } = agent;
   const { conversation, conversationList, isLoading, setConversation, setConversationList, setIsLoading } = convState;
-  const { setSession, setMessages } = chat;
+  const { session, setSession, setMessages } = chat;
   const { setError, setSuccessMessage } = ui;
 
   const createConversation = async () => {
@@ -20,6 +20,13 @@ export function useConversations() {
     setError('');
 
     try {
+      // End existing session before creating new conversation
+      if (session) {
+        console.log('[Conversation] Ending existing session before creating new conversation');
+        session.sendSessionEnd();
+        setSession(null);
+      }
+
       const response = await conversationalAgentService.conversations.create({
         agentReleaseId: selectedAgent.id,
         folderId: selectedAgent.folderId,
@@ -64,6 +71,14 @@ export function useConversations() {
     setError('');
 
     try {
+      // End existing session before switching to different conversation
+      if (session && conversation?.conversationId !== conversationId) {
+        console.log('[Conversation] Ending existing session before loading different conversation');
+        session.sendSessionEnd();
+        setSession(null);
+        setMessages([]);
+      }
+
       const response = await conversationalAgentService.conversations.getById(conversationId);
       console.log('[Conversation API] getById response:', response);
 
@@ -103,6 +118,11 @@ export function useConversations() {
       setConversationList(prev => prev.filter(c => c.conversationId !== conversationId));
 
       if (conversation?.conversationId === conversationId) {
+        // End the WebSocket session before clearing state
+        if (session) {
+          console.log('[Conversation] Ending session for deleted conversation');
+          session.sendSessionEnd();
+        }
         setConversation(null);
         setSession(null);
         setMessages([]);
@@ -119,6 +139,12 @@ export function useConversations() {
     if (!conversation) return;
 
     console.log('[Conversation] Closing conversation:', conversation.conversationId);
+
+    // End the WebSocket session before clearing state
+    if (session) {
+      console.log('[Conversation] Ending session for closed conversation');
+      session.sendSessionEnd();
+    }
 
     // Clear the active conversation and session
     setConversation(null);

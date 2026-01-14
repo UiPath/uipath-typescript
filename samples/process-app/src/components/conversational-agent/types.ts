@@ -29,9 +29,11 @@ export interface AttachmentInfo {
 
 /** Chat message type for UI display */
 export interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   attachments?: string;
+  exchangeId?: string; // For assistant messages, to enable feedback
+  isError?: boolean; // For system messages to show as error
 }
 
 /** User settings form state */

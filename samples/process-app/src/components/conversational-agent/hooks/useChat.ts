@@ -19,6 +19,10 @@ export function useChat() {
   const { setError, setSuccessMessage } = ui;
 
   const setupExchangeHandlers = (exchange: ExchangeEventHelper) => {
+    // Use exchange.exchangeId directly (not from startEvent)
+    const exchangeId = exchange.exchangeId;
+    console.log('[Events] Setting up handlers for exchange:', exchangeId);
+
     exchange.onErrorStart((error) => {
       console.error('[Events] Exchange error:', error);
       setError(`Exchange error: ${error.message}`);
@@ -35,7 +39,12 @@ export function useChat() {
             });
 
             contentPart.onContentPartEnd(() => {
-              setMessages(prev => [...prev, { role: 'assistant', content: fullContent }]);
+              console.log('[Events] Adding assistant message with exchangeId:', exchangeId);
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: fullContent,
+                exchangeId // Include exchange ID for feedback
+              }]);
             });
           }
         });
@@ -43,7 +52,7 @@ export function useChat() {
     });
 
     exchange.onExchangeEnd(() => {
-      console.log('[Events] Exchange ended');
+      console.log('[Events] Exchange ended:', exchangeId);
     });
   };
 
@@ -104,7 +113,36 @@ export function useChat() {
 
         sessionHelper.onErrorStart((error) => {
           console.error('[Events] Session error:', error);
-          setError(`Session error: ${error.message || 'Unknown error'}`);
+          const errorMessage = error.message || 'Unknown error';
+          setError(`Session error: ${errorMessage}`);
+          // Add error message to chat
+          setMessages(prev => [...prev, {
+            role: 'system',
+            content: `Session error: ${errorMessage}`,
+            isError: true
+          }]);
+        });
+
+        // Handle session ending (server is closing the session)
+        sessionHelper.onSessionEnding((event) => {
+          console.log('[Events] Session ending:', event);
+          const reason = event.reason || 'Server ended the session';
+          setMessages(prev => [...prev, {
+            role: 'system',
+            content: `Session ending: ${reason}`,
+            isError: true
+          }]);
+        });
+
+        // Handle session end
+        sessionHelper.onSessionEnd((event) => {
+          console.log('[Events] Session ended:', event);
+          setSession(null);
+          setMessages(prev => [...prev, {
+            role: 'system',
+            content: 'Session disconnected. Send a new message to reconnect.',
+            isError: true
+          }]);
         });
 
         sessionHelper.onSessionStarted(() => {
@@ -165,6 +203,25 @@ export function useChat() {
     setPendingAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
+  const submitFeedback = async (exchangeId: string, rating: 'positive' | 'negative') => {
+    if (!conversationalAgentService || !conversation) return;
+    setError('');
+
+    try {
+      await conversationalAgentService.conversations.exchanges.createFeedback(
+        conversation.conversationId,
+        exchangeId,
+        { rating, comment: `Feedback: ${rating}` }
+      );
+
+      console.log('[Chat] Feedback submitted:', rating, 'for exchange:', exchangeId);
+      setSuccessMessage(`Feedback submitted: ${rating === 'positive' ? 'Thumbs up' : 'Thumbs down'}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Failed to submit feedback: ${message}`);
+    }
+  };
+
   return {
     session,
     messages,
@@ -175,6 +232,7 @@ export function useChat() {
     setInputMessage,
     sendMessage,
     uploadChatAttachment,
-    removePendingAttachment
+    removePendingAttachment,
+    submitFeedback
   };
 }

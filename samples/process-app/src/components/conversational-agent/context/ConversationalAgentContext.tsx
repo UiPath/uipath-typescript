@@ -2,7 +2,7 @@
  * ConversationalAgentContext - Centralized state management for conversational agent
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
 import {
   ConversationalAgent,
@@ -131,25 +131,22 @@ export function ConversationalAgentProvider({ children }: { children: ReactNode 
     }
   }, [successMessage]);
 
-  // Session cleanup: end session when it changes or component unmounts
-  // This handles both session changes and conversation switches
+  // Keep a ref to the session for cleanup on unmount
+  const sessionRef = useRef<SessionEventHelper | null>(null);
   useEffect(() => {
-    const currentSession = session;
-
-    return () => {
-      if (currentSession) {
-        console.log('[ConversationalAgent] Ending session');
-        currentSession.sendSessionEnd();
-      }
-    };
+    sessionRef.current = session;
   }, [session]);
 
-  // Reset session and messages when conversation changes
+  // Session cleanup: only end session on component unmount
+  // Session closing for conversation changes is handled explicitly in useConversations hook
   useEffect(() => {
-    // Clear session state for new conversation
-    setSession(null);
-    setMessages([]);
-  }, [conversation?.conversationId]);
+    return () => {
+      if (sessionRef.current) {
+        console.log('[ConversationalAgent] Ending session on unmount');
+        sessionRef.current.sendSessionEnd();
+      }
+    };
+  }, []); // Empty deps - only run on unmount
 
   const value: ConversationalAgentContextValue = {
     // Service
