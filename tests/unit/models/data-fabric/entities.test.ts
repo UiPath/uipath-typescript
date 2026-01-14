@@ -16,7 +16,7 @@ describe('Entity Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       getRecordsById: vi.fn(),
-      insertById: vi.fn(),
+      batchInsertById: vi.fn(),
       updateById: vi.fn(),
       deleteById: vi.fn(),
     } as any;
@@ -37,11 +37,11 @@ describe('Entity Models', () => {
           ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2
         ];
         const mockResponse = createMockInsertResponse(testData);
-        mockService.insertById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.batchInsertById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insert(testData);
 
-        expect(mockService.insertById).toHaveBeenCalledWith(
+        expect(mockService.batchInsertById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           undefined
@@ -63,11 +63,11 @@ describe('Entity Models', () => {
         const mockResponse = createMockInsertResponse(testData, { 
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
         });
-        mockService.insertById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.batchInsertById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insert(testData, options);
 
-        expect(mockService.insertById).toHaveBeenCalledWith(
+        expect(mockService.batchInsertById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           options
@@ -91,7 +91,7 @@ describe('Entity Models', () => {
           { name: ENTITY_TEST_CONSTANTS.TEST_INVALID_RECORD_NAME, age: null } // Missing required field
         ];
         const mockResponse = createMockInsertResponse(testData, { successCount: 1 });
-        mockService.insertById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.batchInsertById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insert(testData);
 

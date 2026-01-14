@@ -129,23 +129,23 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Inserts data into an entity by entity ID
-   * 
+   * Inserts data into an entity by entity ID using batch insert
+   *
    * @param entityId - UUID of the entity
    * @param data - Array of records to insert
    * @param options - Insert options
    * @returns Promise resolving to insert response
-   * 
+   *
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entities.insertById(<entityId>, [
+   * const result = await sdk.entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
-   * 
+   *
    * // With options
-   * const result = await sdk.entities.insertById(<entityId>, [
+   * const result = await sdk.entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -154,15 +154,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.InsertById')
-  async insertById(id: string, data: Record<string, any>[], options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+  @track('Entities.BatchInsertById')
+  async batchInsertById(id: string, data: Record<string, any>[], options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
     });
 
     const response = await this.post<EntityInsertResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
+      DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(id),
       data,
       {
         params,
