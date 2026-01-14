@@ -50,47 +50,11 @@ export { Agents } from './agents';
 export { User } from './user';
 export { Traces } from './traces';
 
-// Types (re-exported from models for convenience)
-export type {
-  // ID types
-  ConversationId,
-  ExchangeId,
-  MessageId,
-  ContentPartId,
-  // Model types
-  Conversation,
-  Exchange,
-  Message,
-  ContentPart,
-  ToolCall,
-  Citation,
-  // Request types
-  CreateConversationInput,
-  UpdateConversationInput,
-  ListConversationsInput,
-  ListExchangesInput,
-  GetExchangeInput,
-  CreateFeedbackInput,
-  UpdateUserSettingsInput,
-  // Response types
-  ConversationCreateResponse,
-  ConversationResponse,
-  ConversationDeleteResponse,
-  FeedbackCreateResponse,
-  AttachmentUploadResponse,
-  UserSettings,
-  UserSettingsGetResponse,
-  UserSettingsUpdateResponse,
-  // Agent types
-  AgentRelease,
-  AgentReleaseWithAppearance,
-  AgentAppearance,
-  FeatureFlags,
-  // LLM Ops types (Tracing/Observability)
-  LlmOpsSpan,
-  RawLlmOpsSpan,
-  SpanAttachment
-} from '@/models/conversational';
+// ==================== Models ====================
+// Re-export all types: ID types, model types, request/response types, event types, etc.
+export * from '@/models/conversational';
 
-export { LlmOpsSpanStatus } from '@/models/conversational';
+// ==================== Event Helpers ====================
+// Re-export all helpers: event helper classes, handler types, error types, etc.
+export * from './helpers';
 
