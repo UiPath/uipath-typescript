@@ -3,16 +3,23 @@ import { useAuth } from '../hooks/useAuth';
 import { InstanceList } from './InstanceList';
 import { InstanceDetails } from './InstanceDetails';
 import { formatProcessName } from '../utils/formatters';
-import type { 
-  ProcessInstanceGetResponse, 
+
+// Shared utility types from main package
+import type { PaginatedResponse } from '@uipath/uipath-typescript';
+
+// Modular service imports - instantiate directly where used
+import { MaestroProcesses, ProcessInstances as ProcessInstancesService } from '@uipath/uipath-typescript/maestro-processes';
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+// Module-specific types from modular paths
+import type {
+  ProcessInstanceGetResponse,
   MaestroProcessGetAllResponse,
-  PaginatedResponse,
   ProcessInstanceGetVariablesResponse,
-  EntityRecord,
   ProcessInstanceExecutionHistoryResponse,
-  BpmnXmlString,
-  EntityGetResponse
-} from '@uipath/uipath-typescript';
+  BpmnXmlString
+} from '@uipath/uipath-typescript/maestro-processes';
+import type { EntityRecord, EntityGetResponse } from '@uipath/uipath-typescript/entities';
 
 export const ProcessInstances = () => {
   const { sdk, isAuthenticated } = useAuth();
@@ -67,15 +74,18 @@ export const ProcessInstances = () => {
     setError(null);
     
     try {
+      // Instantiate modular service directly
+      const processInstancesService = new ProcessInstancesService(sdk);
+
       // Build options with filtering and pagination
       const options = {
         pageSize,
         ...(cursor && { cursor }),
         ...(selectedProcess !== 'all' && { packageId: selectedProcess })
       };
-          
+
       // The SDK method is overloaded, but since we always pass pageSize, it will return PaginatedResponse
-      const response = await sdk.maestro.processes.instances.getAll(options);
+      const response = await processInstancesService.getAll(options);
       const paginatedResponse = response as PaginatedResponse<ProcessInstanceGetResponse>;
       
       // Set instances for current page only
@@ -109,10 +119,13 @@ export const ProcessInstances = () => {
 
   const fetchData = async () => {
     if (!sdk) return;
-    
+
     try {
+      // Instantiate modular service directly
+      const processesService = new MaestroProcesses(sdk);
+
       // Fetch processes - returns MaestroProcessGetAllResponse[] directly
-      const processesResponse = await sdk.maestro.processes.getAll();
+      const processesResponse = await processesService.getAll();
       setProcesses(processesResponse);
       
       // Fetch first page of instances
@@ -148,6 +161,10 @@ export const ProcessInstances = () => {
 
     setSelectedInstanceDetails({ loading: true });
 
+    // Instantiate modular services directly
+    const processInstancesService = new ProcessInstancesService(sdk);
+    const entitiesService = new Entities(sdk);
+
     // Initialize result object with basic info
     const result: {
       requestor?: string;
@@ -167,7 +184,7 @@ export const ProcessInstances = () => {
     // Fetch variables (with error handling)
     let elementId: string | undefined;
     try {
-      const variables: ProcessInstanceGetVariablesResponse = await sdk.maestro.processes.instances.getVariables(instance.instanceId, instance.folderKey);
+      const variables: ProcessInstanceGetVariablesResponse = await processInstancesService.getVariables(instance.instanceId, instance.folderKey);
       console.log('Variables:', variables);
       const lastElement = variables.elements[variables.elements.length - 1];
       elementId = lastElement?.elementId;
@@ -220,14 +237,14 @@ export const ProcessInstances = () => {
     let executionHistory: ProcessInstanceExecutionHistoryResponse[] = [];
 
     try {
-      bpmnXml = await sdk.maestro.processes.instances.getBpmn(instance.instanceId, instance.folderKey);
+      bpmnXml = await processInstancesService.getBpmn(instance.instanceId, instance.folderKey);
     } catch (err) {
       console.error('Error fetching BPMN:', err);
       // Continue without BPMN data
     }
 
     try {
-      executionHistory = await sdk.maestro.processes.instances.getExecutionHistory(instance.instanceId);
+      executionHistory = await processInstancesService.getExecutionHistory(instance.instanceId);
     } catch (err) {
       console.error('Error fetching execution history:', err);
       // Continue without execution history
@@ -274,7 +291,7 @@ export const ProcessInstances = () => {
 
     if (entityId) {
       try {
-        const entity: EntityGetResponse = await sdk.entities.getById(entityId);
+        const entity: EntityGetResponse = await entitiesService.getById(entityId);
         const entityRecords = await entity.getRecords({expansionLevel: 2});
 
         if (entityRecords?.items && entityRecords.items.length > 0) {
