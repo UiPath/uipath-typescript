@@ -1,10 +1,10 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { 
-  UiPath,
-  UiPathError
-} from '@uipath/uipath-typescript';
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript';
+
+// Core SDK - for authentication and initialization
+import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
+import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -26,7 +26,7 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
     const initializeAuth = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // Handle OAuth callback if present
         if (sdk.isInOAuthCallback()) {
@@ -42,14 +42,14 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
         setIsLoading(false);
       }
     };
-    
+
     initializeAuth();
   }, [sdk]);
 
   const login = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await sdk.initialize();
       setIsAuthenticated(sdk.isAuthenticated());
@@ -66,8 +66,8 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
     setIsAuthenticated(false);
     setError(null);
     // Create new SDK instance for next login
-    const sdk = new UiPath(config);
-    setSdk(sdk);
+    const newSdk = new UiPath(config);
+    setSdk(newSdk);
   };
 
   return (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ProcessInstanceGetResponse } from '@uipath/uipath-typescript';
+import type { ProcessInstanceGetResponse } from '@uipath/uipath-typescript/maestro-processes';
 import { getStatusColor, formatDuration, formatProcessName, getEmbedTaskUrl } from '../utils/formatters';
 
 interface InstanceDetailsProps {

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import type { 
+
+// Modular service imports - instantiate directly where used
+import { MaestroProcesses, ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
+import type {
   MaestroProcessGetAllResponse,
   ProcessInstanceGetResponse
-} from '@uipath/uipath-typescript';
+} from '@uipath/uipath-typescript/maestro-processes';
 
 interface DashboardStats {
   totalProcesses: number;
@@ -37,9 +40,13 @@ export const ProcessList = () => {
     setError(null);
     
     try {
+      // Instantiate modular services directly
+      const processesService = new MaestroProcesses(sdk);
+      const processInstancesService = new ProcessInstances(sdk);
+
       const [processesResponse, instancesResponse] = await Promise.all([
-        sdk.maestro.processes.getAll(),
-        sdk.maestro.processes.instances.getAll()
+        processesService.getAll(),
+        processInstancesService.getAll()
       ]);
 
       console.log('Processes response:', processesResponse);
