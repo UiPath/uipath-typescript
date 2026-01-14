@@ -391,7 +391,7 @@ describe('EntityService Unit Tests', () => {
     });
   });
 
-  describe('insertById', () => {
+  describe('batchInsertById', () => {
     it('should insert records successfully', async () => {
       const testData = [
         ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
@@ -401,7 +401,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockInsertResponse(testData);
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+      const result = await entityService.batchInsertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
 
       // Verify the result
       expect(result).toBeDefined();
@@ -416,7 +416,7 @@ describe('EntityService Unit Tests', () => {
 
       // Verify the API call has correct endpoint and body
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         testData,
         expect.objectContaining({
           params: expect.any(Object)
@@ -441,7 +441,7 @@ describe('EntityService Unit Tests', () => {
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
+      const result = await entityService.batchInsertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
 
       // Verify options are passed in params
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -470,7 +470,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockInsertResponse(testData, { successCount: 1 });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+      const result = await entityService.batchInsertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
 
       expect(result.successRecords).toHaveLength(1);
       expect(result.failureRecords).toHaveLength(1);
@@ -488,7 +488,7 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.insertById(
+      await expect(entityService.batchInsertById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         [ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA]
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);

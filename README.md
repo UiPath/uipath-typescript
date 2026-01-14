@@ -327,7 +327,7 @@ const records = await sdk.entities.getRecordsById('entity-uuid', {
 });
 
 // Insert records
-await sdk.entities.insertById('entity-uuid', [
+await sdk.entities.batchInsertById('entity-uuid', [
   { name: 'John Doe', email: 'john@company.com', status: 'Active' },
   { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' }
 ]);

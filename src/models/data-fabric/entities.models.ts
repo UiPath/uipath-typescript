@@ -115,8 +115,8 @@ export interface EntityServiceModel {
   >;
 
   /**
-   * Inserts data into an entity by entity ID
-   * 
+   * Inserts one or more records into an entity by entity ID using batch insert
+   *
    * @param id - UUID of the entity
    * @param data - Array of records to insert
    * @param options - Insert options
@@ -125,13 +125,13 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entities.insertById(<entityId>, [
+   * const result = await sdk.entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
-   * 
+   *
    * // With options
-   * const result = await sdk.entities.insertById(<entityId>, [
+   * const result = await sdk.entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -140,7 +140,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  insertById(id: string, data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+  batchInsertById(id: string, data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse>;
 
   /**
    * Updates data in an entity by entity ID
@@ -304,7 +304,7 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async insert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.insertById(entityData.id, data, options);
+      return service.batchInsertById(entityData.id, data, options);
     },
 
     async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
