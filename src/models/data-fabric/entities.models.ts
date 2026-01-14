@@ -108,7 +108,7 @@ export interface EntityServiceModel {
   >;
 
   /**
-   * Inserts data into an entity by entity ID using batch insert
+   * Inserts one or more records into an entity by entity ID using batch insert
    *
    * @param id - UUID of the entity
    * @param data - Array of records to insert
