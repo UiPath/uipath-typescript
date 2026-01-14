@@ -5,6 +5,19 @@
 import { useRef } from 'react';
 import { useChat, useConversations } from '../hooks';
 
+// Thumbs up/down icons as simple SVG components
+const ThumbsUpIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+  </svg>
+);
+
+const ThumbsDownIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+  </svg>
+);
+
 export function ChatTab() {
   const { conversation } = useConversations();
   const {
@@ -16,7 +29,8 @@ export function ChatTab() {
     setInputMessage,
     sendMessage,
     uploadChatAttachment,
-    removePendingAttachment
+    removePendingAttachment,
+    submitFeedback
   } = useChat();
 
   const chatFileInputRef = useRef<HTMLInputElement>(null);
@@ -62,22 +76,59 @@ export function ChatTab() {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${
+                  msg.role === 'user'
+                    ? 'justify-end'
+                    : msg.role === 'system'
+                      ? 'justify-center'
+                      : 'justify-start'
+                }`}
               >
-                <div className={`max-w-[70%] p-3 rounded-lg ${msg.role === 'user'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white border border-gray-200 text-gray-800'
+                {/* System/Error messages */}
+                {msg.role === 'system' ? (
+                  <div className={`max-w-[85%] px-4 py-2 rounded-lg text-sm ${
+                    msg.isError
+                      ? 'bg-red-100 border border-red-300 text-red-700'
+                      : 'bg-gray-200 text-gray-600'
                   }`}>
-                  <p className="text-xs font-semibold mb-1 opacity-75">
-                    {msg.role === 'user' ? 'You' : 'Agent'}
-                  </p>
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  {msg.attachments && (
-                    <p className="text-xs mt-1 opacity-75 italic">
-                      Attachments: {msg.attachments}
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                ) : (
+                  /* User and Assistant messages */
+                  <div className={`max-w-[70%] p-3 rounded-lg ${msg.role === 'user'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white border border-gray-200 text-gray-800'
+                    }`}>
+                    <p className="text-xs font-semibold mb-1 opacity-75">
+                      {msg.role === 'user' ? 'You' : 'Agent'}
                     </p>
-                  )}
-                </div>
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    {msg.attachments && (
+                      <p className="text-xs mt-1 opacity-75 italic">
+                        Attachments: {msg.attachments}
+                      </p>
+                    )}
+                    {/* Feedback buttons for assistant messages */}
+                    {msg.role === 'assistant' && msg.exchangeId && (
+                      <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
+                        <button
+                          onClick={() => submitFeedback(msg.exchangeId!, 'positive')}
+                          className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                          title="Thumbs up"
+                        >
+                          <ThumbsUpIcon />
+                        </button>
+                        <button
+                          onClick={() => submitFeedback(msg.exchangeId!, 'negative')}
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Thumbs down"
+                        >
+                          <ThumbsDownIcon />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
