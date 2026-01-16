@@ -6,6 +6,7 @@ export const AUTH_CONSTANTS = {
     AUTH_FILE: '.auth.json',
     ENV_FILE: '.env',
     METADATA_FILE: 'metadata.json',
+    SDK_CONFIG: 'uipath.json',
   },
   DOMAINS: {
     CLOUD: 'cloud',

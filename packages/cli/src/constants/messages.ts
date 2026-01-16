@@ -1,3 +1,5 @@
+import { AUTH_CONSTANTS } from './auth.js';
+
 /**
  * Common CLI error and success messages
  */
@@ -55,6 +57,11 @@ export const MESSAGES = {
     UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
     PACKAGE_TOO_LARGE: '❌ Package file is too large for upload',
     PACKAGE_UPLOAD_FAILED: 'Package upload failed: An error occured',
+    CONFIG_FILE_NOT_FOUND: `❌ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} not found in project root`,
+    CONFIG_FILE_INVALID_JSON: `❌ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} is not valid JSON`,
+    CONFIG_FILE_MISSING_SCOPE: `❌ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} is missing required "scope" field`,
+    CONFIG_FILE_SCOPE_REQUIRED_HINT: 'The scope field is required for OAuth client creation during deployment.',
+    SCOPE_VALIDATION_ERROR: 'Scope is required for OAuth client creation during deployment.',
     
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
@@ -90,8 +97,12 @@ export const MESSAGES = {
     USING_REGISTERED_APP: '✅ Using registered app',
     
     // Packaging
-    PACKAGE_CREATED_SUCCESS: '✅ NuGet package created successfully!',
+    PACKAGE_CREATED_SUCCESS: 'NuGet package created successfully!',
     PACKAGE_CONFIG_VALIDATED: '✅ Package configuration validated',
+    CONFIG_FILE_INCLUDED: `✅ Included ${AUTH_CONSTANTS.FILES.SDK_CONFIG} in package`,
+    CONFIG_FILE_CREATED: `✅ Created ${AUTH_CONSTANTS.FILES.SDK_CONFIG} with provided scopes`,
+    CLIENT_ID_CLEARED: '✅ ClientId cleared - UiPath will create a new OAuth client during deployment',
+    CLIENT_ID_REUSED: '✅ Existing clientId will be reused in production',
     
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
@@ -135,6 +146,8 @@ export const MESSAGES = {
     
     // Directory/File operations
     CREATED_OUTPUT_DIRECTORY: 'Created output directory:',
+    CONFIG_FILE_NOT_FOUND_WARNING: `⚠️ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} not found in project root.`,
+    SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES: 'ℹ️ Scope not provided. By default, all scopes registered with this clientId will be used.',
     
     // Next steps instructions
     NEXT_STEPS: 'Next steps:',
@@ -167,6 +180,8 @@ export const MESSAGES = {
     CONTINUE_WITH_DIFFERENT_VALUES: 'Do you want to continue with these different values?',
     COMPLETE_AUTH_IN_BROWSER: 'Please complete the authentication in your browser',
     BROWSER_FALLBACK_INSTRUCTION: 'If the browser didn\'t open automatically, visit:',
+    REUSE_CLIENT_ID: 'Do you want UiPath to create a new OAuth client during deployment or reuse existing from uipath.json? (Y = create new, N = reuse existing clientId)',
+    ENTER_SCOPES: 'Enter the required scopes for your app (e.g., OR.Execution OR.Folders), please refer https://uipath.github.io/uipath-typescript/oauth-scopes/ for details',
   },
   
   HELP: {
