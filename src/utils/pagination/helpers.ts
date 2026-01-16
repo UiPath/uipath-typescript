@@ -203,9 +203,20 @@ export class PaginationHelpers {
     );
 
     // Transform items only if a transform function is provided
-    const transformedItems = transformFn
-      ? paginatedResponse.items.map(transformFn)
-      : paginatedResponse.items as unknown as R[];
+    // If items is a string (e.g., JSON string), pass it directly to transformFn
+    // Otherwise, map over the array of items
+    let transformedItems: R[];
+    if (transformFn) {
+      if (typeof paginatedResponse.items === 'string') {
+        // For JSON string responses (like ChoiceSet values), pass the raw string to transform
+        transformedItems = transformFn(paginatedResponse.items as unknown as T) as unknown as R[];
+      } else {
+        // For array responses, map over each item
+        transformedItems = paginatedResponse.items.map(transformFn);
+      }
+    } else {
+      transformedItems = paginatedResponse.items as unknown as R[];
+    }
 
     return {
       ...paginatedResponse,
@@ -259,13 +270,25 @@ export class PaginationHelpers {
       );
     }
 
-    // Extract data
-    const items: T[] = response.data?.[itemsField] || [];
-    
+    // Extract data from response
+    const rawItems = response.data?.[itemsField];
+
     // Transform items if a transform function is provided
-    const data = transformFn 
-      ? items.map(transformFn)
-      : items as unknown as R[];
+    // If rawItems is a string (e.g., JSON string), pass it directly to transformFn
+    // Otherwise, map over the array of items
+    let data: R[];
+    if (transformFn) {
+      if (typeof rawItems === 'string') {
+        // For JSON string responses (like ChoiceSet values), pass the raw string to transform
+        data = transformFn(rawItems as unknown as T) as unknown as R[];
+      } else {
+        // For array responses, map over each item
+        const items: T[] = rawItems || [];
+        data = items.map(transformFn);
+      }
+    } else {
+      data = (rawItems || []) as unknown as R[];
+    }
       
     const totalCount = response.data?.[totalCountField];
     
