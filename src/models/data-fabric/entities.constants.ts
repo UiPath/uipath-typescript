@@ -25,7 +25,7 @@ export const EntityMap = {
   createTime: 'createdTime',
   updateTime: 'updatedTime',
   sqlType: 'fieldDataType',
-  fieldDefinition: 'fieldMetaData'
+  fieldDefinition: 'fieldMetaData' 
 };
 
 /**

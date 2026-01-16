@@ -12,7 +12,7 @@ import { track } from '../../core/telemetry';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { CHOICESET_VALUES_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
+import { CHOICESET_VALUES_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../utils/constants/common';
 
 export class ChoiceSetService extends BaseService implements ChoiceSetServiceModel {
   /**
@@ -110,7 +110,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(choicesetId),
       transformFn,
-      method: 'POST',
+      method: HTTP_METHODS.POST,
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: CHOICESET_VALUES_PAGINATION.ITEMS_FIELD,

@@ -12,6 +12,17 @@ export const UNKNOWN = 'Unknown';
 export const NO_INSTANCE = 'no-instance';
 
 /**
+ * HTTP methods
+ */
+export const HTTP_METHODS = {
+  GET: 'GET',
+  POST: 'POST',
+  PUT: 'PUT',
+  PATCH: 'PATCH',
+  DELETE: 'DELETE'
+} as const;
+
+/**
  * OData pagination constants
  */
 export const ODATA_PAGINATION = {

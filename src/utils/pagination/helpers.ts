@@ -9,7 +9,7 @@ import {
 } from './internal-types';
 import { createHeaders } from '../http/headers';
 import { FOLDER_ID } from '../constants/headers';
-import { ODATA_PREFIX } from '../constants/common';
+import { ODATA_PREFIX, HTTP_METHODS } from '../constants/common';
 import { addPrefixToKeys } from '../transform';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './constants';
 import { filterUndefined } from '../object';
@@ -178,7 +178,7 @@ export class PaginationHelpers {
       paginationParams,
       additionalParams,
       transformFn,
-      method = 'GET',
+      method = HTTP_METHODS.GET,
       options = {}
     } = params;
 
@@ -229,7 +229,7 @@ export class PaginationHelpers {
       folderId,
       additionalParams,
       transformFn,
-      method = 'GET',
+      method = HTTP_METHODS.GET,
       options = {}
     } = params;
 
@@ -243,7 +243,7 @@ export class PaginationHelpers {
 
     // Make the API call based on method
     let response: { data: any };
-    if (method === 'POST') {
+    if (method === HTTP_METHODS.POST) {
       response = await serviceAccess.post<any>(
         endpoint,
         additionalParams,

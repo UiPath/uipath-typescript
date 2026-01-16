@@ -1,5 +1,11 @@
 import { PaginationOptions, PaginatedResponse, PaginationMethodUnion } from './types';
 import { RequestSpec } from '../../models/common/request-spec';
+import { HTTP_METHODS } from '../constants/common';
+
+/**
+ * Type for HTTP methods derived from HTTP_METHODS constant
+ */
+export type HttpMethodType = typeof HTTP_METHODS[keyof typeof HTTP_METHODS];
 
 /**
  * Cursor data structure for tracking pagination state
@@ -71,7 +77,7 @@ export interface GetAllPaginatedParams<T, R = T> {
    */
   transformFn?: (item: T) => R;
   /** HTTP method to use for the request (default: 'GET') */
-  method?: 'GET' | 'POST';
+  method?: HttpMethodType;
   options?: {
     paginationType?: PaginationType;
     itemsField?: string;
@@ -100,7 +106,7 @@ export interface GetAllNonPaginatedParams<T, R = T> {
    */
   transformFn?: (item: T) => R;
   /** HTTP method to use for the request (default: 'GET') */
-  method?: 'GET' | 'POST';
+  method?: HttpMethodType;
   options?: {
     itemsField?: string;
     totalCountField?: string;
@@ -216,5 +222,5 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
   excludeFromPrefix?: string[];
 
   /** HTTP method to use for the request (default: 'GET') */
-  method?: 'GET' | 'POST';
+  method?: HttpMethodType;
 } 
