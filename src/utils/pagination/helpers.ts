@@ -9,7 +9,7 @@ import {
 } from './internal-types';
 import { createHeaders } from '../http/headers';
 import { FOLDER_ID } from '../constants/headers';
-import { ODATA_PREFIX } from '../constants/common';
+import { ODATA_PREFIX, HTTP_METHODS } from '../constants/common';
 import { addPrefixToKeys } from '../transform';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './constants';
 import { filterUndefined } from '../object';
@@ -121,6 +121,31 @@ export class PaginationHelpers {
   }
   
   /**
+   * Transforms raw items using the provided transform function.
+   * Handles both array and JSON string responses.
+   *
+   * @param rawItems - Raw items from API response (array or JSON string)
+   * @param transformFn - Optional function to transform items
+   * @returns Transformed items array
+   */
+  private static transformItems<T, R>(
+    rawItems: T[] | string | undefined,
+    transformFn?: (item: T) => R
+  ): R[] {
+    if (transformFn) {
+      if (typeof rawItems === 'string') {
+        // For JSON string responses (like ChoiceSet values), pass the raw string to transform
+        return transformFn(rawItems as unknown as T) as unknown as R[];
+      } else {
+        // For array responses, map over each item
+        const items: T[] = rawItems || [];
+        return items.map(transformFn);
+      }
+    }
+    return (rawItems || []) as unknown as R[];
+  }
+
+  /**
    * Convert a unified pagination options to service-specific parameters
    */
   static getRequestParameters(
@@ -164,7 +189,7 @@ export class PaginationHelpers {
 
   /**
    * Helper method for paginated resource retrieval
-   * 
+   *
    * @param params - Parameters for pagination
    * @returns Promise resolving to a paginated result
    */
@@ -178,14 +203,15 @@ export class PaginationHelpers {
       paginationParams,
       additionalParams,
       transformFn,
+      method = HTTP_METHODS.GET,
       options = {}
     } = params;
 
     const endpoint = getEndpoint(folderId);
     const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
-    
+
     const paginatedResponse = await serviceAccess.requestWithPagination<T>(
-      'GET',
+      method,
       endpoint,
       paginationParams,
       {
@@ -200,12 +226,9 @@ export class PaginationHelpers {
         }
       }
     );
-    
-    // Transform items only if a transform function is provided
-    const transformedItems = transformFn 
-      ? paginatedResponse.items.map(transformFn)
-      : paginatedResponse.items as unknown as R[];
-    
+
+    const transformedItems = PaginationHelpers.transformItems(paginatedResponse.items, transformFn);
+
     return {
       ...paginatedResponse,
       items: transformedItems
@@ -214,7 +237,7 @@ export class PaginationHelpers {
 
   /**
    * Helper method for non-paginated resource retrieval
-   * 
+   *
    * @param params - Parameters for non-paginated resource retrieval
    * @returns Promise resolving to an object with data and totalCount
    */
@@ -228,34 +251,39 @@ export class PaginationHelpers {
       folderId,
       additionalParams,
       transformFn,
+      method = HTTP_METHODS.GET,
       options = {}
     } = params;
 
     // Set default field names
     const itemsField = options.itemsField || DEFAULT_ITEMS_FIELD;
     const totalCountField = options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD;
-  
+
     // Determine endpoint and headers based on folderId
     const endpoint = folderId ? getByFolderEndpoint : getAllEndpoint;
     const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
-    
-    // Make the API call
-    const response = await serviceAccess.get<any>(
-      endpoint,
-      { 
-        params: additionalParams,
-        headers
-      }
-    );
 
-    // Extract data
-    const items = response.data?.[itemsField] || [];
-    
-    // Transform items if a transform function is provided
-    const data = transformFn 
-      ? items.map(transformFn)
-      : items as unknown as R[];
-      
+    // Make the API call based on method
+    let response: { data: any };
+    if (method === HTTP_METHODS.POST) {
+      response = await serviceAccess.post<any>(
+        endpoint,
+        additionalParams,
+        { headers }
+      );
+    } else {
+      response = await serviceAccess.get<any>(
+        endpoint,
+        {
+          params: additionalParams,
+          headers
+        }
+      );
+    }
+
+    // Extract and transform items from response
+    const rawItems = response.data?.[itemsField];
+    const data = PaginationHelpers.transformItems(rawItems, transformFn);
     const totalCount = response.data?.[totalCountField];
     
     return {
@@ -316,13 +344,14 @@ export class PaginationHelpers {
         paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
         transformFn: config.transformFn,
+        method: config.method,
         options: {
           ...paginationOptions,
           paginationParams: config.pagination?.paginationParams
         }
       }) as any; // Type assertion needed due to conditional return
     }
-    
+
     // Non-paginated flow
     const byFolderEndpoint = config.getByFolderEndpoint || config.getEndpoint(folderId);
     return PaginationHelpers.getAllNonPaginated<TRaw, TTransformed>({
@@ -332,6 +361,7 @@ export class PaginationHelpers {
       folderId,
       additionalParams: prefixedOptions,
       transformFn: config.transformFn,
+      method: config.method,
       options: {
         itemsField: paginationOptions.itemsField,
         totalCountField: paginationOptions.totalCountField
