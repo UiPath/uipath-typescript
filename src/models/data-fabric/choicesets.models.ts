@@ -47,14 +47,14 @@ export interface ChoiceSetServiceModel {
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
-   * @param choicesetId - UUID of the choice set
+   * @param choiceSetId - UUID of the choice set
    * @param options - Pagination options
    * @returns Promise resolving to choice set values or paginated result
    * {@link ChoiceSetValueGetResponse}
    * @example
    * ```typescript
    * // Get all values (non-paginated)
-   * const values = await sdk.entities.choicesets.getById('<choicesetId>');
+   * const values = await sdk.entities.choicesets.getById('<choiceSetId>');
    *
    * // Iterate through choice set values
    * for (const value of values.items) {
@@ -62,16 +62,16 @@ export interface ChoiceSetServiceModel {
    * }
    *
    * // First page with pagination
-   * const page1 = await sdk.entities.choicesets.getById('<choicesetId>', { pageSize: 10 });
+   * const page1 = await sdk.entities.choicesets.getById('<choiceSetId>', { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.entities.choicesets.getById('<choicesetId>', { cursor: page1.nextCursor });
+   *   const page2 = await sdk.entities.choicesets.getById('<choiceSetId>', { cursor: page1.nextCursor });
    * }
    * ```
    */
   getById<T extends ChoiceSetGetByIdOptions = ChoiceSetGetByIdOptions>(
-    choicesetId: string,
+    choiceSetId: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
