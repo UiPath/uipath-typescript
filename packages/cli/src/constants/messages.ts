@@ -1,4 +1,9 @@
 /**
+ * Config file name constant
+ */
+export const CONFIG_FILE_NAME = 'uipath.json';
+
+/**
  * Common CLI error and success messages
  */
 export const MESSAGES = {
@@ -55,6 +60,9 @@ export const MESSAGES = {
     UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
     PACKAGE_TOO_LARGE: '❌ Package file is too large for upload',
     PACKAGE_UPLOAD_FAILED: 'Package upload failed: An error occured',
+    CONFIG_FILE_NOT_FOUND: `❌ ${CONFIG_FILE_NAME} not found in project root`,
+    CONFIG_FILE_INVALID_JSON: `❌ ${CONFIG_FILE_NAME} is not valid JSON`,
+    CONFIG_FILE_MISSING_SCOPE: `❌ ${CONFIG_FILE_NAME} is missing required "scope" field`,
     
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
@@ -92,6 +100,10 @@ export const MESSAGES = {
     // Packaging
     PACKAGE_CREATED_SUCCESS: '✅ NuGet package created successfully!',
     PACKAGE_CONFIG_VALIDATED: '✅ Package configuration validated',
+    CONFIG_FILE_INCLUDED: `✅ Included ${CONFIG_FILE_NAME} in package`,
+    CONFIG_FILE_CREATED: `✅ Created ${CONFIG_FILE_NAME} with provided scopes`,
+    CLIENT_ID_CLEARED: '✅ ClientId cleared - UiPath will create a new OAuth client during deployment',
+    CLIENT_ID_REUSED: '✅ Existing clientId will be reused in production',
     
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
@@ -167,6 +179,8 @@ export const MESSAGES = {
     CONTINUE_WITH_DIFFERENT_VALUES: 'Do you want to continue with these different values?',
     COMPLETE_AUTH_IN_BROWSER: 'Please complete the authentication in your browser',
     BROWSER_FALLBACK_INSTRUCTION: 'If the browser didn\'t open automatically, visit:',
+    REUSE_CLIENT_ID: 'Do you want to reuse the existing clientId from uipath.json in production or let UiPath create one?',
+    ENTER_SCOPES: 'Enter the required scopes for your app (e.g., OR.Execution OR.Folders), please refer https://uipath.github.io/uipath-typescript/oauth-scopes/ for details:',
   },
   
   HELP: {
