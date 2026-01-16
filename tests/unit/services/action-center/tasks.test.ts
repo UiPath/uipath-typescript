@@ -767,6 +767,46 @@ describe('TaskService Unit Tests', () => {
       const processedNoFolder = capturedProcessParametersFn!(optionsNoFolder);
       expect(processedNoFolder.filter).toBeUndefined();
     });
+
+    it('should use admin endpoint when asTaskAdmin is true', async () => {
+      const mockTasks = createMockTasks(2);
+      const mockResponse = {
+        items: mockTasks,
+        totalCount: 2
+      };
+
+      // Mock PaginationHelpers.getAll and capture the getEndpoint function
+      let capturedEndpoint: string | undefined;
+      vi.mocked(PaginationHelpers.getAll).mockImplementation(async (config: any) => {
+        capturedEndpoint = config.getEndpoint();
+        return mockResponse;
+      });
+
+      await taskService.getAll({ asTaskAdmin: true });
+
+      // Verify the admin endpoint was used
+      expect(capturedEndpoint).toBe(TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS_ADMIN);
+    });
+
+    it('should use non-admin endpoint when asTaskAdmin is not provided', async () => {
+      const mockTasks = createMockTasks(2);
+      const mockResponse = {
+        items: mockTasks,
+        totalCount: 2
+      };
+
+      // Mock PaginationHelpers.getAll and capture the getEndpoint function
+      let capturedEndpoint: string | undefined;
+      vi.mocked(PaginationHelpers.getAll).mockImplementation(async (config: any) => {
+        capturedEndpoint = config.getEndpoint();
+        return mockResponse;
+      });
+
+      await taskService.getAll();
+
+      // Verify the non-admin endpoint was used (default behavior)
+      expect(capturedEndpoint).toBe(TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS);
+    });
   });
 
   describe('getUsers', () => {

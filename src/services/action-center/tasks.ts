@@ -157,7 +157,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * - An array of tasks (when no pagination parameters are provided)
    * - A paginated result with navigation cursors (when any pagination parameter is provided)
    * 
-   * @param options - Query options including optional folderId and pagination options
+   * @param options - Query options including optional folderId, asTaskAdmin flag and pagination options
    * @returns Promise resolving to an array of tasks or paginated result
    * 
    * @example
@@ -168,6 +168,11 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * // Get tasks within a specific folder
    * const tasks = await sdk.tasks.getAll({ 
    *   folderId: 123
+   * });
+   *
+   * // Get tasks with admin permissions
+   * const tasks = await sdk.tasks.getAll({
+   *   asTaskAdmin: true
    * });
    * 
    * // First page with pagination
@@ -193,6 +198,11 @@ export class TaskService extends BaseService implements TaskServiceModel {
       ? PaginatedResponse<TaskGetResponse>
       : NonPaginatedResponse<TaskGetResponse>
   > {
+    // Determine which endpoint to use based on asTaskAdmin flag
+    const endpoint = options?.asTaskAdmin
+      ? TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS_ADMIN
+      : TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS;
+
     // Transformation function for tasks
     const transformTaskResponse = (task: any) => {
       const transformedTask = transformData(pascalToCamelCaseKeys(task) as TaskGetResponse, TaskMap);
@@ -204,7 +214,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => TASK_ENDPOINTS.GET_TASKS_ACROSS_FOLDERS,
+      getEndpoint: () => endpoint,
       transformFn: transformTaskResponse,
       processParametersFn: this.processTaskParameters,
       excludeFromPrefix: ['event'], // Exclude 'event' key from ODATA prefix transformation

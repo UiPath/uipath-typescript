@@ -225,6 +225,14 @@ export type TaskGetAllOptions = RequestOptions & PaginationOptions & {
    * Optional folder ID to filter tasks by folder
    */
   folderId?: number;
+  /**
+   * Optional flag to fetch tasks using admin permissions
+   * When true, fetches tasks across folders
+   * where the user has at least Task.View, Task.Edit and TaskAssignment.Create permissions
+   * When false or omitted, fetches tasks across folders
+   * where the user has at least Task.View and Task.Edit permissions
+   */
+  asTaskAdmin?: boolean;
 }
 
 /**

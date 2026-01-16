@@ -1,13 +1,14 @@
-import { 
-  EntityGetRecordsByIdOptions, 
-  EntityInsertOptions, 
+import {
+  EntityGetRecordsByIdOptions,
+  EntityInsertOptions,
   EntityInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
-  RawEntityGetResponse
+  RawEntityGetResponse,
+  EntityDownloadAttachmentOptions
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -165,7 +166,7 @@ export interface EntityServiceModel {
 
   /**
    * Deletes data from an entity by entity ID
-   * 
+   *
    * @param id - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
@@ -180,6 +181,50 @@ export interface EntityServiceModel {
    * ```
    */
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Downloads an attachment stored in a File-type field of an entity record.
+   *
+   * @param options - Options containing entityName, recordId, and fieldName
+   * @returns Promise resolving to Blob containing the file content
+   * @example
+   * ```typescript
+   * // First, get records to obtain the record ID
+   * const records = await sdk.entities.getRecordsById(<entityId>);
+   * // Get the recordId for the record that contains the attachment
+   * const recordId = records.items[0].id;
+   *
+   * // Download attachment using SDK method
+   * const response = await sdk.entities.downloadAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: recordId,
+   *   fieldName: 'Documents'
+   * });
+   *
+   * // Or download using entity method
+   * const entity = await sdk.entities.getById(<entityId>);
+   * const response = await entity.downloadAttachment(recordId, 'Documents');
+   *
+   * // Browser: Display Image
+   * const url = URL.createObjectURL(response);
+   * document.getElementById('image').src = url;
+   * // Call URL.revokeObjectURL(url) when done
+   *
+   * // Browser: Display PDF in iframe
+   * const url = URL.createObjectURL(response);
+   * document.getElementById('pdf-viewer').src = url;
+   * // Call URL.revokeObjectURL(url) when done
+   *
+   * // Browser: Render PDF with PDF.js
+   * const arrayBuffer = await response.arrayBuffer();
+   * const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+   *
+   * // Node.js: Save to file
+   * const buffer = Buffer.from(await response.arrayBuffer());
+   * fs.writeFileSync('attachment.pdf', buffer);
+   * ```
+   */
+  downloadAttachment(options: EntityDownloadAttachmentOptions): Promise<Blob>;
 }
 
 /**
@@ -216,7 +261,7 @@ export interface EntityMethods {
 
   /**
    * Get records from this entity
-   * 
+   *
    * @param options - Query options
    * @returns Promise resolving to query response
    */
@@ -225,6 +270,15 @@ export interface EntityMethods {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   >;
+
+  /**
+   * Downloads an attachment stored in a File-type field of an entity record
+   *
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
+   * @returns Promise resolving to Blob containing the file content
+   */
+  downloadAttachment(recordId: string, fieldName: string): Promise<Blob>;
 }
 
 /**
@@ -265,8 +319,18 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
         : NonPaginatedResponse<EntityRecord>
     > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      
+
       return service.getRecordsById(entityData.id, options) as any;
+    },
+
+    async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
+      if (!entityData.name) throw new Error('Entity name is undefined');
+
+      return service.downloadAttachment({
+        entityName: entityData.name,
+        recordId,
+        fieldName
+      });
     }
   };
 }

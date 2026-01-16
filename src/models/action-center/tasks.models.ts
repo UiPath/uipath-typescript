@@ -25,7 +25,7 @@ export interface TaskServiceModel {
   /**
    * Gets all tasks across folders with optional filtering
    * 
-   * @param options - Query options including optional folderId and pagination options
+   * @param options - Query options including optional folderId, asTaskAdmin flag and pagination options
    * @returns Promise resolving to either an array of tasks NonPaginatedResponse<TaskGetResponse> or a PaginatedResponse<TaskGetResponse> when pagination options are used.
    * {@link TaskGetResponse}
    *  @example
@@ -36,6 +36,18 @@ export interface TaskServiceModel {
    * // Get tasks within a specific folder
    * const tasks = await sdk.tasks.getAll({ 
    *   folderId: 123
+   * });
+   *
+   * // Get tasks with admin permissions
+   * // This fetches tasks across folders where the user has Task.View, Task.Edit and TaskAssignment.Create permissions
+   * const tasks = await sdk.tasks.getAll({
+   *   asTaskAdmin: true
+   * });
+   *
+   * // Get tasks without admin permissions (default)
+   * // This fetches tasks across folders where the user has Task.View and Task.Edit permissions
+   * const tasks = await sdk.tasks.getAll({
+   *   asTaskAdmin: false
    * });
    * 
    * // First page with pagination

@@ -1,4 +1,9 @@
 /**
+ * Config file name constant
+ */
+export const CONFIG_FILE_NAME = 'uipath.json';
+
+/**
  * Common CLI error and success messages
  */
 export const MESSAGES = {
@@ -6,9 +11,10 @@ export const MESSAGES = {
     // File/Directory validation
     INVALID_DIST_DIRECTORY: 'Invalid dist directory',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
+    ACTION_SCHEMA_REQUIRED: '❌ action-schema.json file not found in current working directory',
     
-    // Authentication & Authorization  
-    AUTHENTICATION_FAILED: 'Authentication failed. Please check your UIPATH_BEARER_TOKEN or run "uipath auth" to authenticate',
+    // Authentication & Authorization
+    AUTHENTICATION_FAILED: 'Authentication failed. Please check your UIPATH_ACCESS_TOKEN, run "uipath auth" to authenticate, or pass credentials via CLI flags',
     ACCESS_DENIED: 'Access denied. You may not have permission to access this tenant/organization',
     API_ENDPOINT_NOT_FOUND: 'API endpoint not found. Please check your UIPATH_BASE_URL configuration',
     
@@ -26,17 +32,22 @@ export const MESSAGES = {
     REGISTRATION_ERROR_PREFIX: 'Registration error:',
     PACKAGING_ERROR_PREFIX: 'Packaging error:',
     PUBLISHING_ERROR_PREFIX: 'Publishing error:',
+    DEPLOYMENT_ERROR_PREFIX: 'Deployment error:',
     
     // Debug messages
     FAILED_TO_LOAD_APP_CONFIG: 'Failed to load app config:',
     
     // Operation-specific
     APP_REGISTRATION_FAILED: '❌ App registration failed',
-    PACKAGE_CREATION_FAILED: '❌ Package creation failed', 
+    PACKAGE_CREATION_FAILED: '❌ Package creation failed',
     PACKAGE_PUBLISHING_FAILED: '❌ Package publishing failed',
     AUTHENTICATION_PROCESS_FAILED: '❌ Authentication failed',
     LOGOUT_FAILED: '❌ Failed to logout',
     FAILED_TO_FETCH_ORG_TENANT: '❌ Failed to fetch organization/tenant information',
+    APP_DEPLOYMENT_FAILED: '❌ App deployment failed',
+    APP_UPGRADE_FAILED: '❌ App upgrade failed',
+    APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath register app" first',
+    DEPLOYMENT_ID_NOT_FOUND: '❌ Could not find deployment ID for the app',
     
     // Ports
     ALL_REGISTERED_PORTS_IN_USE: 'All registered ports are in use',
@@ -48,6 +59,10 @@ export const MESSAGES = {
     NO_NUPKG_FILES_FOUND: '❌ No .nupkg files found',
     UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
     PACKAGE_TOO_LARGE: '❌ Package file is too large for upload',
+    PACKAGE_UPLOAD_FAILED: 'Package upload failed: An error occured',
+    CONFIG_FILE_NOT_FOUND: `❌ ${CONFIG_FILE_NAME} not found in project root`,
+    CONFIG_FILE_INVALID_JSON: `❌ ${CONFIG_FILE_NAME} is not valid JSON`,
+    CONFIG_FILE_MISSING_SCOPE: `❌ ${CONFIG_FILE_NAME} is missing required "scope" field`,
     
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
@@ -57,6 +72,19 @@ export const MESSAGES = {
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',
     MANUAL_ENV_INSTRUCTION: 'Please add the following to your .env file manually:',
     FAILED_TO_SAVE_APP_CONFIG: 'Failed to save app configuration:',
+    FAILED_TO_PARSE_ACTION_SCHEMA: 'Failed to parse Action Schema:',
+
+    //Action schema validations
+    INVALID_PROPERTY_TYPE: 'Invalid type. Must be one of: string, integer, number, boolean, array, object',
+    INVALID_PROPERTY_FORMAT: 'Invalid format. Must be one of: uuid, date',
+    MISSING_ITEMS_ARRAY: 'Array properties must have an "items" field',
+    NESTED_ARRAYS_NOT_SUPPORTED: 'Nested arrays are not allowed. Array items cannot be of type array',
+    SECTION_TYPE_INVALID: 'Section type must be "object"',
+    INVALID_PROPERTIES_OBJECT: 'Properties must be a valid object',
+    MISSING_ACTION_SCHEMA_SECTION: 'Action schema must have inputs, outputs, inOuts, and outcomes sections',
+    INVALID_ACTION_SCHEMA: 'Action schema validation failed:',
+    UNSUPPORTED_JSON_DATA_TYPE: 'Unsupported JSON data type:'
+
   },
   
   SUCCESS: {
@@ -72,14 +100,25 @@ export const MESSAGES = {
     // Packaging
     PACKAGE_CREATED_SUCCESS: '✅ NuGet package created successfully!',
     PACKAGE_CONFIG_VALIDATED: '✅ Package configuration validated',
+    CONFIG_FILE_INCLUDED: `✅ Included ${CONFIG_FILE_NAME} in package`,
+    CONFIG_FILE_CREATED: `✅ Created ${CONFIG_FILE_NAME} with provided scopes`,
+    CLIENT_ID_CLEARED: '✅ ClientId cleared - UiPath will create a new OAuth client during deployment',
+    CLIENT_ID_REUSED: '✅ Existing clientId will be reused in production',
     
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
+
+    // Deployment
+    APP_DEPLOYED_SUCCESS: '✅ App deployed successfully!',
+    APP_UPGRADED_SUCCESS: '✅ App upgraded successfully!',
   },
   
   INFO: {
     // Spinners/Progress
     REGISTERING_APP: 'Registering app with UiPath...',
+    DEPLOYING_APP: 'Deploying app...',
+    UPGRADING_APP: 'Upgrading app to latest version...',
+    CHECKING_DEPLOYMENT_STATUS: 'Checking deployment status...',
     CREATING_PACKAGE: 'Creating NuGet package...',
     CREATING_METADATA_FILES: 'Creating metadata files...',
     CREATING_NUPKG_PACKAGE: 'Creating .nupkg package...',
@@ -91,6 +130,7 @@ export const MESSAGES = {
     WAITING_FOR_AUTH: 'Waiting for authentication...',
     FETCHING_ORG_TENANTS: 'Fetching organization and tenants...',
     LOGGING_OUT: 'Logging out...',
+    AUTHENTICATING_WITH_CLIENT_CREDENTIALS: 'Authenticating with client credentials...',
     
     // Tips
     RUN_PACK_FIRST: '💡 Run "uipath pack" first to create a package',
@@ -98,10 +138,12 @@ export const MESSAGES = {
     RUN_WITHOUT_DRY_RUN: '💡 Run without --dry-run to create the package',
     USE_PUBLISH_TO_UPLOAD: '💡 Use "uipath publish" to upload to UiPath Orchestrator',
     APP_URL_SAVED_TO_ENV: '💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI',
+    NO_APP_URL_FOR_ACTION_APP: '💡 Action apps do not have an App URL. Action apps will render only inside Action Center',
     APP_CONFIG_SAVED: '💡 App configuration has been saved and will be used by pack command',
     URL_FOR_OAUTH_CONFIG: '💡 You can use this URL as the redirect URI for OAuth configuration in your SDK',
     CREDENTIALS_SAVED: 'Credentials have been saved to .env file',
     CREDENTIALS_REMOVED: 'Credentials have been removed',
+    CREATE_ACTION_SCHEMA_FIRST: '💡 Please create an action-schema.json file in the current directory before registering an Action app',
     
     // Directory/File operations
     CREATED_OUTPUT_DIRECTORY: 'Created output directory:',
@@ -115,14 +157,17 @@ export const MESSAGES = {
     
     // Headers
     APP_REGISTRATION: '🚀 UiPath App Registration',
-    PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator', 
+    APP_DEPLOYMENT: '🚀 UiPath App Deployment',
+    PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator',
     PUBLISHER: '🚀 UiPath Publisher',
     PACKAGE_PREVIEW: '🔍 Package Preview',
+    ACCESS_TOKEN_HEADER: 'Access Token:',
     
     // Success messages
     PACKAGE_READY: '🎉 Package is ready for publishing!',
     APP_REGISTERED: '🎉 Your app has been registered with UiPath!',
     PACKAGE_AVAILABLE: '🎉 Package is now available in UiPath Orchestrator',
+    APP_DEPLOYED: '🎉 Your app is now live!',
   },
   
   PROMPTS: {
@@ -134,6 +179,8 @@ export const MESSAGES = {
     CONTINUE_WITH_DIFFERENT_VALUES: 'Do you want to continue with these different values?',
     COMPLETE_AUTH_IN_BROWSER: 'Please complete the authentication in your browser',
     BROWSER_FALLBACK_INSTRUCTION: 'If the browser didn\'t open automatically, visit:',
+    REUSE_CLIENT_ID: 'Do you want to reuse the existing clientId from uipath.json in production or let UiPath create one?',
+    ENTER_SCOPES: 'Enter the required scopes for your app (e.g., OR.Execution OR.Folders), please refer https://uipath.github.io/uipath-typescript/oauth-scopes/ for details:',
   },
   
   HELP: {
@@ -144,8 +191,22 @@ export const MESSAGES = {
   
   VALIDATIONS: {
     APP_NAME_REQUIRED: 'App name is required',
+    APP_NAME_INVALID_CHARS: 'App name can only contain letters, numbers, underscores (_), and hyphens (-). Please remove invalid special characters and try again.',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
-  }
+    MISSING_REQUIRED_CONFIG: '❌ Missing required configuration:',
+    PROVIDE_VIA_ENV_OR_FLAGS: '💡 Provide these via environment variables or CLI flags:',
+    ENV_VARIABLES_HEADER: 'Environment variables (.env file):',
+    ARGUMENTS_HEADER: 'Arguments',
+  },
+
+  // Error context strings for handleHttpError
+  ERROR_CONTEXT: {
+    APP_REGISTRATION: 'app registration',
+    PACKAGE_PUBLISHING: 'package publishing',
+    CLIENT_CREDENTIALS_AUTH: 'client credentials authentication',
+    APP_DEPLOYMENT: 'app deployment',
+    APP_UPGRADE: 'app upgrade',
+  },
 } as const;
 
 /**

@@ -22,7 +22,6 @@ export const InstanceList = ({
   loading,
   selectedProcess,
   selectedInstance,
-  currentPage,
   totalPages,
   totalCount,
   hasNextPage,
