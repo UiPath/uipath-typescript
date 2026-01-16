@@ -121,6 +121,31 @@ export class PaginationHelpers {
   }
   
   /**
+   * Transforms raw items using the provided transform function.
+   * Handles both array and JSON string responses.
+   *
+   * @param rawItems - Raw items from API response (array or JSON string)
+   * @param transformFn - Optional function to transform items
+   * @returns Transformed items array
+   */
+  private static transformItems<T, R>(
+    rawItems: T[] | string | undefined,
+    transformFn?: (item: T) => R
+  ): R[] {
+    if (transformFn) {
+      if (typeof rawItems === 'string') {
+        // For JSON string responses (like ChoiceSet values), pass the raw string to transform
+        return transformFn(rawItems as unknown as T) as unknown as R[];
+      } else {
+        // For array responses, map over each item
+        const items: T[] = rawItems || [];
+        return items.map(transformFn);
+      }
+    }
+    return (rawItems || []) as unknown as R[];
+  }
+
+  /**
    * Convert a unified pagination options to service-specific parameters
    */
   static getRequestParameters(
@@ -202,21 +227,7 @@ export class PaginationHelpers {
       }
     );
 
-    // Transform items only if a transform function is provided
-    // If items is a string (e.g., JSON string), pass it directly to transformFn
-    // Otherwise, map over the array of items
-    let transformedItems: R[];
-    if (transformFn) {
-      if (typeof paginatedResponse.items === 'string') {
-        // For JSON string responses (like ChoiceSet values), pass the raw string to transform
-        transformedItems = transformFn(paginatedResponse.items as unknown as T) as unknown as R[];
-      } else {
-        // For array responses, map over each item
-        transformedItems = paginatedResponse.items.map(transformFn);
-      }
-    } else {
-      transformedItems = paginatedResponse.items as unknown as R[];
-    }
+    const transformedItems = PaginationHelpers.transformItems(paginatedResponse.items, transformFn);
 
     return {
       ...paginatedResponse,
@@ -270,26 +281,9 @@ export class PaginationHelpers {
       );
     }
 
-    // Extract data from response
+    // Extract and transform items from response
     const rawItems = response.data?.[itemsField];
-
-    // Transform items if a transform function is provided
-    // If rawItems is a string (e.g., JSON string), pass it directly to transformFn
-    // Otherwise, map over the array of items
-    let data: R[];
-    if (transformFn) {
-      if (typeof rawItems === 'string') {
-        // For JSON string responses (like ChoiceSet values), pass the raw string to transform
-        data = transformFn(rawItems as unknown as T) as unknown as R[];
-      } else {
-        // For array responses, map over each item
-        const items: T[] = rawItems || [];
-        data = items.map(transformFn);
-      }
-    } else {
-      data = (rawItems || []) as unknown as R[];
-    }
-      
+    const data = PaginationHelpers.transformItems(rawItems, transformFn);
     const totalCount = response.data?.[totalCountField];
     
     return {

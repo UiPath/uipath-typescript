@@ -19,13 +19,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `sdk.buckets.getReadUri` | `OR.Administration` or `OR.Administration.Read` |
 | `sdk.buckets.uploadFile` | `OR.Administration` or `OR.Administration.Read` |
 
-## Choice Sets
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `sdk.entities.choicesets.getAll` | `DataFabric.Schema.Read` |
-| `sdk.entities.choicesets.getById` | `DataFabric.Data.Read` |
-
 ## Entities
 
 | Method | OAuth Scope |
@@ -35,6 +28,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `sdk.entities.insertById` or `entity.insert` | `DataFabric.Data.Write` |
 | `sdk.entities.deleteById` or `entity.delete` | `DataFabric.Data.Write` |
 | `sdk.entities.updateById` or `entity.update` | `DataFabric.Data.Write` |
+| `sdk.entities.choicesets.getAll` | `DataFabric.Schema.Read` |
+| `sdk.entities.choicesets.getById` | `DataFabric.Data.Read` |
 
 ## Maestro
 
