@@ -185,8 +185,7 @@ describe('ChoiceSetService Unit Tests', () => {
           pagination: expect.objectContaining({
             itemsField: 'jsonValue',
             totalCountField: 'totalRecordCount'
-          }),
-          excludeFromPrefix: ['expansionLevel']
+          })
         }),
         undefined
       );
@@ -250,27 +249,6 @@ describe('ChoiceSetService Unit Tests', () => {
       expect((transformed as any).Name).toBeUndefined();
       expect((transformed as any).CreateTime).toBeUndefined();
       expect((transformed as any).UpdateTime).toBeUndefined();
-    });
-
-    it('should pass expansionLevel option correctly', async () => {
-      const mockResponse = {
-        items: [],
-        totalCount: 0
-      };
-
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
-
-      await choiceSetService.getById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
-        expansionLevel: 1
-      });
-
-      // Verify options were passed to PaginationHelpers.getAll
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({
-          expansionLevel: 1
-        })
-      );
     });
 
     it('should return paginated response when pagination options provided', async () => {

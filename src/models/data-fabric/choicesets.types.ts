@@ -50,8 +50,5 @@ export interface ChoiceSetValueGetResponse {
 /**
  * Options for getting choice set values by choice set ID
  */
-export type ChoiceSetGetByIdOptions = {
-  /** Level of entity expansion (default: 0) */
-  expansionLevel?: number;
-} & PaginationOptions;
+export type ChoiceSetGetByIdOptions = PaginationOptions;
 

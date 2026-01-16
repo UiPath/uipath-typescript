@@ -48,7 +48,7 @@ export interface ChoiceSetServiceModel {
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
    * @param choicesetId - UUID of the choice set
-   * @param options - Query options including expansionLevel and pagination options
+   * @param options - Pagination options
    * @returns Promise resolving to choice set values or paginated result
    * {@link ChoiceSetValueGetResponse}
    * @example
@@ -60,11 +60,6 @@ export interface ChoiceSetServiceModel {
    * for (const value of values.items) {
    *   console.log(`Value: ${value.displayName} (${value.name})`);
    * }
-   *
-   * // With expansion level
-   * const values = await sdk.entities.choicesets.getById('<choicesetId>', {
-   *   expansionLevel: 1
-   * });
    *
    * // First page with pagination
    * const page1 = await sdk.entities.choicesets.getById('<choicesetId>', { pageSize: 10 });
