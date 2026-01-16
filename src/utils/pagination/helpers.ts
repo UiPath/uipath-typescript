@@ -178,7 +178,6 @@ export class PaginationHelpers {
       paginationParams,
       additionalParams,
       transformFn,
-      parseItemsFn,
       method = 'GET',
       options = {}
     } = params;
@@ -198,8 +197,7 @@ export class PaginationHelpers {
           itemsField: options.itemsField || DEFAULT_ITEMS_FIELD,
           totalCountField: options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD,
           continuationTokenField: options.continuationTokenField,
-          paginationParams: options.paginationParams,
-          parseItemsFn: parseItemsFn
+          paginationParams: options.paginationParams
         }
       }
     );
@@ -231,7 +229,6 @@ export class PaginationHelpers {
       folderId,
       additionalParams,
       transformFn,
-      parseItemsFn,
       method = 'GET',
       options = {}
     } = params;
@@ -262,9 +259,8 @@ export class PaginationHelpers {
       );
     }
 
-    // Extract data - use parseItemsFn if provided (e.g., for JSON string responses)
-    const rawItems = response.data?.[itemsField];
-    const items: T[] = parseItemsFn ? parseItemsFn(rawItems) : (rawItems || []);
+    // Extract data
+    const items: T[] = response.data?.[itemsField] || [];
     
     // Transform items if a transform function is provided
     const data = transformFn 
@@ -331,7 +327,6 @@ export class PaginationHelpers {
         paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
         transformFn: config.transformFn,
-        parseItemsFn: config.parseItemsFn,
         method: config.method,
         options: {
           ...paginationOptions,
@@ -349,7 +344,6 @@ export class PaginationHelpers {
       folderId,
       additionalParams: prefixedOptions,
       transformFn: config.transformFn,
-      parseItemsFn: config.parseItemsFn,
       method: config.method,
       options: {
         itemsField: paginationOptions.itemsField,

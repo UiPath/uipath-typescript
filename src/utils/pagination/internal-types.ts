@@ -70,11 +70,6 @@ export interface GetAllPaginatedParams<T, R = T> {
    * Optional function to transform API response items.
    */
   transformFn?: (item: T) => R;
-  /**
-   * Optional function to parse items from the raw field value.
-   * Use this when the API returns items as a JSON string instead of an array.
-   */
-  parseItemsFn?: (rawValue: unknown) => T[];
   /** HTTP method to use for the request (default: 'GET') */
   method?: 'GET' | 'POST';
   options?: {
@@ -104,11 +99,6 @@ export interface GetAllNonPaginatedParams<T, R = T> {
    * Optional function to transform API response items.
    */
   transformFn?: (item: T) => R;
-  /**
-   * Optional function to parse items from the raw field value.
-   * Use this when the API returns items as a JSON string instead of an array.
-   */
-  parseItemsFn?: (rawValue: unknown) => T[];
   /** HTTP method to use for the request (default: 'GET') */
   method?: 'GET' | 'POST';
   options?: {
@@ -148,11 +138,6 @@ export interface PaginationFieldNames {
   itemsField?: string;
   totalCountField?: string;
   continuationTokenField?: string;
-  /**
-   * Optional function to parse items from the raw field value.
-   * Use this when the API returns items as a JSON string instead of an array.
-   */
-  parseItemsFn?: (rawValue: unknown) => unknown[];
 }
 
 /**
@@ -220,12 +205,6 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
    * Optional function to transform raw API items to client format.
    */
   transformFn?: (item: TRaw) => TTransformed;
-
-  /**
-   * Optional function to parse items from the raw field value.
-   * Use this when the API returns items as a JSON string instead of an array.
-   */
-  parseItemsFn?: (rawValue: unknown) => TRaw[];
 
   /** Pagination configuration */
   pagination?: PaginationConfig;

@@ -138,8 +138,7 @@ export class BaseService {
       {
         itemsField: options.pagination.itemsField,
         totalCountField: options.pagination.totalCountField,
-        continuationTokenField: options.pagination.continuationTokenField,
-        parseItemsFn: options.pagination.parseItemsFn
+        continuationTokenField: options.pagination.continuationTokenField
       }
     );
   }
@@ -217,9 +216,8 @@ export class BaseService {
 
     const continuationTokenField = fields.continuationTokenField || 'continuationToken';
 
-    // Extract items and metadata - use parseItemsFn if provided (e.g., for JSON string responses)
-    const rawItems = response.data[itemsField];
-    const items = fields.parseItemsFn ? fields.parseItemsFn(rawItems) : (rawItems || []);
+    // Extract items and metadata
+    const items = response.data[itemsField] || [];
     const totalCount = response.data[totalCountField];
     const continuationToken = response.data[continuationTokenField];
     

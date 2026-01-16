@@ -97,17 +97,19 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
       : NonPaginatedResponse<ChoiceSetValueGetResponse>
   > {
     // Transformation function for choice set values
-    const transformChoiceSetValue = (item: RawChoiceSetValueGetResponse): ChoiceSetValueGetResponse => {
-      // First convert PascalCase to camelCase, then rename time fields
-      const camelCased = pascalToCamelCaseKeys(item);
-      return transformData(camelCased, EntityMap) as unknown as ChoiceSetValueGetResponse;
+    // Includes JSON parsing and transforms each item from PascalCase to camelCase
+    const transformFn = (rawValue: unknown): ChoiceSetValueGetResponse[] => {
+      const items = parseJsonArray<RawChoiceSetValueGetResponse>(rawValue);
+      return items.map(item => {
+        const camelCased = pascalToCamelCaseKeys(item);
+        return transformData(camelCased, EntityMap) as unknown as ChoiceSetValueGetResponse;
+      });
     };
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(choicesetId),
-      transformFn: transformChoiceSetValue,
-      parseItemsFn: parseJsonArray<RawChoiceSetValueGetResponse>,
+      transformFn,
       method: 'POST',
       pagination: {
         paginationType: PaginationType.OFFSET,
