@@ -1,7 +1,8 @@
-import { 
-  EntityGetRecordsByIdOptions, 
-  EntityInsertOptions, 
+import {
+  EntityGetRecordsByIdOptions,
+  EntityInsertOptions,
   EntityInsertResponse,
+  EntitySingleInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
@@ -106,6 +107,27 @@ export interface EntityServiceModel {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   >;
+
+  /**
+   * Inserts a single record into an entity by entity ID
+   *
+   * @param id - UUID of the entity
+   * @param data - Record to insert
+   * @param options - Insert options
+   * @returns Promise resolving to the inserted record with generated ID
+   * {@link EntitySingleInsertResponse}
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 });
+   *
+   * // With options
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 }, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntitySingleInsertResponse>;
 
   /**
    * Inserts one or more records into an entity by entity ID using batch insert

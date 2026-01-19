@@ -16,6 +16,7 @@ describe('Entity Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       getRecordsById: vi.fn(),
+      insertById: vi.fn(),
       batchInsertById: vi.fn(),
       updateById: vi.fn(),
       deleteById: vi.fn(),

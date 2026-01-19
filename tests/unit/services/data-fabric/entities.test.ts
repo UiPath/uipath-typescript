@@ -3,16 +3,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EntityService } from '../../../../src/services/data-fabric/entities';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
-import { 
-  createMockEntityResponse, 
-  createMockEntities, 
-  createMockEntityRecords, 
-  createMockInsertResponse, 
-  createMockUpdateResponse, 
+import {
+  createMockEntityResponse,
+  createMockEntities,
+  createMockEntityRecords,
+  createMockSingleInsertResponse,
+  createMockInsertResponse,
+  createMockUpdateResponse,
   createMockDeleteResponse,
   createMockEntityWithExternalFields,
   createMockEntityWithNestedReferences,
-  createMockEntityWithSqlFieldTypes 
+  createMockEntityWithSqlFieldTypes
 } from '../../../utils/mocks/entities';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
@@ -387,6 +388,76 @@ describe('EntityService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(entityService.getRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('insertById', () => {
+    it('should insert a single record successfully', async () => {
+      const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
+
+      const mockResponse = createMockSingleInsertResponse(testData);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+
+      // Verify the result is the inserted record with generated ID
+      expect(result).toBeDefined();
+      expect(result.name).toBe(testData.name);
+      expect(result.age).toBe(testData.age);
+      expect(result).toHaveProperty('id');
+
+      // Verify the API call has correct endpoint and body (single object, not array)
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        testData,
+        expect.objectContaining({
+          params: expect.any(Object)
+        })
+      );
+    });
+
+    it('should insert a record with options', async () => {
+      const testData = {
+        ...ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+        createdBy: ENTITY_TEST_CONSTANTS.USER_ID
+      };
+      const options: EntityInsertOptions = {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      } as EntityInsertOptions;
+
+      // With expansionLevel, reference fields should be expanded in the response
+      const mockResponse = createMockSingleInsertResponse(testData, {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      });
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
+
+      // Verify options are passed in params
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        testData,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          })
+        })
+      );
+
+      // Verify reference fields are expanded in the response
+      expect(result.recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.createdBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(entityService.insertById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

@@ -7,6 +7,7 @@ import {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
   EntityInsertResponse,
+  EntitySingleInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
@@ -126,6 +127,45 @@ export class EntityService extends BaseService implements EntityServiceModel {
       },
       excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
     }, options);
+  }
+
+  /**
+   * Inserts a single record into an entity by entity ID
+   *
+   * @param entityId - UUID of the entity
+   * @param data - Record to insert
+   * @param options - Insert options
+   * @returns Promise resolving to the inserted record with generated ID
+   *
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 });
+   *
+   * // With options
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 }, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  @track('Entities.InsertById')
+  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntitySingleInsertResponse> {
+    const params = createParams({
+      expansionLevel: options.expansionLevel
+    });
+
+    const response = await this.post<EntitySingleInsertResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
+      data,
+      {
+        params,
+        ...options
+      }
+    );
+
+    // Convert PascalCase response to camelCase
+    const camelResponse = pascalToCamelCaseKeys(response.data);
+    return camelResponse;
   }
 
   /**
