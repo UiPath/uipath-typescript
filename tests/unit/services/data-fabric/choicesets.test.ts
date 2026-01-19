@@ -223,17 +223,12 @@ describe('ChoiceSetService Unit Tests', () => {
 
       await choiceSetService.getById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
 
-      // Verify transformFn is provided (it includes JSON parsing and transformation)
+      // Verify transformFn is provided (JSON parsing is now handled automatically by helpers)
       const config = vi.mocked(PaginationHelpers.getAll).mock.calls[0][0] as any;
       expect(config.transformFn).toBeDefined();
 
-      // Test the transformFn function directly - it parses JSON and transforms items
-      // Pass a JSON string array to simulate the raw API response
-      const rawJsonString = JSON.stringify([mockRawValue]);
-      const transformedItems = config.transformFn(rawJsonString) as ChoiceSetGetResponse[];
-
-      expect(transformedItems).toHaveLength(1);
-      const transformed = transformedItems[0];
+      // Test transformFn - transforms a single item from PascalCase to camelCase
+      const transformed = config.transformFn(mockRawValue) as ChoiceSetGetResponse;
       expect(transformed.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
       expect(transformed.name).toBe(CHOICESET_TEST_CONSTANTS.VALUE_NAME);
       expect(transformed.displayName).toBe(CHOICESET_TEST_CONSTANTS.VALUE_DISPLAY_NAME);

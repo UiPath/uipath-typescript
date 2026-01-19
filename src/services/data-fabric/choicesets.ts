@@ -6,7 +6,7 @@ import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.model
 import { ChoiceSetGetAllResponse, ChoiceSetGetResponse, ChoiceSetGetByIdOptions } from '../../models/data-fabric/choicesets.types';
 import { RawChoiceSetGetAllResponse, RawChoiceSetGetResponse } from '../../models/data-fabric/choicesets.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
-import { transformData, parseJsonArray, pascalToCamelCaseKeys } from '../../utils/transform';
+import { transformData, pascalToCamelCaseKeys } from '../../utils/transform';
 import { EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
@@ -96,14 +96,10 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
       ? PaginatedResponse<ChoiceSetGetResponse>
       : NonPaginatedResponse<ChoiceSetGetResponse>
   > {
-    // Transformation function for choice set values
-    // Includes JSON parsing and transforms each item from PascalCase to camelCase
-    const transformFn = (rawValue: unknown): ChoiceSetGetResponse[] => {
-      const items = parseJsonArray<RawChoiceSetGetResponse>(rawValue);
-      return items.map(item => {
-        const camelCased = pascalToCamelCaseKeys(item);
-        return transformData(camelCased, EntityMap) as unknown as ChoiceSetGetResponse;
-      });
+    // Transform a single item from PascalCase to camelCase
+    const transformFn = (item: RawChoiceSetGetResponse): ChoiceSetGetResponse => {
+      const camelCased = pascalToCamelCaseKeys(item);
+      return transformData(camelCased, EntityMap) as unknown as ChoiceSetGetResponse;
     };
 
     return PaginationHelpers.getAll({

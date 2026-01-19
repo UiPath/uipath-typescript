@@ -121,31 +121,6 @@ export class PaginationHelpers {
   }
   
   /**
-   * Transforms raw items using the provided transform function.
-   * Handles both array and JSON string responses.
-   *
-   * @param rawItems - Raw items from API response (array or JSON string)
-   * @param transformFn - Optional function to transform items
-   * @returns Transformed items array
-   */
-  private static transformItems<T, R>(
-    rawItems: T[] | string | undefined,
-    transformFn?: (item: T) => R
-  ): R[] {
-    if (transformFn) {
-      if (typeof rawItems === 'string') {
-        // For JSON string responses (like ChoiceSet values), pass the raw string to transform
-        return transformFn(rawItems as unknown as T) as unknown as R[];
-      } else {
-        // For array responses, map over each item
-        const items: T[] = rawItems || [];
-        return items.map(transformFn);
-      }
-    }
-    return (rawItems || []) as unknown as R[];
-  }
-
-  /**
    * Convert a unified pagination options to service-specific parameters
    */
   static getRequestParameters(
@@ -227,7 +202,10 @@ export class PaginationHelpers {
       }
     );
 
-    const transformedItems = PaginationHelpers.transformItems(paginatedResponse.items, transformFn);
+    // Parse items - automatically handle JSON string responses
+    const rawItems = paginatedResponse.items;
+    const parsedItems: T[] = typeof rawItems === 'string' ? JSON.parse(rawItems) : (rawItems || []);
+    const transformedItems = transformFn ? parsedItems.map(transformFn) : parsedItems as unknown as R[];
 
     return {
       ...paginatedResponse,
@@ -283,11 +261,14 @@ export class PaginationHelpers {
 
     // Extract and transform items from response
     const rawItems = response.data?.[itemsField];
-    const data = PaginationHelpers.transformItems(rawItems, transformFn);
     const totalCount = response.data?.[totalCountField];
-    
+
+    // Parse items - automatically handle JSON string responses
+    const parsedItems: T[] = typeof rawItems === 'string' ? JSON.parse(rawItems) : (rawItems || []);
+    const items = transformFn ? parsedItems.map(transformFn) : parsedItems as unknown as R[];
+
     return {
-      items: data,
+      items,
       totalCount
     };
   }

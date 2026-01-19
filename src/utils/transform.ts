@@ -388,36 +388,3 @@ export function arrayDictionaryToRecord(
   
   return record;
 }
-
-/**
- * Parses a value that may be a JSON string into an array.
- * Useful for APIs that return items as a JSON string instead of an array.
- *
- * @param rawValue The raw value to parse (could be a JSON string, array, or other)
- * @returns An array of items, or empty array if parsing fails
- *
- * @example
- * ```typescript
- * // JSON string input
- * parseJsonArray('[{"id": 1}, {"id": 2}]');
- * // Result: [{ id: 1 }, { id: 2 }]
- *
- * // Already an array
- * parseJsonArray([{ id: 1 }, { id: 2 }]);
- * // Result: [{ id: 1 }, { id: 2 }]
- *
- * // Invalid input
- * parseJsonArray(null);
- * // Result: []
- * ```
- */
-export function parseJsonArray<T = unknown>(rawValue: unknown): T[] {
-  if (typeof rawValue === 'string') {
-    try {
-      return JSON.parse(rawValue);
-    } catch {
-      return [];
-    }
-  }
-  return Array.isArray(rawValue) ? rawValue : [];
-} 
