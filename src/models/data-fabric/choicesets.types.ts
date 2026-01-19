@@ -7,7 +7,7 @@ import { PaginationOptions } from '../../utils/pagination/types';
 export interface ChoiceSetGetAllResponse {
   /** Name identifier of the choice set */
   name: string;
-  /** Human-readable display name */
+  /** Human-readable display name of the choice set*/
   displayName: string;
   /** Description of the choice set */
   description: string;
@@ -26,12 +26,12 @@ export interface ChoiceSetGetAllResponse {
 /**
  * Represents a single choice set value/record
  */
-export interface ChoiceSetValueGetResponse {
+export interface ChoiceSetGetResponse {
   /** Unique identifier for the choice set value */
   id: string;
   /** Name of the choice set value */
   name: string;
-  /** Human-readable display name */
+  /** Human-readable display name of the choice set value*/
   displayName: string;
   /** Numeric identifier */
   numberId: number;

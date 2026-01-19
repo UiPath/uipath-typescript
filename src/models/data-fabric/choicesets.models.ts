@@ -1,6 +1,6 @@
 import {
   ChoiceSetGetAllResponse,
-  ChoiceSetValueGetResponse,
+  ChoiceSetGetResponse,
   ChoiceSetGetByIdOptions
 } from './choicesets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
@@ -50,23 +50,28 @@ export interface ChoiceSetServiceModel {
    * @param choiceSetId - UUID of the choice set
    * @param options - Pagination options
    * @returns Promise resolving to choice set values or paginated result
-   * {@link ChoiceSetValueGetResponse}
+   * {@link ChoiceSetGetResponse}
    * @example
    * ```typescript
+   * // First, get the choice set ID using getAll()
+   * const choiceSets = await sdk.entities.choicesets.getAll();
+   * const expenseTypes = choiceSets.find(cs => cs.name === 'ExpenseTypes');
+   * const choiceSetId = expenseTypes.id;
+   *
    * // Get all values (non-paginated)
-   * const values = await sdk.entities.choicesets.getById('<choiceSetId>');
+   * const values = await sdk.entities.choicesets.getById(choiceSetId);
    *
    * // Iterate through choice set values
    * for (const value of values.items) {
-   *   console.log(`Value: ${value.displayName} (${value.name})`);
+   *   console.log(`Value: ${value.displayName}`);
    * }
    *
    * // First page with pagination
-   * const page1 = await sdk.entities.choicesets.getById('<choiceSetId>', { pageSize: 10 });
+   * const page1 = await sdk.entities.choicesets.getById(choiceSetId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.entities.choicesets.getById('<choiceSetId>', { cursor: page1.nextCursor });
+   *   const page2 = await sdk.entities.choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -75,8 +80,8 @@ export interface ChoiceSetServiceModel {
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ChoiceSetValueGetResponse>
-      : NonPaginatedResponse<ChoiceSetValueGetResponse>
+      ? PaginatedResponse<ChoiceSetGetResponse>
+      : NonPaginatedResponse<ChoiceSetGetResponse>
   >;
 }
 

@@ -3,8 +3,8 @@ import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution';
 import { TokenManager } from '../../core/auth/token-manager';
 import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.models';
-import { ChoiceSetGetAllResponse, ChoiceSetValueGetResponse, ChoiceSetGetByIdOptions } from '../../models/data-fabric/choicesets.types';
-import { RawChoiceSetGetAllResponse, RawChoiceSetValueGetResponse } from '../../models/data-fabric/choicesets.internal-types';
+import { ChoiceSetGetAllResponse, ChoiceSetGetResponse, ChoiceSetGetByIdOptions } from '../../models/data-fabric/choicesets.types';
+import { RawChoiceSetGetAllResponse, RawChoiceSetGetResponse } from '../../models/data-fabric/choicesets.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { transformData, parseJsonArray, pascalToCamelCaseKeys } from '../../utils/transform';
 import { EntityMap } from '../../models/data-fabric/entities.constants';
@@ -65,8 +65,13 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * @example
    * ```typescript
+   * // First, get the choice set ID using getAll()
+   * const choiceSets = await sdk.entities.choicesets.getAll();
+   * const expenseTypes = choiceSets.find(cs => cs.name === 'ExpenseTypes');
+   * const choiceSetId = expenseTypes.id;
+   *
    * // Get all values (non-paginated)
-   * const values = await sdk.entities.choicesets.getById('<choiceSetId>');
+   * const values = await sdk.entities.choicesets.getById(choiceSetId);
    *
    * // Iterate through choice set values
    * for (const value of values.items) {
@@ -74,11 +79,11 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * }
    *
    * // First page with pagination
-   * const page1 = await sdk.entities.choicesets.getById('<choiceSetId>', { pageSize: 10 });
+   * const page1 = await sdk.entities.choicesets.getById(choiceSetId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.entities.choicesets.getById('<choiceSetId>', { cursor: page1.nextCursor });
+   *   const page2 = await sdk.entities.choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -88,16 +93,16 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ChoiceSetValueGetResponse>
-      : NonPaginatedResponse<ChoiceSetValueGetResponse>
+      ? PaginatedResponse<ChoiceSetGetResponse>
+      : NonPaginatedResponse<ChoiceSetGetResponse>
   > {
     // Transformation function for choice set values
     // Includes JSON parsing and transforms each item from PascalCase to camelCase
-    const transformFn = (rawValue: unknown): ChoiceSetValueGetResponse[] => {
-      const items = parseJsonArray<RawChoiceSetValueGetResponse>(rawValue);
+    const transformFn = (rawValue: unknown): ChoiceSetGetResponse[] => {
+      const items = parseJsonArray<RawChoiceSetGetResponse>(rawValue);
       return items.map(item => {
         const camelCased = pascalToCamelCaseKeys(item);
-        return transformData(camelCased, EntityMap) as unknown as ChoiceSetValueGetResponse;
+        return transformData(camelCased, EntityMap) as unknown as ChoiceSetGetResponse;
       });
     };
 
