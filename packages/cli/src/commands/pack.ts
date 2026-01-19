@@ -68,10 +68,6 @@ export default class Pack extends Command {
       description: 'Show what would be packaged without creating the package',
       default: false,
     }),
-    'reuse-client': Flags.boolean({
-      description: 'Reuse existing clientId from uipath.json instead of letting UiPath create a new one',
-      default: false,
-    }),
   };
 
   @track('Pack')
@@ -103,32 +99,12 @@ export default class Pack extends Command {
     let version = flags.version;
     
     if (appConfig && !flags.name) {
-      // Use saved config if name not provided via flag
+      // Use saved app name if not provided via flag
       packageName = appConfig.appName;
-      // Use saved version if not explicitly provided (checking if it's still the default)
-      if (flags.version === '1.0.0' && appConfig.appVersion !== '1.0.0') {
-        version = appConfig.appVersion;
-      }
-      this.log(chalk.green(`${MESSAGES.SUCCESS.USING_REGISTERED_APP}: ${packageName} v${version}`));
+      this.log(chalk.green(`Using app name: ${packageName}`));
     } else if (!flags.name) {
       // No saved config and no flag, so prompt
       packageName = await this.promptForPackageName();
-    }
-    
-    // If we have app config but user provided different values, show warning
-    if (appConfig && (packageName !== appConfig.appName || version !== appConfig.appVersion)) {
-      this.log(chalk.yellow(`⚠️  Warning: You registered app "${appConfig.appName}" v${appConfig.appVersion} but are packaging as "${packageName}" v${version}. Remove --name flag to automatically use registered app details.`));
-      const response = await inquirer.prompt([{
-        type: 'confirm',
-        name: 'continue',
-        message: MESSAGES.PROMPTS.CONTINUE_WITH_DIFFERENT_VALUES,
-        default: false,
-      }]);
-      
-      if (!response.continue) {
-        this.log(chalk.blue(MESSAGES.INFO.USE_REGISTERED_VALUES));
-        this.exit(0);
-      }
     }
     
     // Ensure packageName is defined at this point
@@ -148,19 +124,6 @@ export default class Pack extends Command {
     // Get package description
     const description = flags.description || await this.promptForDescription(packageName);
 
-    // Determine if we should reuse the existing clientId
-    let reuseClient = flags['reuse-client'];
-    if (!reuseClient && sdkConfig.clientId) {
-      // If clientId exists and --reuse-client flag not provided, ask user
-      const response = await inquirer.prompt([{
-        type: 'confirm',
-        name: 'reuseClient',
-        message: MESSAGES.PROMPTS.REUSE_CLIENT_ID,
-        default: true,
-      }]);
-      reuseClient = response.reuseClient;
-    }
-
     const packageConfig = {
       distDir,
       name: sanitizedName,
@@ -171,7 +134,6 @@ export default class Pack extends Command {
       mainFile: flags['main-file'],
       contentType: flags['content-type'],
       outputDir: flags.output,
-      reuseClient,
       sdkConfig,
     };
     
@@ -330,17 +292,10 @@ export default class Pack extends Command {
         this.log(chalk.dim(`${MESSAGES.INFO.CREATED_OUTPUT_DIRECTORY} ${config.outputDir}`));
       }
 
-      // Copy uipath.json to dist directory (with clientId handling)
+      // Copy uipath.json to dist directory
+      // Clear clientId - server handles OAuth client creation/reuse during deployment
       const configDest = path.join(config.distDir, CONFIG_FILE_NAME);
-      const configToWrite = { ...config.sdkConfig };
-
-      if (!config.reuseClient) {
-        // Clear clientId so UiPath creates a new OAuth client during deployment
-        configToWrite.clientId = '';
-        this.log(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_CLEARED));
-      } else if (config.sdkConfig.clientId) {
-        this.log(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_REUSED));
-      }
+      const configToWrite = { ...config.sdkConfig, clientId: '' };
 
       fs.writeFileSync(configDest, JSON.stringify(configToWrite, null, 2));
       this.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_INCLUDED));

@@ -29,7 +29,6 @@ export const MESSAGES = {
     NO_ERROR_DETAILS: 'No additional error details provided',
     
     // Detailed log messages (used after spinner.fail)
-    REGISTRATION_ERROR_PREFIX: 'Registration error:',
     PACKAGING_ERROR_PREFIX: 'Packaging error:',
     PUBLISHING_ERROR_PREFIX: 'Publishing error:',
     DEPLOYMENT_ERROR_PREFIX: 'Deployment error:',
@@ -38,7 +37,6 @@ export const MESSAGES = {
     FAILED_TO_LOAD_APP_CONFIG: 'Failed to load app config:',
     
     // Operation-specific
-    APP_REGISTRATION_FAILED: '❌ App registration failed',
     PACKAGE_CREATION_FAILED: '❌ Package creation failed',
     PACKAGE_PUBLISHING_FAILED: '❌ Package publishing failed',
     AUTHENTICATION_PROCESS_FAILED: '❌ Authentication failed',
@@ -93,20 +91,16 @@ export const MESSAGES = {
     AUTHENTICATION_SUCCESS: '✓ Successfully authenticated',
     LOGOUT_SUCCESS: 'Successfully logged out',
     
-    // Registration
-    APP_REGISTERED_SUCCESS: '✅ App registered successfully!',
-    USING_REGISTERED_APP: '✅ Using registered app',
-    
     // Packaging
     PACKAGE_CREATED_SUCCESS: '✅ NuGet package created successfully!',
     PACKAGE_CONFIG_VALIDATED: '✅ Package configuration validated',
     CONFIG_FILE_INCLUDED: `✅ Included ${CONFIG_FILE_NAME} in package`,
     CONFIG_FILE_CREATED: `✅ Created ${CONFIG_FILE_NAME} with provided scopes`,
-    CLIENT_ID_CLEARED: '✅ ClientId cleared - UiPath will create a new OAuth client during deployment',
-    CLIENT_ID_REUSED: '✅ Existing clientId will be reused in production',
     
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
+    PACKAGE_UPLOADED_SUCCESS: '✅ Package uploaded to Orchestrator',
+    CODED_APP_REGISTERED_SUCCESS: '✅ Coded app registered successfully!',
 
     // Deployment
     APP_DEPLOYED_SUCCESS: '✅ App deployed successfully!',
@@ -115,7 +109,6 @@ export const MESSAGES = {
   
   INFO: {
     // Spinners/Progress
-    REGISTERING_APP: 'Registering app with UiPath...',
     DEPLOYING_APP: 'Deploying app...',
     UPGRADING_APP: 'Upgrading app to latest version...',
     CHECKING_DEPLOYMENT_STATUS: 'Checking deployment status...',
@@ -123,6 +116,9 @@ export const MESSAGES = {
     CREATING_METADATA_FILES: 'Creating metadata files...',
     CREATING_NUPKG_PACKAGE: 'Creating .nupkg package...',
     PUBLISHING_PACKAGE: 'Publishing package to UiPath Orchestrator...',
+    UPLOADING_PACKAGE: 'Uploading package to Orchestrator...',
+    REGISTERING_CODED_APP: 'Registering coded app...',
+    PACKAGE_ALREADY_EXISTS: 'ℹ Package already exists in Orchestrator, proceeding to registration...',
     FINDING_PORT: 'Finding available port...',
     STARTING_AUTH_PROCESS: 'Starting authentication process...',
     STARTING_AUTH_SERVER: 'Starting local authentication server...',
@@ -134,29 +130,15 @@ export const MESSAGES = {
     
     // Tips
     RUN_PACK_FIRST: '💡 Run "uipath pack" first to create a package',
-    USE_REGISTERED_VALUES: '💡 Use the registered values by running: uipath pack ./dist',
     RUN_WITHOUT_DRY_RUN: '💡 Run without --dry-run to create the package',
     USE_PUBLISH_TO_UPLOAD: '💡 Use "uipath publish" to upload to UiPath Orchestrator',
-    APP_URL_SAVED_TO_ENV: '💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI',
-    NO_APP_URL_FOR_ACTION_APP: '💡 Action apps do not have an App URL. Action apps will render only inside Action Center',
-    APP_CONFIG_SAVED: '💡 App configuration has been saved and will be used by pack command',
-    URL_FOR_OAUTH_CONFIG: '💡 You can use this URL as the redirect URI for OAuth configuration in your SDK',
     CREDENTIALS_SAVED: 'Credentials have been saved to .env file',
     CREDENTIALS_REMOVED: 'Credentials have been removed',
-    CREATE_ACTION_SCHEMA_FIRST: '💡 Please create an action-schema.json file in the current directory before registering an Action app',
-    
+
     // Directory/File operations
     CREATED_OUTPUT_DIRECTORY: 'Created output directory:',
-    
-    // Next steps instructions
-    NEXT_STEPS: 'Next steps:',
-    STEP_BUILD_APP: '1. Build your application: npm run build',
-    STEP_PACKAGE_APP: '2. Package your application: uipath pack ./dist',
-    STEP_PACKAGE_NOTE: '   (App name and version will be automatically used from registration)',
-    STEP_PUBLISH_PACKAGE: '3. Publish the package: uipath publish',
-    
+
     // Headers
-    APP_REGISTRATION: '🚀 UiPath App Registration',
     APP_DEPLOYMENT: '🚀 UiPath App Deployment',
     PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator',
     PUBLISHER: '🚀 UiPath Publisher',
@@ -165,7 +147,6 @@ export const MESSAGES = {
     
     // Success messages
     PACKAGE_READY: '🎉 Package is ready for publishing!',
-    APP_REGISTERED: '🎉 Your app has been registered with UiPath!',
     PACKAGE_AVAILABLE: '🎉 Package is now available in UiPath Orchestrator',
     APP_DEPLOYED: '🎉 Your app is now live!',
   },
@@ -176,10 +157,8 @@ export const MESSAGES = {
     ENTER_PACKAGE_DESCRIPTION: 'Enter package description:',
     SELECT_PACKAGE_TO_PUBLISH: 'Select package to publish:',
     REAUTH_QUESTION: 'Do you want to re-authenticate?',
-    CONTINUE_WITH_DIFFERENT_VALUES: 'Do you want to continue with these different values?',
     COMPLETE_AUTH_IN_BROWSER: 'Please complete the authentication in your browser',
     BROWSER_FALLBACK_INSTRUCTION: 'If the browser didn\'t open automatically, visit:',
-    REUSE_CLIENT_ID: 'Do you want to reuse the existing clientId from uipath.json in production or let UiPath create one?',
     ENTER_SCOPES: 'Enter the required scopes for your app (e.g., OR.Execution OR.Folders), please refer https://uipath.github.io/uipath-typescript/oauth-scopes/ for details:',
   },
   
@@ -201,11 +180,11 @@ export const MESSAGES = {
 
   // Error context strings for handleHttpError
   ERROR_CONTEXT: {
-    APP_REGISTRATION: 'app registration',
     PACKAGE_PUBLISHING: 'package publishing',
     CLIENT_CREDENTIALS_AUTH: 'client credentials authentication',
     APP_DEPLOYMENT: 'app deployment',
     APP_UPGRADE: 'app upgrade',
+    CODED_APP_REGISTRATION: 'coded app registration',
   },
 } as const;
 
