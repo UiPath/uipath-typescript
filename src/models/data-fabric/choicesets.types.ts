@@ -1,3 +1,5 @@
+import { PaginationOptions } from '../../utils/pagination/types';
+
 /**
  * ChoiceSet Get All Response
  * Only exposes essential fields to SDK users
@@ -5,7 +7,7 @@
 export interface ChoiceSetGetAllResponse {
   /** Name identifier of the choice set */
   name: string;
-  /** Human-readable display name */
+  /** Human-readable display name of the choice set*/
   displayName: string;
   /** Description of the choice set */
   description: string;
@@ -20,4 +22,33 @@ export interface ChoiceSetGetAllResponse {
   /** Last update timestamp */
   updatedTime: string;
 }
+
+/**
+ * Represents a single choice set value/record
+ */
+export interface ChoiceSetGetResponse {
+  /** Unique identifier for the choice set value */
+  id: string;
+  /** Name of the choice set value */
+  name: string;
+  /** Human-readable display name of the choice set value*/
+  displayName: string;
+  /** Numeric identifier */
+  numberId: number;
+  /** Creation timestamp */
+  createdTime: string;
+  /** Last update timestamp */
+  updatedTime: string;
+  /** User ID who created this value */
+  createdBy?: string;
+  /** User ID who last updated this value */
+  updatedBy?: string;
+  /** User ID of the record owner */
+  recordOwner?: string;
+}
+
+/**
+ * Options for getting choice set values by choice set ID
+ */
+export type ChoiceSetGetByIdOptions = PaginationOptions;
 

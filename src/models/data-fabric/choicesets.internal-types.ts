@@ -20,3 +20,18 @@ export interface RawChoiceSetGetAllResponse {
   updateTime: string;
   updatedBy: string;
 }
+
+/**
+ * Raw ChoiceSet Value API Response (PascalCase from API)
+ */
+export interface RawChoiceSetGetResponse {
+  Id: string;
+  Name: string;
+  DisplayName: string;
+  NumberId: number;
+  CreateTime: string;
+  UpdateTime: string;
+  CreatedBy?: string;
+  UpdatedBy?: string;
+  RecordOwner?: string;
+}

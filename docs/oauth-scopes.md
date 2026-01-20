@@ -28,6 +28,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `sdk.entities.insertById` or `entity.insert` | `DataFabric.Data.Write` |
 | `sdk.entities.deleteById` or `entity.delete` | `DataFabric.Data.Write` |
 | `sdk.entities.updateById` or `entity.update` | `DataFabric.Data.Write` |
+| `sdk.entities.choicesets.getAll` | `DataFabric.Schema.Read` |
+| `sdk.entities.choicesets.getById` | `DataFabric.Data.Read` |
 
 ## Maestro
 
