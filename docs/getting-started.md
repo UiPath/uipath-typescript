@@ -81,7 +81,6 @@ The SDK supports two import patterns. Choose based on your SDK version.
     ```typescript
     // Import core SDK and only the services you need
     import { UiPath } from '@uipath/uipath-typescript/core';
-    import { Tasks } from '@uipath/uipath-typescript/tasks';
     import { Entities } from '@uipath/uipath-typescript/entities';
 
     // Configure and initialize the SDK
@@ -97,21 +96,13 @@ The SDK supports two import patterns. Choose based on your SDK version.
     await sdk.initialize();
 
     // Create service instances
-    const tasks = new Tasks(sdk);
     const entities = new Entities(sdk);
 
     // Use the services
-    const allTasks = await tasks.getAll();
     const allEntities = await entities.getAll();
     ```
 
-    **Benefits:**
-
-    - Tree-shaking removes unused services from your bundle
-    - Smaller bundle sizes for production
-    - Explicit dependencies make code easier to understand
-
-=== "Earlier versions"
+=== "Earlier versions (<1.0.0-beta.16)"
 
     ```typescript
     // Import everything from the main package
@@ -134,7 +125,7 @@ The SDK supports two import patterns. Choose based on your SDK version.
     const allEntities = await sdk.entities.getAll();
     ```
 
-    **Note:** This pattern still works but includes all services in your bundle regardless of usage.
+    **Note:** This pattern still works in newer versions but it includes all services in your bundle regardless of usage.
 
 ## **Telemetry**
 
