@@ -387,4 +387,4 @@ export function arrayDictionaryToRecord(
   }
   
   return record;
-} 
+}

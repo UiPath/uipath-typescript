@@ -19,7 +19,7 @@ export enum SqlFieldType {
 }
 
 /**
- * Maps fields for Entities 
+ * Maps fields for Entities
  */
 export const EntityMap = {
   createTime: 'createdTime',

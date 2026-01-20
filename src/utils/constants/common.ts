@@ -12,6 +12,17 @@ export const UNKNOWN = 'Unknown';
 export const NO_INSTANCE = 'no-instance';
 
 /**
+ * HTTP methods
+ */
+export const HTTP_METHODS = {
+  GET: 'GET',
+  POST: 'POST',
+  PUT: 'PUT',
+  PATCH: 'PATCH',
+  DELETE: 'DELETE'
+} as const;
+
+/**
  * OData pagination constants
  */
 export const ODATA_PAGINATION = {
@@ -28,8 +39,20 @@ export const ODATA_PAGINATION = {
 export const ENTITY_PAGINATION = {
   /** Field name for items in entity response */
   ITEMS_FIELD: 'value',
-  
+
   /** Field name for total count in entity response */
+  TOTAL_COUNT_FIELD: 'totalRecordCount'
+};
+
+/**
+ * Choice Set values endpoint pagination constants
+ * Note: The API returns items as a JSON string in 'jsonValue' field
+ */
+export const CHOICESET_VALUES_PAGINATION = {
+  /** Field name for items in choice set values response (contains JSON string) */
+  ITEMS_FIELD: 'jsonValue',
+
+  /** Field name for total count in choice set values response */
   TOTAL_COUNT_FIELD: 'totalRecordCount'
 };
 

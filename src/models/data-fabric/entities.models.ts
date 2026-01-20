@@ -14,9 +14,9 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 
 /**
  * Service for managing UiPath Data Fabric Entities.
- * 
+ *
  * Entities are collections of records that can be used to store and manage data in the Data Fabric. [UiPath Data Fabric Guide](https://docs.uipath.com/data-service/automation-cloud/latest/user-guide/introduction)
- * 
+ *
  */
 export interface EntityServiceModel {
   /**
@@ -64,7 +64,13 @@ export interface EntityServiceModel {
    * 
    * // Call operations directly on the entity
    * const records = await entity.getRecords();
-   * 
+   *
+   * // If a field references a ChoiceSet, get the choiceSetId from records.fields
+   * const choiceSetId = records.fields[0].referenceChoiceSet?.id;
+   * if (choiceSetId) {
+   *   const choiceSetValues = await sdk.entities.choicesets.getById(choiceSetId);
+   * }
+   *
    * const insertResult = await entity.insert([
    *   { name: "John", age: 30 }
    * ]);

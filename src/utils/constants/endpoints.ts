@@ -72,6 +72,10 @@ export const DATA_FABRIC_ENDPOINTS = {
     DOWNLOAD_ATTACHMENT: (entityName: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/${entityName}/${recordId}/${fieldName}`,
   },
+  CHOICESETS: {
+    GET_ALL: `${DATAFABRIC_BASE}/api/Entity/choiceset`,
+    GET_BY_ID: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choiceSetId}/query_expansion`,
+  },
 } as const;
 
 /**

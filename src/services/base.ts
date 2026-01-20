@@ -39,7 +39,8 @@ export class BaseService {
   protected createPaginationServiceAccess(): PaginationServiceAccess {
     return {
       get: <T>(path: string, options?: RequestSpec) => this.get<T>(path, options || {}),
-      requestWithPagination: <T>(method: string, path: string, paginationOptions: PaginationOptions, options: RequestWithPaginationOptions) => 
+      post: <T>(path: string, body?: unknown, options?: RequestSpec) => this.post<T>(path, body, options || {}),
+      requestWithPagination: <T>(method: string, path: string, paginationOptions: PaginationOptions, options: RequestWithPaginationOptions) =>
         this.requestWithPagination<T>(method, path, paginationOptions, options)
     };
   }
@@ -103,27 +104,37 @@ export class BaseService {
     options: RequestWithPaginationOptions
   ): Promise<PaginatedResponse<T>> {
     const paginationType = options.pagination.paginationType;
-    
+
     // Validate and prepare pagination parameters
     const params = this.validateAndPreparePaginationParams(paginationType, paginationOptions);
-    
+
     // Prepare request parameters based on pagination type
     const requestParams = this.preparePaginationRequestParams(paginationType, params, options.pagination);
-    
-    // Merge pagination parameters with existing parameters
-    options.params = {
-      ...options.params,
-      ...requestParams
-    };
-    
+
+    // For POST requests, merge pagination params into body; for GET, use query params
+    if (method.toUpperCase() === 'POST') {
+      const existingBody = (options.body && typeof options.body === 'object') ? options.body as Record<string, unknown> : {};
+      options.body = {
+        ...existingBody,
+        ...options.params,
+        ...requestParams
+      };
+    } else {
+      // Merge pagination parameters with existing parameters
+      options.params = {
+        ...options.params,
+        ...requestParams
+      };
+    }
+
     // Make the request
     const response = await this.request<any>(method, path, options);
-    
+
     // Extract data from the response and create page result
     return this.createPaginatedResponseFromResponse<T>(
-      response, 
-      params, 
-      paginationType, 
+      response,
+      params,
+      paginationType,
       {
         itemsField: options.pagination.itemsField,
         totalCountField: options.pagination.totalCountField,
@@ -192,19 +203,19 @@ export class BaseService {
    * Creates a paginated response from API response
    */
   private createPaginatedResponseFromResponse<T>(
-    response: ApiResponse<any>, 
+    response: ApiResponse<any>,
     params: InternalPaginationOptions,
     paginationType: PaginationType,
     fields: PaginationFieldNames
   ): PaginatedResponse<T> {
     // Extract fields from response
-    const itemsField = fields.itemsField || 
+    const itemsField = fields.itemsField ||
       (paginationType === PaginationType.TOKEN ? 'items' : 'value');
-    
+
     const totalCountField = fields.totalCountField || 'totalRecordCount';
-    
+
     const continuationTokenField = fields.continuationTokenField || 'continuationToken';
-    
+
     // Extract items and metadata
     const items = response.data[itemsField] || [];
     const totalCount = response.data[totalCountField];
