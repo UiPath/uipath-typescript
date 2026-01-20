@@ -91,7 +91,7 @@ export interface EntityOperationResponse {
 
 /**
  * Response from inserting a single record into an entity
- * Returns the inserted record with its generated ID and any server-set fields
+ * Returns the inserted record with its generated ID and other fields
  */
 export type EntitySingleInsertResponse = EntityRecord;
 
