@@ -13,7 +13,7 @@ import { PaginationManager } from '../utils/pagination/pagination-manager';
 import { PaginationHelpers } from '../utils/pagination/helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/constants';
 import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
-import type { IUiPathSDK } from '../core/types';
+import type { IUiPath } from '../core/types';
 import { SDKInternalsRegistry } from '../core/internals';
 
 export interface ApiResponse<T> {
@@ -53,7 +53,7 @@ export class BaseService {
    * ```typescript
    * // Services automatically call this via super()
    * export class EntityService extends BaseService {
-   *   constructor(instance: IUiPathSDK) {
+   *   constructor(instance: IUiPath) {
    *     super(instance); // Initializes the internal ApiClient
    *   }
    * }
@@ -67,7 +67,7 @@ export class BaseService {
    * const entitiesService = new Entities(sdk);
    * ```
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
     this.#apiClient = new ApiClient(config, context, tokenManager);
   }

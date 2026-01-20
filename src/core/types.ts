@@ -1,5 +1,5 @@
 /**
- * IUiPathSDK - Interface for UiPath SDK instance
+ * IUiPath - Interface for UiPath SDK instance
  *
  * This interface defines the public contract for the UiPath SDK.
  * Services depend on this interface rather than the concrete UiPath class,
@@ -10,7 +10,7 @@
 
 import type { BaseConfig } from './config/sdk-config';
 
-export interface IUiPathSDK {
+export interface IUiPath {
   /** Read-only configuration for the SDK instance */
   readonly config: Readonly<BaseConfig>;
 

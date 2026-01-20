@@ -1,5 +1,5 @@
 import { BaseService } from '../../base';
-import type { IUiPathSDK } from '../../../core/types';
+import type { IUiPath } from '../../../core/types';
 import { CollectionResponse, RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
@@ -29,7 +29,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     super(instance);
   }
 

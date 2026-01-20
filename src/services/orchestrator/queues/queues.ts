@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import type { IUiPathSDK } from '../../../core/types';
+import type { IUiPath } from '../../../core/types';
 import {
   QueueGetResponse,
   QueueGetAllOptions,
@@ -26,7 +26,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     super(instance);
   }
 

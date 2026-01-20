@@ -1,5 +1,5 @@
 import { BaseService } from '../base';
-import type { IUiPathSDK } from '../../core/types';
+import type { IUiPath } from '../../core/types';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
@@ -32,7 +32,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     super(instance);
   }
 

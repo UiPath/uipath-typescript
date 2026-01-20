@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import type { IUiPathSDK } from '../../../core/types';
+import type { IUiPath } from '../../../core/types';
 import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
@@ -23,7 +23,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     super(instance);
   }
 
