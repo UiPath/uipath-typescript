@@ -3,6 +3,8 @@ import {
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
+  CaseInstanceReopenRequest,
+  CaseInstanceReopenResponse,
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse
 } from './case-instances.types';
@@ -141,6 +143,19 @@ export interface CaseInstancesServiceModel {
   resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Reopen a case instance from a specified element
+   * @param caseInstanceId - The ID of the case instance
+   * @param folderKey - Required folder key
+   * @param request - Reopen request payload
+   * @returns Promise resolving to operation result with instance data
+   */
+  reopen(
+    caseInstanceId: string,
+    folderKey: string,
+    request: CaseInstanceReopenRequest
+  ): Promise<OperationResponse<CaseInstanceReopenResponse>>;
+
+  /**
    * Get execution history for a case instance
    * @param instanceId - The ID of the case instance
    * @param folderKey - Required folder key 
@@ -270,6 +285,14 @@ export interface CaseInstanceMethods {
   resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Reopens this case instance from a specified element
+   *
+   * @param request - Reopen request payload
+   * @returns Promise resolving to operation result
+   */
+  reopen(request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceReopenResponse>>;
+
+  /**
    * Gets execution history for this case instance
    *
    * @returns Promise resolving to instance execution history
@@ -329,6 +352,13 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
 
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async reopen(request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceReopenResponse>> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.reopen(instanceData.instanceId, instanceData.folderKey, request);
     },
 
     async getExecutionHistory(): Promise<CaseInstanceExecutionHistoryResponse> {

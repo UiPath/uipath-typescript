@@ -6,6 +6,8 @@ import {
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
+  CaseInstanceReopenRequest,
+  CaseInstanceReopenResponse,
   CaseInstancesServiceModel,
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
@@ -294,6 +296,33 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   }
 
   /**
+   * Reopen a case instance from a specified element
+   * @param caseInstanceId - The ID of the case instance to reopen
+   * @param folderKey - Required folder key
+   * @param request - Reopen request payload
+   * @returns Promise resolving to operation result with updated instance data
+   */
+  @track('CaseInstances.Reopen')
+  async reopen(
+    caseInstanceId: string,
+    folderKey: string,
+    request: CaseInstanceReopenRequest
+  ): Promise<OperationResponse<CaseInstanceReopenResponse>> {
+    const response = await this.post<CaseInstanceReopenResponse>(
+      MAESTRO_ENDPOINTS.CASES.REOPEN_CASE(caseInstanceId),
+      request || {},
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey })
+      }
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+  }
+
+  /**
    * Get execution history for a case instance
    * @param instanceId - The ID of the case instance
    * @param folderKey - Required folder key
@@ -383,6 +412,9 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
 
     return stages;
   }
+  /**
+   * 
+   */
 
   /**
    * Create a map of element ID to execution data 
