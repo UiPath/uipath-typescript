@@ -72,6 +72,31 @@ export interface CaseInstanceOperationResponse {
 }
 
 /**
+ * Request for reopening a case instance.
+ * Mirrors the Case Management API schema (CaseInstanceReopenRequest).
+ *
+ * Note: The API may support additional properties; this type allows extension.
+ */
+export interface CaseInstanceReopenRequest {
+  /**
+   * The element (node) identifier from which the case instance should be reopened.
+   * The exact required field depends on the API contract.
+   */
+  elementId?: string;
+  [key: string]: any;
+}
+
+/**
+ * Response for reopening a case instance.
+ * Mirrors the Case Management API schema (CaseInstanceReopenResponse).
+ */
+export interface CaseInstanceReopenResponse {
+  instanceId?: string;
+  status?: string;
+  [key: string]: any;
+}
+
+/**
  * Case App Configuration Overview
  */
 export interface CaseAppOverview {
