@@ -31,29 +31,17 @@ export class UiPath {
   private partialConfig?: PartialUiPathConfig;
 
   constructor(config?: PartialUiPathConfig) {
-    // Try to load from meta tags
-    const metaConfig = loadFromMetaTags();
+    // Load configuration from meta tags
+    const configFromMetaTags = loadFromMetaTags();
 
-    if (config) {
-      if (isCompleteConfig(config)) {
-        // Full config provided - initialize directly
-        this.initializeWithConfig(config);
-      } else {
-        // Partial config - merge with meta tags
-        const merged: PartialUiPathConfig = { ...metaConfig, ...config }; // Constructor config overrides meta tags
+    // Merge configuration: constructor config overrides meta tags
+    const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
 
-        if (isCompleteConfig(merged)) {
-          this.initializeWithConfig(merged);
-        } else {
-          // Store partial config to merge later in initialize()
-          this.partialConfig = config;
-        }
-      }
-    } else if (metaConfig && isCompleteConfig(metaConfig)) {
-      // No config provided but meta tags have complete config - auto-initialize
-      this.initializeWithConfig(metaConfig);
+    if (mergedConfig && isCompleteConfig(mergedConfig)) {
+      this.initializeWithConfig(mergedConfig);
+    } else if (config) {
+      this.partialConfig = config;
     }
-    // If still not initialized, wait for initialize() to be called
   }
 
   private initializeWithConfig(config: UiPathSDKConfig): void {
