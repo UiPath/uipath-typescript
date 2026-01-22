@@ -132,18 +132,18 @@ export class WebAppFileHandler {
 
     this.config.logger.log(chalk.blue('\n📦 Importing referenced resources to Studio Web project...'));
 
-    // Read bindings.json
+    // Read bindings.json (using try-catch to avoid race condition)
     const bindingsPath = path.join(this.config.rootDir, 'bindings.json');
-    if (!fs.existsSync(bindingsPath)) {
-      this.config.logger.log(chalk.yellow('⚠️  bindings.json not found, skipping resource import'));
-      return;
-    }
-
+    
     let bindings: Bindings;
     try {
       const bindingsContent = fs.readFileSync(bindingsPath, 'utf-8');
       bindings = JSON.parse(bindingsContent);
     } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        this.config.logger.log(chalk.yellow('⚠️  bindings.json not found, skipping resource import'));
+        return;
+      }
       this.config.logger.log(chalk.red(`❌ Failed to parse bindings.json: ${error instanceof Error ? error.message : 'Unknown error'}`));
       return;
     }
@@ -282,10 +282,16 @@ export class WebAppFileHandler {
   private collectLocalFiles(): LocalFile[] {
     const files: LocalFile[] = [];
     
-    // Collect files from dist/ recursively
+    // Collect files from dist/ recursively (using try-catch to avoid race condition)
     const distPath = path.join(this.config.rootDir, this.config.bundlePath);
-    if (fs.existsSync(distPath)) {
+    try {
       this.collectFilesRecursive(distPath, distPath, files);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        // Directory doesn't exist, return empty files array
+        return files;
+      }
+      throw error;
     }
 
     return files;
@@ -487,21 +493,34 @@ export class WebAppFileHandler {
     const metadataPath = path.join(this.config.rootDir, '.uipath', 'studio_metadata.json');
     const metadataDir = path.dirname(metadataPath);
 
-    if (!fs.existsSync(metadataDir)) {
+    // Create directory atomically (recursive mkdir is safe)
+    try {
       fs.mkdirSync(metadataDir, { recursive: true });
+    } catch (error) {
+      // Ignore if directory already exists
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+        throw error;
+      }
     }
 
     let metadata: any;
     
-    if (fs.existsSync(metadataPath)) {
-      metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
-    } else {
-      metadata = {
-        schemaVersion: '1.0.0',
-        lastPushDate: new Date().toISOString(),
-        lastPushAuthor: this.getCurrentUser(),
-        codeVersion: '0.1.0',
-      };
+    // Read metadata file atomically (using try-catch to avoid race condition)
+    try {
+      const metadataContent = fs.readFileSync(metadataPath, 'utf-8');
+      metadata = JSON.parse(metadataContent);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        // File doesn't exist, create default metadata
+        metadata = {
+          schemaVersion: '1.0.0',
+          lastPushDate: new Date().toISOString(),
+          lastPushAuthor: this.getCurrentUser(),
+          codeVersion: '0.1.0',
+        };
+      } else {
+        throw error;
+      }
     }
 
     // Update metadata
@@ -544,8 +563,21 @@ export class WebAppFileHandler {
       });
     }
 
-    // Write metadata to disk
-    fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+    // Write metadata to disk atomically (write to temp file then rename)
+    const metadataContent = JSON.stringify(metadata, null, 2);
+    const tempPath = `${metadataPath}.${process.pid}.${Date.now()}.tmp`;
+    try {
+      fs.writeFileSync(tempPath, metadataContent, { mode: 0o600 });
+      fs.renameSync(tempPath, metadataPath);
+    } catch (error) {
+      // Clean up temp file if rename failed
+      try {
+        fs.unlinkSync(tempPath);
+      } catch {
+        // Ignore cleanup errors
+      }
+      throw error;
+    }
   }
 
   private getCurrentUser(): string {
@@ -644,10 +676,14 @@ export class WebAppFileHandler {
     if (content_string !== undefined) {
       contentBytes = Buffer.from(content_string, 'utf-8');
     } else if (content_file_path) {
-      if (fs.existsSync(content_file_path)) {
+      // Read file atomically (using try-catch to avoid race condition)
+      try {
         contentBytes = fs.readFileSync(content_file_path);
-      } else {
-        throw new Error(`File not found: ${content_file_path}`);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+          throw new Error(`File not found: ${content_file_path}`);
+        }
+        throw error;
       }
     }
 
