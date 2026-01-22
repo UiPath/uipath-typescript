@@ -5,7 +5,7 @@ import {
   CONFIG_FILE_NAME,
   SDK_PACKAGE_NAME,
   REQUIRED_KEY_ALWAYS,
-  REQUIRED_KEYS_DEV,
+  REQUIRED_KEYS_DEV_LIST,
   SAMPLE_CONFIG,
   MESSAGES,
 } from '../constants'
@@ -39,7 +39,7 @@ export class ConfigReader {
     const config = this.parseConfigFile(fullPath, configPath)
     this.validateAndLog(config, configPath, isDev)
 
-    return config as UiPathConfig
+    return config as unknown as UiPathConfig
   }
 
   /**
@@ -96,7 +96,7 @@ export class ConfigReader {
       )
     } else {
       console.log(`[${PLUGIN_NAME}] ${MESSAGES.CONFIG_INJECTED_AT_DEPLOYMENT}`)
-      return {} as UiPathConfig
+      return {} as unknown as UiPathConfig
     }
   }
 
@@ -166,7 +166,7 @@ export class ConfigReader {
     }
 
     // Check dev-specific keys
-    const missingDevKeys = REQUIRED_KEYS_DEV.filter(
+    const missingDevKeys = REQUIRED_KEYS_DEV_LIST.filter(
       key => key !== REQUIRED_KEY_ALWAYS && !config[key]
     )
 

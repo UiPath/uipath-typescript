@@ -18,13 +18,14 @@ export const CONFIG_FILE_NAME = 'uipath.json'
 /**
  * Key that is always required (both dev and prod)
  */
-export const REQUIRED_KEY_ALWAYS: ValidConfigKey = 'scope'
+export const REQUIRED_KEY_ALWAYS = 'scope'
 
 /**
  * Required keys for local development (OAuth flow)
  */
-export const REQUIRED_KEYS_DEV: readonly ValidConfigKey[] = [
+export const REQUIRED_KEYS_DEV_LIST = [
   'scope',
+  'clientId',
   'orgName',
   'tenantName',
   'baseUrl',
@@ -42,8 +43,7 @@ export const UIPATH_META_TAGS: Record<ValidConfigKey, string | undefined> = {
   orgName: 'org-name',
   tenantName: 'tenant-name',
   baseUrl: 'base-url',
-  redirectUri: 'redirect-uri',
-  secret: undefined, // Not exposed as meta tag
+  redirectUri: 'redirect-uri'
 }
 
 /**

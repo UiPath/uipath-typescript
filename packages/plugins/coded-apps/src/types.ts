@@ -19,13 +19,13 @@ export interface UiPathConfig {
   tenantName?: string
   baseUrl?: string
   redirectUri?: string
-  secret?: string
 }
 
 /**
  * Valid configuration key
  */
 export type ValidConfigKey = keyof UiPathConfig
+
 
 /**
  * Config validation result
