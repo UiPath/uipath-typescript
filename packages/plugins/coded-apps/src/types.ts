@@ -19,7 +19,6 @@ export interface UiPathConfig {
   tenantName?: string
   baseUrl?: string
   redirectUri?: string
-  secret?: string
 }
 
 /**

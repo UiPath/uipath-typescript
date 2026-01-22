@@ -28,63 +28,48 @@ export class ValidationCollector {
   }
 }
 
+// ===== Key Utilities =====
+
+const validKeys: ValidConfigKey[] = Object.keys(UIPATH_META_TAGS) as ValidConfigKey[]
+
 /**
- * Key normalization utilities.
- * Handles snake_case, kebab-case, PascalCase → camelCase conversions.
+ * Normalize a key to lowercase without separators for comparison.
+ * Handles: snake_case, kebab-case, PascalCase, ALLCAPS, etc.
  */
-export class KeyUtils {
-  private static validKeys: ValidConfigKey[] = Object.keys(UIPATH_META_TAGS) as ValidConfigKey[]
-
-  /**
-   * Normalize a key to camelCase for comparison.
-   * Handles: snake_case, kebab-case, PascalCase, lowercase
-   */
-  static normalize(key: string): string {
-    return key
-      .replace(/[-_](.)/g, (_, char: string) => char.toUpperCase())
-      .replace(/^./, char => char.toLowerCase())
-  }
-
-  /**
-   * Find the matching valid key for a given input key.
-   * Returns the valid key if found, otherwise undefined.
-   */
-  static findMatch(key: string): ValidConfigKey | undefined {
-    // Direct match
-    if (this.validKeys.includes(key as ValidConfigKey)) {
-      return key as ValidConfigKey
-    }
-
-    // Normalized match
-    const normalized = this.normalize(key)
-    return this.validKeys.find(
-      validKey => validKey.toLowerCase() === normalized.toLowerCase()
-    )
-  }
-
-  /**
-   * Check if a string is a valid config key (type guard).
-   */
-  static isValid(key: string): key is ValidConfigKey {
-    return this.validKeys.includes(key as ValidConfigKey)
-  }
-
-  static getValidKeys(): ValidConfigKey[] {
-    return [...this.validKeys]
-  }
+export function normalizeKey(key: string): string {
+  return key.replace(/[-_]/g, '').toLowerCase()
 }
 
 /**
- * Error utilities.
+ * Find the matching valid key for a given input key.
+ * Returns the valid key if found, otherwise undefined.
  */
-export class ErrorUtils {
-  static createError(message: string): Error {
-    const error = new Error(`[${PLUGIN_NAME}] ${message}`)
-    error.stack = '' // Hide stack trace for config errors
-    return error
+export function findMatchingKey(key: string): ValidConfigKey | undefined {
+  if (validKeys.includes(key as ValidConfigKey)) {
+    return key as ValidConfigKey
   }
 
-  static formatList(items: string[]): string {
-    return items.map(item => `  • ${item}`).join('\n')
-  }
+  const normalized = normalizeKey(key)
+  return validKeys.find(
+    validKey => normalizeKey(validKey) === normalized
+  )
+}
+
+/**
+ * Check if a string is a valid config key (type guard).
+ */
+export function isValidKey(key: string): key is ValidConfigKey {
+  return validKeys.includes(key as ValidConfigKey)
+}
+
+// ===== Error Utilities =====
+
+export function createPluginError(message: string): Error {
+  const error = new Error(`[${PLUGIN_NAME}] ${message}`)
+  error.stack = '' // Hide stack trace for config errors
+  return error
+}
+
+export function formatList(items: string[]): string {
+  return items.map(item => `  • ${item}`).join('\n')
 }

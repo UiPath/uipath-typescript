@@ -3,179 +3,152 @@ import path from 'node:path'
 import {
   PLUGIN_NAME,
   CONFIG_FILE_NAME,
+  PACKAGE_JSON_FILE_NAME,
   SDK_PACKAGE_NAME,
-  REQUIRED_KEY_ALWAYS,
-  REQUIRED_KEYS_DEV,
+  REQUIRED_KEYS_DEV_LIST,
   SAMPLE_CONFIG,
   MESSAGES,
 } from '../constants'
 import type { UiPathConfig, ReadConfigOptions, ValidationResult } from '../types'
-import { ValidationCollector, KeyUtils, ErrorUtils } from './utils'
+import { ValidationCollector, findMatchingKey, createPluginError, formatList } from './utils'
 
 /**
- * Handles reading and validating UiPath configuration files.
- * Manages SDK checks, file I/O, and validation logic.
+ * Read and validate configuration from file.
+ * @throws Error if validation fails in dev mode
  */
-export class ConfigReader {
-  /**
-   * Read and validate configuration from file.
-   * @throws Error if validation fails in dev mode
-   */
-  read(options: ReadConfigOptions = {}): UiPathConfig {
-    const { configPath = CONFIG_FILE_NAME, isDev = false } = options
-    const fullPath = path.resolve(process.cwd(), configPath)
+export function readConfig(options: ReadConfigOptions = {}): UiPathConfig {
+  const { configPath = CONFIG_FILE_NAME, isDev = false } = options
+  const fullPath = path.resolve(process.cwd(), configPath)
 
-    // Check SDK in dev mode
-    if (isDev) {
-      this.checkSdkInstalled()
-    }
-
-    // Handle missing config
-    if (!fs.existsSync(fullPath)) {
-      return this.handleMissingConfig(fullPath, configPath, isDev)
-    }
-
-    // Parse and validate
-    const config = this.parseConfigFile(fullPath, configPath)
-    this.validateAndLog(config, configPath, isDev)
-
-    return config as UiPathConfig
+  if (isDev) {
+    checkSdkInstalled()
   }
 
-  /**
-   * Validate configuration without logging (for testing).
-   */
-  validate(config: Record<string, unknown>, isDev: boolean): ValidationResult {
-    const collector = new ValidationCollector()
-
-    this.validateKeyFormats(config, collector)
-    this.validateRequiredKeys(config, isDev, collector)
-
-    const results = collector.getResults()
-    return {
-      isValid: !collector.hasErrors(),
-      ...results,
-    }
+  if (!fs.existsSync(fullPath)) {
+    return handleMissingConfig(fullPath, configPath, isDev)
   }
 
-  // ===== PRIVATE METHODS =====
+  const config = parseConfigFile(fullPath, configPath)
+  validateAndLog(config, configPath, isDev)
 
-  private checkSdkInstalled(): void {
-    const packageJsonPath = path.resolve(process.cwd(), 'package.json')
+  return config as unknown as UiPathConfig
+}
 
-    if (!fs.existsSync(packageJsonPath)) {
-      throw ErrorUtils.createError(MESSAGES.PACKAGE_JSON_NOT_FOUND)
-    }
+/**
+ * Validate configuration without logging (for testing).
+ */
+export function validateConfig(config: Record<string, unknown>, isDev: boolean): ValidationResult {
+  const collector = new ValidationCollector()
 
-    try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
-      const deps = packageJson.dependencies || {}
-      const devDeps = packageJson.devDependencies || {}
+  validateKeyFormats(config, collector)
+  validateRequiredKeys(config, isDev, collector)
 
-      if (!deps[SDK_PACKAGE_NAME] && !devDeps[SDK_PACKAGE_NAME]) {
-        throw ErrorUtils.createError(MESSAGES.SDK_NOT_INSTALLED)
-      }
-    } catch (err) {
-      if (err instanceof Error && err.message.includes(MESSAGES.SDK_NOT_INSTALLED)) {
-        throw err
-      }
-      throw ErrorUtils.createError(MESSAGES.PACKAGE_JSON_READ_ERROR(err))
-    }
+  const results = collector.getResults()
+  return {
+    isValid: !collector.hasErrors(),
+    ...results,
+  }
+}
+
+// ===== PRIVATE HELPERS =====
+
+function checkSdkInstalled(): void {
+  const packageJsonPath = path.resolve(process.cwd(), PACKAGE_JSON_FILE_NAME)
+
+  if (!fs.existsSync(packageJsonPath)) {
+    throw createPluginError(MESSAGES.PACKAGE_JSON_NOT_FOUND)
   }
 
-  private handleMissingConfig(
-    fullPath: string,
-    configPath: string,
-    isDev: boolean
-  ): UiPathConfig {
-    if (isDev) {
-      throw ErrorUtils.createError(
-        `\n${MESSAGES.CONFIG_NOT_FOUND(fullPath)}\n\n` +
-        `For local development, create a ${CONFIG_FILE_NAME} file with:\n` +
-        JSON.stringify(SAMPLE_CONFIG, null, 2)
-      )
-    } else {
-      console.log(`[${PLUGIN_NAME}] ${MESSAGES.CONFIG_INJECTED_AT_DEPLOYMENT}`)
-      return {} as UiPathConfig
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+    const deps = packageJson.dependencies || {}
+    const devDeps = packageJson.devDependencies || {}
+
+    if (!deps[SDK_PACKAGE_NAME] && !devDeps[SDK_PACKAGE_NAME]) {
+      throw createPluginError(MESSAGES.SDK_NOT_INSTALLED)
     }
+  } catch (err) {
+    if (err instanceof Error && err.message.includes(MESSAGES.SDK_NOT_INSTALLED)) {
+      throw err
+    }
+    throw createPluginError(MESSAGES.PACKAGE_JSON_READ_ERROR(err))
   }
+}
 
-  private parseConfigFile(fullPath: string, configPath: string): Record<string, unknown> {
-    try {
-      const content = fs.readFileSync(fullPath, 'utf-8')
-      return JSON.parse(content)
-    } catch (err) {
-      throw ErrorUtils.createError(MESSAGES.CONFIG_PARSE_ERROR(configPath, err))
-    }
-  }
-
-  private validateAndLog(
-    config: Record<string, unknown>,
-    configPath: string,
-    isDev: boolean
-  ): void {
-    const validation = this.validate(config, isDev)
-
-    // Log results
-    if (validation.errors.length > 0) {
-      console.error(`\n[${PLUGIN_NAME}] ${MESSAGES.CONFIG_ERRORS_HEADER(configPath)}`)
-      console.error(ErrorUtils.formatList(validation.errors))
-    }
-
-    if (validation.warnings.length > 0) {
-      console.warn(`\n[${PLUGIN_NAME}] ${MESSAGES.CONFIG_WARNINGS_HEADER(configPath)}`)
-      console.warn(ErrorUtils.formatList(validation.warnings))
-    }
-
-    if (validation.errors.length === 0 && validation.warnings.length === 0) {
-      console.log(`[${PLUGIN_NAME}] ${MESSAGES.CONFIG_LOADED(configPath)}`)
-    }
-
-    // Throw if invalid
-    if (!validation.isValid) {
-      throw ErrorUtils.createError(
-        `${MESSAGES.CONFIG_ERRORS_HEADER(configPath)}\n` +
-        ErrorUtils.formatList(validation.errors)
-      )
-    }
-  }
-
-  private validateKeyFormats(
-    config: Record<string, unknown>,
-    collector: ValidationCollector
-  ): void {
-    for (const key of Object.keys(config)) {
-      const matchingKey = KeyUtils.findMatch(key)
-
-      if (matchingKey && matchingKey !== key) {
-        collector.addError(MESSAGES.INVALID_KEY_FORMAT(key, matchingKey))
-      } else if (!matchingKey) {
-        collector.addWarning(MESSAGES.UNKNOWN_KEY(key))
-      }
-    }
-  }
-
-  private validateRequiredKeys(
-    config: Record<string, unknown>,
-    isDev: boolean,
-    collector: ValidationCollector
-  ): void {
-    // Scope is always required
-    if (!config[REQUIRED_KEY_ALWAYS]) {
-      collector.addError(MESSAGES.MISSING_REQUIRED_KEY(REQUIRED_KEY_ALWAYS))
-    }
-
-    // Check dev-specific keys
-    const missingDevKeys = REQUIRED_KEYS_DEV.filter(
-      key => key !== REQUIRED_KEY_ALWAYS && !config[key]
+function handleMissingConfig(
+  fullPath: string,
+  configPath: string,
+  isDev: boolean
+): UiPathConfig {
+  if (isDev) {
+    throw createPluginError(
+      `\n${MESSAGES.CONFIG_NOT_FOUND(fullPath)}\n\n` +
+      MESSAGES.CONFIG_CREATE_HINT(configPath, JSON.stringify(SAMPLE_CONFIG, null, 2))
     )
+  } else {
+    console.log(`[${PLUGIN_NAME}] ${MESSAGES.CONFIG_INJECTED_AT_DEPLOYMENT}`)
+    return {} as unknown as UiPathConfig
+  }
+}
 
-    if (missingDevKeys.length > 0) {
-      if (isDev) {
-        collector.addError(MESSAGES.MISSING_DEV_KEYS([...missingDevKeys]))
-      } else {
-        collector.addWarning(MESSAGES.DEV_KEYS_INJECTED_AT_DEPLOYMENT([...missingDevKeys]))
-      }
+function parseConfigFile(fullPath: string, configPath: string): Record<string, unknown> {
+  try {
+    const content = fs.readFileSync(fullPath, 'utf-8')
+    return JSON.parse(content)
+  } catch (err) {
+    throw createPluginError(MESSAGES.CONFIG_PARSE_ERROR(configPath, err))
+  }
+}
+
+function validateAndLog(
+  config: Record<string, unknown>,
+  configPath: string,
+  isDev: boolean
+): void {
+  const validation = validateConfig(config, isDev)
+
+  if (!validation.isValid) {
+    throw createPluginError(
+      `${MESSAGES.CONFIG_ERRORS_HEADER(configPath)}\n` +
+      formatList(validation.errors)
+    )
+  }
+
+  if (validation.warnings.length > 0) {
+    console.warn(`\n[${PLUGIN_NAME}] ${MESSAGES.CONFIG_WARNINGS_HEADER(configPath)}`)
+    console.warn(formatList(validation.warnings))
+  }
+
+  if (validation.warnings.length === 0) {
+    console.log(`[${PLUGIN_NAME}] ${MESSAGES.CONFIG_LOADED(configPath)}`)
+  }
+}
+
+function validateKeyFormats(
+  config: Record<string, unknown>,
+  collector: ValidationCollector
+): void {
+  for (const key of Object.keys(config)) {
+    const matchingKey = findMatchingKey(key)
+
+    if (matchingKey && matchingKey !== key) {
+      collector.addError(MESSAGES.INVALID_KEY_FORMAT(key, matchingKey))
+    } else if (!matchingKey) {
+      collector.addWarning(MESSAGES.UNKNOWN_KEY(key))
     }
+  }
+}
+
+function validateRequiredKeys(
+  config: Record<string, unknown>,
+  isDev: boolean,
+  collector: ValidationCollector
+): void {
+  if (!isDev) return
+
+  const missingDevKeys = REQUIRED_KEYS_DEV_LIST.filter(key => !config[key])
+
+  if (missingDevKeys.length > 0) {
+    collector.addWarning(MESSAGES.MISSING_DEV_KEYS(missingDevKeys))
   }
 }
