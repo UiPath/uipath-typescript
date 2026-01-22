@@ -31,29 +31,32 @@ export class UiPath {
   private partialConfig?: PartialUiPathConfig;
 
   constructor(config?: PartialUiPathConfig) {
-    // Try to load from meta tags
-    const metaConfig = loadFromMetaTags();
+    // Load configuration from meta tags
+    const configFromMetaTags = loadFromMetaTags();
 
-    if (config) {
-      if (isCompleteConfig(config)) {
-        // Full config provided - initialize directly
-        this.initializeWithConfig(config);
-      } else {
-        // Partial config - merge with meta tags
-        const merged: PartialUiPathConfig = { ...metaConfig, ...config }; // Constructor config overrides meta tags
+    // Merge configuration: constructor config overrides meta tags
+    const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
 
-        if (isCompleteConfig(merged)) {
-          this.initializeWithConfig(merged);
-        } else {
-          // Store partial config to merge later in initialize()
-          this.partialConfig = config;
-        }
+    // Neither constructor config nor meta tags provided a complete configuration
+    // If constructor config was provided (even if partial), store it for later merge in initialize()
+    // when meta tags may have been injected dynamically
+    if (!mergedConfig) {
+      if (config) {
+        this.partialConfig = config;
       }
-    } else if (metaConfig && isCompleteConfig(metaConfig)) {
-      // No config provided but meta tags have complete config - auto-initialize
-      this.initializeWithConfig(metaConfig);
+      return;
     }
-    // If still not initialized, wait for initialize() to be called
+
+    // If configuration is complete, initialize immediately
+    if (isCompleteConfig(mergedConfig)) {
+      this.initializeWithConfig(mergedConfig);
+      return;
+    }
+
+    // Store partial config for later initialization in initialize()
+    if (config) {
+      this.partialConfig = config;
+    }
   }
 
   private initializeWithConfig(config: UiPathSDKConfig): void {

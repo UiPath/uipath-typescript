@@ -9,16 +9,9 @@
  * - <meta name="uipath:app-base" content="/org/apps_/.../public">
  */
 
-import { isBrowser } from '../platform';
 import { UiPathMetaTags } from './constants';
-
-/**
- * Helper to read meta tag content
- */
-function getMetaContent(name: string): string | undefined {
-  if (!isBrowser) return undefined;
-  return document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content;
-}
+import { getMetaTagContent } from '../../core/config/runtime';
+import { normalizeBaseUrl } from '../../core/config/config-utils';
 
 /**
  * Resolves an asset path to the CDN URL (if available)
@@ -31,7 +24,7 @@ function getMetaContent(name: string): string | undefined {
  *
  * @example
  * ```tsx
- * import { getAsset } from '@uipath/sdk';
+ * import { getAsset } from '@uipath/uipath-typescript';
  * import logoPath from './assets/logo.png';
  *
  * function MyComponent() {
@@ -45,8 +38,11 @@ export function getAsset(path: string): string {
     return path;
   }
 
-  const cdnBase = getMetaContent(UiPathMetaTags.CDN_BASE);
+  const cdnBase = getMetaTagContent(UiPathMetaTags.CDN_BASE);
   if (!cdnBase) return path;
+
+  // Normalize CDN base URL to remove trailing slash
+  const normalizedCdnBase = normalizeBaseUrl(cdnBase);
 
   // Normalize path to ensure it starts with /
   let normalizedPath = path;
@@ -56,7 +52,7 @@ export function getAsset(path: string): string {
     normalizedPath = '/' + normalizedPath; // assets -> /assets
   }
 
-  return cdnBase + normalizedPath;
+  return normalizedCdnBase + normalizedPath;
 }
 
 /**
@@ -69,7 +65,7 @@ export function getAsset(path: string): string {
  *
  * @example
  * ```tsx
- * import { getAppBase } from '@uipath/sdk';
+ * import { getAppBase } from '@uipath/uipath-typescript';
  * import { BrowserRouter } from 'react-router-dom';
  *
  * function App() {
@@ -82,5 +78,5 @@ export function getAsset(path: string): string {
  * ```
  */
 export function getAppBase(): string {
-  return getMetaContent(UiPathMetaTags.APP_BASE) || '/';
+  return getMetaTagContent(UiPathMetaTags.APP_BASE) || '/';
 }
