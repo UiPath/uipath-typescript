@@ -481,7 +481,7 @@ describe('CaseInstancesService', () => {
 
   describe('resume', () => {
     it('should resume case instance successfully', async () => {
-      
+
       const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
       const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
       const options: CaseInstanceOperationOptions = {
@@ -510,11 +510,85 @@ describe('CaseInstancesService', () => {
     });
 
     it('should handle API errors', async () => {
-      
+
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
       await expect(service.resume(MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('reopen', () => {
+    it('should reopen case instance successfully with startElementId and comment', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+      const request = {
+        startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
+        comment: 'Reopening case instance'
+      };
+      const mockApiResponse = createMockMaestroApiOperationResponse({
+        status: TEST_CONSTANTS.RUNNING
+      });
+
+      mockApiClient.post.mockResolvedValue(mockApiResponse);
+
+      const result = await service.reopen(instanceId, folderKey, request);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.CASES.REOPEN_CASE(instanceId),
+        request,
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockApiResponse);
+    });
+
+    it('should reopen case instance with only startElementId', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+      const request = {
+        startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+      };
+      const mockApiResponse = createMockMaestroApiOperationResponse({
+        status: TEST_CONSTANTS.RUNNING
+      });
+
+      mockApiClient.post.mockResolvedValue(mockApiResponse);
+
+      const result = await service.reopen(instanceId, folderKey, request);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.CASES.REOPEN_CASE(instanceId),
+        request,
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockApiResponse);
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      const request = {
+        startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+      };
+
+      await expect(service.reopen(
+        MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+        MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+        request
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
