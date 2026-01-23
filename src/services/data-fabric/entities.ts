@@ -7,7 +7,7 @@ import {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
   EntityInsertResponse,
-  EntitySingleInsertResponse,
+  EntityBatchInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
@@ -149,12 +149,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.InsertById')
-  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntitySingleInsertResponse> {
+  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel
     });
 
-    const response = await this.post<EntitySingleInsertResponse>(
+    const response = await this.post<EntityInsertResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
       data,
       {
@@ -195,13 +195,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.BatchInsertById')
-  async batchInsertById(id: string, data: Record<string, any>[], options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+  async batchInsertById(id: string, data: Record<string, any>[], options: EntityInsertOptions = {}): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
     });
 
-    const response = await this.post<EntityInsertResponse>(
+    const response = await this.post<EntityBatchInsertResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(id),
       data,
       {

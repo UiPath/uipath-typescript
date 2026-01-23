@@ -93,12 +93,12 @@ export interface EntityOperationResponse {
  * Response from inserting a single record into an entity
  * Returns the inserted record with its generated ID and other fields
  */
-export type EntitySingleInsertResponse = EntityRecord;
+export type EntityInsertResponse = EntityRecord;
 
 /**
  * Response from batch inserting data into an entity
  */
-export type EntityInsertResponse = EntityOperationResponse;
+export type EntityBatchInsertResponse = EntityOperationResponse;
 
 /**
  * Response from updating data in an entity

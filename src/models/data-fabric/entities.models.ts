@@ -2,7 +2,7 @@ import {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
   EntityInsertResponse,
-  EntitySingleInsertResponse,
+  EntityBatchInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
@@ -42,9 +42,14 @@ export interface EntityServiceModel {
    * if (customerEntity) {
    *   const records = await customerEntity.getRecords();
    *   console.log(`Customer records: ${records.items.length}`);
-   * 
-   *   const insertResult = await customerEntity.insert([
-   *     { name: "John", age: 30 }
+   *
+   *   // Insert a single record
+   *   const insertResult = await customerEntity.insert({ name: "John", age: 30 });
+   *
+   *   // Or batch insert multiple records
+   *   const batchResult = await customerEntity.batchInsert([
+   *     { name: "Jane", age: 25 },
+   *     { name: "Bob", age: 35 }
    *   ]);
    * }
    * ```
@@ -64,9 +69,13 @@ export interface EntityServiceModel {
    * 
    * // Call operations directly on the entity
    * const records = await entity.getRecords();
-   * 
-   * const insertResult = await entity.insert([
-   *   { name: "John", age: 30 }
+   *
+   * // Insert a single record
+   * const insertResult = await entity.insert({ name: "John", age: 30 });
+   *
+   * // Or batch insert multiple records
+   * const batchResult = await entity.batchInsert([
+   *   { name: "Jane", age: 25 }
    * ]);
    * ```
    */
@@ -115,7 +124,7 @@ export interface EntityServiceModel {
    * @param data - Record to insert
    * @param options - Insert options
    * @returns Promise resolving to the inserted record with generated ID
-   * {@link EntitySingleInsertResponse}
+   * {@link EntityInsertResponse}
    * @example
    * ```typescript
    * // Basic usage
@@ -127,7 +136,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntitySingleInsertResponse>;
+  insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
 
   /**
    * Inserts one or more records into an entity by entity ID using batch insert
@@ -136,7 +145,7 @@ export interface EntityServiceModel {
    * @param data - Array of records to insert
    * @param options - Insert options
    * @returns Promise resolving to insert response
-   * {@link EntityInsertResponse}
+   * {@link EntityBatchInsertResponse}
    * @example
    * ```typescript
    * // Basic usage
@@ -155,7 +164,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  batchInsertById(id: string, data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+  batchInsertById(id: string, data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
    * Updates data in an entity by entity ID
@@ -209,13 +218,22 @@ export interface EntityServiceModel {
  */
 export interface EntityMethods {
   /**
-   * Insert data into this entity
-   * 
+   * Insert a single record into this entity
+   *
+   * @param data - Record to insert
+   * @param options - Insert options
+   * @returns Promise resolving to the inserted record with generated ID
+   */
+  insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+
+  /**
+   * Insert multiple records into this entity using batch insert
+   *
    * @param data - Array of records to insert
    * @param options - Insert options
-   * @returns Promise resolving to insert response
+   * @returns Promise resolving to batch insert response
    */
-  insert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+  batchInsert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
    * Update data in this entity
@@ -263,7 +281,13 @@ export type EntityGetResponse = RawEntityGetResponse & EntityMethods;
  */
 function createEntityMethods(entityData: RawEntityGetResponse, service: EntityServiceModel): EntityMethods {
   return {
-    async insert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityInsertResponse> {
+    async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+
+      return service.insertById(entityData.id, data, options);
+    },
+
+    async batchInsert(data: Record<string, any>[], options?: EntityInsertOptions): Promise<EntityBatchInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.batchInsertById(entityData.id, data, options);

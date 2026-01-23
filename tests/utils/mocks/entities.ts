@@ -11,8 +11,8 @@ import {
   DataDirectionType,
   RawEntityGetResponse,
   EntityRecord,
-  EntitySingleInsertResponse,
   EntityInsertResponse,
+  EntityBatchInsertResponse,
   EntityUpdateResponse,
   EntityDeleteResponse
 } from '../../../src/models/data-fabric/entities.types';
@@ -296,7 +296,7 @@ export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord 
  * This is for the /insert endpoint which inserts a single record
  * @param requestData - Single record being inserted
  * @param options - Optional: expansionLevel to expand reference fields
- * @returns Mock EntitySingleInsertResponse (the inserted record with generated ID)
+ * @returns Mock EntityInsertResponse (the inserted record with generated ID)
  *
  * @example
  * // Basic insert
@@ -313,8 +313,8 @@ export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord 
 export const createMockSingleInsertResponse = (
   requestData: Record<string, any>,
   options?: { expansionLevel?: number }
-): EntitySingleInsertResponse => {
-  let result: EntitySingleInsertResponse = {
+): EntityInsertResponse => {
+  let result: EntityInsertResponse = {
     ...requestData,
     id: 'generated-id-1'
   };
@@ -328,11 +328,11 @@ export const createMockSingleInsertResponse = (
 };
 
 /**
- * Creates a mock EntityInsertResponse that echoes back the request data with generated IDs
+ * Creates a mock EntityBatchInsertResponse that echoes back the request data with generated IDs
  * This is for the /insert-batch endpoint which inserts multiple records
  * @param requestData - Array of records being inserted
  * @param options - Optional: successCount to control partial failures, expansionLevel to expand reference fields
- * @returns Mock EntityInsertResponse
+ * @returns Mock EntityBatchInsertResponse
  *
  * @example
  * // All records succeed
@@ -364,7 +364,7 @@ export const createMockSingleInsertResponse = (
 export const createMockInsertResponse = (
   requestData: Record<string, any>[],
   options?: { successCount?: number; expansionLevel?: number }
-): EntityInsertResponse => {
+): EntityBatchInsertResponse => {
   const successCount = options?.successCount ?? requestData.length;
   
   let successRecords = requestData.slice(0, successCount).map((record, i) => ({
