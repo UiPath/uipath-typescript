@@ -42,7 +42,7 @@
  */
 
 // Main entry point
-export { ConversationalAgentService as ConversationalAgent, ConversationalAgentService, type ConversationalAgentOptions } from './conversational-agent';
+export { ConversationalAgentService as ConversationalAgent, ConversationalAgentService } from './conversational-agent';
 
 // Services (for HTTP-only usage without WebSocket)
 export { ConversationService as Conversations, ConversationService } from './conversations';
