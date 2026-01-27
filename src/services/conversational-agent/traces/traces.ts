@@ -47,6 +47,11 @@ import { TRACES_ENDPOINTS } from '@/utils/constants/endpoints';
  * ```
  */
 export class TraceService extends BaseService implements TraceServiceModel {
+  /**
+   * Creates an instance of the Traces service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
   constructor(instance: IUiPathSDK) {
     super(instance);
   }
@@ -59,7 +64,7 @@ export class TraceService extends BaseService implements TraceServiceModel {
    * contains timing, status, and attribute information.
    *
    * @param traceId - The trace ID to retrieve spans for
-   * @returns Array of LLM Ops spans
+   * @returns Promise resolving to an array of LLM Ops spans
    *
    * @example
    * ```typescript
