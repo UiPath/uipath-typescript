@@ -11,7 +11,7 @@ import type {
   MessageStartEvent,
   MetaEvent,
   ToolCallId
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 import type { ContentPartEventHelper, ContentPartStartEventWithData } from './content-part-event-helper';
 import { ContentPartEventHelperImpl } from './content-part-event-helper';

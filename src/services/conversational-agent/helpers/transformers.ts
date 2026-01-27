@@ -4,7 +4,7 @@
  * Transform API responses to use helper classes for convenience.
  */
 
-import type { Exchange, Message } from '@/models/conversational';
+import type { Exchange, Message } from '@/models/conversational-agent';
 import { ContentPartHelper } from './content-part-helper';
 
 /**

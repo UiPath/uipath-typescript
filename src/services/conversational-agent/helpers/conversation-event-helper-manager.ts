@@ -1,7 +1,7 @@
 import type {
   ConversationEvent,
   ConversationId
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 import type {
   AnyErrorEndHandler,
