@@ -26,7 +26,7 @@ export function parseWebSocketUrl(baseUrl: string, path?: string): ParsedWebSock
     return { host, path: '/socket.io' };
   }
 
-  // For cloud URLs, use the UiPath Cloud WebSocket path
+  // For non-localhost URLs (e.g., alpha.uipath.com, cloud.uipath.com), use the UiPath WebSocket path
   return { host, path: CLOUD_WEBSOCKET_PATH };
 }
 
