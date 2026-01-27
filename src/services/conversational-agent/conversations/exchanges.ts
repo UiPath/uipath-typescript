@@ -1,5 +1,5 @@
 /**
- * Exchange operations for Conversations
+ * ExchangeService - Exchange operations for Conversations
  *
  * Exchanges represent individual request-response pairs within a conversation.
  * Each exchange contains messages from the user and assistant.
@@ -16,11 +16,11 @@ import type {
   CreateFeedbackInput,
   Exchange,
   ExchangeId,
-  ExchangeOperationsServiceModel,
+  ExchangeServiceModel,
   FeedbackCreateResponse,
-  GetExchangeInput,
-  ListExchangesInput
-} from '@/models/conversational';
+  ExchangeGetAllOptions,
+  ExchangeGetByIdOptions
+} from '@/models/conversational-agent';
 
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
@@ -30,7 +30,7 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 
 // Local imports
-import { transformExchange, type ExchangeWithHelpers } from '../helpers';
+import { transformExchange, type ExchangeWithHelpers } from '@/services/conversational-agent/helpers';
 
 /**
  * Service for exchange operations within a conversation
@@ -41,21 +41,21 @@ import { transformExchange, type ExchangeWithHelpers } from '../helpers';
  * @example
  * ```typescript
  * // List all exchanges in a conversation
- * const exchanges = await conversations.exchanges.getAll(conversationId);
+ * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
  *
  * // Get a specific exchange with messages
- * const exchange = await conversations.exchanges.getById(conversationId, exchangeId);
+ * const exchangeDetails = await conversationalAgentService.conversations.exchanges.getById(conversationId, exchangeId);
  *
  * // Submit feedback for an exchange
- * await conversations.exchanges.createFeedback(conversationId, exchangeId, {
+ * await conversationalAgentService.conversations.exchanges.createFeedback(conversationId, exchangeId, {
  *   rating: 'positive',
  *   comment: 'Great response!'
  * });
  * ```
  */
-export class ExchangeOperations extends BaseService implements ExchangeOperationsServiceModel {
+export class ExchangeService extends BaseService implements ExchangeServiceModel {
   /**
-   * Creates a new ExchangeOperations instance
+   * Creates a new ExchangeService instance
    * @param instance - UiPath SDK instance
    */
   constructor(instance: IUiPathSDK) {
@@ -76,19 +76,19 @@ export class ExchangeOperations extends BaseService implements ExchangeOperation
    * @example
    * ```typescript
    * // Get all exchanges (non-paginated)
-   * const exchanges = await conversations.exchanges.getAll(conversationId);
+   * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
    *
    * // First page with pagination
-   * const page1 = await conversations.exchanges.getAll(conversationId, { pageSize: 10 });
+   * const firstPageOfExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId, { pageSize: 10 });
    *
    * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await conversations.exchanges.getAll(conversationId, { cursor: page1.nextCursor });
+   * if (firstPageOfExchanges.hasNextPage) {
+   *   const nextPageOfExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId, { cursor: firstPageOfExchanges.nextCursor });
    * }
    * ```
    */
   @track('Exchanges.GetAll')
-  async getAll<T extends ListExchangesInput = ListExchangesInput>(
+  async getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
     conversationId: ConversationId,
     options?: T
   ): Promise<
@@ -130,17 +130,17 @@ export class ExchangeOperations extends BaseService implements ExchangeOperation
    *
    * @example
    * ```typescript
-   * const exchange = await conversations.exchanges.getById(
+   * const exchangeDetails = await conversationalAgentService.conversations.exchanges.getById(
    *   conversationId,
    *   exchangeId
    * );
    *
    * // Access messages via helpers
-   * const userMessage = exchange.getUserMessage();
-   * const assistantMessage = exchange.getAssistantMessage();
+   * const userPrompt = exchangeDetails.getUserMessage();
+   * const assistantResponse = exchangeDetails.getAssistantMessage();
    *
    * // With message sort order
-   * const exchange = await conversations.exchanges.getById(
+   * const exchangeWithDescMessages = await conversationalAgentService.conversations.exchanges.getById(
    *   conversationId,
    *   exchangeId,
    *   { messageSort: 'desc' }
@@ -151,9 +151,9 @@ export class ExchangeOperations extends BaseService implements ExchangeOperation
   async getById(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
-    input?: GetExchangeInput
+    input?: ExchangeGetByIdOptions
   ): Promise<ExchangeWithHelpers> {
-    const params: GetExchangeInput = {};
+    const params: ExchangeGetByIdOptions = {};
 
     if (input?.messageSort) {
       params.messageSort = input.messageSort;
@@ -181,14 +181,14 @@ export class ExchangeOperations extends BaseService implements ExchangeOperation
    * @example
    * ```typescript
    * // Submit positive feedback
-   * await conversations.exchanges.createFeedback(
+   * await conversationalAgentService.conversations.exchanges.createFeedback(
    *   conversationId,
    *   exchangeId,
    *   { rating: 'positive', comment: 'Very helpful response!' }
    * );
    *
    * // Submit negative feedback with explanation
-   * await conversations.exchanges.createFeedback(
+   * await conversationalAgentService.conversations.exchanges.createFeedback(
    *   conversationId,
    *   exchangeId,
    *   { rating: 'negative', comment: 'Response was not accurate' }

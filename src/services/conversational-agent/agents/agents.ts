@@ -1,5 +1,5 @@
 /**
- * Agents - Service for listing available conversational agents
+ * AgentService - Service for listing available conversational agents
  */
 
 // Core SDK imports
@@ -8,7 +8,7 @@ import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
-import type { AgentRelease, AgentReleaseWithAppearance, AgentsServiceModel } from '@/models/conversational';
+import type { AgentGetResponse, AgentGetByIdResponse, AgentServiceModel } from '@/models/conversational-agent';
 
 // Utils
 import { AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -19,26 +19,26 @@ import { AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Agents } from '@uipath/uipath-typescript/conversational-agent';
+ * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const agents = new Agents(sdk);
+ * const conversationalAgentService = new ConversationalAgent(sdk);
  *
- * // Get all agents
- * const agentList = await agents.getAll();
+ * // Get all available agent releases
+ * const availableAgents = await conversationalAgentService.agents.getAll();
  *
- * // Get agents in a specific folder
- * const agentList = await agents.getAll(123);
+ * // Get agent releases in a specific folder
+ * const folderAgents = await conversationalAgentService.agents.getAll(folderId);
  *
- * // Get a specific agent with appearance
- * const agent = await agents.getById(folderId, agentId);
+ * // Get a specific agent release with appearance configuration
+ * const agentDetails = await conversationalAgentService.agents.getById(folderId, agentReleaseId);
  * ```
  */
-export class Agents extends BaseService implements AgentsServiceModel {
+export class AgentService extends BaseService implements AgentServiceModel {
   /**
-   * Creates a new Agents service instance
+   * Creates a new AgentService instance
    * @param instance - UiPath SDK instance
    */
   constructor(instance: IUiPathSDK) {
@@ -52,8 +52,8 @@ export class Agents extends BaseService implements AgentsServiceModel {
    * @returns List of agents
    */
   @track('Agents.GetAll')
-  async getAll(folderId?: number): Promise<AgentRelease[]> {
-    const response = await this.get<AgentRelease[]>(AGENT_ENDPOINTS.LIST, {
+  async getAll(folderId?: number): Promise<AgentGetResponse[]> {
+    const response = await this.get<AgentGetResponse[]>(AGENT_ENDPOINTS.LIST, {
       params: folderId !== undefined ? { folderId } : undefined,
     });
     return response.data;
@@ -67,8 +67,8 @@ export class Agents extends BaseService implements AgentsServiceModel {
    * @returns Agent with appearance configuration
    */
   @track('Agents.GetById')
-  async getById(folderId: number, agentId: number): Promise<AgentReleaseWithAppearance> {
-    const response = await this.get<AgentReleaseWithAppearance>(AGENT_ENDPOINTS.GET(folderId, agentId));
+  async getById(folderId: number, agentId: number): Promise<AgentGetByIdResponse> {
+    const response = await this.get<AgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, agentId));
     return response.data;
   }
 }

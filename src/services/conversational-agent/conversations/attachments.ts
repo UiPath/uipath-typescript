@@ -1,5 +1,5 @@
 /**
- * Attachment operations for Conversations
+ * AttachmentService - Attachment operations for Conversations
  *
  * Attachments allow files to be uploaded and referenced in conversation messages.
  * Files are stored in external blob storage and referenced by URI in messages.
@@ -13,19 +13,14 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
-  AttachmentCreateApiResponse,
-  AttachmentOperationsServiceModel,
+  AttachmentInitializeResponse,
+  AttachmentServiceModel,
   AttachmentUploadResponse,
   ConversationId
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 // Utils
 import { ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
-
-/**
- * Output fields when initializing a file attachment
- */
-export interface InitializeFileOutput extends AttachmentCreateApiResponse {}
 
 /**
  * Service for attachment operations within a conversation
@@ -37,23 +32,23 @@ export interface InitializeFileOutput extends AttachmentCreateApiResponse {}
  * @example
  * ```typescript
  * // One-step upload (recommended for most cases)
- * const attachment = await conversations.attachments.upload(
+ * const uploadedAttachment = await conversationalAgentService.conversations.attachments.upload(
  *   conversationId,
  *   file
  * );
- * console.log(`Uploaded: ${attachment.uri}`);
+ * console.log(`Uploaded: ${uploadedAttachment.uri}`);
  *
  * // Two-step initialize (for custom upload handling)
- * const initResult = await conversations.attachments.initialize(
+ * const attachmentInitResult = await conversationalAgentService.conversations.attachments.initialize(
  *   conversationId,
  *   'document.pdf'
  * );
- * // Handle upload manually using initResult.fileUploadAccess
+ * // Handle upload manually using attachmentInitResult.fileUploadAccess
  * ```
  */
-export class AttachmentOperations extends BaseService implements AttachmentOperationsServiceModel {
+export class AttachmentService extends BaseService implements AttachmentServiceModel {
   /**
-   * Creates a new AttachmentOperations instance
+   * Creates a new AttachmentService instance
    * @param instance - UiPath SDK instance
    */
   constructor(instance: IUiPathSDK) {
@@ -73,8 +68,8 @@ export class AttachmentOperations extends BaseService implements AttachmentOpera
   async initialize(
     conversationId: ConversationId,
     fileName: string
-  ): Promise<InitializeFileOutput> {
-    const response = await this.post<InitializeFileOutput>(
+  ): Promise<AttachmentInitializeResponse> {
+    const response = await this.post<AttachmentInitializeResponse>(
       ATTACHMENT_ENDPOINTS.CREATE(conversationId),
       { name: fileName }
     );
@@ -95,7 +90,7 @@ export class AttachmentOperations extends BaseService implements AttachmentOpera
     file: File
   ): Promise<AttachmentUploadResponse> {
     // Step 1: Create attachment record and get upload URL
-    const createResponse = await this.post<AttachmentCreateApiResponse>(
+    const createResponse = await this.post<AttachmentInitializeResponse>(
       ATTACHMENT_ENDPOINTS.CREATE(conversationId),
       { name: file.name }
     );
