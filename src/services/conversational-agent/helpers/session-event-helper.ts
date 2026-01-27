@@ -10,7 +10,7 @@ import type {
   SessionStartedEvent,
   SessionStartEvent,
   ToolCallId
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 import type { AsyncInputStreamEventHelper } from './async-input-stream-event-helper';
 import { AsyncInputStreamEventHelperImpl } from './async-input-stream-event-helper';

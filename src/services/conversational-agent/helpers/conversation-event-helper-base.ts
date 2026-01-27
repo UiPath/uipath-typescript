@@ -2,7 +2,7 @@ import type {
   ErrorEndEvent,
   ErrorId,
   ErrorStartEvent
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 import type {
   AnyErrorEndHandlerArgs,

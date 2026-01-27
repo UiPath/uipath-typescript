@@ -14,7 +14,7 @@ import type {
   MakeRequired,
   MetaEvent,
   Simplify
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 import { ConversationEventHelperBase } from './conversation-event-helper-base';
 import type {

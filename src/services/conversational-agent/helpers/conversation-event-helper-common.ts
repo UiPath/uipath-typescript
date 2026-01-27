@@ -35,7 +35,7 @@ import type {
   ToolCallEndEvent,
   ToolCallId,
   ToolCallStartEvent
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 import type { AsyncInputStreamEventHelper } from './async-input-stream-event-helper';
 import type { AsyncToolCallEventHelper } from './async-tool-call-event-helper';

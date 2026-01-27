@@ -1,4 +1,4 @@
-import type { CitationSource, CitationSourceMedia, CitationSourceUrl, ExternalValue, InlineOrExternalValue, InlineValue } from '@/models/conversational';
+import type { CitationSource, CitationSourceMedia, CitationSourceUrl, ExternalValue, InlineOrExternalValue, InlineValue } from '@/models/conversational-agent';
 
 /**
  * Type guard that determines if an InlineOrExternalValue value is an InlineValue value.
