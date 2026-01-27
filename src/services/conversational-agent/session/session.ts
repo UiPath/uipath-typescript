@@ -1,56 +1,29 @@
 /**
  * WebSocketSession - WebSocket connection for Conversational Agent
- *
- * Extends BaseWebSocket from core to add UiPath-specific functionality:
- * - Organization/Tenant headers
- * - Automatic token refresh on reconnection (via BaseWebSocket.getValidToken())
  */
 
 import type { IUiPathSDK } from '@/core/types';
 import { BaseWebSocket } from '@/core/websocket';
-import type { LogLevel } from '@/core/websocket';
+import type { ConversationalAgentOptions } from '@/models/conversational-agent';
 import { SDKInternalsRegistry } from '@/core/internals';
 
 import { WEBSOCKET_HEADERS } from '@/utils/constants/headers';
-
-/**
- * Options for WebSocketSession
- */
-export interface WebSocketSessionOptions {
-  /** External User ID (optional) */
-  externalUserId?: string;
-  /** Log level for debugging */
-  logLevel?: LogLevel;
-}
+import { WEBSOCKET_LOGGER_PREFIX } from '../constants';
 
 /**
  * WebSocket session for Conversational Agent
- *
- * Manages real-time WebSocket connection for conversation events.
- * Connection is established automatically when needed via getConnectedSocket().
- *
- * @example
- * ```typescript
- * const session = new WebSocketSession(sdk);
- *
- * // Listen for events
- * session.addEventListeners({
- *   'ConversationEvent': (data) => console.log('Event:', data)
- * });
- *
- * // Get socket (auto-connects if needed)
- * const socket = await session.getConnectedSocket();
- *
- * // Disconnect when done
- * session.disconnect();
- * ```
  */
 export class WebSocketSession extends BaseWebSocket {
   private _externalUserId?: string;
 
-  constructor(instance: IUiPathSDK, options?: WebSocketSessionOptions) {
+  /**
+   * Creates an instance of the WebSocketSession.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration
+   */
+  constructor(instance: IUiPathSDK, options?: ConversationalAgentOptions) {
     const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
-
     super(
       {
         ...config,
@@ -58,15 +31,17 @@ export class WebSocketSession extends BaseWebSocket {
       },
       context,
       tokenManager,
-      'ConversationalAgentSession'
+      WEBSOCKET_LOGGER_PREFIX
     );
 
     this._externalUserId = options?.externalUserId;
   }
 
   /**
-   * Connect to WebSocket.
-   * Token retrieval is handled automatically by BaseWebSocket on every connection/reconnection.
+   * Connects to WebSocket with organization and tenant headers
+   *
+   * Token retrieval is handled automatically by BaseWebSocket on every
+   * connection/reconnection.
    */
   connect(): void {
     const query: Record<string, string> = {};
@@ -85,7 +60,7 @@ export class WebSocketSession extends BaseWebSocket {
   }
 
   /**
-   * Auto-connect when getConnectedSocket is called while disconnected
+   * Auto-connects when getConnectedSocket is called while disconnected
    */
   protected override onDisconnectedWhileWaiting(): void {
     this.connect();
