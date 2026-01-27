@@ -1,41 +1,14 @@
 /**
- * WebSocket Utilities - Helper functions and default configuration
+ * WebSocket Utilities
  */
 
-/**
- * Result of parsing a WebSocket URL
- */
-export interface ParsedWebSocketUrl {
-  /** WebSocket host (wss:// or ws://) */
-  host: string;
-  /** Socket.io path */
-  path: string;
-}
+import { LogLevel, ParsedWebSocketUrl } from './types';
 
-/** Default WebSocket path for UiPath Cloud */
 const CLOUD_WEBSOCKET_PATH = '/autopilotforeveryone_/websocket_/socket.io';
 
 /**
  * Parse a base URL into WebSocket host and path.
- *
- * Automatically converts HTTPS to WSS and HTTP to WS.
- * For localhost URLs, uses default socket.io path.
- * For cloud URLs, uses the UiPath Cloud WebSocket path.
- *
- * @example
- * ```typescript
- * const { host, path } = parseWebSocketUrl('https://alpha.uipath.com');
- * // host: 'wss://alpha.uipath.com'
- * // path: '/autopilotforeveryone_/websocket_/socket.io'
- *
- * const { host, path } = parseWebSocketUrl('http://localhost:3000');
- * // host: 'ws://localhost:3000'
- * // path: '/socket.io'
- *
- * const { host, path } = parseWebSocketUrl('http://localhost:3000', '/custom-path');
- * // host: 'ws://localhost:3000'
- * // path: '/custom-path'
- * ```
+ * Converts HTTPS to WSS, HTTP to WS.
  */
 export function parseWebSocketUrl(baseUrl: string, path?: string): ParsedWebSocketUrl {
   const url = new URL(baseUrl);
@@ -58,10 +31,11 @@ export function parseWebSocketUrl(baseUrl: string, path?: string): ParsedWebSock
 }
 
 /**
- * Default WebSocket configuration values (excludes baseUrl which must be provided)
+ * Default WebSocket configuration.
+ * Uses exponential backoff for reconnection (200ms initial, 30s max, infinite retries).
  */
 export const DEFAULT_WEBSOCKET_CONFIG = {
-  logLevel: 'info' as const,
+  logLevel: LogLevel.Info,
   timeout: 5000,
   reconnection: true,
   reconnectionAttempts: Infinity,

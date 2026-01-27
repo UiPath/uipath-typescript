@@ -13,52 +13,17 @@ import { io, type Socket } from 'socket.io-client';
 
 import {
   ConnectionStatus,
+  LogLevel,
   type ConnectionStatusChangedHandler,
-  type LogLevel,
   type SocketEventHandler,
   type BaseWebSocketConfig,
   type WebSocketConnectOptions
 } from './types';
 import { WebSocketLogger } from './logger';
 import { parseWebSocketUrl, DEFAULT_WEBSOCKET_CONFIG } from './utils';
-import { AuthenticationError, HttpStatus, NetworkError } from '../errors';
+import { NetworkError } from '../errors';
 import type { ExecutionContext } from '../context/execution';
 import type { TokenManager } from '../auth/token-manager';
-import type { TokenInfo } from '../auth/types';
-
-/**
- * Manages multiple callbacks for a single event type.
- * Handles registration, removal, and execution with error isolation.
- */
-class CallbackManager {
-  private _callbacks: SocketEventHandler[] = [];
-
-  addCallback(handler: SocketEventHandler): () => void {
-    this._callbacks.push(handler);
-    return () => this.removeCallback(handler);
-  }
-
-  removeCallback(handler: SocketEventHandler): void {
-    const index = this._callbacks.indexOf(handler);
-    if (index !== -1) {
-      this._callbacks.splice(index, 1);
-    }
-  }
-
-  executeCallbacks(data: unknown): void {
-    for (const callback of this._callbacks) {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error('Error in WebSocket callback:', error);
-      }
-    }
-  }
-
-  clear(): void {
-    this._callbacks = [];
-  }
-}
 
 /**
  * Abstract base class for WebSocket connections.
@@ -105,8 +70,8 @@ export abstract class BaseWebSocket {
   /** Handlers for connection status changes */
   private _connectionStatusHandlers: ConnectionStatusChangedHandler[] = [];
 
-  /** Event callback managers by event name */
-  private _callbackManagers: Map<string, CallbackManager> = new Map();
+  /** Event handlers by event name */
+  private _eventHandlers: Map<string, SocketEventHandler[]> = new Map();
 
   /** Logger instance */
   protected _logger: WebSocketLogger;
@@ -186,35 +151,7 @@ export abstract class BaseWebSocket {
    * @throws AuthenticationError if no token available or refresh fails
    */
   public async getValidToken(): Promise<string> {
-    const tokenInfo = this._executionContext.get('tokenInfo') as TokenInfo | undefined;
-
-    if (!tokenInfo) {
-      throw new AuthenticationError({
-        message: 'No authentication token available. Make sure to initialize the SDK first.'
-      });
-    }
-
-    // For secret-based tokens, they never expire
-    if (tokenInfo.type === 'secret') {
-      return tokenInfo.token;
-    }
-
-    // If token is not expired, return it
-    if (!this._tokenManager.isTokenExpired(tokenInfo)) {
-      return tokenInfo.token;
-    }
-
-    // Token is expired, refresh it
-    try {
-      const newToken = await this._tokenManager.refreshAccessToken();
-      return newToken.access_token;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new AuthenticationError({
-        message: `Token refresh failed: ${message}. Please re-authenticate.`,
-        statusCode: HttpStatus.UNAUTHORIZED
-      });
-    }
+    return this._tokenManager.getValidToken();
   }
 
   // ==================== Connection Management ====================
@@ -265,12 +202,19 @@ export abstract class BaseWebSocket {
       this._logger.debug('Outgoing:', { socketId: socket.id, event, data });
     });
 
-    // Handle incoming events and dispatch to registered callbacks
+    // Handle incoming events and dispatch to registered handlers
     socket.onAny((event, data) => {
       this._logger.debug('Incoming:', { socketId: socket.id, event, data });
-      const callbackManager = this._callbackManagers.get(event);
-      if (callbackManager) {
-        callbackManager.executeCallbacks(data);
+      const handlers = this._eventHandlers.get(event);
+      if (handlers) {
+        // Use slice() for safe iteration if handler adds/removes handlers
+        for (const handler of handlers.slice()) {
+          try {
+            handler(data);
+          } catch (error) {
+            this._logger.error(`Error in ${event} callback:`, error);
+          }
+        }
       }
     });
 
@@ -319,7 +263,7 @@ export abstract class BaseWebSocket {
   disconnect(): void {
     switch (this._connectionStatus) {
       case ConnectionStatus.Connecting:
-        // Causes async connect to be abandoned when it completes
+        this._logger.debug('Disconnect called while connecting, abandoning connection attempt');
         this._setConnectionStatus(ConnectionStatus.Disconnected);
         break;
 
@@ -333,7 +277,7 @@ export abstract class BaseWebSocket {
         break;
 
       case ConnectionStatus.Disconnected:
-        // Already disconnected, nothing to do
+        this._logger.debug('Disconnect called but already disconnected');
         break;
     }
   }
@@ -351,9 +295,9 @@ export abstract class BaseWebSocket {
     if (this._socket === socket) {
       this._logger.debug('Deprecating socket', { socketId: socket.id });
       this._socket = null;
-      this._connectionStatus = ConnectionStatus.Disconnected;
       // Note: We intentionally do NOT call socket.disconnect() here
       // The socket will close naturally when the server closes it
+      this._setConnectionStatus(ConnectionStatus.Disconnected);
     }
   }
 
@@ -424,17 +368,11 @@ export abstract class BaseWebSocket {
    * @param listeners Object mapping event names to handlers
    */
   addEventListeners(listeners: Record<string, SocketEventHandler | SocketEventHandler[]>): void {
-    Object.entries(listeners).forEach(([event, handlers]) => {
+    for (const [event, handlers] of Object.entries(listeners)) {
       const callbacks = Array.isArray(handlers) ? handlers : [handlers];
-      let callbackManager = this._callbackManagers.get(event);
-
-      if (!callbackManager) {
-        callbackManager = new CallbackManager();
-        this._callbackManagers.set(event, callbackManager);
-      }
-
-      callbacks.forEach(handler => callbackManager!.addCallback(handler));
-    });
+      const existing = this._eventHandlers.get(event) || [];
+      this._eventHandlers.set(event, [...existing, ...callbacks]);
+    }
   }
 
   /**
@@ -442,20 +380,25 @@ export abstract class BaseWebSocket {
    * @param listeners Object mapping event names to handlers to remove
    */
   removeEventListeners(listeners: Record<string, SocketEventHandler | SocketEventHandler[]>): void {
-    Object.entries(listeners).forEach(([event, handlers]) => {
-      const callbackManager = this._callbackManagers.get(event);
-      if (callbackManager) {
-        const callbacks = Array.isArray(handlers) ? handlers : [handlers];
-        callbacks.forEach(handler => callbackManager.removeCallback(handler));
+    for (const [event, handlers] of Object.entries(listeners)) {
+      const existing = this._eventHandlers.get(event);
+      if (existing) {
+        const toRemove = Array.isArray(handlers) ? handlers : [handlers];
+        const filtered = existing.filter(h => !toRemove.includes(h));
+        if (filtered.length > 0) {
+          this._eventHandlers.set(event, filtered);
+        } else {
+          this._eventHandlers.delete(event);
+        }
       }
-    });
+    }
   }
 
   /**
    * Clear all event listeners
    */
   clearEventListeners(): void {
-    this._callbackManagers.clear();
+    this._eventHandlers.clear();
   }
 
   // ==================== Protected Methods ====================
