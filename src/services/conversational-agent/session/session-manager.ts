@@ -15,7 +15,7 @@ import { ConnectionStatus } from '@/core/websocket';
 import type { ConnectionStatusChangedHandler, LogLevel } from '@/core/websocket';
 
 import { WebSocketSession } from './session';
-import { WEBSOCKET_EVENTS } from '@/utils/constants/endpoints';
+import { WEBSOCKET_EVENTS } from '../constants';
 
 /**
  * Options for SessionManager
