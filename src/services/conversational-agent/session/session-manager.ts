@@ -1,31 +1,19 @@
 /**
  * SessionManager - Manages WebSocket session lifecycle for conversations
- *
- * Encapsulates all WebSocket-related logic:
- * - WebSocketSession (connection management)
- * - Per-conversation socket tracking
- * - Event emission and dispatch
- * - Connection status and error handling
  */
 
 import type { Socket } from 'socket.io-client';
 import type { IUiPathSDK } from '@/core/types';
-import type { ConversationEvent, ConversationId } from '@/models/conversational-agent';
+import type {
+  ConversationalAgentOptions,
+  ConversationEvent,
+  ConversationId
+} from '@/models/conversational-agent';
 import { ConnectionStatus } from '@/core/websocket';
 import type { ConnectionStatusChangedHandler, LogLevel } from '@/core/websocket';
 
 import { WebSocketSession } from './session';
 import { WEBSOCKET_EVENTS } from '../constants';
-
-/**
- * Options for SessionManager
- */
-export interface SessionManagerOptions {
-  /** External User ID (optional) */
-  externalUserId?: string;
-  /** Log level for debugging */
-  logLevel?: LogLevel;
-}
 
 /**
  * Interface for dispatching conversation events
@@ -35,24 +23,7 @@ export interface EventDispatcher {
 }
 
 /**
- * SessionManager - Manages WebSocket session lifecycle for conversations
- *
- * @example
- * ```typescript
- * const sessionManager = new SessionManager(sdk, { logLevel: 'debug' });
- *
- * // Set event dispatcher
- * sessionManager.setEventDispatcher(eventHelper);
- *
- * // Emit event (auto-connects if needed)
- * sessionManager.emitEvent(conversationEvent);
- *
- * // Check connection status
- * console.log(sessionManager.connectionStatus);
- *
- * // Disconnect
- * sessionManager.disconnect();
- * ```
+ * Manages WebSocket session lifecycle for conversations
  */
 export class SessionManager {
   /** Underlying WebSocket session */
@@ -68,12 +39,12 @@ export class SessionManager {
   private _eventDispatcher: EventDispatcher | null = null;
 
   /**
-   * Create a new SessionManager instance
+   * Creates an instance of the SessionManager.
    *
-   * @param instance - UiPath SDK instance
-   * @param options - Optional configuration (externalUserId, logLevel)
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration
    */
-  constructor(instance: IUiPathSDK, options?: SessionManagerOptions) {
+  constructor(instance: IUiPathSDK, options?: ConversationalAgentOptions) {
     this._session = new WebSocketSession(instance, options);
     this._setupEventListeners();
   }
@@ -81,14 +52,18 @@ export class SessionManager {
   // ==================== Configuration ====================
 
   /**
-   * Set the event dispatcher for routing incoming events
+   * Sets the event dispatcher for routing incoming events
+   *
+   * @param dispatcher - Event dispatcher instance
    */
   setEventDispatcher(dispatcher: EventDispatcher): void {
     this._eventDispatcher = dispatcher;
   }
 
   /**
-   * Set log level for debugging
+   * Sets the log level for debugging
+   *
+   * @param level - Log level to set
    */
   setLogLevel(level: LogLevel): void {
     this._session.setLogLevel(level);
@@ -97,7 +72,7 @@ export class SessionManager {
   // ==================== Event Handling ====================
 
   /**
-   * Setup WebSocket event listeners
+   * Sets up WebSocket event listeners
    */
   private _setupEventListeners(): void {
     this._session.addEventListeners({
@@ -114,10 +89,11 @@ export class SessionManager {
   }
 
   /**
-   * Emit a conversation event via WebSocket
-   * Auto-connects if needed and handles errors
+   * Emits a conversation event via WebSocket
    *
-   * @param event - The conversation event to emit
+   * Auto-connects if needed and handles errors.
+   *
+   * @param event - Conversation event to emit
    */
   emitEvent(event: ConversationEvent): void {
     const emitAsync = async () => {
@@ -148,11 +124,12 @@ export class SessionManager {
   // ==================== Socket Lifecycle ====================
 
   /**
-   * Get or create a socket for a specific conversation.
+   * Gets or creates a socket for a specific conversation
+   *
    * Auto-connects if needed and tracks the socket for this conversation.
    *
-   * @param conversationId - The conversation ID
-   * @returns Promise that resolves with the connected socket
+   * @param conversationId - Conversation ID
+   * @returns Promise resolving to the connected socket
    */
   private async _getSocket(conversationId: ConversationId): Promise<Socket> {
     let socket: Socket | undefined = this._sessionSockets.get(conversationId);
@@ -210,10 +187,11 @@ export class SessionManager {
   }
 
   /**
-   * Release the socket tracking for a conversation.
+   * Releases socket tracking for a conversation
+   *
    * Called when a session ends (endSession event sent).
    *
-   * @param conversationId - The conversation ID to release
+   * @param conversationId - Conversation ID to release
    */
   releaseSocket(conversationId: ConversationId): void {
     const socket = this._sessionSockets.get(conversationId);
@@ -224,9 +202,10 @@ export class SessionManager {
   }
 
   /**
-   * Remove a conversation from the socket's reverse mapping.
-   * @param conversationId - The conversation ID to remove
-   * @param socket - The socket to remove from
+   * Removes a conversation from the socket's reverse mapping
+   *
+   * @param conversationId - Conversation ID to remove
+   * @param socket - Socket to remove from
    */
   private _removeConversationFromSocket(conversationId: ConversationId, socket: Socket): void {
     const conversationIds = this._socketToConversations.get(socket);
@@ -236,10 +215,11 @@ export class SessionManager {
   }
 
   /**
-   * Deprecate socket for a conversation (mark unusable without disconnecting).
+   * Deprecates socket for a conversation (marks unusable without disconnecting)
+   *
    * Called when server signals sessionEnding.
    *
-   * @param conversationId - The conversation ID
+   * @param conversationId - Conversation ID
    */
   private _deprecateSocketForConversation(conversationId: ConversationId): void {
     const socket = this._sessionSockets.get(conversationId);
@@ -251,23 +231,10 @@ export class SessionManager {
   // ==================== Connection Management ====================
 
   /**
-   * Connect to WebSocket for real-time events.
+   * Disconnects from WebSocket and releases all session resources
    *
-   * @deprecated WebSocket connection is now managed automatically. The connection
-   * is established when needed (e.g., when starting a session or sending events).
-   * This method is kept for backwards compatibility but does nothing.
-   */
-  connect(): void {
-    // Connection is now handled automatically when needed via getConnectedSocket()
-    // This method is kept for backwards compatibility but does nothing
-  }
-
-  /**
-   * Disconnect from WebSocket and release all session resources.
-   *
-   * This will immediately close the WebSocket connection and clear all
-   * per-conversation socket tracking. Any active sessions will receive
-   * a disconnection error.
+   * Immediately closes the WebSocket connection and clears all per-conversation
+   * socket tracking. Any active sessions will receive a disconnection error.
    */
   disconnect(): void {
     // Clear all per-conversation socket tracking
@@ -299,7 +266,9 @@ export class SessionManager {
   }
 
   /**
-   * Register handler for connection status changes
+   * Registers a handler for connection status changes
+   *
+   * @param handler - Callback function to handle status changes
    * @returns Cleanup function to remove handler
    */
   onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {

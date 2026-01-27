@@ -4,5 +4,5 @@
  * WebSocket session management for Conversational Agent.
  */
 
-export { WebSocketSession, type WebSocketSessionOptions } from './session';
-export { SessionManager, type SessionManagerOptions, type EventDispatcher } from './session-manager';
+export { WebSocketSession } from './session';
+export { SessionManager, type EventDispatcher } from './session-manager';
