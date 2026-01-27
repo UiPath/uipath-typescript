@@ -2,4 +2,4 @@
  * User Service Module
  */
 
-export { User } from './user';
+export { UserService as User, UserService } from './user';

@@ -10,7 +10,7 @@
 
 import type { Socket } from 'socket.io-client';
 import type { IUiPathSDK } from '@/core/types';
-import type { ConversationEvent, ConversationId } from '@/models/conversational';
+import type { ConversationEvent, ConversationId } from '@/models/conversational-agent';
 import { ConnectionStatus } from '@/core/websocket';
 import type { ConnectionStatusChangedHandler, LogLevel } from '@/core/websocket';
 

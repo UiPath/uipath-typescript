@@ -1,5 +1,5 @@
 /**
- * Traces Service Module
+ * Trace Service Module
  */
 
-export { Traces } from './traces';
+export { TraceService as Traces, TraceService } from './traces';

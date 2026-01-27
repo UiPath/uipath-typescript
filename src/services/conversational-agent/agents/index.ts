@@ -1,5 +1,5 @@
 /**
- * Agents Service Module
+ * Agent Service Module
  */
 
-export { Agents } from './agents';
+export { AgentService as Agents, AgentService } from './agents';

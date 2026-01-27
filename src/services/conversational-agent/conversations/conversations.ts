@@ -1,5 +1,5 @@
 /**
- * Conversations - Service for conversation management
+ * ConversationService - Service for conversation management
  *
  * Provides conversation CRUD operations and access to related services:
  * - exchanges: Exchange operations (list, get, feedback)
@@ -19,12 +19,12 @@ import type {
   ConversationId,
   ConversationCreateResponse,
   ConversationDeleteResponse,
-  ConversationResponse,
-  ConversationsServiceModel,
+  ConversationGetResponse,
+  ConversationServiceModel,
   CreateConversationInput,
-  ListConversationsInput,
+  ConversationGetAllOptions,
   UpdateConversationInput
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
@@ -34,9 +34,9 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 
 // Local imports
-import { AttachmentOperations } from './attachments';
-import { ExchangeOperations } from './exchanges';
-import { MessageOperations } from './messages';
+import { AttachmentService } from './attachments';
+import { ExchangeService } from './exchanges';
+import { MessageService } from './messages';
 
 /**
  * Service for managing conversations and related operations
@@ -44,52 +44,52 @@ import { MessageOperations } from './messages';
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Conversations } from '@uipath/uipath-typescript/conversational-agent';
+ * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const conversations = new Conversations(sdk);
+ * const conversationalAgentService = new ConversationalAgent(sdk);
  *
- * // Create a conversation
- * const conversation = await conversations.create({
+ * // Create a new conversation
+ * const newConversation = await conversationalAgentService.conversations.create({
  *   agentReleaseId: 123,
  *   folderId: 456
  * });
  *
  * // Get all conversations with pagination
- * const page1 = await conversations.getAll({ pageSize: 10 });
- * if (page1.hasNextPage) {
- *   const page2 = await conversations.getAll({ cursor: page1.nextCursor });
+ * const firstPageOfConversations = await conversationalAgentService.conversations.getAll({ pageSize: 10 });
+ * if (firstPageOfConversations.hasNextPage) {
+ *   const nextPageOfConversations = await conversationalAgentService.conversations.getAll({ cursor: firstPageOfConversations.nextCursor });
  * }
  *
  * // Get exchanges for a conversation
- * const exchanges = await conversations.exchanges.getAll(conversationId);
+ * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
  *
  * // Get a message
- * const message = await conversations.messages.getById(
+ * const messageDetails = await conversationalAgentService.conversations.messages.getById(
  *   conversationId, exchangeId, messageId
  * );
  *
  * // Upload an attachment
- * const attachment = await conversations.attachments.upload(conversationId, file);
+ * const uploadedAttachment = await conversationalAgentService.conversations.attachments.upload(conversationId, file);
  * ```
  */
-export class Conversations extends BaseService implements ConversationsServiceModel {
+export class ConversationService extends BaseService implements ConversationServiceModel {
   /** Exchange operations for conversations */
-  public readonly exchanges: ExchangeOperations;
+  public readonly exchanges: ExchangeService;
 
   /** Message operations for conversations */
-  public readonly messages: MessageOperations;
+  public readonly messages: MessageService;
 
   /** Attachment operations for conversations */
-  public readonly attachments: AttachmentOperations;
+  public readonly attachments: AttachmentService;
 
   constructor(instance: IUiPathSDK) {
     super(instance);
-    this.exchanges = new ExchangeOperations(instance);
-    this.messages = new MessageOperations(instance);
-    this.attachments = new AttachmentOperations(instance);
+    this.exchanges = new ExchangeService(instance);
+    this.messages = new MessageService(instance);
+    this.attachments = new AttachmentService(instance);
   }
 
   // ==================== Conversation CRUD Operations ====================
@@ -126,8 +126,8 @@ export class Conversations extends BaseService implements ConversationsServiceMo
    * Gets a conversation by ID
    */
   @track('Conversations.GetById')
-  async getById(conversationId: ConversationId): Promise<ConversationResponse> {
-    const response = await this.get<ConversationResponse>(CONVERSATION_ENDPOINTS.GET(conversationId));
+  async getById(conversationId: ConversationId): Promise<ConversationGetResponse> {
+    const response = await this.get<ConversationGetResponse>(CONVERSATION_ENDPOINTS.GET(conversationId));
     return response.data;
   }
 
@@ -144,22 +144,22 @@ export class Conversations extends BaseService implements ConversationsServiceMo
    * @example
    * ```typescript
    * // Get all conversations (non-paginated)
-   * const conversations = await conversations.getAll();
+   * const allConversations = await conversationalAgentService.conversations.getAll();
    *
    * // Get conversations with sorting
-   * const conversations = await conversations.getAll({ sort: 'desc' });
+   * const sortedConversations = await conversationalAgentService.conversations.getAll({ sort: 'desc' });
    *
    * // First page with pagination
-   * const page1 = await conversations.getAll({ pageSize: 10 });
+   * const firstPageOfConversations = await conversationalAgentService.conversations.getAll({ pageSize: 10 });
    *
    * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await conversations.getAll({ cursor: page1.nextCursor });
+   * if (firstPageOfConversations.hasNextPage) {
+   *   const nextPageOfConversations = await conversationalAgentService.conversations.getAll({ cursor: firstPageOfConversations.nextCursor });
    * }
    * ```
    */
   @track('Conversations.GetAll')
-  async getAll<T extends ListConversationsInput = ListConversationsInput>(
+  async getAll<T extends ConversationGetAllOptions = ConversationGetAllOptions>(
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -189,8 +189,8 @@ export class Conversations extends BaseService implements ConversationsServiceMo
   async update(
     conversationId: ConversationId,
     input: UpdateConversationInput
-  ): Promise<ConversationResponse> {
-    const response = await this.patch<ConversationResponse>(
+  ): Promise<ConversationGetResponse> {
+    const response = await this.patch<ConversationGetResponse>(
       CONVERSATION_ENDPOINTS.UPDATE(conversationId),
       input
     );
