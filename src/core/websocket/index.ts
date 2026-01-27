@@ -5,12 +5,11 @@
  */
 
 // Base class for WebSocket connections
-export { BaseWebSocket } from './websocket';
+export { BaseWebSocket } from './base';
 
 // Public types
-export { ConnectionStatus } from './types';
+export { ConnectionStatus, LogLevel } from './types';
 export type {
   ConnectionStatusChangedHandler,
-  LogLevel,
   SocketEventHandler
 } from './types';

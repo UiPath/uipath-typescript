@@ -63,9 +63,9 @@ export const USER_ENDPOINTS = {
 } as const;
 
 /**
- * Utility Endpoints
+ * Feature Endpoints
  */
-export const UTILITY_ENDPOINTS = {
+export const FEATURE_ENDPOINTS = {
   FEATURE_FLAGS: `${AUTOPILOT_BASE}/api/utility/feature-flags`
 } as const;
 
@@ -81,13 +81,4 @@ export const TRACES_ENDPOINTS = {
  */
 export const WEBSOCKET_EVENTS = {
   CONVERSATION_EVENT: 'ConversationEvent'
-} as const;
-
-/**
- * WebSocket Headers
- */
-export const WEBSOCKET_HEADERS = {
-  ORGANIZATION_ID: 'x-uipath-internal-accountid',
-  TENANT_ID: 'x-uipath-internal-tenantid',
-  EXTERNAL_USER_ID: 'x-uipath-external-user-id'
 } as const;

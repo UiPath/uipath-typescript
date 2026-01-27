@@ -22,7 +22,12 @@ export type ConnectionStatusChangedHandler = (
 /**
  * Log levels for WebSocket debugging
  */
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export enum LogLevel {
+  Debug = 'debug',
+  Info = 'info',
+  Warn = 'warn',
+  Error = 'error'
+}
 
 /**
  * Generic event handler for WebSocket events
@@ -34,19 +39,39 @@ export type SocketEventHandler<T = any> = (data: T) => void | Promise<void>;
  * Accepts full SDK config via spread - extra properties are stored and accessible
  */
 export interface BaseWebSocketConfig {
-  /** Base URL for WebSocket connection */
+  /** Base URL for WebSocket connection (required) */
   baseUrl: string;
-  /** Log level for debugging */
+  /**
+   * Log level for debugging output
+   * @default LogLevel.Info
+   */
   logLevel?: LogLevel;
-  /** Connection timeout in milliseconds */
+  /**
+   * Connection timeout in milliseconds - how long to wait for initial connection
+   * @default 5000
+   */
   timeout?: number;
-  /** Enable automatic reconnection */
+  /**
+   * Enable automatic reconnection when connection is lost
+   * @default true
+   */
   reconnection?: boolean;
-  /** Maximum reconnection attempts */
+  /**
+   * Maximum number of reconnection attempts before giving up
+   * @default Infinity
+   */
   reconnectionAttempts?: number;
-  /** Initial delay between reconnection attempts (ms) */
+  /**
+   * Initial delay between reconnection attempts in milliseconds.
+   * Uses exponential backoff, so delay increases after each failed attempt.
+   * @default 200
+   */
   reconnectionDelay?: number;
-  /** Maximum delay between reconnection attempts (ms) */
+  /**
+   * Maximum delay between reconnection attempts in milliseconds.
+   * Caps the exponential backoff to prevent excessively long wait times.
+   * @default 30000
+   */
   reconnectionDelayMax?: number;
   /** Organization ID (passed from SDK config) */
   organizationId?: string;
@@ -65,4 +90,14 @@ export interface WebSocketConnectOptions {
   query?: Record<string, string>;
   /** Custom path for socket.io */
   path?: string;
+}
+
+/**
+ * Result of parsing a WebSocket URL
+ */
+export interface ParsedWebSocketUrl {
+  /** WebSocket host (wss:// or ws://) */
+  host: string;
+  /** Socket.io path */
+  path: string;
 }

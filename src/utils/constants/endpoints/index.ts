@@ -19,4 +19,4 @@ export * from './data-fabric';
 export * from './identity';
 
 // Conversational Agent endpoints
-export * from './conversational';
+export * from './conversational-agent';

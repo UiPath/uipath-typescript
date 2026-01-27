@@ -289,10 +289,7 @@ export class PaginationHelpers {
       : NonPaginatedResponse<TTransformed>
   > {
     const optionsWithDefaults = options || {} as any;
-    const { folderId, ...restOptions } = optionsWithDefaults;
-    const cursor = options?.cursor;
-    const pageSize = options?.pageSize;
-    const jumpToPage = options?.jumpToPage;
+    const { folderId, pageSize, cursor, jumpToPage, ...restOptions } = optionsWithDefaults;
     
     // Determine if pagination is requested
     const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
