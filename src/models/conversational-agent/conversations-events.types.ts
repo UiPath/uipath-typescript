@@ -21,7 +21,7 @@ import {
   ToolCallInputValue,
   ToolCallOutputValue,
   ToolName
-} from './conversation-shared.types';
+} from './conversations-shared.types';
 
 /**
  * A timestamp with the format YYYY-MM-DDThh:mm:ss.sssZ (ISO 8601 with both date and time required and restricted to UTC).
