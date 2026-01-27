@@ -39,16 +39,16 @@ export interface AgentServiceModel {
   /**
    * Gets a conversational agent by ID with appearance configuration
    *
+   * @param id - Agent ID to retrieve
    * @param folderId - Folder ID containing the agent
-   * @param agentId - Agent ID to retrieve
    * @returns Promise resolving to the agent with appearance configuration
    * {@link AgentGetByIdResponse}
    * @example
    * ```typescript
-   * const agentReleaseDetails = await conversationalAgentService.agents.getById(folderId, agentReleaseId);
+   * const agentReleaseDetails = await conversationalAgentService.agents.getById(agentReleaseId, folderId);
    * console.log(agentReleaseDetails.name);
    * console.log(agentReleaseDetails.appearance); // UI appearance configuration
    * ```
    */
-  getById(folderId: number, agentId: number): Promise<AgentGetByIdResponse>;
+  getById(id: number, folderId: number): Promise<AgentGetByIdResponse>;
 }

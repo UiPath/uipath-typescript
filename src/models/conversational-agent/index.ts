@@ -33,3 +33,4 @@ export * from './traces';
 
 // ==================== Main Service Model ====================
 export * from './conversational-agent.models';
+export * from './conversational-agent.types';

@@ -288,23 +288,9 @@ export interface ConversationServiceModel {
   create(input: CreateConversationInput): Promise<ConversationCreateResponse>;
 
   /**
-   * Creates a new conversation with agent release and folder IDs
-   *
-   * @param agentReleaseId - The agent release ID
-   * @param folderId - The folder ID
-   * @returns Promise resolving to the created conversation
-   * {@link ConversationCreateResponse}
-   * @example
-   * ```typescript
-   * const newConversation = await conversationalAgentService.conversations.create(agentReleaseId, folderId);
-   * ```
-   */
-  create(agentReleaseId: number, folderId: number): Promise<ConversationCreateResponse>;
-
-  /**
    * Gets a conversation by ID
    *
-   * @param conversationId - The conversation ID to retrieve
+   * @param id - The conversation ID to retrieve
    * @returns Promise resolving to the conversation details
    * {@link ConversationGetResponse}
    * @example
@@ -312,7 +298,7 @@ export interface ConversationServiceModel {
    * const conversationDetails = await conversationalAgentService.conversations.getById(conversationId);
    * ```
    */
-  getById(conversationId: ConversationId): Promise<ConversationGetResponse>;
+  getById(id: ConversationId): Promise<ConversationGetResponse>;
 
   /**
    * Gets all conversations with optional filtering and pagination
@@ -345,7 +331,7 @@ export interface ConversationServiceModel {
   /**
    * Updates a conversation
    *
-   * @param conversationId - The conversation ID to update
+   * @param id - The conversation ID to update
    * @param input - Fields to update
    * @returns Promise resolving to the updated conversation
    * {@link ConversationGetResponse}
@@ -357,20 +343,20 @@ export interface ConversationServiceModel {
    * ```
    */
   update(
-    conversationId: ConversationId,
+    id: ConversationId,
     input: UpdateConversationInput
   ): Promise<ConversationGetResponse>;
 
   /**
    * Deletes a conversation
    *
-   * @param conversationId - The conversation ID to delete
+   * @param id - The conversation ID to delete
    * @returns Promise resolving to the deletion response
    * {@link ConversationDeleteResponse}
    * @example
    * ```typescript
-   * await conversationalAgentService.conversations.remove(conversationId);
+   * await conversationalAgentService.conversations.deleteById(conversationId);
    * ```
    */
-  remove(conversationId: ConversationId): Promise<ConversationDeleteResponse>;
+  deleteById(id: ConversationId): Promise<ConversationDeleteResponse>;
 }
