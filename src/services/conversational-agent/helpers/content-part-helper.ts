@@ -6,7 +6,7 @@ import type {
   Citation,
   ContentPart,
   InlineOrExternalValue
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 import { isExternalValue, isInlineValue } from './conversation-type-util';
 
 /**
