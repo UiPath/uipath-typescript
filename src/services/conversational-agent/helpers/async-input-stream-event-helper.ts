@@ -5,7 +5,7 @@ import type {
   AsyncInputStreamId,
   AsyncInputStreamStartEvent,
   MetaEvent
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 import { ConversationEventHelperBase } from './conversation-event-helper-base';
 import {
