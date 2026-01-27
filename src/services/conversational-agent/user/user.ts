@@ -1,5 +1,5 @@
 /**
- * User - Service for managing user profile and context settings
+ * UserService - Service for managing user profile and context settings
  */
 
 // Core SDK imports
@@ -14,7 +14,7 @@ import type {
   UserSettings,
   UserSettingsGetResponse,
   UserSettingsUpdateResponse
-} from '@/models/conversational';
+} from '@/models/conversational-agent';
 
 // Utils
 import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -33,25 +33,25 @@ import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const agent = new ConversationalAgent(sdk);
+ * const conversationalAgentService = new ConversationalAgent(sdk);
  *
  * // Get current user settings
- * const settings = await agent.user.getSettings();
- * console.log(settings.name, settings.email, settings.timezone);
+ * const userSettings = await conversationalAgentService.user.getSettings();
+ * console.log(userSettings.name, userSettings.email, userSettings.timezone);
  *
  * // Update user settings
- * const updated = await agent.user.updateSettings({
+ * const updatedUserSettings = await conversationalAgentService.user.updateSettings({
  *   name: 'John Doe',
  *   timezone: 'America/New_York'
  * });
  *
  * // Clear a field by setting to null
- * await agent.user.updateSettings({
+ * await conversationalAgentService.user.updateSettings({
  *   department: null
  * });
  * ```
  */
-export class User extends BaseService implements UserServiceModel {
+export class UserService extends BaseService implements UserServiceModel {
   constructor(instance: IUiPathSDK) {
     super(instance);
   }
@@ -63,10 +63,10 @@ export class User extends BaseService implements UserServiceModel {
    *
    * @example
    * ```typescript
-   * const settings = await agent.user.getSettings();
-   * console.log(settings.name);      // User's name
-   * console.log(settings.email);     // User's email
-   * console.log(settings.timezone);  // User's timezone
+   * const userSettings = await conversationalAgentService.user.getSettings();
+   * console.log(userSettings.name);      // User's name
+   * console.log(userSettings.email);     // User's email
+   * console.log(userSettings.timezone);  // User's timezone
    * ```
    */
   @track('User.GetSettings')
@@ -88,19 +88,19 @@ export class User extends BaseService implements UserServiceModel {
    * @example
    * ```typescript
    * // Update specific fields
-   * const updated = await agent.user.updateSettings({
+   * const updatedUserSettings = await conversationalAgentService.user.updateSettings({
    *   name: 'John Doe',
    *   email: 'john@example.com',
    *   timezone: 'America/New_York'
    * });
    *
    * // Partial update - only change timezone
-   * await agent.user.updateSettings({
+   * await conversationalAgentService.user.updateSettings({
    *   timezone: 'Europe/London'
    * });
    *
    * // Clear fields by setting to null
-   * await agent.user.updateSettings({
+   * await conversationalAgentService.user.updateSettings({
    *   role: null,
    *   department: null
    * });

@@ -1,5 +1,5 @@
 /**
- * Traces Service
+ * TraceService
  *
  * Provides access to LLM Operations tracing data for conversational agent sessions.
  * This allows retrieving distributed trace spans for debugging, monitoring,
@@ -12,7 +12,7 @@ import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
-import type { LlmOpsSpan, RawLlmOpsSpan, TracesServiceModel } from '@/models/conversational';
+import type { LlmOpsSpan, RawLlmOpsSpan, TraceServiceModel } from '@/models/conversational-agent';
 
 // Utils
 import { TRACES_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -29,24 +29,24 @@ import { TRACES_ENDPOINTS } from '@/utils/constants/endpoints';
  * @example
  * ```typescript
  * // Create a conversation with a trace ID
- * const conversation = await agent.conversations.create({
+ * const newConversation = await conversationalAgentService.conversations.create({
  *   agentReleaseId: 123,
  *   folderId: 456,
  *   traceId: 'my-trace-id'
  * });
  *
  * // Later, retrieve the trace spans
- * const spans = await agent.traces.getSpans('my-trace-id');
+ * const traceSpans = await conversationalAgentService.traces.getSpans('my-trace-id');
  *
  * // Analyze the spans
- * for (const span of spans) {
+ * for (const span of traceSpans) {
  *   console.log(`${span.Name}: ${span.Status}`);
- *   const attributes = JSON.parse(span.Attributes);
- *   console.log('Token usage:', attributes.tokenUsage);
+ *   const spanAttributes = JSON.parse(span.Attributes);
+ *   console.log('Token usage:', spanAttributes.tokenUsage);
  * }
  * ```
  */
-export class Traces extends BaseService implements TracesServiceModel {
+export class TraceService extends BaseService implements TraceServiceModel {
   constructor(instance: IUiPathSDK) {
     super(instance);
   }
@@ -63,16 +63,16 @@ export class Traces extends BaseService implements TracesServiceModel {
    *
    * @example
    * ```typescript
-   * const spans = await agent.traces.getSpans('550e8400-e29b-41d4-a716-446655440000');
+   * const traceSpans = await conversationalAgentService.traces.getSpans('550e8400-e29b-41d4-a716-446655440000');
    *
    * // Find spans with errors
-   * const errorSpans = spans.filter(s => s.Status === LlmOpsSpanStatus.Error);
+   * const errorSpans = traceSpans.filter(span => span.Status === LlmOpsSpanStatus.Error);
    *
    * // Calculate total duration
-   * const rootSpan = spans.find(s => !s.ParentId);
+   * const rootSpan = traceSpans.find(span => !span.ParentId);
    * if (rootSpan?.StartTime && rootSpan?.EndTime) {
-   *   const duration = new Date(rootSpan.EndTime).getTime() - new Date(rootSpan.StartTime).getTime();
-   *   console.log(`Total duration: ${duration}ms`);
+   *   const durationMs = new Date(rootSpan.EndTime).getTime() - new Date(rootSpan.StartTime).getTime();
+   *   console.log(`Total duration: ${durationMs}ms`);
    * }
    * ```
    */
