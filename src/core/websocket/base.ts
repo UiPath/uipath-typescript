@@ -210,7 +210,13 @@ export abstract class BaseWebSocket {
         // Use slice() for safe iteration if handler adds/removes handlers
         for (const handler of handlers.slice()) {
           try {
-            handler(data);
+            const result = handler(data);
+            // If handler returns a promise, catch any async errors
+            if (result instanceof Promise) {
+              result.catch((error) => {
+                this._logger.error(`Error in async ${event} callback:`, error);
+              });
+            }
           } catch (error) {
             this._logger.error(`Error in ${event} callback:`, error);
           }
