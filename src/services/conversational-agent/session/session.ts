@@ -11,7 +11,7 @@ import { BaseWebSocket } from '@/core/websocket';
 import type { LogLevel } from '@/core/websocket';
 import { SDKInternalsRegistry } from '@/core/internals';
 
-import { WEBSOCKET_HEADERS } from '@/utils/constants/endpoints';
+import { WEBSOCKET_HEADERS } from '@/utils/constants/headers';
 
 /**
  * Options for WebSocketSession
