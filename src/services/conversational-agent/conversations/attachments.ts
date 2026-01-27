@@ -62,7 +62,16 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
    *
    * @param conversationId - The id of the conversation that the attachment will be accessible within
    * @param fileName - The name of the file to initialize
-   * @returns The attachment creation response including URI, name, and access details for the client to perform the upload
+   * @returns Promise resolving to the attachment creation response including URI, name, and access details for the client to perform the upload
+   *
+   * @example
+   * ```typescript
+   * const initResult = await conversationalAgentService.conversations.attachments.initialize(
+   *   conversationId,
+   *   'document.pdf'
+   * );
+   * // Use initResult.fileUploadAccess to upload file content manually
+   * ```
    */
   @track('Attachments.Initialize')
   async initialize(
@@ -82,20 +91,24 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
    *
    * @param conversationId - The conversation to attach the file to
    * @param file - The file to upload
-   * @returns The attachment metadata with URI for referencing
+   * @returns Promise resolving to the attachment metadata with URI for referencing
+   *
+   * @example
+   * ```typescript
+   * const attachment = await conversationalAgentService.conversations.attachments.upload(
+   *   conversationId,
+   *   file
+   * );
+   * console.log(`Uploaded: ${attachment.uri}`);
+   * ```
    */
   @track('Attachments.Upload')
   async upload(
     conversationId: ConversationId,
     file: File
   ): Promise<AttachmentUploadResponse> {
-    // Step 1: Create attachment record and get upload URL
-    const createResponse = await this.post<AttachmentInitializeResponse>(
-      ATTACHMENT_ENDPOINTS.CREATE(conversationId),
-      { name: file.name }
-    );
-
-    const { fileUploadAccess, uri, name } = createResponse.data;
+    // Step 1: Initialize attachment and get upload URL
+    const { fileUploadAccess, uri, name } = await this.initialize(conversationId, file.name);
 
     // Step 2: Upload file to blob storage
     const uploadHeaders: Record<string, string> = {
@@ -106,6 +119,12 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
     fileUploadAccess.headers.keys.forEach((key, index) => {
       uploadHeaders[key] = fileUploadAccess.headers.values[index];
     });
+
+    // Add auth header if required by the storage endpoint
+    if (fileUploadAccess.requiresAuth) {
+      const token = await this.getValidAuthToken();
+      uploadHeaders['Authorization'] = `Bearer ${token}`;
+    }
 
     const uploadResponse = await fetch(fileUploadAccess.url, {
       method: fileUploadAccess.verb,

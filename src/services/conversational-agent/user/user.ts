@@ -52,6 +52,11 @@ import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
  * ```
  */
 export class UserService extends BaseService implements UserServiceModel {
+  /**
+   * Creates an instance of the User service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
   constructor(instance: IUiPathSDK) {
     super(instance);
   }
@@ -59,7 +64,7 @@ export class UserService extends BaseService implements UserServiceModel {
   /**
    * Gets the current user's profile and context settings
    *
-   * @returns User settings object containing profile information
+   * @returns Promise resolving to user settings object containing profile information
    *
    * @example
    * ```typescript
@@ -83,7 +88,7 @@ export class UserService extends BaseService implements UserServiceModel {
    * Omitting fields means no change.
    *
    * @param input - Fields to update
-   * @returns Updated user settings object
+   * @returns Promise resolving to updated user settings object
    *
    * @example
    * ```typescript
