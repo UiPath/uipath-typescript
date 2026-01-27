@@ -20,8 +20,8 @@ import {
   ToolCallInputValue,
   ToolCallOutputValue,
   ToolName
-} from './conversation-shared.types';
-import { UTCTimeStamp } from './conversation-event.types';
+} from './conversations-shared.types';
+import { UTCTimeStamp } from './conversations-events.types';
 
 /**
  * Represents the order in which items should be sorted.
