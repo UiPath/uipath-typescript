@@ -4,8 +4,8 @@
 
 import type {
   ConversationalAgent,
-  AgentRelease,
-  AgentReleaseWithAppearance,
+  AgentGetResponse,
+  AgentGetByIdResponse,
   Conversation,
   FeatureFlags,
   UserSettings,
@@ -67,13 +67,13 @@ export interface UIState {
 
 /** Agent state and actions */
 export interface AgentState {
-  agents: AgentRelease[];
-  selectedAgent: AgentRelease | null;
-  agentAppearance: AgentReleaseWithAppearance | null;
+  agents: AgentGetResponse[];
+  selectedAgent: AgentGetResponse | null;
+  agentAppearance: AgentGetByIdResponse | null;
   isLoading: boolean;
-  setAgents: (agents: AgentRelease[]) => void;
-  setSelectedAgent: (agent: AgentRelease | null) => void;
-  setAgentAppearance: (appearance: AgentReleaseWithAppearance | null) => void;
+  setAgents: (agents: AgentGetResponse[]) => void;
+  setSelectedAgent: (agent: AgentGetResponse | null) => void;
+  setAgentAppearance: (appearance: AgentGetByIdResponse | null) => void;
   setIsLoading: (loading: boolean) => void;
 }
 

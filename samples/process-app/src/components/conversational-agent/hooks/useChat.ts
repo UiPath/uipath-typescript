@@ -126,10 +126,9 @@ export function useChat() {
         // Handle session ending (server is closing the session)
         sessionHelper.onSessionEnding((event) => {
           console.log('[Events] Session ending:', event);
-          const reason = event.reason || 'Server ended the session';
           setMessages(prev => [...prev, {
             role: 'system',
-            content: `Session ending: ${reason}`,
+            content: `Session ending in ${event.timeToLiveMS}ms`,
             isError: true
           }]);
         });

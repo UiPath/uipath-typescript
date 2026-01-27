@@ -38,7 +38,7 @@ export function useAgents() {
     setError('');
 
     try {
-      const response = await conversationalAgentService.agents.getById(selectedAgent.folderId, selectedAgent.id);
+      const response = await conversationalAgentService.agents.getById(selectedAgent.id, selectedAgent.folderId);
       console.log('[Agent API] getById response:', response);
 
       setAgentAppearance(response);

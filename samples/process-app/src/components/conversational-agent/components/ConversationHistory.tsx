@@ -7,7 +7,7 @@ import { useConversations } from '../hooks';
 export function ConversationHistory() {
   const {
     conversationList, isLoading: isLoadingConversations,
-    listConversations, deleteConversation
+    listConversations, deleteConversation, loadConversation
   } = useConversations();
 
   return (
@@ -38,6 +38,9 @@ export function ConversationHistory() {
                 <tr key={conv.conversationId} className="border-t hover:bg-gray-50">
                   <td className="px-2 py-1">{conv.label || 'No label'}</td>
                   <td className="px-2 py-1">{new Date(conv.createdAt).toLocaleString()}</td>
+                  <td className="px-2 py-1">
+                    <button onClick={() => loadConversation(conv.conversationId)} className="text-red-600 hover:underline">Load</button>
+                  </td>
                   <td className="px-2 py-1">
                     <button onClick={() => deleteConversation(conv.conversationId)} className="text-red-600 hover:underline">Delete</button>
                   </td>

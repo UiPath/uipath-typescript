@@ -18,7 +18,7 @@ export function useExchanges() {
     try {
       const response = await conversationalAgentService.conversations.exchanges.getAll(
         conversation.conversationId,
-        { exchangeSort: 'descending', messageSort: 'ascending', limit: 10 }
+        { exchangeSort: 'descending', messageSort: 'ascending', pageSize: 10 }
       );
 
       console.log('[Exchange API] getAll response:', response);

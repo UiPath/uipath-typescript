@@ -6,8 +6,8 @@ import { createContext, useContext, useState, useCallback, useEffect, useMemo, u
 import { useAuth } from '../../../hooks/useAuth';
 import {
   ConversationalAgent,
-  type AgentRelease,
-  type AgentReleaseWithAppearance,
+  type AgentGetResponse,
+  type AgentGetByIdResponse,
   type Conversation,
   type FeatureFlags,
   type UserSettings,
@@ -47,9 +47,9 @@ export function ConversationalAgentProvider({ children }: { children: ReactNode 
   const [activeTab, setActiveTab] = useState<TabType>('chat');
 
   // Agent state
-  const [agents, setAgents] = useState<AgentRelease[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<AgentRelease | null>(null);
-  const [agentAppearance, setAgentAppearance] = useState<AgentReleaseWithAppearance | null>(null);
+  const [agents, setAgents] = useState<AgentGetResponse[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<AgentGetResponse | null>(null);
+  const [agentAppearance, setAgentAppearance] = useState<AgentGetByIdResponse | null>(null);
   const [isLoadingAgents, setIsLoadingAgents] = useState(false);
 
   // Conversation state

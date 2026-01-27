@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@uipath/uipath-typescript": "npm:@uipath/uipath-typescript-dev@^1.0.0-beta.1",
+    "@uipath/uipath-typescript": "file:../..",
     "path-browserify": "^1.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

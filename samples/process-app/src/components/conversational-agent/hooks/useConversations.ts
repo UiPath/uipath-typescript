@@ -52,7 +52,7 @@ export function useConversations() {
     try {
       const response = await conversationalAgentService.conversations.getAll({
         sort: 'descending',
-        limit: 20
+        pageSize: 20
       });
 
       console.log('[Conversation API] getAll response:', response);
@@ -112,8 +112,8 @@ export function useConversations() {
     setError('');
 
     try {
-      await conversationalAgentService.conversations.remove(conversationId);
-      console.log('[Conversation API] remove completed');
+      await conversationalAgentService.conversations.deleteById(conversationId);
+      console.log('[Conversation API] deleteById completed');
 
       setConversationList(prev => prev.filter(c => c.conversationId !== conversationId));
 
