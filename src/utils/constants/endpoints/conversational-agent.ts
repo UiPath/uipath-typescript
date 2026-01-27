@@ -75,10 +75,3 @@ export const FEATURE_ENDPOINTS = {
 export const TRACES_ENDPOINTS = {
   GET_SPANS: (traceId: string) => `${LLM_OPS_BASE}/api/Traces/spans?traceId=${traceId}`
 } as const;
-
-/**
- * WebSocket Events
- */
-export const WEBSOCKET_EVENTS = {
-  CONVERSATION_EVENT: 'ConversationEvent'
-} as const;
