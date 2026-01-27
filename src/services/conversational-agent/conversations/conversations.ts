@@ -9,7 +9,6 @@
 
 // Core SDK imports
 import type { IUiPathSDK } from '@/core/types';
-import { ValidationError } from '@/core/errors';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
@@ -85,6 +84,11 @@ export class ConversationService extends BaseService implements ConversationServ
   /** Attachment operations for conversations */
   public readonly attachments: AttachmentService;
 
+  /**
+   * Creates an instance of the Conversations service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
   constructor(instance: IUiPathSDK) {
     super(instance);
     this.exchanges = new ExchangeService(instance);
@@ -96,38 +100,31 @@ export class ConversationService extends BaseService implements ConversationServ
 
   /**
    * Creates a new conversation
+   *
+   * @param input - Conversation creation options including agentReleaseId and folderId
+   * @returns Promise resolving to the created conversation
    */
-  async create(input: CreateConversationInput): Promise<ConversationCreateResponse>;
-  /**
-   * Creates a new conversation with agent release and folder IDs
-   */
-  async create(agentReleaseId: number, folderId: number): Promise<ConversationCreateResponse>;
   @track('Conversations.Create')
-  async create(
-    inputOrAgentReleaseId: CreateConversationInput | number,
-    folderId?: number
-  ): Promise<ConversationCreateResponse> {
-    let body: CreateConversationInput;
-
-    if (typeof inputOrAgentReleaseId === 'object') {
-      body = inputOrAgentReleaseId;
-    } else {
-      if (folderId === undefined) {
-        throw new ValidationError({ message: 'folderId is required when not using options object' });
-      }
-      body = { agentReleaseId: inputOrAgentReleaseId, folderId };
-    }
-
-    const response = await this.post<ConversationCreateResponse>(CONVERSATION_ENDPOINTS.CREATE, body);
+  async create(input: CreateConversationInput): Promise<ConversationCreateResponse> {
+    const response = await this.post<ConversationCreateResponse>(CONVERSATION_ENDPOINTS.CREATE, input);
     return response.data;
   }
 
   /**
    * Gets a conversation by ID
+   *
+   * @param id - The conversation ID to retrieve
+   * @returns Promise resolving to the conversation details
+   *
+   * @example
+   * ```typescript
+   * const conversation = await conversationalAgentService.conversations.getById(conversationId);
+   * console.log(conversation.label, conversation.createdAt);
+   * ```
    */
   @track('Conversations.GetById')
-  async getById(conversationId: ConversationId): Promise<ConversationGetResponse> {
-    const response = await this.get<ConversationGetResponse>(CONVERSATION_ENDPOINTS.GET(conversationId));
+  async getById(id: ConversationId): Promise<ConversationGetResponse> {
+    const response = await this.get<ConversationGetResponse>(CONVERSATION_ENDPOINTS.GET(id));
     return response.data;
   }
 
@@ -184,26 +181,46 @@ export class ConversationService extends BaseService implements ConversationServ
 
   /**
    * Updates a conversation
+   *
+   * @param id - The conversation ID to update
+   * @param input - Update fields (label)
+   * @returns Promise resolving to the updated conversation
+   *
+   * @example
+   * ```typescript
+   * const updatedConversation = await conversationalAgentService.conversations.update(
+   *   conversationId,
+   *   { label: 'New conversation title' }
+   * );
+   * ```
    */
   @track('Conversations.Update')
   async update(
-    conversationId: ConversationId,
+    id: ConversationId,
     input: UpdateConversationInput
   ): Promise<ConversationGetResponse> {
     const response = await this.patch<ConversationGetResponse>(
-      CONVERSATION_ENDPOINTS.UPDATE(conversationId),
+      CONVERSATION_ENDPOINTS.UPDATE(id),
       input
     );
     return response.data;
   }
 
   /**
-   * Deletes a conversation
+   * Deletes a conversation by ID
+   *
+   * @param id - The conversation ID to delete
+   * @returns Promise resolving to the delete response
+   *
+   * @example
+   * ```typescript
+   * await conversationalAgentService.conversations.deleteById(conversationId);
+   * ```
    */
-  @track('Conversations.Remove')
-  async remove(conversationId: ConversationId): Promise<ConversationDeleteResponse> {
-    const response = await super.delete<ConversationDeleteResponse>(
-      CONVERSATION_ENDPOINTS.DELETE(conversationId)
+  @track('Conversations.DeleteById')
+  async deleteById(id: ConversationId): Promise<ConversationDeleteResponse> {
+    const response = await this.delete<ConversationDeleteResponse>(
+      CONVERSATION_ENDPOINTS.DELETE(id)
     );
     return response.data;
   }

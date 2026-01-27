@@ -33,7 +33,7 @@ import { AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
  * const folderAgents = await conversationalAgentService.agents.getAll(folderId);
  *
  * // Get a specific agent release with appearance configuration
- * const agentDetails = await conversationalAgentService.agents.getById(folderId, agentReleaseId);
+ * const agentDetails = await conversationalAgentService.agents.getById(agentReleaseId, folderId);
  * ```
  */
 export class AgentService extends BaseService implements AgentServiceModel {
@@ -46,10 +46,22 @@ export class AgentService extends BaseService implements AgentServiceModel {
   }
 
   /**
-   * Gets all conversational agents
+   * Gets all available conversational agents
    *
-   * @param folderId - Optional folder ID to filter agents
-   * @returns List of agents
+   * Returns a list of agent releases that are available for creating conversations.
+   * When a folder ID is provided, only agents in that folder are returned.
+   *
+   * @param folderId - Optional folder ID to filter agents by folder
+   * @returns Promise resolving to an array of available agent releases
+   *
+   * @example
+   * ```typescript
+   * // Get all available agents
+   * const agents = await conversationalAgent.agents.getAll();
+   *
+   * // Get agents in a specific folder
+   * const folderAgents = await conversationalAgent.agents.getAll(123);
+   * ```
    */
   @track('Agents.GetAll')
   async getAll(folderId?: number): Promise<AgentGetResponse[]> {
@@ -60,15 +72,24 @@ export class AgentService extends BaseService implements AgentServiceModel {
   }
 
   /**
-   * Gets a conversational agent by ID
+   * Gets a specific conversational agent by ID
    *
-   * @param folderId - Folder ID containing the agent
-   * @param agentId - Agent ID
-   * @returns Agent with appearance configuration
+   * Returns detailed information about an agent release, including its
+   * appearance configuration (name, description, avatar, suggested prompts).
+   *
+   * @param id - ID of the agent release to retrieve
+   * @param folderId - ID of the folder containing the agent
+   * @returns Promise resolving to the agent details including appearance configuration
+   *
+   * @example
+   * ```typescript
+   * const agent = await conversationalAgent.agents.getById(456, 123);
+   * console.log(agent.name, agent.appearance?.suggestedPrompts);
+   * ```
    */
   @track('Agents.GetById')
-  async getById(folderId: number, agentId: number): Promise<AgentGetByIdResponse> {
-    const response = await this.get<AgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, agentId));
+  async getById(id: number, folderId: number): Promise<AgentGetByIdResponse> {
+    const response = await this.get<AgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
     return response.data;
   }
 }
