@@ -1,5 +1,5 @@
 /**
- * Message operations for Conversations
+ * MessageService - Message operations for Conversations
  *
  * Messages are the individual turns within an exchange. Each exchange typically
  * contains a user message (the prompt) and an assistant message (the response).
@@ -19,8 +19,8 @@ import type {
   ExchangeId,
   Message,
   MessageId,
-  MessageOperationsServiceModel
-} from '@/models/conversational';
+  MessageServiceModel
+} from '@/models/conversational-agent';
 
 // Utils
 import { MESSAGE_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -30,7 +30,7 @@ import {
   ContentPartHelper,
   transformMessage,
   type MessageWithHelpers
-} from '../helpers';
+} from '@/services/conversational-agent/helpers';
 
 /**
  * Service for message operations within a conversation
@@ -41,18 +41,18 @@ import {
  * @example
  * ```typescript
  * // Get a specific message
- * const message = await conversations.messages.getById(
+ * const messageDetails = await conversationalAgentService.conversations.messages.getById(
  *   conversationId,
  *   exchangeId,
  *   messageId
  * );
  *
  * // Access content via helpers
- * const textContent = message.getTextContent();
- * const toolCalls = message.getToolCalls();
+ * const messageText = messageDetails.getTextContent();
+ * const messageToolCalls = messageDetails.getToolCalls();
  *
  * // Get external content part data
- * const contentPart = await conversations.messages.getContentPart(
+ * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPart(
  *   conversationId,
  *   exchangeId,
  *   messageId,
@@ -60,9 +60,9 @@ import {
  * );
  * ```
  */
-export class MessageOperations extends BaseService implements MessageOperationsServiceModel {
+export class MessageService extends BaseService implements MessageServiceModel {
   /**
-   * Creates a new MessageOperations instance
+   * Creates a new MessageService instance
    * @param instance - UiPath SDK instance
    */
   constructor(instance: IUiPathSDK) {
@@ -83,20 +83,20 @@ export class MessageOperations extends BaseService implements MessageOperationsS
    *
    * @example
    * ```typescript
-   * const message = await conversations.messages.getById(
+   * const messageDetails = await conversationalAgentService.conversations.messages.getById(
    *   conversationId,
    *   exchangeId,
    *   messageId
    * );
    *
    * // Get all text content concatenated
-   * const text = message.getTextContent();
+   * const messageText = messageDetails.getTextContent();
    *
    * // Get tool calls from the message
-   * const toolCalls = message.getToolCalls();
+   * const messageToolCalls = messageDetails.getToolCalls();
    *
    * // Get citations for verification
-   * const citations = message.getCitations();
+   * const messageCitations = messageDetails.getCitations();
    * ```
    */
   @track('Messages.GetById')
@@ -131,7 +131,7 @@ export class MessageOperations extends BaseService implements MessageOperationsS
    * @example
    * ```typescript
    * // Get an external content part (file/attachment)
-   * const contentPart = await conversations.messages.getContentPart(
+   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPart(
    *   conversationId,
    *   exchangeId,
    *   messageId,
@@ -139,8 +139,8 @@ export class MessageOperations extends BaseService implements MessageOperationsS
    * );
    *
    * // Check if it's external before fetching
-   * if (contentPart.isExternal()) {
-   *   const data = contentPart.getData();
+   * if (contentPartDetails.isExternal()) {
+   *   const contentData = contentPartDetails.getData();
    * }
    * ```
    */

@@ -1,5 +1,5 @@
 /**
- * ConversationalAgent - Main entry point for Conversational Agent functionality
+ * ConversationalAgentService - Main entry point for Conversational Agent functionality
  *
  * Provides access to:
  * - Agents: List available agent releases
@@ -16,24 +16,24 @@ import type { ConnectionStatusChangedHandler, LogLevel } from '@/core/websocket'
 import { BaseService } from '@/services/base';
 
 // Models
-import type { ConversationalAgentServiceModel, FeatureFlags } from '@/models/conversational';
+import type { ConversationalAgentServiceModel, FeatureFlags } from '@/models/conversational-agent';
 
 // Utils
-import { UTILITY_ENDPOINTS } from '@/utils/constants/endpoints';
+import { FEATURE_ENDPOINTS } from '@/utils/constants/endpoints';
 
 // Local imports
-import { Agents } from './agents';
-import { Conversations } from './conversations';
+import { AgentService } from './agents';
+import { ConversationService } from './conversations';
 import {
   ConversationEventHelperManagerImpl,
   type ConversationEventHelperManager
 } from './helpers';
 import { SessionManager } from './session';
-import { Traces } from './traces';
-import { User } from './user';
+import { TraceService } from './traces';
+import { UserService } from './user';
 
 /**
- * Options for ConversationalAgent when using modular pattern
+ * Options for ConversationalAgentService when using modular pattern
  */
 export interface ConversationalAgentOptions {
   /** External User ID (optional) */
@@ -43,7 +43,7 @@ export interface ConversationalAgentOptions {
 }
 
 /**
- * ConversationalAgent - Main entry point for Conversational Agent functionality
+ * ConversationalAgentService - Main entry point for Conversational Agent functionality
  *
  * @example
  * ```typescript
@@ -59,27 +59,27 @@ export interface ConversationalAgentOptions {
  * });
  * await sdk.initialize();
  *
- * const agent = new ConversationalAgent(sdk);
+ * const conversationalAgentService = new ConversationalAgent(sdk);
  *
  * // HTTP Operations
- * const agentList = await agent.agents.getAll();
- * const conversation = await agent.conversations.create({
- *   agentReleaseId: agentList[0].id,
- *   folderId: agentList[0].folderId
+ * const availableAgents = await conversationalAgentService.agents.getAll();
+ * const newConversation = await conversationalAgentService.conversations.create({
+ *   agentReleaseId: availableAgents[0].id,
+ *   folderId: availableAgents[0].folderId
  * });
  *
  * // Get exchanges for a conversation
- * const exchanges = await agent.conversations.exchanges.getAll(conversationId);
+ * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
  *
  * // WebSocket Operations (connection is managed automatically)
- * agent.events.onSession((session) => {
+ * conversationalAgentService.events.onSession((session) => {
  *   session.onExchangeStart((exchange) => {
  *     console.log('Exchange:', exchange.exchangeId);
  *   });
  * });
  * ```
  */
-export class ConversationalAgent extends BaseService implements ConversationalAgentServiceModel {
+export class ConversationalAgentService extends BaseService implements ConversationalAgentServiceModel {
   /** Session manager for WebSocket lifecycle */
   private _sessionManager: SessionManager;
 
@@ -87,19 +87,19 @@ export class ConversationalAgent extends BaseService implements ConversationalAg
   private _eventHelper: ConversationEventHelperManagerImpl | null = null;
 
   /** Service for listing available conversational agents */
-  public readonly agents: Agents;
+  public readonly agents: AgentService;
 
   /** Service for conversation operations including exchanges, messages, and attachments */
-  public readonly conversations: Conversations;
+  public readonly conversations: ConversationService;
 
   /** Service for user profile and context settings management */
-  public readonly user: User;
+  public readonly user: UserService;
 
   /** Service for LLM operations tracing and observability */
-  public readonly traces: Traces;
+  public readonly traces: TraceService;
 
   /**
-   * Create a ConversationalAgent instance
+   * Create a ConversationalAgentService instance
    *
    * @param instance - UiPath SDK instance
    * @param options - Optional configuration (externalUserId, logLevel)
@@ -108,10 +108,10 @@ export class ConversationalAgent extends BaseService implements ConversationalAg
     super(instance);
 
     // Create HTTP services
-    this.agents = new Agents(instance);
-    this.conversations = new Conversations(instance);
-    this.user = new User(instance);
-    this.traces = new Traces(instance);
+    this.agents = new AgentService(instance);
+    this.conversations = new ConversationService(instance);
+    this.user = new UserService(instance);
+    this.traces = new TraceService(instance);
 
     // Create session manager for WebSocket operations
     this._sessionManager = new SessionManager(instance, options);
@@ -212,7 +212,7 @@ export class ConversationalAgent extends BaseService implements ConversationalAg
    *
    * @example
    * ```typescript
-   * const flags = await agent.getFeatureFlags();
+   * const flags = await conversationalAgentService.getFeatureFlags();
    * if (flags.audioStreamingEnabled) {
    *   // Enable audio UI features
    * }
@@ -222,7 +222,7 @@ export class ConversationalAgent extends BaseService implements ConversationalAg
    * ```
    */
   async getFeatureFlags(): Promise<FeatureFlags> {
-    const response = await this.get<FeatureFlags>(UTILITY_ENDPOINTS.FEATURE_FLAGS);
+    const response = await this.get<FeatureFlags>(FEATURE_ENDPOINTS.FEATURE_FLAGS);
     return response.data;
   }
 }
