@@ -20,10 +20,11 @@ import type {
   ConversationDeleteResponse,
   ConversationGetResponse,
   ConversationServiceModel,
-  CreateConversationInput,
+  CreateConversationOptions,
   ConversationGetAllOptions,
-  UpdateConversationInput
+  UpdateConversationOptions
 } from '@/models/conversational-agent';
+import { ConversationMap } from '@/models/conversational-agent';
 
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
@@ -31,6 +32,7 @@ import { CONVERSATION_ENDPOINTS } from '@/utils/constants/endpoints';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
+import { transformData } from '@/utils/transform';
 
 // Local imports
 import { AttachmentService } from './attachments';
@@ -101,13 +103,13 @@ export class ConversationService extends BaseService implements ConversationServ
   /**
    * Creates a new conversation
    *
-   * @param input - Conversation creation options including agentReleaseId and folderId
+   * @param options - Conversation creation options including agentReleaseId and folderId
    * @returns Promise resolving to the created conversation
    */
   @track('Conversations.Create')
-  async create(input: CreateConversationInput): Promise<ConversationCreateResponse> {
-    const response = await this.post<ConversationCreateResponse>(CONVERSATION_ENDPOINTS.CREATE, input);
-    return response.data;
+  async create(options: CreateConversationOptions): Promise<ConversationCreateResponse> {
+    const response = await this.post<ConversationCreateResponse>(CONVERSATION_ENDPOINTS.CREATE, options);
+    return transformData(response.data, ConversationMap) as ConversationCreateResponse;
   }
 
   /**
@@ -125,7 +127,7 @@ export class ConversationService extends BaseService implements ConversationServ
   @track('Conversations.GetById')
   async getById(id: ConversationId): Promise<ConversationGetResponse> {
     const response = await this.get<ConversationGetResponse>(CONVERSATION_ENDPOINTS.GET(id));
-    return response.data;
+    return transformData(response.data, ConversationMap) as ConversationGetResponse;
   }
 
   /**
@@ -163,9 +165,14 @@ export class ConversationService extends BaseService implements ConversationServ
       ? PaginatedResponse<Conversation>
       : NonPaginatedResponse<Conversation>
   > {
+    // Transform function to convert API timestamps to SDK naming convention
+    const transformFn = (conversation: Conversation) =>
+      transformData(conversation, ConversationMap) as Conversation;
+
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => CONVERSATION_ENDPOINTS.LIST,
+      transformFn,
       pagination: {
         paginationType: PaginationType.TOKEN,
         itemsField: CONVERSATIONAL_PAGINATION.ITEMS_FIELD,
@@ -183,7 +190,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * Updates a conversation
    *
    * @param id - The conversation ID to update
-   * @param input - Update fields (label)
+   * @param options - Update fields (label)
    * @returns Promise resolving to the updated conversation
    *
    * @example
@@ -197,13 +204,13 @@ export class ConversationService extends BaseService implements ConversationServ
   @track('Conversations.Update')
   async update(
     id: ConversationId,
-    input: UpdateConversationInput
+    options: UpdateConversationOptions
   ): Promise<ConversationGetResponse> {
     const response = await this.patch<ConversationGetResponse>(
       CONVERSATION_ENDPOINTS.UPDATE(id),
-      input
+      options
     );
-    return response.data;
+    return transformData(response.data, ConversationMap) as ConversationGetResponse;
   }
 
   /**
