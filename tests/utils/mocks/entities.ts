@@ -3,15 +3,16 @@
  * Uses generic utilities from core.ts for base functionality
  */
 
-import { 
-  EntityType, 
-  EntityFieldDataType, 
+import {
+  EntityType,
+  EntityFieldDataType,
   ReferenceType,
   FieldDisplayType,
   DataDirectionType,
-  RawEntityGetResponse, 
+  RawEntityGetResponse,
   EntityRecord,
   EntityInsertResponse,
+  EntityBatchInsertResponse,
   EntityUpdateResponse,
   EntityDeleteResponse
 } from '../../../src/models/data-fabric/entities.types';
@@ -291,31 +292,68 @@ export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord 
 };
 
 /**
- * Creates a mock EntityInsertResponse that echoes back the request data with generated IDs
+ * Creates a mock single insert response that echoes back the request data with a generated record ID
+ * This is for the /insert endpoint which inserts a single record
+ * @param requestData - Single record being inserted
+ * @param options - Optional: expansionLevel to expand reference fields
+ * @returns Mock EntityInsertResponse (the inserted record with generated record ID)
+ *
+ * @example
+ * // Basic insert
+ * const response = createMockSingleInsertResponse({ name: 'John', age: 30 });
+ * // Returns: { name: 'John', age: 30, id: 'generated-id-1' }
+ *
+ * // With expansion level - reference fields are expanded
+ * const response = createMockSingleInsertResponse(
+ *   { name: 'John', recordOwner: 'user-id-123' },
+ *   { expansionLevel: 1 }
+ * );
+ * // Returns: { name: 'John', recordOwner: { id: 'user-id-123' }, id: 'generated-id-1' }
+ */
+export const createMockSingleInsertResponse = (
+  requestData: Record<string, any>,
+  options?: { expansionLevel?: number }
+): EntityInsertResponse => {
+  let result: EntityInsertResponse = {
+    ...requestData,
+    id: 'generated-id-1'
+  };
+
+  // If expansionLevel is specified, expand reference fields in the response
+  if (options?.expansionLevel && options.expansionLevel > 0) {
+    result = expandRecordReferenceFields(result);
+  }
+
+  return result;
+};
+
+/**
+ * Creates a mock EntityBatchInsertResponse that echoes back the request data with generated record IDs
+ * This is for the /insert-batch endpoint which inserts multiple records
  * @param requestData - Array of records being inserted
  * @param options - Optional: successCount to control partial failures, expansionLevel to expand reference fields
- * @returns Mock EntityInsertResponse
- * 
+ * @returns Mock EntityBatchInsertResponse
+ *
  * @example
  * // All records succeed
  * const response = createMockInsertResponse([
  *   { name: 'John', age: 30 },
  *   { name: 'Jane', age: 25 }
  * ]);
- * // Returns: { 
+ * // Returns: {
  * //   successRecords: [
  * //     { name: 'John', age: 30, id: 'generated-id-1' },
  * //     { name: 'Jane', age: 25, id: 'generated-id-2' }
  * //   ],
  * //   failureRecords: []
  * // }
- * 
+ *
  * // Partial failure - first record succeeds, second fails
  * const response = createMockInsertResponse(
  *   [{ name: 'Valid' }, { name: 'Invalid', age: null }],
  *   { successCount: 1 }
  * );
- * 
+ *
  * // With expansion level - reference fields are expanded
  * const response = createMockInsertResponse(
  *   [{ name: 'John', recordOwner: 'user-id-123' }],
@@ -326,7 +364,7 @@ export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord 
 export const createMockInsertResponse = (
   requestData: Record<string, any>[],
   options?: { successCount?: number; expansionLevel?: number }
-): EntityInsertResponse => {
+): EntityBatchInsertResponse => {
   const successCount = options?.successCount ?? requestData.length;
   
   let successRecords = requestData.slice(0, successCount).map((record, i) => ({
