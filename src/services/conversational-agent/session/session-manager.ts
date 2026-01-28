@@ -33,7 +33,7 @@ export class SessionManager {
   private _sessionSockets: Map<ConversationId, Socket> = new Map();
 
   /** Reverse mapping: Socket -> Set of conversation IDs using it */
-  private _socketToConversations: WeakMap<Socket, Set<ConversationId>> = new WeakMap();
+  private _socketToConversations: Map<Socket, Set<ConversationId>> = new Map();
 
   /** Event dispatcher for routing events to handlers */
   private _eventDispatcher: EventDispatcher | null = null;
@@ -179,6 +179,8 @@ export class SessionManager {
               });
             }
           }
+          // Clean up the reverse mapping to prevent memory leaks
+          this._socketToConversations.delete(capturedSocket);
         });
       }
     }

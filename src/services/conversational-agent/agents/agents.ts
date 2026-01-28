@@ -9,9 +9,11 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type { AgentGetResponse, AgentGetByIdResponse, AgentServiceModel } from '@/models/conversational-agent';
+import { AgentMap } from '@/models/conversational-agent';
 
 // Utils
 import { AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
+import { transformData } from '@/utils/transform';
 
 /**
  * Service for listing available conversational agents
@@ -57,18 +59,18 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * @example
    * ```typescript
    * // Get all available agents
-   * const agents = await conversationalAgent.agents.getAll();
+   * const agents = await conversationalAgentService.agents.getAll();
    *
    * // Get agents in a specific folder
-   * const folderAgents = await conversationalAgent.agents.getAll(123);
+   * const folderAgents = await conversationalAgentService.agents.getAll(123);
    * ```
    */
-  @track('Agents.GetAll')
+  @track('ConversationalAgents.GetAll')
   async getAll(folderId?: number): Promise<AgentGetResponse[]> {
     const response = await this.get<AgentGetResponse[]>(AGENT_ENDPOINTS.LIST, {
       params: folderId !== undefined ? { folderId } : undefined,
     });
-    return response.data;
+    return response.data.map((agent) => transformData(agent, AgentMap) as AgentGetResponse);
   }
 
   /**
@@ -83,13 +85,13 @@ export class AgentService extends BaseService implements AgentServiceModel {
    *
    * @example
    * ```typescript
-   * const agent = await conversationalAgent.agents.getById(456, 123);
+   * const agent = await conversationalAgentService.agents.getById(456, 123);
    * console.log(agent.name, agent.appearance?.suggestedPrompts);
    * ```
    */
-  @track('Agents.GetById')
+  @track('ConversationalAgents.GetById')
   async getById(id: number, folderId: number): Promise<AgentGetByIdResponse> {
     const response = await this.get<AgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
-    return response.data;
+    return transformData(response.data, AgentMap) as AgentGetByIdResponse;
   }
 }

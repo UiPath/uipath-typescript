@@ -27,9 +27,9 @@ import { MESSAGE_ENDPOINTS } from '@/utils/constants/endpoints';
 
 // Local imports
 import {
-  ContentPartHelper,
+  ContentPartGetResponse,
   transformMessage,
-  type MessageWithHelpers
+  type MessageGetResponse
 } from '@/services/conversational-agent/helpers';
 
 /**
@@ -52,7 +52,7 @@ import {
  * const messageToolCalls = messageDetails.getToolCalls();
  *
  * // Get external content part data
- * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPart(
+ * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
  *   conversationId,
  *   exchangeId,
  *   messageId,
@@ -73,7 +73,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * Gets a message by ID
    *
    * Retrieves a specific message including all its content parts.
-   * Returns a MessageWithHelpers object that provides convenient methods
+   * Returns a MessageGetResponse object that provides convenient methods
    * for accessing text content, tool calls, citations, and more.
    *
    * @param conversationId - The conversation containing the message
@@ -104,7 +104,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
     conversationId: ConversationId,
     exchangeId: ExchangeId,
     messageId: MessageId
-  ): Promise<MessageWithHelpers> {
+  ): Promise<MessageGetResponse> {
     const result = await this.get<Message>(
       MESSAGE_ENDPOINTS.GET(conversationId, exchangeId, messageId)
     );
@@ -125,13 +125,13 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * @param exchangeId - The exchange containing the content
    * @param messageId - The message containing the content part
    * @param contentPartId - The content part ID to retrieve
-   * @returns Promise resolving to a ContentPartHelper for accessing the data
+   * @returns Promise resolving to a ContentPartGetResponse for accessing the data
    * @throws {NetworkError} 404 if the content part is inline (not external)
    *
    * @example
    * ```typescript
    * // Get an external content part (file/attachment)
-   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPart(
+   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
    *   conversationId,
    *   exchangeId,
    *   messageId,
@@ -144,17 +144,17 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * }
    * ```
    */
-  @track('Messages.GetContentPart')
-  async getContentPart(
+  @track('Messages.GetContentPartById')
+  async getContentPartById(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
     messageId: MessageId,
     contentPartId: ContentPartId
-  ): Promise<ContentPartHelper> {
+  ): Promise<ContentPartGetResponse> {
     const result = await this.get<ContentPart>(
       MESSAGE_ENDPOINTS.GET_CONTENT_PART(conversationId, exchangeId, messageId, contentPartId)
     );
 
-    return new ContentPartHelper(result.data);
+    return new ContentPartGetResponse(result.data);
   }
 }

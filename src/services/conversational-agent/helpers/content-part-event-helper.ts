@@ -313,7 +313,7 @@ export class ContentPartEventHelperImpl extends ContentPartEventHelper {
       startContentPart: {
         mimeType: contentPart.mimeType,
         ...(contentPart.isTranscript !== undefined ? { metaData: { isTranscript: contentPart.isTranscript } } : {}),
-        timestamp: contentPart.createdAt,
+        timestamp: contentPart.createdTime,
         ...(isExternalValue(contentPart.data) ? { externalValue: contentPart.data } : {})
       }
     };
