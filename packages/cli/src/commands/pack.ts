@@ -6,9 +6,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
-import { AppConfig } from '../types/index.js';
 import { MESSAGES, CONFIG_FILE_NAME } from '../constants/messages.js';
-import { AUTH_CONSTANTS } from '../constants/index.js';
+import { AppConfig, SdkConfig } from '../types/index.js';
+import { AUTH_CONSTANTS, DEFAULT_APP_VERSION } from '../constants/index.js';
 import { isValidAppName } from '../utils/env-config.js';
 import { track } from '../telemetry/index.js';
 
@@ -40,7 +40,7 @@ export default class Pack extends Command {
     version: Flags.string({
       char: 'v',
       description: 'Package version (semantic version)',
-      default: '1.0.0',
+      default: DEFAULT_APP_VERSION,
     }),
     output: Flags.string({
       char: 'o',
@@ -68,6 +68,10 @@ export default class Pack extends Command {
       description: 'Show what would be packaged without creating the package',
       default: false,
     }),
+    'reuse-client': Flags.boolean({
+      description: 'Reuse existing clientId from uipath.json instead of letting UiPath create a new one',
+      default: false,
+    }),
   };
 
   @track('Pack')
@@ -93,15 +97,22 @@ export default class Pack extends Command {
 
     // Try to load saved app config
     const appConfig = await this.loadAppConfig();
-    
+
+    // Show info message about scope only for new apps (not version upgrades)
+    // Version upgrades are indicated by a non-default version flag
+    const isVersionUpgrade = flags.version !== DEFAULT_APP_VERSION;
+    if (!isVersionUpgrade && sdkConfig.clientId?.trim() && !sdkConfig.scope?.trim()) {
+      this.log(chalk.blue(MESSAGES.INFO.SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES));
+    }
+
     // Get package name and version
     let packageName = flags.name;
     let version = flags.version;
     
     if (appConfig && !flags.name) {
-      // Use saved app name if not provided via flag
-      packageName = appConfig.appName;
+
       this.log(chalk.green(`Using app name: ${packageName}`));
+
     } else if (!flags.name) {
       // No saved config and no flag, so prompt
       packageName = await this.promptForPackageName();
@@ -124,6 +135,26 @@ export default class Pack extends Command {
     // Get package description
     const description = flags.description || await this.promptForDescription(packageName);
 
+    // Determine if we should reuse the existing clientId
+    let reuseClient = flags['reuse-client'];
+
+    if (!reuseClient && sdkConfig.clientId?.trim()) {
+      if (isVersionUpgrade) {
+        // For version upgrades, always reuse existing clientId - publish API handles it
+        reuseClient = true;
+      } else {
+        // For new apps, ask user if they want to create new or reuse existing
+        const response = await inquirer.prompt([{
+          type: 'confirm',
+          name: 'createNew',
+          message: MESSAGES.PROMPTS.REUSE_CLIENT_ID,
+          default: false,
+        }]);
+        // Y = create new (don't reuse), N = reuse existing
+        reuseClient = !response.createNew;
+      }
+    }
+
     const packageConfig = {
       distDir,
       name: sanitizedName,
@@ -134,6 +165,7 @@ export default class Pack extends Command {
       mainFile: flags['main-file'],
       contentType: flags['content-type'],
       outputDir: flags.output,
+      reuseClient,
       sdkConfig,
     };
     
@@ -193,31 +225,37 @@ export default class Pack extends Command {
     return files.length > 0;
   }
 
-  private async loadOrCreateSdkConfig(): Promise<Record<string, unknown> | null> {
-    const configPath = path.join(process.cwd(), CONFIG_FILE_NAME);
+  private async loadOrCreateSdkConfig(): Promise<SdkConfig | null> {
+    const configPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.SDK_CONFIG);
 
     if (fs.existsSync(configPath)) {
-      // Load existing config
-      let config: Record<string, unknown>;
-      try {
-        const content = fs.readFileSync(configPath, 'utf-8');
-        config = JSON.parse(content);
-      } catch {
-        this.log(chalk.red(MESSAGES.ERRORS.CONFIG_FILE_INVALID_JSON));
-        return null;
-      }
+      return this.loadSdkConfig(configPath);
+    }
+    return this.createSdkConfig(configPath);
+  }
 
-      if (!config.scope) {
-        this.log(chalk.red(MESSAGES.ERRORS.CONFIG_FILE_MISSING_SCOPE));
-        this.log(chalk.dim('  The scope field is required for OAuth client creation during deployment.'));
-        return null;
-      }
-
-      return config;
+  private loadSdkConfig(configPath: string): SdkConfig | null {
+    let config: SdkConfig;
+    try {
+      const content = fs.readFileSync(configPath, 'utf-8');
+      config = JSON.parse(content);
+    } catch {
+      this.log(chalk.red(MESSAGES.ERRORS.CONFIG_FILE_INVALID_JSON));
+      return null;
     }
 
-    // uipath.json doesn't exist - prompt for scopes and create it
-    this.log(chalk.yellow(`⚠️  ${CONFIG_FILE_NAME} not found in project root.`));
+    // Scope is only required when clientId is NOT provided
+    if (!config.clientId?.trim() && !config.scope?.trim()) {
+      this.log(chalk.red(MESSAGES.ERRORS.CONFIG_FILE_MISSING_SCOPE));
+      this.log(chalk.dim(`  ${MESSAGES.ERRORS.CONFIG_FILE_SCOPE_REQUIRED_HINT}`));
+      return null;
+    }
+
+    return config;
+  }
+
+  private async createSdkConfig(configPath: string): Promise<SdkConfig | null> {
+    this.log(chalk.yellow(MESSAGES.INFO.CONFIG_FILE_NOT_FOUND_WARNING));
 
     const response = await inquirer.prompt([{
       type: 'input',
@@ -225,14 +263,13 @@ export default class Pack extends Command {
       message: MESSAGES.PROMPTS.ENTER_SCOPES,
       validate: (input: string) => {
         if (!input.trim()) {
-          return 'Scope is required for OAuth client creation during deployment.';
+          return MESSAGES.ERRORS.SCOPE_VALIDATION_ERROR;
         }
         return true;
       },
     }]);
 
-    // Create uipath.json with empty placeholders
-    const config: Record<string, string> = {
+    const config: SdkConfig = {
       scope: response.scope.trim(),
       clientId: '',
       orgName: '',
@@ -241,11 +278,26 @@ export default class Pack extends Command {
       redirectUri: '',
     };
 
-    // Save to project root
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     this.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_CREATED));
 
     return config;
+  }
+
+  private copyConfigToDistDirectory(config: { distDir: string; reuseClient: boolean; sdkConfig: SdkConfig }): void {
+    const configDest = path.join(config.distDir, AUTH_CONSTANTS.FILES.SDK_CONFIG);
+    const configToWrite: SdkConfig = { ...config.sdkConfig };
+
+    if (!config.reuseClient) {
+      // Clear clientId so UiPath creates a new OAuth client during deployment
+      configToWrite.clientId = '';
+      this.log(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_CLEARED));
+    } else if (config.sdkConfig.clientId) {
+      this.log(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_REUSED));
+    }
+
+    fs.writeFileSync(configDest, JSON.stringify(configToWrite, null, 2));
+    this.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_INCLUDED));
   }
 
   private sanitizePackageName(name: string): string {
@@ -292,13 +344,8 @@ export default class Pack extends Command {
         this.log(chalk.dim(`${MESSAGES.INFO.CREATED_OUTPUT_DIRECTORY} ${config.outputDir}`));
       }
 
-      // Copy uipath.json to dist directory
-      // Clear clientId - server handles OAuth client creation/reuse during deployment
-      const configDest = path.join(config.distDir, CONFIG_FILE_NAME);
-      const configToWrite = { ...config.sdkConfig, clientId: '' };
-
-      fs.writeFileSync(configDest, JSON.stringify(configToWrite, null, 2));
-      this.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_INCLUDED));
+      // Copy uipath.json to dist directory (with clientId handling)
+      this.copyConfigToDistDirectory(config);
 
       // Create metadata files in dist directory
       spinner.text = MESSAGES.INFO.CREATING_METADATA_FILES;
