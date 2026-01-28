@@ -1,5 +1,5 @@
 /**
- * ContentPartHelper - Helper class for ContentPart with convenience methods
+ * ContentPartGetResponse - Response class for ContentPart with convenience methods
  */
 
 import type {
@@ -11,7 +11,7 @@ import type {
 import { isExternalValue, isInlineValue } from './conversation-type-util';
 
 /**
- * Helper class that wraps ContentPart with convenience methods
+ * Response class that wraps ContentPart with convenience methods
  * for accessing inline/external data.
  */
 export class ContentPartHelper implements ContentPartGetResponse {
