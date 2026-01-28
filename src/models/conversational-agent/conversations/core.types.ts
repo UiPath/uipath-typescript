@@ -329,7 +329,7 @@ export interface Conversation {
   /**
    * A globally unique identifier for the conversation.
    */
-  conversationId: ConversationId;
+  id: ConversationId;
   /**
    * Timestamp indicating when the conversation was created.
    */
