@@ -21,7 +21,7 @@ export interface AgentAppearance {
 }
 
 /**
- * Response for getting all agents - agent release information from v1 Agent API
+ * Response for getting all agents
  */
 export interface AgentGetResponse {
   /** Unique ID of the agent release */
@@ -34,12 +34,12 @@ export interface AgentGetResponse {
   processVersion: string;
   /** Process key identifier */
   processKey: string;
-  /** Folder ID (organization unit) */
+  /** Folder ID */
   folderId: number;
   /** Feed ID */
   feedId: string;
   /** Creation timestamp */
-  createdAt?: string;
+  createdTime?: string;
 }
 
 /**
