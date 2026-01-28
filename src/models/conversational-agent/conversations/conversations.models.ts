@@ -1,10 +1,10 @@
-import type { Conversation } from '@/models/conversational-agent/conversations-api.types';
+import type { Conversation } from './core.types';
 import type {
   ConversationId,
   ExchangeId,
   MessageId,
   ContentPartId
-} from '@/models/conversational-agent/conversations-shared.types';
+} from './common.types';
 import type {
   ConversationCreateResponse,
   ConversationDeleteResponse,

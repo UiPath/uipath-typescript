@@ -20,12 +20,7 @@ import type { TraceServiceModel } from './traces';
  * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
  *
- * const sdk = new UiPath({
- *   baseUrl: 'https://cloud.uipath.com',
- *   orgName: 'myorg',
- *   tenantName: 'mytenant',
- *   secret: 'your-secret'
- * });
+ * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
  * const conversationalAgentService = new ConversationalAgent(sdk);
