@@ -34,15 +34,27 @@ import type { TraceServiceModel } from './traces';
  * ```
  */
 export interface ConversationalAgentServiceModel {
-  /** Service for listing and retrieving conversational agents */
+  /**
+   * Service for listing and retrieving conversational agents
+   * {@link AgentServiceModel}
+   */
   readonly agents: AgentServiceModel;
 
-  /** Service for managing conversations and related operations */
+  /**
+   * Service for managing conversations and related operations
+   * {@link ConversationServiceModel}
+   */
   readonly conversations: ConversationServiceModel;
 
-  /** Service for managing user profile and context settings */
+  /**
+   * Service for managing user profile and context settings
+   * {@link UserServiceModel}
+   */
   readonly user: UserServiceModel;
 
-  /** Service for accessing LLM Operations traces */
+  /**
+   * Service for accessing LLM Operations traces
+   * {@link TraceServiceModel}
+   */
   readonly traces: TraceServiceModel;
 }
