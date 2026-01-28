@@ -5,10 +5,10 @@
 // ==================== User Settings Types ====================
 
 /**
- * User settings containing profile and context information
+ * Response for getting user settings
  *
- * These settings are passed to the agent for all conversations
- * to provide user context.
+ * Contains profile and context information that is passed to the agent
+ * for all conversations to provide user context.
  *
  * @example
  * ```typescript
@@ -16,7 +16,7 @@
  * console.log(userSettings.name, userSettings.email);
  * ```
  */
-export interface UserSettings {
+export interface UserSettingsGetResponse {
   /** Unique identifier of the user (UUID) */
   userId: string;
   /** Name of the user (max 100 chars) */
@@ -34,23 +34,18 @@ export interface UserSettings {
   /** Timezone (max 50 chars) */
   timezone: string | null;
   /** UTC timestamp of creation */
-  createdAt: string;
+  createdTime: string;
   /** UTC timestamp of last update */
-  updatedAt: string;
+  updatedTime: string;
 }
-
-/**
- * Response for getting user settings
- */
-export interface UserSettingsGetResponse extends UserSettings {}
 
 /**
  * Response for updating user settings
  */
-export interface UserSettingsUpdateResponse extends UserSettings {}
+export interface UserSettingsUpdateResponse extends UserSettingsGetResponse {}
 
 /**
- * Input for updating user settings
+ * Options for updating user settings
  *
  * All fields are optional - only send the fields you want to change.
  * Set fields to `null` to explicitly clear them.
@@ -70,7 +65,7 @@ export interface UserSettingsUpdateResponse extends UserSettings {}
  * });
  * ```
  */
-export interface UpdateUserSettingsInput {
+export interface UpdateUserSettingsOptions {
   /** Name of the user (max 100 chars) */
   name?: string | null;
   /** Email address (max 255 chars, must be valid email) */

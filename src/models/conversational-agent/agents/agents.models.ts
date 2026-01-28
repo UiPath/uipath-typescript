@@ -4,8 +4,6 @@ import type { AgentGetResponse, AgentGetByIdResponse } from './agents.types';
  * Service for managing UiPath Conversational Agents
  *
  * Agents are conversational AI applications that can be deployed and interacted with.
- * This service provides read-only access to agent metadata and configurations.
- * [UiPath Conversational Agents Guide](https://docs.uipath.com/automation-cloud/docs/conversational-agents)
  *
  * ### Usage
  *
@@ -15,22 +13,31 @@ import type { AgentGetResponse, AgentGetByIdResponse } from './agents.types';
  * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
  *
  * const conversationalAgentService = new ConversationalAgent(sdk);
+ *
+ * // Get all available agents
  * const availableAgents = await conversationalAgentService.agents.getAll();
+ *
+ * // Get the agent ID to use for creating conversations
+ * const agentId = availableAgents[0].id;
+ * const folderId = availableAgents[0].folderId;
  * ```
  */
 export interface AgentServiceModel {
   /**
-   * Gets all conversational agents
+   * Get all available conversational agents
    *
    * @param folderId - Optional folder ID to filter agents
    * @returns Promise resolving to an array of agents
    * {@link AgentGetResponse}
    * @example
    * ```typescript
-   * // Get all available agent releases
+   * // Get all available agents
    * const availableAgents = await conversationalAgentService.agents.getAll();
    *
-   * // Get agent releases in a specific folder
+   * // Get the agent ID and folder ID for creating conversations
+   * const { id: agentId, folderId } = availableAgents[0];
+   *
+   * // Get agents in a specific folder
    * const folderAgents = await conversationalAgentService.agents.getAll(folderId);
    * ```
    */
@@ -45,9 +52,9 @@ export interface AgentServiceModel {
    * {@link AgentGetByIdResponse}
    * @example
    * ```typescript
-   * const agentReleaseDetails = await conversationalAgentService.agents.getById(agentReleaseId, folderId);
-   * console.log(agentReleaseDetails.name);
-   * console.log(agentReleaseDetails.appearance); // UI appearance configuration
+   * const agentDetails = await conversationalAgentService.agents.getById(agentId, folderId);
+   * console.log(agentDetails.name);
+   * console.log(agentDetails.appearance); // UI appearance configuration
    * ```
    */
   getById(id: number, folderId: number): Promise<AgentGetByIdResponse>;

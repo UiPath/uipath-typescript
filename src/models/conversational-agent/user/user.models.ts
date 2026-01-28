@@ -1,4 +1,4 @@
-import type { UserSettings, UpdateUserSettingsInput } from './user.types';
+import type { UserSettingsGetResponse, UserSettingsUpdateResponse, UpdateUserSettingsOptions } from './user.types';
 
 /**
  * Service for managing UiPath User Settings
@@ -22,7 +22,7 @@ export interface UserServiceModel {
    * Gets the current user's profile and context settings
    *
    * @returns Promise resolving to user settings object
-   * {@link UserSettings}
+   * {@link UserSettingsGetResponse}
    * @example
    * ```typescript
    * const userSettings = await conversationalAgentService.user.getSettings();
@@ -30,14 +30,14 @@ export interface UserServiceModel {
    * console.log(userSettings.email);
    * ```
    */
-  getSettings(): Promise<UserSettings>;
+  getSettings(): Promise<UserSettingsGetResponse>;
 
   /**
    * Updates the current user's profile and context settings
    *
-   * @param input - Fields to update
+   * @param options - Fields to update
    * @returns Promise resolving to updated user settings
-   * {@link UserSettings}
+   * {@link UserSettingsUpdateResponse}
    * @example
    * ```typescript
    * const updatedUserSettings = await conversationalAgentService.user.updateSettings({
@@ -46,5 +46,5 @@ export interface UserServiceModel {
    * });
    * ```
    */
-  updateSettings(input: UpdateUserSettingsInput): Promise<UserSettings>;
+  updateSettings(options: UpdateUserSettingsOptions): Promise<UserSettingsUpdateResponse>;
 }

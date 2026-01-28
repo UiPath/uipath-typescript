@@ -1,7 +1,7 @@
-import type { LlmOpsSpan } from './traces.types';
+import type { TraceSpanGetResponse, TraceSpanStatus } from './traces.types';
 
 /**
- * Service for managing UiPath LLM Operations Traces
+ * Service for managing UiPath Trace Spans
  *
  * Traces provide observability into LLM operations during conversational agent sessions.
  * Each conversation can have a traceId that links to spans representing
@@ -23,15 +23,15 @@ export interface TraceServiceModel {
    * Get all spans for a given trace ID
    *
    * @param traceId - The trace ID to retrieve spans for
-   * @returns Promise resolving to array of LLM Ops spans
-   * {@link LlmOpsSpan}
+   * @returns Promise resolving to array of trace spans
+   * {@link TraceSpanGetResponse}
    * @example
    * ```typescript
    * const traceSpans = await conversationalAgentService.traces.getSpans('550e8400-e29b-41d4-a716-446655440000');
    *
    * // Find spans with errors
-   * const errorSpans = traceSpans.filter(span => span.Status === LlmOpsSpanStatus.Error);
+   * const errorSpans = traceSpans.filter(span => span.status === TraceSpanStatus.Error);
    * ```
    */
-  getSpans(traceId: string): Promise<LlmOpsSpan[]>;
+  getSpans(traceId: string): Promise<TraceSpanGetResponse[]>;
 }

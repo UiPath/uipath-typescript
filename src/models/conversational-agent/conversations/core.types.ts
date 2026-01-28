@@ -77,11 +77,11 @@ export interface Citation {
   /**
    * Timestamp indicating when the citation was created.
    */
-  createdAt: UTCTimeStamp;
+  createdTime: UTCTimeStamp;
   /**
    * Timestamp indicating when the citation was last updated.
    */
-  updatedAt: UTCTimeStamp;
+  updatedTime: UTCTimeStamp;
 }
 
 /**
@@ -134,11 +134,11 @@ export interface ContentPart {
   /**
    * Timestamp indicating when the content part was created.
    */
-  createdAt: UTCTimeStamp;
+  createdTime: UTCTimeStamp;
   /**
    * Timestamp indicating when the content part was last updated.
    */
-  updatedAt: UTCTimeStamp;
+  updatedTime: UTCTimeStamp;
 }
 
 /**
@@ -198,11 +198,11 @@ export interface ToolCall {
   /**
    * Timestamp indicating when the tool call was created.
    */
-  createdAt: UTCTimeStamp;
+  createdTime: UTCTimeStamp;
   /**
    * Timestamp indicating when the tool call was last updated.
    */
-  updatedAt: UTCTimeStamp;
+  updatedTime: UTCTimeStamp;
 }
 
 /**
@@ -228,11 +228,11 @@ export interface Interrupt {
   /**
    * Timestamp indicating when the interrupt was created.
    */
-  createdAt: UTCTimeStamp;
+  createdTime: UTCTimeStamp;
   /**
    * Timestamp indicating when the interrupt was last updated.
    */
-  updatedAt: UTCTimeStamp;
+  updatedTime: UTCTimeStamp;
 }
 
 /**
@@ -262,11 +262,11 @@ export interface Message {
   /**
    * Timestamp indicating when the message was created.
    */
-  createdAt: UTCTimeStamp;
+  createdTime: UTCTimeStamp;
   /**
    * Timestamp indicating when the message was last updated.
    */
-  updatedAt: UTCTimeStamp;
+  updatedTime: UTCTimeStamp;
   /**
    * Span identifier for distributed tracing.
    */
@@ -296,11 +296,11 @@ export interface Exchange {
   /**
    * Timestamp indicating when the exchange was created.
    */
-  createdAt: UTCTimeStamp;
+  createdTime: UTCTimeStamp;
   /**
    * Timestamp indicating when the exchange was last updated.
    */
-  updatedAt: UTCTimeStamp;
+  updatedTime: UTCTimeStamp;
   /**
    * Span identifier for distributed tracing.
    */
@@ -333,15 +333,15 @@ export interface Conversation {
   /**
    * Timestamp indicating when the conversation was created.
    */
-  createdAt: UTCTimeStamp;
+  createdTime: UTCTimeStamp;
   /**
    * Timestamp indicating when any conversation field(s) are updated.
    */
-  updatedAt: UTCTimeStamp;
+  updatedTime: UTCTimeStamp;
   /**
    * Timestamp indicating when the conversation last had activity.
    */
-  lastActivityAt: UTCTimeStamp;
+  lastActivityTime: UTCTimeStamp;
   /**
    * The human-readable label or title for the conversation.
    */
