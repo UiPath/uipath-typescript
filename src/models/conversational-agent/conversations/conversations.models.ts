@@ -252,8 +252,6 @@ export interface AttachmentServiceModel {
  * Service for managing UiPath Conversations
  *
  * Conversations are the main interaction container for conversational agents.
- * Each conversation can have multiple exchanges (request-response pairs).
- * [UiPath Conversational Agents Guide](https://docs.uipath.com/automation-cloud/docs/conversational-agents)
  *
  * ### Usage
  *
