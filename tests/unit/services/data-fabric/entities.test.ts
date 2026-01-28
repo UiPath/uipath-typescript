@@ -17,12 +17,13 @@ import {
 } from '../../../utils/mocks/entities';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
-import type { 
+import type {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
+  EntityBatchInsertOptions,
   EntityUpdateOptions,
   EntityDeleteOptions,
-  EntityRecord 
+  EntityRecord
 } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -400,7 +401,7 @@ describe('EntityService Unit Tests', () => {
 
       const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
 
-      // Verify the result is the inserted record with generated ID
+      // Verify the result is the inserted record with generated record ID
       expect(result).toBeDefined();
       expect(result.name).toBe(testData.name);
       expect(result.age).toBe(testData.age);
@@ -424,7 +425,7 @@ describe('EntityService Unit Tests', () => {
       };
       const options: EntityInsertOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-      } as EntityInsertOptions;
+      };
 
       // With expansionLevel, reference fields should be expanded in the response
       const mockResponse = createMockSingleInsertResponse(testData, {
@@ -500,10 +501,10 @@ describe('EntityService Unit Tests', () => {
         recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
         createdBy: ENTITY_TEST_CONSTANTS.USER_ID
       }];
-      const options: EntityInsertOptions = {
+      const options: EntityBatchInsertOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
-      } as EntityInsertOptions;
+      };
 
       // With expansionLevel, reference fields should be expanded in the response
       const mockResponse = createMockInsertResponse(testData, { 
@@ -548,7 +549,7 @@ describe('EntityService Unit Tests', () => {
       expect(result.failureRecords[0]).toHaveProperty('record');
       // Verify the failure contains the record we tried to insert
       expect(result.failureRecords[0].record).toEqual(testData[1]);
-      // Verify the success record has the data plus generated ID
+      // Verify the success record has the data plus generated record ID
       expect(result.successRecords[0].name).toBe(testData[0].name);
       expect(result.successRecords[0].age).toBe(testData[0].age);
       expect(result.successRecords[0]).toHaveProperty('id');

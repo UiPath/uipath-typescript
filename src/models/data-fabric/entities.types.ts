@@ -52,9 +52,17 @@ export interface EntityOperationOptions {
 }
 
 /**
- * Options for inserting data into an entity
+ * Options for inserting a single record into an entity
  */
-export type EntityInsertOptions = EntityOperationOptions;
+export interface EntityInsertOptions {
+  /** Level of entity expansion (default: 0) */
+  expansionLevel?: number;
+}
+
+/**
+ * Options for batch inserting data into an entity
+ */
+export type EntityBatchInsertOptions = EntityOperationOptions;
 
 /**
  * Options for updating data in an entity
@@ -91,7 +99,7 @@ export interface EntityOperationResponse {
 
 /**
  * Response from inserting a single record into an entity
- * Returns the inserted record with its generated ID and other fields
+ * Returns the inserted record with its generated record ID and other fields
  */
 export type EntityInsertResponse = EntityRecord;
 

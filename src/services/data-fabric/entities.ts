@@ -6,6 +6,7 @@ import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '
 import {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
+  EntityBatchInsertOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
   EntityUpdateOptions,
@@ -51,8 +52,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * // Call operations directly on the entity
    * const records = await entity.getRecords();
    * 
-   * const insertResult = await entity.insert([
-   *   { name: "John", age: 30 }
+   * // Insert a single record
+   * const insertResult = await entity.insert({ name: "John", age: 30 });
+   *
+   * // Or batch insert multiple records
+   * const batchResult = await entity.batchInsert([
+   *     { name: "Jane", age: 25 },
+   *     { name: "Bob", age: 35 }
    * ]);
    * ```
    */
@@ -135,7 +141,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @param entityId - UUID of the entity
    * @param data - Record to insert
    * @param options - Insert options
-   * @returns Promise resolving to the inserted record with generated ID
+   * @returns Promise resolving to the inserted record with generated record ID
    *
    * @example
    * ```typescript
@@ -195,7 +201,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.BatchInsertById')
-  async batchInsertById(id: string, data: Record<string, any>[], options: EntityInsertOptions = {}): Promise<EntityBatchInsertResponse> {
+  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst

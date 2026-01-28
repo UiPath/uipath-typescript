@@ -292,11 +292,11 @@ export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord 
 };
 
 /**
- * Creates a mock single insert response that echoes back the request data with a generated ID
+ * Creates a mock single insert response that echoes back the request data with a generated record ID
  * This is for the /insert endpoint which inserts a single record
  * @param requestData - Single record being inserted
  * @param options - Optional: expansionLevel to expand reference fields
- * @returns Mock EntityInsertResponse (the inserted record with generated ID)
+ * @returns Mock EntityInsertResponse (the inserted record with generated record ID)
  *
  * @example
  * // Basic insert
@@ -328,7 +328,7 @@ export const createMockSingleInsertResponse = (
 };
 
 /**
- * Creates a mock EntityBatchInsertResponse that echoes back the request data with generated IDs
+ * Creates a mock EntityBatchInsertResponse that echoes back the request data with generated record IDs
  * This is for the /insert-batch endpoint which inserts multiple records
  * @param requestData - Array of records being inserted
  * @param options - Optional: successCount to control partial failures, expansionLevel to expand reference fields
