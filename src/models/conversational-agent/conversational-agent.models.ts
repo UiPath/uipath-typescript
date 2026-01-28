@@ -4,13 +4,16 @@ import type { UserServiceModel } from './user';
 import type { TraceServiceModel } from './traces';
 
 /**
- * Main service for interacting with UiPath Conversational Agents
+ * Service for managing UiPath Conversational Agents
  *
- * Provides access to:
- * - agents: List and retrieve conversational agents
- * - conversations: Manage conversations, exchanges, messages, and attachments
- * - user: Manage user profile and context settings
- * - traces: Access LLM Operations traces for observability
+ * Conversational Agents are AI-powered chat interfaces that enable natural language interactions
+ * with UiPath automation. This service provides access to:
+ *
+ * - **agents** - List and retrieve available conversational agents
+ * - **conversations** - Manage conversations, exchanges, messages, and attachments
+ * - **events** - Real-time WebSocket streaming for live chat (see [Real-time Chat Guide](/uipath-typescript/real-time-chat/))
+ * - **user** - Manage user profile and context settings
+ * - **traces** - Access LLM Operations traces for observability
  *
  * ### Usage
  *
@@ -25,11 +28,18 @@ import type { TraceServiceModel } from './traces';
  *
  * const conversationalAgentService = new ConversationalAgent(sdk);
  *
- * // HTTP Operations
+ * // List available agents
  * const availableAgents = await conversationalAgentService.agents.getAll();
- * const newConversation = await conversationalAgentService.conversations.create({
+ *
+ * // Create a conversation
+ * const conversation = await conversationalAgentService.conversations.create({
  *   agentReleaseId: availableAgents[0].id,
  *   folderId: availableAgents[0].folderId
+ * });
+ *
+ * // Start real-time chat session (see Real-time Chat Guide)
+ * const session = conversationalAgentService.events.startSession({
+ *   conversationId: conversation.id
  * });
  * ```
  */

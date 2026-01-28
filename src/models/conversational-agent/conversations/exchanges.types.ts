@@ -75,7 +75,7 @@ export interface ExchangeGetByIdOptions {
 
 export interface CreateFeedbackOptions {
   rating: FeedbackRating;
-  /** Optional text comment for the feedback (matches AgentInterfaces 'comment' field) */
+  /** Optional text comment for the feedback */
   comment?: string;
 }
 
