@@ -108,18 +108,11 @@ export default class Pack extends Command {
       process.exit(1);
     }
 
-    // Try to load saved app config early
-    const appConfig = await this.loadAppConfig();
-
-    // Get package name first (before anything else)
+    // Get package name from flag or prompt (NOT from appConfig as per user requirement)
     let packageName = flags.name;
 
-    if (appConfig && !flags.name) {
-      packageName = appConfig.appName;
-      this.log(chalk.green(`Using app name: ${packageName}`));
-
-    } else if (!flags.name) {
-      // No saved config and no flag, so prompt
+    if (!packageName) {
+      // No flag provided, so prompt
       packageName = await this.promptForPackageName();
     }
 
