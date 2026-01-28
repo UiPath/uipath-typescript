@@ -6,8 +6,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
+import { MESSAGES, CONFIG_FILE_NAME } from '../constants/messages.js';
 import { AppConfig, SdkConfig } from '../types/index.js';
-import { MESSAGES } from '../constants/messages.js';
 import { AUTH_CONSTANTS, DEFAULT_APP_VERSION } from '../constants/index.js';
 import { isValidAppName } from '../utils/env-config.js';
 import { track } from '../telemetry/index.js';
@@ -110,32 +110,12 @@ export default class Pack extends Command {
     let version = flags.version;
     
     if (appConfig && !flags.name) {
-      // Use saved config if name not provided via flag
-      packageName = appConfig.appName;
-      // Use saved version if not explicitly provided (checking if it's still the default)
-      if (flags.version === DEFAULT_APP_VERSION && appConfig.appVersion !== DEFAULT_APP_VERSION) {
-        version = appConfig.appVersion;
-      }
-      this.log(chalk.green(`${MESSAGES.SUCCESS.USING_REGISTERED_APP}: ${packageName} v${version}`));
+
+      this.log(chalk.green(`Using app name: ${packageName}`));
+
     } else if (!flags.name) {
       // No saved config and no flag, so prompt
       packageName = await this.promptForPackageName();
-    }
-    
-    // If we have app config but user provided different values, show warning
-    if (appConfig && (packageName !== appConfig.appName || version !== appConfig.appVersion)) {
-      this.log(chalk.yellow(`⚠️  Warning: You registered app "${appConfig.appName}" v${appConfig.appVersion} but are packaging as "${packageName}" v${version}. Remove --name flag to automatically use registered app details.`));
-      const response = await inquirer.prompt([{
-        type: 'confirm',
-        name: 'continue',
-        message: MESSAGES.PROMPTS.CONTINUE_WITH_DIFFERENT_VALUES,
-        default: false,
-      }]);
-      
-      if (!response.continue) {
-        this.log(chalk.blue(MESSAGES.INFO.USE_REGISTERED_VALUES));
-        this.exit(0);
-      }
     }
     
     // Ensure packageName is defined at this point
