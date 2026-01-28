@@ -5,7 +5,7 @@ import ora from 'ora';
 import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
-import { EnvironmentConfig, AppConfig } from '../types/index.js';
+import { EnvironmentConfig, AppConfig, AppType } from '../types/index.js';
 import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../utils/api.js';
@@ -187,13 +187,16 @@ export default class Deploy extends Command {
         cliTelemetryClient.track('Cli.Deploy', { operation: 'fresh_deploy' });
       }
 
-      // Build and display app URL
-      const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgName, appName);
-
       this.log('');
       this.log(`  ${chalk.cyan('App Name:')} ${appName}`);
       this.log(`  ${chalk.cyan('Version:')} ${version}`);
-      this.log(`  ${chalk.cyan('App URL:')} ${chalk.green(appUrl)}`);
+
+      // Only show app URL for non-action apps
+      const appConfig = this.loadAppConfig();
+      if (appConfig?.appType !== AppType.Action) {
+        const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgName, appName);
+        this.log(`  ${chalk.cyan('App URL:')} ${chalk.green(appUrl)}`);
+      }
 
     } catch (error) {
       spinner.fail(chalk.red(MESSAGES.ERRORS.APP_DEPLOYMENT_FAILED));

@@ -30,6 +30,7 @@ export interface AppConfig {
   registeredAt: string;
   deploymentId?: string;
   deployedAt?: string;
+  appType?: string;
 }
 
 /**

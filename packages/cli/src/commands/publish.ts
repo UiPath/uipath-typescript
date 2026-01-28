@@ -6,13 +6,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
-import { EnvironmentConfig, AppConfig } from '../types/index.js';
-import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
+import { EnvironmentConfig, AppConfig, AppType } from '../types/index.js';
+import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
 import { getEnvironmentConfig, atomicWriteFileSync } from '../utils/env-config.js';
 import { createHeaders } from '../utils/api.js';
 import { handleHttpError } from '../utils/error-handler.js';
 import { track } from '../telemetry/index.js';
+import { readAndParseActionSchema } from '../utils/action-schema.js';
 
 interface RegisterResponse {
   definition: {
@@ -34,6 +35,7 @@ export default class Publish extends Command {
     '<%= config.bin %> <%= command.id %> --name MyApp',
     '<%= config.bin %> <%= command.id %> --name MyApp --version 2.0.0',
     '<%= config.bin %> <%= command.id %> --uipathDir ./packages',
+    '<%= config.bin %> <%= command.id %> --name MyApp --type Action',
     "<%= config.bin %> <%= command.id %> --name MyApp --version 2.0.0 --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --accessToken 'your_token'",
   ];
 
@@ -66,6 +68,12 @@ export default class Publish extends Command {
     accessToken: Flags.string({
       description: 'UiPath authentication token',
     }),
+    type: Flags.string({
+      char: 't',
+      description: 'App type',
+      default: AppType.Web,
+      options: [AppType.Web, AppType.Action],
+    }),
   };
 
   @track('Publish')
@@ -80,10 +88,17 @@ export default class Publish extends Command {
       process.exit(1);
     }
 
-    await this.publishPackage(flags.uipathDir, envConfig, flags.name, flags.version);
+    const isActionApp = (flags.type as AppType) === AppType.Action;
+
+    if (isActionApp && !fs.existsSync(path.join(process.cwd(), ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME))) {
+      this.log(chalk.red(`${MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED}`));
+      process.exit(1);
+    }
+
+    await this.publishPackage(flags.uipathDir, envConfig, isActionApp, flags.name, flags.version);
   }
 
-  private async publishPackage(uipathDir: string, envConfig: EnvironmentConfig, packageName?: string, packageVersion?: string): Promise<void> {
+  private async publishPackage(uipathDir: string, envConfig: EnvironmentConfig, isActionApp: boolean, packageName?: string, packageVersion?: string): Promise<void> {
     const spinner = ora(MESSAGES.INFO.PUBLISHING_PACKAGE).start();
 
     try {
@@ -174,7 +189,7 @@ export default class Publish extends Command {
 
       // Step 2: Register coded app
       spinner.start(MESSAGES.INFO.REGISTERING_CODED_APP);
-      const registerResponse = await this.registerCodedApp(metadata, envConfig);
+      const registerResponse = await this.registerCodedApp(metadata, envConfig, isActionApp);
       spinner.succeed(chalk.green(MESSAGES.SUCCESS.CODED_APP_REGISTERED_SUCCESS));
 
       // Step 3: Save app configuration
@@ -184,6 +199,7 @@ export default class Publish extends Command {
         systemName: registerResponse.definition.systemName,
         appUrl: null, // App URL is now injected at deployment time
         registeredAt: new Date().toISOString(),
+        appType: isActionApp ? AppType.Action : AppType.Web,
       });
 
       this.log('');
@@ -285,15 +301,26 @@ export default class Publish extends Command {
   /**
    * Register the coded app with UiPath by calling the codedapp/publish API
    */
-  private async registerCodedApp(metadata: PackageMetadata, envConfig: EnvironmentConfig): Promise<RegisterResponse> {
+  private async registerCodedApp(metadata: PackageMetadata, envConfig: EnvironmentConfig, isActionApp: boolean): Promise<RegisterResponse> {
     const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.PUBLISH_CODED_APP}`;
+
+    let actionSchema = {};
+    if (isActionApp) {
+      try {
+        actionSchema = readAndParseActionSchema();
+      } catch (error) {
+        this.log('');
+        this.log(chalk.red(`${MESSAGES.ERRORS.FAILED_TO_PARSE_ACTION_SCHEMA} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+        process.exit(1);
+      }
+    }
 
     const payload = {
       tenantName: envConfig.tenantName,
       packageName: metadata.packageName,
       packageVersion: metadata.packageVersion,
       title: metadata.packageName,
-      schema: {},
+      schema: actionSchema,
     };
 
     const response = await fetch(url, {
