@@ -17,10 +17,20 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 
 /**
  * Service for managing UiPath Action Center
- * 
+ *
  * Tasks are task-based automation components that can be integrated into applications and processes. They represent discrete units of work that can be triggered and monitored through the UiPath API. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
  *
-*/
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ *
+ * ```typescript
+ * import { Tasks } from '@uipath/uipath-typescript/tasks';
+ *
+ * const tasks = new Tasks(sdk);
+ * const allTasks = await tasks.getAll();
+ * ```
+ */
 export interface TaskServiceModel {
   /**
    * Gets all tasks across folders with optional filtering
@@ -31,35 +41,35 @@ export interface TaskServiceModel {
    *  @example
    * ```typescript
    * // Standard array return
-   * const tasks = await sdk.tasks.getAll();
-   * 
+   * const allTasks = await tasks.getAll();
+   *
    * // Get tasks within a specific folder
-   * const tasks = await sdk.tasks.getAll({ 
+   * const folderTasks = await tasks.getAll({
    *   folderId: 123
    * });
    *
    * // Get tasks with admin permissions
    * // This fetches tasks across folders where the user has Task.View, Task.Edit and TaskAssignment.Create permissions
-   * const tasks = await sdk.tasks.getAll({
+   * const adminTasks = await tasks.getAll({
    *   asTaskAdmin: true
    * });
    *
    * // Get tasks without admin permissions (default)
    * // This fetches tasks across folders where the user has Task.View and Task.Edit permissions
-   * const tasks = await sdk.tasks.getAll({
+   * const userTasks = await tasks.getAll({
    *   asTaskAdmin: false
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.tasks.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await tasks.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.tasks.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await tasks.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.tasks.getAll({
+   * const page5 = await tasks.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -84,11 +94,11 @@ export interface TaskServiceModel {
    * @example
    * ```typescript
    * // Get a task by ID
-   * const task = await sdk.tasks.getById(<taskId>);
-   * 
+   * const task = await tasks.getById(<taskId>);
+   *
    * // Get a form task by ID
-   * const formTask = await sdk.tasks.getById(<taskId>, <folderId>);
-   * 
+   * const formTask = await tasks.getById(<taskId>, <folderId>);
+   *
    * // Access form task properties
    * console.log(formTask.formLayout);
    * ```
@@ -105,7 +115,7 @@ export interface TaskServiceModel {
    * @example
    * ```typescript
    * import { TaskPriority } from '@uipath/uipath-typescript';
-   * const task = await sdk.tasks.create({
+   * const task = await tasks.create({
    *   title: "My Task",
    *   priority: TaskPriority.Medium
    * }, <folderId>); // folderId is required
@@ -122,26 +132,25 @@ export interface TaskServiceModel {
    * @example
    * ```typescript
    * // Assign a single task to a user by ID
-   * const result = await sdk.tasks.assign({
+   * const result = await tasks.assign({
    *   taskId: <taskId>,
    *   userId: <userId>
    * });
-   * 
-   * or
-   * 
-   * const task = await sdk.tasks.getById(<taskId>);
+   *
+   * // Or using instance method
+   * const task = await tasks.getById(<taskId>);
    * const result = await task.assign({
    *   userId: <userId>
    * });
-   * 
+   *
    * // Assign a single task to a user by email
-   * const result = await sdk.tasks.assign({
+   * const result = await tasks.assign({
    *   taskId: <taskId>,
    *   userNameOrEmail: "user@example.com"
    * });
-   * 
+   *
    * // Assign multiple tasks
-   * const result = await sdk.tasks.assign([
+   * const result = await tasks.assign([
    *   { taskId: <taskId1>, userId: <userId> },
    *   { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
    * ]);
@@ -158,26 +167,25 @@ export interface TaskServiceModel {
    * @example
    * ```typescript
    * // Reassign a single task to a user by ID
-   * const result = await sdk.tasks.reassign({
+   * const result = await tasks.reassign({
    *   taskId: <taskId>,
    *   userId: <userId>
    * });
-   * 
-   * or
-   * 
-   * const task = await sdk.tasks.getById(<taskId>);
+   *
+   * // Or using instance method
+   * const task = await tasks.getById(<taskId>);
    * const result = await task.reassign({
    *   userId: <userId>
    * });
-   * 
+   *
    * // Reassign a single task to a user by email
-   * const result = await sdk.tasks.reassign({
+   * const result = await tasks.reassign({
    *   taskId: <taskId>,
    *   userNameOrEmail: "user@example.com"
    * });
-   * 
+   *
    * // Reassign multiple tasks
-   * const result = await sdk.tasks.reassign([
+   * const result = await tasks.reassign([
    *   { taskId: <taskId1>, userId: <userId> },
    *   { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
    * ]);
@@ -194,15 +202,14 @@ export interface TaskServiceModel {
    * @example
    * ```typescript
    * // Unassign a single task
-   * const result = await sdk.tasks.unassign(<taskId>);
-   * 
-   * or
-   * 
-   * const task = await sdk.tasks.getById(<taskId>);
+   * const result = await tasks.unassign(<taskId>);
+   *
+   * // Or using instance method
+   * const task = await tasks.getById(<taskId>);
    * const result = await task.unassign();
-   * 
+   *
    * // Unassign multiple tasks
-   * const result = await sdk.tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
+   * const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
    * ```
    */
   unassign(taskId: number | number[]): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>>;
@@ -217,7 +224,7 @@ export interface TaskServiceModel {
    * @example
    * ```typescript
    * // Complete an app task
-   * await sdk.tasks.complete({
+   * await tasks.complete({
    *   type: TaskType.App,
    *   taskId: <taskId>,
    *   data: {},
@@ -225,7 +232,7 @@ export interface TaskServiceModel {
    * }, <folderId>); // folderId is required
    *
    * // Complete an external task
-   * await sdk.tasks.complete({
+   * await tasks.complete({
    *   type: TaskType.External,
    *   taskId: <taskId>
    * }, <folderId>); // folderId is required
@@ -248,8 +255,8 @@ export interface TaskServiceModel {
    * @example
    * ```typescript
    * // Get users from a folder
-   * const users = await sdk.tasks.getUsers(<folderId>);
-   * 
+   * const users = await tasks.getUsers(<folderId>);
+   *
    * // Access user properties
    * console.log(users.items[0].name);
    * console.log(users.items[0].emailAddress);

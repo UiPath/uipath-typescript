@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import type { UiPath } from '../../../core/uipath';
+import type { IUiPath } from '../../../core/types';
 import { ValidationError, HttpStatus } from '../../../core/errors';
 import {
   BucketGetResponse,
@@ -34,7 +34,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: UiPath) {
+  constructor(instance: IUiPath) {
     super(instance);
   }
 
