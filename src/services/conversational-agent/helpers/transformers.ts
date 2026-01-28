@@ -4,24 +4,10 @@
  * Transform API responses to use helper classes and SDK naming conventions.
  */
 
-import type { Exchange, Message } from '@/models/conversational-agent';
+import type { Exchange, Message, ExchangeGetResponse, MessageGetResponse } from '@/models/conversational-agent';
 import { ConversationMap } from '@/models/conversational-agent';
 import { transformData } from '@/utils/transform';
-import { ContentPartGetResponse } from './content-part-helper';
-
-/**
- * Response type for Exchange with ContentPartGetResponse instead of raw ContentPart
- */
-export interface ExchangeGetResponse extends Omit<Exchange, 'messages'> {
-  messages: MessageGetResponse[];
-}
-
-/**
- * Response type for Message with ContentPartGetResponse instead of raw ContentPart
- */
-export interface MessageGetResponse extends Omit<Message, 'contentParts'> {
-  contentParts?: ContentPartGetResponse[];
-}
+import { ContentPartHelper } from './content-part-helper';
 
 /**
  * Transform an array of exchanges to use helper classes
@@ -52,6 +38,6 @@ export function transformMessage(message: Message): MessageGetResponse {
   const { contentParts, ...rest } = transformed;
   return {
     ...rest,
-    contentParts: contentParts?.map(cp => new ContentPartGetResponse(cp))
+    contentParts: contentParts?.map(cp => new ContentPartHelper(cp))
   };
 }
