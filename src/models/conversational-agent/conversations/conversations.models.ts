@@ -10,22 +10,23 @@ import type {
   ConversationDeleteResponse,
   ConversationGetResponse,
   ConversationGetAllOptions,
-  CreateConversationInput,
-  UpdateConversationInput
+  CreateConversationOptions,
+  UpdateConversationOptions
 } from './conversations.types';
 import type {
   ExchangeGetAllOptions,
   ExchangeGetByIdOptions,
-  CreateFeedbackInput,
-  FeedbackCreateResponse
+  CreateFeedbackOptions,
+  FeedbackCreateResponse,
+  ExchangeGetResponse,
+  MessageGetResponse,
+  ContentPartGetResponse
 } from './exchanges.types';
 import type {
-  AttachmentInitializeResponse,
+  AttachmentCreateResponse,
   AttachmentUploadResponse
 } from './attachments.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
-import type { ExchangeWithHelpers, MessageWithHelpers } from '@/services/conversational-agent/helpers';
-import type { ContentPartHelper } from '@/services/conversational-agent/helpers/content-part-helper';
 
 /**
  * Service for exchange operations within conversations
@@ -46,7 +47,7 @@ export interface ExchangeServiceModel {
    * @param conversationId - The conversation ID to get exchanges for
    * @param options - Query options including optional pagination parameters
    * @returns Promise resolving to exchanges or paginated result
-   * {@link ExchangeWithHelpers}
+   * {@link ExchangeGetResponse}
    * @example
    * ```typescript
    * // Get all exchanges (non-paginated)
@@ -68,8 +69,8 @@ export interface ExchangeServiceModel {
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ExchangeWithHelpers>
-      : NonPaginatedResponse<ExchangeWithHelpers>
+      ? PaginatedResponse<ExchangeGetResponse>
+      : NonPaginatedResponse<ExchangeGetResponse>
   >;
 
   /**
@@ -79,7 +80,7 @@ export interface ExchangeServiceModel {
    * @param exchangeId - The exchange ID to retrieve
    * @param options - Optional parameters for message sorting
    * @returns Promise resolving to the exchange with helper methods
-   * {@link ExchangeWithHelpers}
+   * {@link ExchangeGetResponse}
    * @example
    * ```typescript
    * const exchangeDetails = await conversationalAgentService.conversations.exchanges.getById(
@@ -96,14 +97,14 @@ export interface ExchangeServiceModel {
     conversationId: ConversationId,
     exchangeId: ExchangeId,
     options?: ExchangeGetByIdOptions
-  ): Promise<ExchangeWithHelpers>;
+  ): Promise<ExchangeGetResponse>;
 
   /**
    * Creates feedback for an exchange
    *
    * @param conversationId - The conversation containing the exchange
    * @param exchangeId - The exchange to provide feedback for
-   * @param input - Feedback data including rating and optional comment
+   * @param options - Feedback data including rating and optional comment
    * @returns Promise resolving to the feedback creation response
    * {@link FeedbackCreateResponse}
    * @example
@@ -118,7 +119,7 @@ export interface ExchangeServiceModel {
   createFeedback(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
-    input: CreateFeedbackInput
+    options: CreateFeedbackOptions
   ): Promise<FeedbackCreateResponse>;
 }
 
@@ -143,7 +144,7 @@ export interface MessageServiceModel {
    * @param exchangeId - The exchange containing the message
    * @param messageId - The message ID to retrieve
    * @returns Promise resolving to the message with helper methods
-   * {@link MessageWithHelpers}
+   * {@link MessageGetResponse}
    * @example
    * ```typescript
    * const messageDetails = await conversationalAgentService.conversations.messages.getById(
@@ -160,7 +161,7 @@ export interface MessageServiceModel {
     conversationId: ConversationId,
     exchangeId: ExchangeId,
     messageId: MessageId
-  ): Promise<MessageWithHelpers>;
+  ): Promise<MessageGetResponse>;
 
   /**
    * Gets a content part by ID
@@ -169,11 +170,11 @@ export interface MessageServiceModel {
    * @param exchangeId - The exchange containing the content
    * @param messageId - The message containing the content part
    * @param contentPartId - The content part ID to retrieve
-   * @returns Promise resolving to a ContentPartHelper
-   * {@link ContentPartHelper}
+   * @returns Promise resolving to a ContentPartGetResponse
+   * {@link ContentPartGetResponse}
    * @example
    * ```typescript
-   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPart(
+   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
    *   conversationId,
    *   exchangeId,
    *   messageId,
@@ -181,12 +182,12 @@ export interface MessageServiceModel {
    * );
    * ```
    */
-  getContentPart(
+  getContentPartById(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
     messageId: MessageId,
     contentPartId: ContentPartId
-  ): Promise<ContentPartHelper>;
+  ): Promise<ContentPartGetResponse>;
 }
 
 /**
@@ -202,27 +203,34 @@ export interface MessageServiceModel {
  */
 export interface AttachmentServiceModel {
   /**
-   * Initialize a file attachment for the conversation
+   * Creates an attachment entry for a conversation
+   *
+   * Creates the attachment entry and returns upload access details.
+   * The client must handle the file upload using the returned fileUploadAccess.
+   * For most cases, use `upload()` instead which handles both steps.
    *
    * @param conversationId - The conversation to attach the file to
-   * @param fileName - The name of the file to initialize
+   * @param fileName - The name of the file
    * @returns Promise resolving to attachment details with upload access
-   * {@link AttachmentInitializeResponse}
+   * {@link AttachmentCreateResponse}
    * @example
    * ```typescript
-   * const attachmentInitResult = await conversationalAgentService.conversations.attachments.initialize(
+   * const attachmentEntry = await conversationalAgentService.conversations.attachments.create(
    *   conversationId,
    *   'document.pdf'
    * );
    *
-   * // Handle upload manually using attachmentInitResult.fileUploadAccess
-   * const { url, verb, headers } = attachmentInitResult.fileUploadAccess;
+   * // Handle upload manually using attachmentEntry.fileUploadAccess
+   * const { url, verb, headers } = attachmentEntry.fileUploadAccess;
    * ```
    */
-  initialize(conversationId: ConversationId, fileName: string): Promise<AttachmentInitializeResponse>;
+  create(conversationId: ConversationId, fileName: string): Promise<AttachmentCreateResponse>;
 
   /**
-   * Creates an attachment by uploading a file to a conversation
+   * Uploads a file attachment to a conversation
+   *
+   * Convenience method that creates the attachment entry and uploads
+   * the file content in one step.
    *
    * @param conversationId - The conversation to attach the file to
    * @param file - The file to upload
@@ -274,7 +282,7 @@ export interface ConversationServiceModel {
   /**
    * Creates a new conversation
    *
-   * @param input - Conversation creation options
+   * @param options - Conversation creation options
    * @returns Promise resolving to the created conversation
    * {@link ConversationCreateResponse}
    * @example
@@ -285,7 +293,7 @@ export interface ConversationServiceModel {
    * });
    * ```
    */
-  create(input: CreateConversationInput): Promise<ConversationCreateResponse>;
+  create(options: CreateConversationOptions): Promise<ConversationCreateResponse>;
 
   /**
    * Gets a conversation by ID
@@ -332,7 +340,7 @@ export interface ConversationServiceModel {
    * Updates a conversation
    *
    * @param id - The conversation ID to update
-   * @param input - Fields to update
+   * @param options - Fields to update
    * @returns Promise resolving to the updated conversation
    * {@link ConversationGetResponse}
    * @example
@@ -344,7 +352,7 @@ export interface ConversationServiceModel {
    */
   update(
     id: ConversationId,
-    input: UpdateConversationInput
+    options: UpdateConversationOptions
   ): Promise<ConversationGetResponse>;
 
   /**
