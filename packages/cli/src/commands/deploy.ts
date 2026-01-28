@@ -44,7 +44,7 @@ export default class Deploy extends Command {
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> --name MyApp',
-    "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
+    "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --orgName 'YourOrgName' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
   ];
 
   static override flags = {
@@ -58,6 +58,9 @@ export default class Deploy extends Command {
     }),
     orgId: Flags.string({
       description: 'UiPath organization ID',
+    }),
+    orgName: Flags.string({
+      description: 'UiPath organization name',
     }),
     tenantId: Flags.string({
       description: 'UiPath tenant ID',
@@ -185,8 +188,7 @@ export default class Deploy extends Command {
       }
 
       // Build and display app URL
-      const folderKey = envConfig.folderKey!;
-      const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgId, envConfig.tenantId, folderKey, systemName);
+      const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgName, appName);
 
       this.log('');
       this.log(`  ${chalk.cyan('App Name:')} ${appName}`);
@@ -251,7 +253,8 @@ export default class Deploy extends Command {
     const url = `${envConfig.baseUrl}/${envConfig.orgId}${endpoint}`;
 
     const payload = {
-      title: appName
+      title: appName,
+      routingName: appName
     };
 
     const response = await fetch(url, {

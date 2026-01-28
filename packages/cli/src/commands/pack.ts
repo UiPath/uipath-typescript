@@ -6,11 +6,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
+import fetch from 'node-fetch';
 import { MESSAGES, CONFIG_FILE_NAME } from '../constants/messages.js';
-import { AppConfig, SdkConfig } from '../types/index.js';
-import { AUTH_CONSTANTS, DEFAULT_APP_VERSION } from '../constants/index.js';
-import { isValidAppName } from '../utils/env-config.js';
+import { AppConfig, SdkConfig, EnvironmentConfig } from '../types/index.js';
+import { AUTH_CONSTANTS, DEFAULT_APP_VERSION, API_ENDPOINTS } from '../constants/index.js';
+import { isValidAppName, getEnvironmentConfig } from '../utils/env-config.js';
 import { track } from '../telemetry/index.js';
+import { createHeaders } from '../utils/api.js';
+import { handleHttpError } from '../utils/error-handler.js';
 
 export default class Pack extends Command {
   static override description = 'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
@@ -21,6 +24,7 @@ export default class Pack extends Command {
     '<%= config.bin %> <%= command.id %> ./dist --name MyApp --version 1.0.0',
     '<%= config.bin %> <%= command.id %> ./dist --output ./.uipath',
     '<%= config.bin %> <%= command.id %> ./dist --dry-run',
+    '<%= config.bin %> <%= command.id %> ./dist --name MyApp --orgId \'xxxx\' --tenantId \'xxxx\' --folderKey \'xxxx\' --accessToken \'your_token\'',
   ];
 
   static override args = {
@@ -72,52 +76,53 @@ export default class Pack extends Command {
       description: 'Reuse existing clientId from uipath.json instead of letting UiPath create a new one',
       default: false,
     }),
+    baseUrl: Flags.string({
+      description: 'UiPath base URL (default: https://cloud.uipath.com)',
+    }),
+    orgId: Flags.string({
+      description: 'UiPath organization ID',
+    }),
+    tenantId: Flags.string({
+      description: 'UiPath tenant ID',
+    }),
+    folderKey: Flags.string({
+      description: 'UiPath folder key',
+    }),
+    accessToken: Flags.string({
+      description: 'UiPath bearer token for authentication',
+    }),
   };
 
   @track('Pack')
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Pack);
-    
+
     this.log(chalk.blue(MESSAGES.INFO.PACKAGE_CREATOR));
 
     // Get dist directory from args
     const distDir = args.dist;
-    
+
     // Validate dist directory
     if (!this.validateDistDirectory(distDir)) {
       this.log(chalk.red(`${MESSAGES.ERRORS.INVALID_DIST_DIRECTORY}: ${distDir}`));
       process.exit(1);
     }
 
-    // Load or create uipath.json config
-    const sdkConfig = await this.loadOrCreateSdkConfig();
-    if (!sdkConfig) {
-      process.exit(1);
-    }
-
-    // Try to load saved app config
+    // Try to load saved app config early
     const appConfig = await this.loadAppConfig();
 
-    // Show info message about scope only for new apps (not version upgrades)
-    // Version upgrades are indicated by a non-default version flag
-    const isVersionUpgrade = flags.version !== DEFAULT_APP_VERSION;
-    if (!isVersionUpgrade && sdkConfig.clientId?.trim() && !sdkConfig.scope?.trim()) {
-      this.log(chalk.blue(MESSAGES.INFO.SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES));
-    }
-
-    // Get package name and version
+    // Get package name first (before anything else)
     let packageName = flags.name;
-    let version = flags.version;
-    
-    if (appConfig && !flags.name) {
 
+    if (appConfig && !flags.name) {
+      packageName = appConfig.appName;
       this.log(chalk.green(`Using app name: ${packageName}`));
 
     } else if (!flags.name) {
       // No saved config and no flag, so prompt
       packageName = await this.promptForPackageName();
     }
-    
+
     // Ensure packageName is defined at this point
     if (!packageName) {
       this.log(chalk.red(MESSAGES.ERRORS.PACKAGE_NAME_REQUIRED));
@@ -130,10 +135,39 @@ export default class Pack extends Command {
       process.exit(1);
     }
 
+    // Get package version
+    let version = flags.version;
+
+    // Only check app name uniqueness for new apps (version 1.0.0)
+    // Skip for version upgrades (non-default versions)
+    const isVersionUpgrade = version !== DEFAULT_APP_VERSION;
+
+    if (!isVersionUpgrade) {
+      // Validate environment variables or flags for uniqueness check
+      const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY, this, flags);
+      if (!envConfig) {
+        process.exit(1);
+      }
+
+      // Check if app name is unique (only for new apps)
+      await this.checkAppNameUniqueness(packageName, envConfig);
+    }
+
+    // Load or create uipath.json config (asks for scopes if needed)
+    const sdkConfig = await this.loadOrCreateSdkConfig();
+    if (!sdkConfig) {
+      process.exit(1);
+    }
+
+    // Show info message about scope only for new apps (not version upgrades)
+    if (!isVersionUpgrade && sdkConfig.clientId?.trim() && !sdkConfig.scope?.trim()) {
+      this.log(chalk.blue(MESSAGES.INFO.SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES));
+    }
+
     const sanitizedName = this.sanitizePackageName(packageName);
-    
-    // Get package description
-    const description = flags.description || await this.promptForDescription(packageName);
+
+    // Get package description (use package name as default if not provided)
+    const description = flags.description || packageName;
 
     // Determine if we should reuse the existing clientId
     let reuseClient = flags['reuse-client'];
@@ -196,19 +230,6 @@ export default class Pack extends Command {
     ]);
 
     return response.name;
-  }
-
-  private async promptForDescription(packageName: string): Promise<string> {
-    const response = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'description',
-        message: MESSAGES.PROMPTS.ENTER_PACKAGE_DESCRIPTION,
-        default: `UiPath package for ${packageName}`,
-      },
-    ]);
-    
-    return response.description;
   }
 
   private validateDistDirectory(distDir: string): boolean {
@@ -547,7 +568,7 @@ export default class Pack extends Command {
 
   private async loadAppConfig(): Promise<AppConfig | null> {
     const configPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR, AUTH_CONSTANTS.FILES.APP_CONFIG);
-    
+
     try {
       if (fs.existsSync(configPath)) {
         const configContent = fs.readFileSync(configPath, 'utf-8');
@@ -556,7 +577,45 @@ export default class Pack extends Command {
     } catch (error) {
       this.debug(`${MESSAGES.ERRORS.FAILED_TO_LOAD_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
     }
-    
+
     return null;
+  }
+
+  private async checkAppNameUniqueness(appName: string, envConfig: EnvironmentConfig): Promise<void> {
+    const spinner = ora(MESSAGES.INFO.CHECKING_APP_NAME_UNIQUENESS).start();
+
+    try {
+      const endpoint = API_ENDPOINTS.CHECK_APP_NAME_UNIQUE.replace('{appName}', encodeURIComponent(appName));
+      const url = `${envConfig.baseUrl}/${envConfig.orgId}${endpoint}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: createHeaders({
+          bearerToken: envConfig.accessToken,
+          tenantId: envConfig.tenantId,
+          additionalHeaders: {
+            'Accept': 'application/json',
+            'X-UIPATH-OrganizationUnitId': envConfig.folderKey || '',
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_DEPLOYMENT);
+      }
+
+      const data = await response.json() as { isUnique: boolean };
+
+      if (!data.isUnique) {
+        spinner.fail(chalk.red(MESSAGES.ERRORS.APP_NAME_ALREADY_EXISTS));
+        process.exit(1);
+      }
+
+      spinner.succeed(chalk.green('App name is available'));
+    } catch (error) {
+      spinner.fail(chalk.red('Failed to check app name uniqueness'));
+      this.log(chalk.red(`Error: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      process.exit(1);
+    }
   }
 }

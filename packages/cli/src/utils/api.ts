@@ -1,4 +1,3 @@
-import { APP_URL_TEMPLATE } from '../constants/index.js';
 import { AUTH_CONSTANTS } from '../constants/auth.js';
 
 export interface HeaderOptions {
@@ -45,16 +44,19 @@ export function createHeaders(options: HeaderOptions = {}): Record<string, strin
 
 export function buildAppUrl(
   baseUrl: string,
-  orgId: string,
-  tenantId: string,
-  folderKey: string,
-  appSystemName: string
+  orgName: string,
+  routingName: string
 ): string {
-  const path = APP_URL_TEMPLATE
-    .replace('{orgId}', orgId)
-    .replace('{tenantId}', tenantId)
-    .replace('{folderKey}', folderKey)
-    .replace('{appSystemName}', appSystemName);
-  
-  return `${baseUrl}${path}`;
+  // Extract environment from baseUrl (e.g., "staging" from "https://staging.uipath.com/")
+  // Remove protocol (http:// or https://) and trailing slash
+  const urlWithoutProtocol = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+  // Extract environment (first part before .uipath.com)
+  // For cloud.uipath.com, alpha.uipath.com, staging.uipath.com, etc.
+  const match = urlWithoutProtocol.match(/^([^.]+)\.uipath\.com/);
+  const environment = match ? match[1] : 'cloud';
+
+  // Construct the new app URL format: https://<orgName>.<environment>.uipath.host/<routingName>
+  // Note: baseUrl uses .uipath.com but app URLs use .uipath.host
+  return `https://${orgName}.${environment}.uipath.host/${routingName}`;
 }
