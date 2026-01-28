@@ -3,7 +3,7 @@
  *
  * This module exports:
  * - Helper classes for managing WebSocket conversation events
- * - ContentPartHelper for working with content parts
+ * - ContentPartGetResponse for working with content parts
  * - Transformers for converting API responses
  */
 

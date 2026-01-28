@@ -13,7 +13,7 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
-  AttachmentInitializeResponse,
+  AttachmentCreateResponse,
   AttachmentServiceModel,
   AttachmentUploadResponse,
   ConversationId
@@ -25,8 +25,8 @@ import { ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
 /**
  * Service for attachment operations within a conversation
  *
- * Provides methods to initialize and upload file attachments that can be
- * referenced in conversation messages. Supports both two-step initialization
+ * Provides methods to create and upload file attachments that can be
+ * referenced in conversation messages. Supports both two-step creation
  * (for custom upload handling) and one-step upload convenience method.
  *
  * @example
@@ -38,12 +38,12 @@ import { ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
  * );
  * console.log(`Uploaded: ${uploadedAttachment.uri}`);
  *
- * // Two-step initialize (for custom upload handling)
- * const attachmentInitResult = await conversationalAgentService.conversations.attachments.initialize(
+ * // Two-step create (for custom upload handling)
+ * const attachmentEntry = await conversationalAgentService.conversations.attachments.create(
  *   conversationId,
  *   'document.pdf'
  * );
- * // Handle upload manually using attachmentInitResult.fileUploadAccess
+ * // Handle upload manually using attachmentEntry.fileUploadAccess
  * ```
  */
 export class AttachmentService extends BaseService implements AttachmentServiceModel {
@@ -56,29 +56,31 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
   }
 
   /**
-   * Initialize a file attachment for the conversation. Creates the attachment entry and returns
-   * the upload details, without uploading any file content. The client must handle the file
-   * upload using the returned fileUploadAccess details.
+   * Creates an attachment entry for a conversation
+   *
+   * Creates the attachment entry and returns upload access details.
+   * The client must handle the file upload using the returned fileUploadAccess.
+   * For most cases, use `upload()` instead which handles both steps.
    *
    * @param conversationId - The id of the conversation that the attachment will be accessible within
-   * @param fileName - The name of the file to initialize
+   * @param fileName - The name of the file
    * @returns Promise resolving to the attachment creation response including URI, name, and access details for the client to perform the upload
    *
    * @example
    * ```typescript
-   * const initResult = await conversationalAgentService.conversations.attachments.initialize(
+   * const attachmentEntry = await conversationalAgentService.conversations.attachments.create(
    *   conversationId,
    *   'document.pdf'
    * );
-   * // Use initResult.fileUploadAccess to upload file content manually
+   * // Use attachmentEntry.fileUploadAccess to upload file content manually
    * ```
    */
-  @track('Attachments.Initialize')
-  async initialize(
+  @track('Attachments.Create')
+  async create(
     conversationId: ConversationId,
     fileName: string
-  ): Promise<AttachmentInitializeResponse> {
-    const response = await this.post<AttachmentInitializeResponse>(
+  ): Promise<AttachmentCreateResponse> {
+    const response = await this.post<AttachmentCreateResponse>(
       ATTACHMENT_ENDPOINTS.CREATE(conversationId),
       { name: fileName }
     );
@@ -86,8 +88,10 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
   }
 
   /**
-   * Creates an attachment by uploading a file to a conversation. Both initializes the attachment
-   * and uploads the file contents to the attachment's storage URL.
+   * Uploads a file attachment to a conversation
+   *
+   * Convenience method that creates the attachment entry and uploads
+   * the file content in one step.
    *
    * @param conversationId - The conversation to attach the file to
    * @param file - The file to upload
@@ -107,8 +111,8 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
     conversationId: ConversationId,
     file: File
   ): Promise<AttachmentUploadResponse> {
-    // Step 1: Initialize attachment and get upload URL
-    const { fileUploadAccess, uri, name } = await this.initialize(conversationId, file.name);
+    // Step 1: Create attachment entry and get upload URL
+    const { fileUploadAccess, uri, name } = await this.create(conversationId, file.name);
 
     // Step 2: Upload file to blob storage
     const uploadHeaders: Record<string, string> = {

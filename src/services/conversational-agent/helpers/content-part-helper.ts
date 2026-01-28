@@ -1,5 +1,5 @@
 /**
- * ContentPartHelper - Helper class for ContentPart with convenience methods
+ * ContentPartGetResponse - Response class for ContentPart with convenience methods
  */
 
 import type {
@@ -10,10 +10,10 @@ import type {
 import { isExternalValue, isInlineValue } from './conversation-type-util';
 
 /**
- * Helper class that wraps ContentPart with convenience methods
+ * Response class that wraps ContentPart with convenience methods
  * for accessing inline/external data.
  */
-export class ContentPartHelper implements ContentPart {
+export class ContentPartGetResponse implements ContentPart {
   public contentPartId: string;
   public mimeType: string;
   public data: InlineOrExternalValue<string>;
@@ -21,8 +21,8 @@ export class ContentPartHelper implements ContentPart {
   public isTranscript?: boolean;
   public isIncomplete?: boolean;
   public name?: string;
-  public createdAt: string;
-  public updatedAt: string;
+  public createdTime: string;
+  public updatedTime: string;
 
   constructor(contentPart: ContentPart) {
     this.contentPartId = contentPart.contentPartId;
@@ -32,8 +32,8 @@ export class ContentPartHelper implements ContentPart {
     this.isTranscript = contentPart.isTranscript;
     this.isIncomplete = contentPart.isIncomplete;
     this.name = contentPart.name;
-    this.createdAt = contentPart.createdAt;
-    this.updatedAt = contentPart.updatedAt;
+    this.createdTime = contentPart.createdTime;
+    this.updatedTime = contentPart.updatedTime;
   }
 
   /**

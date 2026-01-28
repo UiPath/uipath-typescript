@@ -1,7 +1,7 @@
 /**
  * TraceService
  *
- * Provides access to LLM Operations tracing data for conversational agent sessions.
+ * Provides access to trace data for conversational agent sessions.
  * This allows retrieving distributed trace spans for debugging, monitoring,
  * and observability purposes.
  */
@@ -12,13 +12,18 @@ import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
-import type { LlmOpsSpan, RawLlmOpsSpan, TraceServiceModel } from '@/models/conversational-agent';
+import type {
+  TraceSpanGetResponse,
+  RawTraceSpan,
+  TraceServiceModel
+} from '@/models/conversational-agent';
 
 // Utils
 import { TRACES_ENDPOINTS } from '@/utils/constants/endpoints';
+import { pascalToCamelCaseKeys } from '@/utils/transform';
 
 /**
- * Service for accessing LLM Operations traces
+ * Service for accessing trace spans
  *
  * Traces provide observability into LLM operations during conversational agent sessions.
  * Each conversation can have a traceId that links to spans representing:
@@ -40,8 +45,8 @@ import { TRACES_ENDPOINTS } from '@/utils/constants/endpoints';
  *
  * // Analyze the spans
  * for (const span of traceSpans) {
- *   console.log(`${span.Name}: ${span.Status}`);
- *   const spanAttributes = JSON.parse(span.Attributes);
+ *   console.log(`${span.name}: ${span.status}`);
+ *   const spanAttributes = JSON.parse(span.attributes);
  *   console.log('Token usage:', spanAttributes.tokenUsage);
  * }
  * ```
@@ -64,31 +69,33 @@ export class TraceService extends BaseService implements TraceServiceModel {
    * contains timing, status, and attribute information.
    *
    * @param traceId - The trace ID to retrieve spans for
-   * @returns Promise resolving to an array of LLM Ops spans
+   * @returns Promise resolving to an array of trace spans
    *
    * @example
    * ```typescript
    * const traceSpans = await conversationalAgentService.traces.getSpans('550e8400-e29b-41d4-a716-446655440000');
    *
    * // Find spans with errors
-   * const errorSpans = traceSpans.filter(span => span.Status === LlmOpsSpanStatus.Error);
+   * const errorSpans = traceSpans.filter(span => span.status === TraceSpanStatus.Error);
    *
    * // Calculate total duration
-   * const rootSpan = traceSpans.find(span => !span.ParentId);
-   * if (rootSpan?.StartTime && rootSpan?.EndTime) {
-   *   const durationMs = new Date(rootSpan.EndTime).getTime() - new Date(rootSpan.StartTime).getTime();
+   * const rootSpan = traceSpans.find(span => !span.parentId);
+   * if (rootSpan?.startTime && rootSpan?.endTime) {
+   *   const durationMs = new Date(rootSpan.endTime).getTime() - new Date(rootSpan.startTime).getTime();
    *   console.log(`Total duration: ${durationMs}ms`);
    * }
    * ```
    */
   @track('Traces.GetSpans')
-  async getSpans(traceId: string): Promise<LlmOpsSpan[]> {
-    const response = await this.get<RawLlmOpsSpan[]>(TRACES_ENDPOINTS.GET_SPANS(traceId));
+  async getSpans(traceId: string): Promise<TraceSpanGetResponse[]> {
+    const response = await this.get<RawTraceSpan[]>(TRACES_ENDPOINTS.GET_SPANS(traceId));
 
-    // Transform raw spans: stringify the Attributes object
-    return response.data.map((rawSpan) => ({
-      ...rawSpan,
-      Attributes: JSON.stringify(rawSpan.Attributes)
-    }));
+    // Transform raw spans: convert PascalCase to camelCase and stringify Attributes
+    return response.data.map((rawSpan) => {
+      const transformedSpan = pascalToCamelCaseKeys(rawSpan) as TraceSpanGetResponse;
+      // Stringify the attributes object (it comes as an object from API)
+      transformedSpan.attributes = JSON.stringify(rawSpan.Attributes);
+      return transformedSpan;
+    });
   }
 }
