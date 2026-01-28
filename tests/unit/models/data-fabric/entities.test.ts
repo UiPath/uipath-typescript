@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createEntityWithMethods } from '../../../../src/models/data-fabric/entities.models';
 import type { EntityServiceModel } from '../../../../src/models/data-fabric/entities.models';
-import { createBasicEntity, createMockEntityRecords, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
+import { createBasicEntity, createMockEntityRecords, createMockSingleInsertResponse, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 
 // ===== TEST SUITE =====
@@ -15,6 +15,7 @@ describe('Entity Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       getRecordsById: vi.fn(),
+      insertById: vi.fn(),
       batchInsertById: vi.fn(),
       updateById: vi.fn(),
       deleteById: vi.fn(),
@@ -28,7 +29,58 @@ describe('Entity Models', () => {
 
   describe('bound methods on entity', () => {
     describe('entity.insert()', () => {
-      it('should call entity.insert with entity id and data', async () => {
+      it('should call entity.insert with entity id and single record', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
+        const mockResponse = createMockSingleInsertResponse(testData);
+        mockService.insertById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.insert(testData);
+
+        expect(mockService.insertById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          testData,
+          undefined
+        );
+        expect(result).toEqual(mockResponse);
+        expect(result.id).toBeDefined();
+      });
+
+      it('should call entity.insert with options', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
+        const options = {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        };
+        const mockResponse = createMockSingleInsertResponse(testData, {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        });
+        mockService.insertById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.insert(testData, options);
+
+        expect(mockService.insertById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          testData,
+          options
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('should throw error if entity id is undefined', async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.insert(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA)).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+      });
+    });
+
+    describe('entity.batchInsert()', () => {
+      it('should call entity.batchInsert with entity id and data array', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -39,7 +91,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockInsertResponse(testData);
         mockService.batchInsertById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.insert(testData);
+        const result = await entity.batchInsert(testData);
 
         expect(mockService.batchInsertById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -51,7 +103,7 @@ describe('Entity Models', () => {
         expect(result.failureRecords).toHaveLength(0);
       });
 
-      it('should call entity.insert with options', async () => {
+      it('should call entity.batchInsert with options', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -60,12 +112,12 @@ describe('Entity Models', () => {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
           failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
         };
-        const mockResponse = createMockInsertResponse(testData, { 
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
+        const mockResponse = createMockInsertResponse(testData, {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
         });
         mockService.batchInsertById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.insert(testData, options);
+        const result = await entity.batchInsert(testData, options);
 
         expect(mockService.batchInsertById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -79,10 +131,10 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
-        await expect(entity.insert([ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+        await expect(entity.batchInsert([ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
 
-      it('should handle partial failures in insert', async () => {
+      it('should handle partial failures in batchInsert', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -93,16 +145,16 @@ describe('Entity Models', () => {
         const mockResponse = createMockInsertResponse(testData, { successCount: 1 });
         mockService.batchInsertById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.insert(testData);
+        const result = await entity.batchInsert(testData);
 
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(1);
-        
+
         // Validate successful record data
         expect(result.successRecords[0]).toHaveProperty('id');
         expect(result.successRecords[0].name).toBe(testData[0].name);
         expect(result.successRecords[0].age).toBe(testData[0].age);
-        
+
         // Validate failure record structure
         expect(result.failureRecords[0]).toHaveProperty('error');
         expect(result.failureRecords[0]).toHaveProperty('record');
@@ -431,6 +483,7 @@ describe('Entity Models', () => {
       const entity = createEntityWithMethods(entityData, mockService);
 
       expect(typeof entity.insert).toBe('function');
+      expect(typeof entity.batchInsert).toBe('function');
       expect(typeof entity.update).toBe('function');
       expect(typeof entity.delete).toBe('function');
       expect(typeof entity.getRecords).toBe('function');
