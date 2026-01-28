@@ -5,7 +5,7 @@
  */
 
 import type { Exchange, Message, ExchangeGetResponse, MessageGetResponse } from '@/models/conversational-agent';
-import { ConversationMap } from '@/models/conversational-agent';
+import { ExchangeMap, MessageMap } from '@/models/conversational-agent';
 import { transformData } from '@/utils/transform';
 import { ContentPartHelper } from './content-part-helper';
 
@@ -21,7 +21,7 @@ export function transformExchanges(exchanges: Exchange[]): ExchangeGetResponse[]
  */
 export function transformExchange(exchange: Exchange): ExchangeGetResponse {
   // First transform timestamps at exchange level
-  const transformed = transformData(exchange, ConversationMap) as Exchange;
+  const transformed = transformData(exchange, ExchangeMap) as Exchange;
   const { messages, ...rest } = transformed;
   return {
     ...rest,
@@ -34,7 +34,7 @@ export function transformExchange(exchange: Exchange): ExchangeGetResponse {
  */
 export function transformMessage(message: Message): MessageGetResponse {
   // First transform timestamps at message level (also transforms nested contentParts, toolCalls, etc.)
-  const transformed = transformData(message, ConversationMap) as Message;
+  const transformed = transformData(message, MessageMap) as Message;
   const { contentParts, ...rest } = transformed;
   return {
     ...rest,
