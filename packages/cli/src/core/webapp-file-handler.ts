@@ -47,7 +47,16 @@ export interface ProjectStructure {
   folders: ProjectFolder[];
 }
 
-// Structural Migration
+// Execution plan for per-file operations
+export interface FileOperationPlan {
+  createFolders: Array<{ path: string; id?: string }>; // Not used anymore - folders created automatically
+  uploadFiles: Array<{ path: string; localFile: LocalFile; parentPath: string | null; parentId?: string | null }>; // parentId if folder exists, parentPath if needs creation
+  updateFiles: Array<{ path: string; localFile: LocalFile; fileId: string }>;
+  deleteFiles: Array<{ fileId: string; path: string }>;
+  deleteFolders: Array<{ folderId: string; path: string }>; // Folders that no longer exist locally
+}
+
+// Legacy interfaces (kept for backward compatibility during migration)
 export interface AddedResource {
   content_file_path?: string;
   content_string?: string;
@@ -75,42 +84,208 @@ interface LockInfo {
 export class WebAppFileHandler {
   private config: WebAppPushConfig;
   private projectStructure: ProjectStructure | null = null;
+  private lockKey: string | null = null;
 
   constructor(config: WebAppPushConfig) {
     this.config = config;
   }
 
+  /**
+   * Remote "source" folder name: outer boundary on remote. Inside it we have dist/ (same as local bundlePath).
+   * Structure: source/dist/index.html, source/dist/css/, etc. All push operations are scoped to source/dist/;
+   * we never touch files/folders outside it.
+   */
+  private static readonly REMOTE_SOURCE_FOLDER_NAME = 'source';
+
+  private get sourceFolderName(): string {
+    return WebAppFileHandler.REMOTE_SOURCE_FOLDER_NAME;
+  }
+
+  /**
+   * Remote content root: source/dist. This is the root for diff; we only consider paths under source/dist/.
+   */
+  private get remoteContentRoot(): string {
+    return this.sourceFolderName + '/' + this.config.bundlePath;
+  }
+
+  /**
+   * Map local path (under bundlePath, e.g. dist/index.html) to remote path (under source/dist, e.g. source/dist/index.html).
+   */
+  private localPathToRemotePath(localPath: string): string {
+    const normalized = localPath.replace(/\\/g, '/');
+    const prefix = this.config.bundlePath + '/';
+    if (normalized.startsWith(prefix)) {
+      return this.remoteContentRoot + '/' + normalized.slice(prefix.length);
+    }
+    if (normalized === this.config.bundlePath) {
+      return this.remoteContentRoot;
+    }
+    return this.remoteContentRoot + '/' + normalized;
+  }
+
+  /**
+   * Filter remote files map to only entries under source/dist/ (our push boundary; don't touch outer env).
+   */
+  private filterToSourceFolderFiles(files: Map<string, ProjectFile>): Map<string, ProjectFile> {
+    const root = this.remoteContentRoot;
+    const prefix = root + '/';
+    const filtered = new Map<string, ProjectFile>();
+    for (const [filePath, file] of files.entries()) {
+      if (filePath === root || filePath.startsWith(prefix)) {
+        filtered.set(filePath, file);
+      }
+    }
+    return filtered;
+  }
+
+  /**
+   * Filter remote folders map to only entries under source/dist/ (our push boundary).
+   */
+  private filterToSourceFolderFolders(folders: Map<string, ProjectFolder>): Map<string, ProjectFolder> {
+    const root = this.remoteContentRoot;
+    const prefix = root + '/';
+    const filtered = new Map<string, ProjectFolder>();
+    for (const [folderPath, folder] of folders.entries()) {
+      if (folderPath === root || folderPath.startsWith(prefix)) {
+        filtered.set(folderPath, folder);
+      }
+    }
+    return filtered;
+  }
+
   async push(): Promise<void> {
     try {
-      // Fetch remote structure
-      this.config.logger.log(chalk.gray('\n📥 Fetching remote structure...'));
+      const lockInfo = await this.retrieveLock();
+      this.lockKey = lockInfo?.projectLockKey ?? null;
+
       this.projectStructure = await this.fetchRemoteStructure();
-
-      // Collect local files
-      this.config.logger.log(chalk.gray('Collecting local files...'));
       const localFiles = this.collectLocalFiles();
-      this.config.logger.log(chalk.gray(`Collected ${localFiles.length} local files`));
+      const fullRemoteFiles = this.getRemoteFilesMap(this.projectStructure);
+      const fullRemoteFolders = this.getRemoteFoldersMap(this.projectStructure);
 
-      // Get remote files as a flat map
-      const remoteFiles = this.getRemoteFilesMap(this.projectStructure);
+      const plan = await this.buildExecutionPlan(localFiles, fullRemoteFiles, fullRemoteFolders);
+      await this.prepareMetadataFileForPlan(plan, fullRemoteFiles);
 
-      // Process file uploads and build migration
-      this.config.logger.log(chalk.gray('Computing diff...'));
-      const migration = await this.processFileUploads(localFiles, remoteFiles);
-      this.config.logger.log(chalk.gray(`Diff: ${migration.added_resources.length} add, ${migration.modified_resources.length} update, ${migration.deleted_resources.length} delete`));
+      const folderIdMap = this.buildFolderIdMap();
+      await this.ensureFoldersCreated(plan, folderIdMap);
+      await this.moveNestedFoldersIntoParents(plan.createFolders, folderIdMap);
 
-      // Prepare metadata file
-      await this.prepareMetadataFile(migration, remoteFiles);
-
-      // Commit migration
-      if (migration.added_resources.length > 0 || migration.modified_resources.length > 0 || migration.deleted_resources.length > 0) {
-        await this.commitMigration(migration);
+      for (const fileOp of plan.uploadFiles) {
+        if (fileOp.parentPath) {
+          fileOp.parentId = folderIdMap.get(fileOp.parentPath) ?? null;
+        }
       }
 
-      // Cleanup empty folders
+      // File operations
+      const hasFileOps = plan.uploadFiles.length > 0 || plan.updateFiles.length > 0 || plan.deleteFiles.length > 0;
+      if (hasFileOps) {
+        await this.executeFileOperations(plan);
+      }
+
+      if (plan.deleteFiles.length > 0) {
+        await this.deleteFiles(plan.deleteFiles);
+      }
+
+      // Delete folders that no longer exist locally (after files are deleted)
+      if (plan.deleteFolders.length > 0) {
+        await this.deleteFolders(plan.deleteFolders);
+      }
+
       await this.cleanupEmptyFolders();
     } catch (error) {
       throw error;
+    }
+  }
+
+  /** Build execution plan: first-push (create source/dist + upload only) or diff-based plan. */
+  private async buildExecutionPlan(
+    localFiles: LocalFile[],
+    fullRemoteFiles: Map<string, ProjectFile>,
+    fullRemoteFolders: Map<string, ProjectFolder>
+  ): Promise<FileOperationPlan> {
+    const contentRootExists = fullRemoteFolders.has(this.remoteContentRoot);
+
+    if (!contentRootExists) {
+      await this.ensureContentRootExists(fullRemoteFolders);
+      const remoteFolders = this.getRemoteFoldersMap(this.projectStructure!);
+      return this.computeFirstPushPlan(localFiles, remoteFolders);
+    }
+
+    const remoteFiles = this.filterToSourceFolderFiles(fullRemoteFiles);
+    const remoteFolders = this.filterToSourceFolderFolders(fullRemoteFolders);
+    return this.computeExecutionPlan(localFiles, remoteFiles, remoteFolders);
+  }
+
+  /** Ensure source and source/dist exist on remote (first push). */
+  private async ensureContentRootExists(fullRemoteFolders: Map<string, ProjectFolder>): Promise<void> {
+    if (!fullRemoteFolders.has(this.sourceFolderName)) {
+      await this.createFolderAtRoot(this.sourceFolderName);
+      this.projectStructure = await this.fetchRemoteStructure();
+    }
+    let currentFolders = this.getRemoteFoldersMap(this.projectStructure!);
+    if (!currentFolders.has(this.remoteContentRoot)) {
+      await this.createFolderAtRoot(this.config.bundlePath);
+      this.projectStructure = await this.fetchRemoteStructure();
+      currentFolders = this.getRemoteFoldersMap(this.projectStructure!);
+      const distId = currentFolders.get(this.config.bundlePath)?.id;
+      const sourceId = currentFolders.get(this.sourceFolderName)?.id;
+      if (distId && sourceId) {
+        await this.moveFolder(distId, sourceId);
+      }
+      this.projectStructure = await this.fetchRemoteStructure();
+    }
+  }
+
+  private buildFolderIdMap(): Map<string, string> {
+    const map = new Map<string, string>();
+    const folders = this.getRemoteFoldersMap(this.projectStructure!);
+    for (const [folderPath, folder] of folders.entries()) {
+      if (folder.id) map.set(folderPath, folder.id);
+    }
+    return map;
+  }
+
+  private async ensureFoldersCreated(plan: FileOperationPlan, folderIdMap: Map<string, string>): Promise<void> {
+    if (plan.createFolders.length === 0) return;
+    for (const folder of plan.createFolders) {
+      if (folderIdMap.has(folder.path)) continue;
+      const folderName = folder.path.split('/').filter(Boolean).pop()!;
+      const id = await this.createFolderAtRoot(folderName);
+      if (id) folderIdMap.set(folder.path, id);
+    }
+    this.projectStructure = await this.fetchRemoteStructure();
+    const afterCreate = this.getRemoteFoldersMap(this.projectStructure!);
+    for (const folder of plan.createFolders) {
+      if (folderIdMap.has(folder.path)) continue;
+      const folderName = folder.path.split('/').filter(Boolean).pop()!;
+      const byPath = afterCreate.get(folder.path);
+      const byName = afterCreate.get(folderName);
+      if (byPath?.id) folderIdMap.set(folder.path, byPath.id);
+      else if (byName?.id) folderIdMap.set(folder.path, byName.id);
+    }
+  }
+
+  private async moveNestedFoldersIntoParents(
+    createFolders: FileOperationPlan['createFolders'],
+    folderIdMap: Map<string, string>
+  ): Promise<void> {
+    const moves: Array<{ folderPath: string; folderId: string; parentId: string }> = [];
+    for (const folder of createFolders) {
+      const pathParts = folder.path.split('/').filter(Boolean);
+      if (pathParts.length <= 1) continue;
+      const parentPath = pathParts.slice(0, -1).join('/');
+      const folderId = folderIdMap.get(folder.path);
+      const parentId = folderIdMap.get(parentPath);
+      if (folderId && parentId && folderId !== parentId) {
+        moves.push({ folderPath: folder.path, folderId, parentId });
+      }
+    }
+    for (const m of moves) {
+      try {
+        await this.moveFolder(m.folderId, m.parentId);
+      } catch (e) {
+        this.config.logger.log(chalk.yellow(`Move folder failed: ${m.folderPath} — ${e instanceof Error ? e.message : 'Unknown error'}`));
+      }
     }
   }
 
@@ -122,27 +297,18 @@ export class WebAppFileHandler {
       return;
     }
 
-    this.config.logger.log(chalk.blue('\n📦 Importing referenced resources to Studio Web project...'));
-
     const bindingsPath = path.join(this.config.rootDir, 'bindings.json');
-    
     let bindings: Bindings;
     try {
       const bindingsContent = fs.readFileSync(bindingsPath, 'utf-8');
       bindings = JSON.parse(bindingsContent);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        this.config.logger.log(chalk.yellow('⚠️  bindings.json not found, skipping resource import'));
-        return;
-      }
-      this.config.logger.log(chalk.red(`❌ Failed to parse bindings.json: ${error instanceof Error ? error.message : 'Unknown error'}`));
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
+      this.config.logger.log(chalk.red(`Failed to parse bindings.json: ${error instanceof Error ? error.message : 'Unknown error'}`));
       return;
     }
 
-    if (!bindings.resources || bindings.resources.length === 0) {
-      this.config.logger.log(chalk.gray('No resources found in bindings.json'));
-      return;
-    }
+    if (!bindings.resources || bindings.resources.length === 0) return;
 
     let resourcesNotFound = 0;
     let resourcesUnchanged = 0;
@@ -185,7 +351,7 @@ export class WebAppFileHandler {
             };
           } catch (error) {
             const connectorName = bindingsResource.metadata?.Connector || 'unknown';
-            this.config.logger.log(chalk.yellow(`⚠️  Connection with key '${connectionKey}' of type '${connectorName}' was not found and will not be added to the solution.`));
+            this.config.logger.log(chalk.yellow(`Connection not found: ${connectionKey} (${connectorName})`));
             resourcesNotFound++;
             continue;
           }
@@ -206,14 +372,14 @@ export class WebAppFileHandler {
             foundResource = await this.findResourceInCatalog(resourceType, resourceName, folderPath);
           } catch (error) {
             const folderInfo = folderPath ? ` at folder path '${folderPath}'` : ' (tenant-scoped)';
-            this.config.logger.log(chalk.yellow(`⚠️  Resource '${resourceName}' of type '${resourceType}'${folderInfo} was not found and will not be added to the solution.`));
+            this.config.logger.log(chalk.yellow(`Resource not found: ${resourceName} (${resourceType})${folderInfo}`));
             resourcesNotFound++;
             continue;
           }
         }
 
         if (!foundResource || foundResource.folders.length === 0) {
-          this.config.logger.log(chalk.yellow(`⚠️  Resource '${resourceName}' of type '${resourceType}' was not found and will not be added to the solution.`));
+          this.config.logger.log(chalk.yellow(`Resource not found: ${resourceName} (${resourceType})`));
           resourcesNotFound++;
           continue;
         }
@@ -235,37 +401,30 @@ export class WebAppFileHandler {
 
         const response = await this.createReferencedResource(solutionId, referencedResourceRequest);
 
-        const resourceDetails = `(kind = ${chalk.cyan(foundResource.resource_type)}, type = ${chalk.cyan(foundResource.resource_sub_type || 'N/A')})`;
-
         switch (response.status) {
           case 'ADDED':
-            this.config.logger.log(chalk.green(`✅ Created reference for resource: ${chalk.cyan(resourceName)} ${resourceDetails}`));
             resourcesCreated++;
             break;
           case 'UNCHANGED':
-            this.config.logger.log(chalk.gray(`ℹ️  Resource reference already exists (${chalk.yellow('unchanged')}): ${chalk.cyan(resourceName)} ${resourceDetails}`));
             resourcesUnchanged++;
             break;
           case 'UPDATED':
-            this.config.logger.log(chalk.blue(`ℹ️  Resource reference already exists (${chalk.blue('updated')}): ${chalk.cyan(resourceName)} ${resourceDetails}`));
             resourcesUpdated++;
             break;
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        this.config.logger.log(chalk.red(`❌ Error processing resource '${resourceName}': ${errorMessage}`));
+        this.config.logger.log(chalk.red(`Error processing resource ${resourceName}: ${errorMessage}`));
         resourcesNotFound++;
       }
     }
 
     const totalResources = resourcesCreated + resourcesUnchanged + resourcesNotFound + resourcesUpdated;
-    this.config.logger.log(
-      chalk.blue(`\n📊 Resource import summary: ${totalResources} total resources - `) +
-      chalk.green(`${resourcesCreated} created, `) +
-      chalk.blue(`${resourcesUpdated} updated, `) +
-      chalk.yellow(`${resourcesUnchanged} unchanged, `) +
-      chalk.red(`${resourcesNotFound} not found`)
-    );
+    if (resourcesCreated > 0 || resourcesUpdated > 0 || resourcesNotFound > 0) {
+      this.config.logger.log(
+        `Resources: ${resourcesCreated} created, ${resourcesUpdated} updated, ${resourcesUnchanged} unchanged, ${resourcesNotFound} not found`
+      );
+    }
   }
 
   private collectLocalFiles(): LocalFile[] {
@@ -380,47 +539,72 @@ export class WebAppFileHandler {
       files.set(file.name, file);
     }
 
-    // Process folders
+    // Process root-level folders with folder name as path prefix so paths match local (e.g. dist/index.html)
     for (const folder of structure.folders) {
-      collectFiles(folder);
+      collectFiles(folder, folder.name);
     }
 
     return files;
   }
 
-  private async processFileUploads(
+  /**
+   * Get all remote folders as a flat map indexed by path
+   */
+  private getRemoteFoldersMap(structure: ProjectStructure): Map<string, ProjectFolder> {
+    const folders = new Map<string, ProjectFolder>();
+
+    const collectFolders = (folder: ProjectFolder, currentPath: string = '') => {
+      const pathKey = currentPath || folder.name;
+      if (pathKey) {
+        folders.set(pathKey, folder);
+      }
+      for (const subfolder of folder.folders) {
+        const subfolderPath = currentPath ? `${currentPath}/${subfolder.name}` : subfolder.name;
+        collectFolders(subfolder, subfolderPath);
+      }
+    };
+
+    // Use folder name as path prefix so paths match local (e.g. dist, dist/css)
+    for (const folder of structure.folders) {
+      collectFolders(folder, folder.name);
+    }
+
+    return folders;
+  }
+
+  /**
+   * Compute execution plan for file operations
+   * Phase 3: Diff Computation
+   */
+  private async computeExecutionPlan(
     localFiles: LocalFile[],
-    remoteFiles: Map<string, ProjectFile>
-  ): Promise<StructuralMigration> {
-    const migration: StructuralMigration = {
-      added_resources: [],
-      modified_resources: [],
-      deleted_resources: [],
+    remoteFiles: Map<string, ProjectFile>,
+    remoteFolders: Map<string, ProjectFolder>
+  ): Promise<FileOperationPlan> {
+    const plan: FileOperationPlan = {
+      createFolders: [],
+      uploadFiles: [],
+      updateFiles: [],
+      deleteFiles: [],
+      deleteFolders: [],
     };
 
     const processedFileIds = new Set<string>();
+    const requiredFolders = new Set<string>();
 
-    // Process local files
+    // Process local files: remote paths are under source/dist/ (e.g. source/dist/index.html), local are under dist/
     for (const localFile of localFiles) {
-      // Try exact path match first
-      let remoteFile = remoteFiles.get(localFile.path);
-      
-      // If not found, try alternative path formats to handle different storage locations
-      if (!remoteFile) {
-        const normalizedPath = localFile.path.replace(/\\/g, '/');
-        remoteFile = remoteFiles.get(normalizedPath);
-        
-        // Try without bundlePath prefix (files might be stored at root)
-        if (!remoteFile && localFile.path.startsWith(this.config.bundlePath + '/')) {
-          const pathWithoutPrefix = localFile.path.substring(this.config.bundlePath.length + 1);
-          remoteFile = remoteFiles.get(pathWithoutPrefix);
-        }
-        
-        // Try with bundlePath prefix (files might be stored in folder)
-        if (!remoteFile && !localFile.path.startsWith(this.config.bundlePath + '/')) {
-          const pathWithPrefix = `${this.config.bundlePath}/${localFile.path}`;
-          remoteFile = remoteFiles.get(pathWithPrefix);
-        }
+      const remotePath = this.localPathToRemotePath(localFile.path);
+      const remoteFile = remoteFiles.get(remotePath);
+
+      // Always track required folders for every local file (so we don't delete folders that have files)
+      const remoteParentPath = path.dirname(remotePath);
+      const parentPathForPlan = remoteParentPath === '.' ? this.remoteContentRoot : remoteParentPath;
+      const pathParts = parentPathForPlan.split('/');
+      let currentPath = '';
+      for (const part of pathParts) {
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
+        requiredFolders.add(currentPath);
       }
 
       if (remoteFile) {
@@ -430,45 +614,184 @@ export class WebAppFileHandler {
         try {
           const remoteContent = await this.downloadRemoteFile(remoteFile.id);
           const remoteHash = this.computeNormalizedHash(remoteContent);
-          
-          // Only update if content differs
+
           if (localFile.hash !== remoteHash) {
-            migration.modified_resources.push({
-              id: remoteFile.id,
-              content_file_path: localFile.absPath,
+            plan.updateFiles.push({
+              path: localFile.path,
+              localFile,
+              fileId: remoteFile.id,
             });
-            this.config.logger.log(chalk.yellow(`Updating '${localFile.path}'`));
           }
         } catch (error) {
           // If comparison fails, proceed with update
-          migration.modified_resources.push({
-            id: remoteFile.id,
-            content_file_path: localFile.absPath,
+          plan.updateFiles.push({
+            path: localFile.path,
+            localFile,
+            fileId: remoteFile.id,
           });
         }
       } else {
-        // New file - determine parent path
-        const parentPath = path.dirname(localFile.path);
-        const parentPathNormalized = parentPath === '.' ? null : parentPath;
+        // Skip studio_metadata.json - it's local metadata only
+        if (localFile.path === '.uipath/studio_metadata.json' || localFile.path === 'studio_metadata.json') {
+          continue;
+        }
 
-        migration.added_resources.push({
-          content_file_path: localFile.absPath,
-          parent_path: parentPathNormalized,
+        // New file: parent path on remote is under source/dist (e.g. source/dist, source/dist/css)
+        plan.uploadFiles.push({
+          path: localFile.path,
+          localFile,
+          parentPath: parentPathForPlan,
         });
-        this.config.logger.log(chalk.cyan(`Uploading '${localFile.path}'`));
       }
     }
 
-    // Find deleted files
+    // Find deleted files: remote paths are under source/; delete if no local file maps to that remote path
+    const localRemotePaths = new Set<string>();
+    for (const localFile of localFiles) {
+      localRemotePaths.add(this.localPathToRemotePath(localFile.path));
+    }
+
     for (const [filePath, remoteFile] of remoteFiles.entries()) {
       if (filePath === '.uipath/studio_metadata.json' || filePath === 'studio_metadata.json') {
         continue;
       }
-      
-      if (filePath.startsWith(this.config.bundlePath + '/') && !processedFileIds.has(remoteFile.id)) {
-        migration.deleted_resources.push(remoteFile.id);
-        this.config.logger.log(chalk.red(`Deleting '${filePath}'`));
+      if (processedFileIds.has(remoteFile.id)) {
+        continue;
       }
+      const normalizedRemote = filePath.replace(/\\/g, '/');
+      if (!localRemotePaths.has(normalizedRemote)) {
+        plan.deleteFiles.push({
+          fileId: remoteFile.id,
+          path: filePath,
+        });
+      }
+    }
+
+    // Determine folders to create (remote path: source, source/css, etc.)
+    for (const folderPath of requiredFolders) {
+      if (!remoteFolders.has(folderPath)) {
+        plan.createFolders.push({ path: folderPath });
+      }
+    }
+
+    // Find folders to delete: only under source/dist/ and not required; never delete source/dist itself
+    const contentRootPrefix = this.remoteContentRoot + '/';
+    for (const [folderPath, folder] of remoteFolders.entries()) {
+      if (requiredFolders.has(folderPath)) {
+        continue;
+      }
+      const normalizedRemote = folderPath.replace(/\\/g, '/');
+      const isUnderContentRoot = normalizedRemote.startsWith(contentRootPrefix);
+      if (isUnderContentRoot && folder.id) {
+        plan.deleteFolders.push({
+          folderId: folder.id,
+          path: folderPath,
+        });
+      }
+    }
+
+    // Sort folders top-down (parent before child)
+    plan.createFolders.sort((a, b) => {
+      const depthA = a.path.split('/').length;
+      const depthB = b.path.split('/').length;
+      return depthA - depthB;
+    });
+
+    // Sort deleteFolders bottom-up (child before parent) so we delete children first
+    plan.deleteFolders.sort((a, b) => {
+      const depthA = a.path.split('/').length;
+      const depthB = b.path.split('/').length;
+      return depthB - depthA; // Reverse order
+    });
+
+    return plan;
+  }
+
+  /**
+   * Compute plan for first push: only uploads and nested folder creation under source/dist/; no updates or deletes.
+   * Used when source/dist was just created on remote. Paths in plan use remote path (source/dist, source/dist/css).
+   */
+  private computeFirstPushPlan(
+    localFiles: LocalFile[],
+    remoteFolders: Map<string, ProjectFolder>
+  ): FileOperationPlan {
+    const plan: FileOperationPlan = {
+      createFolders: [],
+      uploadFiles: [],
+      updateFiles: [],
+      deleteFiles: [],
+      deleteFolders: [],
+    };
+
+    const requiredFolders = new Set<string>();
+
+    for (const localFile of localFiles) {
+      if (localFile.path === '.uipath/studio_metadata.json' || localFile.path === 'studio_metadata.json') {
+        continue;
+      }
+
+      const remotePath = this.localPathToRemotePath(localFile.path);
+      const remoteParentPath = path.dirname(remotePath);
+      const parentPathForPlan = remoteParentPath === '.' ? this.remoteContentRoot : remoteParentPath;
+
+      plan.uploadFiles.push({
+        path: localFile.path,
+        localFile,
+        parentPath: parentPathForPlan,
+      });
+
+      const pathParts = parentPathForPlan.split('/');
+      let currentPath = '';
+      for (const part of pathParts) {
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
+        requiredFolders.add(currentPath);
+      }
+    }
+
+    for (const folderPath of requiredFolders) {
+      if (!remoteFolders.has(folderPath)) {
+        plan.createFolders.push({ path: folderPath });
+      }
+    }
+
+    plan.createFolders.sort((a, b) => {
+      const depthA = a.path.split('/').length;
+      const depthB = b.path.split('/').length;
+      return depthA - depthB;
+    });
+
+    return plan;
+  }
+
+  /**
+   * Convert FileOperationPlan to StructuralMigration (for old API)
+   */
+  private convertPlanToMigration(plan: FileOperationPlan): StructuralMigration {
+    const migration: StructuralMigration = {
+      added_resources: [],
+      modified_resources: [],
+      deleted_resources: [],
+    };
+
+    // Convert upload files to added resources
+    for (const fileOp of plan.uploadFiles) {
+      migration.added_resources.push({
+        content_file_path: fileOp.localFile.absPath,
+        parent_path: fileOp.parentPath,
+      });
+    }
+
+    // Convert update files to modified resources
+    for (const fileOp of plan.updateFiles) {
+      migration.modified_resources.push({
+        id: fileOp.fileId,
+        content_file_path: fileOp.localFile.absPath,
+      });
+    }
+
+    // Convert delete files
+    for (const fileOp of plan.deleteFiles) {
+      migration.deleted_resources.push(fileOp.fileId);
     }
 
     return migration;
@@ -496,6 +819,93 @@ export class WebAppFileHandler {
     return Buffer.from(await response.arrayBuffer());
   }
 
+  /**
+   * Prepare metadata file (local only, do not upload)
+   */
+  private async prepareMetadataFileForPlan(
+    plan: FileOperationPlan,
+    remoteFiles: Map<string, ProjectFile>
+  ): Promise<void> {
+    const metadataPath = path.join(this.config.rootDir, '.uipath', 'studio_metadata.json');
+    const metadataDir = path.dirname(metadataPath);
+
+    try {
+      fs.mkdirSync(metadataDir, { recursive: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+        throw error;
+      }
+    }
+
+    let metadata: any;
+    try {
+      const metadataContent = fs.readFileSync(metadataPath, 'utf-8');
+      metadata = JSON.parse(metadataContent);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        metadata = {
+          schemaVersion: '1.0.0',
+          name: this.config.projectId,
+          description: '',
+          lastPushDate: new Date().toISOString(),
+          lastPushAuthor: this.getCurrentUser(),
+        };
+      } else {
+        throw error;
+      }
+    }
+
+    // Update metadata
+    metadata.lastPushDate = new Date().toISOString();
+    metadata.lastPushAuthor = this.getCurrentUser();
+
+    // Check if remote metadata exists to increment version
+    let remoteMetadata = remoteFiles.get('.uipath/studio_metadata.json') || remoteFiles.get('studio_metadata.json');
+    
+    if (remoteMetadata) {
+      try {
+        const remoteContent = await this.downloadRemoteFile(remoteMetadata.id);
+        const remoteMetadataObj = JSON.parse(remoteContent.toString('utf-8'));
+        
+        if (remoteMetadataObj.codeVersion) {
+          const versionParts = remoteMetadataObj.codeVersion.split('.');
+          if (versionParts.length >= 3) {
+            versionParts[2] = String(parseInt(versionParts[2], 10) + 1);
+            metadata.codeVersion = versionParts.join('.');
+          } else {
+            metadata.codeVersion = '0.1.1';
+          }
+        }
+      } catch (error) {
+        metadata.codeVersion = '0.1.1';
+      }
+
+      // Do not upload studio_metadata.json - it's local metadata only
+      // Just update the local file
+    } else {
+      // Do not upload studio_metadata.json - it's local metadata only.
+      // Do not create .uipath on remote (no remote files under it).
+    }
+
+    // Write metadata to disk atomically
+    const metadataContent = JSON.stringify(metadata, null, 2);
+    const tempPath = `${metadataPath}.${process.pid}.${Date.now()}.tmp`;
+    try {
+      fs.writeFileSync(tempPath, metadataContent, { mode: 0o600 });
+      fs.renameSync(tempPath, metadataPath);
+    } catch (error) {
+      try {
+        fs.unlinkSync(tempPath);
+      } catch {
+        // Ignore cleanup errors
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Legacy method - kept for backward compatibility
+   */
   private async prepareMetadataFile(
     migration: StructuralMigration,
     remoteFiles: Map<string, ProjectFile>
@@ -789,7 +1199,8 @@ export class WebAppFileHandler {
   private async cleanupEmptyFolders(): Promise<void> {
     // Refresh structure
     const structure = await this.fetchRemoteStructure();
-    const emptyFolders = this.findEmptyFolders(structure);
+    // Only clean up empty folders inside the source folder; don't touch outer surroundings
+    const emptyFolders = this.findEmptyFolders(structure, this.remoteContentRoot);
 
     if (emptyFolders.length === 0) {
       return;
@@ -825,7 +1236,14 @@ export class WebAppFileHandler {
     }
   }
 
-  private findEmptyFolders(structure: ProjectStructure): Array<{ id: string; name: string }> {
+  /**
+   * Find empty folders in the structure. If rootPath is provided (e.g. "source/dist"), only consider
+   * folders under that path (so we don't touch outer surroundings).
+   */
+  private findEmptyFolders(
+    structure: ProjectStructure,
+    rootPath?: string
+  ): Array<{ id: string; name: string }> {
     const emptyFolders: Array<{ id: string; name: string }> = [];
 
     const checkFolder = (folder: ProjectFolder): void => {
@@ -838,8 +1256,19 @@ export class WebAppFileHandler {
       }
     };
 
-    for (const folder of structure.folders) {
-      checkFolder(folder);
+    if (rootPath) {
+      const segments = rootPath.replace(/\\/g, '/').split('/').filter(Boolean);
+      let folder: ProjectFolder | undefined = structure.folders.find((f) => f.name === segments[0]);
+      for (let i = 1; i < segments.length && folder; i++) {
+        folder = folder.folders.find((f) => f.name === segments[i]);
+      }
+      if (folder) {
+        checkFolder(folder);
+      }
+    } else {
+      for (const folder of structure.folders) {
+        checkFolder(folder);
+      }
     }
 
     return emptyFolders;
@@ -908,6 +1337,375 @@ export class WebAppFileHandler {
       return `${baseUrl}/${orgId}/${tenantId}${endpoint}`;
     }
     return `${baseUrl}/${orgId}${endpoint}`;
+  }
+
+  /**
+   * Create a folder at project root (API creates only at root).
+   */
+  private async createFolderAtRoot(name: string): Promise<string | null> {
+    const url = this.buildApiUrl(
+      API_ENDPOINTS.STUDIO_WEB_CREATE_FOLDER.replace('{projectId}', this.config.projectId)
+    );
+    const headers = createHeaders({
+      bearerToken: this.config.envConfig.accessToken,
+      tenantId: this.config.envConfig.tenantId,
+      contentType: 'application/json',
+    });
+    if (this.lockKey) {
+      headers['x-uipath-sw-lockkey'] = this.lockKey;
+    }
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ name }),
+      });
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = (await response.json()) as { id?: string };
+          if (data.id) return data.id;
+        }
+        return null;
+      }
+      if (response.status === 409) {
+        return null; // exists; id will come from refresh or existing map
+      }
+      const err = await response.text().catch(() => '');
+      throw new Error(`Create folder '${name}' failed: ${response.status} ${err.slice(0, 80)}`);
+    } catch (e) {
+      this.config.logger.log(chalk.yellow(`Create folder failed: ${name} — ${e instanceof Error ? e.message : 'Unknown error'}`));
+      return null;
+    }
+  }
+
+  /**
+   * Move a folder into a new parent (Folder/Move API).
+   */
+  private async moveFolder(folderId: string, parentId: string): Promise<void> {
+    const endpoint = API_ENDPOINTS.STUDIO_WEB_MOVE_FOLDER.replace('{projectId}', this.config.projectId);
+    const baseUrl = this.buildApiUrl(endpoint);
+    const url = `${baseUrl}?api-version=2`;
+    const headers = createHeaders({
+      bearerToken: this.config.envConfig.accessToken,
+      tenantId: this.config.envConfig.tenantId,
+      contentType: 'application/json',
+    });
+    if (this.lockKey) {
+      headers['x-uipath-sw-lockkey'] = this.lockKey;
+    }
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ folderId, parentId }),
+    });
+    if (!response.ok) {
+      const err = await response.text().catch(() => '');
+      throw new Error(`Move folder failed: ${response.status} ${response.statusText} ${err.slice(0, 80)}`);
+    }
+  }
+
+  /**
+   * Phase 4: Create a single folder and return its ID
+   * Creates folders synchronously to ensure proper parent-child relationships
+   */
+  private async createSingleFolder(
+    folderPath: string,
+    folderIdMap: Map<string, string>
+  ): Promise<string | null> {
+    const url = this.buildApiUrl(
+      API_ENDPOINTS.STUDIO_WEB_CREATE_FOLDER.replace('{projectId}', this.config.projectId)
+    );
+
+    try {
+      // Split path into parent and name
+      const pathParts = folderPath.split('/').filter(p => p);
+      const folderName = pathParts[pathParts.length - 1];
+      const parentPath = pathParts.length > 1 
+        ? pathParts.slice(0, -1).join('/')
+        : null;
+
+      const payload: Record<string, any> = {
+        name: folderName,
+      };
+
+      // For nested folders, API requires parentId (UUID). Never use parentPath for subfolders.
+      // Parents are always created first (sorted top-down), so we must have parentId.
+      if (parentPath && folderIdMap.has(parentPath)) {
+        payload.parentId = folderIdMap.get(parentPath);
+      }
+      // Root-level folder (e.g. "dist"): no parentId/parentPath
+
+      const headers = createHeaders({
+        bearerToken: this.config.envConfig.accessToken,
+        tenantId: this.config.envConfig.tenantId,
+        contentType: 'application/json',
+      });
+
+      if (this.lockKey) {
+        headers['x-uipath-sw-lockkey'] = this.lockKey;
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            const responseData = await response.json() as { id?: string };
+            if (responseData.id) {
+              return responseData.id;
+            }
+          } catch (parseError) {
+            const responseText = await response.text();
+            this.config.logger.log(chalk.yellow(`Could not parse folder creation response for ${folderPath}`));
+          }
+        }
+        // If response is OK but no ID in JSON, folder was created - we'll get ID from refresh
+        return null;
+      } else if (response.status === 409) {
+        // Folder already exists - get ID from remote structure
+        const remoteFolders = this.getRemoteFoldersMap(this.projectStructure!);
+        const existingFolder = remoteFolders.get(folderPath);
+        if (existingFolder?.id) {
+          return existingFolder.id;
+        }
+        // Will be captured in refresh
+        return null;
+      } else {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(`Failed to create folder '${folderPath}': ${response.status} ${response.statusText}${errorText ? ` - ${errorText.substring(0, 100)}` : ''}`);
+      }
+    } catch (error) {
+      this.config.logger.log(chalk.yellow(`Could not create folder ${folderPath}: ${error instanceof Error ? error.message : 'Unknown error'}`));
+      return null;
+    }
+  }
+
+  /**
+   * Phase 5: Upload a new file
+   */
+  private async createFile(
+    filePath: string,
+    localFile: LocalFile,
+    parentId: string | null,
+    parentPath: string | null
+  ): Promise<void> {
+    const url = this.buildApiUrl(
+      API_ENDPOINTS.STUDIO_WEB_CREATE_FILE.replace('{projectId}', this.config.projectId)
+    );
+
+    const form = new FormData();
+    // API expects 'file' field, not 'Content'
+    form.append('file', localFile.content, {
+      filename: path.basename(filePath),
+      contentType: 'application/octet-stream',
+    });
+
+    // Use parentId if available (existing folder), otherwise use parentPath (API will create folder)
+    if (parentId) {
+      form.append('parentId', parentId);
+    } else if (parentPath) {
+      // Fallback to parentPath - API should create the folder automatically
+      form.append('parentPath', parentPath);
+    }
+
+    const baseHeaders = createHeaders({
+      bearerToken: this.config.envConfig.accessToken,
+      tenantId: this.config.envConfig.tenantId,
+      contentType: undefined,
+    });
+
+    delete baseHeaders['Content-Type'];
+
+    if (this.lockKey) {
+      baseHeaders['x-uipath-sw-lockkey'] = this.lockKey;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...baseHeaders,
+        ...form.getHeaders(),
+      },
+      body: form,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to upload file '${filePath}': ${response.status} ${response.statusText}`);
+    }
+  }
+
+  /**
+   * Phase 5: Update an existing file
+   */
+  private async updateFile(
+    filePath: string,
+    localFile: LocalFile,
+    fileId: string
+  ): Promise<void> {
+    const url = this.buildApiUrl(
+      API_ENDPOINTS.STUDIO_WEB_UPDATE_FILE
+        .replace('{projectId}', this.config.projectId)
+        .replace('{fileId}', fileId)
+    );
+
+    const form = new FormData();
+    // API expects 'file' field, not 'Content'
+    form.append('file', localFile.content, {
+      filename: path.basename(filePath),
+      contentType: 'application/octet-stream',
+    });
+
+    const baseHeaders = createHeaders({
+      bearerToken: this.config.envConfig.accessToken,
+      tenantId: this.config.envConfig.tenantId,
+      contentType: undefined,
+    });
+
+    delete baseHeaders['Content-Type'];
+
+    if (this.lockKey) {
+      baseHeaders['x-uipath-sw-lockkey'] = this.lockKey;
+    }
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        ...baseHeaders,
+        ...form.getHeaders(),
+      },
+      body: form,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update file '${filePath}': ${response.status} ${response.statusText}`);
+    }
+  }
+
+  /**
+   * Phase 5: Execute file operations in parallel (with worker pool)
+   */
+  private async executeFileOperations(plan: FileOperationPlan): Promise<void> {
+    const WORKER_POOL_SIZE = 8;
+    const allOperations: Array<{ execute: () => Promise<void>; path: string }> = [];
+
+    // Add upload operations
+    for (const fileOp of plan.uploadFiles) {
+      allOperations.push({
+        execute: () => this.createFile(fileOp.path, fileOp.localFile, fileOp.parentId || null, fileOp.parentPath),
+        path: fileOp.path,
+      });
+    }
+
+    // Add update operations
+    for (const fileOp of plan.updateFiles) {
+      allOperations.push({
+        execute: () => this.updateFile(fileOp.path, fileOp.localFile, fileOp.fileId),
+        path: fileOp.path,
+      });
+    }
+
+    if (allOperations.length === 0) {
+      return;
+    }
+
+    // Execute in batches with worker pool
+    for (let i = 0; i < allOperations.length; i += WORKER_POOL_SIZE) {
+      const batch = allOperations.slice(i, i + WORKER_POOL_SIZE);
+      const results = await Promise.allSettled(batch.map(op => op.execute()));
+
+      // Check for failures
+      for (let j = 0; j < results.length; j++) {
+        const result = results[j];
+        if (result.status === 'rejected') {
+          const operation = batch[j];
+          this.config.logger.log(chalk.red(`Failed: ${operation.path} — ${result.reason}`));
+        }
+      }
+    }
+  }
+
+  /**
+   * Phase 6: Delete orphaned files
+   */
+  private async deleteFiles(files: Array<{ fileId: string; path: string }>): Promise<void> {
+    if (files.length === 0) {
+      return;
+    }
+
+    for (const file of files) {
+      try {
+        const url = this.buildApiUrl(
+          API_ENDPOINTS.STUDIO_WEB_DELETE_ITEM
+            .replace('{projectId}', this.config.projectId)
+            .replace('{itemId}', file.fileId)
+        );
+
+        const headers = createHeaders({
+          bearerToken: this.config.envConfig.accessToken,
+          tenantId: this.config.envConfig.tenantId,
+        });
+
+        if (this.lockKey) {
+          headers['x-uipath-sw-lockkey'] = this.lockKey;
+        }
+
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to delete file '${file.path}': ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+        this.config.logger.log(chalk.yellow(`Could not delete file ${file.path}: ${error instanceof Error ? error.message : 'Unknown error'}`));
+      }
+    }
+  }
+
+  /**
+   * Delete orphaned folders (no longer exist locally). (folders that no longer exist locally)
+   */
+  private async deleteFolders(folders: Array<{ folderId: string; path: string }>): Promise<void> {
+    if (folders.length === 0) {
+      return;
+    }
+
+    for (const folder of folders) {
+      try {
+        const url = this.buildApiUrl(
+          API_ENDPOINTS.STUDIO_WEB_DELETE_ITEM
+            .replace('{projectId}', this.config.projectId)
+            .replace('{itemId}', folder.folderId)
+        );
+
+        const headers = createHeaders({
+          bearerToken: this.config.envConfig.accessToken,
+          tenantId: this.config.envConfig.tenantId,
+        });
+
+        if (this.lockKey) {
+          headers['x-uipath-sw-lockkey'] = this.lockKey;
+        }
+
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to delete folder '${folder.path}': ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+        this.config.logger.log(chalk.yellow(`Could not delete folder ${folder.path}: ${error instanceof Error ? error.message : 'Unknown error'}`));
+      }
+    }
   }
 
   /**

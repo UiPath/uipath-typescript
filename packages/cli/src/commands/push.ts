@@ -35,59 +35,33 @@ export default class Push extends Command {
   @track('Push')
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Push);
-    
-    this.log(chalk.blue('🚀 UiPath WebApp Push'));
+
+    this.log(chalk.blue('🚀 UiPath Push'));
     this.log('');
 
-    // Validate environment variables
     const envConfig = await this.validateEnvironment();
-    if (!envConfig) {
-      return;
-    }
+    if (!envConfig) return;
 
-    // Get project ID from args, env var, or error
     const projectId = args['project-id'] || process.env.UIPATH_PROJECT_ID;
     if (!projectId) {
-      this.log(chalk.red('❌ Project ID is required'));
-      this.log(chalk.yellow('💡 Provide it as:'));
-      this.log(chalk.yellow('   - Positional argument: uipath push <project-id>'));
-      this.log(chalk.yellow('   - Environment variable: UIPATH_PROJECT_ID'));
-      this.log('');
+      this.log(chalk.red('Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID'));
       return;
     }
 
-    // Auto-detect root directory (current working directory)
     const rootDir = process.cwd();
-    this.log(chalk.gray(`📁 Working directory: ${rootDir}`));
-
-    // Auto-detect dist folder
     const distPath = path.join(rootDir, 'dist');
     if (!fs.existsSync(distPath) || !fs.statSync(distPath).isDirectory()) {
-      this.log(chalk.red(`❌ dist/ directory not found at ${distPath}`));
-      this.log(chalk.yellow('💡 Make sure you are in your project root directory with a dist/ folder'));
-      this.log('');
+      this.log(chalk.red(`dist/ not found at ${distPath}. Run from project root with a dist/ folder.`));
       return;
     }
-    this.log(chalk.gray(`📦 Found dist/ folder: ${distPath}`));
 
-    // Auto-detect bindings.json (optional, but log if found)
-    const bindingsPath = path.join(rootDir, 'bindings.json');
-    if (fs.existsSync(bindingsPath)) {
-      this.log(chalk.gray(`📋 Found bindings.json: ${bindingsPath}`));
-    } else {
-      this.log(chalk.gray(`ℹ️  bindings.json not found (resource import will be skipped)`));
-    }
-
-    // Validate preconditions
     try {
       Preconditions.validate(rootDir);
     } catch (error) {
-      this.log(chalk.red(`❌ Precondition validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
-      this.log('');
+      this.log(chalk.red(`Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
       return;
     }
 
-    // Create handler and push
     const handler = new WebAppFileHandler({
       projectId,
       rootDir,
@@ -99,15 +73,10 @@ export default class Push extends Command {
 
     try {
       await handler.push();
-      
-      // Import referenced resources (unless --ignore-resources flag is set)
       await handler.importReferencedResources(flags['ignore-resources']);
-      
-      this.log('');
-      this.log(chalk.green('✅ WebApp push completed successfully!'));
+      this.log(chalk.green('Push completed successfully.'));
     } catch (error) {
-      this.log('');
-      this.log(chalk.red(`❌ WebApp push failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
+      this.log(chalk.red(`Push failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
       process.exit(1);
     }
   }
