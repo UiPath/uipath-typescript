@@ -20,7 +20,7 @@ export * from './session-event-helper';
 export * from './conversation-event-helper-manager';
 export * from './conversation-type-util';
 
-// Content part helper
+// Content part helper class
 export * from './content-part-helper';
 
 // Transformers
