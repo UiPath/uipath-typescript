@@ -2,28 +2,16 @@
  * Conversational Agent Types
  *
  * This module exports all types for the Conversational Agent functionality.
- * Types are organized per service in subfolders, with cross-cutting types at root.
+ * Types are organized per service in subfolders.
  */
 
-// ==================== Cross-Cutting Types (Root Level) ====================
-// Common types used across multiple services (IDs, enums, utility types)
-export * from './conversations-shared.types';
+// ==================== Conversation Types (includes shared, core, events) ====================
+// All conversation-related types including IDs, data models, and WebSocket events
+export * from './conversations';
 
-// Core data models (Conversation, Exchange, Message, ContentPart)
-export * from './conversations-api.types';
-
-// Event types (WebSocket protocol)
-export * from './conversations-events.types';
-
-// Feature flags
-export * from './feature-flags.types';
-
-// ==================== Per-Service Types (Subfolders) ====================
+// ==================== Per-Service Types ====================
 // Agent service types and models
 export * from './agents';
-
-// Conversation service types and models (includes exchanges, attachments)
-export * from './conversations';
 
 // User service types and models
 export * from './user';
@@ -31,6 +19,10 @@ export * from './user';
 // Trace service types and models
 export * from './traces';
 
-// ==================== Main Service Model ====================
+// ==================== Feature Types ====================
+// Feature flags
+export * from './feature-flags.types';
+
+// Main service model
 export * from './conversational-agent.models';
 export * from './conversational-agent.types';

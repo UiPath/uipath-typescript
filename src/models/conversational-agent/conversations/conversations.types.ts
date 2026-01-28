@@ -2,7 +2,7 @@
  * Types for Conversation Service
  */
 
-import type { Conversation, SortOrder, ConversationJobStartOverrides } from '@/models/conversational-agent/conversations-api.types';
+import type { Conversation, SortOrder, ConversationJobStartOverrides } from './core.types';
 import type { PaginationCursor } from '@/utils/pagination/types';
 
 // Re-export for convenience
