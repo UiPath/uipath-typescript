@@ -1,6 +1,6 @@
 /**
- * Shared types for Conversational Agent
- * Converted from Zod schemas to pure TypeScript
+ * Common types for Conversational Agent
+ * Contains IDs, primitives, and utility types used across conversation types.
  */
 
 /**
@@ -21,7 +21,11 @@ export type MessageId = string;
 /**
  * Identifies the origin of a message in the conversation.
  */
-export type MessageRole = 'system' | 'user' | 'assistant';
+export enum MessageRole {
+  System = 'system',
+  User = 'user',
+  Assistant = 'assistant'
+}
 
 /**
  * Identifies a message content part.
@@ -34,16 +38,11 @@ export type ContentPartId = string;
 export type InterruptId = string;
 
 /**
- * Enum of known interrupt types for type-safe references.
- */
-export enum InterruptTypeEnum {
-  ToolCallConfirmation = 'uipath_cas_tool_call_confirmation'
-}
-
-/**
  * Identifies the type of an interrupt.
  */
-export type InterruptType = InterruptTypeEnum.ToolCallConfirmation;
+export enum InterruptType {
+  ToolCallConfirmation = 'uipath_cas_tool_call_confirmation'
+}
 
 /**
  * Identifies a citation.
@@ -184,18 +183,3 @@ export type ToolCallInputValue = JSONObject;
  * Tool call output value type.
  */
 export type ToolCallOutputValue = JSONValue;
-
-/**
- * Tool call input as inline or external value.
- */
-export type ToolCallInputInlineOrExternalValue = InlineOrExternalValue<ToolCallInputValue>;
-
-/**
- * Tool call output as inline or external value.
- */
-export type ToolCallOutputInlineOrExternalValue = InlineOrExternalValue<ToolCallOutputValue>;
-
-/**
- * Constant for the conversation event name used in WebSocket communication.
- */
-export const ConversationEventName = 'ConversationEvent';

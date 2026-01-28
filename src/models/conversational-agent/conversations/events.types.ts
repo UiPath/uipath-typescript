@@ -1,6 +1,5 @@
 /**
  * Event types for Conversational Agent WebSocket protocol
- * Converted from Zod schemas to pure TypeScript
  */
 
 import {
@@ -11,7 +10,7 @@ import {
   ExchangeId,
   ExternalValue,
   InterruptId,
-  InterruptTypeEnum,
+  InterruptType,
   JSONValue,
   MessageId,
   MessageRole,
@@ -21,7 +20,7 @@ import {
   ToolCallInputValue,
   ToolCallOutputValue,
   ToolName
-} from './conversations-shared.types';
+} from './common.types';
 
 /**
  * A timestamp with the format YYYY-MM-DDThh:mm:ss.sssZ (ISO 8601 with both date and time required and restricted to UTC).
@@ -40,7 +39,11 @@ export type AsyncInputStreamId = string;
  *     * HIGH - Will detect the start/end of speech more often.
  *     * LOW - Will detect the start/end of speech less often.
  */
-export type InputStreamSpeechSensitivity = 'UNSPECIFIED' | 'HIGH' | 'LOW';
+export enum InputStreamSpeechSensitivity {
+  Unspecified = 'UNSPECIFIED',
+  High = 'HIGH',
+  Low = 'LOW'
+}
 
 /**
  * Signals that a content stream was interrupted.
@@ -417,7 +420,7 @@ export interface ToolCallEndEvent {
    */
   output?: ToolCallOutputValue;
   /**
-   * Indicates if the tool call resulting in an error.
+   * Indicates if the tool call resulted in an error.
    */
   isError?: boolean;
   /**
@@ -484,7 +487,7 @@ export interface ToolCallConfirmationValue {
   /**
    * The ID of the tool call being confirmed.
    */
-  toolCallId: string;
+  toolCallId: ToolCallId;
   /**
    * The name of the tool to be called.
    */
@@ -520,7 +523,7 @@ export interface ToolCallConfirmationInterruptStartEvent {
   /**
    * Tool call confirmation interrupt type.
    */
-  type: typeof InterruptTypeEnum.ToolCallConfirmation;
+  type: typeof InterruptType.ToolCallConfirmation;
   /**
    * The tool call confirmation data.
    */
