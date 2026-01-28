@@ -29,7 +29,7 @@ export interface ConversationDeleteResponse extends Conversation {}
 
 // ==================== Conversation Request Types ====================
 
-export interface CreateConversationInput {
+export interface CreateConversationOptions {
   /** Agent release ID (required) */
   agentReleaseId: number;
   /** Folder ID (required) */
@@ -44,7 +44,7 @@ export interface CreateConversationInput {
   jobStartOverrides?: ConversationJobStartOverrides;
 }
 
-export interface UpdateConversationInput {
+export interface UpdateConversationOptions {
   /** Human-readable label for the conversation */
   label?: string;
   /** Whether the label should be auto-generated and updated after exchanges */
