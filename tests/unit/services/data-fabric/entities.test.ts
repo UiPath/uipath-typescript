@@ -7,6 +7,7 @@ import {
   createMockEntityResponse,
   createMockEntities,
   createMockEntityRecords,
+  createMockSingleInsertResponse,
   createMockInsertResponse,
   createMockUpdateResponse,
   createMockDeleteResponse,
@@ -19,6 +20,7 @@ import { createMockError } from '../../../utils/mocks/core';
 import type {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
+  EntityBatchInsertOptions,
   EntityUpdateOptions,
   EntityDeleteOptions,
   EntityRecord,
@@ -392,6 +394,76 @@ describe('EntityService Unit Tests', () => {
   });
 
   describe('insertById', () => {
+    it('should insert a single record successfully', async () => {
+      const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
+
+      const mockResponse = createMockSingleInsertResponse(testData);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+
+      // Verify the result is the inserted record with generated record ID
+      expect(result).toBeDefined();
+      expect(result.name).toBe(testData.name);
+      expect(result.age).toBe(testData.age);
+      expect(result).toHaveProperty('id');
+
+      // Verify the API call has correct endpoint and body (single object, not array)
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        testData,
+        expect.objectContaining({
+          params: expect.any(Object)
+        })
+      );
+    });
+
+    it('should insert a record with options', async () => {
+      const testData = {
+        ...ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+        recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+        createdBy: ENTITY_TEST_CONSTANTS.USER_ID
+      };
+      const options: EntityInsertOptions = {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      };
+
+      // With expansionLevel, reference fields should be expanded in the response
+      const mockResponse = createMockSingleInsertResponse(testData, {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      });
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
+
+      // Verify options are passed in params
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        testData,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          })
+        })
+      );
+
+      // Verify reference fields are expanded in the response
+      expect(result.recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.createdBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(entityService.insertById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('batchInsertById', () => {
     it('should insert records successfully', async () => {
       const testData = [
         ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
@@ -401,7 +473,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockInsertResponse(testData);
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+      const result = await entityService.batchInsertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
 
       // Verify the result
       expect(result).toBeDefined();
@@ -416,7 +488,7 @@ describe('EntityService Unit Tests', () => {
 
       // Verify the API call has correct endpoint and body
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         testData,
         expect.objectContaining({
           params: expect.any(Object)
@@ -430,10 +502,10 @@ describe('EntityService Unit Tests', () => {
         recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
         createdBy: ENTITY_TEST_CONSTANTS.USER_ID
       }];
-      const options: EntityInsertOptions = {
+      const options: EntityBatchInsertOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
-      } as EntityInsertOptions;
+      };
 
       // With expansionLevel, reference fields should be expanded in the response
       const mockResponse = createMockInsertResponse(testData, { 
@@ -441,7 +513,7 @@ describe('EntityService Unit Tests', () => {
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
+      const result = await entityService.batchInsertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
 
       // Verify options are passed in params
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -470,7 +542,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockInsertResponse(testData, { successCount: 1 });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+      const result = await entityService.batchInsertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
 
       expect(result.successRecords).toHaveLength(1);
       expect(result.failureRecords).toHaveLength(1);
@@ -478,7 +550,7 @@ describe('EntityService Unit Tests', () => {
       expect(result.failureRecords[0]).toHaveProperty('record');
       // Verify the failure contains the record we tried to insert
       expect(result.failureRecords[0].record).toEqual(testData[1]);
-      // Verify the success record has the data plus generated ID
+      // Verify the success record has the data plus generated record ID
       expect(result.successRecords[0].name).toBe(testData[0].name);
       expect(result.successRecords[0].age).toBe(testData[0].age);
       expect(result.successRecords[0]).toHaveProperty('id');
@@ -488,7 +560,7 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.insertById(
+      await expect(entityService.batchInsertById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         [ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA]
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);

@@ -6,7 +6,9 @@ import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '
 import {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
+  EntityBatchInsertOptions,
   EntityInsertResponse,
+  EntityBatchInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
@@ -52,8 +54,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * // Call operations directly on the entity
    * const records = await entity.getRecords();
    * 
-   * const insertResult = await entity.insert([
-   *   { name: "John", age: 30 }
+   * // Insert a single record
+   * const insertResult = await entity.insert({ name: "John", age: 30 });
+   *
+   * // Or batch insert multiple records
+   * const batchResult = await entity.batchInsert([
+   *     { name: "Jane", age: 25 },
+   *     { name: "Bob", age: 35 }
    * ]);
    * ```
    */
@@ -131,23 +138,62 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Inserts data into an entity by entity ID
-   * 
+   * Inserts a single record into an entity by entity ID
+   *
+   * @param entityId - UUID of the entity
+   * @param data - Record to insert
+   * @param options - Insert options
+   * @returns Promise resolving to the inserted record with generated record ID
+   *
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 });
+   *
+   * // With options
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 }, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  @track('Entities.InsertById')
+  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+    const params = createParams({
+      expansionLevel: options.expansionLevel
+    });
+
+    const response = await this.post<EntityInsertResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
+      data,
+      {
+        params,
+        ...options
+      }
+    );
+
+    // Convert PascalCase response to camelCase
+    const camelResponse = pascalToCamelCaseKeys(response.data);
+    return camelResponse;
+  }
+
+  /**
+   * Inserts data into an entity by entity ID using batch insert
+   *
    * @param entityId - UUID of the entity
    * @param data - Array of records to insert
    * @param options - Insert options
    * @returns Promise resolving to insert response
-   * 
+   *
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entities.insertById(<entityId>, [
+   * const result = await sdk.entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
-   * 
+   *
    * // With options
-   * const result = await sdk.entities.insertById(<entityId>, [
+   * const result = await sdk.entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -156,15 +202,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.InsertById')
-  async insertById(id: string, data: Record<string, any>[], options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+  @track('Entities.BatchInsertById')
+  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
     });
 
-    const response = await this.post<EntityInsertResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
+    const response = await this.post<EntityBatchInsertResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(id),
       data,
       {
         params,
