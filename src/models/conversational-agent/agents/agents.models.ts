@@ -53,8 +53,6 @@ export interface AgentServiceModel {
    * @example
    * ```typescript
    * const agentDetails = await conversationalAgentService.agents.getById(agentId, folderId);
-   * console.log(agentDetails.name);
-   * console.log(agentDetails.appearance); // UI appearance configuration
    * ```
    */
   getById(id: number, folderId: number): Promise<AgentGetByIdResponse>;
