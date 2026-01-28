@@ -15,22 +15,20 @@ import { BaseService } from '@/services/base';
 import type {
   ContentPart,
   ContentPartId,
+  ContentPartGetResponse,
   ConversationId,
   ExchangeId,
   Message,
   MessageId,
-  MessageServiceModel
+  MessageServiceModel,
+  MessageGetResponse
 } from '@/models/conversational-agent';
 
 // Utils
 import { MESSAGE_ENDPOINTS } from '@/utils/constants/endpoints';
 
 // Local imports
-import {
-  ContentPartGetResponse,
-  transformMessage,
-  type MessageGetResponse
-} from '@/services/conversational-agent/helpers';
+import { transformMessage, ContentPartHelper } from '@/services/conversational-agent/helpers';
 
 /**
  * Service for message operations within a conversation
@@ -155,6 +153,6 @@ export class MessageService extends BaseService implements MessageServiceModel {
       MESSAGE_ENDPOINTS.GET_CONTENT_PART(conversationId, exchangeId, messageId, contentPartId)
     );
 
-    return new ContentPartGetResponse(result.data);
+    return new ContentPartHelper(result.data);
   }
 }
