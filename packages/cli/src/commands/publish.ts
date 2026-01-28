@@ -31,12 +31,22 @@ export default class Publish extends Command {
 
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
+    '<%= config.bin %> <%= command.id %> --name MyApp',
+    '<%= config.bin %> <%= command.id %> --name MyApp --version 2.0.0',
     '<%= config.bin %> <%= command.id %> --uipathDir ./packages',
-    "<%= config.bin %> <%= command.id %> --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --accessToken 'your_token'",
+    "<%= config.bin %> <%= command.id %> --name MyApp --version 2.0.0 --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --accessToken 'your_token'",
   ];
 
   static override flags = {
     help: Flags.help({ char: 'h' }),
+    name: Flags.string({
+      char: 'n',
+      description: 'Package name to publish (makes command non-interactive)',
+    }),
+    version: Flags.string({
+      char: 'v',
+      description: 'Package version to publish (requires --name flag)',
+    }),
     uipathDir: Flags.string({
       description: 'UiPath directory containing packages',
       default: './.uipath',
@@ -70,10 +80,10 @@ export default class Publish extends Command {
       process.exit(1);
     }
 
-    await this.publishPackage(flags.uipathDir, envConfig);
+    await this.publishPackage(flags.uipathDir, envConfig, flags.name, flags.version);
   }
 
-  private async publishPackage(uipathDir: string, envConfig: EnvironmentConfig): Promise<void> {
+  private async publishPackage(uipathDir: string, envConfig: EnvironmentConfig, packageName?: string, packageVersion?: string): Promise<void> {
     const spinner = ora(MESSAGES.INFO.PUBLISHING_PACKAGE).start();
 
     try {
@@ -99,9 +109,45 @@ export default class Publish extends Command {
 
       let selectedPackage: string;
 
-      if (nupkgFiles.length === 1) {
+      // If name flag is provided, find matching package
+      if (packageName) {
+        let matchingPackage: string | undefined;
+
+        if (packageVersion) {
+          // Match by exact name and version
+          const expectedFilename = `${packageName}.${packageVersion}.nupkg`;
+          matchingPackage = nupkgFiles.find(file => path.basename(file) === expectedFilename);
+
+          if (!matchingPackage) {
+            spinner.fail(chalk.red(`No package found matching name: ${packageName} and version: ${packageVersion}`));
+            this.log('');
+            this.log(chalk.yellow('Available packages:'));
+            nupkgFiles.forEach(file => this.log(chalk.dim(`  - ${path.basename(file)}`)));
+            process.exit(1);
+          }
+        } else {
+          // Match by package name only (any version)
+          matchingPackage = nupkgFiles.find(file => {
+            const basename = path.basename(file);
+            // Match by package name (basename starts with packageName followed by . and version)
+            return basename.startsWith(`${packageName}.`) || basename === `${packageName}.nupkg`;
+          });
+
+          if (!matchingPackage) {
+            spinner.fail(chalk.red(`No package found matching name: ${packageName}`));
+            this.log('');
+            this.log(chalk.yellow('Available packages:'));
+            nupkgFiles.forEach(file => this.log(chalk.dim(`  - ${path.basename(file)}`)));
+            process.exit(1);
+          }
+        }
+
+        selectedPackage = matchingPackage;
+      } else if (nupkgFiles.length === 1) {
+        // Auto-select if only one package
         selectedPackage = nupkgFiles[0];
       } else {
+        // Prompt user to select
         spinner.stop();
         const response = await inquirer.prompt([
           {
