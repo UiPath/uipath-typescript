@@ -1,6 +1,6 @@
 /**
- * API types for Conversational Agent REST endpoints
- * Converted from Zod schemas to pure TypeScript
+ * Core data model types for Conversational Agent REST endpoints
+ * Contains: Conversation, Exchange, Message, ContentPart, ToolCall, etc.
  */
 
 import {
@@ -9,7 +9,6 @@ import {
   ContentPartId,
   ConversationId,
   ExchangeId,
-  ExternalValue,
   InlineOrExternalValue,
   InterruptId,
   MessageId,
@@ -20,13 +19,16 @@ import {
   ToolCallInputValue,
   ToolCallOutputValue,
   ToolName
-} from './conversations-shared.types';
-import { UTCTimeStamp } from './conversations-events.types';
+} from './common.types';
+import { UTCTimeStamp } from './events.types';
 
 /**
  * Represents the order in which items should be sorted.
  */
-export type SortOrder = 'ascending' | 'descending';
+export enum SortOrder {
+  Ascending = 'ascending',
+  Descending = 'descending'
+}
 
 /**
  * Pagination type for API responses.
@@ -152,7 +154,7 @@ export interface ToolCallResult {
    */
   output?: ToolCallOutputValue;
   /**
-   * @deprecated
+   * Legacy field for the tool call output value.
    */
   value?: InlineOrExternalValue<ToolCallOutputValue>;
   /**
@@ -182,7 +184,7 @@ export interface ToolCall {
    */
   input?: ToolCallInputValue;
   /**
-   * @deprecated
+   * Legacy field for tool call input arguments.
    */
   arguments?: InlineOrExternalValue<ToolCallInputValue>;
   /**
@@ -274,7 +276,10 @@ export interface Message {
 /**
  * Feedback rating type.
  */
-export type FeedbackRating = 'positive' | 'negative';
+export enum FeedbackRating {
+  Positive = 'positive',
+  Negative = 'negative'
+}
 
 /**
  * Represents a group of related messages (exchange).
@@ -390,7 +395,13 @@ export interface Conversation {
 /**
  * HTTP method type for file upload operations.
  */
-export type FileUploadMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export enum FileUploadMethod {
+  Get = 'GET',
+  Post = 'POST',
+  Put = 'PUT',
+  Patch = 'PATCH',
+  Delete = 'DELETE'
+}
 
 /**
  * Attachment file upload headers.
@@ -445,4 +456,3 @@ export interface Attachment {
    */
   fileUploadAccess: AttachmentFileUploadAccess;
 }
-
