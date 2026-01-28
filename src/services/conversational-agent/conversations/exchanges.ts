@@ -13,7 +13,7 @@ import { BaseService } from '@/services/base';
 // Models
 import type {
   ConversationId,
-  CreateFeedbackInput,
+  CreateFeedbackOptions,
   Exchange,
   ExchangeId,
   ExchangeServiceModel,
@@ -30,7 +30,7 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 
 // Local imports
-import { transformExchange, type ExchangeWithHelpers } from '@/services/conversational-agent/helpers';
+import { transformExchange, type ExchangeGetResponse } from '@/services/conversational-agent/helpers';
 
 /**
  * Service for exchange operations within a conversation
@@ -93,10 +93,10 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ExchangeWithHelpers>
-      : NonPaginatedResponse<ExchangeWithHelpers>
+      ? PaginatedResponse<ExchangeGetResponse>
+      : NonPaginatedResponse<ExchangeGetResponse>
   > {
-    // Transform function to convert Exchange to ExchangeWithHelpers
+    // Transform function to convert Exchange to ExchangeGetResponse
     const transformFn = (exchange: Exchange) => transformExchange(exchange);
 
     return PaginationHelpers.getAll({
@@ -120,12 +120,12 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * Gets an exchange by ID with its messages
    *
    * Retrieves a specific exchange including user and assistant messages.
-   * Returns an ExchangeWithHelpers object that provides convenient access
+   * Returns an ExchangeGetResponse object that provides convenient access
    * to messages and content.
    *
    * @param conversationId - The conversation containing the exchange
    * @param exchangeId - The exchange ID to retrieve
-   * @param input - Optional parameters for message sorting
+   * @param options - Optional parameters for message sorting
    * @returns Promise resolving to the exchange with helper methods
    *
    * @example
@@ -151,12 +151,12 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   async getById(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
-    input?: ExchangeGetByIdOptions
-  ): Promise<ExchangeWithHelpers> {
+    options?: ExchangeGetByIdOptions
+  ): Promise<ExchangeGetResponse> {
     const params: ExchangeGetByIdOptions = {};
 
-    if (input?.messageSort) {
-      params.messageSort = input.messageSort;
+    if (options?.messageSort) {
+      params.messageSort = options.messageSort;
     }
 
     const result = await this.get<Exchange>(
@@ -175,7 +175,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    *
    * @param conversationId - The conversation containing the exchange
    * @param exchangeId - The exchange to provide feedback for
-   * @param input - Feedback data including rating and optional comment
+   * @param options - Feedback data including rating and optional comment
    * @returns Promise resolving to the feedback creation response
    *
    * @example
@@ -199,11 +199,11 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   async createFeedback(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
-    input: CreateFeedbackInput
+    options: CreateFeedbackOptions
   ): Promise<FeedbackCreateResponse> {
     const response = await this.post<FeedbackCreateResponse>(
       EXCHANGE_ENDPOINTS.CREATE_FEEDBACK(conversationId, exchangeId),
-      input
+      options
     );
     return response.data;
   }

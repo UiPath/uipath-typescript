@@ -9,15 +9,16 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
-  UpdateUserSettingsInput,
+  UpdateUserSettingsOptions,
   UserServiceModel,
-  UserSettings,
   UserSettingsGetResponse,
   UserSettingsUpdateResponse
 } from '@/models/conversational-agent';
+import { UserSettingsMap } from '@/models/conversational-agent';
 
 // Utils
 import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
+import { transformData } from '@/utils/transform';
 
 /**
  * Service for managing user profile and context settings
@@ -75,9 +76,9 @@ export class UserService extends BaseService implements UserServiceModel {
    * ```
    */
   @track('User.GetSettings')
-  async getSettings(): Promise<UserSettings> {
+  async getSettings(): Promise<UserSettingsGetResponse> {
     const response = await this.get<UserSettingsGetResponse>(USER_ENDPOINTS.SETTINGS);
-    return response.data;
+    return transformData(response.data, UserSettingsMap) as UserSettingsGetResponse;
   }
 
   /**
@@ -87,7 +88,7 @@ export class UserService extends BaseService implements UserServiceModel {
    * Set fields to `null` to explicitly clear them.
    * Omitting fields means no change.
    *
-   * @param input - Fields to update
+   * @param options - Fields to update
    * @returns Promise resolving to updated user settings object
    *
    * @example
@@ -112,8 +113,8 @@ export class UserService extends BaseService implements UserServiceModel {
    * ```
    */
   @track('User.UpdateSettings')
-  async updateSettings(input: UpdateUserSettingsInput): Promise<UserSettings> {
-    const response = await this.patch<UserSettingsUpdateResponse>(USER_ENDPOINTS.SETTINGS, input);
-    return response.data;
+  async updateSettings(options: UpdateUserSettingsOptions): Promise<UserSettingsUpdateResponse> {
+    const response = await this.patch<UserSettingsUpdateResponse>(USER_ENDPOINTS.SETTINGS, options);
+    return transformData(response.data, UserSettingsMap) as UserSettingsUpdateResponse;
   }
 }
