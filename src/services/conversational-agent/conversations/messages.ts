@@ -122,6 +122,6 @@ export class MessageService extends BaseService implements MessageServiceModel {
       MESSAGE_ENDPOINTS.GET_CONTENT_PART(conversationId, exchangeId, messageId, contentPartId)
     );
 
-    return new ContentPartGetResponse(result.data);
+    return new ContentPartHelper(result.data);
   }
 }
