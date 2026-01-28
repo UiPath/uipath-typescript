@@ -19,7 +19,8 @@ import type {
   ExchangeServiceModel,
   FeedbackCreateResponse,
   ExchangeGetAllOptions,
-  ExchangeGetByIdOptions
+  ExchangeGetByIdOptions,
+  ExchangeGetResponse
 } from '@/models/conversational-agent';
 
 // Utils
@@ -30,7 +31,7 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 
 // Local imports
-import { transformExchange, type ExchangeGetResponse } from '@/services/conversational-agent/helpers';
+import { transformExchange } from '@/services/conversational-agent/helpers';
 
 /**
  * Service for exchange operations within a conversation
