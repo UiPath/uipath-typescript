@@ -12,7 +12,6 @@ export type { SortOrder, ConversationJobStartOverrides };
 
 /**
  * Response for creating a conversation - returns full Conversation object
- * Matches AgentInterfaces: ConversationCreateOutput = ConversationSchema
  */
 export interface ConversationCreateResponse extends Conversation {}
 
@@ -23,7 +22,6 @@ export interface ConversationGetResponse extends Conversation {}
 
 /**
  * Response for deleting a conversation - returns the deleted Conversation object
- * Matches AgentInterfaces: ConversationDeleteOutput = ConversationSchema
  */
 export interface ConversationDeleteResponse extends Conversation {}
 
