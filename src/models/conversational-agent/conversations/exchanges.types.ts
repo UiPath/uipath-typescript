@@ -2,7 +2,7 @@
  * Types for Exchange Service
  */
 
-import type { SortOrder, FeedbackRating } from '@/models/conversational-agent/conversations-api.types';
+import type { SortOrder, FeedbackRating } from './core.types';
 import type { PaginationCursor } from '@/utils/pagination/types';
 
 // Re-export for convenience
