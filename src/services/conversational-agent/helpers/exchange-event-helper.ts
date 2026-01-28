@@ -6,6 +6,8 @@ import type {
   ExchangeStartEvent,
   MakeRequired,
   MessageId,
+  MessageRole,
+  MessageStartEvent,
   MetaEvent
 } from '@/models/conversational-agent';
 
@@ -85,9 +87,9 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
 
     const { messageId: providedId, properties, ...startMessageWithoutDefaults } = args ?? {};
     const messageId = providedId ?? this.manager.makeId();
-    const startMessage = {
+    const startMessage: MessageStartEvent = {
       ...startMessageWithoutDefaults,
-      role: startMessageWithoutDefaults.role ?? 'user'
+      role: (startMessageWithoutDefaults.role ?? 'user') as MessageRole
     };
 
     // shallow copy start event because helper will add timestamp property we don't need to send to the service
@@ -232,7 +234,7 @@ export class ExchangeEventHelperImpl extends ExchangeEventHelper {
     yield {
       exchangeId: exchange.exchangeId,
       startExchange: {
-        timestamp: exchange.createdAt
+        timestamp: exchange.createdTime
       }
     };
 
