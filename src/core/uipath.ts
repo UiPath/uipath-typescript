@@ -5,6 +5,7 @@ import { UiPathSDKConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './
 import { validateConfig, normalizeBaseUrl } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
+import type { IUiPath } from './types';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -33,7 +34,7 @@ import { SDKInternalsRegistry } from './internals';
  * const allEntities = await entitiesService.getAll();
  * ```
  */
-export class UiPath {
+export class UiPath implements IUiPath {
   // Private fields - true runtime privacy, not visible via Object.keys()
   #config: UiPathConfig;
   #authService: AuthService;

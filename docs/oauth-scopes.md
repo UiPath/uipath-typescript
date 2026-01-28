@@ -6,78 +6,95 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `sdk.assets.getAll` | `OR.Assets` or `OR.Assets.Read` |
-| `sdk.assets.getById` | `OR.Assets` or `OR.Assets.Read` |
+| `getAll()` | `OR.Assets` or `OR.Assets.Read` |
+| `getById()` | `OR.Assets` or `OR.Assets.Read` |
 
 ## Buckets
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `sdk.buckets.getAll` | `OR.Administration` or `OR.Administration.Read` |
-| `sdk.buckets.getById` | `OR.Administration` or `OR.Administration.Read` |
-| `sdk.buckets.getFileMetaData` | `OR.Administration` or `OR.Administration.Read` |
-| `sdk.buckets.getReadUri` | `OR.Administration` or `OR.Administration.Read` |
-| `sdk.buckets.uploadFile` | `OR.Administration` or `OR.Administration.Read` |
+| `getAll()` | `OR.Administration` or `OR.Administration.Read` |
+| `getById()` | `OR.Administration` or `OR.Administration.Read` |
+| `getFileMetaData()` | `OR.Administration` or `OR.Administration.Read` |
+| `getReadUri()` | `OR.Administration` or `OR.Administration.Read` |
+| `uploadFile()` | `OR.Administration` or `OR.Administration.Read` |
 
 ## Entities
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `sdk.entities.getAll` | `DataFabric.Schema.Read` |
-| `sdk.entities.getRecordsById` | `DataFabric.Data.Read` |
-| `sdk.entities.insertById` or `entity.insert` | `DataFabric.Data.Write` |
-| `sdk.entities.batchInsertById` or `entity.batchInsert` | `DataFabric.Data.Write` |
-| `sdk.entities.deleteById` or `entity.delete` | `DataFabric.Data.Write` |
-| `sdk.entities.updateById` or `entity.update` | `DataFabric.Data.Write` |
-| `sdk.entities.choicesets.getAll` | `DataFabric.Schema.Read` |
-| `sdk.entities.choicesets.getById` | `DataFabric.Data.Read` |
+| `getAll()` | `DataFabric.Schema.Read` |
+| `getRecordsById()` | `DataFabric.Data.Read` |
+| `insertById()` / `insert()` | `DataFabric.Data.Write` |
+| `deleteById()` / `delete()` | `DataFabric.Data.Write` |
+| `updateById()` / `update()` | `DataFabric.Data.Write` |
+| `choicesets.getAll()` | `DataFabric.Schema.Read` |
+| `choicesets.getById()` | `DataFabric.Data.Read` |
 
-## Maestro
+## Maestro Processes
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `sdk.maestro.processes.getAll` | `PIMS` |
-| `sdk.maestro.processes.instances.getAll` | `PIMS` |
-| `sdk.maestro.processes.instances.getExecutionHistory` | `PIMS` |
-| `sdk.maestro.processes.instances.getById` | `PIMS` |
-| `sdk.maestro.processes.instances.getbpmn` | `OR.Execution.Read` |
-| `sdk.maestro.processes.instances.cancel` | `PIMS` |
-| `sdk.maestro.processes.instances.pause` | `PIMS` |
-| `sdk.maestro.processes.instances.resume` | `PIMS` |
-| `sdk.maestro.cases.getAll` | `PIMS` |
-| `sdk.maestro.cases.instances.getAll` | `PIMS` |
-| `sdk.maestro.cases.instances.getById` | `PIMS` |
-| `sdk.maestro.cases.instances.close` | `PIMS` |
-| `sdk.maestro.cases.instances.pause` | `PIMS` |
-| `sdk.maestro.cases.instances.resume` | `PIMS` |
-| `sdk.maestro.cases.instances.getExecutionHistory` | `PIMS` |
-| `sdk.maestro.cases.instances.getStages` | `PIMS` |
-| `sdk.maestro.cases.instances.getActionTasks` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getAll()` | `PIMS` |
+| `getIncidents()` | `PIMS` |
+
+## Maestro Process Instances
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `PIMS` |
+| `getById()` | `PIMS` |
+| `getExecutionHistory()` | `PIMS` |
+| `getBpmn()` | `OR.Execution.Read` |
+| `getVariables()` | `PIMS` |
+| `getIncidents()` | `PIMS` |
+| `cancel()` | `PIMS` |
+| `pause()` | `PIMS` |
+| `resume()` | `PIMS` |
+
+## Maestro Cases
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `PIMS` |
+
+## Maestro Case Instances
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `PIMS` |
+| `getById()` | `PIMS` |
+| `close()` | `PIMS` |
+| `pause()` | `PIMS` |
+| `resume()` | `PIMS` |
+| `getExecutionHistory()` | `PIMS` |
+| `getStages()` | `PIMS` |
+| `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 
 ## Processes
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `sdk.processes.getAll` | `OR.Execution` or `OR.Execution.Read` |
-| `sdk.processes.start` | `OR.Jobs` or `OR.Jobs.Write` |
-| `sdk.processes.getById` | `OR.Execution` or `OR.Execution.Read` |
+| `getAll()` | `OR.Execution` or `OR.Execution.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read` |
+| `start()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ## Queues
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `sdk.queues.getAll` | `OR.Queues` or `OR.Queues.Read` |
-| `sdk.queues.getById` | `OR.Queues` or `OR.Queues.Read` |
+| `getAll()` | `OR.Queues` or `OR.Queues.Read` |
+| `getById()` | `OR.Queues` or `OR.Queues.Read` |
 
 ## Tasks
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `sdk.tasks.create` | `OR.Tasks` or `OR.Tasks.Write` |
-| `sdk.tasks.getUsers` | `OR.Tasks` or `OR.Tasks.Read` |
-| `sdk.tasks.getAll` | `OR.Tasks` or `OR.Tasks.Read` |
-| `sdk.tasks.getById` | `OR.Tasks` or `OR.Tasks.Read` |
-| `sdk.tasks.assign` | `OR.Tasks` or `OR.Tasks.Write` |
-| `sdk.tasks.reassign` | `OR.Tasks` or `OR.Tasks.Write` |
-| `sdk.tasks.complete` | `OR.Tasks` or `OR.Tasks.Write` |
-| `sdk.tasks.getFormTaskById` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getAll()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getUsers()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getFormTaskById()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `create()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `assign()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `complete()` | `OR.Tasks` or `OR.Tasks.Write` |

@@ -6,6 +6,21 @@ import json from '@rollup/plugin-json';           // Imports JSON files as ES6 m
 import builtins from 'builtin-modules';           // List of Node.js built-in modules (fs, crypto, etc.)
 import { readFileSync } from 'fs';
 
+// Custom plugin to rewrite import paths in .d.ts files
+// This normalizes core import paths to '../core/index' for cleaner output
+function rewriteDtsImports() {
+  return {
+    name: 'rewrite-dts-imports',
+    renderChunk(code) {
+      return code.replace(
+        /from ['"](?:(?:\.\.\/)+|@\/)core\/(?:types|uipath|index)['"]/g,
+        "from '../core/index'"
+      );
+    }
+  };
+}
+
+
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 const allDependencies = [
@@ -65,7 +80,7 @@ const configs = [
     plugins: createPlugins(false),
     external: allDependencies
   },
-  
+
   // CommonJS bundle (for Node.js and older bundlers)
   {
     input: 'src/index.ts',              // Entry point of the SDK
@@ -78,7 +93,7 @@ const configs = [
     plugins: createPlugins(false),
     external: allDependencies
   },
-  
+
   // UMD bundle (for browsers via script tag or older bundlers)
   {
     input: 'src/index.ts',              // Entry point of the SDK
@@ -152,7 +167,7 @@ const serviceEntries = [
 ];
 
 // Generate ESM, CJS, and DTS builds for each service entry
-serviceEntries.forEach(({ input, output }) => {
+serviceEntries.forEach(({ name, input, output }) => {
   // ESM bundle
   configs.push({
     input,
@@ -170,10 +185,17 @@ serviceEntries.forEach(({ input, output }) => {
   });
 
   // Type definitions
+  // Mark core types as external to avoid duplication (cleaner output, smaller files)
+  const isCore = name === 'core';
+  const dtsExternal = isCore ? [] : [/src\/core\//, /\.\.\/core/, /^@\/core/];
+
   configs.push({
     input,
     output: { file: `dist/${output}.d.ts`, format: 'es' },
-    plugins: [dts()]
+    plugins: isCore
+      ? [dts()]
+      : [dts(), rewriteDtsImports()],
+    external: dtsExternal
   });
 });
 

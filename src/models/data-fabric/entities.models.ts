@@ -19,6 +19,16 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  *
  * Entities are collections of records that can be used to store and manage data in the Data Fabric. [UiPath Data Fabric Guide](https://docs.uipath.com/data-service/automation-cloud/latest/user-guide/introduction)
  *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ *
+ * ```typescript
+ * import { Entities } from '@uipath/uipath-typescript/entities';
+ *
+ * const entities = new Entities(sdk);
+ * const allEntities = await entities.getAll();
+ * ```
  */
 export interface EntityServiceModel {
   /**
@@ -29,17 +39,17 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Get all entities
-   * const entities = await sdk.entities.getAll();
-   * 
+   * const allEntities = await entities.getAll();
+   *
    * // Iterate through entities
-   * entities.forEach(entity => {
+   * allEntities.forEach(entity => {
    *   console.log(`Entity: ${entity.displayName} (${entity.name})`);
    *   console.log(`Type: ${entity.entityType}`);
    * });
-   * 
+   *
    * // Find a specific entity by name
-   * const customerEntity = entities.find(e => e.name === 'Customer');
-   * 
+   * const customerEntity = allEntities.find(e => e.name === 'Customer');
+   *
    * // Use entity methods directly
    * if (customerEntity) {
    *   const records = await customerEntity.getRecords();
@@ -67,15 +77,15 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Get entity metadata with methods
-   * const entity = await sdk.entities.getById(<entityId>);
-   * 
+   * const entity = await entities.getById(<entityId>);
+   *
    * // Call operations directly on the entity
    * const records = await entity.getRecords();
    *
    * // If a field references a ChoiceSet, get the choiceSetId from records.fields
    * const choiceSetId = records.fields[0].referenceChoiceSet?.id;
    * if (choiceSetId) {
-   *   const choiceSetValues = await sdk.entities.choicesets.getById(choiceSetId);
+   *   const choiceSetValues = await choicesets.getById(choiceSetId);
    * }
    *
    * // Insert a single record
@@ -100,21 +110,21 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage (non-paginated)
-   * const records = await sdk.entities.getRecordsById(<entityId>);
-   * 
+   * const records = await entities.getRecordsById(<entityId>);
+   *
    * // With expansion level
-   * const records = await sdk.entities.getRecordsById(<entityId>, {
+   * const records = await entities.getRecordsById(<entityId>, {
    *   expansionLevel: 1
    * });
-   * 
+   *
    * // With pagination
-   * const paginatedResponse = await sdk.entities.getRecordsById(<entityId>, {
+   * const paginatedResponse = await entities.getRecordsById(<entityId>, {
    *   pageSize: 50,
    *   expansionLevel: 1
    * });
-   * 
+   *
    * // Navigate to next page
-   * const nextPage = await sdk.entities.getRecordsById(<entityId>, {
+   * const nextPage = await entities.getRecordsById(<entityId>, {
    *   cursor: paginatedResponse.nextCursor,
    *   expansionLevel: 1
    * });
@@ -140,10 +150,10 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 });
+   * const result = await entities.insertById(<entityId>, { name: "John", age: 30 });
    *
    * // With options
-   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 }, {
+   * const result = await entities.insertById(<entityId>, { name: "John", age: 30 }, {
    *   expansionLevel: 1
    * });
    * ```
@@ -164,13 +174,13 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entities.batchInsertById(<entityId>, [
+   * const result = await entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
    *
    * // With options
-   * const result = await sdk.entities.batchInsertById(<entityId>, [
+   * const result = await entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -192,13 +202,13 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entities.updateById(<entityId>, [
+   * const result = await entities.updateById(<entityId>, [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ]);
-   * 
+   *
    * // With options
-   * const result = await sdk.entities.updateById(<entityId>, [
+   * const result = await entities.updateById(<entityId>, [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ], {
@@ -220,7 +230,7 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await sdk.entities.deleteById(<entityId>, [
+   * const result = await entities.deleteById(<entityId>, [
    *   <recordId-1>, <recordId-2>
    * ]);
    * ```
