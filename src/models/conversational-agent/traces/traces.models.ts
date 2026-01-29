@@ -1,11 +1,12 @@
-import type { TraceSpanGetResponse, TraceSpanStatus } from './traces.types';
+import type { TraceSpanGetResponse } from './traces.types';
 
 /**
  * Service for managing UiPath Trace Spans
  *
- * Traces provide observability into LLM operations during conversational agent sessions.
- * Each conversation can have a traceId that links to spans representing
- * LLM calls, tool executions, and agent operations.
+ * A **trace** represents the complete execution path of a conversation, identified by a unique traceId.
+ * A **span** represents a single operation within that trace (e.g., an LLM call, tool execution, or agent action).
+ * Together, traces and spans provide observability into conversational agent sessions, allowing you to
+ * analyze performance, debug issues, and understand the flow of operations.
  *
  * ### Usage
  *
@@ -15,7 +16,7 @@ import type { TraceSpanGetResponse, TraceSpanStatus } from './traces.types';
  * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
  *
  * const conversationalAgentService = new ConversationalAgent(sdk);
- * const traceSpans = await conversationalAgentService.traces.getSpans(traceId);
+ * const spans = await conversationalAgentService.traces.getSpans(traceId);
  * ```
  */
 export interface TraceServiceModel {
@@ -23,14 +24,14 @@ export interface TraceServiceModel {
    * Get all spans for a given trace ID
    *
    * @param traceId - The trace ID to retrieve spans for
-   * @returns Promise resolving to array of trace spans
+   * @returns Promise resolving to array of spans
    * {@link TraceSpanGetResponse}
    * @example
    * ```typescript
-   * const traceSpans = await conversationalAgentService.traces.getSpans('550e8400-e29b-41d4-a716-446655440000');
+   * const spans = await conversationalAgentService.traces.getSpans(traceId);
    *
    * // Find spans with errors
-   * const errorSpans = traceSpans.filter(span => span.status === TraceSpanStatus.Error);
+   * const errorSpans = spans.filter(span => span.status === TraceSpanStatus.Error);
    * ```
    */
   getSpans(traceId: string): Promise<TraceSpanGetResponse[]>;
