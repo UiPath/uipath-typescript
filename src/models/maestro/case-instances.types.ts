@@ -72,6 +72,20 @@ export interface CaseInstanceOperationResponse {
 }
 
 /**
+ * Request for reopening a case instance.
+ */
+export interface CaseInstanceReopenRequest {
+  /**
+   * The stage ID from which the case instance should be reopened.
+   */
+  startElementId: string;
+  /**
+   * Optional comment for the reopen operation.
+   */
+  comment?: string;
+}
+
+/**
  * Case App Configuration Overview
  */
 export interface CaseAppOverview {
