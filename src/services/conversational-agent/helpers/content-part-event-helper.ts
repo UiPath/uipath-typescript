@@ -1,7 +1,7 @@
 import type {
   Citation,
   CitationId,
-  CitationInput,
+  CitationOptions,
   CitationSource,
   ContentPart,
   ContentPartChunkEvent,
@@ -242,7 +242,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
 
     let data = '';
     const citationOffsets = new Map<CitationId, number>();
-    const citations = new Array<CitationInput>();
+    const citations = new Array<CitationOptions>();
     const citationErrors = new Array<CitationError>();
 
     this.onChunk(chunk => {
