@@ -2,14 +2,13 @@ import { BaseService } from '../base';
 import { Config } from '../../core/config/config';
 import { ExecutionContext } from '../../core/context/execution';
 import { TokenManager } from '../../core/auth/token-manager';
-import { 
-  CaseInstanceGetResponse, 
+import {
+  CaseInstanceGetResponse,
   RawCaseInstanceGetResponse,
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
   CaseInstanceReopenRequest,
-  CaseInstanceReopenResponse,
   CaseInstancesServiceModel,
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
@@ -265,7 +264,26 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
-    
+
+    return {
+      success: true,
+      data: response.data
+    };
+  }
+
+  /**
+   * Reopen a case instance from a specified element
+   * @param instanceId - The ID of the case instance to reopen
+   * @param folderKey - Required folder key
+   * @param request - Reopen request containing startElementId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result with updated instance data
+   */
+  @track('CaseInstances.Reopen')
+  async reopen(instanceId: string, folderKey: string, request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.CASES.REOPEN_CASE(instanceId), request || {}, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
+    });
+
     return {
       success: true,
       data: response.data
@@ -284,33 +302,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
-    
-    return {
-      success: true,
-      data: response.data
-    };
-  }
-
-  /**
-   * Reopen a case instance from a specified element
-   * @param caseInstanceId - The ID of the case instance to reopen
-   * @param folderKey - Required folder key
-   * @param request - Reopen request payload
-   * @returns Promise resolving to operation result with updated instance data
-   */
-  @track('CaseInstances.Reopen')
-  async reopen(
-    caseInstanceId: string,
-    folderKey: string,
-    request: CaseInstanceReopenRequest
-  ): Promise<OperationResponse<CaseInstanceReopenResponse>> {
-    const response = await this.post<CaseInstanceReopenResponse>(
-      MAESTRO_ENDPOINTS.CASES.REOPEN_CASE(caseInstanceId),
-      request || {},
-      {
-        headers: createHeaders({ [FOLDER_KEY]: folderKey })
-      }
-    );
 
     return {
       success: true,
@@ -406,9 +397,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
 
     return stages;
   }
-  /**
-   * 
-   */
 
   /**
    * Create a map of element ID to execution data 
