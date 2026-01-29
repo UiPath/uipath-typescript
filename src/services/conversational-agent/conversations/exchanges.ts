@@ -71,8 +71,8 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
    * @param conversationId - The conversation ID to get exchanges for
-   * @param options - Query options including optional pagination parameters
-   * @returns Promise resolving to exchanges or paginated result
+   * @param options - Options for querying exchanges including optional pagination parameters
+   * @returns Promise resolving to either an array of exchanges {@link NonPaginatedResponse}<{@link ExchangeGetResponse}> or a {@link PaginatedResponse}<{@link ExchangeGetResponse}> when pagination options are used
    *
    * @example
    * ```typescript
@@ -88,7 +88,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * }
    * ```
    */
-  @track('Exchanges.GetAll')
+  @track('ConversationalAgent.Exchanges.GetAll')
   async getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
     conversationId: ConversationId,
     options?: T
@@ -148,7 +148,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * );
    * ```
    */
-  @track('Exchanges.GetById')
+  @track('ConversationalAgent.Exchanges.GetById')
   async getById(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
@@ -196,7 +196,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * );
    * ```
    */
-  @track('Exchanges.CreateFeedback')
+  @track('ConversationalAgent.Exchanges.CreateFeedback')
   async createFeedback(
     conversationId: ConversationId,
     exchangeId: ExchangeId,

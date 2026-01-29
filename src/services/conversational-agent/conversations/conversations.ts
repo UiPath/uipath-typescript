@@ -14,7 +14,6 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
-  Conversation,
   ConversationId,
   ConversationCreateResponse,
   ConversationDeleteResponse,
@@ -103,10 +102,10 @@ export class ConversationService extends BaseService implements ConversationServ
   /**
    * Creates a new conversation
    *
-   * @param options - Conversation creation options including agentReleaseId and folderId
+   * @param options - Options for creating a conversation
    * @returns Promise resolving to the created conversation
    */
-  @track('Conversations.Create')
+  @track('ConversationalAgent.Conversations.Create')
   async create(options: CreateConversationOptions): Promise<ConversationCreateResponse> {
     const response = await this.post<ConversationCreateResponse>(CONVERSATION_ENDPOINTS.CREATE, options);
     return transformData(response.data, ConversationMap) as ConversationCreateResponse;
@@ -124,7 +123,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * console.log(conversation.label, conversation.createdAt);
    * ```
    */
-  @track('Conversations.GetById')
+  @track('ConversationalAgent.Conversations.GetById')
   async getById(id: ConversationId): Promise<ConversationGetResponse> {
     const response = await this.get<ConversationGetResponse>(CONVERSATION_ENDPOINTS.GET(id));
     return transformData(response.data, ConversationMap) as ConversationGetResponse;
@@ -137,8 +136,8 @@ export class ConversationService extends BaseService implements ConversationServ
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
-   * @param options - Query options including optional pagination parameters
-   * @returns Promise resolving to conversations or paginated result
+   * @param options - Options for querying conversations including optional pagination parameters
+   * @returns Promise resolving to either an array of conversations {@link NonPaginatedResponse}<{@link ConversationGetResponse}> or a {@link PaginatedResponse}<{@link ConversationGetResponse}> when pagination options are used
    *
    * @example
    * ```typescript
@@ -157,17 +156,17 @@ export class ConversationService extends BaseService implements ConversationServ
    * }
    * ```
    */
-  @track('Conversations.GetAll')
+  @track('ConversationalAgent.Conversations.GetAll')
   async getAll<T extends ConversationGetAllOptions = ConversationGetAllOptions>(
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<Conversation>
-      : NonPaginatedResponse<Conversation>
+      ? PaginatedResponse<ConversationGetResponse>
+      : NonPaginatedResponse<ConversationGetResponse>
   > {
     // Transform function to convert API timestamps to SDK naming convention
-    const transformFn = (conversation: Conversation) =>
-      transformData(conversation, ConversationMap) as Conversation;
+    const transformFn = (conversation: ConversationGetResponse) =>
+      transformData(conversation, ConversationMap) as ConversationGetResponse;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -187,7 +186,7 @@ export class ConversationService extends BaseService implements ConversationServ
   }
 
   /**
-   * Updates a conversation
+   * Updates a conversation by ID
    *
    * @param id - The conversation ID to update
    * @param options - Update fields (label)
@@ -195,14 +194,14 @@ export class ConversationService extends BaseService implements ConversationServ
    *
    * @example
    * ```typescript
-   * const updatedConversation = await conversationalAgentService.conversations.update(
+   * const updatedConversation = await conversationalAgentService.conversations.updateById(
    *   conversationId,
    *   { label: 'New conversation title' }
    * );
    * ```
    */
-  @track('Conversations.Update')
-  async update(
+  @track('ConversationalAgent.Conversations.UpdateById')
+  async updateById(
     id: ConversationId,
     options: UpdateConversationOptions
   ): Promise<ConversationGetResponse> {
@@ -224,7 +223,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * await conversationalAgentService.conversations.deleteById(conversationId);
    * ```
    */
-  @track('Conversations.DeleteById')
+  @track('ConversationalAgent.Conversations.DeleteById')
   async deleteById(id: ConversationId): Promise<ConversationDeleteResponse> {
     const response = await this.delete<ConversationDeleteResponse>(
       CONVERSATION_ENDPOINTS.DELETE(id)

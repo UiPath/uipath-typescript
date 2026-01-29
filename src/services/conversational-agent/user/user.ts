@@ -9,7 +9,7 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
-  UpdateUserSettingsOptions,
+  UserSettingsUpdateOptions,
   UserServiceModel,
   UserSettingsGetResponse,
   UserSettingsUpdateResponse
@@ -75,7 +75,7 @@ export class UserService extends BaseService implements UserServiceModel {
    * console.log(userSettings.timezone);  // User's timezone
    * ```
    */
-  @track('User.GetSettings')
+  @track('ConversationalAgent.User.GetSettings')
   async getSettings(): Promise<UserSettingsGetResponse> {
     const response = await this.get<UserSettingsGetResponse>(USER_ENDPOINTS.SETTINGS);
     return transformData(response.data, UserSettingsMap) as UserSettingsGetResponse;
@@ -112,8 +112,8 @@ export class UserService extends BaseService implements UserServiceModel {
    * });
    * ```
    */
-  @track('User.UpdateSettings')
-  async updateSettings(options: UpdateUserSettingsOptions): Promise<UserSettingsUpdateResponse> {
+  @track('ConversationalAgent.User.UpdateSettings')
+  async updateSettings(options: UserSettingsUpdateOptions): Promise<UserSettingsUpdateResponse> {
     const response = await this.patch<UserSettingsUpdateResponse>(USER_ENDPOINTS.SETTINGS, options);
     return transformData(response.data, UserSettingsMap) as UserSettingsUpdateResponse;
   }
