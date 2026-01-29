@@ -3,7 +3,6 @@ export const API_ENDPOINTS = {
   UPLOAD_PACKAGE: '/orchestrator_/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage()',
   // Base: /studio_/backend/api/Project/{project_id}/FileOperations
   STUDIO_WEB_STRUCTURE: '/studio_/backend/api/Project/{projectId}/FileOperations/Structure',
-  STUDIO_WEB_MIGRATE: '/studio_/backend/api/Project/{projectId}/FileOperations/StructuralMigration', // Deprecated
   STUDIO_WEB_DOWNLOAD_FILE: '/studio_/backend/api/Project/{projectId}/FileOperations/File/{fileId}',
   STUDIO_WEB_DELETE_ITEM: '/studio_/backend/api/Project/{projectId}/FileOperations/Delete/{itemId}',
   STUDIO_WEB_LOCK: '/studio_/backend/api/Project/{projectId}/Lock',

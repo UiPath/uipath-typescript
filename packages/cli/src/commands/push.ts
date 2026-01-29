@@ -15,6 +15,7 @@ export default class Push extends Command {
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> <project-id>',
     '<%= config.bin %> <%= command.id %> <project-id> --ignore-resources',
+    '<%= config.bin %> <%= command.id %> <project-id> --build-dir build',
   ];
 
   static override args = {
@@ -26,6 +27,10 @@ export default class Push extends Command {
 
   static override flags = {
     help: Flags.help({ char: 'h' }),
+    'build-dir': Flags.string({
+      description: 'Relative path to the build output directory (e.g. dist, build, out). Default: dist',
+      default: 'dist',
+    }),
     'ignore-resources': Flags.boolean({
       description: 'Skip importing the referenced resources to Studio Web solution',
       default: false,
@@ -44,19 +49,20 @@ export default class Push extends Command {
 
     const projectId = args['project-id'] || process.env.UIPATH_PROJECT_ID;
     if (!projectId) {
-      this.log(chalk.red('Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID'));
+      this.log(chalk.red('Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath push directly'));
       return;
     }
 
     const rootDir = process.cwd();
-    const distPath = path.join(rootDir, 'dist');
-    if (!fs.existsSync(distPath) || !fs.statSync(distPath).isDirectory()) {
-      this.log(chalk.red(`dist/ not found at ${distPath}. Run from project root with a dist/ folder.`));
+    const bundlePath = flags['build-dir'].replace(/^\.\//, '').replace(/\\/g, '/') || 'dist';
+    const buildPath = path.join(rootDir, bundlePath);
+    if (!fs.existsSync(buildPath) || !fs.statSync(buildPath).isDirectory()) {
+      this.log(chalk.red(`Build directory '${bundlePath}' not found at ${buildPath}. Run from project root with a valid build folder.`));
       return;
     }
 
     try {
-      Preconditions.validate(rootDir);
+      Preconditions.validate(rootDir, bundlePath);
     } catch (error) {
       this.log(chalk.red(`Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
       return;
@@ -65,7 +71,7 @@ export default class Push extends Command {
     const handler = new WebAppFileHandler({
       projectId,
       rootDir,
-      bundlePath: 'dist',
+      bundlePath,
       manifestFile: '.uipath/studio_metadata.json',
       envConfig,
       logger: this,

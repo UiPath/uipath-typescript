@@ -5,7 +5,29 @@ import chalk from 'chalk';
 import { API_ENDPOINTS } from '../../constants/api.js';
 import { createHeaders } from '../../utils/api.js';
 import { handleHttpError } from '../../utils/error-handler.js';
-import type { WebAppPushConfig, LocalFile, LockInfo, ProjectStructure } from './types.js';
+import { cliTelemetryClient } from '../../telemetry/index.js';
+import type {
+  WebAppPushConfig,
+  LocalFile,
+  LockInfo,
+  ProjectStructure,
+  Resource,
+  Connection,
+  ReferencedResourceRequest,
+  ReferencedResourceResponse,
+} from './types.js';
+
+const MAX_TELEMETRY_ERROR_LENGTH = 500;
+
+function trackApiFailure(apiMethod: string, errorMessage: string, statusCode?: number): void {
+  cliTelemetryClient.track('Cli.Push.ApiFailure', {
+    api_method: apiMethod,
+    error_message: errorMessage.length > MAX_TELEMETRY_ERROR_LENGTH
+      ? `${errorMessage.slice(0, MAX_TELEMETRY_ERROR_LENGTH)}...`
+      : errorMessage,
+    ...(statusCode !== undefined && { status_code: statusCode }),
+  });
+}
 
 export function buildApiUrl(config: WebAppPushConfig, endpoint: string, tenantScoped = false): string {
   const { baseUrl, orgId, tenantId } = config.envConfig;
@@ -33,6 +55,8 @@ export async function fetchRemoteStructure(
     if (response.status === 404) {
       return { name: '', files: [], folders: [] };
     }
+    const errText = await response.text().catch(() => '');
+    trackApiFailure('fetchRemoteStructure', errText || response.statusText, response.status);
     await handleHttpError(response, 'fetch remote structure');
   }
   return (await response.json()) as ProjectStructure;
@@ -67,7 +91,10 @@ export async function retrieveLock(config: WebAppPushConfig): Promise<LockInfo |
       return lockInfo;
     }
     return null;
-  } catch {
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    trackApiFailure('retrieveLock', msg);
+    config.logger.log(chalk.gray(`[retrieveLock] Error: ${msg}`));
     return null;
   }
 }
@@ -117,9 +144,13 @@ export async function createFolderAtRoot(
     }
     if (response.status === 409) return null;
     const err = await response.text().catch(() => '');
-    throw new Error(`Create folder '${name}' failed: ${response.status} ${err.slice(0, 80)}`);
+    const errMsg = `Create folder '${name}' failed: ${response.status} ${err.slice(0, 80)}`;
+    trackApiFailure('createFolderAtRoot', errMsg, response.status);
+    throw new Error(errMsg);
   } catch (e) {
-    config.logger.log(chalk.yellow(`Create folder failed: ${name} — ${e instanceof Error ? e.message : 'Unknown error'}`));
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    trackApiFailure('createFolderAtRoot', msg);
+    config.logger.log(chalk.yellow(`Create folder failed: ${name} — ${msg}`));
     return null;
   }
 }
@@ -146,7 +177,9 @@ export async function moveFolder(
   });
   if (!response.ok) {
     const err = await response.text().catch(() => '');
-    throw new Error(`Move folder failed: ${response.status} ${response.statusText} ${err.slice(0, 80)}`);
+    const errMsg = `Move folder failed: ${response.status} ${response.statusText} ${err.slice(0, 80)}`;
+    trackApiFailure('moveFolder', errMsg, response.status);
+    throw new Error(errMsg);
   }
 }
 
@@ -169,7 +202,9 @@ export async function downloadRemoteFile(
     }),
   });
   if (!response.ok) {
-    throw new Error(`Failed to download file ${fileId}: ${response.statusText}`);
+    const errMsg = `Failed to download file ${fileId}: ${response.statusText}`;
+    trackApiFailure('downloadRemoteFile', errMsg, response.status);
+    throw new Error(errMsg);
   }
   return Buffer.from(await response.arrayBuffer());
 }
@@ -203,7 +238,9 @@ export async function createFile(
   if (lockKey) headers['x-uipath-sw-lockkey'] = lockKey;
   const response = await fetch(url, { method: 'POST', headers, body: form });
   if (!response.ok) {
-    throw new Error(`Failed to upload file '${filePath}': ${response.status} ${response.statusText}`);
+    const errMsg = `Failed to upload file '${filePath}': ${response.status} ${response.statusText}`;
+    trackApiFailure('createFile', errMsg, response.status);
+    throw new Error(errMsg);
   }
 }
 
@@ -236,7 +273,9 @@ export async function updateFile(
   if (lockKey) headers['x-uipath-sw-lockkey'] = lockKey;
   const response = await fetch(url, { method: 'PUT', headers, body: form });
   if (!response.ok) {
-    throw new Error(`Failed to update file '${filePath}': ${response.status} ${response.statusText}`);
+    const errMsg = `Failed to update file '${filePath}': ${response.status} ${response.statusText}`;
+    trackApiFailure('updateFile', errMsg, response.status);
+    throw new Error(errMsg);
   }
 }
 
@@ -259,7 +298,9 @@ export async function deleteItem(
   if (lockKey) headers['x-uipath-sw-lockkey'] = lockKey;
   const response = await fetch(url, { method: 'DELETE', headers });
   if (!response.ok) {
-    throw new Error(`Failed to delete item ${itemId}: ${response.status} ${response.statusText}`);
+    const errMsg = `Failed to delete item ${itemId}: ${response.status} ${response.statusText}`;
+    trackApiFailure('deleteItem', errMsg, response.status);
+    throw new Error(errMsg);
   }
 }
 
@@ -276,7 +317,9 @@ export async function getSolutionId(config: WebAppPushConfig): Promise<string> {
     }),
   });
   if (!response.ok) {
-    throw new Error(`Failed to get solution ID: ${response.status} ${response.statusText}`);
+    const errMsg = `Failed to get solution ID: ${response.status} ${response.statusText}`;
+    trackApiFailure('getSolutionId', errMsg, response.status);
+    throw new Error(errMsg);
   }
   const data = (await response.json()) as { solutionId: string };
   return data.solutionId;
@@ -288,7 +331,7 @@ export async function findResourceInCatalog(
   name: string,
   folderPath: string,
   mapFolder: (f: Record<string, unknown>) => { folder_key: string; fully_qualified_name: string; path: string }
-): Promise<import('./types.js').Resource> {
+): Promise<Resource> {
   const resourceTypeMap: Record<string, string> = {
     asset: 'asset',
     process: 'process',
@@ -319,16 +362,23 @@ export async function findResourceInCatalog(
   const responseText = await response.text();
   const contentType = response.headers.get('content-type') || '';
   if (!response.ok) {
-    throw new Error(`Failed to search resource catalog: ${response.status} ${response.statusText}`);
+    const errMsg = `Failed to search resource catalog: ${response.status} ${response.statusText}`;
+    trackApiFailure('findResourceInCatalog', errMsg, response.status);
+    throw new Error(errMsg);
   }
   if (!contentType.includes('application/json') && responseText.trim().startsWith('<!DOCTYPE')) {
-    throw new Error(`API returned HTML instead of JSON. Status: ${response.status}`);
+    const errMsg = `API returned HTML instead of JSON. Status: ${response.status}`;
+    trackApiFailure('findResourceInCatalog', errMsg, response.status);
+    throw new Error(errMsg);
   }
   let data: { value?: unknown[]; items?: unknown[] };
   try {
     data = JSON.parse(responseText) as { value?: unknown[]; items?: unknown[] };
   } catch (error) {
-    throw new Error(`Invalid JSON: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    trackApiFailure('findResourceInCatalog', `Invalid JSON: ${msg}`);
+    config.logger.log(chalk.gray(`[findResourceInCatalog] Invalid JSON: ${msg}`));
+    throw new Error(`Invalid JSON: ${msg}`);
   }
   const items = data.value || data.items || [];
   for (const item of items as Array<Record<string, unknown>>) {
@@ -357,7 +407,9 @@ export async function findResourceInCatalog(
     }
   }
   const folderInfo = folderPath ? ` at folder path '${folderPath}'` : ' (tenant-scoped)';
-  throw new Error(`Resource '${name}' of type '${resourceType}' not found${folderInfo}`);
+  const errMsg = `Resource '${name}' of type '${resourceType}' not found${folderInfo}`;
+  trackApiFailure('findResourceInCatalog', errMsg);
+  throw new Error(errMsg);
 }
 
 export function mapFolder(f: Record<string, unknown>): {
@@ -380,7 +432,7 @@ export function mapFolder(f: Record<string, unknown>): {
 export async function retrieveConnection(
   config: WebAppPushConfig,
   connectionKey: string
-): Promise<import('./types.js').Connection> {
+): Promise<Connection> {
   const url = buildApiUrl(
     config,
     API_ENDPOINTS.CONNECTIONS_RETRIEVE.replace('{connectionKey}', connectionKey)
@@ -393,8 +445,14 @@ export async function retrieveConnection(
     }),
   });
   if (!response.ok) {
-    if (response.status === 404) throw new Error(`Connection '${connectionKey}' not found`);
-    throw new Error(`Failed to retrieve connection: ${response.status} ${response.statusText}`);
+    if (response.status === 404) {
+      const errMsg = `Connection '${connectionKey}' not found`;
+      trackApiFailure('retrieveConnection', errMsg, 404);
+      throw new Error(errMsg);
+    }
+    const errMsg = `Failed to retrieve connection: ${response.status} ${response.statusText}`;
+    trackApiFailure('retrieveConnection', errMsg, response.status);
+    throw new Error(errMsg);
   }
   const data = (await response.json()) as {
     Key?: string;
@@ -417,9 +475,9 @@ export async function retrieveConnection(
 export async function createReferencedResource(
   config: WebAppPushConfig,
   solutionId: string,
-  request: import('./types.js').ReferencedResourceRequest,
+  request: ReferencedResourceRequest,
   lockKey: string | null
-): Promise<import('./types.js').ReferencedResourceResponse> {
+): Promise<ReferencedResourceResponse> {
   const baseUrl = buildApiUrl(
     config,
     API_ENDPOINTS.STUDIO_WEB_CREATE_REFERENCED_RESOURCE.replace('{solutionId}', solutionId),
@@ -459,9 +517,14 @@ export async function createReferencedResource(
     try {
       const body = JSON.parse(errorText) as { Detail?: string; Message?: string };
       if (body.Detail || body.Message) msg += ` - ${body.Detail || body.Message}`;
-    } catch {
-      /* ignore */
+    } catch (parseErr) {
+      config.logger.log(
+        chalk.gray(
+          `[createReferencedResource] Could not parse error response body: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`
+        )
+      );
     }
+    trackApiFailure('createReferencedResource', msg, response.status);
     throw new Error(msg);
   }
   const data = (await response.json()) as {
