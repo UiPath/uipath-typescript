@@ -3,10 +3,7 @@
  */
 
 import type { SortOrder, FeedbackRating, Exchange, Message, ContentPart } from './core.types';
-import type { PaginationCursor } from '@/utils/pagination/types';
-
-// Re-export for convenience
-export type { FeedbackRating };
+import type { PaginationOptions } from '@/utils/pagination/types';
 
 // ==================== Response Types ====================
 
@@ -56,13 +53,9 @@ export interface ContentPartGetResponse extends ContentPart {
 
 // ==================== Exchange Options ====================
 
-export interface ExchangeGetAllOptions {
+export type ExchangeGetAllOptions = PaginationOptions & {
   exchangeSort?: SortOrder;
   messageSort?: SortOrder;
-  /** Size of the page to fetch (items per page) */
-  pageSize?: number;
-  /** Cursor for pagination */
-  cursor?: PaginationCursor;
 }
 
 export interface ExchangeGetByIdOptions {
@@ -74,6 +67,7 @@ export interface ExchangeGetByIdOptions {
 // ==================== Feedback Types ====================
 
 export interface CreateFeedbackOptions {
+  /** Rating for the exchange ('positive' or 'negative') */
   rating: FeedbackRating;
   /** Optional text comment for the feedback */
   comment?: string;

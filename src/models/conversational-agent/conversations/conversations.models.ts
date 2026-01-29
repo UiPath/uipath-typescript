@@ -1,252 +1,20 @@
-import type { Conversation } from './core.types';
-import type {
-  ConversationId,
-  ExchangeId,
-  MessageId,
-  ContentPartId
-} from './common.types';
+/**
+ * Conversation Service Model
+ */
+
+import type { ConversationId } from './common.types';
+import type { ConversationGetResponse } from './core.types';
 import type {
   ConversationCreateResponse,
   ConversationDeleteResponse,
-  ConversationGetResponse,
   ConversationGetAllOptions,
   CreateConversationOptions,
   UpdateConversationOptions
 } from './conversations.types';
-import type {
-  ExchangeGetAllOptions,
-  ExchangeGetByIdOptions,
-  CreateFeedbackOptions,
-  FeedbackCreateResponse,
-  ExchangeGetResponse,
-  MessageGetResponse,
-  ContentPartGetResponse
-} from './exchanges.types';
-import type {
-  AttachmentCreateResponse,
-  AttachmentUploadResponse
-} from './attachments.types';
+import type { ExchangeServiceModel } from './exchanges.models';
+import type { MessageServiceModel } from './messages.models';
+import type { AttachmentServiceModel } from './attachments.models';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
-
-/**
- * Service for exchange operations within conversations
- *
- * Exchanges represent individual request-response pairs within a conversation.
- * Each exchange contains messages from the user and assistant.
- *
- * ### Usage
- *
- * ```typescript
- * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
- * ```
- */
-export interface ExchangeServiceModel {
-  /**
-   * Gets all exchanges for a conversation with optional filtering and pagination
-   *
-   * @param conversationId - The conversation ID to get exchanges for
-   * @param options - Query options including optional pagination parameters
-   * @returns Promise resolving to exchanges or paginated result
-   * {@link ExchangeGetResponse}
-   * @example
-   * ```typescript
-   * // Get all exchanges (non-paginated)
-   * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
-   *
-   * // First page with pagination
-   * const firstPageOfExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId, { pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (firstPageOfExchanges.hasNextPage) {
-   *   const nextPageOfExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId, {
-   *     cursor: firstPageOfExchanges.nextCursor
-   *   });
-   * }
-   * ```
-   */
-  getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
-    conversationId: ConversationId,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ExchangeGetResponse>
-      : NonPaginatedResponse<ExchangeGetResponse>
-  >;
-
-  /**
-   * Gets an exchange by ID with its messages
-   *
-   * @param conversationId - The conversation containing the exchange
-   * @param exchangeId - The exchange ID to retrieve
-   * @param options - Optional parameters for message sorting
-   * @returns Promise resolving to the exchange with helper methods
-   * {@link ExchangeGetResponse}
-   * @example
-   * ```typescript
-   * const exchangeDetails = await conversationalAgentService.conversations.exchanges.getById(
-   *   conversationId,
-   *   exchangeId
-   * );
-   *
-   * // Access messages via helpers
-   * const userPrompt = exchangeDetails.getUserMessage();
-   * const assistantResponse = exchangeDetails.getAssistantMessage();
-   * ```
-   */
-  getById(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
-    options?: ExchangeGetByIdOptions
-  ): Promise<ExchangeGetResponse>;
-
-  /**
-   * Creates feedback for an exchange
-   *
-   * @param conversationId - The conversation containing the exchange
-   * @param exchangeId - The exchange to provide feedback for
-   * @param options - Feedback data including rating and optional comment
-   * @returns Promise resolving to the feedback creation response
-   * {@link FeedbackCreateResponse}
-   * @example
-   * ```typescript
-   * await conversationalAgentService.conversations.exchanges.createFeedback(
-   *   conversationId,
-   *   exchangeId,
-   *   { rating: 'positive', comment: 'Very helpful!' }
-   * );
-   * ```
-   */
-  createFeedback(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
-    options: CreateFeedbackOptions
-  ): Promise<FeedbackCreateResponse>;
-}
-
-/**
- * Service for message operations within conversations
- *
- * Messages are the individual turns within an exchange.
- *
- * ### Usage
- *
- * ```typescript
- * const messageDetails = await conversationalAgentService.conversations.messages.getById(
- *   conversationId, exchangeId, messageId
- * );
- * ```
- */
-export interface MessageServiceModel {
-  /**
-   * Gets a message by ID
-   *
-   * @param conversationId - The conversation containing the message
-   * @param exchangeId - The exchange containing the message
-   * @param messageId - The message ID to retrieve
-   * @returns Promise resolving to the message with helper methods
-   * {@link MessageGetResponse}
-   * @example
-   * ```typescript
-   * const messageDetails = await conversationalAgentService.conversations.messages.getById(
-   *   conversationId,
-   *   exchangeId,
-   *   messageId
-   * );
-   *
-   * const messageText = messageDetails.getTextContent();
-   * const messageToolCalls = messageDetails.getToolCalls();
-   * ```
-   */
-  getById(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
-    messageId: MessageId
-  ): Promise<MessageGetResponse>;
-
-  /**
-   * Gets a content part by ID
-   *
-   * @param conversationId - The conversation containing the content
-   * @param exchangeId - The exchange containing the content
-   * @param messageId - The message containing the content part
-   * @param contentPartId - The content part ID to retrieve
-   * @returns Promise resolving to a ContentPartGetResponse
-   * {@link ContentPartGetResponse}
-   * @example
-   * ```typescript
-   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
-   *   conversationId,
-   *   exchangeId,
-   *   messageId,
-   *   contentPartId
-   * );
-   * ```
-   */
-  getContentPartById(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
-    messageId: MessageId,
-    contentPartId: ContentPartId
-  ): Promise<ContentPartGetResponse>;
-}
-
-/**
- * Service for attachment operations within conversations
- *
- * Attachments allow files to be uploaded and referenced in conversation messages.
- *
- * ### Usage
- *
- * ```typescript
- * const uploadedAttachment = await conversationalAgentService.conversations.attachments.upload(conversationId, file);
- * ```
- */
-export interface AttachmentServiceModel {
-  /**
-   * Creates an attachment entry for a conversation
-   *
-   * Creates the attachment entry and returns upload access details.
-   * The client must handle the file upload using the returned fileUploadAccess.
-   * For most cases, use `upload()` instead which handles both steps.
-   *
-   * @param conversationId - The conversation to attach the file to
-   * @param fileName - The name of the file
-   * @returns Promise resolving to attachment details with upload access
-   * {@link AttachmentCreateResponse}
-   * @example
-   * ```typescript
-   * const attachmentEntry = await conversationalAgentService.conversations.attachments.create(
-   *   conversationId,
-   *   'document.pdf'
-   * );
-   *
-   * // Handle upload manually using attachmentEntry.fileUploadAccess
-   * const { url, verb, headers } = attachmentEntry.fileUploadAccess;
-   * ```
-   */
-  create(conversationId: ConversationId, fileName: string): Promise<AttachmentCreateResponse>;
-
-  /**
-   * Uploads a file attachment to a conversation
-   *
-   * Convenience method that creates the attachment entry and uploads
-   * the file content in one step.
-   *
-   * @param conversationId - The conversation to attach the file to
-   * @param file - The file to upload
-   * @returns Promise resolving to attachment metadata with URI
-   * {@link AttachmentUploadResponse}
-   * @example
-   * ```typescript
-   * const uploadedAttachment = await conversationalAgentService.conversations.attachments.upload(
-   *   conversationId,
-   *   file
-   * );
-   * console.log(`Uploaded: ${uploadedAttachment.uri}`);
-   * ```
-   */
-  upload(conversationId: ConversationId, file: File): Promise<AttachmentUploadResponse>;
-}
 
 /**
  * Service for managing UiPath Conversations
@@ -280,7 +48,7 @@ export interface ConversationServiceModel {
   /**
    * Creates a new conversation
    *
-   * @param options - Conversation creation options
+   * @param options - Options for creating a conversation
    * @returns Promise resolving to the created conversation
    * {@link ConversationCreateResponse}
    * @example
@@ -309,9 +77,8 @@ export interface ConversationServiceModel {
   /**
    * Gets all conversations with optional filtering and pagination
    *
-   * @param options - Query options including optional pagination parameters
-   * @returns Promise resolving to conversations or paginated result
-   * {@link Conversation}
+   * @param options - Options for querying conversations including optional pagination parameters
+   * @returns Promise resolving to either an array of conversations {@link NonPaginatedResponse}<{@link ConversationGetResponse}> or a {@link PaginatedResponse}<{@link ConversationGetResponse}> when pagination options are used
    * @example
    * ```typescript
    * // Get all conversations (non-paginated)
@@ -330,12 +97,12 @@ export interface ConversationServiceModel {
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<Conversation>
-      : NonPaginatedResponse<Conversation>
+      ? PaginatedResponse<ConversationGetResponse>
+      : NonPaginatedResponse<ConversationGetResponse>
   >;
 
   /**
-   * Updates a conversation
+   * Updates a conversation by ID
    *
    * @param id - The conversation ID to update
    * @param options - Fields to update
@@ -343,12 +110,12 @@ export interface ConversationServiceModel {
    * {@link ConversationGetResponse}
    * @example
    * ```typescript
-   * const updatedConversation = await conversationalAgentService.conversations.update(conversationId, {
+   * const updatedConversation = await conversationalAgentService.conversations.updateById(conversationId, {
    *   name: 'Updated Name'
    * });
    * ```
    */
-  update(
+  updateById(
     id: ConversationId,
     options: UpdateConversationOptions
   ): Promise<ConversationGetResponse>;
