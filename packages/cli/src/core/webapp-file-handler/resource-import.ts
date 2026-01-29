@@ -10,6 +10,8 @@ import type {
 } from './types.js';
 import * as api from './api.js';
 
+const BINDINGS_FILE_NAME = 'bindings.json';
+
 function transformKind(kind: string): string {
   return kind ? kind[0].toLowerCase() + kind.slice(1) : kind;
 }
@@ -35,7 +37,7 @@ export async function runImportReferencedResources(
   config: WebAppPushConfig,
   lockKey: string | null
 ): Promise<void> {
-  const bindingsPath = path.join(config.rootDir, 'bindings.json');
+  const bindingsPath = path.join(config.rootDir, BINDINGS_FILE_NAME);
   let bindings: Bindings;
   try {
     const content = fs.readFileSync(bindingsPath, 'utf-8');
@@ -43,14 +45,14 @@ export async function runImportReferencedResources(
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
     config.logger.log(
-      chalk.red(`Failed to parse bindings.json: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      chalk.red(`Failed to parse ${BINDINGS_FILE_NAME}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     );
     return;
   }
 
   if (!bindings.resources || bindings.resources.length === 0) return;
 
-  config.logger.log(chalk.gray(`[resources] Processing ${bindings.resources.length} resource(s) from bindings.json...`));
+  config.logger.log(chalk.gray(`[resources] Processing ${bindings.resources.length} resource(s) from ${BINDINGS_FILE_NAME}...`));
 
   let resourcesCreated = 0;
   let resourcesUnchanged = 0;
