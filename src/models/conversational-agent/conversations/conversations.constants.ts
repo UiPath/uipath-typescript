@@ -2,18 +2,12 @@
  * Constants for Conversational Agent
  */
 
+import { CommonFieldMap } from '../common.constants';
+
 /**
  * Constant for the conversation event name used in WebSocket communication.
  */
 export const ConversationEventName = 'ConversationEvent';
-
-/**
- * Common field mappings shared across all entities
- */
-export const CommonFieldMap: { [key: string]: string } = {
-  createdAt: 'createdTime',
-  updatedAt: 'updatedTime'
-};
 
 /**
  * Maps fields for Conversation entity to ensure consistent SDK naming
