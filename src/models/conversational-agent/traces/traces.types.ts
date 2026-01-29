@@ -7,6 +7,26 @@
  */
 
 /**
+ * Type of trace span
+ */
+export enum TraceSpanType {
+  /** Conversation-level span */
+  Conversation = 'conversation',
+  /** Exchange (request-response pair) span */
+  Exchange = 'conversationExchange',
+  /** User message span */
+  UserMessage = 'conversationUserMessage',
+  /** Agent/assistant message span */
+  AgentMessage = 'conversationAgentMessage',
+  /** Content part span */
+  ContentPart = 'conversationContentPart',
+  /** Tool call span */
+  ToolCall = 'conversationToolCall',
+  /** Citation span */
+  Citation = 'conversationCitation'
+}
+
+/**
  * Status of a trace span
  */
 export enum TraceSpanStatus {
@@ -69,8 +89,8 @@ export interface TraceSpanGetResponse {
   folderKey?: string;
   /** Source identifier */
   source?: number;
-  /** Type of span (e.g., "Conversation", "Exchange", "ToolCall") */
-  spanType?: string;
+  /** Type of span */
+  spanType?: TraceSpanType | string;
   /** Process key if related to a UiPath process */
   processKey?: string;
   /** Job key if related to a UiPath job */
@@ -79,47 +99,4 @@ export interface TraceSpanGetResponse {
   attachments?: TraceSpanAttachment[];
 }
 
-/**
- * Raw span as returned from the API (before transformation)
- */
-export interface RawTraceSpan {
-  /** Unique identifier for this span */
-  Id: string;
-  /** Trace ID this span belongs to */
-  TraceId: string;
-  /** Parent span ID (for hierarchical traces) */
-  ParentId?: string;
-  /** Name of the operation */
-  Name: string;
-  /** When the operation started (ISO 8601 format) */
-  StartTime: string;
-  /** When the operation ended (ISO 8601 format) */
-  EndTime?: string;
-  /** Raw attributes object (not yet stringified) */
-  Attributes: Record<string, unknown>;
-  /** Current status of the span */
-  Status: TraceSpanStatus;
-  /** Organization ID */
-  OrganizationId: string;
-  /** Tenant ID */
-  TenantId: string;
-  /** When this span expires (ISO 8601 format) */
-  ExpiryTimeUtc?: string;
-  /** Folder key for organization */
-  FolderKey?: string;
-  /** Source identifier */
-  Source?: number;
-  /** Type of span */
-  SpanType?: string;
-  /** Process key if related to a UiPath process */
-  ProcessKey?: string;
-  /** Job key if related to a UiPath job */
-  JobKey?: string;
-  /** Attachments associated with this span */
-  Attachments?: Array<{
-    Id: string;
-    FileName: string;
-    MimeType: string;
-  }>;
-}
 
