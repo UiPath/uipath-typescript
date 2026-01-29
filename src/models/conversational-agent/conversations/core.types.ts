@@ -72,9 +72,9 @@ export interface Citation {
 }
 
 /**
- * Citation type for input operations (without timestamps).
+ * Citation options for input operations (without timestamps).
  */
-export interface CitationInput {
+export interface CitationOptions {
   citationId: CitationId;
   offset: number;
   length: number;
@@ -141,7 +141,7 @@ export interface ToolCallResult {
    */
   output?: ToolCallOutputValue;
   /**
-   * Legacy field for the tool call output value.
+   * field for the tool call output value.
    */
   value?: InlineOrExternalValue<ToolCallOutputValue>;
   /**
