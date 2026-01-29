@@ -78,6 +78,7 @@ plugins:
           - getting-started.md: Introduction to UiPath TypeScript SDK
           - authentication.md: Authentication setup
           - pagination.md: Pagination guide
+          - real-time-chat.md: Real-time chat with WebSocket streaming
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
           - api/interfaces/ProcessServiceModel.md: Process service methods
@@ -89,6 +90,20 @@ plugins:
           - api/interfaces/ProcessInstancesServiceModel.md: Process instance methods
           - api/interfaces/CasesServiceModel.md: Maestro Case methods
           - api/interfaces/CaseInstancesServiceModel.md: Maestro Case instance methods
+          - api/interfaces/ConversationalAgentServiceModel.md: Conversational Agent main service
+          - api/interfaces/AgentServiceModel.md: Agent service methods
+          - api/interfaces/ConversationServiceModel.md: Conversation service methods
+          - api/interfaces/ExchangeServiceModel.md: Exchange service methods
+          - api/interfaces/MessageServiceModel.md: Message service methods
+          - api/interfaces/AttachmentServiceModel.md: Attachment service methods
+          - api/interfaces/UserServiceModel.md: User settings service methods
+          - api/interfaces/TraceServiceModel.md: LLM Ops trace service methods
+          - api/interfaces/ConversationEventHelperManagerModel.md: WebSocket event manager
+          - api/interfaces/SessionEventHelperModel.md: Session event helper
+          - api/interfaces/ExchangeEventHelperModel.md: Exchange event helper
+          - api/interfaces/MessageEventHelperModel.md: Message event helper
+          - api/interfaces/ContentPartEventHelperModel.md: Content part event helper
+          - api/interfaces/ToolCallEventHelperModel.md: Tool call event helper
   - termynal:
       prompt_literal_start:
         - "$"
@@ -155,6 +170,17 @@ nav:
       - Services:
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
+          - Conversational Agent:
+            - Overview: api/interfaces/ConversationalAgentServiceModel.md
+            - Real-time Chat Guide: real-time-chat.md
+            - Agents: api/interfaces/AgentServiceModel.md
+            - Conversations:
+              - Overview: api/interfaces/ConversationServiceModel.md
+              - Exchanges: api/interfaces/ExchangeServiceModel.md
+              - Messages: api/interfaces/MessageServiceModel.md
+              - Attachments: api/interfaces/AttachmentServiceModel.md
+            - User Settings: api/interfaces/UserServiceModel.md
+            - Traces: api/interfaces/TraceServiceModel.md
           - Entities: api/interfaces/EntityServiceModel.md
           - Maestro:
             - Processes: api/interfaces/MaestroProcessesServiceModel.md
