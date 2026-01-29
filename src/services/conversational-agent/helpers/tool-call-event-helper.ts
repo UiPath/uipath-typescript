@@ -151,7 +151,7 @@ export class ToolCallEventHelperImpl extends ToolCallEventHelper {
       startToolCall: {
         toolName: toolCall.name,
         input: toolCall.input,
-        timestamp: toolCall.createdAt
+        timestamp: toolCall.createdTime
       }
     };
 
