@@ -39,10 +39,8 @@ export interface UserSettingsGetResponse {
   updatedTime: string;
 }
 
-/**
- * Response for updating user settings
- */
-export interface UserSettingsUpdateResponse extends UserSettingsGetResponse {}
+/** Response for updating user settings */
+export type UserSettingsUpdateResponse = UserSettingsGetResponse;
 
 /**
  * Options for updating user settings
@@ -65,7 +63,7 @@ export interface UserSettingsUpdateResponse extends UserSettingsGetResponse {}
  * });
  * ```
  */
-export interface UpdateUserSettingsOptions {
+export interface UserSettingsUpdateOptions {
   /** Name of the user (max 100 chars) */
   name?: string | null;
   /** Email address (max 255 chars, must be valid email) */

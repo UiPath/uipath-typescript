@@ -2,28 +2,16 @@
  * Types for Conversation Service
  */
 
-import type { Conversation, SortOrder, ConversationJobStartOverrides } from './core.types';
-import type { PaginationCursor } from '@/utils/pagination/types';
-
-// Re-export for convenience
-export type { SortOrder, ConversationJobStartOverrides };
+import type { ConversationGetResponse, SortOrder, ConversationJobStartOverrides } from './core.types';
+import type { PaginationOptions } from '@/utils/pagination/types';
 
 // ==================== Conversation Response Types ====================
 
-/**
- * Response for creating a conversation - returns full Conversation object
- */
-export interface ConversationCreateResponse extends Conversation {}
+/** Response for creating a conversation */
+export type ConversationCreateResponse = ConversationGetResponse;
 
-/**
- * Response for getting a conversation - returns full Conversation object
- */
-export interface ConversationGetResponse extends Conversation {}
-
-/**
- * Response for deleting a conversation - returns the deleted Conversation object
- */
-export interface ConversationDeleteResponse extends Conversation {}
+/** Response for deleting a conversation */
+export type ConversationDeleteResponse = ConversationGetResponse;
 
 // ==================== Conversation Request Types ====================
 
@@ -53,10 +41,6 @@ export interface UpdateConversationOptions {
   isLocalJobExecution?: boolean;
 }
 
-export interface ConversationGetAllOptions {
+export type ConversationGetAllOptions = PaginationOptions & {
   sort?: SortOrder;
-  /** Size of the page to fetch (items per page) */
-  pageSize?: number;
-  /** Cursor for pagination */
-  cursor?: PaginationCursor;
 }

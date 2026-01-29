@@ -5,6 +5,18 @@
 // ==================== Agent Types ====================
 
 /**
+ * Starting prompt configuration for an agent
+ */
+export interface AgentStartingPrompt {
+  /** The prompt text displayed to the user */
+  displayPrompt: string;
+  /** The actual prompt sent when selected */
+  actualPrompt: string;
+  /** Unique identifier for the prompt */
+  id: string;
+}
+
+/**
  * Agent appearance configuration
  */
 export interface AgentAppearance {
@@ -13,18 +25,14 @@ export interface AgentAppearance {
   /** Welcome description displayed to users */
   welcomeDescription?: string;
   /** Starting prompts for users to choose from */
-  startingPrompts?: Array<{
-    displayPrompt: string;
-    actualPrompt: string;
-    id: string;
-  }>;
+  startingPrompts?: AgentStartingPrompt[];
 }
 
 /**
  * Response for getting all agents
  */
 export interface AgentGetResponse {
-  /** Unique ID of the agent release */
+  /** Unique ID of the agent */
   id: number;
   /** Display name of the agent */
   name: string;

@@ -5,6 +5,20 @@
 // ==================== Attachment Types ====================
 
 /**
+ * File upload access details for uploading file content to blob storage
+ */
+export interface FileUploadAccess {
+  /** URL to upload the file to */
+  url: string;
+  /** HTTP verb to use (e.g., 'PUT') */
+  verb: string;
+  /** Headers to include in the upload request */
+  headers: { keys: string[]; values: string[] };
+  /** Whether authentication is required for the upload */
+  requiresAuth?: boolean;
+}
+
+/**
  * Response for creating a file attachment entry
  *
  * Contains the attachment URI and upload access details for uploading
@@ -16,16 +30,7 @@ export interface AttachmentCreateResponse {
   /** File name */
   name: string;
   /** Details for uploading the file content */
-  fileUploadAccess: {
-    /** URL to upload the file to */
-    url: string;
-    /** HTTP verb to use (e.g., 'PUT') */
-    verb: string;
-    /** Headers to include in the upload request */
-    headers: { keys: string[]; values: string[] };
-    /** Whether authentication is required for the upload */
-    requiresAuth?: boolean;
-  };
+  fileUploadAccess: FileUploadAccess;
 }
 
 /**

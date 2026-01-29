@@ -1,4 +1,4 @@
-import type { UserSettingsGetResponse, UserSettingsUpdateResponse, UpdateUserSettingsOptions } from './user.types';
+import type { UserSettingsGetResponse, UserSettingsUpdateResponse, UserSettingsUpdateOptions } from './user.types';
 
 /**
  * Service for managing UiPath User Settings
@@ -46,5 +46,5 @@ export interface UserServiceModel {
    * });
    * ```
    */
-  updateSettings(options: UpdateUserSettingsOptions): Promise<UserSettingsUpdateResponse>;
+  updateSettings(options: UserSettingsUpdateOptions): Promise<UserSettingsUpdateResponse>;
 }

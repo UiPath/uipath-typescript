@@ -11,6 +11,7 @@ import {
   ExchangeId,
   InlineOrExternalValue,
   InterruptId,
+  InterruptType,
   MessageId,
   MessageRole,
   MimeType,
@@ -28,20 +29,6 @@ import { UTCTimeStamp } from './events.types';
 export enum SortOrder {
   Ascending = 'ascending',
   Descending = 'descending'
-}
-
-/**
- * Pagination type for API responses.
- */
-export interface Paginated<T> {
-  /**
-   * The data of the paginated response.
-   */
-  data: T;
-  /**
-   * The cursor if there are additional results.
-   */
-  cursor?: string;
 }
 
 /**
@@ -216,7 +203,7 @@ export interface Interrupt {
   /**
    * The type of interrupt.
    */
-  type: string;
+  type: InterruptType;
   /**
    * The value associated with the interrupt start event.
    */
@@ -323,9 +310,10 @@ export interface ConversationJobStartOverrides {
 }
 
 /**
+ * Response type for conversation operations.
  * Represents a conversation between users and AI agents.
  */
-export interface Conversation {
+export interface ConversationGetResponse {
   /**
    * A globally unique identifier for the conversation.
    */
@@ -367,7 +355,7 @@ export interface Conversation {
    */
   folderId: number;
   /**
-   * Identifier of the specific agent release/version used.
+   * Identifier of the specific agentId used
    */
   agentReleaseId?: number;
   /**
@@ -392,67 +380,3 @@ export interface Conversation {
   isLocalJobExecution?: boolean;
 }
 
-/**
- * HTTP method type for file upload operations.
- */
-export enum FileUploadMethod {
-  Get = 'GET',
-  Post = 'POST',
-  Put = 'PUT',
-  Patch = 'PATCH',
-  Delete = 'DELETE'
-}
-
-/**
- * Attachment file upload headers.
- */
-export interface AttachmentHeadersDictionary {
-  /**
-   * The keys of the headers.
-   */
-  keys: string[];
-  /**
-   * The values of the headers.
-   */
-  values: string[];
-}
-
-/**
- * Attachment file upload access information.
- */
-export interface AttachmentFileUploadAccess {
-  /**
-   * The storage URL for uploading file contents.
-   */
-  url: string;
-  /**
-   * The HTTP method for uploading.
-   */
-  verb: FileUploadMethod;
-  /**
-   * Whether authentication is required for uploading.
-   */
-  requiresAuth: boolean;
-  /**
-   * The headers for uploading.
-   */
-  headers: AttachmentHeadersDictionary;
-}
-
-/**
- * Represents an attachment that can be referenced in content-parts.
- */
-export interface Attachment {
-  /**
-   * The URI to reference the attachment in content-parts.
-   */
-  uri: string;
-  /**
-   * The name of the attachment.
-   */
-  name: string;
-  /**
-   * The information for uploading file contents.
-   */
-  fileUploadAccess: AttachmentFileUploadAccess;
-}

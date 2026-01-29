@@ -25,6 +25,11 @@ export * from './conversations.models';
 
 // Exchange service types
 export * from './exchanges.types';
+export * from './exchanges.models';
+
+// Message service types
+export * from './messages.models';
 
 // Attachment service types
 export * from './attachments.types';
+export * from './attachments.models';
