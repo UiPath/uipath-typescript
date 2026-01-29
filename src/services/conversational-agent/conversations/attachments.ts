@@ -75,7 +75,7 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
    * // Use attachmentEntry.fileUploadAccess to upload file content manually
    * ```
    */
-  @track('Attachments.Create')
+  @track('ConversationalAgent.Attachments.Create')
   async create(
     conversationId: ConversationId,
     fileName: string
@@ -106,7 +106,7 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
    * console.log(`Uploaded: ${attachment.uri}`);
    * ```
    */
-  @track('Attachments.Upload')
+  @track('ConversationalAgent.Attachments.Upload')
   async upload(
     conversationId: ConversationId,
     file: File
