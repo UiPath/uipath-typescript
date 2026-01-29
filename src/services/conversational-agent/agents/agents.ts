@@ -65,7 +65,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * const folderAgents = await conversationalAgentService.agents.getAll(123);
    * ```
    */
-  @track('ConversationalAgents.GetAll')
+  @track('ConversationalAgent.Agents.GetAll')
   async getAll(folderId?: number): Promise<AgentGetResponse[]> {
     const response = await this.get<AgentGetResponse[]>(AGENT_ENDPOINTS.LIST, {
       params: folderId !== undefined ? { folderId } : undefined,
@@ -89,7 +89,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
    * console.log(agent.name, agent.appearance?.suggestedPrompts);
    * ```
    */
-  @track('ConversationalAgents.GetById')
+  @track('ConversationalAgent.Agents.GetById')
   async getById(id: number, folderId: number): Promise<AgentGetByIdResponse> {
     const response = await this.get<AgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
     return transformData(response.data, AgentMap) as AgentGetByIdResponse;
