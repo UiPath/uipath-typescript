@@ -380,7 +380,7 @@ export class MessageEventHelperImpl extends MessageEventHelper {
       messageId: message.messageId,
       startMessage: {
         role: message.role,
-        timestamp: message.createdAt
+        timestamp: message.createdTime
       }
     };
 

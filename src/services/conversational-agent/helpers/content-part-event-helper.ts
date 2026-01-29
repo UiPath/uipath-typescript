@@ -1,7 +1,7 @@
 import type {
   Citation,
   CitationId,
-  CitationInput,
+  CitationOptions,
   CitationSource,
   ContentPart,
   ContentPartChunkEvent,
@@ -242,7 +242,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
 
     let data = '';
     const citationOffsets = new Map<CitationId, number>();
-    const citations = new Array<CitationInput>();
+    const citations = new Array<CitationOptions>();
     const citationErrors = new Array<CitationError>();
 
     this.onChunk(chunk => {
@@ -313,7 +313,7 @@ export class ContentPartEventHelperImpl extends ContentPartEventHelper {
       startContentPart: {
         mimeType: contentPart.mimeType,
         ...(contentPart.isTranscript !== undefined ? { metaData: { isTranscript: contentPart.isTranscript } } : {}),
-        timestamp: contentPart.createdAt,
+        timestamp: contentPart.createdTime,
         ...(isExternalValue(contentPart.data) ? { externalValue: contentPart.data } : {})
       }
     };

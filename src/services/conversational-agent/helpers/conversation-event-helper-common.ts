@@ -4,7 +4,7 @@ import type {
   AsyncInputStreamId,
   AsyncInputStreamStartEvent,
   CitationId,
-  CitationInput,
+  CitationOptions,
   ContentPartChunkEvent,
   ContentPartEndEvent,
   ContentPartId,
@@ -139,7 +139,7 @@ export enum CitationErrorType {
 export type CompletedContentPart = ContentPartStartEvent & ContentPartEndEvent & {
   contentPartId: ContentPartId;
   data: string;
-  citations: CitationInput[];
+  citations: CitationOptions[];
   citationErrors: CitationError[];
 };
 
