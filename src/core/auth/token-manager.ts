@@ -7,14 +7,15 @@ import { Config } from '../config/config';
 /**
  * TokenManager is responsible for managing authentication tokens.
  * It provides token operations for a specific client ID.
- * - For OAuth tokens: Uses session storage with client ID-based keys
+ * - For OAuth tokens: Uses configured storage (localStorage or sessionStorage) with client ID-based keys
  * - For Secret tokens: Stores only in memory, allowing multiple instances
  */
 export class TokenManager {
   private currentToken?: TokenInfo;
   private readonly STORAGE_KEY_PREFIX = 'uipath_sdk_user_token-';
   private refreshPromise: Promise<AuthToken> | null = null;
-  
+  private readonly storage?: Storage;
+
   /**
    * Creates a new TokenManager instance
    * @param executionContext The execution context
@@ -25,7 +26,12 @@ export class TokenManager {
     private executionContext: ExecutionContext,
     private config: Config,
     private isOAuth: boolean = false
-  ) {}
+  ) {
+    // Determine which storage to use based on config (only in browser environments)
+    if (isBrowser) {
+      this.storage = config.tokenStorage === 'localStorage' ? localStorage : sessionStorage;
+    }
+  }
 
   /**
    * Checks if a token is expired
@@ -53,13 +59,13 @@ export class TokenManager {
    * @returns true if a valid token was loaded, false otherwise
    */
   public loadFromStorage(): boolean {
-    // Only OAuth tokens are stored in session storage
+    // Only OAuth tokens are stored in storage
     if (!isBrowser || !this.isOAuth) {
       return false;
     }
     
     try {
-      const storedToken = sessionStorage.getItem(this._getStorageKey());
+      const storedToken = this.storage!.getItem(this._getStorageKey());
       if (!storedToken) {
         return false;
       }
@@ -67,14 +73,14 @@ export class TokenManager {
       const tokenInfo = this._parseTokenInfo(storedToken);
       if (!tokenInfo) {
         // Invalid token format, clear it
-        sessionStorage.removeItem(this._getStorageKey());
+        this.storage!.removeItem(this._getStorageKey());
         return false;
       }
       
       // Check if token is expired
       if (this.isTokenExpired(tokenInfo)) {
         // Token expired, clear it
-        sessionStorage.removeItem(this._getStorageKey());
+        this.storage!.removeItem(this._getStorageKey());
         return false;
       }
       
@@ -83,7 +89,7 @@ export class TokenManager {
       this._updateExecutionContext(tokenInfo);
       return true;
     } catch (error) {
-      console.warn('Failed to load token from session storage', error);
+      console.warn('Failed to load token from storage', error);
       return false;
     }
   }
@@ -137,13 +143,13 @@ export class TokenManager {
     
     // Store token in execution context
     this._updateExecutionContext(tokenInfo);
-    
-    // Store in session storage if in browser and this is an OAuth token
+
+    // Store in configured storage if in browser and this is an OAuth token
     if (isBrowser && this.isOAuth) {
       try {
-        sessionStorage.setItem(this._getStorageKey(), JSON.stringify(tokenInfo));
+        this.storage!.setItem(this._getStorageKey(), JSON.stringify(tokenInfo));
       } catch (error) {
-        console.warn('Failed to store token in session storage', error);
+        console.warn('Failed to store token in storage', error);
       }
     }
   }
@@ -186,13 +192,13 @@ export class TokenManager {
     const headers = this.executionContext.getHeaders();
     delete headers['Authorization'];
     this.executionContext.setHeaders(headers);
-    
-    // Remove from session storage if this is an OAuth token
+
+    // Remove from configured storage if this is an OAuth token
     if (isBrowser && this.isOAuth) {
       try {
-        sessionStorage.removeItem(this._getStorageKey());
+        this.storage!.removeItem(this._getStorageKey());
       } catch (error) {
-        console.warn('Failed to remove token from session storage', error);
+        console.warn('Failed to remove token from storage', error);
       }
     }
   }

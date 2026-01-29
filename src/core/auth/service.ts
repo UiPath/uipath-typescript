@@ -217,6 +217,29 @@ export class AuthService extends BaseService {
   }
 
   /**
+   * Clears authentication state (logout)
+   * Removes tokens from storage and clears OAuth context
+   */
+  public logout(): void {
+    // Clear the token from storage and memory
+    this.tokenManager.clearToken();
+
+    // Clear OAuth-specific session storage items
+    // Note: These items are normally cleared after successful authentication in _handleOAuthCallback(),
+    // but we clear them here as well to handle edge cases where OAuth flow was interrupted:
+    // - User navigated away during OAuth flow (before callback completed)
+    // - OAuth error occurred that didn't clear these items
+    if (isBrowser) {
+      try {
+        sessionStorage.removeItem('uipath_sdk_oauth_context');
+        sessionStorage.removeItem('uipath_sdk_code_verifier');
+      } catch (error) {
+        console.warn('Failed to clear OAuth context from session storage', error);
+      }
+    }
+  }
+
+  /**
    * Get the current token
    */
   public getToken(): string | undefined {
