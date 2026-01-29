@@ -14,9 +14,11 @@ import { BaseService } from '@/services/base';
 // Models
 import type {
   TraceSpanGetResponse,
-  RawTraceSpan,
   TraceServiceModel
 } from '@/models/conversational-agent';
+
+// Internal types
+import type { RawTraceSpan } from '@/models/conversational-agent/traces/traces.internal-types';
 
 // Utils
 import { TRACES_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -40,11 +42,11 @@ import { pascalToCamelCaseKeys } from '@/utils/transform';
  *   traceId: 'my-trace-id'
  * });
  *
- * // Later, retrieve the trace spans
- * const traceSpans = await conversationalAgentService.traces.getSpans('my-trace-id');
+ * // Later, retrieve the spans
+ * const spans = await conversationalAgentService.traces.getSpans('my-trace-id');
  *
  * // Analyze the spans
- * for (const span of traceSpans) {
+ * for (const span of spans) {
  *   console.log(`${span.name}: ${span.status}`);
  *   const spanAttributes = JSON.parse(span.attributes);
  *   console.log('Token usage:', spanAttributes.tokenUsage);
@@ -73,20 +75,20 @@ export class TraceService extends BaseService implements TraceServiceModel {
    *
    * @example
    * ```typescript
-   * const traceSpans = await conversationalAgentService.traces.getSpans('550e8400-e29b-41d4-a716-446655440000');
+   * const spans = await conversationalAgentService.traces.getSpans(traceId);
    *
    * // Find spans with errors
-   * const errorSpans = traceSpans.filter(span => span.status === TraceSpanStatus.Error);
+   * const errorSpans = spans.filter(span => span.status === TraceSpanStatus.Error);
    *
    * // Calculate total duration
-   * const rootSpan = traceSpans.find(span => !span.parentId);
+   * const rootSpan = spans.find(span => !span.parentId);
    * if (rootSpan?.startTime && rootSpan?.endTime) {
    *   const durationMs = new Date(rootSpan.endTime).getTime() - new Date(rootSpan.startTime).getTime();
    *   console.log(`Total duration: ${durationMs}ms`);
    * }
    * ```
    */
-  @track('Traces.GetSpans')
+  @track('ConversationalAgent.Traces.GetSpans')
   async getSpans(traceId: string): Promise<TraceSpanGetResponse[]> {
     const response = await this.get<RawTraceSpan[]>(TRACES_ENDPOINTS.GET_SPANS(traceId));
 
