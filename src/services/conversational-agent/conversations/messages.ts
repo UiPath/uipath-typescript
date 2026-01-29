@@ -97,7 +97,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * const messageCitations = messageDetails.getCitations();
    * ```
    */
-  @track('Messages.GetById')
+  @track('ConversationalAgent.Messages.GetById')
   async getById(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
@@ -142,7 +142,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * }
    * ```
    */
-  @track('Messages.GetContentPartById')
+  @track('ConversationalAgent.Messages.GetContentPartById')
   async getContentPartById(
     conversationId: ConversationId,
     exchangeId: ExchangeId,
