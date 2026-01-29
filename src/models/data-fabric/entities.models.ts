@@ -22,135 +22,6 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  */
 export interface EntityServiceModel {
   /**
-   * Gets all entities in the system
-   * 
-   * @returns Promise resolving to either an array of entities NonPaginatedResponse<EntityGetResponse> or a PaginatedResponse<EntityGetResponse> when pagination options are used.
-   * {@link EntityGetResponse}
-   * @example
-   * ```typescript
-   * // Get all entities
-   * const entities = await sdk.entities.getAll();
-   * 
-   * // Iterate through entities
-   * entities.forEach(entity => {
-   *   console.log(`Entity: ${entity.displayName} (${entity.name})`);
-   *   console.log(`Type: ${entity.entityType}`);
-   * });
-   * 
-   * // Find a specific entity by name
-   * const customerEntity = entities.find(e => e.name === 'Customer');
-   * 
-   * // Use entity methods directly
-   * if (customerEntity) {
-   *   const records = await customerEntity.getRecords();
-   *   console.log(`Customer records: ${records.items.length}`);
-   *
-   *   // Insert a single record
-   *   const insertResult = await customerEntity.insert({ name: "John", age: 30 });
-   *
-   *   // Or batch insert multiple records
-   *   const batchResult = await customerEntity.batchInsert([
-   *     { name: "Jane", age: 25 },
-   *     { name: "Bob", age: 35 }
-   *   ]);
-   * }
-   * ```
-   */
-  getAll(): Promise<EntityGetResponse[]>;
-
-  /**
-   * Gets entity metadata by entity ID with attached operation methods
-   * 
-   * @param id - UUID of the entity
-   * @returns Promise resolving to entity metadata with operation methods
-   * {@link EntityGetResponse}
-   * @example
-   * ```typescript
-   * // Get entity metadata with methods
-   * const entity = await sdk.entities.getById(<entityId>);
-   * 
-   * // Call operations directly on the entity
-   * const records = await entity.getRecords();
-   *
-   * // If a field references a ChoiceSet, get the choiceSetId from records.fields
-   * const choiceSetId = records.fields[0].referenceChoiceSet?.id;
-   * if (choiceSetId) {
-   *   const choiceSetValues = await sdk.entities.choicesets.getById(choiceSetId);
-   * }
-   *
-   * // Insert a single record
-   * const insertResult = await entity.insert({ name: "John", age: 30 });
-   *
-   * // Or batch insert multiple records
-   * const batchResult = await entity.batchInsert([
-   *     { name: "Jane", age: 25 },
-   *     { name: "Bob", age: 35 }
-   * ]);
-   * ```
-   */
-  getById(id: string): Promise<EntityGetResponse>;
-
-  /**
-   * Gets entity records by entity ID
-   * 
-   * @param entityId - UUID of the entity
-   * @param options - Query options
-   * @returns Promise resolving to either an array of entity records NonPaginatedResponse<EntityRecord> or a PaginatedResponse<EntityRecord> when pagination options are used.
-   * {@link EntityRecord}
-   * @example
-   * ```typescript
-   * // Basic usage (non-paginated)
-   * const records = await sdk.entities.getRecordsById(<entityId>);
-   * 
-   * // With expansion level
-   * const records = await sdk.entities.getRecordsById(<entityId>, {
-   *   expansionLevel: 1
-   * });
-   * 
-   * // With pagination
-   * const paginatedResponse = await sdk.entities.getRecordsById(<entityId>, {
-   *   pageSize: 50,
-   *   expansionLevel: 1
-   * });
-   * 
-   * // Navigate to next page
-   * const nextPage = await sdk.entities.getRecordsById(<entityId>, {
-   *   cursor: paginatedResponse.nextCursor,
-   *   expansionLevel: 1
-   * });
-   * ```
-   */
-  getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  >;
-
-  /**
-   * Inserts a single record into an entity by entity ID
-   *
-   * Note: Data Fabric supports trigger events only on individual inserts, not on batch inserts.
-   * Use this method if you need trigger events to fire for the inserted record.
-   *
-   * @param id - UUID of the entity
-   * @param data - Record to insert
-   * @param options - Insert options
-   * @returns Promise resolving to the inserted record with generated record ID
-   * {@link EntityInsertResponse}
-   * @example
-   * ```typescript
-   * // Basic usage
-   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 });
-   *
-   * // With options
-   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 }, {
-   *   expansionLevel: 1
-   * });
-   * ```
-   */
-  insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
-
-  /**
    * Inserts one or more records into an entity by entity ID using batch insert
    *
    * Note: Batch inserts do not trigger Data Fabric trigger events. Use {@link insertById} if you need
@@ -180,34 +51,6 @@ export interface EntityServiceModel {
    * ```
    */
   batchInsertById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
-
-  /**
-   * Updates data in an entity by entity ID
-   * 
-   * @param id - UUID of the entity
-   * @param data - Array of records to update. Each record MUST contain the record Id.
-   * @param options - Update options
-   * @returns Promise resolving to update response
-   * {@link EntityUpdateResponse}
-   * @example
-   * ```typescript
-   * // Basic usage
-   * const result = await sdk.entities.updateById(<entityId>, [
-   *   { Id: "123", name: "John Updated", age: 31 },
-   *   { Id: "456", name: "Jane Updated", age: 26 }
-   * ]);
-   * 
-   * // With options
-   * const result = await sdk.entities.updateById(<entityId>, [
-   *   { Id: "123", name: "John Updated", age: 31 },
-   *   { Id: "456", name: "Jane Updated", age: 26 }
-   * ], {
-   *   expansionLevel: 1,
-   *   failOnFirst: true
-   * });
-   * ```
-   */
-  updateById(id: string, data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
 
   /**
    * Deletes data from an entity by entity ID
@@ -270,24 +113,169 @@ export interface EntityServiceModel {
    * ```
    */
   downloadAttachment(options: EntityDownloadAttachmentOptions): Promise<Blob>;
+
+  /**
+   * Gets all entities in the system
+   *
+   * @returns Promise resolving to either an array of entities NonPaginatedResponse<EntityGetResponse> or a PaginatedResponse<EntityGetResponse> when pagination options are used.
+   * {@link EntityGetResponse}
+   * @example
+   * ```typescript
+   * // Get all entities
+   * const entities = await sdk.entities.getAll();
+   *
+   * // Iterate through entities
+   * entities.forEach(entity => {
+   *   console.log(`Entity: ${entity.displayName} (${entity.name})`);
+   *   console.log(`Type: ${entity.entityType}`);
+   * });
+   *
+   * // Find a specific entity by name
+   * const customerEntity = entities.find(e => e.name === 'Customer');
+   *
+   * // Use entity methods directly
+   * if (customerEntity) {
+   *   const records = await customerEntity.getRecords();
+   *   console.log(`Customer records: ${records.items.length}`);
+   *
+   *   // Insert a single record
+   *   const insertResult = await customerEntity.insert({ name: "John", age: 30 });
+   *
+   *   // Or batch insert multiple records
+   *   const batchResult = await customerEntity.batchInsert([
+   *     { name: "Jane", age: 25 },
+   *     { name: "Bob", age: 35 }
+   *   ]);
+   * }
+   * ```
+   */
+  getAll(): Promise<EntityGetResponse[]>;
+
+  /**
+   * Gets entity metadata by entity ID with attached operation methods
+   *
+   * @param id - UUID of the entity
+   * @returns Promise resolving to entity metadata with operation methods
+   * {@link EntityGetResponse}
+   * @example
+   * ```typescript
+   * // Get entity metadata with methods
+   * const entity = await sdk.entities.getById(<entityId>);
+   *
+   * // Call operations directly on the entity
+   * const records = await entity.getRecords();
+   *
+   * // If a field references a ChoiceSet, get the choiceSetId from records.fields
+   * const choiceSetId = records.fields[0].referenceChoiceSet?.id;
+   * if (choiceSetId) {
+   *   const choiceSetValues = await sdk.entities.choicesets.getById(choiceSetId);
+   * }
+   *
+   * // Insert a single record
+   * const insertResult = await entity.insert({ name: "John", age: 30 });
+   *
+   * // Or batch insert multiple records
+   * const batchResult = await entity.batchInsert([
+   *     { name: "Jane", age: 25 },
+   *     { name: "Bob", age: 35 }
+   * ]);
+   * ```
+   */
+  getById(id: string): Promise<EntityGetResponse>;
+
+  /**
+   * Gets entity records by entity ID
+   *
+   * @param entityId - UUID of the entity
+   * @param options - Query options
+   * @returns Promise resolving to either an array of entity records NonPaginatedResponse<EntityRecord> or a PaginatedResponse<EntityRecord> when pagination options are used.
+   * {@link EntityRecord}
+   * @example
+   * ```typescript
+   * // Basic usage (non-paginated)
+   * const records = await sdk.entities.getRecordsById(<entityId>);
+   *
+   * // With expansion level
+   * const records = await sdk.entities.getRecordsById(<entityId>, {
+   *   expansionLevel: 1
+   * });
+   *
+   * // With pagination
+   * const paginatedResponse = await sdk.entities.getRecordsById(<entityId>, {
+   *   pageSize: 50,
+   *   expansionLevel: 1
+   * });
+   *
+   * // Navigate to next page
+   * const nextPage = await sdk.entities.getRecordsById(<entityId>, {
+   *   cursor: paginatedResponse.nextCursor,
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
+
+  /**
+   * Inserts a single record into an entity by entity ID
+   *
+   * Note: Data Fabric supports trigger events only on individual inserts, not on batch inserts.
+   * Use this method if you need trigger events to fire for the inserted record.
+   *
+   * @param id - UUID of the entity
+   * @param data - Record to insert
+   * @param options - Insert options
+   * @returns Promise resolving to the inserted record with generated record ID
+   * {@link EntityInsertResponse}
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 });
+   *
+   * // With options
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 }, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+
+  /**
+   * Updates data in an entity by entity ID
+   *
+   * @param id - UUID of the entity
+   * @param data - Array of records to update. Each record MUST contain the record Id.
+   * @param options - Update options
+   * @returns Promise resolving to update response
+   * {@link EntityUpdateResponse}
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const result = await sdk.entities.updateById(<entityId>, [
+   *   { Id: "123", name: "John Updated", age: 31 },
+   *   { Id: "456", name: "Jane Updated", age: 26 }
+   * ]);
+   *
+   * // With options
+   * const result = await sdk.entities.updateById(<entityId>, [
+   *   { Id: "123", name: "John Updated", age: 31 },
+   *   { Id: "456", name: "Jane Updated", age: 26 }
+   * ], {
+   *   expansionLevel: 1,
+   *   failOnFirst: true
+   * });
+   * ```
+   */
+  updateById(id: string, data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
 }
 
 /**
  * Entity methods interface - defines operations that can be performed on an entity
  */
 export interface EntityMethods {
-  /**
-   * Insert a single record into this entity
-   *
-   * Note: Data Fabric supports trigger events only on individual inserts, not on batch inserts.
-   * Use this method if you need trigger events to fire for the inserted record.
-   *
-   * @param data - Record to insert
-   * @param options - Insert options
-   * @returns Promise resolving to the inserted record with generated record ID
-   */
-  insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
-
   /**
    * Insert multiple records into this entity using batch insert
    *
@@ -301,23 +289,22 @@ export interface EntityMethods {
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
-   * Update data in this entity
-   * 
-   * @param data - Array of records to update. Each record MUST contain the record Id,
-   *               otherwise the update will fail.
-   * @param options - Update options
-   * @returns Promise resolving to update response
-   */
-  update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
-
-  /**
    * Delete data from this entity
-   * 
+   *
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
    * @returns Promise resolving to delete response
    */
   delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Downloads an attachment stored in a File-type field of an entity record
+   *
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
+   * @returns Promise resolving to Blob containing the file content
+   */
+  downloadAttachment(recordId: string, fieldName: string): Promise<Blob>;
 
   /**
    * Get records from this entity
@@ -332,13 +319,26 @@ export interface EntityMethods {
   >;
 
   /**
-   * Downloads an attachment stored in a File-type field of an entity record
+   * Insert a single record into this entity
    *
-   * @param recordId - UUID of the record containing the attachment
-   * @param fieldName - Name of the File-type field containing the attachment
-   * @returns Promise resolving to Blob containing the file content
+   * Note: Data Fabric supports trigger events only on individual inserts, not on batch inserts.
+   * Use this method if you need trigger events to fire for the inserted record.
+   *
+   * @param data - Record to insert
+   * @param options - Insert options
+   * @returns Promise resolving to the inserted record with generated record ID
    */
-  downloadAttachment(recordId: string, fieldName: string): Promise<Blob>;
+  insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+
+  /**
+   * Update data in this entity
+   *
+   * @param data - Array of records to update. Each record MUST contain the record Id,
+   *               otherwise the update will fail.
+   * @param options - Update options
+   * @returns Promise resolving to update response
+   */
+  update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
 }
 
 /**
@@ -355,28 +355,26 @@ export type EntityGetResponse = RawEntityGetResponse & EntityMethods;
  */
 function createEntityMethods(entityData: RawEntityGetResponse, service: EntityServiceModel): EntityMethods {
   return {
-    async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-
-      return service.insertById(entityData.id, data, options);
-    },
-
     async batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.batchInsertById(entityData.id, data, options);
     },
 
-    async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-
-      return service.updateById(entityData.id, data, options);
-    },
-
     async delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.deleteById(entityData.id, recordIds, options);
+    },
+
+    async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
+      if (!entityData.name) throw new Error('Entity name is undefined');
+
+      return service.downloadAttachment({
+        entityName: entityData.name,
+        recordId,
+        fieldName
+      });
     },
 
     async getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
@@ -389,14 +387,16 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.getRecordsById(entityData.id, options) as any;
     },
 
-    async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
-      if (!entityData.name) throw new Error('Entity name is undefined');
+    async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.downloadAttachment({
-        entityName: entityData.name,
-        recordId,
-        fieldName
-      });
+      return service.insertById(entityData.id, data, options);
+    },
+
+    async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+
+      return service.updateById(entityData.id, data, options);
     }
   };
 }

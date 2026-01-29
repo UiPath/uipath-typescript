@@ -19,12 +19,48 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  */
 export interface ProcessInstancesServiceModel {
   /**
+   * Cancel a process instance
+   * @param instanceId The ID of the instance to cancel
+   * @param folderKey The folder key for authorization
+   * @param options Optional cancellation options with comment
+   * @returns Promise resolving to operation result with instance data
+   * @example
+   * ```typescript
+   * // Cancel a process instance
+   * const result = await sdk.maestro.processes.instances.cancel(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   *
+   * or
+   *
+   * const instance = await sdk.maestro.processes.instances.getById(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   * const result = await instance.cancel();
+   *
+   * console.log(`Cancelled: ${result.success}`);
+   *
+   * // Cancel with a comment
+   * const result = await instance.cancel({
+   *   comment: 'Cancelling due to invalid input data'
+   * });
+   *
+   * if (result.success) {
+   *   console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
+   * }
+   * ```
+   */
+  cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+
+  /**
    * Get all process instances with optional filtering and pagination
-   * 
+   *
    * The method returns either:
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param options Query parameters for filtering instances and pagination
    * @returns Promise resolving to either an array of process instances NonPaginatedResponse<ProcessInstanceGetResponse> or a PaginatedResponse<ProcessInstanceGetResponse> when pagination options are used.
    * {@link ProcessInstanceGetResponse}
@@ -32,22 +68,22 @@ export interface ProcessInstancesServiceModel {
    * ```typescript
    * // Get all instances (non-paginated)
    * const instances = await sdk.maestro.processes.instances.getAll();
-   * 
+   *
    * // Cancel faulted instances using methods directly on instances
    * for (const instance of instances.items) {
    *   if (instance.latestRunStatus === 'Faulted') {
    *     await instance.cancel({ comment: 'Cancelling faulted instance' });
    *   }
    * }
-   * 
+   *
    * // With filtering
    * const instances = await sdk.maestro.processes.instances.getAll({
    *   processKey: 'MyProcess'
    * });
-   * 
+   *
    * // First page with pagination
    * const page1 = await sdk.maestro.processes.instances.getAll({ pageSize: 10 });
-   * 
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
    *   const page2 = await sdk.maestro.processes.instances.getAll({ cursor: page1.nextCursor });
@@ -63,6 +99,35 @@ export interface ProcessInstancesServiceModel {
   >;
 
   /**
+   * Get BPMN XML file for a process instance
+   * @param instanceId The ID of the instance to get BPMN for
+   * @param folderKey The folder key for authorization
+   * @returns Promise resolving to BPMN XML file
+   * {@link BpmnXmlString}
+   * @example
+   * ```typescript
+   * // Get BPMN XML for a process instance
+   * const bpmnXml = await sdk.maestro.processes.instances.getBpmn(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   *
+   * // Render BPMN diagram in frontend using bpmn-js
+   * import BpmnViewer from 'bpmn-js/lib/Viewer';
+   *
+   * const viewer = new BpmnViewer({
+   *   container: '#bpmn-diagram'
+   * });
+   *
+   * await viewer.importXML(bpmnXml);
+   *
+   * // Zoom to fit the diagram
+   * viewer.get('canvas').zoom('fit-viewport');
+   * ```
+   */
+  getBpmn(instanceId: string, folderKey: string): Promise<BpmnXmlString>;
+
+  /**
    * Get a process instance by ID with operation methods (cancel, pause, resume)
    * @param id The ID of the instance to retrieve
    * @param folderKey The folder key for authorization
@@ -75,10 +140,10 @@ export interface ProcessInstancesServiceModel {
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
+   *
    * // Access instance properties
    * console.log(`Status: ${instance.latestRunStatus}`);
-   * 
+   *
    * ```
    */
   getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse>;
@@ -94,82 +159,76 @@ export interface ProcessInstancesServiceModel {
    * const history = await sdk.maestro.processes.instances.getExecutionHistory(
    *   <instanceId>
    * );
-   * 
+   *
    * // Analyze execution timeline
    * history.forEach(span => {
    *   console.log(`Activity: ${span.name}`);
    *   console.log(`Start: ${span.startTime}`);
    *   console.log(`Duration: ${span.duration}ms`);
    * });
-   * 
+   *
    * ```
    */
   getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
 
   /**
-   * Get BPMN XML file for a process instance
-   * @param instanceId The ID of the instance to get BPMN for
+   * Get incidents for a process instance
+   *
+   * @param instanceId The ID of the instance to get incidents for
    * @param folderKey The folder key for authorization
-   * @returns Promise resolving to BPMN XML file
-   * {@link BpmnXmlString}
+   * @returns Promise resolving to array of incidents for the processinstance
+   * {@link ProcessIncidentGetResponse}
    * @example
    * ```typescript
-   * // Get BPMN XML for a process instance
-   * const bpmnXml = await sdk.maestro.processes.instances.getBpmn(
-   *   <instanceId>,
-   *   <folderKey>
-   * );
-   * 
-   * // Render BPMN diagram in frontend using bpmn-js
-   * import BpmnViewer from 'bpmn-js/lib/Viewer';
-   * 
-   * const viewer = new BpmnViewer({
-   *   container: '#bpmn-diagram'
-   * });
-   * 
-   * await viewer.importXML(bpmnXml);
-   * 
-   * // Zoom to fit the diagram
-   * viewer.get('canvas').zoom('fit-viewport');
-   * ```
-   */
-  getBpmn(instanceId: string, folderKey: string): Promise<BpmnXmlString>;
-
-  /**
-   * Cancel a process instance
-   * @param instanceId The ID of the instance to cancel
-   * @param folderKey The folder key for authorization
-   * @param options Optional cancellation options with comment
-   * @returns Promise resolving to operation result with instance data
-   * @example
-   * ```typescript
-   * // Cancel a process instance
-   * const result = await sdk.maestro.processes.instances.cancel(
-   *   <instanceId>,
-   *   <folderKey>
-   * );
-   * 
-   * or
-   * 
-   * const instance = await sdk.maestro.processes.instances.getById(
-   *   <instanceId>,
-   *   <folderKey>
-   * );
-   * const result = await instance.cancel();
-   * 
-   * console.log(`Cancelled: ${result.success}`);
+   * // Get incidents for a specific instance
+   * const incidents = await sdk.maestro.processes.instances.getIncidents('<instanceId>', '<folderKey>');
    *
-   * // Cancel with a comment
-   * const result = await instance.cancel({
-   *   comment: 'Cancelling due to invalid input data'
-   * });
-   *
-   * if (result.success) {
-   *   console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
+   * // Access process incident details
+   * for (const incident of incidents) {
+   *   console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);
+   *   console.log(`Severity: ${incident.incidentSeverity}`);
+   *   console.log(`Error: ${incident.errorMessage}`);
    * }
    * ```
    */
-  cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+  getIncidents(instanceId: string, folderKey: string): Promise<ProcessIncidentGetResponse[]>;
+
+  /**
+   * Get global variables for a process instance
+   *
+   * @param instanceId The ID of the instance to get variables for
+   * @param folderKey The folder key for authorization
+   * @param options Optional options including parentElementId to filter by parent element
+   * @returns Promise resolving to variables response with elements and globals
+   * {@link ProcessInstanceGetVariablesResponse}
+   * @example
+   * ```typescript
+   * // Get all variables for a process instance
+   * const variables = await sdk.maestro.processes.instances.getVariables(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   *
+   * // Access global variables
+   * console.log('Global variables:', variables.globalVariables);
+   *
+   * // Iterate through global variables with metadata
+   * variables.globalVariables?.forEach(variable => {
+   *   console.log(`Variable: ${variable.name} (${variable.id})`);
+   *   console.log(`  Type: ${variable.type}`);
+   *   console.log(`  Element: ${variable.elementId}`);
+   *   console.log(`  Value: ${variable.value}`);
+   * });
+   *
+   * // Get variables for a specific parent element
+   * const variables = await sdk.maestro.processes.instances.getVariables(
+   *   <instanceId>,
+   *   <folderKey>,
+   *   { parentElementId: <parentElementId> }
+   * );
+   * ```
+   */
+  getVariables(instanceId: string, folderKey: string, options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse>;
 
   /**
    * Pause a process instance
@@ -188,106 +247,17 @@ export interface ProcessInstancesServiceModel {
    * @returns Promise resolving to operation result with instance data
    */
   resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
-
-  /**
-   * Get global variables for a process instance
-   * 
-   * @param instanceId The ID of the instance to get variables for
-   * @param folderKey The folder key for authorization
-   * @param options Optional options including parentElementId to filter by parent element
-   * @returns Promise resolving to variables response with elements and globals
-   * {@link ProcessInstanceGetVariablesResponse}
-   * @example
-   * ```typescript
-   * // Get all variables for a process instance
-   * const variables = await sdk.maestro.processes.instances.getVariables(
-   *   <instanceId>,
-   *   <folderKey>
-   * );
-   * 
-   * // Access global variables
-   * console.log('Global variables:', variables.globalVariables);
-   * 
-   * // Iterate through global variables with metadata
-   * variables.globalVariables?.forEach(variable => {
-   *   console.log(`Variable: ${variable.name} (${variable.id})`);
-   *   console.log(`  Type: ${variable.type}`);
-   *   console.log(`  Element: ${variable.elementId}`);
-   *   console.log(`  Value: ${variable.value}`);
-   * });
-   * 
-   * // Get variables for a specific parent element
-   * const variables = await sdk.maestro.processes.instances.getVariables(
-   *   <instanceId>,
-   *   <folderKey>,
-   *   { parentElementId: <parentElementId> }
-   * );
-   * ```
-   */
-  getVariables(instanceId: string, folderKey: string, options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse>;
-
-  /**
-   * Get incidents for a process instance
-   * 
-   * @param instanceId The ID of the instance to get incidents for
-   * @param folderKey The folder key for authorization
-   * @returns Promise resolving to array of incidents for the processinstance
-   * {@link ProcessIncidentGetResponse}
-   * @example
-   * ```typescript
-   * // Get incidents for a specific instance
-   * const incidents = await sdk.maestro.processes.instances.getIncidents('<instanceId>', '<folderKey>');
-   * 
-   * // Access process incident details 
-   * for (const incident of incidents) {
-   *   console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);
-   *   console.log(`Severity: ${incident.incidentSeverity}`);
-   *   console.log(`Error: ${incident.errorMessage}`);
-   * }
-   * ```
-   */
-  getIncidents(instanceId: string, folderKey: string): Promise<ProcessIncidentGetResponse[]>;
 }
 
 // Method interface that will be added to process instance objects
 export interface ProcessInstanceMethods {
   /**
    * Cancels this process instance
-   * 
+   *
    * @param options - Optional cancellation options with comment
    * @returns Promise resolving to operation result
    */
   cancel(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
-
-  /**
-   * Pauses this process instance
-   * 
-   * @param options - Optional pause options with comment
-   * @returns Promise resolving to operation result
-   */
-  pause(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
-
-  /**
-   * Resumes this process instance
-   * 
-   * @param options - Optional resume options with comment
-   * @returns Promise resolving to operation result
-   */
-  resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
-
-  /**
-   * Gets incidents for this process instance
-   * 
-   * @returns Promise resolving to array of incidents for this instance
-   */
-  getIncidents(): Promise<ProcessIncidentGetResponse[]>;
-   
-  /**
-   * Gets execution history (spans) for this process instance
-   *
-   * @returns Promise resolving to execution history
-   */
-  getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]>;
 
   /**
    * Gets BPMN XML file for this process instance
@@ -297,12 +267,42 @@ export interface ProcessInstanceMethods {
   getBpmn(): Promise<BpmnXmlString>;
 
   /**
+   * Gets execution history (spans) for this process instance
+   *
+   * @returns Promise resolving to execution history
+   */
+  getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+
+  /**
+   * Gets incidents for this process instance
+   *
+   * @returns Promise resolving to array of incidents for this instance
+   */
+  getIncidents(): Promise<ProcessIncidentGetResponse[]>;
+
+  /**
    * Gets global variables for this process instance
    *
    * @param options - Optional options including parentElementId to filter by parent element
    * @returns Promise resolving to variables response with elements and globals
    */
   getVariables(options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse>;
+
+  /**
+   * Pauses this process instance
+   *
+   * @param options - Optional pause options with comment
+   * @returns Promise resolving to operation result
+   */
+  pause(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+
+  /**
+   * Resumes this process instance
+   *
+   * @param options - Optional resume options with comment
+   * @returns Promise resolving to operation result
+   */
+  resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 }
 
 // Combined type for process instance data with methods
@@ -323,7 +323,34 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
 
       return service.cancel(instanceData.instanceId, instanceData.folderKey, options);
     },
-    
+
+    async getBpmn(): Promise<BpmnXmlString> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+
+      return service.getBpmn(instanceData.instanceId, instanceData.folderKey);
+    },
+
+    async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+
+      return service.getExecutionHistory(instanceData.instanceId);
+    },
+
+    async getIncidents(): Promise<ProcessIncidentGetResponse[]> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+
+      return service.getIncidents(instanceData.instanceId, instanceData.folderKey);
+    },
+
+    async getVariables(options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse> {
+      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
+
+      return service.getVariables(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
     async pause(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
@@ -334,35 +361,8 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
     async resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
-      
+
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
-    },
-
-    async getIncidents(): Promise<ProcessIncidentGetResponse[]> {
-      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
-      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
-      
-      return service.getIncidents(instanceData.instanceId, instanceData.folderKey);
-    },
-
-    async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]> {
-      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
-
-      return service.getExecutionHistory(instanceData.instanceId);
-    },
-
-    async getBpmn(): Promise<BpmnXmlString> {
-      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
-      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
-
-      return service.getBpmn(instanceData.instanceId, instanceData.folderKey);
-    },
-
-    async getVariables(options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse> {
-      if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
-      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
-
-      return service.getVariables(instanceData.instanceId, instanceData.folderKey, options);
     }
   };
 }

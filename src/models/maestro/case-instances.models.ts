@@ -17,8 +17,91 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  */
 export interface CaseInstancesServiceModel {
   /**
+   * Close/Cancel a case instance
+   * @param instanceId - The ID of the instance to cancel
+   * @param folderKey - Required folder key
+   * @param options - Optional close options with comment
+   * @returns Promise resolving to operation result with instance data
+   * @example
+   * ```typescript
+   * // Close a case instance
+   * const result = await sdk.maestro.cases.instances.close(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   *
+   * or
+   *
+   * const instance = await sdk.maestro.cases.instances.getById(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   * const result = await instance.close();
+   *
+   * console.log(`Closed: ${result.success}`);
+   *
+   * // Close with a comment
+   * const result = await instance.close({
+   *   comment: 'Closing due to invalid input data'
+   * });
+   *
+   * if (result.success) {
+   *   console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
+   * }
+   * ```
+   */
+  close(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
+   * Get human in the loop tasks associated with a case instance
+   *
+   * The method returns either:
+   * - An array of tasks (when no pagination parameters are provided)
+   * - A paginated result with navigation cursors (when any pagination parameter is provided)
+   *
+   * @param caseInstanceId - The ID of the case instance
+   * @param options - Optional filtering and pagination options
+   * @returns Promise resolving to human in the loop tasks associated with the case instance
+   * @example
+   * ```typescript
+   * // Get all tasks for a case instance (non-paginated)
+   * const tasks = await sdk.maestro.cases.instances.getActionTasks(
+   *   <caseInstanceId>,
+   * );
+   *
+   * // First page with pagination
+   * const page1 = await sdk.maestro.cases.instances.getActionTasks(
+   *   <caseInstanceId>,
+   *   { pageSize: 10 }
+   * );
+   * // Iterate through tasks
+   * for (const task of page1.items) {
+   *   console.log(`Task: ${task.title}`);
+   *   console.log(`Task: ${task.status}`);
+   * }
+   *
+   * // Jump to specific page
+   * const page5 = await sdk.maestro.cases.instances.getActionTasks(
+   *   <caseInstanceId>,
+   *   {
+   *     jumpToPage: 5,
+   *     pageSize: 10
+   *   }
+   * );
+   * ```
+   */
+  getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
+    caseInstanceId: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskGetResponse>
+      : NonPaginatedResponse<TaskGetResponse>
+  >;
+
+  /**
    * Get all case instances with optional filtering and pagination
-   * 
+   *
    * @param options Query parameters for filtering instances and pagination
    * @returns Promise resolving to either an array of case instances NonPaginatedResponse<CaseInstanceGetResponse> or a PaginatedResponse<CaseInstanceGetResponse> when pagination options are used.
    * {@link CaseInstanceGetResponse}
@@ -26,22 +109,22 @@ export interface CaseInstancesServiceModel {
    * ```typescript
    * // Get all case instances (non-paginated)
    * const instances = await sdk.maestro.cases.instances.getAll();
-   * 
+   *
    * // Cancel/Close faulted instances using methods directly on instances
    * for (const instance of instances.items) {
    *   if (instance.latestRunStatus === 'Faulted') {
    *     await instance.close({ comment: 'Closing faulted case instance' });
    *   }
    * }
-   * 
+   *
    * // With filtering
    * const instances = await sdk.maestro.cases.instances.getAll({
    *   processKey: 'MyCaseProcess'
    * });
-   * 
+   *
    * // First page with pagination
    * const page1 = await sdk.maestro.cases.instances.getAll({ pageSize: 10 });
-   * 
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
    *   const page2 = await sdk.maestro.cases.instances.getAll({ cursor: page1.nextCursor });
@@ -69,49 +152,68 @@ export interface CaseInstancesServiceModel {
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
+   *
    * // Access instance properties
    * console.log(`Status: ${instance.latestRunStatus}`);
-   * 
+   *
    * ```
    */
   getById(instanceId: string, folderKey: string): Promise<CaseInstanceGetResponse>;
 
   /**
-   * Close/Cancel a case instance
-   * @param instanceId - The ID of the instance to cancel
+   * Get execution history for a case instance
+   * @param instanceId - The ID of the case instance
    * @param folderKey - Required folder key
-   * @param options - Optional close options with comment
-   * @returns Promise resolving to operation result with instance data
+   * @returns Promise resolving to instance execution history
+   * {@link CaseInstanceExecutionHistoryResponse}
    * @example
    * ```typescript
-   * // Close a case instance
-   * const result = await sdk.maestro.cases.instances.close(
+   * // Get execution history for a case instance
+   * const history = await sdk.maestro.cases.instances.getExecutionHistory(
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
-   * or
-   * 
-   * const instance = await sdk.maestro.cases.instances.getById(
-   *   <instanceId>,
-   *   <folderKey>
-   * );
-   * const result = await instance.close();
-   * 
-   * console.log(`Closed: ${result.success}`);
    *
-   * // Close with a comment
-   * const result = await instance.close({
-   *   comment: 'Closing due to invalid input data'
-   * });
-   *
-   * if (result.success) {
-   *   console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
+   * // Access element executions
+   * if (history.elementExecutions) {
+   *   for (const execution of history.elementExecutions) {
+   *     console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);
+   *   }
    * }
    * ```
    */
-  close(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+  getExecutionHistory(
+    instanceId: string,
+    folderKey: string
+  ): Promise<CaseInstanceExecutionHistoryResponse>;
+
+  /**
+   * Get stages and its associated tasks information for a case instance
+   * @param caseInstanceId - The ID of the case instance
+   * @param folderKey - Required folder key
+   * @returns Promise resolving to an array of case stages with their tasks and status
+   * @example
+   * ```typescript
+   * // Get stages for a case instance
+   * const stages = await sdk.maestro.cases.instances.getStages(
+   *   <caseInstanceId>,
+   *   <folderKey>
+   * );
+   *
+   * // Iterate through stages
+   * for (const stage of stages) {
+   *   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
+   *
+   *   // Check tasks in the stage
+   *   for (const taskGroup of stage.tasks) {
+   *     for (const task of taskGroup) {
+   *       console.log(`  Task: ${task.name} - Status: ${task.status}`);
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]>;
 
   /**
    * Pause a case instance
@@ -130,135 +232,31 @@ export interface CaseInstancesServiceModel {
    * @returns Promise resolving to operation result with instance data
    */
   resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
-
-  /**
-   * Get execution history for a case instance
-   * @param instanceId - The ID of the case instance
-   * @param folderKey - Required folder key 
-   * @returns Promise resolving to instance execution history
-   * {@link CaseInstanceExecutionHistoryResponse}
-   * @example
-   * ```typescript
-   * // Get execution history for a case instance
-   * const history = await sdk.maestro.cases.instances.getExecutionHistory(
-   *   <instanceId>,
-   *   <folderKey>
-   * );
-   * 
-   * // Access element executions
-   * if (history.elementExecutions) {
-   *   for (const execution of history.elementExecutions) {
-   *     console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);
-   *   }
-   * }
-   * ```
-   */
-  getExecutionHistory(
-    instanceId: string, 
-    folderKey: string
-  ): Promise<CaseInstanceExecutionHistoryResponse>;
-
-  /**
-   * Get stages and its associated tasks information for a case instance 
-   * @param caseInstanceId - The ID of the case instance
-   * @param folderKey - Required folder key
-   * @returns Promise resolving to an array of case stages with their tasks and status
-   * @example
-   * ```typescript
-   * // Get stages for a case instance
-   * const stages = await sdk.maestro.cases.instances.getStages(
-   *   <caseInstanceId>,
-   *   <folderKey>
-   * );
-   * 
-   * // Iterate through stages
-   * for (const stage of stages) {
-   *   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
-   *   
-   *   // Check tasks in the stage
-   *   for (const taskGroup of stage.tasks) {
-   *     for (const task of taskGroup) {
-   *       console.log(`  Task: ${task.name} - Status: ${task.status}`);
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  getStages(caseInstanceId: string, folderKey: string): Promise<CaseGetStageResponse[]>;
-
-  /**
-   * Get human in the loop tasks associated with a case instance
-   * 
-   * The method returns either:
-   * - An array of tasks (when no pagination parameters are provided)
-   * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
-   * @param caseInstanceId - The ID of the case instance
-   * @param options - Optional filtering and pagination options
-   * @returns Promise resolving to human in the loop tasks associated with the case instance
-   * @example
-   * ```typescript
-   * // Get all tasks for a case instance (non-paginated)
-   * const tasks = await sdk.maestro.cases.instances.getActionTasks(
-   *   <caseInstanceId>,
-   * );
-   * 
-   * // First page with pagination
-   * const page1 = await sdk.maestro.cases.instances.getActionTasks(
-   *   <caseInstanceId>,
-   *   { pageSize: 10 }
-   * );
-   * // Iterate through tasks
-   * for (const task of page1.items) {
-   *   console.log(`Task: ${task.title}`);
-   *   console.log(`Task: ${task.status}`);
-   * }
-   * 
-   * // Jump to specific page
-   * const page5 = await sdk.maestro.cases.instances.getActionTasks(
-   *   <caseInstanceId>,
-   *   {
-   *     jumpToPage: 5,
-   *     pageSize: 10
-   *   }
-   * );
-   * ```
-   */
-  getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
-    caseInstanceId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<TaskGetResponse>
-      : NonPaginatedResponse<TaskGetResponse>
-  >;
 }
 
 // Method interface that will be added to case instance objects
 export interface CaseInstanceMethods {
   /**
    * Closes/cancels this case instance
-   * 
+   *
    * @param options - Optional close options with comment
    * @returns Promise resolving to operation result
    */
   close(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
-   * Pauses this case instance
-   * 
-   * @param options - Optional pause options with comment
-   * @returns Promise resolving to operation result
+   * Gets human in the loop tasks associated with this case instance
+   *
+   * @param options - Optional filtering and pagination options
+   * @returns Promise resolving to human in the loop tasks associated with the case instance
    */
-  pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
-
-  /**
-   * Resumes this case instance
-   * 
-   * @param options - Optional resume options with comment
-   * @returns Promise resolving to operation result
-   */
-  resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+  getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<TaskGetResponse>
+      : NonPaginatedResponse<TaskGetResponse>
+  >;
 
   /**
    * Gets execution history for this case instance
@@ -275,18 +273,20 @@ export interface CaseInstanceMethods {
   getStages(): Promise<CaseGetStageResponse[]>;
 
   /**
-   * Gets human in the loop tasks associated with this case instance
+   * Pauses this case instance
    *
-   * @param options - Optional filtering and pagination options
-   * @returns Promise resolving to human in the loop tasks associated with the case instance
+   * @param options - Optional pause options with comment
+   * @returns Promise resolving to operation result
    */
-  getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<TaskGetResponse>
-      : NonPaginatedResponse<TaskGetResponse>
-  >;
+  pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
+   * Resumes this case instance
+   *
+   * @param options - Optional resume options with comment
+   * @returns Promise resolving to operation result
+   */
+  resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 }
 
 // Combined type for case instance data with methods
@@ -304,22 +304,20 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
     async close(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
-      
+
       return service.close(instanceData.instanceId, instanceData.folderKey, options);
     },
-    
-    async pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+
+    async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
+      options?: T
+    ): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<TaskGetResponse>
+        : NonPaginatedResponse<TaskGetResponse>
+    > {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
-      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
 
-      return service.pause(instanceData.instanceId, instanceData.folderKey, options);
-    },
-
-    async resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
-      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
-      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
-
-      return service.resume(instanceData.instanceId, instanceData.folderKey, options);
+      return service.getActionTasks(instanceData.instanceId, options);
     },
 
     async getExecutionHistory(): Promise<CaseInstanceExecutionHistoryResponse> {
@@ -336,16 +334,18 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       return service.getStages(instanceData.instanceId, instanceData.folderKey);
     },
 
-    async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
-      options?: T
-    ): Promise<
-      T extends HasPaginationOptions<T>
-        ? PaginatedResponse<TaskGetResponse>
-        : NonPaginatedResponse<TaskGetResponse>
-    > {
+    async pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
 
-      return service.getActionTasks(instanceData.instanceId, options);
+      return service.pause(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.resume(instanceData.instanceId, instanceData.folderKey, options);
     }
   };
 }
