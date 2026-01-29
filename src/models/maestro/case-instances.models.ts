@@ -1,10 +1,9 @@
-import { 
+import {
   RawCaseInstanceGetResponse,
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
   CaseInstanceReopenRequest,
-  CaseInstanceReopenResponse,
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse
 } from './case-instances.types';
@@ -134,6 +133,35 @@ export interface CaseInstancesServiceModel {
   pause(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Reopen a case instance from a specified element
+   * @param instanceId - The ID of the case instance
+   * @param folderKey - Required folder key
+   * @param request - Reopen request containing startElementId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result with instance data
+   * @example
+   * ```typescript
+   * // Reopen a case instance from a specific stage
+   * const result = await sdk.maestro.cases.instances.reopen(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   { startElementId: '<stageId>' }
+   * );
+   *
+   * // Reopen with a comment
+   * const result = await sdk.maestro.cases.instances.reopen(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   { startElementId: '<stageId>', comment: 'Reopening to retry failed stage' }
+   * );
+   *
+   * // Or using instance method
+   * const instance = await sdk.maestro.cases.instances.getById('<instanceId>', '<folderKey>');
+   * const result = await instance.reopen({ startElementId: '<stageId>' });
+   * ```
+   */
+  reopen(instanceId: string, folderKey: string, request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
    * Resume a case instance
    * @param instanceId - The ID of the instance to resume
    * @param folderKey - Required folder key
@@ -141,19 +169,6 @@ export interface CaseInstancesServiceModel {
    * @returns Promise resolving to operation result with instance data
    */
   resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
-
-  /**
-   * Reopen a case instance from a specified element
-   * @param caseInstanceId - The ID of the case instance
-   * @param folderKey - Required folder key
-   * @param request - Reopen request payload
-   * @returns Promise resolving to operation result with instance data
-   */
-  reopen(
-    caseInstanceId: string,
-    folderKey: string,
-    request: CaseInstanceReopenRequest
-  ): Promise<OperationResponse<CaseInstanceReopenResponse>>;
 
   /**
    * Get execution history for a case instance
@@ -270,27 +285,27 @@ export interface CaseInstanceMethods {
 
   /**
    * Pauses this case instance
-   * 
+   *
    * @param options - Optional pause options with comment
    * @returns Promise resolving to operation result
    */
   pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Reopens this case instance from a specified element
+   *
+   * @param request - Reopen request containing startElementId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result
+   */
+  reopen(request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
    * Resumes this case instance
-   * 
+   *
    * @param options - Optional resume options with comment
    * @returns Promise resolving to operation result
    */
   resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
-
-  /**
-   * Reopens this case instance from a specified element
-   *
-   * @param request - Reopen request payload
-   * @returns Promise resolving to operation result
-   */
-  reopen(request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceReopenResponse>>;
 
   /**
    * Gets execution history for this case instance
@@ -347,18 +362,18 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       return service.pause(instanceData.instanceId, instanceData.folderKey, options);
     },
 
+    async reopen(request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.reopen(instanceData.instanceId, instanceData.folderKey, request);
+    },
+
     async resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
 
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
-    },
-
-    async reopen(request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceReopenResponse>> {
-      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
-      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
-
-      return service.reopen(instanceData.instanceId, instanceData.folderKey, request);
     },
 
     async getExecutionHistory(): Promise<CaseInstanceExecutionHistoryResponse> {
