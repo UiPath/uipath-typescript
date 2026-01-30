@@ -192,7 +192,7 @@ This command will:
 Push your local web app build to a Studio Web project. Syncs files under a build directory to the remote project and optionally imports referenced resources (assets, processes, connections, etc.) from `bindings.json`.
 
 **Prerequisites:**
-- Environment variables set (see [Prerequisites](#prerequisites)); `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
+- Environment variables set (see [Prerequisites](#prerequisites)), or pass `--orgId`, `--tenantId`, `--accessToken` (and optionally `--baseUrl`, `--tenantName`) for non-interactive use. `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
 - A built app (e.g. `dist/`, `build/`, or `out/`) at the project root.
 - Optional: `bindings.json` at the project root for resource import; `.uipath/studio_metadata.json` for metadata.
 
@@ -203,6 +203,9 @@ uipath push
 # Push with project ID
 uipath push <project-id>
 
+# Non-interactive (e.g. CI): pass org, tenant, and token via flags
+uipath push <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
+
 # Use a different build directory (e.g. Create React App uses "build")
 uipath push <project-id> --build-dir build
 
@@ -210,7 +213,7 @@ uipath push <project-id> --build-dir build
 uipath push <project-id> --ignore-resources
 
 # Combine flags
-uipath push <project-id> --build-dir out --ignore-resources
+uipath push <project-id> --build-dir out --ignore-resources --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
 ```
 
 **Arguments:**
@@ -223,6 +226,11 @@ uipath push <project-id> --build-dir out --ignore-resources
 |------|-------------|
 | `--build-dir` | Relative path to the build output directory (e.g. `dist`, `build`, `out`). Default: `dist`. |
 | `--ignore-resources` | Skip importing referenced resources (assets, processes, connections, etc.) to the Studio Web solution. Default: false. |
+| `--baseUrl` | UiPath base URL (default: https://cloud.uipath.com). Overrides env. |
+| `--orgId` | UiPath organization ID. Overrides env. |
+| `--tenantId` | UiPath tenant ID. Overrides env. |
+| `--tenantName` | UiPath tenant name. Overrides env. |
+| `--accessToken` | UiPath bearer token for authentication. Overrides env. |
 
 This command will:
 - Validate the build directory exists and required files are present

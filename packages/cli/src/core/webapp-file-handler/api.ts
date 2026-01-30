@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import FormData from 'form-data';
 import chalk from 'chalk';
 import { API_ENDPOINTS } from '../../constants/api.js';
+import { MESSAGES } from '../../constants/index.js';
 import { createHeaders } from '../../utils/api.js';
 import { handleHttpError } from '../../utils/error-handler.js';
 import { cliTelemetryClient } from '../../telemetry/index.js';
@@ -87,12 +88,16 @@ export async function retrieveLock(config: WebAppPushConfig): Promise<LockInfo |
           }),
         });
         if (retry.ok) return (await retry.json()) as LockInfo;
+        const retryErr = `Lock was acquired but retrieving the lock key failed (${retry.status} ${retry.statusText}); the project may remain locked on the server.`;
+        trackApiFailure('retrieveLock', retryErr, retry.status);
+        throw new Error(retryErr);
       }
       return lockInfo;
     }
     return null;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    if (msg.startsWith('Lock was acquired but retrieving')) throw err;
     trackApiFailure('retrieveLock', msg);
     config.logger.log(chalk.gray(`[retrieveLock] Error: ${msg}`));
     return null;
@@ -150,7 +155,7 @@ export async function createFolderAtRoot(
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
     trackApiFailure('createFolderAtRoot', msg);
-    config.logger.log(chalk.yellow(`Create folder failed: ${name} — ${msg}`));
+    config.logger.log(chalk.yellow(`${MESSAGES.ERRORS.PUSH_CREATE_FOLDER_FAILED_PREFIX}${name} — ${msg}`));
     return null;
   }
 }
@@ -495,6 +500,8 @@ export async function createReferencedResource(
   };
   if (request.type != null) payload.type = request.type;
 
+  // Create-referenced-resource API expects the lock key scoped by the resource's folder
+  // (projectLockKey-fullyQualifiedFolderName) when creating a resource in a folder.
   let lockKeyHeader = lockKey;
   if (lockKeyHeader && request.folder.fully_qualified_name) {
     lockKeyHeader = `${lockKeyHeader}-${request.folder.fully_qualified_name}`;

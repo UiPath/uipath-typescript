@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { MESSAGES } from '../../constants/index.js';
 import type { WebAppPushConfig, FileOperationPlan, ProjectFolder, ProjectStructure } from './types.js';
 import {
   getRemoteFoldersMap,
@@ -98,11 +99,8 @@ export async function moveNestedFoldersIntoParents(
     try {
       await api.moveFolder(config, m.folderId, m.parentId, lockKey);
     } catch (e) {
-      config.logger.log(
-        chalk.yellow(
-          `Move folder failed: ${m.folderPath} — ${e instanceof Error ? e.message : 'Unknown error'}`
-        )
-      );
+      const msg = e instanceof Error ? e.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
+      config.logger.log(chalk.yellow(`${MESSAGES.ERRORS.PUSH_MOVE_FOLDER_FAILED_PREFIX}${m.folderPath} — ${msg}`));
     }
   }
 }

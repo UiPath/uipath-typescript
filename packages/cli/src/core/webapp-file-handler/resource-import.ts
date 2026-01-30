@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
+import { MESSAGES } from '../../constants/index.js';
 import type {
   WebAppPushConfig,
   Bindings,
@@ -44,9 +45,8 @@ export async function runImportReferencedResources(
     bindings = JSON.parse(content) as Bindings;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
-    config.logger.log(
-      chalk.red(`Failed to parse ${BINDINGS_FILE_NAME}: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    );
+    const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
+    config.logger.log(chalk.red(`${MESSAGES.ERRORS.PUSH_BINDINGS_PARSE_FAILED_PREFIX}${BINDINGS_FILE_NAME}: ${msg}`));
     return;
   }
 
@@ -93,7 +93,7 @@ export async function runImportReferencedResources(
           };
         } catch {
           config.logger.log(
-            chalk.yellow(`Connection not found: ${connectionKey} (${bindingsResource.metadata?.Connector || 'unknown'})`)
+            chalk.yellow(`${MESSAGES.ERRORS.PUSH_CONNECTION_NOT_FOUND_PREFIX}${connectionKey} (${bindingsResource.metadata?.Connector || 'unknown'})`)
           );
           resourcesNotFound++;
           continue;
@@ -115,7 +115,7 @@ export async function runImportReferencedResources(
         } catch {
           const folderInfo = folderPath ? ` at folder path '${folderPath}'` : ' (tenant-scoped)';
           config.logger.log(
-            chalk.yellow(`Resource not found: ${resourceName} (${resourceType})${folderInfo}`)
+            chalk.yellow(`${MESSAGES.ERRORS.PUSH_RESOURCE_NOT_FOUND_PREFIX}${resourceName} (${resourceType})${folderInfo}`)
           );
           resourcesNotFound++;
           continue;
@@ -123,7 +123,7 @@ export async function runImportReferencedResources(
       }
 
       if (!foundResource || foundResource.folders.length === 0) {
-        config.logger.log(chalk.yellow(`Resource not found: ${resourceName} (${resourceType})`));
+        config.logger.log(chalk.yellow(`${MESSAGES.ERRORS.PUSH_RESOURCE_NOT_FOUND_PREFIX}${resourceName} (${resourceType})`));
         resourcesNotFound++;
         continue;
       }
@@ -150,21 +150,21 @@ export async function runImportReferencedResources(
       switch (response.status) {
         case 'ADDED':
           resourcesCreated++;
-          config.logger.log(chalk.green(`[resources] Added: ${resourceName} (${resourceType})`));
+          config.logger.log(chalk.green(`${MESSAGES.INFO.PUSH_RESOURCE_ADDED_PREFIX}${resourceName} (${resourceType})`));
           break;
         case 'UNCHANGED':
           resourcesUnchanged++;
-          config.logger.log(chalk.gray(`[resources] Unchanged: ${resourceName} (${resourceType})`));
+          config.logger.log(chalk.gray(`${MESSAGES.INFO.PUSH_RESOURCE_UNCHANGED_PREFIX}${resourceName} (${resourceType})`));
           break;
         case 'UPDATED':
           resourcesUpdated++;
-          config.logger.log(chalk.blue(`[resources] Updated: ${resourceName} (${resourceType})`));
+          config.logger.log(chalk.blue(`${MESSAGES.INFO.PUSH_RESOURCE_UPDATED_PREFIX}${resourceName} (${resourceType})`));
           break;
       }
     } catch (error) {
       config.logger.log(
         chalk.red(
-          `Error processing resource ${resourceName}: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `${MESSAGES.ERRORS.PUSH_RESOURCE_PROCESSING_ERROR_PREFIX}${resourceName}: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`
         )
       );
       resourcesNotFound++;

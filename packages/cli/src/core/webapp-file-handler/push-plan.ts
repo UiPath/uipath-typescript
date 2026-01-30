@@ -32,9 +32,11 @@ export async function computeExecutionPlan(
 
   const processedFileIds = new Set<string>();
   const requiredFolders = new Set<string>();
+  const localRemotePaths = new Set<string>();
 
   for (const localFile of localFiles) {
     const remotePath = localPathToRemotePath(localFile.path, bundlePath, remoteContentRoot);
+    localRemotePaths.add(remotePath);
     const remoteFile = remoteFiles.get(remotePath);
 
     const remoteParentPath = path.dirname(remotePath);
@@ -78,11 +80,6 @@ export async function computeExecutionPlan(
         parentPath: parentPathForPlan,
       });
     }
-  }
-
-  const localRemotePaths = new Set<string>();
-  for (const localFile of localFiles) {
-    localRemotePaths.add(localPathToRemotePath(localFile.path, bundlePath, remoteContentRoot));
   }
 
   for (const [filePath, remoteFile] of remoteFiles.entries()) {
