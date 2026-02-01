@@ -130,6 +130,13 @@ export const AUTH_CONSTANTS = {
       'UIPATH_FOLDER_KEY',
       'UIPATH_ACCESS_TOKEN'
     ],
+    // Required for push command (Studio Web)
+    PUSH: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_ACCESS_TOKEN'
+    ],
   },
   API_ENDPOINTS: {
     FOLDERS_NAVIGATION: '/Folders/GetAllForCurrentUser',
