@@ -27,6 +27,7 @@ export const AUTH_CONSTANTS = {
   },
   CONTENT_TYPES: {
     JSON: 'application/json',
+    OCTET_STREAM: 'application/octet-stream',
     FORM_URLENCODED: 'application/x-www-form-urlencoded',
     TEXT_HTML: 'text/html',
   },

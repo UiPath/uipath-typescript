@@ -1,6 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { WebAppPushConfig, FileOperationPlan, ProjectFile } from './types.js';
+import chalk from 'chalk';
+import { STUDIO_METADATA_FILENAME, STUDIO_METADATA_RELATIVE_PATH } from '../../constants/api.js';
+import { MESSAGES } from '../../constants/index.js';
+import type { WebAppPushConfig, ProjectFile } from './types.js';
 
 export function getCurrentUser(): string {
   return process.env.USER || process.env.USERNAME || process.env.UIPATH_USER || 'unknown';
@@ -8,18 +11,13 @@ export function getCurrentUser(): string {
 
 export async function prepareMetadataFileForPlan(
   config: WebAppPushConfig,
-  plan: FileOperationPlan,
   remoteFiles: Map<string, ProjectFile>,
   downloadRemoteFile: (config: WebAppPushConfig, fileId: string) => Promise<Buffer>
 ): Promise<void> {
-  const metadataPath = path.join(config.rootDir, '.uipath', 'studio_metadata.json');
+  const metadataPath = path.join(config.rootDir, config.manifestFile);
   const metadataDir = path.dirname(metadataPath);
 
-  try {
-    fs.mkdirSync(metadataDir, { recursive: true });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-  }
+  fs.mkdirSync(metadataDir, { recursive: true });
 
   let metadata: Record<string, unknown>;
   try {
@@ -43,7 +41,7 @@ export async function prepareMetadataFileForPlan(
   metadata.lastPushAuthor = getCurrentUser();
 
   const remoteMetadata =
-    remoteFiles.get('.uipath/studio_metadata.json') || remoteFiles.get('studio_metadata.json');
+    remoteFiles.get(STUDIO_METADATA_RELATIVE_PATH) || remoteFiles.get(STUDIO_METADATA_FILENAME);
   if (remoteMetadata) {
     try {
       const remoteContent = await downloadRemoteFile(config, remoteMetadata.id);
@@ -59,7 +57,13 @@ export async function prepareMetadataFileForPlan(
           metadata.codeVersion = '0.1.1';
         }
       }
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      config.logger.log(
+        chalk.gray(
+          MESSAGES.ERRORS.PUSH_REMOTE_METADATA_READ_FAILED_PREFIX + msg + MESSAGES.ERRORS.PUSH_METADATA_DEFAULT_VERSION_SUFFIX
+        )
+      );
       metadata.codeVersion = '0.1.1';
     }
   }
@@ -72,8 +76,11 @@ export async function prepareMetadataFileForPlan(
   } catch (error) {
     try {
       fs.unlinkSync(tempPath);
-    } catch {
-      /* ignore */
+    } catch (unlinkErr) {
+      const msg = unlinkErr instanceof Error ? unlinkErr.message : String(unlinkErr);
+      config.logger.log(
+        chalk.gray(MESSAGES.ERRORS.PUSH_TEMP_METADATA_REMOVE_FAILED_PREFIX + msg)
+      );
     }
     throw error;
   }

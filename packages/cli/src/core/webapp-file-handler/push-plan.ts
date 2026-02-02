@@ -1,4 +1,7 @@
 import * as path from 'path';
+import chalk from 'chalk';
+import { STUDIO_METADATA_FILENAME, STUDIO_METADATA_RELATIVE_PATH } from '../../constants/api.js';
+import { MESSAGES } from '../../constants/index.js';
 import type {
   FileOperationPlan,
   LocalFile,
@@ -12,7 +15,10 @@ export interface PlanOptions {
   bundlePath: string;
   remoteContentRoot: string;
   downloadRemoteFile: (fileId: string) => Promise<Buffer>;
-  computeNormalizedHash: (content: Buffer | string) => string;
+  /** Path-based: same filePath (e.g. local path) when hashing local and remote content for the same file. */
+  computeHash: (content: Buffer | string, filePath: string) => string;
+  /** Optional logger for error/debug output during plan computation. */
+  logger?: { log: (message: string) => void };
 }
 
 export async function computeExecutionPlan(
@@ -21,7 +27,7 @@ export async function computeExecutionPlan(
   remoteFolders: Map<string, ProjectFolder>,
   opts: PlanOptions
 ): Promise<FileOperationPlan> {
-  const { bundlePath, remoteContentRoot, downloadRemoteFile, computeNormalizedHash } = opts;
+  const { bundlePath, remoteContentRoot, downloadRemoteFile, computeHash, logger } = opts;
   const plan: FileOperationPlan = {
     createFolders: [],
     uploadFiles: [],
@@ -52,7 +58,7 @@ export async function computeExecutionPlan(
       processedFileIds.add(remoteFile.id);
       try {
         const remoteContent = await downloadRemoteFile(remoteFile.id);
-        const remoteHash = computeNormalizedHash(remoteContent);
+        const remoteHash = computeHash(remoteContent, localFile.path);
         if (localFile.hash !== remoteHash) {
           plan.updateFiles.push({
             path: localFile.path,
@@ -60,7 +66,15 @@ export async function computeExecutionPlan(
             fileId: remoteFile.id,
           });
         }
-      } catch {
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (logger) {
+          logger.log(
+            chalk.gray(
+              `${MESSAGES.ERRORS.PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX}${localFile.path} — ${msg}`
+            )
+          );
+        }
         plan.updateFiles.push({
           path: localFile.path,
           localFile,
@@ -69,8 +83,8 @@ export async function computeExecutionPlan(
       }
     } else {
       if (
-        localFile.path === '.uipath/studio_metadata.json' ||
-        localFile.path === 'studio_metadata.json'
+        localFile.path === STUDIO_METADATA_RELATIVE_PATH ||
+        localFile.path === STUDIO_METADATA_FILENAME
       ) {
         continue;
       }
@@ -84,8 +98,8 @@ export async function computeExecutionPlan(
 
   for (const [filePath, remoteFile] of remoteFiles.entries()) {
     if (
-      filePath === '.uipath/studio_metadata.json' ||
-      filePath === 'studio_metadata.json'
+      filePath === STUDIO_METADATA_RELATIVE_PATH ||
+      filePath === STUDIO_METADATA_FILENAME
     ) {
       continue;
     }
@@ -138,8 +152,8 @@ export function computeFirstPushPlan(
 
   for (const localFile of localFiles) {
     if (
-      localFile.path === '.uipath/studio_metadata.json' ||
-      localFile.path === 'studio_metadata.json'
+      localFile.path === STUDIO_METADATA_RELATIVE_PATH ||
+      localFile.path === STUDIO_METADATA_FILENAME
     ) {
       continue;
     }
@@ -173,14 +187,14 @@ export function computeFirstPushPlan(
 
 export function convertPlanToMigration(plan: FileOperationPlan): StructuralMigration {
   return {
-    added_resources: plan.uploadFiles.map((op) => ({
-      content_file_path: op.localFile.absPath,
-      parent_path: op.parentPath,
+    addedResources: plan.uploadFiles.map((op) => ({
+      contentFilePath: op.localFile.absPath,
+      parentPath: op.parentPath,
     })),
-    modified_resources: plan.updateFiles.map((op) => ({
+    modifiedResources: plan.updateFiles.map((op) => ({
       id: op.fileId,
-      content_file_path: op.localFile.absPath,
+      contentFilePath: op.localFile.absPath,
     })),
-    deleted_resources: plan.deleteFiles.map((op) => op.fileId),
+    deletedResources: plan.deleteFiles.map((op) => op.fileId),
   };
 }

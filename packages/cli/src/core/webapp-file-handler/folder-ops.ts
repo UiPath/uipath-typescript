@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
-import type { WebAppPushConfig, FileOperationPlan, ProjectFolder, ProjectStructure } from './types.js';
+import type { WebAppPushConfig, FileOperationPlan, ProjectStructure } from './types.js';
 import {
   getRemoteFoldersMap,
   REMOTE_SOURCE_FOLDER_NAME,
@@ -23,12 +23,20 @@ export async function ensureContentRootExists(
   getStructure: () => ProjectStructure | null,
   setStructure: (s: ProjectStructure) => void
 ): Promise<void> {
-  const fullRemoteFolders = getRemoteFoldersMap(getStructure()!);
+  const structure = getStructure();
+  if (!structure) {
+    throw new Error(MESSAGES.ERRORS.PUSH_PROJECT_STRUCTURE_REQUIRED);
+  }
+  const fullRemoteFolders = getRemoteFoldersMap(structure);
 
   if (!fullRemoteFolders.has(REMOTE_SOURCE_FOLDER_NAME)) {
     await api.createFolderAtRoot(config, REMOTE_SOURCE_FOLDER_NAME, lockKey);
     const next = await api.fetchRemoteStructure(config);
     setStructure(next);
+    const afterFolders = getRemoteFoldersMap(next);
+    if (!afterFolders.has(REMOTE_SOURCE_FOLDER_NAME)) {
+      throw new Error(MESSAGES.ERRORS.PUSH_SOURCE_FOLDER_CREATE_FAILED);
+    }
   }
 }
 
@@ -36,7 +44,6 @@ export async function ensureFoldersCreated(
   config: WebAppPushConfig,
   plan: FileOperationPlan,
   folderIdMap: Map<string, string>,
-  getStructure: () => ProjectStructure | null,
   setStructure: (s: ProjectStructure) => void,
   lockKey: string | null
 ): Promise<void> {
@@ -99,8 +106,9 @@ export async function cleanupEmptyFolders(
     if (!folder.id) continue;
     try {
       await api.deleteItem(config, folder.id, lockKey);
-    } catch {
-      /* ignore */
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
+      config.logger.log(chalk.yellow(`${MESSAGES.ERRORS.PUSH_DELETE_FOLDER_PREFIX}${folder.name}: ${msg}`));
     }
   }
 }

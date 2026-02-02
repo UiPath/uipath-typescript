@@ -9,10 +9,9 @@ import {
   getRemoteContentRoot,
   getRemoteFilesMap,
   getRemoteFoldersMap,
-  filterToSourceFolderFiles,
-  filterToSourceFolderFolders,
+  filterToSourceFolderMap,
 } from './structure.js';
-import { collectLocalFiles, computeNormalizedHash } from './local-files.js';
+import { collectLocalFiles, computeHash } from './local-files.js';
 import { computeExecutionPlan, computeFirstPushPlan } from './push-plan.js';
 import * as api from './api.js';
 import { prepareMetadataFileForPlan } from './metadata.js';
@@ -54,7 +53,12 @@ export class WebAppFileHandler {
   async push(): Promise<void> {
     this.config.logger.log(chalk.gray('[push] Acquiring lock...'));
     const lockInfo = await api.retrieveLock(this.config);
-    this.lockKey = lockInfo?.projectLockKey ?? null;
+    const hasLock =
+      lockInfo && (lockInfo.projectLockKey ?? lockInfo.solutionLockKey);
+    if (!hasLock) {
+      throw new Error(MESSAGES.ERRORS.PUSH_LOCK_NOT_ACQUIRED);
+    }
+    this.lockKey = lockInfo.projectLockKey ?? lockInfo.solutionLockKey ?? null;
     this.config.logger.log(chalk.gray('[push] Lock acquired.'));
 
     this.config.logger.log(chalk.gray('[push] Fetching remote structure...'));
@@ -65,7 +69,7 @@ export class WebAppFileHandler {
     const fullRemoteFiles = getRemoteFilesMap(this.projectStructure);
     const fullRemoteFolders = getRemoteFoldersMap(this.projectStructure);
 
-    const remoteContentRoot = getRemoteContentRoot(this.config.bundlePath);
+    const remoteContentRoot = getRemoteContentRoot();
     const contentRootExists = fullRemoteFolders.has(remoteContentRoot);
 
     let plan: FileOperationPlan;
@@ -89,8 +93,8 @@ export class WebAppFileHandler {
       );
     } else {
       this.config.logger.log(chalk.gray('[push] Computing diff (scoped to source/dist)...'));
-      const remoteFiles = filterToSourceFolderFiles(fullRemoteFiles, remoteContentRoot);
-      const remoteFolders = filterToSourceFolderFolders(fullRemoteFolders, remoteContentRoot);
+      const remoteFiles = filterToSourceFolderMap(fullRemoteFiles, remoteContentRoot);
+      const remoteFolders = filterToSourceFolderMap(fullRemoteFolders, remoteContentRoot);
       plan = await computeExecutionPlan(
         localFiles,
         remoteFiles,
@@ -99,7 +103,8 @@ export class WebAppFileHandler {
           bundlePath: this.config.bundlePath,
           remoteContentRoot,
           downloadRemoteFile: (fileId) => api.downloadRemoteFile(this.config, fileId),
-          computeNormalizedHash,
+          computeHash,
+          logger: this.config.logger,
         }
       );
       this.config.logger.log(
@@ -112,7 +117,6 @@ export class WebAppFileHandler {
     this.config.logger.log(chalk.gray('[push] Preparing metadata...'));
     await prepareMetadataFileForPlan(
       this.config,
-      plan,
       fullRemoteFiles,
       (config, fileId) => api.downloadRemoteFile(config, fileId)
     );
@@ -125,7 +129,6 @@ export class WebAppFileHandler {
       this.config,
       plan,
       folderIdMap,
-      () => this.projectStructure!,
       (s) => {
         this.projectStructure = s;
       },

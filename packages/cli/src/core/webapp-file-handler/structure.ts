@@ -3,7 +3,7 @@ import type { ProjectFile, ProjectFolder, ProjectStructure } from './types.js';
 export const REMOTE_SOURCE_FOLDER_NAME = 'source';
 
 /** Remote root for pushed content. Content inside the build dir is placed directly under source (no extra folder for dist/output/build). */
-export function getRemoteContentRoot(_bundlePath: string): string {
+export function getRemoteContentRoot(): string {
   return REMOTE_SOURCE_FOLDER_NAME;
 }
 
@@ -23,29 +23,16 @@ export function localPathToRemotePath(
   return remoteContentRoot + '/' + normalized;
 }
 
-export function filterToSourceFolderFiles(
-  files: Map<string, ProjectFile>,
+/** Keeps only entries whose key equals remoteContentRoot or starts with remoteContentRoot + '/'. */
+export function filterToSourceFolderMap<T>(
+  map: Map<string, T>,
   remoteContentRoot: string
-): Map<string, ProjectFile> {
+): Map<string, T> {
   const prefix = remoteContentRoot + '/';
-  const filtered = new Map<string, ProjectFile>();
-  for (const [filePath, file] of files.entries()) {
-    if (filePath === remoteContentRoot || filePath.startsWith(prefix)) {
-      filtered.set(filePath, file);
-    }
-  }
-  return filtered;
-}
-
-export function filterToSourceFolderFolders(
-  folders: Map<string, ProjectFolder>,
-  remoteContentRoot: string
-): Map<string, ProjectFolder> {
-  const prefix = remoteContentRoot + '/';
-  const filtered = new Map<string, ProjectFolder>();
-  for (const [folderPath, folder] of folders.entries()) {
-    if (folderPath === remoteContentRoot || folderPath.startsWith(prefix)) {
-      filtered.set(folderPath, folder);
+  const filtered = new Map<string, T>();
+  for (const [pathKey, value] of map.entries()) {
+    if (pathKey === remoteContentRoot || pathKey.startsWith(prefix)) {
+      filtered.set(pathKey, value);
     }
   }
   return filtered;

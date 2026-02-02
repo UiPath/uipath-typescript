@@ -74,6 +74,13 @@ export const MESSAGES = {
     PUSH_RESOURCE_PROCESSING_ERROR_PREFIX: 'Error processing resource ',
     PUSH_MOVE_FOLDER_FAILED_PREFIX: 'Move folder failed: ',
     PUSH_CREATE_FOLDER_FAILED_PREFIX: 'Create folder failed: ',
+    PUSH_PROJECT_STRUCTURE_REQUIRED: 'Project structure is required before ensuring content root exists.',
+    PUSH_SOURCE_FOLDER_CREATE_FAILED: 'Failed to create source folder; project structure may be inconsistent.',
+    PUSH_LOCK_NOT_ACQUIRED: 'Could not acquire lock on the project. Another user or process may have the lock.',
+    PUSH_REMOTE_METADATA_READ_FAILED_PREFIX: '[push] Could not read remote metadata: ',
+    PUSH_METADATA_DEFAULT_VERSION_SUFFIX: '; using codeVersion 0.1.1',
+    PUSH_TEMP_METADATA_REMOVE_FAILED_PREFIX: '[push] Could not remove temp metadata file: ',
+    PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX: '[push] Could not download remote file for diff: ',
 
     // File operations
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',

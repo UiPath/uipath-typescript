@@ -8,11 +8,10 @@ import {
   STUDIO_WEB_API_VERSION,
   STUDIO_WEB_LOCK_ACQUIRE_PATH,
   STUDIO_WEB_REFERENCED_RESOURCE_FORCE_UPDATE,
-  CONTENT_TYPE_JSON,
-  CONTENT_TYPE_OCTET_STREAM,
   RESOURCE_CATALOG_SKIP,
   RESOURCE_CATALOG_TAKE,
 } from '../../constants/api.js';
+import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { MESSAGES } from '../../constants/index.js';
 import { createHeaders } from '../../utils/api.js';
 import { handleHttpError } from '../../utils/error-handler.js';
@@ -23,6 +22,7 @@ import type {
   LockInfo,
   ProjectStructure,
   Resource,
+  ResourceFolder,
   Connection,
   ReferencedResourceRequest,
   ReferencedResourceResponse,
@@ -169,7 +169,7 @@ export async function createFolderAtRoot(
   const headers = createHeaders({
     bearerToken: config.envConfig.accessToken,
     tenantId: config.envConfig.tenantId,
-    contentType: CONTENT_TYPE_JSON,
+    contentType: AUTH_CONSTANTS.CONTENT_TYPES.JSON,
   });
   if (lockKey) headers[STUDIO_WEB_HEADERS.LOCK_KEY] = lockKey;
   try {
@@ -180,7 +180,7 @@ export async function createFolderAtRoot(
     });
     if (response.ok) {
       const ct = response.headers.get('content-type');
-      if (ct?.includes(CONTENT_TYPE_JSON)) {
+      if (ct?.includes(AUTH_CONSTANTS.CONTENT_TYPES.JSON)) {
         const data = (await response.json()) as { id?: string };
         if (data.id) return data.id;
       }
@@ -211,7 +211,7 @@ export async function moveFolder(
   const headers = createHeaders({
     bearerToken: config.envConfig.accessToken,
     tenantId: config.envConfig.tenantId,
-    contentType: CONTENT_TYPE_JSON,
+    contentType: AUTH_CONSTANTS.CONTENT_TYPES.JSON,
   });
   if (lockKey) headers[STUDIO_WEB_HEADERS.LOCK_KEY] = lockKey;
   const response = await fetch(url, {
@@ -262,7 +262,7 @@ function buildFileUploadForm(
   const form = new FormData();
   form.append('file', localFile.content, {
     filename: path.basename(filePath),
-    contentType: CONTENT_TYPE_OCTET_STREAM,
+    contentType: AUTH_CONSTANTS.CONTENT_TYPES.OCTET_STREAM,
   });
   const baseHeaders = createHeaders({
     bearerToken: config.envConfig.accessToken,
@@ -370,13 +370,13 @@ export async function getSolutionId(config: WebAppPushConfig): Promise<string> {
 function catalogItemToResource(
   item: Record<string, unknown>,
   itemFolders: Array<Record<string, unknown>>,
-  mapFolder: (f: Record<string, unknown>) => { folder_key: string; fully_qualified_name: string; path: string }
+  mapFolder: (f: Record<string, unknown>) => ResourceFolder
 ): Resource {
   return {
-    resource_key: (item.entityKey || item.resource_key) as string,
+    resourceKey: (item.entityKey || item.resource_key) as string,
     name: item.name as string,
-    resource_type: (item.entityType || item.resource_type) as string,
-    resource_sub_type: (item.entitySubType || item.resource_sub_type || null) as string | null,
+    resourceType: (item.entityType || item.resource_type) as string,
+    resourceSubType: (item.entitySubType || item.resource_sub_type || null) as string | null,
     folders: itemFolders.map(mapFolder),
   };
 }
@@ -385,7 +385,7 @@ function findMatchingResourceInItems(
   items: Array<Record<string, unknown>>,
   name: string,
   folderPath: string,
-  mapFolder: (f: Record<string, unknown>) => { folder_key: string; fully_qualified_name: string; path: string }
+  mapFolder: (f: Record<string, unknown>) => ResourceFolder
 ): Resource | null {
   for (const item of items) {
     if (item.name !== name) continue;
@@ -404,7 +404,7 @@ function parseCatalogResponse(
   response: { status: number; statusText: string },
   config: WebAppPushConfig
 ): { value?: unknown[]; items?: unknown[] } {
-  if (!contentType.includes(CONTENT_TYPE_JSON) && responseText.trim().startsWith('<!DOCTYPE')) {
+  if (!contentType.includes(AUTH_CONSTANTS.CONTENT_TYPES.JSON) && responseText.trim().startsWith('<!DOCTYPE')) {
     const errMsg = `API returned HTML instead of JSON. Status: ${response.status}`;
     trackApiFailure('findResourceInCatalog', errMsg, response.status);
     throw new Error(errMsg);
@@ -424,7 +424,7 @@ export async function findResourceInCatalog(
   resourceType: string,
   name: string,
   folderPath: string,
-  mapFolder: (f: Record<string, unknown>) => { folder_key: string; fully_qualified_name: string; path: string }
+  mapFolder: (f: Record<string, unknown>) => ResourceFolder
 ): Promise<Resource> {
   const apiResourceType = RESOURCE_CATALOG_TYPE_MAP[resourceType.toLowerCase()];
   if (!apiResourceType) throw new Error(`Unknown resource type: ${resourceType}`);
@@ -440,7 +440,7 @@ export async function findResourceInCatalog(
     headers: createHeaders({
       bearerToken: config.envConfig.accessToken,
       tenantId: config.envConfig.tenantId,
-      additionalHeaders: { Accept: CONTENT_TYPE_JSON },
+      additionalHeaders: { Accept: AUTH_CONSTANTS.CONTENT_TYPES.JSON },
     }),
   });
   const responseText = await response.text();
@@ -461,19 +461,15 @@ export async function findResourceInCatalog(
   throw new Error(errMsg);
 }
 
-export function mapFolder(f: Record<string, unknown>): {
-  folder_key: string;
-  fully_qualified_name: string;
-  path: string;
-} {
+export function mapFolder(f: Record<string, unknown>): ResourceFolder {
   const folderKey =
     (f.key as string) ||
     (f.folderKey as string) ||
     (f.folder_key as string) ||
     (f.path && String(f.path).match(/^[0-9a-f-]{36}$/i) ? (f.path as string) : '');
   return {
-    folder_key: folderKey,
-    fully_qualified_name: (f.fullyQualifiedName || f.fully_qualified_name || '') as string,
+    folderKey,
+    fullyQualifiedName: (f.fullyQualifiedName || f.fully_qualified_name || '') as string,
     path: (f.path || '') as string,
   };
 }
@@ -513,7 +509,7 @@ export async function retrieveConnection(
     name: data.Name || connectionKey,
     folder: data.Folder
       ? {
-          key: data.Folder.Id || data.Folder.Key || '',
+          folderKey: data.Folder.Id || data.Folder.Key || '',
           fullyQualifiedName: data.Folder.FullyQualifiedName || '',
           path: data.Folder.Path || '',
         }
@@ -526,8 +522,8 @@ function buildCreateReferencedResourcePayload(request: ReferencedResourceRequest
     key: request.key,
     kind: request.kind,
     folder: {
-      folderKey: request.folder.folder_key,
-      fullyQualifiedName: request.folder.fully_qualified_name,
+      folderKey: request.folder.folderKey,
+      fullyQualifiedName: request.folder.fullyQualifiedName,
       path: request.folder.path,
     },
   };
@@ -547,7 +543,7 @@ function buildCreateReferencedResourceHeaders(
 ): Record<string, string> {
   const headers = createHeaders({
     bearerToken: config.envConfig.accessToken,
-    contentType: CONTENT_TYPE_JSON,
+    contentType: AUTH_CONSTANTS.CONTENT_TYPES.JSON,
   }) as Record<string, string>;
   headers[STUDIO_WEB_HEADERS.TENANT_ID] = config.envConfig.tenantId;
   if (lockKeyHeader) headers[STUDIO_WEB_HEADERS.LOCK_KEY] = lockKeyHeader;
@@ -601,7 +597,7 @@ export async function createReferencedResource(
   );
   const url = `${baseUrl}?api-version=${STUDIO_WEB_API_VERSION}&forceUpdate=${STUDIO_WEB_REFERENCED_RESOURCE_FORCE_UPDATE}`;
   const payload = buildCreateReferencedResourcePayload(request);
-  const lockKeyHeader = getScopedLockKey(lockKey, request.folder.fully_qualified_name);
+  const lockKeyHeader = getScopedLockKey(lockKey, request.folder.fullyQualifiedName);
   const headers = buildCreateReferencedResourceHeaders(config, lockKeyHeader);
 
   const response = await fetch(url, {

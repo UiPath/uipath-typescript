@@ -42,14 +42,12 @@ export const STUDIO_WEB_LOCK_ACQUIRE_PATH = 'dummy-uuid-Shared';
 /** Create referenced resource: force backend to apply the resource even if it considers it unchanged. */
 export const STUDIO_WEB_REFERENCED_RESOURCE_FORCE_UPDATE = 'true';
 
-/** Content type for JSON request/response bodies. */
-export const CONTENT_TYPE_JSON = 'application/json';
-
-/** Content type for binary file uploads (multipart file part). */
-export const CONTENT_TYPE_OCTET_STREAM = 'application/octet-stream';
-
 /** Resource catalog search: first page, up to 100 matches by name (sufficient for bindings lookup). */
 export const RESOURCE_CATALOG_SKIP = '0';
 export const RESOURCE_CATALOG_TAKE = '100';
+
+/** Studio Web push: default manifest path; remote may also use STUDIO_METADATA_FILENAME. */
+export const STUDIO_METADATA_RELATIVE_PATH = '.uipath/studio_metadata.json';
+export const STUDIO_METADATA_FILENAME = 'studio_metadata.json';
 
 export const APP_URL_TEMPLATE = '/{orgId}/apps_/default/run/production/{tenantId}/{folderKey}/{appSystemName}/public';

@@ -35,43 +35,71 @@ export interface ProjectStructure {
   folders: ProjectFolder[];
 }
 
+export interface CreateFolderEntry {
+  path: string;
+  id?: string;
+}
+
+export interface UploadFileEntry {
+  path: string;
+  localFile: LocalFile;
+  parentPath: string | null;
+  parentId?: string | null;
+}
+
+export interface UpdateFileEntry {
+  path: string;
+  localFile: LocalFile;
+  fileId: string;
+}
+
+export interface DeleteFileEntry {
+  fileId: string;
+  path: string;
+}
+
+export interface DeleteFolderEntry {
+  folderId: string;
+  path: string;
+}
+
 export interface FileOperationPlan {
-  createFolders: Array<{ path: string; id?: string }>;
-  uploadFiles: Array<{
-    path: string;
-    localFile: LocalFile;
-    parentPath: string | null;
-    parentId?: string | null;
-  }>;
-  updateFiles: Array<{ path: string; localFile: LocalFile; fileId: string }>;
-  deleteFiles: Array<{ fileId: string; path: string }>;
-  deleteFolders: Array<{ folderId: string; path: string }>;
+  createFolders: CreateFolderEntry[];
+  uploadFiles: UploadFileEntry[];
+  updateFiles: UpdateFileEntry[];
+  deleteFiles: DeleteFileEntry[];
+  deleteFolders: DeleteFolderEntry[];
+}
+
+export interface FailedPathEntry {
+  path: string;
+  error: string;
 }
 
 /** Result of file/folder operations so callers can detect and handle failures. */
 export interface FileOpsResult {
   succeededCount: number;
   failedCount: number;
-  failedPaths: Array<{ path: string; error: string }>;
+  failedPaths: FailedPathEntry[];
 }
 
 export interface AddedResource {
-  content_file_path?: string;
-  content_string?: string;
-  file_name?: string;
-  parent_path?: string | null;
+  contentFilePath?: string;
+  contentString?: string;
+  fileName?: string;
+  parentPath?: string | null;
 }
 
 export interface ModifiedResource {
   id: string;
-  content_file_path?: string;
-  content_string?: string;
+  contentFilePath?: string;
+  contentString?: string;
 }
 
 export interface StructuralMigration {
-  added_resources: AddedResource[];
-  modified_resources: ModifiedResource[];
-  deleted_resources: string[];
+  addedResources: AddedResource[];
+  modifiedResources: ModifiedResource[];
+  deletedResources: string[];
 }
 
 export interface LockInfo {
@@ -108,25 +136,24 @@ export interface Bindings {
   resources: BindingResource[];
 }
 
-export interface ResourceFolder {
-  folder_key: string;
-  fully_qualified_name: string;
-  path: string;
-}
-
-export interface Resource {
-  resource_key: string;
-  name: string;
-  resource_type: string;
-  resource_sub_type: string | null;
-  folders: ResourceFolder[];
-}
-
-export interface ConnectionFolder {
-  key: string;
+/** Shared shape for folder with key, fully-qualified name, and path (resource catalog, connections, referenced resources). */
+export interface QualifiedFolder {
+  folderKey: string;
   fullyQualifiedName: string;
   path: string;
 }
+
+export type ResourceFolder = QualifiedFolder;
+
+export interface Resource {
+  resourceKey: string;
+  name: string;
+  resourceType: string;
+  resourceSubType: string | null;
+  folders: ResourceFolder[];
+}
+
+export type ConnectionFolder = QualifiedFolder;
 
 export interface Connection {
   key: string;
@@ -134,11 +161,7 @@ export interface Connection {
   folder: ConnectionFolder | null;
 }
 
-export interface ReferencedResourceFolder {
-  folder_key: string;
-  fully_qualified_name: string;
-  path: string;
-}
+export type ReferencedResourceFolder = QualifiedFolder;
 
 export interface ReferencedResourceRequest {
   key: string;

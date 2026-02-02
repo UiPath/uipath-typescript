@@ -13,24 +13,26 @@ import * as api from './api.js';
 
 const BINDINGS_FILE_NAME = 'bindings.json';
 
+/** Maps bindings resource type strings to Studio Web resource type values. */
+const BINDINGS_TYPE_MAPPINGS: Record<string, string> = {
+  text: 'stringAsset',
+  integer: 'integerAsset',
+  bool: 'booleanAsset',
+  credential: 'credentialAsset',
+  secret: 'secretAsset',
+  orchestrator: 'orchestratorBucket',
+  amazon: 'amazonBucket',
+  azure: 'azureBucket',
+};
+
 function transformKind(kind: string): string {
   return kind ? kind[0].toLowerCase() + kind.slice(1) : kind;
 }
 
 function transformType(type: string | null): string | null {
   if (!type) return null;
-  const typeMappings: Record<string, string> = {
-    text: 'stringAsset',
-    integer: 'integerAsset',
-    bool: 'booleanAsset',
-    credential: 'credentialAsset',
-    secret: 'secretAsset',
-    orchestrator: 'orchestratorBucket',
-    amazon: 'amazonBucket',
-    azure: 'azureBucket',
-  };
   const lowerType = type.toLowerCase();
-  if (lowerType in typeMappings) return typeMappings[lowerType];
+  if (lowerType in BINDINGS_TYPE_MAPPINGS) return BINDINGS_TYPE_MAPPINGS[lowerType];
   return type[0].toLowerCase() + type.slice(1);
 }
 
@@ -77,15 +79,15 @@ export async function runImportReferencedResources(
           resourceName = connection.name;
           folderPath = connection.folder?.path || '';
           foundResource = {
-            resource_key: connection.key || connectionKey,
+            resourceKey: connection.key || connectionKey,
             name: resourceName,
-            resource_type: 'connection',
-            resource_sub_type: bindingsResource.metadata?.Connector || null,
+            resourceType: 'connection',
+            resourceSubType: bindingsResource.metadata?.Connector || null,
             folders: connection.folder
               ? [
                   {
-                    folder_key: connection.folder.key,
-                    fully_qualified_name: connection.folder.fullyQualifiedName || '',
+                    folderKey: connection.folder.folderKey,
+                    fullyQualifiedName: connection.folder.fullyQualifiedName || '',
                     path: folderPath,
                   },
                 ]
@@ -130,12 +132,12 @@ export async function runImportReferencedResources(
 
       const folder = foundResource.folders[0];
       const request: ReferencedResourceRequest = {
-        key: foundResource.resource_key,
-        kind: transformKind(foundResource.resource_type),
-        type: transformType(foundResource.resource_sub_type),
+        key: foundResource.resourceKey,
+        kind: transformKind(foundResource.resourceType),
+        type: transformType(foundResource.resourceSubType),
         folder: {
-          folder_key: folder.folder_key,
-          fully_qualified_name: folder.fully_qualified_name,
+          folderKey: folder.folderKey,
+          fullyQualifiedName: folder.fullyQualifiedName,
           path: folder.path,
         },
       };
