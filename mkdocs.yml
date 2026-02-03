@@ -168,3 +168,6 @@ nav:
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
   - Release Policy: release-policy.md
+  - API Guide:
+      - Data Fabric: https://docs.uipath.com/data-service/automation-cloud/latest/api-guide/get-entity-endpoint
+      - Orchestrator: https://docs.uipath.com/orchestrator/automation-cloud/latest/api-guide/introduction
