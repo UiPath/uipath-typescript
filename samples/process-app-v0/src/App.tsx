@@ -12,7 +12,7 @@ const authConfig: UiPathSDKConfig = {
   clientId: import.meta.env.VITE_UIPATH_CLIENT_ID || 'your-client-id',
   orgName: import.meta.env.VITE_UIPATH_ORG_NAME || 'your-organization',
   tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME || 'your-tenant',
-  baseUrl: window.location.origin,
+  baseUrl: import.meta.env.VITE_UIPATH_BASE_URL,
   redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI || window.location.origin,
   scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access',
 };
