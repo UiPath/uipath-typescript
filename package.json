@@ -132,6 +132,12 @@
         "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:unit": "vitest tests/unit",
+        "test:integration": "vitest --config vitest.integration.config.ts",
+        "test:integration:v0": "vitest --config vitest.integration.config.ts --testNamePattern='\\[v0\\]'",
+        "test:integration:v1": "vitest --config vitest.integration.config.ts --testNamePattern='\\[v1\\]'",
+        "test:integration:smoke": "vitest tests/integration/shared/smoke.integration.test.ts --config vitest.integration.config.ts",
+        "test:integration:watch": "vitest --config vitest.integration.config.ts --watch",
+        "test:all": "npm run test:unit && npm run test:integration",
         "test:watch": "vitest --watch",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest --coverage"
