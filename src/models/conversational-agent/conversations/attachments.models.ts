@@ -16,7 +16,10 @@ import type {
  * ### Usage
  *
  * ```typescript
- * const uploadedAttachment = await conversationalAgentService.conversations.attachments.upload(conversationId, file);
+ * import { Attachments } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const attachmentsService = new Attachments(sdk);
+ * const uploadedAttachment = await attachmentsService.upload(conversationId, file);
  * ```
  */
 export interface AttachmentServiceModel {
@@ -33,10 +36,7 @@ export interface AttachmentServiceModel {
    * {@link AttachmentCreateResponse}
    * @example
    * ```typescript
-   * const attachmentEntry = await conversationalAgentService.conversations.attachments.create(
-   *   conversationId,
-   *   'document.pdf'
-   * );
+   * const attachmentEntry = await attachmentsService.create(conversationId, 'document.pdf');
    *
    * // Handle upload manually using attachmentEntry.fileUploadAccess
    * const { url, verb, headers } = attachmentEntry.fileUploadAccess;
@@ -56,10 +56,7 @@ export interface AttachmentServiceModel {
    * {@link AttachmentUploadResponse}
    * @example
    * ```typescript
-   * const uploadedAttachment = await conversationalAgentService.conversations.attachments.upload(
-   *   conversationId,
-   *   file
-   * );
+   * const uploadedAttachment = await attachmentsService.upload(conversationId, file);
    * console.log(`Uploaded: ${uploadedAttachment.uri}`);
    * ```
    */

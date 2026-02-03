@@ -75,6 +75,81 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
   }
 
   /**
+   * The MIME type of this content part.
+   * Returns undefined if the start event hasn't been received yet.
+   */
+  public get mimeType(): string | undefined {
+    return this.startEventMaybe?.mimeType;
+  }
+
+  /**
+   * Whether this content part is text (text/plain, text/markdown, etc.).
+   * @example
+   * ```typescript
+   * message.onContentPartStart((contentPart) => {
+   *   if (contentPart.isText) {
+   *     contentPart.onChunk((chunk) => {
+   *       console.log('Text chunk:', chunk.data);
+   *     });
+   *   }
+   * });
+   * ```
+   */
+  public get isText(): boolean {
+    return this.startEventMaybe?.mimeType?.startsWith('text/') ?? false;
+  }
+
+  /**
+   * Whether this content part is audio content.
+   * @example
+   * ```typescript
+   * message.onContentPartStart((contentPart) => {
+   *   if (contentPart.isAudio) {
+   *     // Handle audio streaming
+   *     contentPart.onChunk((chunk) => {
+   *       audioPlayer.appendBuffer(chunk.data);
+   *     });
+   *   }
+   * });
+   * ```
+   */
+  public get isAudio(): boolean {
+    return this.startEventMaybe?.mimeType?.startsWith('audio/') ?? false;
+  }
+
+  /**
+   * Whether this content part is an image.
+   */
+  public get isImage(): boolean {
+    return this.startEventMaybe?.mimeType?.startsWith('image/') ?? false;
+  }
+
+  /**
+   * Whether this content part is markdown text.
+   */
+  public get isMarkdown(): boolean {
+    return this.startEventMaybe?.mimeType === 'text/markdown';
+  }
+
+  /**
+   * Whether this content part is a transcript (from speech-to-text).
+   * @example
+   * ```typescript
+   * message.onContentPartStart((contentPart) => {
+   *   if (contentPart.isTranscript) {
+   *     console.log('User voice transcription:');
+   *     contentPart.onChunk((chunk) => {
+   *       process.stdout.write(chunk.data ?? '');
+   *     });
+   *   }
+   * });
+   * ```
+   */
+  public get isTranscript(): boolean {
+    return this.startEventMaybe?.metaData?.isTranscript ?? false;
+  }
+
+  /**
    * Emits a content part event through the parent message.
    */
   public emit(contentPartEvent: Omit<ContentPartEvent, 'contentPartId'>) {

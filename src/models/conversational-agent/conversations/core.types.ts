@@ -310,10 +310,10 @@ export interface ConversationJobStartOverrides {
 }
 
 /**
- * Response type for conversation operations.
+ * Raw response type for conversation operations (without methods).
  * Represents a conversation between users and AI agents.
  */
-export interface ConversationGetResponse {
+export interface RawConversationGetResponse {
   /**
    * A globally unique identifier for the conversation.
    */

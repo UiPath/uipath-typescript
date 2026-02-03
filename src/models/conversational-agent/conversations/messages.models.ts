@@ -21,9 +21,10 @@ import type {
  * ### Usage
  *
  * ```typescript
- * const messageDetails = await conversationalAgentService.conversations.messages.getById(
- *   conversationId, exchangeId, messageId
- * );
+ * import { Messages } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const messagesService = new Messages(sdk);
+ * const messageDetails = await messagesService.getById(conversationId, exchangeId, messageId);
  * ```
  */
 export interface MessageServiceModel {
@@ -37,11 +38,7 @@ export interface MessageServiceModel {
    * {@link MessageGetResponse}
    * @example
    * ```typescript
-   * const messageDetails = await conversationalAgentService.conversations.messages.getById(
-   *   conversationId,
-   *   exchangeId,
-   *   messageId
-   * );
+   * const messageDetails = await messagesService.getById(conversationId, exchangeId, messageId);
    *
    * const messageText = messageDetails.getTextContent();
    * const messageToolCalls = messageDetails.getToolCalls();
@@ -64,7 +61,7 @@ export interface MessageServiceModel {
    * {@link ContentPartGetResponse}
    * @example
    * ```typescript
-   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
+   * const contentPartDetails = await messagesService.getContentPartById(
    *   conversationId,
    *   exchangeId,
    *   messageId,

@@ -1,0 +1,158 @@
+/**
+ * Types for the Conversational Agent component
+ */
+
+import type {
+  ConversationalAgent,
+  User,
+  Exchanges,
+  Messages,
+  Attachments,
+  AgentGetResponse,
+  AgentGetByIdResponse,
+  ConversationGetResponse,
+  FeatureFlags,
+  UserSettingsGetResponse,
+  SessionEventHelper,
+  ExchangeGetResponse
+} from '@uipath/uipath-typescript/conversational-agent';
+
+// ==================== UI Types ====================
+
+/** Tab type for navigation */
+export type TabType = 'chat' | 'history' | 'attachments' | 'features';
+
+/** Attachment info type for uploaded files */
+export interface AttachmentInfo {
+  uri: string;
+  name: string;
+  mimeType: string;
+  fileName: string;
+  fileSize: number;
+}
+
+/** Chat message type for UI display */
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  attachments?: string;
+  exchangeId?: string; // For assistant messages, to enable feedback
+  isError?: boolean; // For system messages to show as error
+}
+
+/** User settings form state */
+export interface UserSettingsFormState {
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  company: string;
+  country: string;
+  timezone: string;
+}
+
+// ==================== Domain State Interfaces ====================
+
+/** Core service state */
+export interface ServiceState {
+  conversationalAgentService: ConversationalAgent | null;
+  userService: User | null;
+  exchangeService: Exchanges | null;
+  messageService: Messages | null;
+  attachmentService: Attachments | null;
+  connectionStatus: string;
+}
+
+/** UI feedback state */
+export interface UIState {
+  error: string;
+  successMessage: string;
+  activeTab: TabType;
+  setError: (error: string) => void;
+  setSuccessMessage: (message: string) => void;
+  setActiveTab: (tab: TabType) => void;
+}
+
+/** Agent state and actions */
+export interface AgentState {
+  agents: AgentGetResponse[];
+  selectedAgent: AgentGetResponse | null;
+  agentAppearance: AgentGetByIdResponse | null;
+  isLoading: boolean;
+  setAgents: (agents: AgentGetResponse[]) => void;
+  setSelectedAgent: (agent: AgentGetResponse | null) => void;
+  setAgentAppearance: (appearance: AgentGetByIdResponse | null) => void;
+  setIsLoading: (loading: boolean) => void;
+}
+
+/** Conversation state and actions */
+export interface ConversationState {
+  conversation: ConversationGetResponse | null;
+  conversationList: ConversationGetResponse[];
+  isLoading: boolean;
+  setConversation: (conversation: ConversationGetResponse | null) => void;
+  setConversationList: React.Dispatch<React.SetStateAction<ConversationGetResponse[]>>;
+  setIsLoading: (loading: boolean) => void;
+}
+
+/** Chat/Session state and actions */
+export interface ChatState {
+  session: SessionEventHelper | null;
+  messages: ChatMessage[];
+  inputMessage: string;
+  setSession: (session: SessionEventHelper | null) => void;
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  setInputMessage: (message: string) => void;
+}
+
+/** Exchange state and actions */
+export interface ExchangeState {
+  exchanges: ExchangeGetResponse[];
+  isLoading: boolean;
+  setExchanges: (exchanges: ExchangeGetResponse[]) => void;
+  setIsLoading: (loading: boolean) => void;
+}
+
+/** Attachment state and actions */
+export interface AttachmentState {
+  selectedFile: File | null;
+  uploadedAttachments: AttachmentInfo[];
+  pendingAttachments: AttachmentInfo[];
+  isUploading: boolean;
+  setSelectedFile: (file: File | null) => void;
+  setUploadedAttachments: React.Dispatch<React.SetStateAction<AttachmentInfo[]>>;
+  setPendingAttachments: React.Dispatch<React.SetStateAction<AttachmentInfo[]>>;
+  setIsUploading: (uploading: boolean) => void;
+}
+
+/** Feature flags state and actions */
+export interface FeatureFlagsState {
+  featureFlags: FeatureFlags | null;
+  isLoading: boolean;
+  setFeatureFlags: (flags: FeatureFlags | null) => void;
+  setIsLoading: (loading: boolean) => void;
+}
+
+/** User settings state and actions */
+export interface UserSettingsState {
+  userSettings: UserSettingsGetResponse | null;
+  isLoading: boolean;
+  userSettingsForm: UserSettingsFormState;
+  setUserSettings: (settings: UserSettingsGetResponse | null) => void;
+  setIsLoading: (loading: boolean) => void;
+  setUserSettingsForm: React.Dispatch<React.SetStateAction<UserSettingsFormState>>;
+}
+
+// ==================== Context Value Type ====================
+
+/** Combined context value type - grouped by domain */
+export interface ConversationalAgentContextValue extends ServiceState {
+  ui: UIState;
+  agent: AgentState;
+  conversation: ConversationState;
+  chat: ChatState;
+  exchange: ExchangeState;
+  attachment: AttachmentState;
+  featureFlags: FeatureFlagsState;
+  userSettings: UserSettingsState;
+}

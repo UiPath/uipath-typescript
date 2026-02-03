@@ -1,59 +1,111 @@
+/**
+ * Agent Service Models
+ *
+ * Provides fluent API for agent objects returned from getAll() and getById().
+ */
+
 import type { AgentGetResponse, AgentGetByIdResponse } from './agents.types';
+import type {
+  ConversationServiceModel,
+  ConversationGetResponse,
+  CreateConversationOptions
+} from '../conversations';
 
 /**
- * Service for managing UiPath Conversational Agents
- *
- * Agents are conversational AI applications that can be deployed and interacted with.
- *
- * ### Usage
- *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
- *
- * ```typescript
- * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
- *
- * const conversationalAgentService = new ConversationalAgent(sdk);
- *
- * // Get all available agents
- * const availableAgents = await conversationalAgentService.agents.getAll();
- *
- * // Get the agent ID to use for creating conversations
- * const agentId = availableAgents[0].id;
- * const folderId = availableAgents[0].folderId;
- * ```
+ * Options for creating a conversation from an agent (without agentReleaseId/folderId)
  */
-export interface AgentServiceModel {
-  /**
-   * Get all available conversational agents
-   *
-   * @param folderId - Optional folder ID to filter agents
-   * @returns Promise resolving to an array of agents
-   * {@link AgentGetResponse}
-   * @example
-   * ```typescript
-   * // Get all available agents
-   * const availableAgents = await conversationalAgentService.agents.getAll();
-   *
-   * // Get the agent ID and folder ID for creating conversations
-   * const { id: agentId, folderId } = availableAgents[0];
-   *
-   * // Get agents in a specific folder
-   * const folderAgents = await conversationalAgentService.agents.getAll(folderId);
-   * ```
-   */
-  getAll(folderId?: number): Promise<AgentGetResponse[]>;
+export type AgentCreateConversationOptions = Omit<CreateConversationOptions, 'agentReleaseId' | 'folderId'>;
 
+/**
+ * Scoped conversation service for a specific agent.
+ * Auto-fills agentReleaseId and folderId from the agent.
+ */
+export interface AgentConversationServiceModel {
   /**
-   * Gets a conversational agent by ID with appearance configuration
+   * Creates a conversation for this agent
    *
-   * @param id - Agent ID to retrieve
-   * @param folderId - Folder ID containing the agent
-   * @returns Promise resolving to the agent with appearance configuration
-   * {@link AgentGetByIdResponse}
+   * @param options - Optional conversation options (label, etc.)
+   * @returns Promise resolving to the created conversation with methods
+   *
    * @example
    * ```typescript
-   * const agentDetails = await conversationalAgentService.agents.getById(agentId, folderId);
+   * const agent = (await conversationalAgent.getAll())[0];
+   * const conversation = await agent.conversations.create({ label: 'My Chat' });
+   * const session = conversation.startSession();
    * ```
    */
-  getById(id: number, folderId: number): Promise<AgentGetByIdResponse>;
+  create(options?: AgentCreateConversationOptions): Promise<ConversationGetResponse>;
+}
+
+/**
+ * Methods added to agent objects
+ */
+export interface AgentMethods {
+  /**
+   * Scoped conversation operations for this agent.
+   * Methods automatically use this agent's id and folderId.
+   */
+  readonly conversations: AgentConversationServiceModel;
+}
+
+/**
+ * Agent response with fluent methods (from getAll)
+ */
+export type AgentGetResponseWithMethods = AgentGetResponse & AgentMethods;
+
+/**
+ * Agent response with fluent methods (from getById)
+ */
+export type AgentGetByIdResponseWithMethods = AgentGetByIdResponse & AgentMethods;
+
+/**
+ * Creates methods for an agent
+ */
+function createAgentMethods(
+  agentData: AgentGetResponse,
+  conversationService: ConversationServiceModel
+): AgentMethods {
+  const agentConversations: AgentConversationServiceModel = {
+    async create(options: AgentCreateConversationOptions = {}): Promise<ConversationGetResponse> {
+      return conversationService.create({
+        ...options,
+        agentReleaseId: agentData.id,
+        folderId: agentData.folderId
+      });
+    }
+  };
+
+  return {
+    conversations: agentConversations
+  };
+}
+
+/**
+ * Creates an agent with fluent methods
+ *
+ * @param agentData - The agent data from API
+ * @param conversationService - The conversation service instance
+ * @returns Agent object with added methods
+ */
+export function createAgentWithMethods(
+  agentData: AgentGetResponse,
+  conversationService: ConversationServiceModel
+): AgentGetResponseWithMethods {
+  const methods = createAgentMethods(agentData, conversationService);
+  return Object.assign({}, agentData, methods) as AgentGetResponseWithMethods;
+}
+
+/**
+ * Creates an agent (from getById) with fluent methods
+ *
+ * @param agentData - The agent data from API (includes appearance)
+ * @param conversationService - The conversation service instance
+ * @returns Agent object with added methods
+ */
+export function createAgentByIdWithMethods(
+  agentData: AgentGetByIdResponse,
+  conversationService: ConversationServiceModel
+): AgentGetByIdResponseWithMethods {
+  const methods = createAgentMethods(agentData, conversationService);
+  return Object.assign({}, agentData, methods) as AgentGetByIdResponseWithMethods;
 }

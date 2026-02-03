@@ -31,18 +31,16 @@ import { ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
  *
  * @example
  * ```typescript
+ * import { Attachments } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const attachmentsService = new Attachments(sdk);
+ *
  * // One-step upload (recommended for most cases)
- * const uploadedAttachment = await conversationalAgentService.conversations.attachments.upload(
- *   conversationId,
- *   file
- * );
+ * const uploadedAttachment = await attachmentsService.upload(conversationId, file);
  * console.log(`Uploaded: ${uploadedAttachment.uri}`);
  *
  * // Two-step create (for custom upload handling)
- * const attachmentEntry = await conversationalAgentService.conversations.attachments.create(
- *   conversationId,
- *   'document.pdf'
- * );
+ * const attachmentEntry = await attachmentsService.create(conversationId, 'document.pdf');
  * // Handle upload manually using attachmentEntry.fileUploadAccess
  * ```
  */
@@ -68,10 +66,7 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
    *
    * @example
    * ```typescript
-   * const attachmentEntry = await conversationalAgentService.conversations.attachments.create(
-   *   conversationId,
-   *   'document.pdf'
-   * );
+   * const attachmentEntry = await attachmentsService.create(conversationId, 'document.pdf');
    * // Use attachmentEntry.fileUploadAccess to upload file content manually
    * ```
    */
@@ -99,10 +94,7 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
    *
    * @example
    * ```typescript
-   * const attachment = await conversationalAgentService.conversations.attachments.upload(
-   *   conversationId,
-   *   file
-   * );
+   * const attachment = await attachmentsService.upload(conversationId, file);
    * console.log(`Uploaded: ${attachment.uri}`);
    * ```
    */

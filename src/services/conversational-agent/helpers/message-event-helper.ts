@@ -1,16 +1,17 @@
-import type {
-  ContentPartId,
-  InterruptEndEvent,
-  InterruptId,
-  InterruptStartEvent,
-  MakeRequired,
-  Message,
-  MessageEndEvent,
-  MessageEvent,
-  MessageId,
-  MessageStartEvent,
-  MetaEvent,
-  ToolCallId
+import {
+  MessageRole,
+  type ContentPartId,
+  type InterruptEndEvent,
+  type InterruptId,
+  type InterruptStartEvent,
+  type MakeRequired,
+  type Message,
+  type MessageEndEvent,
+  type MessageEvent,
+  type MessageId,
+  type MessageStartEvent,
+  type MetaEvent,
+  type ToolCallId
 } from '@/models/conversational-agent';
 
 import type { ContentPartEventHelper, ContentPartStartEventWithData } from './content-part-event-helper';
@@ -79,6 +80,55 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   public get startEvent(): MakeRequired<MessageStartEvent, 'timestamp'> {
     if (!this.startEventMaybe) throw new ConversationEventValidationError(`Message ${this.messageId} has no start event.`);
     return this.startEventMaybe as MakeRequired<MessageStartEvent, 'timestamp'>; // timestamp is set by the constructor
+  }
+
+  /**
+   * The role of this message (user, assistant, or system).
+   * Returns undefined if the start event hasn't been received yet.
+   */
+  public get role(): MessageRole | undefined {
+    return this.startEventMaybe?.role;
+  }
+
+  /**
+   * Whether this message is from the user.
+   * @example
+   * ```typescript
+   * message.onContentPartStart((contentPart) => {
+   *   if (message.isUser) {
+   *     console.log('User message content:', contentPart.mimeType);
+   *   }
+   * });
+   * ```
+   */
+  public get isUser(): boolean {
+    return this.startEventMaybe?.role === MessageRole.User;
+  }
+
+  /**
+   * Whether this message is from the assistant.
+   * @example
+   * ```typescript
+   * exchange.onMessageStart((message) => {
+   *   if (message.isAssistant) {
+   *     message.onContentPartStart((contentPart) => {
+   *       contentPart.onChunk((chunk) => {
+   *         process.stdout.write(chunk.data ?? '');
+   *       });
+   *     });
+   *   }
+   * });
+   * ```
+   */
+  public get isAssistant(): boolean {
+    return this.startEventMaybe?.role === MessageRole.Assistant;
+  }
+
+  /**
+   * Whether this message is a system message.
+   */
+  public get isSystem(): boolean {
+    return this.startEventMaybe?.role === MessageRole.System;
   }
 
   /**

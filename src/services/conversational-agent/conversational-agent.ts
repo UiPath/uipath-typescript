@@ -4,52 +4,40 @@
 
 // Core SDK imports
 import type { IUiPathSDK } from '@/core/types';
+import { track } from '@/core/telemetry';
 import { ConnectionStatus } from '@/core/websocket';
-import type { ConnectionStatusChangedHandler, LogLevel } from '@/core/websocket';
+import type { ConnectionStatusChangedHandler } from '@/core/websocket';
 import { BaseService } from '@/services/base';
 
 // Models
 import type {
   ConversationalAgentServiceModel,
   ConversationalAgentOptions,
-  FeatureFlags
+  FeatureFlags,
+  AgentGetResponse,
+  AgentGetByIdResponse,
+  AgentGetResponseWithMethods,
+  AgentGetByIdResponseWithMethods
+} from '@/models/conversational-agent';
+import {
+  AgentMap,
+  createAgentWithMethods,
+  createAgentByIdWithMethods
 } from '@/models/conversational-agent';
 
 // Utils
-import { FEATURE_ENDPOINTS } from '@/utils/constants/endpoints';
+import { FEATURE_ENDPOINTS, AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
+import { transformData } from '@/utils/transform';
 
 // Local imports
-import { AgentService } from './agents';
 import { ConversationService } from './conversations';
-import {
-  ConversationEventHelperManagerImpl,
-  type ConversationEventHelperManager
-} from './helpers';
-import { SessionManager } from './session';
-import { TraceService } from './traces';
-import { UserService } from './user';
 
 /**
  * Service for interacting with UiPath Conversational Agent API
  */
 export class ConversationalAgentService extends BaseService implements ConversationalAgentServiceModel {
-  /** Session manager for WebSocket lifecycle */
-  private _sessionManager: SessionManager;
-
-  /** Event helper for conversation events */
-  private _eventHelper: ConversationEventHelperManagerImpl | null = null;
-
-  /** Service for listing available conversational agents */
-  public readonly agents: AgentService;
-
-  /** Service for conversation operations including exchanges, messages, and attachments */
+  /** Service for conversation operations including real-time WebSocket support */
   public readonly conversations: ConversationService;
-
-  /** Service for user profile and context settings management */
-  public readonly user: UserService;
-
-  /** Service for LLM operations tracing and observability */
-  public readonly traces: TraceService;
 
   /**
    * Creates an instance of the ConversationalAgent service.
@@ -60,88 +48,151 @@ export class ConversationalAgentService extends BaseService implements Conversat
   constructor(instance: IUiPathSDK, options?: ConversationalAgentOptions) {
     super(instance);
 
-    // Create HTTP services
-    this.agents = new AgentService(instance);
-    this.conversations = new ConversationService(instance);
-    this.user = new UserService(instance);
-    this.traces = new TraceService(instance);
-
-    // Create session manager for WebSocket operations
-    this._sessionManager = new SessionManager(instance, options);
+    // Create conversation service with WebSocket support
+    this.conversations = new ConversationService(instance, options);
   }
 
-  // ==================== Event Handling ====================
+  // ==================== Agent Operations ====================
 
   /**
-   * Event helpers for sending and receiving real-time conversation events
-   */
-  get events(): ConversationEventHelperManager {
-    if (this._eventHelper === null) {
-      this._eventHelper = new ConversationEventHelperManagerImpl({
-        emit: (event) => {
-          this._sessionManager.emitEvent(event);
-        }
-      });
-
-      // Connect event dispatcher to session manager
-      this._sessionManager.setEventDispatcher(this._eventHelper);
-    }
-    return this._eventHelper;
-  }
-
-  // ==================== Connection Management ====================
-
-  /**
-   * Disconnects from WebSocket and releases all session resources
+   * Gets all available conversational agents
    *
-   * Immediately closes the WebSocket connection and clears all per-conversation
-   * socket tracking. Any active sessions will receive a disconnection error.
+   * Returns agents with helper methods attached via `createAgentWithMethods()`.
+   * Each agent has a `conversations.create()` method that simplifies
+   * creating conversations without manually passing `agentReleaseId` and `folderId`.
    *
-   * Note: Sessions are automatically cleaned up when they end. Use this only
-   * when you need to force a full disconnection (e.g., on app shutdown or logout).
-   */
-  disconnect(): void {
-    this._sessionManager.disconnect();
-  }
-
-  /**
-   * Current connection status
-   */
-  get connectionStatus(): ConnectionStatus {
-    return this._sessionManager.connectionStatus;
-  }
-
-  /**
-   * Whether WebSocket is connected
-   */
-  get isConnected(): boolean {
-    return this._sessionManager.isConnected;
-  }
-
-  /**
-   * Current connection error, if any
-   */
-  get connectionError(): Error | null {
-    return this._sessionManager.connectionError;
-  }
-
-  /**
-   * Registers a handler for connection status changes
+   * @param folderId - Optional folder ID to filter agents
+   * @returns Promise resolving to an array of available agents with helper methods
    *
-   * @param handler - Callback function to handle status changes
-   * @returns Cleanup function to remove handler
+   * @example Basic usage - get agents and create conversation
+   * ```typescript
+   * const agents = await conversationalAgent.getAll();
+   * const agent = agents[0];
+   *
+   * // Create conversation directly from agent (agentReleaseId and folderId are auto-filled)
+   * const conversation = await agent.conversations.create({ label: 'My Chat' });
+   * ```
+   *
+   * @example Complete workflow - agent to session with real-time chat
+   * ```typescript
+   * // Get all agents
+   * const agents = await conversationalAgent.getAll();
+   * const agent = agents.find(a => a.name === 'Customer Support Bot');
+   *
+   * // Create conversation (no need to pass agentReleaseId/folderId - auto-filled)
+   * const conversation = await agent.conversations.create({
+   *   label: 'Support Session'
+   * });
+   *
+   * // Start real-time session
+   * const session = conversation.startSession();
+   *
+   * // Listen for AI responses using helper methods
+   * session.onExchangeStart((exchange) => {
+   *   exchange.onMessageStart((message) => {
+   *     // Use message.isAssistant to filter AI responses
+   *     if (message.isAssistant) {
+   *       message.onContentPartStart((part) => {
+   *         // Use part.isText to check content type
+   *         if (part.isText) {
+   *           part.onChunk((chunk) => {
+   *             process.stdout.write(chunk.data ?? '');
+   *           });
+   *         }
+   *       });
+   *     }
+   *   });
+   * });
+   *
+   * // Send user prompt
+   * session.sendPrompt({ text: 'Hello, I need help with my order' });
+   * ```
+   *
+   * @example Filter agents by folder
+   * ```typescript
+   * // Get agents from a specific folder
+   * const agents = await conversationalAgent.getAll(123);
+   * ```
+   *
+   * @example Accessing agent properties (from AgentGetResponse)
+   * ```typescript
+   * const agents = await conversationalAgent.getAll();
+   * for (const agent of agents) {
+   *   console.log(`Agent: ${agent.name}`);
+   *   console.log(`  ID: ${agent.id}`);
+   *   console.log(`  Folder ID: ${agent.folderId}`);
+   *   console.log(`  Description: ${agent.description ?? 'N/A'}`);
+   * }
+   * ```
    */
-  onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {
-    return this._sessionManager.onConnectionStatusChanged(handler);
+  @track('ConversationalAgent.GetAll')
+  async getAll(folderId?: number): Promise<AgentGetResponseWithMethods[]> {
+    const response = await this.get<AgentGetResponse[]>(AGENT_ENDPOINTS.LIST, {
+      params: folderId !== undefined ? { folderId } : undefined,
+    });
+    return response.data.map((agent) =>
+      createAgentWithMethods(transformData(agent, AgentMap) as AgentGetResponse, this.conversations)
+    );
   }
 
   /**
-   * Sets the log level for debugging
+   * Gets a specific agent by ID
    *
-   * @param level - Log level to set
+   * Returns the agent with helper methods attached via `createAgentByIdWithMethods()`.
+   * The returned agent has a `conversations.create()` method that simplifies
+   * creating conversations without manually passing `agentReleaseId` and `folderId`.
+   *
+   * @param id - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @returns Promise resolving to the agent details with helper methods
+   *
+   * @example Basic usage
+   * ```typescript
+   * const agent = await conversationalAgent.getById(agentId, folderId);
+   *
+   * // Create conversation directly from agent (agentReleaseId and folderId are auto-filled)
+   * const conversation = await agent.conversations.create();
+   * ```
+   *
+   * @example Complete workflow - agent to real-time chat
+   * ```typescript
+   * // Get specific agent
+   * const agent = await conversationalAgent.getById(123, 456);
+   *
+   * // Create conversation with label (agentReleaseId/folderId auto-filled)
+   * const conversation = await agent.conversations.create({
+   *   label: 'Customer Inquiry'
+   * });
+   *
+   * // Start real-time session
+   * const session = conversation.startSession();
+   *
+   * // Handle streaming responses using helper methods
+   * session.onExchangeStart((exchange) => {
+   *   exchange.onMessageStart((message) => {
+   *     // Filter for assistant messages only
+   *     if (message.isAssistant) {
+   *       message.onContentPartStart((part) => {
+   *         // Handle text content
+   *         if (part.isText) {
+   *           part.onChunk((chunk) => console.log(chunk.data));
+   *         }
+   *       });
+   *     }
+   *   });
+   * });
+   *
+   * // Send message
+   * session.sendPrompt({ text: 'What are your business hours?' });
+   * ```
    */
-  setLogLevel(level: LogLevel): void {
-    this._sessionManager.setLogLevel(level);
+  @track('ConversationalAgent.GetById')
+  async getById(id: number, folderId: number): Promise<AgentGetByIdResponseWithMethods> {
+    const response = await this.get<AgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
+    return createAgentByIdWithMethods(
+      transformData(response.data, AgentMap) as AgentGetByIdResponse,
+      this.conversations
+    );
   }
 
   /**
@@ -151,14 +202,56 @@ export class ConversationalAgentService extends BaseService implements Conversat
    *
    * @example
    * ```typescript
-   * const flags = await conversationalAgentService.getFeatureFlags();
-   * if (flags.audioStreamingEnabled) {
-   *   // Enable audio UI features
-   * }
+   * const flags = await conversationalAgent.getFeatureFlags();
    * ```
    */
   async getFeatureFlags(): Promise<FeatureFlags> {
     const response = await this.get<FeatureFlags>(FEATURE_ENDPOINTS.FEATURE_FLAGS);
     return response.data;
+  }
+
+  // ==================== Connection Management ====================
+
+  /**
+   * Disconnects from WebSocket and releases all session resources
+   *
+   * @example
+   * ```typescript
+   * conversationalAgent.disconnect();
+   * ```
+   */
+  disconnect(): void {
+    this.conversations.disconnectAll();
+  }
+
+  /**
+   * Current connection status
+   */
+  get connectionStatus(): ConnectionStatus {
+    return this.conversations.connectionStatus;
+  }
+
+  /**
+   * Whether WebSocket is connected
+   */
+  get isConnected(): boolean {
+    return this.conversations.isConnected;
+  }
+
+  /**
+   * Current connection error, if any
+   */
+  get connectionError(): Error | null {
+    return this.conversations.connectionError;
+  }
+
+  /**
+   * Registers a handler for connection status changes
+   *
+   * @param handler - Callback function to handle status changes
+   * @returns Cleanup function to remove handler
+   */
+  onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {
+    return this.conversations.onConnectionStatusChanged(handler);
   }
 }

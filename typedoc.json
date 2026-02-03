@@ -15,11 +15,11 @@
     "private": false,
     "inherited": false
   },
-  "excludeTags": ["@internal", "@ignore"],
+  "excludeTags": ["@ignore"],
   "sort": ["source-order"],
   "kindSortOrder": [
     "Document",
-    "Project", 
+    "Project",
     "Module",
     "Namespace",
     "Enum",
@@ -28,10 +28,10 @@
     "Interface",
     "TypeAlias",
     "Constructor",
-    "Property", 
-    "Variable",
-    "Function",
     "Method",
+    "Function",
+    "Variable",
+    "Property",
     "Accessor",
     "GetSignature",
     "SetSignature",
@@ -69,6 +69,7 @@
   "expandParameters": true,
   "hideBreadcrumbs": true,
   "hidePageHeader": true,
+  "groupOrder": ["Methods", "Properties"],
   "flattenOutputFiles": false,
   "mergeReadme": false
 }

@@ -11,10 +11,10 @@ import type { UserSettingsGetResponse, UserSettingsUpdateResponse, UserSettingsU
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
  *
  * ```typescript
- * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+ * import { User } from '@uipath/uipath-typescript/conversational-agent';
  *
- * const conversationalAgentService = new ConversationalAgent(sdk);
- * const userSettings = await conversationalAgentService.user.getSettings();
+ * const userService = new User(sdk);
+ * const userSettings = await userService.getSettings();
  * ```
  */
 export interface UserServiceModel {
@@ -25,7 +25,7 @@ export interface UserServiceModel {
    * {@link UserSettingsGetResponse}
    * @example
    * ```typescript
-   * const userSettings = await conversationalAgentService.user.getSettings();
+   * const userSettings = await userService.getSettings();
    * console.log(userSettings.name);
    * console.log(userSettings.email);
    * ```
@@ -40,7 +40,7 @@ export interface UserServiceModel {
    * {@link UserSettingsUpdateResponse}
    * @example
    * ```typescript
-   * const updatedUserSettings = await conversationalAgentService.user.updateSettings({
+   * const updatedUserSettings = await userService.updateSettings({
    *   name: 'John Doe',
    *   timezone: 'America/New_York'
    * });

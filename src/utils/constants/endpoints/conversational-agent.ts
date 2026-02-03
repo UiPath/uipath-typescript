@@ -2,7 +2,7 @@
  * Conversational Agent Service Endpoints
  */
 
-import { AUTOPILOT_BASE, LLM_OPS_BASE } from './base';
+import { AUTOPILOT_BASE } from './base';
 
 const API_VERSION = 'v1';
 
@@ -24,9 +24,7 @@ export const EXCHANGE_ENDPOINTS = {
   LIST: (conversationId: string) =>
     `${AUTOPILOT_BASE}/api/${API_VERSION}/conversation/${conversationId}/exchange`,
   GET: (conversationId: string, exchangeId: string) =>
-    `${AUTOPILOT_BASE}/api/${API_VERSION}/conversation/${conversationId}/exchange/${exchangeId}`,
-  CREATE_FEEDBACK: (conversationId: string, exchangeId: string) =>
-    `${AUTOPILOT_BASE}/api/${API_VERSION}/conversation/${conversationId}/exchange/${exchangeId}/feedback`
+    `${AUTOPILOT_BASE}/api/${API_VERSION}/conversation/${conversationId}/exchange/${exchangeId}`
 } as const;
 
 /**
@@ -67,11 +65,4 @@ export const USER_ENDPOINTS = {
  */
 export const FEATURE_ENDPOINTS = {
   FEATURE_FLAGS: `${AUTOPILOT_BASE}/api/utility/feature-flags`
-} as const;
-
-/**
- * Traces/LLM Ops Endpoints
- */
-export const TRACES_ENDPOINTS = {
-  GET_SPANS: (traceId: string) => `${LLM_OPS_BASE}/api/Traces/spans?traceId=${traceId}`
 } as const;

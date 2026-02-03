@@ -2,7 +2,7 @@
  * Types for Exchange Service
  */
 
-import type { SortOrder, FeedbackRating, Exchange, Message, ContentPart } from './core.types';
+import type { SortOrder, Exchange, Message, ContentPart } from './core.types';
 import type { PaginationOptions } from '@/utils/pagination/types';
 
 // ==================== Response Types ====================
@@ -63,14 +63,3 @@ export interface ExchangeGetByIdOptions {
   /** Index signature for QueryParams compatibility */
   [key: string]: SortOrder | undefined;
 }
-
-// ==================== Feedback Types ====================
-
-export interface CreateFeedbackOptions {
-  /** Rating for the exchange ('positive' or 'negative') */
-  rating: FeedbackRating;
-  /** Optional text comment for the feedback */
-  comment?: string;
-}
-
-export interface FeedbackCreateResponse {}

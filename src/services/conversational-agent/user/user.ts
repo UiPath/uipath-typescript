@@ -29,25 +29,25 @@ import { transformData } from '@/utils/transform';
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+ * import { User } from '@uipath/uipath-typescript/conversational-agent';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const conversationalAgentService = new ConversationalAgent(sdk);
+ * const userService = new User(sdk);
  *
  * // Get current user settings
- * const userSettings = await conversationalAgentService.user.getSettings();
+ * const userSettings = await userService.getSettings();
  * console.log(userSettings.name, userSettings.email, userSettings.timezone);
  *
  * // Update user settings
- * const updatedUserSettings = await conversationalAgentService.user.updateSettings({
+ * const updatedUserSettings = await userService.updateSettings({
  *   name: 'John Doe',
  *   timezone: 'America/New_York'
  * });
  *
  * // Clear a field by setting to null
- * await conversationalAgentService.user.updateSettings({
+ * await userService.updateSettings({
  *   department: null
  * });
  * ```
@@ -69,7 +69,7 @@ export class UserService extends BaseService implements UserServiceModel {
    *
    * @example
    * ```typescript
-   * const userSettings = await conversationalAgentService.user.getSettings();
+   * const userSettings = await userService.getSettings();
    * console.log(userSettings.name);      // User's name
    * console.log(userSettings.email);     // User's email
    * console.log(userSettings.timezone);  // User's timezone
@@ -94,19 +94,19 @@ export class UserService extends BaseService implements UserServiceModel {
    * @example
    * ```typescript
    * // Update specific fields
-   * const updatedUserSettings = await conversationalAgentService.user.updateSettings({
+   * const updatedUserSettings = await userService.updateSettings({
    *   name: 'John Doe',
    *   email: 'john@example.com',
    *   timezone: 'America/New_York'
    * });
    *
    * // Partial update - only change timezone
-   * await conversationalAgentService.user.updateSettings({
+   * await userService.updateSettings({
    *   timezone: 'Europe/London'
    * });
    *
    * // Clear fields by setting to null
-   * await conversationalAgentService.user.updateSettings({
+   * await userService.updateSettings({
    *   role: null,
    *   department: null
    * });

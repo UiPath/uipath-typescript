@@ -2,16 +2,17 @@
  * Types for Conversation Service
  */
 
-import type { ConversationGetResponse, SortOrder, ConversationJobStartOverrides } from './core.types';
+import type { SortOrder, ConversationJobStartOverrides, RawConversationGetResponse } from './core.types';
+import type { ConversationGetResponse } from './conversations.models';
 import type { PaginationOptions } from '@/utils/pagination/types';
 
 // ==================== Conversation Response Types ====================
 
-/** Response for creating a conversation */
+/** Response for creating a conversation (includes methods) */
 export type ConversationCreateResponse = ConversationGetResponse;
 
-/** Response for deleting a conversation */
-export type ConversationDeleteResponse = ConversationGetResponse;
+/** Response for deleting a conversation (raw data, no methods needed) */
+export type ConversationDeleteResponse = RawConversationGetResponse;
 
 // ==================== Conversation Request Types ====================
 

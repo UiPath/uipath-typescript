@@ -1,70 +1,229 @@
-import type { AgentServiceModel } from './agents';
+import type {
+  AgentGetResponseWithMethods,
+  AgentGetByIdResponseWithMethods
+} from './agents';
 import type { ConversationServiceModel } from './conversations';
-import type { UserServiceModel } from './user';
-import type { TraceServiceModel } from './traces';
+import type { FeatureFlags } from './feature-flags.types';
+import type { ConnectionStatus, ConnectionStatusChangedHandler } from '@/core/websocket';
 
 /**
  * Service for managing UiPath Conversational Agents
  *
  * Conversational Agents are AI-powered chat interfaces that enable natural language interactions
- * with UiPath automation. This service provides access to:
- *
- * - **agents** - List and retrieve available conversational agents
- * - **conversations** - Manage conversations, exchanges, messages, and attachments
- * - **events** - Real-time WebSocket streaming for live chat (see [Real-time Chat Guide](/uipath-typescript/real-time-chat/))
- * - **user** - Manage user profile and context settings
- * - **traces** - Access LLM Operations traces for observability
+ * with UiPath automation.
  *
  * ### Usage
  *
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
  *
  * ```typescript
- * import { UiPath } from '@uipath/uipath-typescript/core';
  * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
  *
- * const sdk = new UiPath(config);
- * await sdk.initialize();
- *
- * const conversationalAgentService = new ConversationalAgent(sdk);
+ * const conversationalAgent = new ConversationalAgent(sdk);
  *
  * // List available agents
- * const availableAgents = await conversationalAgentService.agents.getAll();
+ * const agents = await conversationalAgent.getAll();
  *
- * // Create a conversation
- * const conversation = await conversationalAgentService.conversations.create({
- *   agentReleaseId: availableAgents[0].id,
- *   folderId: availableAgents[0].folderId
+ * // Create a conversation with an agent
+ * const conversation = await conversationalAgent.conversations.create({
+ *   agentReleaseId: agents[0].id,
+ *   folderId: agents[0].folderId
  * });
  *
- * // Start real-time chat session (see Real-time Chat Guide)
- * const session = conversationalAgentService.events.startSession({
- *   conversationId: conversation.id
- * });
+ * // Start real-time chat session
+ * const session = conversation.startSession();
  * ```
  */
 export interface ConversationalAgentServiceModel {
   /**
-   * Service for listing and retrieving conversational agents
-   * {@link AgentServiceModel}
+   * Gets all available conversational agents
+   *
+   * Returns agents with helper methods attached via `createAgentWithMethods()`.
+   * Each agent has a `conversations.create()` method that simplifies
+   * creating conversations without manually passing `agentReleaseId` and `folderId`.
+   *
+   * @param folderId - Optional folder ID to filter agents
+   * @returns Promise resolving to an array of agents with helper methods
+   * {@link AgentGetResponseWithMethods}
+   *
+   * @example Basic usage - get agents and create conversation
+   * ```typescript
+   * const agents = await conversationalAgent.getAll();
+   * const agent = agents[0];
+   *
+   * // Create conversation directly from agent (agentReleaseId and folderId are auto-filled)
+   * const conversation = await agent.conversations.create({ label: 'My Chat' });
+   * ```
+   *
+   * @example Complete workflow - agent to session with real-time chat
+   * ```typescript
+   * // Get all agents
+   * const agents = await conversationalAgent.getAll();
+   * const agent = agents.find(a => a.name === 'Customer Support Bot');
+   *
+   * // Create conversation (no need to pass agentReleaseId/folderId - auto-filled)
+   * const conversation = await agent.conversations.create({
+   *   label: 'Support Session'
+   * });
+   *
+   * // Start real-time session
+   * const session = conversation.startSession();
+   *
+   * // Listen for AI responses using helper methods
+   * session.onExchangeStart((exchange) => {
+   *   exchange.onMessageStart((message) => {
+   *     // Use message.isAssistant to filter AI responses
+   *     if (message.isAssistant) {
+   *       message.onContentPartStart((part) => {
+   *         // Use part.isText to check content type
+   *         if (part.isText) {
+   *           part.onChunk((chunk) => {
+   *             process.stdout.write(chunk.data ?? '');
+   *           });
+   *         }
+   *       });
+   *     }
+   *   });
+   * });
+   *
+   * // Send user prompt
+   * session.sendPrompt({ text: 'Hello, I need help with my order' });
+   * ```
+   *
+   * @example Filter agents by folder
+   * ```typescript
+   * // Get agents from a specific folder
+   * const agents = await conversationalAgent.getAll(123);
+   * ```
+   *
+   * @example Accessing agent properties (from AgentGetResponse)
+   * ```typescript
+   * const agents = await conversationalAgent.getAll();
+   * for (const agent of agents) {
+   *   console.log(`Agent: ${agent.name}`);
+   *   console.log(`  ID: ${agent.id}`);
+   *   console.log(`  Folder ID: ${agent.folderId}`);
+   *   console.log(`  Description: ${agent.description ?? 'N/A'}`);
+   * }
+   * ```
    */
-  readonly agents: AgentServiceModel;
+  getAll(folderId?: number): Promise<AgentGetResponseWithMethods[]>;
 
   /**
-   * Service for managing conversations and related operations
-   * {@link ConversationServiceModel}
+   * Gets a specific agent by ID
+   *
+   * Returns the agent with helper methods attached via `createAgentByIdWithMethods()`.
+   * The returned agent has a `conversations.create()` method that simplifies
+   * creating conversations without manually passing `agentReleaseId` and `folderId`.
+   *
+   * @param id - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @returns Promise resolving to the agent with helper methods
+   * {@link AgentGetByIdResponseWithMethods}
+   *
+   * @example Basic usage
+   * ```typescript
+   * const agent = await conversationalAgent.getById(agentId, folderId);
+   *
+   * // Create conversation directly from agent (agentReleaseId and folderId are auto-filled)
+   * const conversation = await agent.conversations.create();
+   * ```
+   *
+   * @example Complete workflow - agent to real-time chat
+   * ```typescript
+   * // Get specific agent
+   * const agent = await conversationalAgent.getById(123, 456);
+   *
+   * // Create conversation with label (agentReleaseId/folderId auto-filled)
+   * const conversation = await agent.conversations.create({
+   *   label: 'Customer Inquiry'
+   * });
+   *
+   * // Start real-time session
+   * const session = conversation.startSession();
+   *
+   * // Handle streaming responses using helper methods
+   * session.onExchangeStart((exchange) => {
+   *   exchange.onMessageStart((message) => {
+   *     // Filter for assistant messages only
+   *     if (message.isAssistant) {
+   *       message.onContentPartStart((part) => {
+   *         // Handle text content
+   *         if (part.isText) {
+   *           part.onChunk((chunk) => console.log(chunk.data));
+   *         }
+   *       });
+   *     }
+   *   });
+   * });
+   *
+   * // Send message
+   * session.sendPrompt({ text: 'What are your business hours?' });
+   * ```
+   */
+  getById(id: number, folderId: number): Promise<AgentGetByIdResponseWithMethods>;
+
+  /**
+   * Service for managing conversations
+   * @internal
    */
   readonly conversations: ConversationServiceModel;
 
-  /**
-   * Service for managing user profile and context settings
-   * {@link UserServiceModel}
-   */
-  readonly user: UserServiceModel;
+  // ==================== Feature Flags ====================
 
   /**
-   * Service for accessing LLM Operations traces
-   * {@link TraceServiceModel}
+   * Gets feature flags for the current tenant
+   *
+   * @returns Promise resolving to feature flags object
+   * @example
+   * ```typescript
+   * const flags = await conversationalAgent.getFeatureFlags();
+   * ```
    */
-  readonly traces: TraceServiceModel;
+  getFeatureFlags(): Promise<FeatureFlags>;
+
+  // ==================== Connection Management ====================
+
+  /**
+   * Disconnects from WebSocket and releases all session resources
+   *
+   * @example
+   * ```typescript
+   * conversationalAgent.disconnect();
+   * ```
+   */
+  disconnect(): void;
+
+  /**
+   * Current connection status
+   * {@link ConnectionStatus}
+   */
+  readonly connectionStatus: ConnectionStatus;
+
+  /**
+   * Whether WebSocket is connected
+   */
+  readonly isConnected: boolean;
+
+  /**
+   * Current connection error, if any
+   */
+  readonly connectionError: Error | null;
+
+  /**
+   * Registers a handler for connection status changes
+   *
+   * @param handler - Callback function to handle status changes
+   * @returns Cleanup function to remove handler
+   * @example
+   * ```typescript
+   * const cleanup = conversationalAgent.onConnectionStatusChanged((status) => {
+   *   console.log('Connection status:', status);
+   * });
+   *
+   * // Later, remove the handler
+   * cleanup();
+   * ```
+   */
+  onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void;
 }

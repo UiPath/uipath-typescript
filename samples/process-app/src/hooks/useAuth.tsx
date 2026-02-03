@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { 
   UiPath,
   UiPathError
-} from '@uipath/uipath-typescript';
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript';
+} from '@uipath/uipath-typescript/core';
+import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;

@@ -38,19 +38,19 @@ import { transformMessage, ContentPartHelper } from '@/services/conversational-a
  *
  * @example
  * ```typescript
+ * import { Messages } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const messagesService = new Messages(sdk);
+ *
  * // Get a specific message
- * const messageDetails = await conversationalAgentService.conversations.messages.getById(
- *   conversationId,
- *   exchangeId,
- *   messageId
- * );
+ * const messageDetails = await messagesService.getById(conversationId, exchangeId, messageId);
  *
  * // Access content via helpers
  * const messageText = messageDetails.getTextContent();
  * const messageToolCalls = messageDetails.getToolCalls();
  *
  * // Get external content part data
- * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
+ * const contentPartDetails = await messagesService.getContentPartById(
  *   conversationId,
  *   exchangeId,
  *   messageId,
@@ -81,11 +81,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    *
    * @example
    * ```typescript
-   * const messageDetails = await conversationalAgentService.conversations.messages.getById(
-   *   conversationId,
-   *   exchangeId,
-   *   messageId
-   * );
+   * const messageDetails = await messagesService.getById(conversationId, exchangeId, messageId);
    *
    * // Get all text content concatenated
    * const messageText = messageDetails.getTextContent();
@@ -129,7 +125,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * @example
    * ```typescript
    * // Get an external content part (file/attachment)
-   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
+   * const contentPartDetails = await messagesService.getContentPartById(
    *   conversationId,
    *   exchangeId,
    *   messageId,
