@@ -21,7 +21,6 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sdk, setSdk] = useState<UiPath>(() => new UiPath(config));
-  console.log('config: ', config);
 
   useEffect(() => {
     const initializeAuth = async () => {
