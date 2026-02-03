@@ -19,9 +19,10 @@ import {
 } from '../../../utils/mocks';
 import { createMockBaseResponse } from '../../../utils/mocks/core';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
-import type { 
+import type {
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
+  CaseInstanceReopenOptions,
   CaseInstanceGetResponse
 } from '../../../../src/models/maestro';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
@@ -222,8 +223,10 @@ describe('CaseInstancesService', () => {
       // Verify operation methods are attached
       expect(result).toHaveProperty('close');
       expect(result).toHaveProperty('pause');
+      expect(result).toHaveProperty('reopen');
       expect(typeof result.pause).toBe('function');
       expect(typeof result.resume).toBe('function');
+      expect(typeof result.reopen).toBe('function');
       expect(result).toHaveProperty('getExecutionHistory');
       expect(result).toHaveProperty('getStages');
       expect(result).toHaveProperty('getActionTasks');
@@ -519,12 +522,12 @@ describe('CaseInstancesService', () => {
   });
 
   describe('reopen', () => {
-    it('should reopen case instance successfully with startElementId and comment', async () => {
+    it('should reopen case instance successfully with stageId and comment', async () => {
       const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
       const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
-      const request = {
-        startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
-        comment: 'Reopening case instance'
+      const options: CaseInstanceReopenOptions = {
+        stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
+        comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT
       };
       const mockApiResponse = createMockMaestroApiOperationResponse({
         status: TEST_CONSTANTS.RUNNING
@@ -532,11 +535,15 @@ describe('CaseInstancesService', () => {
 
       mockApiClient.post.mockResolvedValue(mockApiResponse);
 
-      const result = await service.reopen(instanceId, folderKey, request);
+      const result = await service.reopen(instanceId, folderKey, options);
 
+      // Verify API is called with transformed request body (PascalCase)
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.CASES.REOPEN_CASE(instanceId),
-        request,
+        MAESTRO_ENDPOINTS.CASES.REOPEN(instanceId),
+        {
+          StartElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
+          Comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT
+        },
         {
           headers: expect.objectContaining({
             [FOLDER_KEY]: folderKey
@@ -548,11 +555,11 @@ describe('CaseInstancesService', () => {
       expect(result.data).toEqual(mockApiResponse);
     });
 
-    it('should reopen case instance with only startElementId', async () => {
+    it('should reopen case instance with only stageId', async () => {
       const instanceId = MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID;
       const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
-      const request = {
-        startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+      const options: CaseInstanceReopenOptions = {
+        stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
       };
       const mockApiResponse = createMockMaestroApiOperationResponse({
         status: TEST_CONSTANTS.RUNNING
@@ -560,11 +567,14 @@ describe('CaseInstancesService', () => {
 
       mockApiClient.post.mockResolvedValue(mockApiResponse);
 
-      const result = await service.reopen(instanceId, folderKey, request);
+      const result = await service.reopen(instanceId, folderKey, options);
 
+      // Verify API is called with transformed request body (PascalCase, no Comment)
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.CASES.REOPEN_CASE(instanceId),
-        request,
+        MAESTRO_ENDPOINTS.CASES.REOPEN(instanceId),
+        {
+          StartElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+        },
         {
           headers: expect.objectContaining({
             [FOLDER_KEY]: folderKey
@@ -580,14 +590,14 @@ describe('CaseInstancesService', () => {
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      const request = {
-        startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+      const options: CaseInstanceReopenOptions = {
+        stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
       };
 
       await expect(service.reopen(
         MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
         MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-        request
+        options
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

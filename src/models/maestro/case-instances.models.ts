@@ -3,7 +3,7 @@ import {
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
-  CaseInstanceReopenRequest,
+  CaseInstanceReopenOptions,
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse
 } from './case-instances.types';
@@ -136,30 +136,36 @@ export interface CaseInstancesServiceModel {
    * Reopen a case instance from a specified element
    * @param instanceId - The ID of the case instance
    * @param folderKey - Required folder key
-   * @param request - Reopen request containing startElementId (the stage ID to resume from) and an optional comment
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
    * @returns Promise resolving to operation result with instance data
+   * {@link CaseInstanceOperationResponse}
    * @example
    * ```typescript
+   * // First, get the available stages for the case instance
+   * const stages = await sdk.maestro.cases.instances.getStages('<instanceId>', '<folderKey>');
+   * const stageId = stages[0].id; // Select the stage to reopen from
+   *
    * // Reopen a case instance from a specific stage
    * const result = await sdk.maestro.cases.instances.reopen(
    *   '<instanceId>',
    *   '<folderKey>',
-   *   { startElementId: '<stageId>' }
+   *   { stageId }
    * );
    *
    * // Reopen with a comment
    * const result = await sdk.maestro.cases.instances.reopen(
    *   '<instanceId>',
    *   '<folderKey>',
-   *   { startElementId: '<stageId>', comment: 'Reopening to retry failed stage' }
+   *   { stageId, comment: 'Reopening to retry failed stage' }
    * );
    *
    * // Or using instance method
    * const instance = await sdk.maestro.cases.instances.getById('<instanceId>', '<folderKey>');
-   * const result = await instance.reopen({ startElementId: '<stageId>' });
+   * const stages = await instance.getStages();
+   * const result = await instance.reopen({ stageId: stages[0].id });
    * ```
    */
-  reopen(instanceId: string, folderKey: string, request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+  reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
    * Resume a case instance
@@ -294,10 +300,10 @@ export interface CaseInstanceMethods {
   /**
    * Reopens this case instance from a specified element
    *
-   * @param request - Reopen request containing startElementId (the stage ID to resume from) and an optional comment
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
    * @returns Promise resolving to operation result
    */
-  reopen(request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+  reopen(options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
    * Resumes this case instance
@@ -362,11 +368,11 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       return service.pause(instanceData.instanceId, instanceData.folderKey, options);
     },
 
-    async reopen(request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+    async reopen(options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
 
-      return service.reopen(instanceData.instanceId, instanceData.folderKey, request);
+      return service.reopen(instanceData.instanceId, instanceData.folderKey, options);
     },
 
     async resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {

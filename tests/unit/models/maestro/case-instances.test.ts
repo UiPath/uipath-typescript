@@ -13,7 +13,7 @@ import {
 } from '../../../utils/mocks';
 import type {
   CaseInstanceOperationOptions,
-  CaseInstanceReopenRequest,
+  CaseInstanceReopenOptions,
 } from '../../../../src/models/maestro/case-instances.types';
 
 // ===== TEST SUITE =====
@@ -220,9 +220,9 @@ describe('Case Instance Models', () => {
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           status: TEST_CONSTANTS.RUNNING
         });
-        const request: CaseInstanceReopenRequest = {
-          startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
-          comment: 'Reopening case'
+        const request: CaseInstanceReopenOptions = {
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
+          comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT
         };
         mockService.reopen = vi.fn().mockResolvedValue(mockResponse);
 
@@ -235,7 +235,7 @@ describe('Case Instance Models', () => {
         );
       });
 
-      it('should call caseInstance.reopen with only startElementId', async () => {
+      it('should call caseInstance.reopen with only stageId', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
 
@@ -243,8 +243,8 @@ describe('Case Instance Models', () => {
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           status: TEST_CONSTANTS.RUNNING
         });
-        const request: CaseInstanceReopenRequest = {
-          startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+        const request: CaseInstanceReopenOptions = {
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
         };
         mockService.reopen = vi.fn().mockResolvedValue(mockResponse);
 
@@ -263,8 +263,8 @@ describe('Case Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
 
-        const request: CaseInstanceReopenRequest = {
-          startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+        const request: CaseInstanceReopenOptions = {
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
         };
 
         await expect(invalidInstance.reopen(request)).rejects.toThrow('Case instance ID is undefined');
@@ -275,8 +275,8 @@ describe('Case Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
 
-        const request: CaseInstanceReopenRequest = {
-          startElementId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+        const request: CaseInstanceReopenOptions = {
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
         };
 
         await expect(invalidInstance.reopen(request)).rejects.toThrow('Case instance folder key is undefined');

@@ -6,7 +6,7 @@ import {
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
-  CaseInstanceReopenRequest,
+  CaseInstanceReopenOptions,
   CaseInstancesServiceModel,
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
@@ -144,7 +144,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   }
 
   /**
-   * Get a case instance by ID with operation methods (close, pause, resume)
+   * Get a case instance by ID with operation methods (close, pause, resume, reopen)
    * @param instanceId - The ID of the instance to retrieve
    * @param folderKey - Required folder key
    * @returns Promise<CaseInstanceGetResponse>
@@ -279,12 +279,18 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * Reopen a case instance from a specified element
    * @param instanceId - The ID of the case instance to reopen
    * @param folderKey - Required folder key
-   * @param request - Reopen request containing startElementId (the stage ID to resume from) and an optional comment
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
    * @returns Promise resolving to operation result with updated instance data
    */
   @track('CaseInstances.Reopen')
-  async reopen(instanceId: string, folderKey: string, request: CaseInstanceReopenRequest): Promise<OperationResponse<CaseInstanceOperationResponse>> {
-    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.CASES.REOPEN_CASE(instanceId), request || {}, {
+  async reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+    // Transform SDK options to API request format
+    const requestBody = {
+      StartElementId: options.stageId,
+      ...(options.comment && { Comment: options.comment })
+    };
+
+    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.CASES.REOPEN(instanceId), requestBody, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
 
