@@ -70,12 +70,17 @@ export interface EntityServiceModel {
 
   /**
    * Gets entity metadata by entity ID with attached operation methods
-   * 
+   *
    * @param id - UUID of the entity
    * @returns Promise resolving to entity metadata with operation methods
    * {@link EntityGetResponse}
    * @example
    * ```typescript
+   * import { Entities, ChoiceSets } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   * const choicesets = new ChoiceSets(sdk);
+   *
    * // Get entity metadata with methods
    * const entity = await entities.getById(<entityId>);
    *
