@@ -196,12 +196,7 @@ export class UiPath {
    * Access to Entity service
    */
   get entities() {
-    return Object.assign(this.getService(EntityService), {
-      /**
-       * Access to ChoiceSet service for managing choice sets
-       */
-      choicesets: this.getService(ChoiceSetService)
-    });
+    return this.getService(EntityService);
   }
 
   /**
@@ -237,6 +232,13 @@ export class UiPath {
    */
   get assets(): AssetService {
     return this.getService(AssetService);
+  }
+
+  /**
+   * Access to ChoiceSets service
+   */
+  get choicesets(): ChoiceSetService {
+    return this.getService(ChoiceSetService);
   }
 }
 

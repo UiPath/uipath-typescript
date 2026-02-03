@@ -19,7 +19,7 @@ export interface ChoiceSetServiceModel {
    * @example
    * ```typescript
    * // Get all choice sets
-   * const choiceSets = await sdk.entities.choicesets.getAll();
+   * const choiceSets = await sdk.choicesets.getAll();
    *
    * // Iterate through choice sets
    * choiceSets.forEach(choiceSet => {
@@ -54,12 +54,12 @@ export interface ChoiceSetServiceModel {
    * @example
    * ```typescript
    * // First, get the choice set ID using getAll()
-   * const choiceSets = await sdk.entities.choicesets.getAll();
+   * const choiceSets = await sdk.choicesets.getAll();
    * const expenseTypes = choiceSets.find(cs => cs.name === 'ExpenseTypes');
    * const choiceSetId = expenseTypes.id;
    *
    * // Get all values (non-paginated)
-   * const values = await sdk.entities.choicesets.getById(choiceSetId);
+   * const values = await sdk.choicesets.getById(choiceSetId);
    *
    * // Iterate through choice set values
    * for (const value of values.items) {
@@ -67,11 +67,11 @@ export interface ChoiceSetServiceModel {
    * }
    *
    * // First page with pagination
-   * const page1 = await sdk.entities.choicesets.getById(choiceSetId, { pageSize: 10 });
+   * const page1 = await sdk.choicesets.getById(choiceSetId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.entities.choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
+   *   const page2 = await sdk.choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
    * }
    * ```
    */

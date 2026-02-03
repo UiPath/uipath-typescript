@@ -75,7 +75,7 @@ export interface EntityServiceModel {
    * // If a field references a ChoiceSet, get the choiceSetId from records.fields
    * const choiceSetId = records.fields[0].referenceChoiceSet?.id;
    * if (choiceSetId) {
-   *   const choiceSetValues = await sdk.entities.choicesets.getById(choiceSetId);
+   *   const choiceSetValues = await sdk.choicesets.getById(choiceSetId);
    * }
    *
    * // Insert a single record

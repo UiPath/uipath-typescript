@@ -156,6 +156,7 @@ nav:
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
           - Entities: api/interfaces/EntityServiceModel.md
+          - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
           - Maestro:
             - Processes: api/interfaces/MaestroProcessesServiceModel.md
             - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
