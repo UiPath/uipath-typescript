@@ -18,7 +18,7 @@ permissions:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,21 +32,67 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Run Tests
+      - name: Run Unit Tests
         run: npm run test:coverage -- --run
 
       - name: Build Project
         run: npm run build
+
+      - name: Set Integration Test Configuration
+        if: github.base_ref == 'develop'
+        id: config
+        run: |
+          # Configuration for develop branch
+          echo "env_name=development" >> $GITHUB_OUTPUT
+          echo "base_url=${{ secrets.UIPATH_BASE_URL_DEV || secrets.UIPATH_BASE_URL }}" >> $GITHUB_OUTPUT
+          echo "org_name=${{ secrets.UIPATH_ORG_NAME_DEV || secrets.UIPATH_ORG_NAME }}" >> $GITHUB_OUTPUT
+          echo "tenant_name=${{ secrets.UIPATH_TENANT_NAME_DEV || secrets.UIPATH_TENANT_NAME }}" >> $GITHUB_OUTPUT
+          echo "secret=${{ secrets.UIPATH_SECRET_DEV || secrets.UIPATH_SECRET }}" >> $GITHUB_OUTPUT
+          echo "integration_test_folder_id=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER }}" >> $GITHUB_OUTPUT
+
+      - name: Create Integration Test Configuration
+        if: github.base_ref == 'develop'
+        run: |
+          cat > tests/.env.integration << EOF
+          # Auto-generated configuration for development environment
+          # Target branch: ${{ github.base_ref }}
+          UIPATH_BASE_URL=${{ steps.config.outputs.base_url }}
+          UIPATH_ORG_NAME=${{ steps.config.outputs.org_name }}
+          UIPATH_TENANT_NAME=${{ steps.config.outputs.tenant_name }}
+          UIPATH_SECRET=${{ steps.config.outputs.secret }}
+          INTEGRATION_TEST_TIMEOUT=30000
+          INTEGRATION_TEST_SKIP_CLEANUP=false
+          INTEGRATION_TEST_FOLDER_ID=${{ steps.config.outputs.integration_test_folder_id }}
+          EOF
+
+      - name: Run Integration Tests
+        if: github.base_ref == 'develop'
+        run: npm run test:integration -- --run
+        env:
+          # Pass configuration through environment variables as well (backup method)
+          UIPATH_BASE_URL: ${{ steps.config.outputs.base_url }}
+          UIPATH_ORG_NAME: ${{ steps.config.outputs.org_name }}
+          UIPATH_TENANT_NAME: ${{ steps.config.outputs.tenant_name }}
+          UIPATH_SECRET: ${{ steps.config.outputs.secret }}
+          INTEGRATION_TEST_FOLDER_ID: ${{ steps.config.outputs.integration_test_folder_id }}
 
       - name: Generate Summary
         if: success()
         run: |
           echo "## ✅ PR Checks Passed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Branch:** \`${{ github.base_ref }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.base_ref }}" == "develop" ]; then
+            echo "**Environment:** \`development\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Completed Checks:" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Dependencies installed successfully" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ All unit tests passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.base_ref }}" == "develop" ]; then
+            echo "- ✅ All integration tests passed" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Your pull request is ready for review!" >> $GITHUB_STEP_SUMMARY
 
@@ -54,6 +100,11 @@ jobs:
         if: failure()
         run: |
           echo "## ❌ PR Checks Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Branch:** \`${{ github.base_ref }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.base_ref }}" == "develop" ]; then
+            echo "**Environment:** \`development\`" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Please review the logs above to identify and fix the issues." >> $GITHUB_STEP_SUMMARY
 

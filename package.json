@@ -129,6 +129,10 @@
         "docs:api": "typedoc",
         "test": "vitest",
         "test:unit": "vitest tests/unit",
+        "test:integration": "vitest tests/integration --config vitest.integration.config.ts",
+        "test:integration:smoke": "vitest tests/integration/smoke --config vitest.integration.config.ts",
+        "test:integration:watch": "vitest tests/integration --config vitest.integration.config.ts --watch",
+        "test:all": "npm run test:unit && npm run test:integration",
         "test:watch": "vitest --watch",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest --coverage"
