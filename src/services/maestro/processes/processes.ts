@@ -29,19 +29,20 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   /**
    * Get all processes with their instance statistics
    * @returns Promise resolving to array of MaestroProcess objects
-   * 
+   *
    * @example
    * ```typescript
-   * // Get all processes
-   * const processes = await sdk.maestro.processes.getAll();
-   * 
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   * const processes = await maestroProcesses.getAll();
+   *
    * // Access process information
    * for (const process of processes) {
    *   console.log(`Process: ${process.processKey}`);
    *   console.log(`Running instances: ${process.runningCount}`);
    *   console.log(`Faulted instances: ${process.faultedCount}`);
    * }
-   * 
    * ```
    */
   @track('MaestroProcesses.GetAll')

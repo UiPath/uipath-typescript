@@ -36,22 +36,26 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * 
    * @example
    * ```typescript
+   * import { Assets } from '@uipath/uipath-typescript/assets';
+   *
+   * const assets = new Assets(sdk);
+   *
    * // Standard array return
-   * const assets = await sdk.assets.getAll();
-   * 
+   * const allAssets = await assets.getAll();
+   *
    * // With folder
-   * const folderAssets = await sdk.assets.getAll({ folderId: 123 });
-   * 
+   * const folderAssets = await assets.getAll({ folderId: 123 });
+   *
    * // First page with pagination
-   * const page1 = await sdk.assets.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await assets.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.assets.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await assets.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.assets.getAll({
+   * const page5 = await assets.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -97,8 +101,12 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * 
    * @example
    * ```typescript
+   * import { Assets } from '@uipath/uipath-typescript/assets';
+   *
+   * const assets = new Assets(sdk);
+   *
    * // Get asset by ID
-   * const asset = await sdk.assets.getById(123, 456);
+   * const asset = await assets.getById(123, 456);
    * ```
    */
   @track('Assets.GetById')

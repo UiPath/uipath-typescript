@@ -23,19 +23,20 @@ export class CasesService extends BaseService implements CasesServiceModel {
   /**
    * Get all case management processes with their instance statistics
    * @returns Promise resolving to array of Case objects
-   * 
+   *
    * @example
    * ```typescript
-   * // Get all case management processes
-   * const cases = await sdk.maestro.cases.getAll();
-   * 
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   * const allCases = await cases.getAll();
+   *
    * // Access case information
-   * for (const caseProcess of cases) {
+   * for (const caseProcess of allCases) {
    *   console.log(`Case Process: ${caseProcess.processKey}`);
    *   console.log(`Running instances: ${caseProcess.runningCount}`);
    *   console.log(`Completed instances: ${caseProcess.completedCount}`);
    * }
-   * 
    * ```
    */
   @track('Cases.GetAll')

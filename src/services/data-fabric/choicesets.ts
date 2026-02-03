@@ -27,8 +27,12 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * @example
    * ```typescript
+   * import { ChoiceSets } from '@uipath/uipath-typescript/choicesets';
+   *
+   * const choiceSets = new ChoiceSets(sdk);
+   *
    * // Get all choice sets
-   * const allChoiceSets = await choicesets.getAll();
+   * const allChoiceSets = await choiceSets.getAll();
    *
    * // Iterate through choice sets
    * allChoiceSets.forEach(choiceSet => {
@@ -63,13 +67,17 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * @example
    * ```typescript
+   * import { ChoiceSets } from '@uipath/uipath-typescript/choicesets';
+   *
+   * const choiceSets = new ChoiceSets(sdk);
+   *
    * // First, get the choice set ID using getAll()
-   * const allChoiceSets = await choicesets.getAll();
+   * const allChoiceSets = await choiceSets.getAll();
    * const expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');
    * const choiceSetId = expenseTypes.id;
    *
    * // Get all values (non-paginated)
-   * const values = await choicesets.getById(choiceSetId);
+   * const values = await choiceSets.getById(choiceSetId);
    *
    * // Iterate through choice set values
    * for (const value of values.items) {
@@ -77,11 +85,11 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * }
    *
    * // First page with pagination
-   * const page1 = await choicesets.getById(choiceSetId, { pageSize: 10 });
+   * const page1 = await choiceSets.getById(choiceSetId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
+   *   const page2 = await choiceSets.getById(choiceSetId, { cursor: page1.nextCursor });
    * }
    * ```
    */

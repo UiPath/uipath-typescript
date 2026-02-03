@@ -14,14 +14,16 @@ import type { ProcessIncidentsServiceModel } from '../../../models/maestro/proce
 export class ProcessIncidentsService extends BaseService implements ProcessIncidentsServiceModel {
   /**
    * Get all process incidents across all folders
-   * 
+   *
    * @returns Promise resolving to array of process incident
    * {@link ProcessIncidentGetAllResponse}
    * @example
    * ```typescript
-   * // Get all process incidents across all folders
-   * const incidents = await sdk.maestro.processes.incidents.getAll();
-   * 
+   * import { ProcessIncidents } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const processIncidents = new ProcessIncidents(sdk);
+   * const incidents = await processIncidents.getAll();
+   *
    * // Access process incident information
    * for (const incident of incidents) {
    *   console.log(`Process: ${incident.processKey}`);

@@ -64,7 +64,7 @@ export class BaseService {
    *
    * const sdk = new UiPath(config);
    * await sdk.initialize();
-   * const entitiesService = new Entities(sdk);
+   * const entities = new Entities(sdk);
    * ```
    */
   constructor(instance: IUiPath) {

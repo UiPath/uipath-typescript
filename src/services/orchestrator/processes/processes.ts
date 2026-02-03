@@ -45,29 +45,33 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
    * // Standard array return
-   * const processes = await sdk.processes.getAll();
-   * 
+   * const allProcesses = await processes.getAll();
+   *
    * // Get processes within a specific folder
-   * const processes = await sdk.processes.getAll({ 
+   * const folderProcesses = await processes.getAll({
    *   folderId: 123
    * });
-   * 
+   *
    * // Get processes with filtering
-   * const processes = await sdk.processes.getAll({ 
+   * const filteredProcesses = await processes.getAll({
    *   filter: "name eq 'MyProcess'"
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.processes.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await processes.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.processes.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await processes.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.processes.getAll({
+   * const page5 = await processes.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -113,13 +117,17 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
    * // Start a process by process key
-   * const jobs = await sdk.processes.start({
+   * const jobs = await processes.start({
    *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
    * }, 123); // folderId is required
-   * 
+   *
    * // Start a process by name with specific robots
-   * const jobs = await sdk.processes.start({
+   * const jobs = await processes.start({
    *   processName: "MyProcess"
    * }, 123); // folderId is required
    * ```
@@ -177,8 +185,12 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
    * // Get process by ID
-   * const process = await sdk.processes.getById(123, 456);
+   * const process = await processes.getById(123, 456);
    * ```
    */
   @track('Processes.GetById')

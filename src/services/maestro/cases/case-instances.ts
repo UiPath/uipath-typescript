@@ -55,37 +55,41 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
 
   /**
    * Get all case instances with optional filtering and pagination
-   * 
+   *
    * The method returns either:
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param options -Query parameters for filtering instances and pagination
    * @returns Promise resolving to case instances or paginated result
-   * 
+   *
    * @example
    * ```typescript
+   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   *
    * // Get all case instances (non-paginated)
-   * const instances = await sdk.maestro.cases.instances.getAll();
-   * 
+   * const instances = await caseInstances.getAll();
+   *
    * // Close faulted instances using methods directly on instances
    * for (const instance of instances.items) {
    *   if (instance.latestRunStatus === 'Faulted') {
    *     await instance.close({ comment: 'Closing faulted case instance' });
    *   }
    * }
-   * 
+   *
    * // With filtering
-   * const instances = await sdk.maestro.cases.instances.getAll({
+   * const filtered = await caseInstances.getAll({
    *   processKey: 'MyCaseProcess'
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.maestro.cases.instances.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await caseInstances.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.maestro.cases.instances.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await caseInstances.getAll({ cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -296,8 +300,10 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @returns Promise resolving to instance execution history
    * @example
    * ```typescript
-   * // Get execution history for a case instance
-   * const history = await sdk.maestro.cases.instances.getExecutionHistory(
+   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   * const history = await caseInstances.getExecutionHistory(
    *   'instance-id',
    *   'folder-key'
    * );

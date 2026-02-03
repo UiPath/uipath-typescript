@@ -47,8 +47,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Get bucket by ID
-   * const bucket = await sdk.buckets.getById(123, 456);
+   * const bucket = await buckets.getById(123, 456);
    * ```
    */
   @track('Buckets.GetById')
@@ -91,29 +95,33 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Get all buckets across folders
-   * const buckets = await sdk.buckets.getAll();
-   * 
+   * const allBuckets = await buckets.getAll();
+   *
    * // Get buckets within a specific folder
-   * const buckets = await sdk.buckets.getAll({ 
+   * const folderBuckets = await buckets.getAll({
    *   folderId: 123
    * });
-   * 
+   *
    * // Get buckets with filtering
-   * const buckets = await sdk.buckets.getAll({ 
+   * const filteredBuckets = await buckets.getAll({
    *   filter: "name eq 'MyBucket'"
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.buckets.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await buckets.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.buckets.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await buckets.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.buckets.getAll({
+   * const page5 = await buckets.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -163,20 +171,24 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Get metadata for all files in a bucket
-   * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456);
-   * 
+   * const fileMetadata = await buckets.getFileMetaData(123, 456);
+   *
    * // Get file metadata with a specific prefix
-   * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456, {
+   * const fileMetadata = await buckets.getFileMetaData(123, 456, {
    *   prefix: '/folder1'
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.buckets.getFileMetaData(123, 456, { pageSize: 10 });
-   * 
+   * const page1 = await buckets.getFileMetaData(123, 456, { pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.buckets.getFileMetaData(123, 456, { cursor: page1.nextCursor });
+   *   const page2 = await buckets.getFileMetaData(123, 456, { cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -227,18 +239,22 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Upload a file from browser
    * const file = new File(['file content'], 'example.txt');
-   * const result = await sdk.buckets.uploadFile({
+   * const result = await buckets.uploadFile({
    *   bucketId: 123,
-   *   folderId: 456, 
+   *   folderId: 456,
    *   path: '/folder/example.txt',
    *   content: file
    * });
-   * 
+   *
    * // In Node env with Buffer
    * const buffer = Buffer.from('file content');
-   * const result = await sdk.buckets.uploadFile({
+   * const result = await buckets.uploadFile({
    *   bucketId: 123,
    *   folderId: 456,
    *   path: '/folder/example.txt',
@@ -294,9 +310,13 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Get download URL for a file
-   * const fileAccess = await sdk.buckets.getReadUri({
-   *   bucketId: 123, 
+   * const fileAccess = await buckets.getReadUri({
+   *   bucketId: 123,
    *   folderId: 456,
    *   path: '/folder/file.pdf'
    * });

@@ -42,18 +42,20 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Gets entity metadata by entity ID with attached operation methods
-   * 
+   *
    * @param id - UUID of the entity
    * @returns Promise resolving to entity metadata with schema information and operation methods
-   * 
+   *
    * @example
    * ```typescript
-   * // Get entity metadata with methods
-   * const entity = await sdk.entities.getById("<entityId>");
-   * 
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   * const entity = await entities.getById("<entityId>");
+   *
    * // Call operations directly on the entity
    * const records = await entity.getRecords();
-   * 
+   *
    * // Insert a single record
    * const insertResult = await entity.insert({ name: "John", age: 30 });
    *
@@ -90,22 +92,26 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * // Basic usage (non-paginated)
-   * const records = await sdk.entities.getRecordsById(<entityId>);
-   * 
+   * const records = await entities.getRecordsById("<entityId>");
+   *
    * // With expansion level
-   * const records = await sdk.entities.getRecordsById(<entityId>, {
+   * const records = await entities.getRecordsById("<entityId>", {
    *   expansionLevel: 1
    * });
-   * 
+   *
    * // With pagination
-   * const paginatedResponse = await sdk.entities.getRecordsById(<entityId>, {
+   * const paginatedResponse = await entities.getRecordsById("<entityId>", {
    *   pageSize: 50,
    *   expansionLevel: 1
    * });
-   * 
+   *
    * // Navigate to next page
-   * const nextPage = await sdk.entities.getRecordsById(<entityId>, {
+   * const nextPage = await entities.getRecordsById("<entityId>", {
    *   cursor: paginatedResponse.nextCursor,
    *   expansionLevel: 1
    * });
@@ -147,11 +153,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * // Basic usage
-   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 });
+   * const result = await entities.insertById("<entityId>", { name: "John", age: 30 });
    *
    * // With options
-   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 }, {
+   * const result = await entities.insertById("<entityId>", { name: "John", age: 30 }, {
    *   expansionLevel: 1
    * });
    * ```
@@ -186,14 +196,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * // Basic usage
-   * const result = await sdk.entities.batchInsertById(<entityId>, [
+   * const result = await entities.batchInsertById("<entityId>", [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
    *
    * // With options
-   * const result = await sdk.entities.batchInsertById(<entityId>, [
+   * const result = await entities.batchInsertById("<entityId>", [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -234,14 +248,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * // Basic usage
-   * const result = await sdk.entities.updateById(<entityId>, [
+   * const result = await entities.updateById("<entityId>", [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ]);
-   * 
+   *
    * // With options
-   * const result = await sdk.entities.updateById(<entityId>, [
+   * const result = await entities.updateById("<entityId>", [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ], {
@@ -281,9 +299,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * // Basic usage
-   * const result = await sdk.entities.deleteById(<entityId>, [
-   *   <recordId-1>, <recordId-2>
+   * const result = await entities.deleteById("<entityId>", [
+   *   "<recordId-1>", "<recordId-2>"
    * ]);
    * ```
    */
@@ -314,11 +336,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * // Get all entities
-   * const entities = await sdk.entities.getAll();
-   * 
+   * const allEntities = await entities.getAll();
+   *
    * // Call operations on an entity
-   * const records = await entities[0].getRecords();
+   * const records = await allEntities[0].getRecords();
    * ```
    */
   @track('Entities.GetAll')
@@ -347,8 +373,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * // Download attachment for a specific record and field
-   * const blob = await sdk.entities.downloadAttachment({
+   * const blob = await entities.downloadAttachment({
    *   entityName: 'Invoice',
    *   recordId: '<record-uuid>',
    *   fieldName: 'Documents'
