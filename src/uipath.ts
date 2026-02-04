@@ -220,7 +220,7 @@ export class UiPath {
    * Access to Task Events service
    */
   get taskEvents(): TaskEventsService {
-    return this.getService(TaskEventsService);
+    return this.authService.getTaskEventsService();
   }
 
   /**

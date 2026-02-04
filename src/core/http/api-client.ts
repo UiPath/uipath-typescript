@@ -47,8 +47,10 @@ export class ApiClient {
       throw new AuthenticationError({ message: 'No authentication token available. Make sure to initialize the SDK first.' });
     }
 
+    const isInActionCenter = window.self != window.top && window.location.href.includes('?basedomain');
+
     // For secret-based tokens, they never expire
-    if (tokenInfo.type === 'secret') {
+    if (tokenInfo.type === 'secret' && !isInActionCenter) {
       return tokenInfo.token;
     }
 
@@ -58,8 +60,7 @@ export class ApiClient {
     }
 
     try {
-      const newToken = await this.tokenManager.refreshAccessToken();
-      return newToken.access_token;
+        return await this.tokenManager.refreshAccessToken(isInActionCenter);
     } catch (error: any) {
       throw new AuthenticationError({
         message: `Token refresh failed: ${error.message}. Please re-authenticate.`,
@@ -71,16 +72,6 @@ export class ApiClient {
   private async getDefaultHeaders(): Promise<Record<string, string>> {
     // Get headers from execution context first
     const contextHeaders = this.executionContext.getHeaders();
-    
-    // If Authorization header is already set in context, use that
-    if (contextHeaders['Authorization']) {
-      return {
-        ...contextHeaders,
-        'Content-Type': CONTENT_TYPES.JSON,
-        ...this.defaultHeaders,
-        ...this.clientConfig.headers
-      };
-    }
 
     const token = await this.ensureValidToken();
 

@@ -1,12 +1,30 @@
 import { ActionCenterData, ActionCenterEventResponsePayload, ActionCenterEventNames } from '../../models/action-center/tasks.types';
+import type { TokenManager } from '../../core/auth/token-manager';
 
 export class TaskEventsService {
   private messageListener: ((event: MessageEvent<ActionCenterEventResponsePayload>) => void) | null = null;
   private parentOrigin = new URLSearchParams(window.location.search).get('basedomain');
   private subscribedEvents = [ActionCenterEventNames.LOADAPP, ActionCenterEventNames.TOKENREFRESHED, ActionCenterEventNames.LANGUAGECHANGED, ActionCenterEventNames.THEMECHANGED];
+  private pendingTokenRefresh: {
+    resolve: (token: string) => void;
+    reject: (error: Error) => void;
+  } | null = null;
+  private tokenManager: TokenManager | null = null;
 
-  initializeInActionCenter(): void {
-    this.sendMessageToParent(ActionCenterEventNames.INIT);
+  constructor() {
+    this.updateParentOrigin();
+  }
+
+  setTokenManager(tokenManager: TokenManager): void {
+    this.tokenManager = tokenManager;
+  }
+
+  initializeInActionCenter(clientId?: string, scope?: string): void {
+    const content = {
+      clientId,
+      scope,
+    };
+    this.sendMessageToParent(ActionCenterEventNames.INIT, content);
   }
 
   dataChanged(data: unknown): void {
@@ -33,6 +51,20 @@ export class TaskEventsService {
       window.removeEventListener('message', this.messageListener);
       this.messageListener = null;
     }
+  }
+
+  refreshAccessToken(): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.pendingTokenRefresh = { resolve, reject };
+      this.sendMessageToParent(ActionCenterEventNames.REFRESHTOKEN);
+
+      setTimeout(() => {
+        if (this.pendingTokenRefresh) {
+          this.pendingTokenRefresh = null;
+          reject(new Error('Token refresh timeout: Failed to fetch new token'));
+        }
+      }, 3000); // Set timeout of 3 seconds
+    });
   }
 
   private sendMessageToParent(eventType: string, content?: unknown): void {
@@ -67,6 +99,36 @@ export class TaskEventsService {
   private actionCenterEventCallback(event: MessageEvent<ActionCenterEventResponsePayload>, callback: (data: ActionCenterData) => void): void {
     if (event.origin === this.parentOrigin && this.subscribedEvents.includes(event.data?.eventType)) {
       callback(event.data?.content);
+
+      if (event.data?.eventType === ActionCenterEventNames.LOADAPP && event.data?.content?.token) {
+        this.updateToken(event.data.content.token);
+      }
+
+      if (event.data?.eventType === ActionCenterEventNames.TOKENREFRESHED && event.data?.content?.newToken) {
+        this.updateToken(event.data.content.newToken, true);
+      }
+    }
+  }
+
+  private updateParentOrigin() {
+    if (this.parentOrigin === null) {
+      if (window.location.origin.endsWith('alpha.uipath.host')) {
+        this.parentOrigin = 'https://alpha.uipath.com';
+      }
+    }
+  }
+
+  private updateToken(token: string, isRefresh: boolean = false) {
+    if (this.tokenManager) {
+      this.tokenManager.setToken({
+        token,
+        type: 'secret' as const,
+      });
+
+      if (isRefresh && this.pendingTokenRefresh) {
+        this.pendingTokenRefresh.resolve(token);
+        this.pendingTokenRefresh = null;
+      }
     }
   }
 }

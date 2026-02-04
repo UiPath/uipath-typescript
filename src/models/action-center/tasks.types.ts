@@ -254,6 +254,7 @@ export enum ActionCenterEventNames {
   TOKENREFRESHED = 'tokenRefreshed',
   LANGUAGECHANGED = 'languageChanged',
   THEMECHANGED = 'themeChanged',
+  REFRESHTOKEN = 'refreshToken',
 }
 
 enum Theme {

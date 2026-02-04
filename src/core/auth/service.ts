@@ -6,9 +6,12 @@ import { AuthToken, TokenInfo, OAuthContext } from './types';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
+import { TaskEventsService } from '../../services';
+import { jwtDecode, JwtPayload } from 'jwt-decode';
 
 export class AuthService extends BaseService {
   private tokenManager: TokenManager;
+  private taskEventsService: TaskEventsService;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     // Check if we should use stored OAuth context instead of provided config
@@ -16,9 +19,12 @@ export class AuthService extends BaseService {
     const effectiveConfig = storedContext ? AuthService._mergeConfigWithContext(config, storedContext) : config;
 
     const isOAuth = hasOAuthConfig(effectiveConfig);
-    const tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
+    const taskEventsService = new TaskEventsService();
+    const tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth, taskEventsService);
+    taskEventsService.setTokenManager(tokenManager);
     super(effectiveConfig, executionContext, tokenManager);
     this.tokenManager = tokenManager;
+    this.taskEventsService = taskEventsService;
 
     // Auto-load token from storage on initialization
     // This ensures isAuthenticated() returns true after page refresh if a valid token exists
@@ -89,6 +95,13 @@ export class AuthService extends BaseService {
    */
   public getTokenManager(): TokenManager {
     return this.tokenManager;
+  }
+
+  /**
+   * Get the task events service instance
+   */
+  public getTaskEventsService(): TaskEventsService {
+    return this.taskEventsService;
   }
 
   /**
@@ -193,7 +206,8 @@ export class AuthService extends BaseService {
    */
   public authenticateWithSecret(secret: string): boolean {
     try {
-      this.updateToken({ token: secret, type: 'secret' });
+      const expiryTime = this._extractExpiryTime(secret);
+      this.updateToken({ token: secret, type: 'secret', expiresAt: expiryTime});
       return true;
     } catch (error) {
       console.error('Failed to authenticate with secret', error);
@@ -403,5 +417,15 @@ export class AuthService extends BaseService {
     url.searchParams.delete('code');
     url.searchParams.delete('state');
     window.history.replaceState({}, '', url.toString());
+  }
+
+  private _extractExpiryTime(secret: string): Date | undefined {
+    try {
+      const decodedToken = jwtDecode<JwtPayload>(secret);
+      if (decodedToken.exp) {
+        return new Date(decodedToken.exp * 1000);
+      }
+    }
+    catch (_) {}
   }
 } 
