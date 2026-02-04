@@ -6,7 +6,6 @@ import { Navigation } from './components/Navigation';
 import { LoginScreen } from './components/LoginScreen';
 import { ProcessList } from './components/ProcessList';
 import { ProcessInstances } from './components/ProcessInstances';
-import { ModularServicesTest } from './components/ModularServicesTest';
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 
 const authConfig: UiPathSDKConfig = {
@@ -41,8 +40,6 @@ function AppContent() {
     switch (activeTab) {
       case 'instances':
         return <ProcessInstances />;
-      case 'services-test':
-        return <ModularServicesTest />;
       case 'processes':
       default:
         return <ProcessList />;
