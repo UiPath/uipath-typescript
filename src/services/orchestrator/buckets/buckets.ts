@@ -1,11 +1,9 @@
-import { FolderScopedService } from '../folder-scoped';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
-import { ValidationError, AuthenticationError, HttpStatus } from '../../core/errors';
-import { 
-  BucketGetResponse, 
-  BucketGetAllOptions, 
+import { FolderScopedService } from '../../folder-scoped';
+import type { IUiPath } from '../../../core/types';
+import { ValidationError, HttpStatus } from '../../../core/errors';
+import {
+  BucketGetResponse,
+  BucketGetAllOptions,
   BucketGetByIdOptions,
   BucketGetUriResponse,
   BucketGetReadUriOptions,
@@ -14,31 +12,30 @@ import {
   BucketUploadResponse,
   BlobItem,
   BucketGetUriOptions
-} from '../../models/orchestrator/buckets.types';
-import { BucketServiceModel } from '../../models/orchestrator/buckets.models';
-import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../utils/transform';
-import { filterUndefined } from '../../utils/object';
-import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_ID } from '../../utils/constants/headers';
-import { BUCKET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../utils/constants/common';
-import { BucketMap } from '../../models/orchestrator/buckets.constants';
-import { ODATA_PAGINATION } from '../../utils/constants/common';
+} from '../../../models/orchestrator/buckets.types';
+import { BucketServiceModel } from '../../../models/orchestrator/buckets.models';
+import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
+import { filterUndefined } from '../../../utils/object';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
+import { BUCKET_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../../utils/constants/common';
+import { BucketMap } from '../../../models/orchestrator/buckets.constants';
+import { ODATA_PAGINATION } from '../../../utils/constants/common';
 import axios, { AxiosResponse } from 'axios';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { track } from '../../core/telemetry';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { track } from '../../../core/telemetry';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
-  protected readonly tokenManager: TokenManager;
-  
   /**
-   * @hideconstructor
+   * Creates an instance of the Buckets service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-    this.tokenManager = tokenManager;
+  constructor(instance: IUiPath) {
+    super(instance);
   }
 
   /**
@@ -50,8 +47,12 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Get bucket by ID
-   * const bucket = await sdk.buckets.getById(123, 456);
+   * const bucket = await buckets.getById(123, 456);
    * ```
    */
   @track('Buckets.GetById')
@@ -94,29 +95,33 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Get all buckets across folders
-   * const buckets = await sdk.buckets.getAll();
-   * 
+   * const allBuckets = await buckets.getAll();
+   *
    * // Get buckets within a specific folder
-   * const buckets = await sdk.buckets.getAll({ 
+   * const folderBuckets = await buckets.getAll({
    *   folderId: 123
    * });
-   * 
+   *
    * // Get buckets with filtering
-   * const buckets = await sdk.buckets.getAll({ 
+   * const filteredBuckets = await buckets.getAll({
    *   filter: "name eq 'MyBucket'"
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.buckets.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await buckets.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.buckets.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await buckets.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.buckets.getAll({
+   * const page5 = await buckets.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -166,20 +171,24 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Get metadata for all files in a bucket
-   * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456);
-   * 
+   * const fileMetadata = await buckets.getFileMetaData(123, 456);
+   *
    * // Get file metadata with a specific prefix
-   * const fileMetadata = await sdk.buckets.getFileMetaData(123, 456, {
+   * const fileMetadata = await buckets.getFileMetaData(123, 456, {
    *   prefix: '/folder1'
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.buckets.getFileMetaData(123, 456, { pageSize: 10 });
-   * 
+   * const page1 = await buckets.getFileMetaData(123, 456, { pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.buckets.getFileMetaData(123, 456, { cursor: page1.nextCursor });
+   *   const page2 = await buckets.getFileMetaData(123, 456, { cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -230,18 +239,22 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Upload a file from browser
    * const file = new File(['file content'], 'example.txt');
-   * const result = await sdk.buckets.uploadFile({
+   * const result = await buckets.uploadFile({
    *   bucketId: 123,
-   *   folderId: 456, 
+   *   folderId: 456,
    *   path: '/folder/example.txt',
    *   content: file
    * });
-   * 
+   *
    * // In Node env with Buffer
    * const buffer = Buffer.from('file content');
-   * const result = await sdk.buckets.uploadFile({
+   * const result = await buckets.uploadFile({
    *   bucketId: 123,
    *   folderId: 456,
    *   path: '/folder/example.txt',
@@ -297,9 +310,13 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * 
    * @example
    * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
    * // Get download URL for a file
-   * const fileAccess = await sdk.buckets.getReadUri({
-   *   bucketId: 123, 
+   * const fileAccess = await buckets.getReadUri({
+   *   bucketId: 123,
    *   folderId: 456,
    *   path: '/folder/file.pdf'
    * });
@@ -344,34 +361,8 @@ export class BucketService extends FolderScopedService implements BucketServiceM
 
     // Add auth header if required
     if (requiresAuth) {
-      try {
-        const tokenInfo = this.executionContext.get('tokenInfo') as any;
-        
-        if (!tokenInfo) {
-          throw new AuthenticationError({ message: 'No authentication token available. Make sure to initialize the SDK first.' });
-        }
-        
-        let token: string;
-        
-        // For secret-based tokens, they never expire so use directly
-        if (tokenInfo.type === 'secret') {
-          token = tokenInfo.token;
-        } 
-        // For non-secret tokens, check expiration and refresh if needed
-        else if (!this.tokenManager.isTokenExpired(tokenInfo)) {
-          token = tokenInfo.token;
-        } else {
-          const newToken = await this.tokenManager.refreshAccessToken();
-          token = newToken.access_token;
-        }
-        
-        requestHeaders['Authorization'] = `Bearer ${token}`;
-      } catch (error) {
-        throw new AuthenticationError({ 
-          message: `Authentication required but failed: ${error instanceof Error ? error.message : ''}`, 
-          statusCode: HttpStatus.UNAUTHORIZED
-        });
-      }
+      const token = await this.getValidAuthToken();
+      requestHeaders['Authorization'] = `Bearer ${token}`;
     }
    
     return axios.put(uri, content, {
