@@ -1,5 +1,6 @@
 import {
   EntityGetRecordsByIdOptions,
+  EntityGetRecordByIdOptions,
   EntityInsertOptions,
   EntityBatchInsertOptions,
   EntityInsertResponse,
@@ -140,6 +141,27 @@ export interface EntityServiceModel {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   >;
+
+  /**
+   * Gets a single entity record by entity ID and record ID
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record
+   * @param options - Query options including expansionLevel
+   * @returns Promise resolving to the entity record
+   * {@link EntityRecord}
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>);
+   *
+   * // With expansion level
+   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  getRecordById(entityId: string, recordId: string, options?: EntityGetRecordByIdOptions): Promise<EntityRecord>;
 
   /**
    * Inserts a single record into an entity by entity ID
@@ -351,6 +373,15 @@ export interface EntityMethods {
   >;
 
   /**
+   * Gets a single record from this entity by record ID
+   *
+   * @param recordId - UUID of the record
+   * @param options - Query options including expansionLevel
+   * @returns Promise resolving to the entity record
+   */
+  getRecord(recordId: string, options?: EntityGetRecordByIdOptions): Promise<EntityRecord>;
+
+  /**
    * Downloads an attachment stored in a File-type field of an entity record
    *
    * @param recordId - UUID of the record containing the attachment
@@ -406,6 +437,13 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.getRecordsById(entityData.id, options) as any;
+    },
+
+    async getRecord(recordId: string, options?: EntityGetRecordByIdOptions): Promise<EntityRecord> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      if (!recordId) throw new Error('Record ID is undefined');
+
+      return service.getRecordById(entityData.id, recordId, options);
     },
 
     async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
