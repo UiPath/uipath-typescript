@@ -130,6 +130,11 @@ const serviceEntries = [
     output: 'entities/index'
   },
   {
+    name: 'choicesets',
+    input: 'src/services/data-fabric/choicesets/index.ts',
+    output: 'choicesets/index'
+  },
+  {
     name: 'tasks',
     input: 'src/services/action-center/index.ts',
     output: 'tasks/index'

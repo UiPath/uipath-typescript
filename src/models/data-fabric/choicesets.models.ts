@@ -15,7 +15,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
  *
  * ```typescript
- * import { ChoiceSets } from '@uipath/uipath-typescript/entities';
+ * import { ChoiceSets } from '@uipath/uipath-typescript/choicesets';
  *
  * const choicesets = new ChoiceSets(sdk);
  * const allChoiceSets = await choicesets.getAll();

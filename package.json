@@ -46,6 +46,16 @@
                 "default": "./dist/entities/index.cjs"
             }
         },
+        "./choicesets": {
+            "import": {
+                "types": "./dist/choicesets/index.d.ts",
+                "default": "./dist/choicesets/index.mjs"
+            },
+            "require": {
+                "types": "./dist/choicesets/index.d.ts",
+                "default": "./dist/choicesets/index.cjs"
+            }
+        },
         "./tasks": {
             "import": {
                 "types": "./dist/tasks/index.d.ts",
