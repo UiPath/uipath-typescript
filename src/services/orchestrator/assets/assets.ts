@@ -1,30 +1,30 @@
-import { FolderScopedService } from '../folder-scoped';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../models/orchestrator/assets.types';
-import { AssetServiceModel } from '../../models/orchestrator/assets.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
-import { createHeaders } from '../../utils/http/headers';
-import { TokenManager } from '../../core/auth/token-manager';
-import { FOLDER_ID } from '../../utils/constants/headers';
-import { ASSET_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
-import { AssetMap } from '../../models/orchestrator/assets.constants';
-import { ODATA_PAGINATION } from '../../utils/constants/common';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { track } from '../../core/telemetry';
+import { FolderScopedService } from '../../folder-scoped';
+import type { IUiPath } from '../../../core/types';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../../models/orchestrator/assets.types';
+import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
+import { ASSET_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { AssetMap } from '../../../models/orchestrator/assets.constants';
+import { ODATA_PAGINATION } from '../../../utils/constants/common';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { track } from '../../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
  */
 export class AssetService extends FolderScopedService implements AssetServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Assets service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: IUiPath) {
+    super(instance);
   }
 
   /**
@@ -36,22 +36,26 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * 
    * @example
    * ```typescript
+   * import { Assets } from '@uipath/uipath-typescript/assets';
+   *
+   * const assets = new Assets(sdk);
+   *
    * // Standard array return
-   * const assets = await sdk.assets.getAll();
-   * 
+   * const allAssets = await assets.getAll();
+   *
    * // With folder
-   * const folderAssets = await sdk.assets.getAll({ folderId: 123 });
-   * 
+   * const folderAssets = await assets.getAll({ folderId: 123 });
+   *
    * // First page with pagination
-   * const page1 = await sdk.assets.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await assets.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.assets.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await assets.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.assets.getAll({
+   * const page5 = await assets.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -97,8 +101,12 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * 
    * @example
    * ```typescript
+   * import { Assets } from '@uipath/uipath-typescript/assets';
+   *
+   * const assets = new Assets(sdk);
+   *
    * // Get asset by ID
-   * const asset = await sdk.assets.getById(123, 456);
+   * const asset = await assets.getById(123, 456);
    * ```
    */
   @track('Assets.GetById')

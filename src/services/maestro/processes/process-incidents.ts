@@ -1,12 +1,12 @@
-import { BaseService } from '../base';
-import { track } from '../../core/telemetry';
-import { transformData } from '../../utils/transform';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ProcessIncidentSummaryMap } from '../../models/maestro/process-incidents.constants';
+import { BaseService } from '../../base';
+import { track } from '../../../core/telemetry';
+import { transformData } from '../../../utils/transform';
+import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ProcessIncidentSummaryMap } from '../../../models/maestro/process-incidents.constants';
 
-import type { ProcessIncidentGetAllResponse } from '../../models/maestro/process-incidents.types';
-import type { RawIncidentGetAllResponse } from '../../models/maestro/process-incidents.internal-types';
-import type { ProcessIncidentsServiceModel } from '../../models/maestro/process-incidents.models';
+import type { ProcessIncidentGetAllResponse } from '../../../models/maestro/process-incidents.types';
+import type { RawIncidentGetAllResponse } from '../../../models/maestro/process-incidents.internal-types';
+import type { ProcessIncidentsServiceModel } from '../../../models/maestro/process-incidents.models';
 
 /**
  * Service class for Maestro Process Incidents
@@ -14,14 +14,16 @@ import type { ProcessIncidentsServiceModel } from '../../models/maestro/process-
 export class ProcessIncidentsService extends BaseService implements ProcessIncidentsServiceModel {
   /**
    * Get all process incidents across all folders
-   * 
+   *
    * @returns Promise resolving to array of process incident
    * {@link ProcessIncidentGetAllResponse}
    * @example
    * ```typescript
-   * // Get all process incidents across all folders
-   * const incidents = await sdk.maestro.processes.incidents.getAll();
-   * 
+   * import { ProcessIncidents } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const processIncidents = new ProcessIncidents(sdk);
+   * const incidents = await processIncidents.getAll();
+   *
    * // Access process incident information
    * for (const incident of incidents) {
    *   console.log(`Process: ${incident.processKey}`);

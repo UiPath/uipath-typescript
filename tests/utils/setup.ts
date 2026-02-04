@@ -1,7 +1,28 @@
 import { vi } from 'vitest';
-import { Config } from '../../src/core/config/config';
+import { UiPathConfig } from '../../src/core/config/config';
 import { ExecutionContext } from '../../src/core/context/execution';
 import { TokenManager } from '../../src/core/auth/token-manager';
+import type { UiPath } from '../../src/core/uipath';
+import type { BaseConfig } from '../../src/core/config/sdk-config';
+import { SDKInternalsRegistry, type PrivateSDK } from '../../src/core/internals';
+
+/**
+ * Interface for mockable UiPath properties used in tests.
+ * Only includes the public surface needed for testing services.
+ */
+interface MockableUiPath {
+  config: Readonly<BaseConfig>;
+  isAuthenticated: () => boolean;
+  isInitialized: () => boolean;
+}
+
+/**
+ * Interface for mockable TokenManager properties used in tests.
+ */
+interface MockableTokenManager {
+  getToken: () => string | undefined;
+  hasValidToken: () => boolean;
+}
 
 // Mock console methods to avoid test output noise
 global.console = {
@@ -19,40 +40,36 @@ process.env.NODE_ENV = 'test';
 import { TEST_CONSTANTS } from './constants/common';
 
 /**
- * Creates a mock Config object for testing
- * @param overrides - Optional overrides for specific config values
- * @returns Mock Config object
+ * Creates a mock UiPathConfig object for testing
  */
-export const createMockConfig = (overrides?: Partial<Config>): Config => {
-  return {
+const createMockConfig = (overrides?: Partial<UiPathConfig>): UiPathConfig => {
+  return new UiPathConfig({
     baseUrl: TEST_CONSTANTS.BASE_URL,
+    orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+    tenantName: TEST_CONSTANTS.TENANT_ID,
     clientId: TEST_CONSTANTS.CLIENT_ID,
-    clientSecret: TEST_CONSTANTS.CLIENT_SECRET,
-    organizationId: TEST_CONSTANTS.ORGANIZATION_ID,
-    tenantId: TEST_CONSTANTS.TENANT_ID,
+    secret: TEST_CONSTANTS.CLIENT_SECRET,
     ...overrides,
-  } as Config;
+  });
 };
 
 /**
  * Creates a mock ExecutionContext for testing
- * @returns Mock ExecutionContext instance
  */
-export const createMockExecutionContext = (): ExecutionContext => {
+const createMockExecutionContext = (): ExecutionContext => {
   return new ExecutionContext();
 };
 
 /**
  * Creates a mock TokenManager for testing
- * @param overrides - Optional overrides for specific methods
- * @returns Mock TokenManager object
  */
-export const createMockTokenManager = (overrides?: Partial<TokenManager>): TokenManager => {
-  return {
+const createMockTokenManager = (overrides?: Partial<MockableTokenManager>): TokenManager => {
+  const mock: MockableTokenManager = {
     getToken: vi.fn().mockReturnValue('mock-access-token'),
     hasValidToken: vi.fn().mockReturnValue(true),
     ...overrides,
-  } as unknown as TokenManager;
+  };
+  return mock as TokenManager;
 };
 
 /**
@@ -64,28 +81,135 @@ export const createMockApiClient = () => ({
   post: vi.fn(),
   put: vi.fn(),
   patch: vi.fn(),
-  delete: vi.fn()
+  delete: vi.fn(),
+  getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN)
 });
+
+/**
+ * Creates a mock UiPath instance for testing services
+ * @param configOverrides - Optional config overrides
+ * @param tokenManagerOverrides - Optional token manager overrides
+ * @returns Mock UiPath object registered with SDKInternalsRegistry
+ *
+ * @example
+ * ```typescript
+ * const mockUiPath = createMockUiPath();
+ * const service = new MyService(mockUiPath);
+ * ```
+ */
+export const createMockUiPath = (
+  configOverrides?: Partial<UiPathConfig>,
+  tokenManagerOverrides?: Partial<TokenManager>
+): UiPath => {
+  const config = createMockConfig(configOverrides);
+  const executionContext = createMockExecutionContext();
+  const tokenManager = createMockTokenManager(tokenManagerOverrides);
+
+  const mockInstance = {
+    config: {
+      baseUrl: config.baseUrl,
+      orgName: config.orgName,
+      tenantName: config.tenantName
+    },
+    isAuthenticated: () => true,
+    isInitialized: () => true,
+  } as unknown as UiPath;
+
+  // Register with SDKInternalsRegistry
+  SDKInternalsRegistry.set(mockInstance, {
+    config,
+    context: executionContext,
+    tokenManager
+  });
+
+  return mockInstance;
+};
 
 /**
  * Creates all common service test dependencies at once
  * @param configOverrides - Optional config overrides
  * @param tokenManagerOverrides - Optional token manager overrides
- * @returns Object containing all common mocks
- * 
+ * @returns Object containing all common mocks including UiPath mock
+ *
  * @example
  * ```typescript
+ * // New pattern (recommended)
+ * const { instance } = createServiceTestDependencies();
+ * const service = new MyService(instance);
+ *
+ * // Old pattern (for backward compatibility during migration)
  * const { config, executionContext, tokenManager } = createServiceTestDependencies();
- * const service = new MyService(config, executionContext, tokenManager);
  * ```
  */
 export const createServiceTestDependencies = (
-  configOverrides?: Partial<Config>,
-  tokenManagerOverrides?: Partial<TokenManager>
+  configOverrides?: Partial<UiPathConfig>,
+  tokenManagerOverrides?: Partial<MockableTokenManager>
 ) => {
-  return {
-    config: createMockConfig(configOverrides),
-    executionContext: createMockExecutionContext(),
-    tokenManager: createMockTokenManager(tokenManagerOverrides),
+  const config = createMockConfig(configOverrides);
+  const executionContext = createMockExecutionContext();
+  const tokenManager = createMockTokenManager(tokenManagerOverrides);
+
+  // Create mock with explicit interface for type safety
+  const mock: MockableUiPath = {
+    config: {
+      baseUrl: config.baseUrl,
+      orgName: config.orgName,
+      tenantName: config.tenantName
+    },
+    isAuthenticated: () => true,
+    isInitialized: () => true,
   };
+
+  // Cast to UiPath for compatibility with SDKInternalsRegistry and service constructors
+  const mockInstance = mock as UiPath;
+
+  // Register with SDKInternalsRegistry
+  SDKInternalsRegistry.set(mockInstance, {
+    config,
+    context: executionContext,
+    tokenManager
+  });
+
+  return {
+    config,
+    executionContext,
+    tokenManager,
+    instance: mockInstance,
+  };
+};
+
+/**
+ * Test helper to get private SDK internals from a UiPath instance
+ * @param instance - UiPath instance
+ * @returns PrivateSDK internals
+ */
+export const getPrivateSDK = (instance: UiPath): PrivateSDK => {
+  return SDKInternalsRegistry.get(instance);
+};
+
+/**
+ * Test helper to get config from a UiPath instance
+ * @param instance - UiPath instance
+ * @returns UiPathConfig
+ */
+export const getConfig = (instance: UiPath): UiPathConfig => {
+  return SDKInternalsRegistry.get(instance).config;
+};
+
+/**
+ * Test helper to get execution context from a UiPath instance
+ * @param instance - UiPath instance
+ * @returns ExecutionContext
+ */
+export const getContext = (instance: UiPath): ExecutionContext => {
+  return SDKInternalsRegistry.get(instance).context;
+};
+
+/**
+ * Test helper to get token manager from a UiPath instance
+ * @param instance - UiPath instance
+ * @returns TokenManager
+ */
+export const getTokenManager = (instance: UiPath): TokenManager => {
+  return SDKInternalsRegistry.get(instance).tokenManager;
 };

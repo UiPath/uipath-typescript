@@ -14,8 +14,19 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 
 /**
  * Service for managing UiPath Maestro Process instances
- * 
+ *
  * Maestro process instances are the running instances of Maestro processes. [UiPath Maestro Process Instances Guide](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/all-instances-view)
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ *
+ * ```typescript
+ * import { ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
+ *
+ * const processInstances = new ProcessInstances(sdk);
+ * const allInstances = await processInstances.getAll();
+ * ```
  */
 export interface ProcessInstancesServiceModel {
   /**
@@ -31,26 +42,26 @@ export interface ProcessInstancesServiceModel {
    * @example
    * ```typescript
    * // Get all instances (non-paginated)
-   * const instances = await sdk.maestro.processes.instances.getAll();
-   * 
+   * const instances = await processInstances.getAll();
+   *
    * // Cancel faulted instances using methods directly on instances
    * for (const instance of instances.items) {
    *   if (instance.latestRunStatus === 'Faulted') {
    *     await instance.cancel({ comment: 'Cancelling faulted instance' });
    *   }
    * }
-   * 
+   *
    * // With filtering
-   * const instances = await sdk.maestro.processes.instances.getAll({
+   * const filteredInstances = await processInstances.getAll({
    *   processKey: 'MyProcess'
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.maestro.processes.instances.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await processInstances.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.maestro.processes.instances.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await processInstances.getAll({ cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -71,14 +82,13 @@ export interface ProcessInstancesServiceModel {
    * @example
    * ```typescript
    * // Get a specific process instance
-   * const instance = await sdk.maestro.processes.instances.getById(
+   * const instance = await processInstances.getById(
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
+   *
    * // Access instance properties
    * console.log(`Status: ${instance.latestRunStatus}`);
-   * 
    * ```
    */
   getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse>;
@@ -91,17 +101,16 @@ export interface ProcessInstancesServiceModel {
    * @example
    * ```typescript
    * // Get execution history for a process instance
-   * const history = await sdk.maestro.processes.instances.getExecutionHistory(
+   * const history = await processInstances.getExecutionHistory(
    *   <instanceId>
    * );
-   * 
+   *
    * // Analyze execution timeline
    * history.forEach(span => {
    *   console.log(`Activity: ${span.name}`);
    *   console.log(`Start: ${span.startTime}`);
    *   console.log(`Duration: ${span.duration}ms`);
    * });
-   * 
    * ```
    */
   getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
@@ -115,20 +124,20 @@ export interface ProcessInstancesServiceModel {
    * @example
    * ```typescript
    * // Get BPMN XML for a process instance
-   * const bpmnXml = await sdk.maestro.processes.instances.getBpmn(
+   * const bpmnXml = await processInstances.getBpmn(
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
+   *
    * // Render BPMN diagram in frontend using bpmn-js
    * import BpmnViewer from 'bpmn-js/lib/Viewer';
-   * 
+   *
    * const viewer = new BpmnViewer({
    *   container: '#bpmn-diagram'
    * });
-   * 
+   *
    * await viewer.importXML(bpmnXml);
-   * 
+   *
    * // Zoom to fit the diagram
    * viewer.get('canvas').zoom('fit-viewport');
    * ```
@@ -144,28 +153,27 @@ export interface ProcessInstancesServiceModel {
    * @example
    * ```typescript
    * // Cancel a process instance
-   * const result = await sdk.maestro.processes.instances.cancel(
+   * const result = await processInstances.cancel(
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
-   * or
-   * 
-   * const instance = await sdk.maestro.processes.instances.getById(
+   *
+   * // Or using instance method
+   * const instance = await processInstances.getById(
    *   <instanceId>,
    *   <folderKey>
    * );
    * const result = await instance.cancel();
-   * 
+   *
    * console.log(`Cancelled: ${result.success}`);
    *
    * // Cancel with a comment
-   * const result = await instance.cancel({
+   * const resultWithComment = await instance.cancel({
    *   comment: 'Cancelling due to invalid input data'
    * });
    *
-   * if (result.success) {
-   *   console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
+   * if (resultWithComment.success) {
+   *   console.log(`Instance ${resultWithComment.data.instanceId} status: ${resultWithComment.data.status}`);
    * }
    * ```
    */
@@ -200,14 +208,14 @@ export interface ProcessInstancesServiceModel {
    * @example
    * ```typescript
    * // Get all variables for a process instance
-   * const variables = await sdk.maestro.processes.instances.getVariables(
+   * const variables = await processInstances.getVariables(
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
+   *
    * // Access global variables
    * console.log('Global variables:', variables.globalVariables);
-   * 
+   *
    * // Iterate through global variables with metadata
    * variables.globalVariables?.forEach(variable => {
    *   console.log(`Variable: ${variable.name} (${variable.id})`);
@@ -215,9 +223,9 @@ export interface ProcessInstancesServiceModel {
    *   console.log(`  Element: ${variable.elementId}`);
    *   console.log(`  Value: ${variable.value}`);
    * });
-   * 
+   *
    * // Get variables for a specific parent element
-   * const variables = await sdk.maestro.processes.instances.getVariables(
+   * const elementVariables = await processInstances.getVariables(
    *   <instanceId>,
    *   <folderKey>,
    *   { parentElementId: <parentElementId> }
@@ -236,9 +244,9 @@ export interface ProcessInstancesServiceModel {
    * @example
    * ```typescript
    * // Get incidents for a specific instance
-   * const incidents = await sdk.maestro.processes.instances.getIncidents('<instanceId>', '<folderKey>');
-   * 
-   * // Access process incident details 
+   * const incidents = await processInstances.getIncidents('<instanceId>', '<folderKey>');
+   *
+   * // Access process incident details
    * for (const incident of incidents) {
    *   console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);
    *   console.log(`Severity: ${incident.incidentSeverity}`);
