@@ -372,7 +372,7 @@ To build and serve the documentation locally using MkDocs:
 **Prerequisites:**
 - Python
 - Node.js 18.x or higher
-- npm 8.x or higher (or yarn/pnpm)
+- npm 8.x or higher
 
 **Steps:**
 ```bash
