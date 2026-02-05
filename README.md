@@ -365,6 +365,23 @@ Check out the [`/samples`](./samples) folder to see sample applications built us
 
 Before submitting a pull request, please review our [Contribution Guidelines](https://uipath.github.io/uipath-typescript/CONTRIBUTING/).
 
+### Running Documentation Locally
+
+To build and serve the documentation locally using MkDocs:
+
+**Prerequisites:**
+- Python
+- Node.js 18.x or higher
+- npm 8.x or higher
+
+**Steps:**
+```bash
+pip3 install -r docs/requirements.txt
+npm run docs:api
+mkdocs build
+mkdocs serve
+```
+
 <div align="right">
 
 [↑ Back to top](#uipath-typescript-sdk)
