@@ -147,16 +147,16 @@ export interface EntityServiceModel {
    *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record
-   * @param options - Query options including expansionLevel
-   * @returns Promise resolving to the entity record
+   * @param options - Query options
+   * @returns Promise resolving to a single entity record
    * {@link EntityRecord}
    * @example
    * ```typescript
    * // Basic usage
-   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>);
+   * const record = await entities.getRecordById(<entityId>, <recordId>);
    *
    * // With expansion level
-   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>, {
+   * const record = await entities.getRecordById(<entityId>, <recordId>, {
    *   expansionLevel: 1
    * });
    * ```
