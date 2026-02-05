@@ -152,11 +152,15 @@ export interface EntityServiceModel {
    * {@link EntityRecord}
    * @example
    * ```typescript
-   * // Basic usage
-   * const record = await entities.getRecordById(<entityId>, <recordId>);
-   *
+   * // First, get records to obtain the record ID
+   * const records = await entities.getRecordsById(<entityId>);
+   * // Get the recordId for the record
+   * const recordId = records.items[0].id;
+   * // Get the record
+   * const record = await entities.getRecordById(<entityId>, recordId);
+   * 
    * // With expansion level
-   * const record = await entities.getRecordById(<entityId>, <recordId>, {
+   * const record = await entities.getRecordById(<entityId>, recordId, {
    *   expansionLevel: 1
    * });
    * ```
