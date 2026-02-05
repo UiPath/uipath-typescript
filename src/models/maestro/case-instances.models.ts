@@ -1,8 +1,9 @@
-import { 
+import {
   RawCaseInstanceGetResponse,
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
+  CaseInstanceReopenOptions,
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse
 } from './case-instances.types';
@@ -132,6 +133,45 @@ export interface CaseInstancesServiceModel {
   pause(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Reopen a case instance from a specified element
+   * @param instanceId - The ID of the case instance
+   * @param folderKey - Required folder key
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result with instance data
+   * {@link CaseInstanceOperationResponse}
+   * @example
+   * ```typescript
+   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   *
+   * // First, get the available stages for the case instance
+   * const stages = await caseInstances.getStages('<instanceId>', '<folderKey>');
+   * const stageId = stages[0].id; // Select the stage to reopen from
+   *
+   * // Reopen a case instance from a specific stage
+   * const result = await caseInstances.reopen(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   { stageId }
+   * );
+   *
+   * // Reopen with a comment
+   * const result = await caseInstances.reopen(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   { stageId, comment: 'Reopening to retry failed stage' }
+   * );
+   *
+   * // Or using instance method
+   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+   * const stages = await instance.getStages();
+   * const result = await instance.reopen({ stageId: stages[0].id });
+   * ```
+   */
+  reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
    * Resume a case instance
    * @param instanceId - The ID of the instance to resume
    * @param folderKey - Required folder key
@@ -255,15 +295,23 @@ export interface CaseInstanceMethods {
 
   /**
    * Pauses this case instance
-   * 
+   *
    * @param options - Optional pause options with comment
    * @returns Promise resolving to operation result
    */
   pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Reopens this case instance from a specified element
+   *
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result
+   */
+  reopen(options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
    * Resumes this case instance
-   * 
+   *
    * @param options - Optional resume options with comment
    * @returns Promise resolving to operation result
    */
@@ -322,6 +370,13 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
 
       return service.pause(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async reopen(options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.reopen(instanceData.instanceId, instanceData.folderKey, options);
     },
 
     async resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {

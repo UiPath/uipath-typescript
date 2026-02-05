@@ -6,6 +6,7 @@ import {
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
+  CaseInstanceReopenOptions,
   CaseInstancesServiceModel,
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
@@ -143,7 +144,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   }
 
   /**
-   * Get a case instance by ID with operation methods (close, pause, resume)
+   * Get a case instance by ID with operation methods (close, pause, resume, reopen)
    * @param instanceId - The ID of the instance to retrieve
    * @param folderKey - Required folder key
    * @returns Promise<CaseInstanceGetResponse>
@@ -267,7 +268,32 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
-    
+
+    return {
+      success: true,
+      data: response.data
+    };
+  }
+
+  /**
+   * Reopen a case instance from a specified element
+   * @param instanceId - The ID of the case instance to reopen
+   * @param folderKey - Required folder key
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result with updated instance data
+   */
+  @track('CaseInstances.Reopen')
+  async reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+    // Transform SDK options to API request format
+    const requestBody = {
+      StartElementId: options.stageId,
+      ...(options.comment && { Comment: options.comment })
+    };
+
+    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.CASES.REOPEN(instanceId), requestBody, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
+    });
+
     return {
       success: true,
       data: response.data
@@ -286,7 +312,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
-    
+
     return {
       success: true,
       data: response.data
