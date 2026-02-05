@@ -3,6 +3,7 @@ import type { IUiPath } from '../../core/types';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
+  EntityGetRecordByIdOptions,
   EntityInsertOptions,
   EntityBatchInsertOptions,
   EntityInsertResponse,
@@ -83,13 +84,56 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return createEntityWithMethods(metadata, this);
   }
 
+    /**
+   * Gets a single entity record by entity ID and record ID
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record
+   * @param options - Query options including expansionLevel
+   * @returns Promise resolving to a single entity record
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Basic usage
+   * const record = await entities.getRecordById("<entityId>", "<recordId>");
+   *
+   * // With expansion level
+   * const record = await entities.getRecordById("<entityId>", "<recordId>", {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  @track('Entities.GetRecordById')
+  async getRecordById(
+    entityId: string,
+    recordId: string,
+    options: EntityGetRecordByIdOptions = {}
+  ): Promise<EntityRecord> {
+    const params = createParams({
+      expansionLevel: options.expansionLevel
+    });
+
+    const response = await this.get<EntityRecord>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(entityId, recordId),
+      {
+        params
+      }
+    );
+
+    return response.data;
+  }
+
   /**
    * Gets entity records by entity ID
-   * 
+   *
    * @param entityId - UUID of the entity
    * @param options - Query options including expansionLevel and pagination options
    * @returns Promise resolving to an array of entity records or paginated response
-   * 
+   *
    * @example
    * ```typescript
    * import { Entities } from '@uipath/uipath-typescript/entities';
@@ -119,7 +163,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.GetRecordsById')
   async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
-    entityId: string, 
+    entityId: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -134,9 +178,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
         itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
         totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
-          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,    
-          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,         
-          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM            
+          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
       excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel

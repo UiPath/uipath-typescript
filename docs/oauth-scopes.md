@@ -24,6 +24,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `DataFabric.Schema.Read` |
+| `getRecordById()` | `DataFabric.Data.Read` |
 | `getRecordsById()` | `DataFabric.Data.Read` |
 | `insertById()` / `insert()` | `DataFabric.Data.Write` |
 | `deleteById()` / `delete()` | `DataFabric.Data.Write` |

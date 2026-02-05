@@ -34,12 +34,20 @@ export interface EntityRecord {
 }
 
 /**
- * Options for getting an entity by Id
+ * Options for getting entity records by Id
  */
 export type EntityGetRecordsByIdOptions = {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
 } & PaginationOptions;
+
+/**
+ * Options for getting a single entity record by Id
+ */
+export interface EntityGetRecordByIdOptions {
+  /** Level of entity expansion (default: 0) */
+  expansionLevel?: number;
+}
 
 /**
  * Common options for entity operations that modify multiple records
