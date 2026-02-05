@@ -72,6 +72,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `close()` | `PIMS` |
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
+| `reopen()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` |
 | `getStages()` | `PIMS` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
