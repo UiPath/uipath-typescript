@@ -141,26 +141,30 @@ export interface CaseInstancesServiceModel {
    * {@link CaseInstanceOperationResponse}
    * @example
    * ```typescript
+   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   *
    * // First, get the available stages for the case instance
-   * const stages = await sdk.maestro.cases.instances.getStages('<instanceId>', '<folderKey>');
+   * const stages = await caseInstances.getStages('<instanceId>', '<folderKey>');
    * const stageId = stages[0].id; // Select the stage to reopen from
    *
    * // Reopen a case instance from a specific stage
-   * const result = await sdk.maestro.cases.instances.reopen(
+   * const result = await caseInstances.reopen(
    *   '<instanceId>',
    *   '<folderKey>',
    *   { stageId }
    * );
    *
    * // Reopen with a comment
-   * const result = await sdk.maestro.cases.instances.reopen(
+   * const result = await caseInstances.reopen(
    *   '<instanceId>',
    *   '<folderKey>',
    *   { stageId, comment: 'Reopening to retry failed stage' }
    * );
    *
    * // Or using instance method
-   * const instance = await sdk.maestro.cases.instances.getById('<instanceId>', '<folderKey>');
+   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
    * const stages = await instance.getStages();
    * const result = await instance.reopen({ stageId: stages[0].id });
    * ```
