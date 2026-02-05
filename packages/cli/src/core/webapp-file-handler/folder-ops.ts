@@ -3,6 +3,7 @@ import { MESSAGES } from '../../constants/index.js';
 import type { WebAppPushConfig, FileOperationPlan, ProjectStructure } from './types.js';
 import {
   getRemoteFoldersMap,
+  getRemoteContentRoot,
   REMOTE_SOURCE_FOLDER_NAME,
   findEmptyFolders,
 } from './structure.js';
@@ -21,13 +22,15 @@ export async function ensureContentRootExists(
   config: WebAppPushConfig,
   lockKey: string | null,
   getStructure: () => ProjectStructure | null,
-  setStructure: (s: ProjectStructure) => void
+  setStructure: (s: ProjectStructure) => void,
+  bundlePath: string
 ): Promise<void> {
   const structure = getStructure();
   if (!structure) {
     throw new Error(MESSAGES.ERRORS.PUSH_PROJECT_STRUCTURE_REQUIRED);
   }
   const fullRemoteFolders = getRemoteFoldersMap(structure);
+  const remoteContentRoot = getRemoteContentRoot(bundlePath);
 
   if (!fullRemoteFolders.has(REMOTE_SOURCE_FOLDER_NAME)) {
     await api.createFolderAtRoot(config, REMOTE_SOURCE_FOLDER_NAME, lockKey);
@@ -35,6 +38,25 @@ export async function ensureContentRootExists(
     setStructure(next);
     const afterFolders = getRemoteFoldersMap(next);
     if (!afterFolders.has(REMOTE_SOURCE_FOLDER_NAME)) {
+      throw new Error(MESSAGES.ERRORS.PUSH_SOURCE_FOLDER_CREATE_FAILED);
+    }
+  }
+
+  if (!fullRemoteFolders.has(remoteContentRoot)) {
+    const bundleName = remoteContentRoot.split('/').filter(Boolean).pop()!;
+    const createdId = await api.createFolderAtRoot(config, bundleName, lockKey);
+    let next = await api.fetchRemoteStructure(config);
+    setStructure(next);
+    const afterCreate = getRemoteFoldersMap(next);
+    const sourceId = afterCreate.get(REMOTE_SOURCE_FOLDER_NAME)?.id;
+    const newFolderId = createdId ?? afterCreate.get(bundleName)?.id;
+    if (sourceId && newFolderId) {
+      await api.moveFolder(config, newFolderId, sourceId, lockKey);
+      next = await api.fetchRemoteStructure(config);
+      setStructure(next);
+    }
+    const afterMove = getRemoteFoldersMap(next);
+    if (!afterMove.has(remoteContentRoot)) {
       throw new Error(MESSAGES.ERRORS.PUSH_SOURCE_FOLDER_CREATE_FAILED);
     }
   }
