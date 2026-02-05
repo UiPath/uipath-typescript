@@ -141,6 +141,66 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
+  describe('getRecordById', () => {
+    it('should retrieve a single record by ID', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        console.log('No entity ID available for testing');
+        return;
+      }
+
+      // First get records to find a valid record ID
+      const records = await entities.getRecordsById(entityId, {
+        pageSize: 1,
+      });
+
+      if (records.items.length === 0) {
+        console.log('No records available to test getRecordById');
+        return;
+      }
+
+      const recordId = records.items[0].Id;
+      const result = await entities.getRecordById(entityId, recordId);
+
+      expect(result).toBeDefined();
+      expect(result.Id).toBe(recordId);
+    });
+
+    it('should retrieve a record with expansion level', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        console.log('No entity ID available for testing');
+        return;
+      }
+
+      // First get records to find a valid record ID
+      const records = await entities.getRecordsById(entityId, {
+        pageSize: 1,
+      });
+
+      if (records.items.length === 0) {
+        console.log('No records available to test getRecordById with expansion');
+        return;
+      }
+
+      const recordId = records.items[0].Id;
+      const result = await entities.getRecordById(entityId, recordId, {
+        expansionLevel: 1,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.Id).toBe(recordId);
+    });
+  });
+
   describe('Record CRUD operations', () => {
     it('should insert a single record', async () => {
       const { entities } = getServices();

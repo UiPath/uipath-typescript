@@ -19,6 +19,7 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { createMockError } from '../../../utils/mocks/core';
 import type {
   EntityGetRecordsByIdOptions,
+  EntityGetRecordByIdOptions,
   EntityInsertOptions,
   EntityBatchInsertOptions,
   EntityUpdateOptions,
@@ -390,6 +391,92 @@ describe('EntityService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(entityService.getRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getRecordById', () => {
+    it('should get a single record by ID successfully', async () => {
+      const mockRecord: EntityRecord = {
+        id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
+        age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age
+      };
+      mockApiClient.get.mockResolvedValue(mockRecord);
+
+      const result = await entityService.getRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID
+      );
+
+      // Verify the result
+      expect(result).toBeDefined();
+      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name);
+      expect(result.age).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age);
+
+      // Verify the API call has correct endpoint
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        ),
+        expect.objectContaining({
+          params: expect.any(Object)
+        })
+      );
+    });
+
+    it('should get a record with expansion level option', async () => {
+      // With expansionLevel, reference fields should be expanded to objects
+      const mockRecord: EntityRecord = {
+        id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
+        age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
+        recordOwner: { id: ENTITY_TEST_CONSTANTS.USER_ID },
+        createdBy: { id: ENTITY_TEST_CONSTANTS.USER_ID }
+      };
+      mockApiClient.get.mockResolvedValue(mockRecord);
+
+      const options: EntityGetRecordByIdOptions = {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      };
+
+      const result = await entityService.getRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        options
+      );
+
+      // Verify the result includes expanded reference fields
+      expect(result).toBeDefined();
+      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(result.recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.createdBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+
+      // Verify the API call includes expansionLevel in params
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        ),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          })
+        })
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        entityService.getRecordById(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
