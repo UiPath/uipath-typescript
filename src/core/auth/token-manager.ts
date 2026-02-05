@@ -3,7 +3,7 @@ import { isBrowser } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
-import { TaskEventsService } from '../../services';
+import { TaskEventsServiceInternal } from '../../services';
 import { jwtDecode, JwtPayload } from 'jwt-decode';
 
 /**
@@ -22,12 +22,13 @@ export class TokenManager {
    * @param executionContext The execution context
    * @param config The SDK configuration
    * @param isOAuth Whether this is an OAuth-based authentication
+   * @param taskEventsService Internal task events service
    */
   constructor(
     private executionContext: ExecutionContext,
     private config: Config,
     private isOAuth: boolean = false,
-    private taskEventsService: TaskEventsService
+    private taskEventsService: TaskEventsServiceInternal
   ) {}
 
   /**

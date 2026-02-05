@@ -132,3 +132,9 @@ export class TaskEventsService {
     }
   }
 }
+
+// Internal interface exposes all methods including refreshAccessToken for use by TokenManager
+export type TaskEventsServiceInternal = TaskEventsService;
+
+// Public interface excludes internal methods - this is what SDK consumers see
+export type TaskEventsServicePublic = Omit<TaskEventsService, 'refreshAccessToken' | 'setTokenManager'>;

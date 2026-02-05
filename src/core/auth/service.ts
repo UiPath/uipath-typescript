@@ -6,12 +6,12 @@ import { AuthToken, TokenInfo, OAuthContext } from './types';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
-import { TaskEventsService } from '../../services';
+import { TaskEventsService, TaskEventsServicePublic, TaskEventsServiceInternal } from '../../services';
 import { jwtDecode, JwtPayload } from 'jwt-decode';
 
 export class AuthService extends BaseService {
   private tokenManager: TokenManager;
-  private taskEventsService: TaskEventsService;
+  private taskEventsService: TaskEventsServiceInternal;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     // Check if we should use stored OAuth context instead of provided config
@@ -98,9 +98,9 @@ export class AuthService extends BaseService {
   }
 
   /**
-   * Get the task events service instance
+   * Get the task events public service instance
    */
-  public getTaskEventsService(): TaskEventsService {
+  public getTaskEventsService(): TaskEventsServicePublic {
     return this.taskEventsService;
   }
 
@@ -392,8 +392,10 @@ export class AuthService extends BaseService {
       codeChallenge,
       scope
     });
+
+    const popupWindow = window.open(authUrl, 'OAuthWindow', 'height=500,width=500');
     
-    window.location.href = authUrl;
+    popupWindow!.location.href = authUrl;
   }
 
   private async _handleOAuthCallback(code: string, clientId: string, redirectUri: string): Promise<void> {

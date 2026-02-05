@@ -19,7 +19,7 @@ import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
 import { TokenManager } from './core/auth/token-manager';
 import { telemetryClient, trackEvent } from './core/telemetry';
-import { TaskEventsService } from './services/action-center/codedActionEventsService';
+import { TaskEventsServicePublic } from './services/action-center/codedActionEventsService';
 
 type ServiceConstructor<T> = new (config: UiPathConfig, context: ExecutionContext, tokenManager: TokenManager) => T;
 
@@ -217,9 +217,9 @@ export class UiPath {
   }
 
   /**
-   * Access to Task Events service
+   * Access to Task Events service public methods
    */
-  get taskEvents(): TaskEventsService {
+  get taskEvents(): TaskEventsServicePublic {
     return this.authService.getTaskEventsService();
   }
 
