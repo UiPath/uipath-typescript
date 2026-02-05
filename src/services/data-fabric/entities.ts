@@ -178,11 +178,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
-  }
-
+     // Convert PascalCase response to camelCase
+     const camelResponse = pascalToCamelCaseKeys(response.data);
+     // Apply EntityMap transformations
+     const transformedResponse = transformData(camelResponse, EntityMap);
+     return transformedResponse;
+   }
+   
   /**
    * Inserts a single record into an entity by entity ID
    *
