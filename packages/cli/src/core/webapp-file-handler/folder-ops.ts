@@ -42,21 +42,28 @@ export async function ensureContentRootExists(
     }
   }
 
-  if (!fullRemoteFolders.has(remoteContentRoot)) {
-    const bundleName = remoteContentRoot.split('/').filter(Boolean).pop()!;
-    const createdId = await api.createFolderAtRoot(config, bundleName, lockKey);
+  // Ensure full path source/<segment>/<segment>/... (supports nested bundlePath e.g. src/output)
+  const segments = remoteContentRoot.split('/').filter(Boolean);
+  let currentFolders = getRemoteFoldersMap(getStructure()!);
+  let currentPath = '';
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+    if (currentFolders.has(currentPath)) continue;
+    const createdId = await api.createFolderAtRoot(config, segment, lockKey);
     let next = await api.fetchRemoteStructure(config);
     setStructure(next);
-    const afterCreate = getRemoteFoldersMap(next);
-    const sourceId = afterCreate.get(REMOTE_SOURCE_FOLDER_NAME)?.id;
-    const newFolderId = createdId ?? afterCreate.get(bundleName)?.id;
-    if (sourceId && newFolderId) {
-      await api.moveFolder(config, newFolderId, sourceId, lockKey);
+    currentFolders = getRemoteFoldersMap(next);
+    const parentPath = i > 0 ? segments.slice(0, i).join('/') : '';
+    const parentId = parentPath ? currentFolders.get(parentPath)?.id : null;
+    const newFolderId = createdId ?? currentFolders.get(segment)?.id;
+    if (parentId && newFolderId) {
+      await api.moveFolder(config, newFolderId, parentId, lockKey);
       next = await api.fetchRemoteStructure(config);
       setStructure(next);
+      currentFolders = getRemoteFoldersMap(next);
     }
-    const afterMove = getRemoteFoldersMap(next);
-    if (!afterMove.has(remoteContentRoot)) {
+    if (!currentFolders.has(currentPath)) {
       throw new Error(MESSAGES.ERRORS.PUSH_SOURCE_FOLDER_CREATE_FAILED);
     }
   }
