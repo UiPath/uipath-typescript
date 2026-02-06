@@ -1,6 +1,8 @@
 # UiPath Maestro Process Management App
 
-A sample React TypeScript application demonstrating how to use the UiPath TypeScript SDK to build a Maestro Process Management dashboard.
+A sample React TypeScript application for managing UiPath Maestro processes with OAuth authentication.
+
+> This app uses the recommended modular import pattern for better performance and smaller bundle sizes. For the single-package import pattern, see [process-app-v0](../process-app-v0).
 
 ## SDK Usage
 
@@ -77,7 +79,7 @@ npm install @uipath/uipath-typescript
    VITE_UIPATH_TENANT_NAME=your-tenant-name
    VITE_UIPATH_BASE_URL=https://cloud.uipath.com
    VITE_UIPATH_REDIRECT_URI=http://localhost:5173
-   VITE_UIPATH_SCOPE=OR.License OR.License.Read OR.License.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.Users OR.Users.Read OR.Users.Write OR.Administration OR.Administration.Read OR.Administration.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.ML OR.ML.Read OR.ML.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.AutomationSolutions.Access PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write
+   VITE_UIPATH_SCOPE=PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write
    ```
 
 ### 4. Installation and Running
@@ -120,36 +122,40 @@ This above setup is for CORS Issue for local development, it creates a local pro
 
 ```
 src/
-├── components/          # React components
-│   ├── Dashboard.tsx    # Main dashboard with statistics
-│   ├── Header.tsx       # App header with auth status
-│   ├── LoginScreen.tsx  # OAuth login interface
-│   ├── Navigation.tsx   # Tab navigation
-│   ├── ProcessList.tsx  # Maestro processes view
-│   └── ProcessInstances.tsx # Process instances table
+├── components/
+│   ├── Header.tsx           # App header with auth status
+│   ├── InstanceDetails.tsx  # Instance details view
+│   ├── InstanceList.tsx     # Instance list component
+│   ├── LoginScreen.tsx      # OAuth login interface
+│   ├── Navigation.tsx       # Tab navigation
+│   ├── ProcessInstances.tsx # Process instances table
+│   └── ProcessList.tsx      # Maestro processes view
 ├── hooks/
-│   └── useAuth.tsx      # Authentication context and hooks
-├── services/
-│   └── auth.ts          # OAuth service implementation
-└── App.tsx              # Main application component
+│   └── useAuth.tsx          # Authentication context and hooks
+├── utils/
+│   └── formatters.ts        # Utility functions
+├── App.tsx                  # Main application component
+└── main.tsx                 # Application entry point
 ```
 
 ## Key Features
 
-### Dashboard
-- Live process statistics (total, running, completed, failed)
-- System status indicators
-- Quick action buttons
+### Process Overview (ProcessList)
+- Dashboard statistics (total processes, running, completed today, failed today)
+- List all Maestro processes with instance counts (completed, running, faulted, pending)
+- Visual progress bar for each process status distribution
+- Refresh data on demand
 
-### Process Management
-- View all Maestro processes with statistics
-- Start process instances
-- Real-time status updates
-
-### Process Instances
-- Monitor running and completed instances
-- View execution status and duration
-- Sortable table interface
+### Process Instances (ProcessInstances)
+- Paginated list of all process instances
+- Filter instances by process
+- View instance details including:
+  - Variables grouped by source
+  - Execution history
+  - BPMN activity type detection
+  - Action Center task links
+  - Entity attachments
+- Cancel faulted instances
 
 ## Technologies Used
 
