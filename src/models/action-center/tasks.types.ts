@@ -246,15 +246,16 @@ export type TaskGetByIdOptions = BaseOptions
 export type TaskGetUsersOptions = RequestOptions & PaginationOptions;
 
 export enum ActionCenterEventNames {
-  INIT = 'init',
-  COMPLETE = 'complete',
-  DATACHANGED = 'dataChanged',
-  LOADAPP = 'loadApp',
-  ERROR = 'error',
-  TOKENREFRESHED = 'tokenRefreshed',
-  LANGUAGECHANGED = 'languageChanged',
-  THEMECHANGED = 'themeChanged',
-  REFRESHTOKEN = 'refreshToken',
+  INIT = 'AC.init',
+  COMPLETE = 'AC.complete',
+  DATACHANGED = 'AC.dataChanged',
+  LOADAPP = 'AC.loadApp',
+  ERROR = 'AC.error',
+  TOKENREFRESHED = 'AC.tokenRefreshed',
+  LANGUAGECHANGED = 'AC.languageChanged',
+  THEMECHANGED = 'AC.themeChanged',
+  REFRESHTOKEN = 'AC.refreshToken',
+  DISPLAYMESSAGE = 'AC.displayMessage',
 }
 
 enum Theme {
@@ -263,6 +264,13 @@ enum Theme {
     dark = 'dark',
     lighthc = 'light-hc',
     darkhc = 'dark-hc',
+}
+
+export enum MessageTypes {
+  info = 'info',
+  error = 'error',
+  success = 'success',
+  warning = 'warning',
 }
 
 export type ActionCenterData = {

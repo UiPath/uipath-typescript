@@ -1,4 +1,4 @@
-import { ActionCenterData, ActionCenterEventResponsePayload, ActionCenterEventNames } from '../../models/action-center/tasks.types';
+import { ActionCenterData, ActionCenterEventResponsePayload, ActionCenterEventNames, MessageTypes } from '../../models/action-center/tasks.types';
 import type { TokenManager } from '../../core/auth/token-manager';
 
 export class TaskEventsService {
@@ -37,6 +37,14 @@ export class TaskEventsService {
       action: actionTaken,
     };
     this.sendMessageToParent(ActionCenterEventNames.COMPLETE, content);
+  }
+
+  displayMessage(msg: string, type: MessageTypes) {
+    const content = {
+      msg,
+      type,
+    }
+    this.sendMessageToParent(ActionCenterEventNames.DISPLAYMESSAGE, content);
   }
 
   getTaskDetailsFromActionCenter(callback: (data: ActionCenterData) => void): void {
@@ -103,8 +111,7 @@ export class TaskEventsService {
       if (event.data?.eventType === ActionCenterEventNames.LOADAPP && event.data?.content?.token) {
         this.updateToken(event.data.content.token);
       }
-
-      if (event.data?.eventType === ActionCenterEventNames.TOKENREFRESHED && event.data?.content?.newToken) {
+      else if (event.data?.eventType === ActionCenterEventNames.TOKENREFRESHED && event.data?.content?.newToken) {
         this.updateToken(event.data.content.newToken, true);
       }
     }
@@ -114,6 +121,12 @@ export class TaskEventsService {
     if (this.parentOrigin === null) {
       if (window.location.origin.endsWith('alpha.uipath.host')) {
         this.parentOrigin = 'https://alpha.uipath.com';
+      }
+      else if (window.location.origin.endsWith('staging.uipath.host')) {
+        this.parentOrigin = 'https://staging.uipath.com';
+      }
+      else if (window.location.origin.endsWith('cloud.uipath.host')) {
+        this.parentOrigin = 'https://cloud.uipath.com';
       }
     }
   }
