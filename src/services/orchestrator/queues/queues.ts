@@ -2,7 +2,9 @@ import { FolderScopedService } from '../../folder-scoped';
 import {
   QueueGetResponse,
   QueueGetAllOptions,
-  QueueGetByIdOptions
+  QueueGetByIdOptions,
+  QueueItem,
+  QueueItemPayload
 } from '../../../models/orchestrator/queues.types';
 import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
@@ -13,7 +15,7 @@ import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../ut
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
-import { QueueMap } from '../../../models/orchestrator/queues.constants';
+import { QueueMap, QueueItemMap } from '../../../models/orchestrator/queues.constants';
 import { track } from '../../../core/telemetry';
 
 /**
@@ -69,11 +71,11 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueGetResponse>
-      : NonPaginatedResponse<QueueGetResponse>
+    ? PaginatedResponse<QueueGetResponse>
+    : NonPaginatedResponse<QueueGetResponse>
   > {
     // Transformation function for queues
-    const transformQueueResponse = (queue: any) => 
+    const transformQueueResponse = (queue: any) =>
       transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
 
     return PaginationHelpers.getAll({
@@ -86,9 +88,9 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
         totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
-          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
-          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
-          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
         }
       }
     }, options) as any;
@@ -114,18 +116,56 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   @track('Queues.GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
+
     const response = await this.get<QueueGetResponse>(
       QUEUE_ENDPOINTS.GET_BY_ID(id),
-      { 
+      {
         headers,
         params: apiOptions
       }
     );
 
     return transformData(pascalToCamelCaseKeys(response.data) as QueueGetResponse, QueueMap);
+  }
+
+  /**
+   * Adds a new item to a queue
+   * 
+   * @param folderId - Required folder ID
+   * @param queueName - The name of the queue
+   * @param content - The specific data for the item
+   * @param priority - Optional priority (High, Normal, Low)
+   * @param reference - Optional reference string
+   * @returns Promise resolving to the created Queue Item
+   */
+  @track('Queues.AddQueueItem')
+  async addQueueItem(
+    folderId: number,
+    queueName: string,
+    content: Record<string, any>,
+    priority: 'High' | 'Normal' | 'Low' = 'Normal',
+    reference?: string
+  ): Promise<QueueItem> {
+    const payload: QueueItemPayload = {
+      itemData: {
+        Name: queueName,
+        Priority: priority,
+        SpecificContent: content,
+        Reference: reference
+      }
+    };
+
+    const response = await this.post<QueueItem>(
+      QUEUE_ENDPOINTS.ADD_ITEM,
+      payload,
+      {
+        headers: createHeaders({ [FOLDER_ID]: folderId })
+      }
+    );
+
+    return transformData(pascalToCamelCaseKeys(response.data) as QueueItem, QueueItemMap);
   }
 }
