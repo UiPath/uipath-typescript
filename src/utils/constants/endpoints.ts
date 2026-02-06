@@ -36,7 +36,7 @@ export const MAESTRO_ENDPOINTS = {
   },
   CASES: {
     GET_CASE_JSON: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/case-json`,
-    GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v1alpha1/element-executions/case-instances/${instanceId}`,
+    GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v1/element-executions/case-instances/${instanceId}`,
   },
 } as const;
 
@@ -56,6 +56,7 @@ export const TASK_ENDPOINTS = {
   COMPLETE_APP_TASK: `${ORCHESTRATOR_BASE}/tasks/AppTasks/CompleteAppTask`,
   COMPLETE_GENERIC_TASK: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/CompleteTask`,
   GET_TASK_FORM_BY_ID: `${ORCHESTRATOR_BASE}/forms/TaskForms/GetTaskFormById`,
+  GET_APP_TASK_BY_ID: `${ORCHESTRATOR_BASE}/tasks/AppTasks/GetAppTaskById`,
 } as const;
 
 /**

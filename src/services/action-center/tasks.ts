@@ -274,7 +274,12 @@ export class TaskService extends BaseService implements TaskServiceModel {
       const formOptions: TaskGetFormOptions = { expandOnFormLayout: true };
       return this.getFormTaskById(id, folderId || transformedTask.folderId, formOptions);
     }
-    
+
+    // Check if this is an app task and get app-specific data if it is
+    if (transformedTask.type === TaskType.App) {
+      return this.getAppTaskById(id, folderId || transformedTask.folderId);
+    }
+
     return createTaskWithMethods(
       applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
       this
@@ -508,6 +513,33 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const transformedFormTask = transformData(response.data, TaskMap);
     return createTaskWithMethods(
       applyDataTransforms(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
+      this
+    ) as TaskGetResponse;
+  }
+
+  /**
+   * Gets an app task by ID (private method)
+   *
+   * @param id - The ID of the app task to retrieve
+   * @param folderId - Required folder ID
+   * @returns Promise resolving to the app task
+   */
+  private async getAppTaskById(id: number, folderId: number): Promise<TaskGetResponse> {
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+
+    const response = await this.get<TaskGetResponse>(
+      TASK_ENDPOINTS.GET_APP_TASK_BY_ID,
+      {
+        params: {
+          taskId: id,
+          $expand: 'TaskSlaDetails'
+        },
+        headers
+      }
+    );
+    const transformedAppTask = transformData(response.data, TaskMap);
+    return createTaskWithMethods(
+      applyDataTransforms(transformedAppTask, { field: 'status', valueMap: TaskStatusMap }),
       this
     ) as TaskGetResponse;
   }

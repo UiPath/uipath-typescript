@@ -495,7 +495,8 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
       name: node.data?.label || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
       sla: node.data?.sla ? transformData(node.data.sla, StageSLAMap) : undefined,
       status: execution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
-      tasks: this.processTasks(node, executionMap, bindingsMap)
+      tasks: this.processTasks(node, executionMap, bindingsMap),
+      ...(node.type && { stageType: node.type })
     };
 
     return stage;
@@ -530,6 +531,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     // Prepare the enhanced options with proper typing
     const enhancedOptions: T = {
       ...options,
+      asTaskAdmin: true,
       filter,
       expand
     } as T;
