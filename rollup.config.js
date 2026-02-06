@@ -122,5 +122,40 @@ const configs = [
   }
 ];
 
+// Service-level entry points for modular imports
+const serviceEntries = [
+  {
+    name: 'feedback',
+    input: 'src/services/llmops/index.ts',
+    output: 'feedback/index'
+  }
+];
+
+// Generate ESM, CJS, and DTS builds for each service entry
+serviceEntries.forEach(({ name, input, output }) => {
+  // ESM bundle
+  configs.push({
+    input,
+    output: { file: `dist/${output}.mjs`, format: 'es', inlineDynamicImports: true },
+    plugins: createPlugins(false),
+    external: allDependencies
+  });
+
+  // CommonJS bundle
+  configs.push({
+    input,
+    output: { file: `dist/${output}.cjs`, format: 'cjs', exports: 'named', inlineDynamicImports: true },
+    plugins: createPlugins(false),
+    external: allDependencies
+  });
+
+  // Type definitions
+  configs.push({
+    input,
+    output: { file: `dist/${output}.d.ts`, format: 'es' },
+    plugins: [dts()]
+  });
+});
+
 // Export all build configurations
 export default configs; 

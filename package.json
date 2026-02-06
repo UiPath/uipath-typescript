@@ -25,6 +25,16 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
+        },
+        "./feedback": {
+            "import": {
+                "types": "./dist/feedback/index.d.ts",
+                "default": "./dist/feedback/index.mjs"
+            },
+            "require": {
+                "types": "./dist/feedback/index.d.ts",
+                "default": "./dist/feedback/index.cjs"
+            }
         }
     },
     "files": [

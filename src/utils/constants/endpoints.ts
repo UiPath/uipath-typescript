@@ -10,6 +10,7 @@ export const ORCHESTRATOR_BASE = 'orchestrator_';
 export const PIMS_BASE = 'pims_';
 export const DATAFABRIC_BASE = 'datafabric_';
 export const IDENTITY_BASE = 'identity_';
+export const LLMOPS_BASE = 'llmops_';
 
 /**
  * Maestro Process Service Endpoints
@@ -125,4 +126,18 @@ export const ASSET_ENDPOINTS = {
   GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered`,
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Assets(${id})`,
+} as const;
+
+/**
+ * LLMOps Feedback Service Endpoints
+ */
+export const FEEDBACK_ENDPOINTS = {
+  CREATE: `${LLMOPS_BASE}/api/Feedback`,
+  GET_ALL: `${LLMOPS_BASE}/api/Feedback`,
+  GET_BY_ID: (id: string) => `${LLMOPS_BASE}/api/Feedback/${id}`,
+  UPDATE: (id: string) => `${LLMOPS_BASE}/api/Feedback/${id}`,
+  DELETE: (id: string) => `${LLMOPS_BASE}/api/Feedback/${id}`,
+  CREATE_CATEGORY: `${LLMOPS_BASE}/api/Feedback/category`,
+  GET_CATEGORIES: `${LLMOPS_BASE}/api/Feedback/category`,
+  DELETE_CATEGORY: (id: string) => `${LLMOPS_BASE}/api/Feedback/category/${id}`,
 } as const;
