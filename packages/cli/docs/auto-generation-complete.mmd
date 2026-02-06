@@ -1,0 +1,72 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4F46E5', 'fontSize': '14px'}}}%%
+
+graph TB
+    subgraph TITLE[" "]
+        T["🔄 SDK Auto-Generation Architecture"]
+    end
+
+    subgraph SDK["📦 SDK Source"]
+        SDK_SERVICES["Service Classes"]
+        SDK_TYPES["Type Definitions"]
+        SDK_JSDOC["JSDoc Comments"]
+    end
+
+    TRIGGER{{"npm run generate"}}
+
+    subgraph CONFIG["⚙️ Configuration"]
+        CFG["Output path, naming conventions,<br/>service filters, method overrides"]
+    end
+
+    subgraph PARSE["🔍 AST Parsing"]
+        P1["Extract classes"]
+        P2["Extract methods"]
+        P3["Extract parameters"]
+        P4["Resolve types"]
+        P1 --> P2 --> P3 --> P4
+    end
+
+    subgraph INTERMEDIATE["📋 ServiceInfo"]
+        META["Structured metadata for<br/>all services and methods"]
+    end
+
+    subgraph CLI_GEN["⌨️ CLI Generator"]
+        CLI_T["Transform to oclif commands"]
+    end
+
+    subgraph MCP_GEN["🤖 MCP Generator"]
+        MCP_T["Transform to MCP tools + Zod"]
+    end
+
+    subgraph CLI_FILES["📁 CLI Files"]
+        CLI_F["47 command files<br/>in topic directories"]
+    end
+
+    subgraph MCP_FILES["📁 MCP Files"]
+        MCP_F["4 category files<br/>+ index"]
+    end
+
+    subgraph RUNTIME["🚀 Runtime"]
+        CLI_RUN["Terminal commands"]
+        MCP_RUN["AI tool calls"]
+    end
+
+    SDK --> TRIGGER --> CONFIG --> PARSE --> INTERMEDIATE
+    INTERMEDIATE --> CLI_GEN --> CLI_FILES --> CLI_RUN
+    INTERMEDIATE --> MCP_GEN --> MCP_FILES --> MCP_RUN
+
+    style TITLE fill:none,stroke:none
+    style T fill:#4F46E5,stroke:#3730A3,color:#fff
+
+    style SDK fill:#E0E7FF,stroke:#4F46E5
+    style CONFIG fill:#FEF3C7,stroke:#F59E0B
+    style PARSE fill:#DDD6FE,stroke:#7C3AED
+    style INTERMEDIATE fill:#FECACA,stroke:#EF4444
+
+    style CLI_GEN fill:#D1FAE5,stroke:#10B981
+    style CLI_FILES fill:#A7F3D0,stroke:#059669
+
+    style MCP_GEN fill:#FFEDD5,stroke:#F97316
+    style MCP_FILES fill:#FED7AA,stroke:#EA580C
+
+    style RUNTIME fill:#FCE7F3,stroke:#EC4899
+    style TRIGGER fill:#EC4899,stroke:#DB2777,color:#fff

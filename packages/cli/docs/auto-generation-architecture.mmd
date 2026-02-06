@@ -1,0 +1,64 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4F46E5', 'primaryTextColor': '#fff', 'primaryBorderColor': '#3730A3', 'lineColor': '#6366F1'}}}%%
+
+flowchart TB
+    subgraph SDK["📦 SDK Source - Single Source of Truth"]
+        SDK_SRC["TypeScript Service Classes<br/>TaskService, EntityService, ProcessService, etc."]
+    end
+
+    subgraph SHARED["🔄 Shared Parsing Layer"]
+        TSMORPH["ts-morph AST Parser"]
+        PARSER["service-parser.ts"]
+        META["ServiceInfo Array<br/>Intermediate Representation"]
+
+        TSMORPH --> PARSER --> META
+    end
+
+    subgraph CLI_GEN["⌨️ CLI Generator"]
+        CLI_CONFIG["Configuration"]
+        CLI_CMD_GEN["command-generator.ts"]
+        CLI_ENTRY["Entry: npm run generate"]
+
+        CLI_CONFIG --> CLI_CMD_GEN --> CLI_ENTRY
+    end
+
+    subgraph MCP_GEN["🤖 MCP Generator"]
+        MCP_CONFIG["Configuration"]
+        MCP_SCHEMA["schema-converter.ts"]
+        MCP_TOOL["tool-generator.ts"]
+        MCP_ENTRY["Entry: npm run generate"]
+
+        MCP_CONFIG --> MCP_SCHEMA --> MCP_TOOL --> MCP_ENTRY
+    end
+
+    subgraph CLI_OUT["📁 CLI Output"]
+        CLI_STRUCT["commands/generated/<br/>├── tasks/<br/>├── entities/<br/>├── maestro/<br/>└── ..."]
+    end
+
+    subgraph MCP_OUT["📁 MCP Output"]
+        MCP_STRUCT["tools/generated/<br/>├── action-center.ts<br/>├── maestro.ts<br/>└── ..."]
+    end
+
+    subgraph RUNTIME["🚀 Runtime"]
+        CLI_RUN["CLI: uipath tasks create"]
+        MCP_RUN["MCP: AI calls tools"]
+    end
+
+    SDK_SRC --> TSMORPH
+    META --> CLI_CONFIG
+    META --> MCP_CONFIG
+    CLI_ENTRY --> CLI_STRUCT --> CLI_RUN
+    MCP_ENTRY --> MCP_STRUCT --> MCP_RUN
+
+    classDef sdkStyle fill:#4F46E5,stroke:#3730A3,color:#fff
+    classDef sharedStyle fill:#8B5CF6,stroke:#6D28D9,color:#fff
+    classDef cliStyle fill:#10B981,stroke:#059669,color:#fff
+    classDef mcpStyle fill:#F59E0B,stroke:#D97706,color:#fff
+    classDef outputStyle fill:#6366F1,stroke:#4F46E5,color:#fff
+    classDef runtimeStyle fill:#EC4899,stroke:#DB2777,color:#fff
+
+    class SDK_SRC sdkStyle
+    class TSMORPH,PARSER,META sharedStyle
+    class CLI_CONFIG,CLI_CMD_GEN,CLI_ENTRY cliStyle
+    class MCP_CONFIG,MCP_SCHEMA,MCP_TOOL,MCP_ENTRY mcpStyle
+    class CLI_STRUCT,MCP_STRUCT outputStyle
+    class CLI_RUN,MCP_RUN runtimeStyle

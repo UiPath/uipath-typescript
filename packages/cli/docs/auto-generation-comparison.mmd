@@ -1,0 +1,55 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4F46E5'}}}%%
+
+flowchart TB
+    subgraph SOURCE["📦 Common Source"]
+        SDK["SDK TypeScript Services<br/>11 Services • 47 Methods"]
+    end
+
+    subgraph PARSING["🔍 Shared Parsing"]
+        PARSER["service-parser.ts using ts-morph"]
+        META["ServiceInfo Array"]
+        PARSER --> META
+    end
+
+    SDK --> PARSER
+
+    subgraph CLI_SIDE["⌨️ CLI Generation"]
+        CLI_GEN["command-generator.ts"]
+        CLI_F["• oclif Framework<br/>• kebab-case flags<br/>• JSON/Table/YAML output<br/>• Interactive spinners"]
+        CLI_S["One file per command<br/>generated/tasks/create.ts"]
+        CLI_GEN --> CLI_F --> CLI_S
+    end
+
+    subgraph MCP_SIDE["🤖 MCP Generation"]
+        MCP_GEN["tool-generator.ts"]
+        MCP_F["• MCP Protocol<br/>• snake_case names<br/>• Zod schemas<br/>• JSON responses"]
+        MCP_S["One file per category<br/>generated/action-center.ts"]
+        MCP_GEN --> MCP_F --> MCP_S
+    end
+
+    META --> CLI_GEN
+    META --> MCP_GEN
+
+    subgraph STATS["📊 Output: 47 Commands/Tools"]
+        S1["Action Center: 8"]
+        S2["Data Fabric: 6"]
+        S3["Maestro: 21"]
+        S4["Orchestrator: 12"]
+    end
+
+    CLI_S --> STATS
+    MCP_S --> STATS
+
+    subgraph USAGE["🚀 Usage"]
+        CLI_USE["Terminal:<br/>$ uipath tasks create --task '...'"]
+        MCP_USE["AI/Claude:<br/>Calls tasks_create tool"]
+    end
+
+    STATS --> USAGE
+
+    style SOURCE fill:#E0E7FF,stroke:#4F46E5
+    style PARSING fill:#DDD6FE,stroke:#7C3AED
+    style CLI_SIDE fill:#D1FAE5,stroke:#10B981
+    style MCP_SIDE fill:#FFEDD5,stroke:#F97316
+    style STATS fill:#FEF3C7,stroke:#F59E0B
+    style USAGE fill:#FCE7F3,stroke:#EC4899

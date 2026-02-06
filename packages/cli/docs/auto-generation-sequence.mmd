@@ -1,0 +1,51 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4F46E5', 'actorLineColor': '#6366F1'}}}%%
+
+sequenceDiagram
+    autonumber
+    participant Dev as Developer
+    participant CLI as Generator CLI
+    participant Parser as Service Parser
+    participant TSMorph as ts-morph
+    participant SDK as SDK Source
+    participant Gen as Code Generator
+    participant FS as File System
+
+    Note over Dev,FS: Generation Process
+
+    Dev->>CLI: npm run generate
+    CLI->>CLI: Load configuration
+
+    CLI->>Parser: Parse SDK services
+    Parser->>TSMorph: Create AST project
+    TSMorph->>SDK: Read TypeScript files
+    SDK-->>TSMorph: Source contents
+
+    Note over TSMorph: Extract service classes,<br/>methods, parameters, types
+
+    TSMorph-->>Parser: AST nodes
+    Parser-->>CLI: ServiceInfo[]
+
+    CLI->>Gen: Generate code from metadata
+
+    Note over Gen: Transform services to<br/>CLI commands or MCP tools
+
+    Gen->>FS: Write generated files
+    FS-->>Gen: Files written
+
+    Gen-->>CLI: Generation complete
+    CLI-->>Dev: 47 commands/tools generated
+
+    Note over Dev,FS: Build Process
+
+    Dev->>CLI: npm run build
+    CLI->>FS: TypeScript compile
+    FS-->>Dev: Compiled JavaScript
+
+    Note over Dev,FS: Ready for Use
+
+    alt CLI Usage
+        Dev->>SDK: uipath tasks create --task "..."
+    else MCP Usage
+        Note over Dev: AI calls MCP tool
+        Dev->>SDK: Execute tool handler
+    end

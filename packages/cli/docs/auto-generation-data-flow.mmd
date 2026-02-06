@@ -1,0 +1,38 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4F46E5'}}}%%
+
+flowchart LR
+    subgraph INPUT["📥 SDK Source"]
+        direction TB
+        TS_CODE["TypeScript Service Classes<br/>• Method signatures<br/>• Parameter types<br/>• JSDoc comments<br/>• Return types"]
+    end
+
+    subgraph PARSE["🔍 AST Parsing"]
+        direction TB
+        AST["ts-morph extracts:<br/>• Class declarations<br/>• Method declarations<br/>• Parameters & types<br/>• Documentation"]
+    end
+
+    subgraph INTERMEDIATE["📋 ServiceInfo"]
+        direction TB
+        SERVICE_INFO["Structured metadata:<br/>• Service name & category<br/>• Method definitions<br/>• Parameter details<br/>• Type information"]
+    end
+
+    subgraph CLI_OUTPUT["⌨️ CLI Commands"]
+        direction TB
+        CLI_CODE["oclif Command classes:<br/>• Flag definitions<br/>• run() method<br/>• SDK client calls<br/>• Output formatting"]
+    end
+
+    subgraph MCP_OUTPUT["🤖 MCP Tools"]
+        direction TB
+        MCP_CODE["MCP tool definitions:<br/>• Zod input schemas<br/>• Execute handlers<br/>• SDK client calls<br/>• JSON responses"]
+    end
+
+    INPUT --> PARSE
+    PARSE --> INTERMEDIATE
+    INTERMEDIATE --> CLI_OUTPUT
+    INTERMEDIATE --> MCP_OUTPUT
+
+    style INPUT fill:#E0E7FF,stroke:#4F46E5
+    style PARSE fill:#DDD6FE,stroke:#7C3AED
+    style INTERMEDIATE fill:#FEF3C7,stroke:#F59E0B
+    style CLI_OUTPUT fill:#D1FAE5,stroke:#10B981
+    style MCP_OUTPUT fill:#FFEDD5,stroke:#F97316
