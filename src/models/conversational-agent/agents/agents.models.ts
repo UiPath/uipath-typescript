@@ -4,7 +4,7 @@
  * Provides fluent API for agent objects returned from getAll() and getById().
  */
 
-import type { AgentGetResponse, AgentGetByIdResponse } from './agents.types';
+import type { RawAgentGetResponse, RawAgentGetByIdResponse } from './agents.types';
 import type {
   ConversationServiceModel,
   ConversationGetResponse,
@@ -12,13 +12,13 @@ import type {
 } from '../conversations';
 
 /**
- * Options for creating a conversation from an agent (without agentReleaseId/folderId)
+ * Options for creating a conversation from an agent (without agentId/folderId)
  */
-export type AgentCreateConversationOptions = Omit<CreateConversationOptions, 'agentReleaseId' | 'folderId'>;
+export type AgentCreateConversationOptions = Omit<CreateConversationOptions, 'agentId' | 'folderId'>;
 
 /**
  * Scoped conversation service for a specific agent.
- * Auto-fills agentReleaseId and folderId from the agent.
+ * Auto-fills agentId and folderId from the agent.
  */
 export interface AgentConversationServiceModel {
   /**
@@ -51,25 +51,25 @@ export interface AgentMethods {
 /**
  * Agent response with fluent methods (from getAll)
  */
-export type AgentGetResponseWithMethods = AgentGetResponse & AgentMethods;
+export type AgentGetResponse = RawAgentGetResponse & AgentMethods;
 
 /**
  * Agent response with fluent methods (from getById)
  */
-export type AgentGetByIdResponseWithMethods = AgentGetByIdResponse & AgentMethods;
+export type AgentGetByIdResponse = RawAgentGetByIdResponse & AgentMethods;
 
 /**
  * Creates methods for an agent
  */
 function createAgentMethods(
-  agentData: AgentGetResponse,
+  agentData: RawAgentGetResponse,
   conversationService: ConversationServiceModel
 ): AgentMethods {
   const agentConversations: AgentConversationServiceModel = {
     async create(options: AgentCreateConversationOptions = {}): Promise<ConversationGetResponse> {
       return conversationService.create({
         ...options,
-        agentReleaseId: agentData.id,
+        agentId: agentData.id,
         folderId: agentData.folderId
       });
     }
@@ -88,11 +88,11 @@ function createAgentMethods(
  * @returns Agent object with added methods
  */
 export function createAgentWithMethods(
-  agentData: AgentGetResponse,
+  agentData: RawAgentGetResponse,
   conversationService: ConversationServiceModel
-): AgentGetResponseWithMethods {
+): AgentGetResponse {
   const methods = createAgentMethods(agentData, conversationService);
-  return Object.assign({}, agentData, methods) as AgentGetResponseWithMethods;
+  return Object.assign({}, agentData, methods) as AgentGetResponse;
 }
 
 /**
@@ -103,9 +103,9 @@ export function createAgentWithMethods(
  * @returns Agent object with added methods
  */
 export function createAgentByIdWithMethods(
-  agentData: AgentGetByIdResponse,
+  agentData: RawAgentGetByIdResponse,
   conversationService: ConversationServiceModel
-): AgentGetByIdResponseWithMethods {
+): AgentGetByIdResponse {
   const methods = createAgentMethods(agentData, conversationService);
-  return Object.assign({}, agentData, methods) as AgentGetByIdResponseWithMethods;
+  return Object.assign({}, agentData, methods) as AgentGetByIdResponse;
 }

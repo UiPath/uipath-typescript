@@ -14,10 +14,10 @@ import type {
   ConversationalAgentServiceModel,
   ConversationalAgentOptions,
   FeatureFlags,
+  RawAgentGetResponse,
+  RawAgentGetByIdResponse,
   AgentGetResponse,
-  AgentGetByIdResponse,
-  AgentGetResponseWithMethods,
-  AgentGetByIdResponseWithMethods
+  AgentGetByIdResponse
 } from '@/models/conversational-agent';
 import {
   AgentMap,
@@ -59,7 +59,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    *
    * Returns agents with helper methods attached via `createAgentWithMethods()`.
    * Each agent has a `conversations.create()` method that simplifies
-   * creating conversations without manually passing `agentReleaseId` and `folderId`.
+   * creating conversations without manually passing `agentId` and `folderId`.
    *
    * @param folderId - Optional folder ID to filter agents
    * @returns Promise resolving to an array of available agents with helper methods
@@ -69,7 +69,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * const agents = await conversationalAgent.getAll();
    * const agent = agents[0];
    *
-   * // Create conversation directly from agent (agentReleaseId and folderId are auto-filled)
+   * // Create conversation directly from agent (agentId and folderId are auto-filled)
    * const conversation = await agent.conversations.create({ label: 'My Chat' });
    * ```
    *
@@ -79,7 +79,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * const agents = await conversationalAgent.getAll();
    * const agent = agents.find(a => a.name === 'Customer Support Bot');
    *
-   * // Create conversation (no need to pass agentReleaseId/folderId - auto-filled)
+   * // Create conversation (no need to pass agentId/folderId - auto-filled)
    * const conversation = await agent.conversations.create({
    *   label: 'Support Session'
    * });
@@ -126,12 +126,12 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * ```
    */
   @track('ConversationalAgent.GetAll')
-  async getAll(folderId?: number): Promise<AgentGetResponseWithMethods[]> {
-    const response = await this.get<AgentGetResponse[]>(AGENT_ENDPOINTS.LIST, {
+  async getAll(folderId?: number): Promise<AgentGetResponse[]> {
+    const response = await this.get<RawAgentGetResponse[]>(AGENT_ENDPOINTS.LIST, {
       params: folderId !== undefined ? { folderId } : undefined,
     });
     return response.data.map((agent) =>
-      createAgentWithMethods(transformData(agent, AgentMap) as AgentGetResponse, this.conversations)
+      createAgentWithMethods(transformData(agent, AgentMap) as RawAgentGetResponse, this.conversations)
     );
   }
 
@@ -140,7 +140,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    *
    * Returns the agent with helper methods attached via `createAgentByIdWithMethods()`.
    * The returned agent has a `conversations.create()` method that simplifies
-   * creating conversations without manually passing `agentReleaseId` and `folderId`.
+   * creating conversations without manually passing `agentId` and `folderId`.
    *
    * @param id - ID of the agent release
    * @param folderId - ID of the folder containing the agent
@@ -150,7 +150,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * ```typescript
    * const agent = await conversationalAgent.getById(agentId, folderId);
    *
-   * // Create conversation directly from agent (agentReleaseId and folderId are auto-filled)
+   * // Create conversation directly from agent (agentId and folderId are auto-filled)
    * const conversation = await agent.conversations.create();
    * ```
    *
@@ -159,7 +159,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * // Get specific agent
    * const agent = await conversationalAgent.getById(123, 456);
    *
-   * // Create conversation with label (agentReleaseId/folderId auto-filled)
+   * // Create conversation with label (agentId/folderId auto-filled)
    * const conversation = await agent.conversations.create({
    *   label: 'Customer Inquiry'
    * });
@@ -187,10 +187,10 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * ```
    */
   @track('ConversationalAgent.GetById')
-  async getById(id: number, folderId: number): Promise<AgentGetByIdResponseWithMethods> {
-    const response = await this.get<AgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
+  async getById(id: number, folderId: number): Promise<AgentGetByIdResponse> {
+    const response = await this.get<RawAgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
     return createAgentByIdWithMethods(
-      transformData(response.data, AgentMap) as AgentGetByIdResponse,
+      transformData(response.data, AgentMap) as RawAgentGetByIdResponse,
       this.conversations
     );
   }

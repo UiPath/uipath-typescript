@@ -23,7 +23,7 @@
  *
  * // Create a conversation
  * const conversation = await agent.conversations.create({
- *   agentReleaseId: agents[0].id,
+ *   agentId: agents[0].id,
  *   folderId: agents[0].folderId
  * });
  *

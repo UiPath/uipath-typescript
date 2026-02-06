@@ -17,8 +17,8 @@ export type ConversationDeleteResponse = RawConversationGetResponse;
 // ==================== Conversation Request Types ====================
 
 export interface CreateConversationOptions {
-  /** Agent release ID (required) */
-  agentReleaseId: number;
+  /** Agent ID (required) */
+  agentId: number;
   /** Folder ID (required) */
   folderId: number;
   /** Human-readable label for the conversation (max 100 chars) */

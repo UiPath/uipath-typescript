@@ -25,5 +25,3 @@ export * from './content-part-helper';
 
 // Transformers
 export * from './transformers';
-
-export { ConversationEventName } from '@/models/conversational-agent';

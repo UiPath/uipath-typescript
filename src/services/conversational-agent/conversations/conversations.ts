@@ -33,7 +33,7 @@ import { CONVERSATION_ENDPOINTS } from '@/utils/constants/endpoints';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
-import { transformData } from '@/utils/transform';
+import { transformData, transformRequest } from '@/utils/transform';
 
 // Local imports
 import {
@@ -59,7 +59,7 @@ import { SessionManager } from '../session';
  *
  * // Create a new conversation
  * const conversation = await conversations.create({
- *   agentReleaseId: 123,
+ *   agentId: 123,
  *   folderId: 456
  * });
  *
@@ -120,7 +120,10 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   @track('ConversationalAgent.Conversations.Create')
   async create(options: CreateConversationOptions): Promise<ConversationCreateResponse> {
-    const response = await this.post<RawConversationGetResponse>(CONVERSATION_ENDPOINTS.CREATE, options);
+    // Transform SDK field names to API field names (e.g., agentId → agentReleaseId)
+    const apiPayload = transformRequest(options, ConversationMap);
+
+    const response = await this.post<RawConversationGetResponse>(CONVERSATION_ENDPOINTS.CREATE, apiPayload);
     const transformedData = transformData(response.data, ConversationMap) as RawConversationGetResponse;
     return createConversationWithMethods(transformedData, this, this);
   }

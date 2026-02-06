@@ -9,7 +9,7 @@ import {
   ProcessGetByIdOptions
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, reverseMap, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { ProcessMap } from '../../../models/orchestrator/processes.constants';
 import { FOLDER_ID } from '../../../utils/constants/headers';
@@ -127,21 +127,10 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
   @track('Processes.Start')
   async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    // Transform processKey/processName to releaseKey/releaseName for API compatibility
-    const apiRequest: Record<string, any> = { ...request };
-    
-    // Create a reverse mapping using ProcessMap
-    const reversedPropertiesMap = reverseMap(ProcessMap);
-    
-    // Apply transformations for any client properties found in the request
-    Object.entries(reversedPropertiesMap).forEach(([clientKey, apiKey]) => {
-      if (clientKey in apiRequest) {
-        apiRequest[apiKey] = apiRequest[clientKey];
-        delete apiRequest[clientKey];
-      }
-    });
-    
+
+    // Transform SDK field names to API field names (e.g., processKey → releaseKey)
+    const apiRequest = transformRequest(request, ProcessMap);
+
     // Create the request object according to API spec
     const requestBody = {
       startInfo: apiRequest

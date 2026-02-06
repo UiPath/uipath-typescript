@@ -335,7 +335,7 @@ export interface RawConversationGetResponse {
    */
   label: string;
   /**
-   * Whether the conversation label should be automatically generated.
+   * Whether the conversation label was automatically generated.
    */
   autogenerateLabel: boolean;
   /**
@@ -355,9 +355,9 @@ export interface RawConversationGetResponse {
    */
   folderId: number;
   /**
-   * Identifier of the specific agentId used
+   * Identifier of the agent used for this conversation
    */
-  agentReleaseId?: number;
+  agentId?: number;
   /**
    * Trace identifier for distributed tracing.
    */
