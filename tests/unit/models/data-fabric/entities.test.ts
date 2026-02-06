@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createEntityWithMethods } from '../../../../src/models/data-fabric/entities.models';
 import type { EntityServiceModel } from '../../../../src/models/data-fabric/entities.models';
-import { createBasicEntity, createMockEntityRecords, createMockSingleInsertResponse, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
+import { createBasicEntity, createMockEntityRecord, createMockEntityRecords, createMockSingleInsertResponse, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 
 // ===== TEST SUITE =====
@@ -15,6 +15,7 @@ describe('Entity Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       getRecordsById: vi.fn(),
+      getRecordById: vi.fn(),
       insertById: vi.fn(),
       batchInsertById: vi.fn(),
       updateById: vi.fn(),
@@ -417,6 +418,62 @@ describe('Entity Models', () => {
       });
     });
 
+    describe('entity.getRecord()', () => {
+      it('should call getRecordById with entity id, recordId, and no options', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const mockRecord = createMockEntityRecord();
+        mockService.getRecordById = vi.fn().mockResolvedValue(mockRecord);
+
+        const result = await entity.getRecord(ENTITY_TEST_CONSTANTS.RECORD_ID);
+
+        expect(mockService.getRecordById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          undefined
+        );
+        expect(result).toEqual(mockRecord);
+      });
+
+      it('should call getRecordById with entity id, recordId, and options', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const options = { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL };
+        const mockRecord = createMockEntityRecord({ name: 'Expanded Record' });
+        mockService.getRecordById = vi.fn().mockResolvedValue(mockRecord);
+
+        const result = await entity.getRecord(ENTITY_TEST_CONSTANTS.RECORD_ID, options);
+
+        expect(mockService.getRecordById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          options
+        );
+        expect(result).toEqual(mockRecord);
+        expect(result.name).toBe('Expanded Record');
+      });
+
+      it('should throw error if entity id is undefined', async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.getRecord(ENTITY_TEST_CONSTANTS.RECORD_ID)).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED
+        );
+      });
+
+      it('should throw error if record id is undefined', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.getRecord(undefined as any)).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED
+        );
+      });
+    });
+
     describe('entity.downloadAttachment()', () => {
       it('should call downloadAttachment with entity name, recordId, and fieldName', async () => {
         const entityData = createBasicEntity();
@@ -487,6 +544,7 @@ describe('Entity Models', () => {
       expect(typeof entity.update).toBe('function');
       expect(typeof entity.delete).toBe('function');
       expect(typeof entity.getRecords).toBe('function');
+      expect(typeof entity.getRecord).toBe('function');
       expect(typeof entity.downloadAttachment).toBe('function');
     });
   });
