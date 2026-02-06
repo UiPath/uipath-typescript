@@ -1,3 +1,4 @@
+import path from 'path';
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
 import type {
@@ -14,7 +15,7 @@ import {
 import { collectLocalFiles, computeHash } from './local-files.js';
 import { computeExecutionPlan, computeFirstPushPlan } from './push-plan.js';
 import * as api from './api.js';
-import { prepareMetadataFileForPlan } from './metadata.js';
+import { prepareMetadataFileForPlan, uploadPushMetadataToRemote } from './metadata.js';
 import {
   buildFolderIdMap,
   ensureContentRootExists,
@@ -118,10 +119,19 @@ export class WebAppFileHandler {
     await prepareMetadataFileForPlan(
       this.config,
       fullRemoteFiles,
-      (config, fileId) => api.downloadRemoteFile(config, fileId)
+      (config, fileId) => api.downloadRemoteFile(config, fileId),
+      plan
     );
 
     const folderIdMap = buildFolderIdMap(this.projectStructure!);
+    const metadataPath = path.join(this.config.rootDir, this.config.manifestFile);
+    await uploadPushMetadataToRemote(
+      this.config,
+      metadataPath,
+      fullRemoteFiles,
+      folderIdMap,
+      this.lockKey
+    );
     if (plan.createFolders.length > 0) {
       this.config.logger.log(chalk.gray(`[push] Creating ${plan.createFolders.length} folder(s)...`));
     }

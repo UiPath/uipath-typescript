@@ -1,6 +1,6 @@
 import * as path from 'path';
 import chalk from 'chalk';
-import { STUDIO_METADATA_FILENAME, STUDIO_METADATA_RELATIVE_PATH } from '../../constants/api.js';
+import { PUSH_METADATA_FILENAME, PUSH_METADATA_RELATIVE_PATH } from '../../constants/api.js';
 import { MESSAGES } from '../../constants/index.js';
 import type {
   FileOperationPlan,
@@ -83,8 +83,8 @@ export async function computeExecutionPlan(
       }
     } else {
       if (
-        localFile.path === STUDIO_METADATA_RELATIVE_PATH ||
-        localFile.path === STUDIO_METADATA_FILENAME
+        localFile.path === PUSH_METADATA_RELATIVE_PATH ||
+        localFile.path === PUSH_METADATA_FILENAME
       ) {
         continue;
       }
@@ -98,8 +98,8 @@ export async function computeExecutionPlan(
 
   for (const [filePath, remoteFile] of remoteFiles.entries()) {
     if (
-      filePath === STUDIO_METADATA_RELATIVE_PATH ||
-      filePath === STUDIO_METADATA_FILENAME
+      filePath === PUSH_METADATA_RELATIVE_PATH ||
+      filePath === PUSH_METADATA_FILENAME
     ) {
       continue;
     }
@@ -110,15 +110,26 @@ export async function computeExecutionPlan(
     }
   }
 
+  // Normalize folder paths for comparison so case or slash differences don't create false "new" folders.
+  const requiredFoldersNormalized = new Set(
+    [...requiredFolders].map((p) => p.replace(/\\/g, '/').toLowerCase())
+  );
+  const remoteFoldersByNormalized = new Map<string, string>();
+  for (const key of remoteFolders.keys()) {
+    const n = key.replace(/\\/g, '/').toLowerCase();
+    remoteFoldersByNormalized.set(n, key);
+  }
   for (const folderPath of requiredFolders) {
-    if (!remoteFolders.has(folderPath)) {
+    const normalized = folderPath.replace(/\\/g, '/').toLowerCase();
+    if (!remoteFoldersByNormalized.has(normalized)) {
       plan.createFolders.push({ path: folderPath });
     }
   }
 
   const contentRootPrefix = remoteContentRoot + '/';
   for (const [folderPath, folder] of remoteFolders.entries()) {
-    if (requiredFolders.has(folderPath)) continue;
+    const normalizedFolder = folderPath.replace(/\\/g, '/').toLowerCase();
+    if (requiredFoldersNormalized.has(normalizedFolder)) continue;
     const normalizedRemote = folderPath.replace(/\\/g, '/');
     const isUnderContentRoot = normalizedRemote.startsWith(contentRootPrefix);
     if (isUnderContentRoot && folder.id) {
@@ -152,8 +163,8 @@ export function computeFirstPushPlan(
 
   for (const localFile of localFiles) {
     if (
-      localFile.path === STUDIO_METADATA_RELATIVE_PATH ||
-      localFile.path === STUDIO_METADATA_FILENAME
+      localFile.path === PUSH_METADATA_RELATIVE_PATH ||
+      localFile.path === PUSH_METADATA_FILENAME
     ) {
       continue;
     }
