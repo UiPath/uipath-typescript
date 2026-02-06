@@ -163,6 +163,11 @@ const serviceEntries = [
     name: 'maestro-processes',
     input: 'src/services/maestro/processes/index.ts',
     output: 'maestro-processes/index'
+  },
+  {
+    name: 'feedback',
+    input: 'src/services/llmops/index.ts',
+    output: 'feedback/index'
   }
 ];
 

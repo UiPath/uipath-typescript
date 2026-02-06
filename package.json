@@ -115,6 +115,16 @@
                 "types": "./dist/maestro-processes/index.d.ts",
                 "default": "./dist/maestro-processes/index.cjs"
             }
+        },
+        "./feedback": {
+            "import": {
+                "types": "./dist/feedback/index.d.ts",
+                "default": "./dist/feedback/index.mjs"
+            },
+            "require": {
+                "types": "./dist/feedback/index.d.ts",
+                "default": "./dist/feedback/index.cjs"
+            }
         }
     },
     "files": [
