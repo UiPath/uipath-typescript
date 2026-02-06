@@ -1,6 +1,6 @@
-import { BaseService } from '../base';
-import type { IUiPath } from '../../core/types';
-import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
+import { BaseService } from '../../base';
+import type { IUiPath } from '../../../core/types';
+import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
   EntityInsertOptions,
@@ -15,17 +15,17 @@ import {
   RawEntityGetResponse,
   EntityFieldDataType,
   EntityDownloadAttachmentOptions
-} from '../../models/data-fabric/entities.types';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
-import { RESPONSE_TYPES } from '../../utils/constants/headers';
-import { createParams } from '../../utils/http/params';
-import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
-import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
-import { track } from '../../core/telemetry';
+} from '../../../models/data-fabric/entities.types';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination/types';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { DATA_FABRIC_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { RESPONSE_TYPES } from '../../../utils/constants/headers';
+import { createParams } from '../../../utils/http/params';
+import { pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../../models/data-fabric/entities.constants';
+import { track } from '../../../core/telemetry';
 
 /**
  * Service for interacting with the Data Fabric Entity API

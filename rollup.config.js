@@ -126,7 +126,7 @@ const serviceEntries = [
   },
   {
     name: 'entities',
-    input: 'src/services/data-fabric/index.ts',
+    input: 'src/services/data-fabric/entities/index.ts',
     output: 'entities/index'
   },
   {

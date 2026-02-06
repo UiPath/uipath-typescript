@@ -22,7 +22,7 @@
  */
 
 // Export service with cleaner name and keep ChoiceSetService for legacy UiPath class
-export { ChoiceSetService as ChoiceSets, ChoiceSetService } from '../choicesets';
+export { ChoiceSetService as ChoiceSets, ChoiceSetService } from './choicesets';
 
 // Re-export service-specific types
 export type * from '../../../models/data-fabric/choicesets.types';

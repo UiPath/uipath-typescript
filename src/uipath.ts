@@ -6,13 +6,13 @@ import {
   CasesService,
   CaseInstancesService,
   EntityService,
+  ChoiceSetService,
   TaskService,
   ProcessService,
   BucketService,
   QueueService,
   AssetService
 } from './services';
-import { ChoiceSetService } from './services/data-fabric/choicesets';
 import { UiPathSDKConfig } from './core/config/sdk-config';
 
 type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;

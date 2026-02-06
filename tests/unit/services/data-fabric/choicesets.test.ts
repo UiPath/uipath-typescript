@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ChoiceSetService } from '../../../../src/services/data-fabric/choicesets';
+import { ChoiceSetService } from '../../../../src/services/data-fabric/choicesets/choicesets';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
