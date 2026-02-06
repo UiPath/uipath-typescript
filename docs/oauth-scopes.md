@@ -60,12 +60,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
 
-## Maestro Process Incidents
-
-| Method | OAuth Scope |
-|--------|-------------|
-| `getAll()` | `PIMS` |
-
 ## Maestro Cases
 
 | Method | OAuth Scope |
