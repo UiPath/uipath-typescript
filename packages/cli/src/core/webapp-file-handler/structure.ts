@@ -2,9 +2,15 @@ import type { ProjectFile, ProjectFolder, ProjectStructure } from './types.js';
 
 export const REMOTE_SOURCE_FOLDER_NAME = 'source';
 
-/** Remote root for pushed content. Content inside the build dir is placed directly under source (no extra folder for dist/output/build). */
-export function getRemoteContentRoot(): string {
-  return REMOTE_SOURCE_FOLDER_NAME;
+/** Normalize bundle path (strip leading/trailing slashes, use forward slashes). */
+function normalizeBundlePath(bundlePath: string): string {
+  return bundlePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '') || bundlePath;
+}
+
+/** Remote root for pushed content: source/<buildDir> (e.g. source/dist). All build dir files go under this path. */
+export function getRemoteContentRoot(bundlePath: string): string {
+  const name = normalizeBundlePath(bundlePath);
+  return name ? `${REMOTE_SOURCE_FOLDER_NAME}/${name}` : REMOTE_SOURCE_FOLDER_NAME;
 }
 
 export function localPathToRemotePath(
