@@ -1,12 +1,13 @@
 /**
  * Data Fabric Services Module
  *
- * Provides access to UiPath Data Fabric services for entity and choice set management.
+ * Provides access to UiPath Data Fabric services for entity management and choice sets.
  *
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Entities, ChoiceSets } from '@uipath/uipath-typescript/entities';
+ * import { Entities } from '@uipath/uipath-typescript/entities';
+ * import { ChoiceSets } from '@uipath/uipath-typescript/choicesets';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
@@ -21,9 +22,11 @@
  * @module
  */
 
-// Export service with cleaner name and keep EntityService for legacy UiPath class
-export { EntityService as Entities, EntityService } from './entities';
-export { ChoiceSetService as ChoiceSets, ChoiceSetService } from './choicesets';
+// Export Entities service
+export { EntityService as Entities, EntityService } from './entities/entities';
+
+// Export ChoiceSets service
+export { ChoiceSetService as ChoiceSets, ChoiceSetService } from './choicesets/choicesets';
 
 // Re-export service-specific types
 export type * from '../../models/data-fabric/entities.types';

@@ -76,7 +76,8 @@ export interface EntityServiceModel {
    * {@link EntityGetResponse}
    * @example
    * ```typescript
-   * import { Entities, ChoiceSets } from '@uipath/uipath-typescript/entities';
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   * import { ChoiceSets } from '@uipath/uipath-typescript/choicesets';
    *
    * const entities = new Entities(sdk);
    * const choicesets = new ChoiceSets(sdk);
