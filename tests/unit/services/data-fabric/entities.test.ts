@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { EntityService } from '../../../../src/services/data-fabric/entities/entities';
+import { EntityService } from '../../../../src/services/data-fabric/entities';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
