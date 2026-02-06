@@ -4,7 +4,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['tests/unit/**/*.test.ts'],
+    include: ['tests/integration/**/*.integration.test.ts'],
+    exclude: ['tests/integration/shared/maestro/**'],
+    testTimeout: 30000,
+    hookTimeout: 30000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
