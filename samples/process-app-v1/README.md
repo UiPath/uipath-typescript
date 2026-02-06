@@ -1,59 +1,45 @@
-# UiPath Maestro Process Management App (Modular Imports)
+# UiPath Maestro Process Management App
 
-A sample React TypeScript application demonstrating the **modular imports pattern** for the UiPath TypeScript SDK.
+A sample React TypeScript application demonstrating how to use the UiPath TypeScript SDK to build a Maestro Process Management dashboard.
 
-This app has identical functionality to `process-app` but uses modular imports instead of the monolithic SDK import pattern. This results in smaller bundle sizes when you only need specific SDK modules.
+## SDK Usage
 
-## Modular Imports Pattern
-
-Instead of importing everything from the main package:
+### Importing the SDK
 
 ```typescript
-// Monolithic import (larger bundle)
-import { UiPath, UiPathError, MaestroProcesses } from '@uipath/uipath-typescript';
-import type { UiPathSDKConfig, ProcessInstanceGetResponse } from '@uipath/uipath-typescript';
-```
-
-This app uses modular imports from specific submodules:
-
-```typescript
-// Modular imports (smaller bundle - only loads what you need)
+// Core SDK for authentication
 import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 
+// Maestro Processes service
 import { MaestroProcesses, ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
 import type { ProcessInstanceGetResponse, MaestroProcessGetAllResponse } from '@uipath/uipath-typescript/maestro-processes';
 
+// Entities service
 import { Entities } from '@uipath/uipath-typescript/entities';
 import type { EntityGetResponse, EntityRecord } from '@uipath/uipath-typescript/entities';
 ```
 
-### Using Modular Services
-
-With modular imports, you create service instances directly instead of accessing them via `sdk.*`:
+### Initializing the SDK
 
 ```typescript
-// Create SDK instance (same as before)
+// Create SDK instance
 const sdk = new UiPath(config);
 await sdk.initialize();
 
-// Create modular service instances
+// Create service instances
 const maestroProcesses = new MaestroProcesses(sdk);
-const processInstances = new ProcessInstances(sdk);  // Separate service!
+const processInstances = new ProcessInstances(sdk);
 const entities = new Entities(sdk);
 
-// Use services directly
+// Use services
 const processes = await maestroProcesses.getAll();
-const instances = await processInstances.getAll();  // Not maestroProcesses.instances!
+const instances = await processInstances.getAll();
 const entity = await entities.getById(entityId);
 ```
 
-> **Note:** Unlike the monolithic SDK where you access `sdk.maestro.processes.instances`,
-> in modular imports `ProcessInstances` is a separate service that must be instantiated independently.
-
 ## Installation
 
-To install the sdk do
 ```bash
 npm install @uipath/uipath-typescript
 ```
@@ -169,7 +155,7 @@ src/
 
 - **React 18** with TypeScript
 - **Vite** for fast development and building
-- **Tailwind CSS** for beautiful styling
+- **Tailwind CSS** for styling
 - **UiPath TypeScript SDK** for API integration
 - **OAuth 2.0** for secure authentication
 
@@ -193,6 +179,6 @@ The built application will be in the `dist/` directory.
 
 ### Getting Help
 
-- Check the UiPath TypeScript SDK documentation[https://uipath.github.io/uipath-typescript/]
+- Check the [UiPath TypeScript SDK documentation](https://uipath.github.io/uipath-typescript/)
 - Verify your UiPath Cloud tenant configuration
 - Ensure proper scopes are granted to your OAuth application
