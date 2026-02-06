@@ -13,7 +13,8 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService
+  AssetService,
+  TransactionService
 } from './services';
 import { UiPathSDKConfig, hasOAuthConfig, hasSecretConfig } from './core/config/sdk-config';
 import { validateConfig, normalizeBaseUrl } from './core/config/config-utils';
@@ -32,7 +33,7 @@ export class UiPath {
   constructor(config: UiPathSDKConfig) {
     // Validate and normalize the configuration
     validateConfig(config);
-    
+
     // Initialize core components
     this.config = new UiPathConfig({
       baseUrl: normalizeBaseUrl(config.baseUrl),
@@ -224,7 +225,7 @@ export class UiPath {
   get buckets(): BucketService {
     return this.getService(BucketService);
   }
-  
+
   /**
    * Access to Orchestrator Queues service
    */
@@ -237,6 +238,13 @@ export class UiPath {
    */
   get assets(): AssetService {
     return this.getService(AssetService);
+  }
+
+  /**
+   * Access to Orchestrator Transactions service
+   */
+  get transactions(): TransactionService {
+    return this.getService(TransactionService);
   }
 }
 
