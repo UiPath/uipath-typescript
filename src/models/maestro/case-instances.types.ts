@@ -198,6 +198,7 @@ export interface CaseGetStageResponse {
   sla?: StageSLA;
   status: string;
   tasks: StageTask[][];
+  stageType?: string;
 }
 
 /**
