@@ -69,12 +69,12 @@ export class WebAppFileHandler {
     const fullRemoteFiles = getRemoteFilesMap(this.projectStructure);
     const fullRemoteFolders = getRemoteFoldersMap(this.projectStructure);
 
-    const remoteContentRoot = getRemoteContentRoot();
+    const remoteContentRoot = getRemoteContentRoot(this.config.bundlePath);
     const contentRootExists = fullRemoteFolders.has(remoteContentRoot);
 
     let plan: FileOperationPlan;
     if (!contentRootExists) {
-      this.config.logger.log(chalk.gray('[push] First push: ensuring source/dist...'));
+      this.config.logger.log(chalk.gray(`[push] First push: ensuring ${remoteContentRoot}...`));
       await ensureContentRootExists(
         this.config,
         this.lockKey,
@@ -92,7 +92,7 @@ export class WebAppFileHandler {
         chalk.gray(`[push] Plan: ${plan.uploadFiles.length} to upload, ${plan.createFolders.length} folders to create.`)
       );
     } else {
-      this.config.logger.log(chalk.gray('[push] Computing diff (scoped to source/dist)...'));
+      this.config.logger.log(chalk.gray(`[push] Computing diff (scoped to ${remoteContentRoot})...`));
       const remoteFiles = filterToSourceFolderMap(fullRemoteFiles, remoteContentRoot);
       const remoteFolders = filterToSourceFolderMap(fullRemoteFolders, remoteContentRoot);
       plan = await computeExecutionPlan(

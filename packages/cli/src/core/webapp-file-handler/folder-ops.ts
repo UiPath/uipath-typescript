@@ -3,6 +3,7 @@ import { MESSAGES } from '../../constants/index.js';
 import type { WebAppPushConfig, FileOperationPlan, ProjectStructure } from './types.js';
 import {
   getRemoteFoldersMap,
+  getRemoteContentRoot,
   REMOTE_SOURCE_FOLDER_NAME,
   findEmptyFolders,
 } from './structure.js';
@@ -28,6 +29,7 @@ export async function ensureContentRootExists(
     throw new Error(MESSAGES.ERRORS.PUSH_PROJECT_STRUCTURE_REQUIRED);
   }
   const fullRemoteFolders = getRemoteFoldersMap(structure);
+  const remoteContentRoot = getRemoteContentRoot(config.bundlePath);
 
   if (!fullRemoteFolders.has(REMOTE_SOURCE_FOLDER_NAME)) {
     await api.createFolderAtRoot(config, REMOTE_SOURCE_FOLDER_NAME, lockKey);
@@ -35,6 +37,32 @@ export async function ensureContentRootExists(
     setStructure(next);
     const afterFolders = getRemoteFoldersMap(next);
     if (!afterFolders.has(REMOTE_SOURCE_FOLDER_NAME)) {
+      throw new Error(MESSAGES.ERRORS.PUSH_SOURCE_FOLDER_CREATE_FAILED);
+    }
+  }
+
+  // Ensure full path source/<segment>/<segment>/... (supports nested bundlePath e.g. src/output)
+  const segments = remoteContentRoot.split('/').filter(Boolean);
+  let currentFolders = getRemoteFoldersMap(getStructure()!);
+  let currentPath = '';
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+    if (currentFolders.has(currentPath)) continue;
+    const createdId = await api.createFolderAtRoot(config, segment, lockKey);
+    let next = await api.fetchRemoteStructure(config);
+    setStructure(next);
+    currentFolders = getRemoteFoldersMap(next);
+    const parentPath = i > 0 ? segments.slice(0, i).join('/') : '';
+    const parentId = parentPath ? currentFolders.get(parentPath)?.id : null;
+    const newFolderId = createdId ?? currentFolders.get(segment)?.id;
+    if (parentId && newFolderId) {
+      await api.moveFolder(config, newFolderId, parentId, lockKey);
+      next = await api.fetchRemoteStructure(config);
+      setStructure(next);
+      currentFolders = getRemoteFoldersMap(next);
+    }
+    if (!currentFolders.has(currentPath)) {
       throw new Error(MESSAGES.ERRORS.PUSH_SOURCE_FOLDER_CREATE_FAILED);
     }
   }
