@@ -81,8 +81,7 @@ export class WebAppFileHandler {
         () => this.projectStructure!,
         (s) => {
           this.projectStructure = s;
-        },
-        this.config.bundlePath
+        }
       );
       const remoteFolders = getRemoteFoldersMap(this.projectStructure!);
       plan = computeFirstPushPlan(localFiles, remoteFolders, {

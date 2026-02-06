@@ -22,15 +22,14 @@ export async function ensureContentRootExists(
   config: WebAppPushConfig,
   lockKey: string | null,
   getStructure: () => ProjectStructure | null,
-  setStructure: (s: ProjectStructure) => void,
-  bundlePath: string
+  setStructure: (s: ProjectStructure) => void
 ): Promise<void> {
   const structure = getStructure();
   if (!structure) {
     throw new Error(MESSAGES.ERRORS.PUSH_PROJECT_STRUCTURE_REQUIRED);
   }
   const fullRemoteFolders = getRemoteFoldersMap(structure);
-  const remoteContentRoot = getRemoteContentRoot(bundlePath);
+  const remoteContentRoot = getRemoteContentRoot(config.bundlePath);
 
   if (!fullRemoteFolders.has(REMOTE_SOURCE_FOLDER_NAME)) {
     await api.createFolderAtRoot(config, REMOTE_SOURCE_FOLDER_NAME, lockKey);
