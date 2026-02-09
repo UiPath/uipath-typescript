@@ -30,6 +30,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `batchInsertById()` / `batchInsert()` | `DataFabric.Data.Write` |
 | `deleteById()` / `delete()` | `DataFabric.Data.Write` |
 | `updateById()` / `update()` | `DataFabric.Data.Write` |
+| `downloadAttachment()` | `DataFabric.Data.Read` |
 
 ## ChoiceSets
 
@@ -105,4 +106,5 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `create()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `assign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |
+| `unassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `complete()` | `OR.Tasks` or `OR.Tasks.Write` |
