@@ -16,9 +16,6 @@ export * from './agents';
 // User service types and models
 export * from './user';
 
-// Trace service types and models
-export * from './traces';
-
 // ==================== Feature Types ====================
 // Feature flags
 export * from './feature-flags.types';

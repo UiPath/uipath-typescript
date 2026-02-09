@@ -2,7 +2,7 @@
  * Types for Exchange Service
  */
 
-import type { SortOrder, FeedbackRating, Exchange, Message, ContentPart } from './core.types';
+import type { SortOrder, FeedbackRating, Exchange, Message, ContentPart } from './types/core.types';
 import type { PaginationOptions } from '@/utils/pagination/types';
 
 // ==================== Response Types ====================
