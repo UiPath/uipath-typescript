@@ -7,16 +7,8 @@
 export * from './conversations.constants';
 
 // ==================== Foundation Types ====================
-// Common IDs, primitives, utility types - these are the building blocks
-export * from './common.types';
-
-// ==================== Core Data Models ====================
-// Core domain models: Conversation, Exchange, Message, ContentPart, ToolCall, etc.
-export * from './core.types';
-
-// ==================== WebSocket Events ====================
-// Event types for real-time conversation protocol
-export * from './events.types';
+// Common IDs, primitives, utility types, core data models, and WebSocket event types
+export * from './types';
 
 // ==================== Service Types ====================
 // Request/response types for conversation service operations
@@ -30,6 +22,7 @@ export * from './exchanges.models';
 // Message service types
 export * from './messages.models';
 
-// Attachment service types
-export * from './attachments.types';
-export * from './attachments.models';
+// ==================== Event Types ====================
+// WebSocket protocol types and consumer-facing interfaces
+export * from './events';
+

@@ -40,6 +40,7 @@ import type {
 import {
   ConversationEventValidationError
 } from './conversation-event-helper-common';
+import type { SessionStream } from '@/models/conversational-agent';
 import type { ConversationEventHelperManager, ConversationEventHelperManagerImpl } from './conversation-event-helper-manager';
 import type { ExchangeEventHelper } from './exchange-event-helper';
 import { ExchangeEventHelperImpl } from './exchange-event-helper';
@@ -51,7 +52,7 @@ import { ExchangeEventHelperImpl } from './exchange-event-helper';
 export abstract class SessionEventHelper extends ConversationEventHelperBase<
   SessionStartEvent,
   ConversationEvent
-> {
+> implements SessionStream {
 
   protected readonly _exchangeMap = new Map<ExchangeId, ExchangeEventHelperImpl>();
   protected readonly _inputStreamMap = new Map<string, AsyncInputStreamEventHelperImpl>();

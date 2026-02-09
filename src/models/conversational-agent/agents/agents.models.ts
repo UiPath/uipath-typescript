@@ -1,59 +1,114 @@
-import type { AgentGetResponse, AgentGetByIdResponse } from './agents.types';
+/**
+ * Agent Service Models
+ *
+ * Provides fluent API for agent objects returned from getAll() and getById().
+ */
+
+import type { ConnectionStatus } from '@/core/websocket';
+
+import type { RawAgentGetResponse, RawAgentGetByIdResponse } from './agents.types';
+import type {
+  ConversationServiceModel,
+  ConversationGetResponse,
+  CreateConversationOptions
+} from '../conversations';
 
 /**
- * Service for managing UiPath Conversational Agents
- *
- * Agents are conversational AI applications that can be deployed and interacted with.
- *
- * ### Usage
- *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
- *
- * ```typescript
- * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
- *
- * const conversationalAgentService = new ConversationalAgent(sdk);
- *
- * // Get all available agents
- * const availableAgents = await conversationalAgentService.agents.getAll();
- *
- * // Get the agent ID to use for creating conversations
- * const agentId = availableAgents[0].id;
- * const folderId = availableAgents[0].folderId;
- * ```
+ * Options for creating a conversation from an agent (without agentId/folderId)
  */
-export interface AgentServiceModel {
-  /**
-   * Get all available conversational agents
-   *
-   * @param folderId - Optional folder ID to filter agents
-   * @returns Promise resolving to an array of agents
-   * {@link AgentGetResponse}
-   * @example
-   * ```typescript
-   * // Get all available agents
-   * const availableAgents = await conversationalAgentService.agents.getAll();
-   *
-   * // Get the agent ID and folder ID for creating conversations
-   * const { id: agentId, folderId } = availableAgents[0];
-   *
-   * // Get agents in a specific folder
-   * const folderAgents = await conversationalAgentService.agents.getAll(folderId);
-   * ```
-   */
-  getAll(folderId?: number): Promise<AgentGetResponse[]>;
+export type AgentCreateConversationOptions = Omit<CreateConversationOptions, 'agentId' | 'folderId'>;
 
+/**
+ * Scoped conversation service for a specific agent.
+ * Auto-fills agentId and folderId from the agent.
+ */
+export interface AgentConversationServiceModel {
   /**
-   * Gets a conversational agent by ID with appearance configuration
+   * Creates a conversation for this agent
    *
-   * @param id - Agent ID to retrieve
-   * @param folderId - Folder ID containing the agent
-   * @returns Promise resolving to the agent with appearance configuration
-   * {@link AgentGetByIdResponse}
+   * @param options - Optional conversation options (label, etc.)
+   * @returns Promise resolving to the created conversation with methods
+   *
    * @example
    * ```typescript
-   * const agentDetails = await conversationalAgentService.agents.getById(agentId, folderId);
+   * const agent = (await conversationalAgent.getAll())[0];
+   * const conversation = await agent.conversations.create({ label: 'My Chat' });
+   * const session = conversation.startSession();
    * ```
    */
-  getById(id: number, folderId: number): Promise<AgentGetByIdResponse>;
+  create(options?: AgentCreateConversationOptions): Promise<ConversationGetResponse>;
+}
+
+/**
+ * Methods added to agent objects
+ */
+export interface AgentMethods {
+  /** Scoped conversation operations for this agent */
+  readonly conversations: AgentConversationServiceModel;
+
+  /** Current WebSocket connection status */
+  readonly connectionStatus: ConnectionStatus;
+
+  /** Whether the WebSocket connection is currently active */
+  readonly isConnected: boolean;
+
+  /** Current connection error, or `null` if none */
+  readonly connectionError: Error | null;
+}
+
+/**
+ * Agent combining {@link RawAgentGetResponse} metadata with {@link AgentMethods} for conversation and connection management
+ */
+export type AgentGetResponse = RawAgentGetResponse & AgentMethods;
+
+/**
+ * Agent combining {@link RawAgentGetByIdResponse} metadata with {@link AgentMethods} for conversation and connection management
+ */
+export type AgentGetByIdResponse = RawAgentGetByIdResponse & AgentMethods;
+
+/**
+ * Creates methods for an agent
+ *
+ * @param agentData - The agent data from API
+ * @param conversationService - The conversation service instance for delegation
+ * @returns Object containing agent methods
+ */
+function createAgentMethods(
+  agentData: RawAgentGetResponse,
+  conversationService: ConversationServiceModel
+): AgentMethods {
+  const agentConversations: AgentConversationServiceModel = {
+    async create(options: AgentCreateConversationOptions = {}): Promise<ConversationGetResponse> {
+      return conversationService.create({
+        ...options,
+        agentId: agentData.id,
+        folderId: agentData.folderId
+      });
+    }
+  };
+
+  return {
+    conversations: agentConversations,
+    get connectionStatus() { return conversationService.connectionStatus; },
+    get isConnected() { return conversationService.isConnected; },
+    get connectionError() { return conversationService.connectionError; }
+  };
+}
+
+/** @internal */
+export function createAgentWithMethods(
+  agentData: RawAgentGetResponse,
+  conversationService: ConversationServiceModel
+): AgentGetResponse {
+  const methods = createAgentMethods(agentData, conversationService);
+  return Object.assign({}, agentData, methods) as AgentGetResponse;
+}
+
+/** @internal */
+export function createAgentByIdWithMethods(
+  agentData: RawAgentGetByIdResponse,
+  conversationService: ConversationServiceModel
+): AgentGetByIdResponse {
+  const methods = createAgentMethods(agentData, conversationService);
+  return Object.assign({}, agentData, methods) as AgentGetByIdResponse;
 }

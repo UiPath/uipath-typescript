@@ -14,26 +14,38 @@ import { isExternalValue, isInlineValue } from './conversation-type-util';
  * for accessing inline/external data.
  */
 export class ContentPartHelper implements ContentPart {
+  /** Unique identifier for the content part (alias for contentPartId) */
+  public id: string;
+  /** Unique identifier for the content part */
   public contentPartId: string;
+  /** The MIME type of the content */
   public mimeType: string;
+  /** The actual content data (inline or external) */
   public data: InlineOrExternalValue<string>;
+  /** Array of citations referenced in this content part */
   public citations: Citation[];
+  /** Whether this content part is a transcript produced by the LLM */
   public isTranscript?: boolean;
+  /** Whether this content part may be incomplete */
   public isIncomplete?: boolean;
+  /** Optional name for the content part */
   public name?: string;
-  public createdAt: string;
-  public updatedAt: string;
+  /** Timestamp indicating when the content part was created */
+  public createdTime: string;
+  /** Timestamp indicating when the content part was last updated */
+  public updatedTime: string;
 
   constructor(contentPart: ContentPart) {
+    this.id = contentPart.contentPartId;
     this.contentPartId = contentPart.contentPartId;
     this.mimeType = contentPart.mimeType;
     this.data = contentPart.data;
-    this.citations = contentPart.citations;
+    this.citations = (contentPart.citations ?? []).map(c => ({ ...c, id: c.citationId }));
     this.isTranscript = contentPart.isTranscript;
     this.isIncomplete = contentPart.isIncomplete;
     this.name = contentPart.name;
-    this.createdAt = contentPart.createdAt;
-    this.updatedAt = contentPart.updatedAt;
+    this.createdTime = contentPart.createdTime;
+    this.updatedTime = contentPart.updatedTime;
   }
 
   /**

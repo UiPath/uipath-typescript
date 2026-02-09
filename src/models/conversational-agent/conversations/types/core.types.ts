@@ -19,9 +19,9 @@ import {
   ToolCallId,
   ToolCallInputValue,
   ToolCallOutputValue,
-  ToolName
+  ToolName,
+  UTCTimeStamp
 } from './common.types';
-import { UTCTimeStamp } from './events.types';
 
 /**
  * Represents the order in which items should be sorted.
@@ -45,6 +45,10 @@ export type SpanId = string;
  * Represents a citation or reference to an external source within a content part.
  */
 export interface Citation {
+  /**
+   * Unique identifier for the citation.
+   */
+  id: CitationId;
   /**
    * Unique identifier for the citation within its content part.
    */
@@ -90,6 +94,10 @@ export type ContentPartData = Simplify<InlineOrExternalValue<string>>;
  * Represents a single part of message content.
  */
 export interface ContentPart {
+  /**
+   * Unique identifier for the content part.
+   */
+  id: ContentPartId;
   /**
    * Unique identifier for the content part within the message.
    */
@@ -159,6 +167,10 @@ export interface ToolCallResult {
  */
 export interface ToolCall {
   /**
+   * Unique identifier for the tool call.
+   */
+  id: ToolCallId;
+  /**
    * Unique identifier for the tool call within the message.
    */
   toolCallId: ToolCallId;
@@ -197,6 +209,10 @@ export interface ToolCall {
  */
 export interface Interrupt {
   /**
+   * Unique identifier for the interrupt.
+   */
+  id: InterruptId;
+  /**
    * Unique identifier for the interrupt within the message.
    */
   interruptId: InterruptId;
@@ -226,6 +242,10 @@ export interface Interrupt {
  * Represents a single message within a conversation exchange.
  */
 export interface Message {
+  /**
+   * Unique identifier for the message.
+   */
+  id: MessageId;
   /**
    * Unique identifier for the message within its exchange.
    */
@@ -273,6 +293,10 @@ export enum FeedbackRating {
  */
 export interface Exchange {
   /**
+   * Unique identifier for the exchange.
+   */
+  id: ExchangeId;
+  /**
    * Identifies the exchange.
    */
   exchangeId: ExchangeId;
@@ -310,10 +334,10 @@ export interface ConversationJobStartOverrides {
 }
 
 /**
- * Response type for conversation operations.
+ * Raw response type for conversation operations (without methods).
  * Represents a conversation between users and AI agents.
  */
-export interface ConversationGetResponse {
+export interface RawConversationGetResponse {
   /**
    * A globally unique identifier for the conversation.
    */
@@ -335,7 +359,7 @@ export interface ConversationGetResponse {
    */
   label: string;
   /**
-   * Whether the conversation label should be automatically generated.
+   * Whether the conversation label was automatically generated.
    */
   autogenerateLabel: boolean;
   /**
@@ -355,9 +379,9 @@ export interface ConversationGetResponse {
    */
   folderId: number;
   /**
-   * Identifier of the specific agentId used
+   * Identifier of the agent used for this conversation
    */
-  agentReleaseId?: number;
+  agentId?: number;
   /**
    * Trace identifier for distributed tracing.
    */

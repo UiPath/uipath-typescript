@@ -183,3 +183,8 @@ export type ToolCallInputValue = JSONObject;
  * Tool call output value type.
  */
 export type ToolCallOutputValue = JSONValue;
+
+/**
+ * A timestamp with the format YYYY-MM-DDThh:mm:ss.sssZ (ISO 8601 with both date and time required and restricted to UTC).
+ */
+export type UTCTimeStamp = string;

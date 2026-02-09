@@ -29,9 +29,9 @@ export interface AgentAppearance {
 }
 
 /**
- * Response for getting all agents
+ * Raw API response for getting all agents
  */
-export interface AgentGetResponse {
+export interface RawAgentGetResponse {
   /** Unique ID of the agent */
   id: number;
   /** Display name of the agent */
@@ -51,9 +51,9 @@ export interface AgentGetResponse {
 }
 
 /**
- * Response for getting a single agent by ID - includes appearance configuration
+ * Raw API response for getting a single agent by ID - includes appearance configuration
  */
-export interface AgentGetByIdResponse extends AgentGetResponse {
+export interface RawAgentGetByIdResponse extends RawAgentGetResponse {
   /** Agent appearance configuration */
   appearance?: AgentAppearance;
 }

@@ -15,6 +15,7 @@ import {
   type ErrorStartEventOptions,
   type ToolCallEndHandler
 } from './conversation-event-helper-common';
+import type { ToolCallStream } from '@/models/conversational-agent';
 import type { MessageEventHelper, MessageEventHelperImpl } from './message-event-helper';
 
 /**
@@ -24,7 +25,7 @@ import type { MessageEventHelper, MessageEventHelperImpl } from './message-event
 export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
   ToolCallStartEvent,
   ToolCallEvent
-> {
+> implements ToolCallStream {
 
   protected readonly _endHandlers = new Array<ToolCallEndHandler>();
 
@@ -151,7 +152,7 @@ export class ToolCallEventHelperImpl extends ToolCallEventHelper {
       startToolCall: {
         toolName: toolCall.name,
         input: toolCall.input,
-        timestamp: toolCall.createdAt
+        timestamp: toolCall.createdTime ?? (toolCall as any).createdAt
       }
     };
 

@@ -10,12 +10,15 @@ import { CommonFieldMap } from '../common.constants';
 export const ConversationEventName = 'ConversationEvent';
 
 /**
- * Maps fields for Conversation entity to ensure consistent SDK naming
+ * Maps API response fields to SDK field names (API → SDK)
+ * Used when transforming API responses for SDK consumers.
+ * For request transformation (SDK → API), use `transformRequest(data, ConversationMap)`.
  */
 export const ConversationMap: { [key: string]: string } = {
   ...CommonFieldMap,
   conversationId: 'id',
-  lastActivityAt: 'lastActivityTime'
+  lastActivityAt: 'lastActivityTime',
+  agentReleaseId: 'agentId'
 };
 
 /**

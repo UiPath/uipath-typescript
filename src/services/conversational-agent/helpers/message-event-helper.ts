@@ -1,16 +1,17 @@
-import type {
-  ContentPartId,
-  InterruptEndEvent,
-  InterruptId,
-  InterruptStartEvent,
-  MakeRequired,
-  Message,
-  MessageEndEvent,
-  MessageEvent,
-  MessageId,
-  MessageStartEvent,
-  MetaEvent,
-  ToolCallId
+import {
+  MessageRole,
+  type ContentPartId,
+  type InterruptEndEvent,
+  type InterruptId,
+  type InterruptStartEvent,
+  type MakeRequired,
+  type Message,
+  type MessageEndEvent,
+  type MessageEvent,
+  type MessageId,
+  type MessageStartEvent,
+  type MetaEvent,
+  type ToolCallId
 } from '@/models/conversational-agent';
 
 import type { ContentPartEventHelper, ContentPartStartEventWithData } from './content-part-event-helper';
@@ -37,6 +38,7 @@ import type {
 import {
   ConversationEventValidationError
 } from './conversation-event-helper-common';
+import type { MessageStream } from '@/models/conversational-agent';
 import type { ExchangeEventHelper, ExchangeEventHelperImpl } from './exchange-event-helper';
 import type { ToolCallEventHelper } from './tool-call-event-helper';
 import { ToolCallEventHelperImpl } from './tool-call-event-helper';
@@ -48,7 +50,7 @@ import { ToolCallEventHelperImpl } from './tool-call-event-helper';
 export abstract class MessageEventHelper extends ConversationEventHelperBase<
   MessageStartEvent,
   MessageEvent
-> {
+> implements MessageStream {
 
   protected readonly _contentPartMap = new Map<ContentPartId, ContentPartEventHelperImpl>();
   protected readonly _contentPartStartHandlers = new Array<ContentPartStartHandler>();
@@ -79,6 +81,55 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   public get startEvent(): MakeRequired<MessageStartEvent, 'timestamp'> {
     if (!this.startEventMaybe) throw new ConversationEventValidationError(`Message ${this.messageId} has no start event.`);
     return this.startEventMaybe as MakeRequired<MessageStartEvent, 'timestamp'>; // timestamp is set by the constructor
+  }
+
+  /**
+   * The role of this message (user, assistant, or system).
+   * Returns undefined if the start event hasn't been received yet.
+   */
+  public get role(): MessageRole | undefined {
+    return this.startEventMaybe?.role;
+  }
+
+  /**
+   * Whether this message is from the user.
+   * @example
+   * ```typescript
+   * message.onContentPartStart((contentPart) => {
+   *   if (message.isUser) {
+   *     console.log('User message content:', contentPart.mimeType);
+   *   }
+   * });
+   * ```
+   */
+  public get isUser(): boolean {
+    return this.startEventMaybe?.role === MessageRole.User;
+  }
+
+  /**
+   * Whether this message is from the assistant.
+   * @example
+   * ```typescript
+   * exchange.onMessageStart((message) => {
+   *   if (message.isAssistant) {
+   *     message.onContentPartStart((contentPart) => {
+   *       contentPart.onChunk((chunk) => {
+   *         process.stdout.write(chunk.data ?? '');
+   *       });
+   *     });
+   *   }
+   * });
+   * ```
+   */
+  public get isAssistant(): boolean {
+    return this.startEventMaybe?.role === MessageRole.Assistant;
+  }
+
+  /**
+   * Whether this message is a system message.
+   */
+  public get isSystem(): boolean {
+    return this.startEventMaybe?.role === MessageRole.System;
   }
 
   /**
@@ -126,7 +177,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
 
   /**
    * Retrieves the content part with a specified id from this message.
-   * @param exchangeId The id of the content part to get.
+   * @param contentPartId The id of the content part to get.
    * @returns The ContentPartEventHelper for the specified id, or undefined if no such content part exists.
    */
   public getContentPart(contentPartId: ContentPartId): ContentPartEventHelper | undefined {
@@ -171,9 +222,9 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   }
 
   /**
-   * Retrieves the content part with a specified id from this session.
-   * @param exchangeId The id of the content part to get.
-   * @returns The ContentPartEventHelper for the specified id, or undefined if no such content part exists.
+   * Retrieves the tool call with a specified id from this message.
+   * @param toolCallId The id of the tool call to get.
+   * @returns The ToolCallEventHelper for the specified id, or undefined if no such tool call exists.
    */
   public getToolCall(toolCallId: ToolCallId): ToolCallEventHelper | undefined {
     return this._toolCallMap.get(toolCallId);
@@ -380,7 +431,7 @@ export class MessageEventHelperImpl extends MessageEventHelper {
       messageId: message.messageId,
       startMessage: {
         role: message.role,
-        timestamp: message.createdAt
+        timestamp: message.createdTime ?? (message as any).createdAt
       }
     };
 

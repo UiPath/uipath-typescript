@@ -3,8 +3,6 @@ import type {
   AsyncInputStreamEndEvent,
   AsyncInputStreamId,
   AsyncInputStreamStartEvent,
-  CitationId,
-  CitationInput,
   ContentPartChunkEvent,
   ContentPartEndEvent,
   ContentPartId,
@@ -36,6 +34,11 @@ import type {
   ToolCallId,
   ToolCallStartEvent
 } from '@/models/conversational-agent';
+
+// Import and re-export completed types from model layer
+import type { CitationError, CompletedContentPart, CompletedToolCall, CompletedMessage } from '@/models/conversational-agent';
+export type { CitationError, CompletedContentPart, CompletedToolCall, CompletedMessage };
+export { CitationErrorType } from '@/models/conversational-agent';
 
 import type { AsyncInputStreamEventHelper } from './async-input-stream-event-helper';
 import type { AsyncToolCallEventHelper } from './async-tool-call-event-helper';
@@ -126,36 +129,6 @@ export type InterruptCompletedHandlerArgs = { interruptId: InterruptId; startEve
 
 export type ConversationEventErrorSource = ConversationEventHelperBase<any, any>;
 
-export type CitationError = {
-  citationId: CitationId;
-  errorType: CitationErrorType;
-};
-
-export enum CitationErrorType {
-  CitationNotEnded = 'CitationNotEnded',
-  CitationNotStarted = 'CitationNotStarted'
-};
-
-export type CompletedContentPart = ContentPartStartEvent & ContentPartEndEvent & {
-  contentPartId: ContentPartId;
-  data: string;
-  citations: CitationInput[];
-  citationErrors: CitationError[];
-};
-
-export type CompletedToolCall = ToolCallStartEvent & ToolCallEndEvent & {
-  toolCallId: ToolCallId;
-};
-
-export type CompletedMessage = Simplify<
-  {
-    messageId: MessageId;
-    contentParts: Array<CompletedContentPart>;
-    toolCalls: Array<CompletedToolCall>;
-  }
-  & Partial<MessageStartEvent>
-  & MessageEndEvent
->;
 
 export type SendMessageWithContentPartOptions = Simplify<
 MakeRequired<
