@@ -78,7 +78,6 @@ plugins:
           - getting-started.md: Introduction to UiPath TypeScript SDK
           - authentication.md: Authentication setup
           - pagination.md: Pagination guide
-          - real-time-chat.md: Real-time chat with WebSocket streaming
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
           - api/interfaces/ProcessServiceModel.md: Process service methods
@@ -187,8 +186,11 @@ nav:
               - Exchanges: api/interfaces/ExchangeServiceModel.md
               - Messages: api/interfaces/MessageServiceModel.md
               - Attachments: api/interfaces/AttachmentServiceModel.md
+              - Session: api/interfaces/SessionStream.md
             - User Settings: api/interfaces/UserServiceModel.md
             - Traces: api/interfaces/TraceServiceModel.md
+          - Assets: api/interfaces/AssetServiceModel.md
+          - Buckets: api/interfaces/BucketServiceModel.md
           - Entities:
             - api/interfaces/entity/index.md
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md

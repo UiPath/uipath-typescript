@@ -19,13 +19,9 @@ import {
   ToolCallId,
   ToolCallInputValue,
   ToolCallOutputValue,
-  ToolName
-} from './common.types';
-
-/**
- * A timestamp with the format YYYY-MM-DDThh:mm:ss.sssZ (ISO 8601 with both date and time required and restricted to UTC).
- */
-export type UTCTimeStamp = string;
+  ToolName,
+  UTCTimeStamp
+} from '../types/common.types';
 
 /**
  * Identifies an input stream.
