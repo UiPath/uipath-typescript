@@ -38,6 +38,9 @@ jobs:
       - name: Build Project
         run: npm run build
 
+      - name: Validate OAuth Scopes Documentation
+        run: npx ts-node scripts/validate-oauth-scopes.ts
+
       - name: Generate Summary
         if: success()
         run: |
@@ -47,6 +50,7 @@ jobs:
           echo "- ✅ Dependencies installed successfully" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ All tests passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ OAuth scopes documentation validated" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Your pull request is ready for review!" >> $GITHUB_STEP_SUMMARY
 

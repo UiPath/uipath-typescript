@@ -131,7 +131,8 @@
         "test:unit": "vitest tests/unit",
         "test:watch": "vitest --watch",
         "test:ui": "vitest --ui",
-        "test:coverage": "vitest --coverage"
+        "test:coverage": "vitest --coverage",
+        "validate:scopes": "npx ts-node scripts/validate-oauth-scopes.ts"
     },
     "dependencies": {
         "@opentelemetry/sdk-logs": "^0.204.0",
