@@ -39,7 +39,7 @@ jobs:
         run: npm run build
 
       - name: Validate OAuth Scopes Documentation
-        run: npx ts-node scripts/validate-oauth-scopes.ts
+        run: node scripts/validate-oauth-scopes.mjs
 
       - name: Generate Summary
         if: success()

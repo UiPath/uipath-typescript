@@ -1,4 +1,4 @@
-#!/usr/bin/env npx ts-node
+#!/usr/bin/env node
 
 /**
  * OAuth Scopes Documentation Validator
@@ -7,7 +7,7 @@
  * in docs/oauth-scopes.md with their required OAuth scopes.
  *
  * Usage:
- *   npx ts-node scripts/validate-oauth-scopes.ts
+ *   node scripts/validate-oauth-scopes.mjs
  *
  * Exit codes:
  *   0 - All methods are documented
@@ -20,18 +20,6 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-interface MethodInfo {
-  serviceName: string;
-  methodName: string;
-  filePath: string;
-  line: number;
-}
-
-interface DocumentedMethod {
-  serviceName: string;
-  methodName: string;
-}
 
 // Service directories to scan
 const SERVICE_DIRS = [
@@ -48,7 +36,7 @@ const EXCLUDED_METHODS = new Set([
 ]);
 
 // Map service class names to their documented names in oauth-scopes.md
-const SERVICE_NAME_MAP: Record<string, string> = {
+const SERVICE_NAME_MAP = {
   AssetService: 'Assets',
   BucketService: 'Buckets',
   EntityService: 'Entities',
@@ -66,8 +54,8 @@ const SERVICE_NAME_MAP: Record<string, string> = {
 /**
  * Extract service methods from TypeScript files
  */
-function extractServiceMethods(rootDir: string): MethodInfo[] {
-  const methods: MethodInfo[] = [];
+function extractServiceMethods(rootDir) {
+  const methods = [];
 
   for (const serviceDir of SERVICE_DIRS) {
     const fullPath = path.join(rootDir, serviceDir);
@@ -79,7 +67,7 @@ function extractServiceMethods(rootDir: string): MethodInfo[] {
   return methods;
 }
 
-function scanDirectory(dir: string, methods: MethodInfo[], rootDir: string): void {
+function scanDirectory(dir, methods, rootDir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -93,9 +81,8 @@ function scanDirectory(dir: string, methods: MethodInfo[], rootDir: string): voi
   }
 }
 
-function extractMethodsFromFile(filePath: string, methods: MethodInfo[], rootDir: string): void {
+function extractMethodsFromFile(filePath, methods, rootDir) {
   const content = fs.readFileSync(filePath, 'utf-8');
-  const lines = content.split('\n');
 
   // Find service class name
   const classMatch = content.match(/export\s+class\s+(\w+Service)\s+extends/);
@@ -106,7 +93,7 @@ function extractMethodsFromFile(filePath: string, methods: MethodInfo[], rootDir
 
   if (!documentedServiceName) {
     console.warn(`Warning: Unknown service class "${serviceName}" in ${filePath}`);
-    console.warn(`  Add it to SERVICE_NAME_MAP in validate-oauth-scopes.ts`);
+    console.warn(`  Add it to SERVICE_NAME_MAP in validate-oauth-scopes.mjs`);
     return;
   }
 
@@ -135,10 +122,10 @@ function extractMethodsFromFile(filePath: string, methods: MethodInfo[], rootDir
 /**
  * Parse oauth-scopes.md to extract documented methods
  */
-function parseOAuthScopesDoc(rootDir: string): DocumentedMethod[] {
+function parseOAuthScopesDoc(rootDir) {
   const docPath = path.join(rootDir, 'docs/oauth-scopes.md');
   const content = fs.readFileSync(docPath, 'utf-8');
-  const documented: DocumentedMethod[] = [];
+  const documented = [];
 
   let currentSection = '';
 
@@ -175,7 +162,7 @@ function parseOAuthScopesDoc(rootDir: string): DocumentedMethod[] {
 /**
  * Main validation function
  */
-function validate(): boolean {
+function validate() {
   const rootDir = path.resolve(__dirname, '..');
 
   console.log('Validating OAuth scopes documentation...\n');
@@ -206,7 +193,7 @@ function validate(): boolean {
   console.log('❌ The following methods are missing OAuth scope documentation:\n');
 
   // Group by service for cleaner output
-  const byService = new Map<string, MethodInfo[]>();
+  const byService = new Map();
   for (const method of undocumented) {
     const existing = byService.get(method.serviceName) || [];
     existing.push(method);
