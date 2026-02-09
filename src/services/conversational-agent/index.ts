@@ -1,12 +1,10 @@
 /**
  * Conversational Agent Service Module
  *
- * Provides conversational AI capabilities through:
- * - ConversationalAgent: Main entry point with WebSocket support
- * - ConversationService: Conversation management (HTTP)
- * - AgentService: List available agents (HTTP)
- * - UserService: User profile and context settings (HTTP)
- * - TraceService: LLM operations tracing and observability (HTTP)
+ * Provides conversational AI capabilities through a single entry point:
+ * - ConversationalAgent: Main service for agent listing, conversations, attachments, and real-time sessions
+ *
+ * All conversation operations are accessed via `conversationalAgent.conversations`.
  *
  * @example
  * ```typescript
@@ -16,26 +14,14 @@
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const conversationalAgentService = new ConversationalAgent(sdk);
+ * const conversationalAgent = new ConversationalAgent(sdk);
  *
- * // Conversations
- * const newConversation = await conversationalAgentService.conversations.create({ agentReleaseId, folderId });
- * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
+ * // List available agents
+ * const agents = await conversationalAgent.getAll();
+ * const agent = agents[0];
  *
- * // Agents
- * const availableAgents = await conversationalAgentService.agents.getAll();
- *
- * // User Settings
- * const userSettings = await conversationalAgentService.user.getSettings();
- * await conversationalAgentService.user.updateSettings({ name: 'John', timezone: 'America/New_York' });
- *
- * // Traces (LLM Ops observability)
- * const traceSpans = await conversationalAgentService.traces.getSpans(traceId);
- *
- * // WebSocket events (connection is managed automatically)
- * conversationalAgentService.events.onSession((session) => {
- *   session.onExchangeStart((exchange) => console.log(exchange));
- * });
+ * // Create a conversation (agentId/folderId auto-filled)
+ * const conversation = await agent.conversations.create({ label: 'My Chat' });
  * ```
  *
  * @module
@@ -44,11 +30,11 @@
 // Main entry point
 export { ConversationalAgentService as ConversationalAgent, ConversationalAgentService } from './conversational-agent';
 
-// Services (for HTTP-only usage without WebSocket)
-export { ConversationService as Conversations, ConversationService } from './conversations';
-export { AgentService as Agents, AgentService } from './agents';
-export { UserService as User, UserService } from './user';
-export { TraceService as Traces, TraceService } from './traces';
+// Standalone services (HTTP-only operations)
+export { Exchanges, ExchangeService, Messages, MessageService } from './conversations';
+
+/** @internal */
+export { User, UserService } from './user';
 
 // ==================== Models ====================
 // Re-export all types: ID types, model types, request/response types, event types, etc.

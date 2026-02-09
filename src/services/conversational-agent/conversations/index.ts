@@ -4,10 +4,9 @@
  * Exports the ConversationService and related operation services.
  */
 
-// Main service
-export { ConversationService as Conversations, ConversationService } from './conversations';
+// Main service (used internally by ConversationalAgentService)
+export { ConversationService } from './conversations';
 
-// Operation services (for standalone use or testing)
-export { ExchangeService as ExchangeOperations, ExchangeService } from './exchanges';
-export { MessageService as MessageOperations, MessageService } from './messages';
-export { AttachmentService as AttachmentOperations, AttachmentService } from './attachments';
+// Operation services (for standalone use)
+export { ExchangeService as Exchanges, ExchangeService } from './exchanges';
+export { MessageService as Messages, MessageService } from './messages';

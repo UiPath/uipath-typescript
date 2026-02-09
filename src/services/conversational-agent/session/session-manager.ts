@@ -241,6 +241,7 @@ export class SessionManager {
   disconnect(): void {
     // Clear all per-conversation socket tracking
     this._sessionSockets.clear();
+    this._socketToConversations.clear();
 
     // Disconnect the underlying WebSocket
     this._session.disconnect();

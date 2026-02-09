@@ -4,52 +4,39 @@
 
 // Core SDK imports
 import type { IUiPathSDK } from '@/core/types';
-import { ConnectionStatus } from '@/core/websocket';
-import type { ConnectionStatusChangedHandler, LogLevel } from '@/core/websocket';
+import type { ConnectionStatus } from '@/core/websocket';
+import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
 import type {
   ConversationalAgentServiceModel,
   ConversationalAgentOptions,
-  FeatureFlags
+  FeatureFlags,
+  RawAgentGetResponse,
+  RawAgentGetByIdResponse,
+  AgentGetResponse,
+  AgentGetByIdResponse
+} from '@/models/conversational-agent';
+import {
+  AgentMap,
+  createAgentWithMethods,
+  createAgentByIdWithMethods
 } from '@/models/conversational-agent';
 
 // Utils
-import { FEATURE_ENDPOINTS } from '@/utils/constants/endpoints';
+import { FEATURE_ENDPOINTS, AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
+import { transformData } from '@/utils/transform';
 
 // Local imports
-import { AgentService } from './agents';
 import { ConversationService } from './conversations';
-import {
-  ConversationEventHelperManagerImpl,
-  type ConversationEventHelperManager
-} from './helpers';
-import { SessionManager } from './session';
-import { TraceService } from './traces';
-import { UserService } from './user';
 
 /**
  * Service for interacting with UiPath Conversational Agent API
  */
 export class ConversationalAgentService extends BaseService implements ConversationalAgentServiceModel {
-  /** Session manager for WebSocket lifecycle */
-  private _sessionManager: SessionManager;
-
-  /** Event helper for conversation events */
-  private _eventHelper: ConversationEventHelperManagerImpl | null = null;
-
-  /** Service for listing available conversational agents */
-  public readonly agents: AgentService;
-
-  /** Service for conversation operations including exchanges, messages, and attachments */
+  /** @internal */
   public readonly conversations: ConversationService;
-
-  /** Service for user profile and context settings management */
-  public readonly user: UserService;
-
-  /** Service for LLM operations tracing and observability */
-  public readonly traces: TraceService;
 
   /**
    * Creates an instance of the ConversationalAgent service.
@@ -57,108 +44,99 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * @param instance - UiPath SDK instance providing authentication and configuration
    * @param options - Optional configuration
    */
-  constructor(instance: IUiPathSDK, options?: ConversationalAgentOptions) {
+  constructor(instance: IUiPathSDK) {
     super(instance);
 
-    // Create HTTP services
-    this.agents = new AgentService(instance);
+    // Create conversation service with WebSocket support
     this.conversations = new ConversationService(instance);
-    this.user = new UserService(instance);
-    this.traces = new TraceService(instance);
-
-    // Create session manager for WebSocket operations
-    this._sessionManager = new SessionManager(instance, options);
   }
 
-  // ==================== Event Handling ====================
-
   /**
-   * Event helpers for sending and receiving real-time conversation events
-   */
-  get events(): ConversationEventHelperManager {
-    if (this._eventHelper === null) {
-      this._eventHelper = new ConversationEventHelperManagerImpl({
-        emit: (event) => {
-          this._sessionManager.emitEvent(event);
-        }
-      });
-
-      // Connect event dispatcher to session manager
-      this._sessionManager.setEventDispatcher(this._eventHelper);
-    }
-    return this._eventHelper;
-  }
-
-  // ==================== Connection Management ====================
-
-  /**
-   * Disconnects from WebSocket and releases all session resources
+   * Registers a handler that is called whenever the WebSocket connection status changes.
    *
-   * Immediately closes the WebSocket connection and clears all per-conversation
-   * socket tracking. Any active sessions will receive a disconnection error.
+   * @param handler - Callback receiving a {@link ConnectionStatus} (`'Disconnected'` | `'Connecting'` | `'Connected'`) and an optional `Error`
+   * @returns Cleanup function to remove the handler
    *
-   * Note: Sessions are automatically cleaned up when they end. Use this only
-   * when you need to force a full disconnection (e.g., on app shutdown or logout).
-   */
-  disconnect(): void {
-    this._sessionManager.disconnect();
-  }
-
-  /**
-   * Current connection status
-   */
-  get connectionStatus(): ConnectionStatus {
-    return this._sessionManager.connectionStatus;
-  }
-
-  /**
-   * Whether WebSocket is connected
-   */
-  get isConnected(): boolean {
-    return this._sessionManager.isConnected;
-  }
-
-  /**
-   * Current connection error, if any
-   */
-  get connectionError(): Error | null {
-    return this._sessionManager.connectionError;
-  }
-
-  /**
-   * Registers a handler for connection status changes
+   * @example
+   * ```typescript
+   * const cleanup = conversationalAgent.onConnectionStatusChanged((status, error) => {
+   *   console.log('Connection status:', status);
+   *   if (error) {
+   *     console.error('Connection error:', error.message);
+   *   }
+   * });
    *
-   * @param handler - Callback function to handle status changes
-   * @returns Cleanup function to remove handler
+   * // Later, remove the handler
+   * cleanup();
+   * ```
    */
-  onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {
-    return this._sessionManager.onConnectionStatusChanged(handler);
+  onConnectionStatusChanged(handler: (status: ConnectionStatus, error: Error | null) => void): () => void {
+    return this.conversations.onConnectionStatusChanged(handler);
+  }
+
+
+  /**
+   * Gets all available conversational agents
+   *
+   * @param folderId - Optional folder ID to filter agents
+   * @returns Promise resolving to an array of agents
+   *
+   * @example Basic usage
+   * ```typescript
+   * const agents = await conversationalAgent.getAll();
+   * const agent = agents[0];
+   *
+   * // Create conversation directly from agent (agentId and folderId are auto-filled)
+   * const conversation = await agent.conversations.create({ label: 'My Chat' });
+   * ```
+   *
+   * @example Filter agents by folder
+   * ```typescript
+   * const agents = await conversationalAgent.getAll(folderId);
+   * ```
+   */
+  @track('ConversationalAgent.GetAll')
+  async getAll(folderId?: number): Promise<AgentGetResponse[]> {
+    const response = await this.get<RawAgentGetResponse[]>(AGENT_ENDPOINTS.LIST, {
+      params: folderId !== undefined ? { folderId } : undefined,
+    });
+    return response.data.map((agent) =>
+      createAgentWithMethods(transformData(agent, AgentMap) as RawAgentGetResponse, this.conversations)
+    );
   }
 
   /**
-   * Sets the log level for debugging
+   * Gets a specific agent by ID
    *
-   * @param level - Log level to set
+   * @param id - ID of the agent release
+   * @param folderId - ID of the folder containing the agent
+   * @returns Promise resolving to the agent
+   *
+   * @example Basic usage
+   * ```typescript
+   * const agent = await conversationalAgent.getById(agentId, folderId);
+   *
+   * // Create conversation directly from agent (agentId and folderId are auto-filled)
+   * const conversation = await agent.conversations.create({ label: 'My Chat' });
+   * ```
    */
-  setLogLevel(level: LogLevel): void {
-    this._sessionManager.setLogLevel(level);
+  @track('ConversationalAgent.GetById')
+  async getById(id: number, folderId: number): Promise<AgentGetByIdResponse> {
+    const response = await this.get<RawAgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
+    return createAgentByIdWithMethods(
+      transformData(response.data, AgentMap) as RawAgentGetByIdResponse,
+      this.conversations
+    );
   }
 
   /**
    * Gets feature flags for the current tenant
    *
-   * @returns Promise resolving to feature flags object
-   *
-   * @example
-   * ```typescript
-   * const flags = await conversationalAgentService.getFeatureFlags();
-   * if (flags.audioStreamingEnabled) {
-   *   // Enable audio UI features
-   * }
-   * ```
+   * @internal
    */
   async getFeatureFlags(): Promise<FeatureFlags> {
     const response = await this.get<FeatureFlags>(FEATURE_ENDPOINTS.FEATURE_FLAGS);
     return response.data;
   }
+
 }

@@ -38,19 +38,20 @@ import { transformMessage, ContentPartHelper } from '@/services/conversational-a
  *
  * @example
  * ```typescript
- * // Get a specific message
- * const messageDetails = await conversationalAgentService.conversations.messages.getById(
- *   conversationId,
- *   exchangeId,
- *   messageId
- * );
+ * import { Messages } from '@uipath/uipath-typescript/conversational-agent';
  *
- * // Access content via helpers
- * const messageText = messageDetails.getTextContent();
- * const messageToolCalls = messageDetails.getToolCalls();
+ * const messagesService = new Messages(sdk);
+ *
+ * // Get a specific message
+ * const messageDetails = await messagesService.getById(conversationId, exchangeId, messageId);
+ *
+ * // Access message properties
+ * console.log(messageDetails.role);
+ * console.log(messageDetails.contentParts);
+ * console.log(messageDetails.toolCalls);
  *
  * // Get external content part data
- * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
+ * const contentPartDetails = await messagesService.getContentPartById(
  *   conversationId,
  *   exchangeId,
  *   messageId,
@@ -70,31 +71,20 @@ export class MessageService extends BaseService implements MessageServiceModel {
   /**
    * Gets a message by ID
    *
-   * Retrieves a specific message including all its content parts.
-   * Returns a MessageGetResponse object that provides convenient methods
-   * for accessing text content, tool calls, citations, and more.
+   * Gets a message by ID
    *
    * @param conversationId - The conversation containing the message
    * @param exchangeId - The exchange containing the message
    * @param messageId - The message ID to retrieve
-   * @returns Promise resolving to the message with helper methods
+   * @returns Promise resolving to {@link MessageGetResponse}
    *
    * @example
    * ```typescript
-   * const messageDetails = await conversationalAgentService.conversations.messages.getById(
-   *   conversationId,
-   *   exchangeId,
-   *   messageId
-   * );
+   * const message = await messagesService.getById(conversationId, exchangeId, messageId);
    *
-   * // Get all text content concatenated
-   * const messageText = messageDetails.getTextContent();
-   *
-   * // Get tool calls from the message
-   * const messageToolCalls = messageDetails.getToolCalls();
-   *
-   * // Get citations for verification
-   * const messageCitations = messageDetails.getCitations();
+   * console.log(message.role);
+   * console.log(message.contentParts);
+   * console.log(message.toolCalls);
    * ```
    */
   @track('ConversationalAgent.Messages.GetById')
@@ -124,12 +114,11 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * @param messageId - The message containing the content part
    * @param contentPartId - The content part ID to retrieve
    * @returns Promise resolving to a ContentPartGetResponse for accessing the data
-   * @throws {NetworkError} 404 if the content part is inline (not external)
    *
    * @example
    * ```typescript
    * // Get an external content part (file/attachment)
-   * const contentPartDetails = await conversationalAgentService.conversations.messages.getContentPartById(
+   * const contentPartDetails = await messagesService.getContentPartById(
    *   conversationId,
    *   exchangeId,
    *   messageId,
@@ -137,8 +126,8 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * );
    *
    * // Check if it's external before fetching
-   * if (contentPartDetails.isExternal()) {
-   *   const contentData = contentPartDetails.getData();
+   * if (contentPartDetails.isDataExternal) {
+   *   const contentData = await contentPartDetails.getData();
    * }
    * ```
    */
