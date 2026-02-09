@@ -96,6 +96,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * Creates an instance of the Conversations service.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration for WebSocket behavior
    */
   constructor(instance: IUiPath) {
     super(instance);
