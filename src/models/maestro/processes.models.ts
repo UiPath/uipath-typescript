@@ -13,7 +13,7 @@ import { ProcessIncidentGetResponse } from './process-incidents.types';
  *
  * ### Usage
  *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
  * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
