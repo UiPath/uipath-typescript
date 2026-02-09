@@ -27,6 +27,7 @@ export const AUTH_CONSTANTS = {
   },
   CONTENT_TYPES: {
     JSON: 'application/json',
+    OCTET_STREAM: 'application/octet-stream',
     FORM_URLENCODED: 'application/x-www-form-urlencoded',
     TEXT_HTML: 'text/html',
   },
@@ -128,6 +129,13 @@ export const AUTH_CONSTANTS = {
       'UIPATH_ORG_ID',
       'UIPATH_TENANT_ID',
       'UIPATH_FOLDER_KEY',
+      'UIPATH_ACCESS_TOKEN'
+    ],
+    // Required for push command (Studio Web)
+    PUSH: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
       'UIPATH_ACCESS_TOKEN'
     ],
   },
