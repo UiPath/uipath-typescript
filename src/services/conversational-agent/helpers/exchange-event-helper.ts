@@ -27,6 +27,7 @@ import {
 } from './conversation-event-helper-common';
 import type { MessageEventHelper } from './message-event-helper';
 import { MessageEventHelperImpl } from './message-event-helper';
+import type { ExchangeStream } from '@/models/conversational-agent';
 import type { SessionEventHelper, SessionEventHelperImpl } from './session-event-helper';
 
 /**
@@ -36,7 +37,7 @@ import type { SessionEventHelper, SessionEventHelperImpl } from './session-event
 export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
   ExchangeStartEvent,
   ExchangeEvent
-> {
+> implements ExchangeStream {
 
   protected readonly _messageMap = new Map<MessageId, MessageEventHelperImpl>();
   protected readonly _messageStartHandlers = new Array<MessageStartHandler>();
@@ -234,7 +235,7 @@ export class ExchangeEventHelperImpl extends ExchangeEventHelper {
     yield {
       exchangeId: exchange.exchangeId,
       startExchange: {
-        timestamp: exchange.createdTime
+        timestamp: exchange.createdTime ?? (exchange as any).createdAt
       }
     };
 

@@ -6,16 +6,7 @@ import type { UserSettingsGetResponse, UserSettingsUpdateResponse, UserSettingsU
  * User settings are passed to the agent for all conversations
  * to provide user context (name, email, role, timezone, etc.).
  *
- * ### Usage
- *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
- *
- * ```typescript
- * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
- *
- * const conversationalAgentService = new ConversationalAgent(sdk);
- * const userSettings = await conversationalAgentService.user.getSettings();
- * ```
+ * @internal
  */
 export interface UserServiceModel {
   /**
@@ -25,7 +16,7 @@ export interface UserServiceModel {
    * {@link UserSettingsGetResponse}
    * @example
    * ```typescript
-   * const userSettings = await conversationalAgentService.user.getSettings();
+   * const userSettings = await userService.getSettings();
    * console.log(userSettings.name);
    * console.log(userSettings.email);
    * ```
@@ -40,7 +31,7 @@ export interface UserServiceModel {
    * {@link UserSettingsUpdateResponse}
    * @example
    * ```typescript
-   * const updatedUserSettings = await conversationalAgentService.user.updateSettings({
+   * const updatedUserSettings = await userService.updateSettings({
    *   name: 'John Doe',
    *   timezone: 'America/New_York'
    * });

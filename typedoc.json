@@ -15,7 +15,7 @@
     "private": false,
     "inherited": false
   },
-  "excludeTags": ["@internal", "@ignore"],
+  "excludeTags": ["@ignore"],
   "sort": ["source-order"],
   "kindSortOrder": [
     "Document",

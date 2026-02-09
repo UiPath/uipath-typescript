@@ -5,7 +5,7 @@
 import type {
   ConversationId,
   ExchangeId
-} from './common.types';
+} from './types/common.types';
 import type {
   ExchangeGetAllOptions,
   ExchangeGetByIdOptions,
@@ -24,7 +24,10 @@ import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } fr
  * ### Usage
  *
  * ```typescript
- * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
+ * import { Exchanges } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const exchangesService = new Exchanges(sdk);
+ * const conversationExchanges = await exchangesService.getAll(conversationId);
  * ```
  */
 export interface ExchangeServiceModel {
@@ -37,14 +40,14 @@ export interface ExchangeServiceModel {
    * @example
    * ```typescript
    * // Get all exchanges (non-paginated)
-   * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
+   * const conversationExchanges = await exchangesService.getAll(conversationId);
    *
    * // First page with pagination
-   * const firstPageOfExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId, { pageSize: 10 });
+   * const firstPageOfExchanges = await exchangesService.getAll(conversationId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (firstPageOfExchanges.hasNextPage) {
-   *   const nextPageOfExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId, {
+   *   const nextPageOfExchanges = await exchangesService.getAll(conversationId, {
    *     cursor: firstPageOfExchanges.nextCursor
    *   });
    * }
@@ -65,18 +68,15 @@ export interface ExchangeServiceModel {
    * @param conversationId - The conversation containing the exchange
    * @param exchangeId - The exchange ID to retrieve
    * @param options - Optional parameters for message sorting
-   * @returns Promise resolving to the exchange with helper methods
-   * {@link ExchangeGetResponse}
+   * @returns Promise resolving to {@link ExchangeGetResponse}
    * @example
    * ```typescript
-   * const exchangeDetails = await conversationalAgentService.conversations.exchanges.getById(
-   *   conversationId,
-   *   exchangeId
-   * );
+   * const exchange = await exchangesService.getById(conversationId, exchangeId);
    *
-   * // Access messages via helpers
-   * const userPrompt = exchangeDetails.getUserMessage();
-   * const assistantResponse = exchangeDetails.getAssistantMessage();
+   * // Access messages
+   * for (const message of exchange.messages) {
+   *   console.log(message.role, message.contentParts);
+   * }
    * ```
    */
   getById(
@@ -95,10 +95,10 @@ export interface ExchangeServiceModel {
    * {@link FeedbackCreateResponse}
    * @example
    * ```typescript
-   * await conversationalAgentService.conversations.exchanges.createFeedback(
+   * await exchangesService.createFeedback(
    *   conversationId,
    *   exchangeId,
-   *   { rating: 'positive', comment: 'Very helpful!' }
+   *   { rating: FeedbackRating.Positive, comment: 'Very helpful!' }
    * );
    * ```
    */
