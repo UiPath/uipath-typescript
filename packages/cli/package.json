@@ -1,6 +1,6 @@
 {
   "name": "@uipath/uipath-ts-cli",
-  "version": "1.0.0-beta.6",
+  "version": "1.0.0-beta.7",
   "description": "UiPath CLI tool for authentication, packaging, publishing, and deployment",
   "type": "module",
   "main": "./dist/index.js",
