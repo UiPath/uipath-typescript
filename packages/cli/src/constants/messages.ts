@@ -59,7 +59,29 @@ export const MESSAGES = {
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
     UNKNOWN_COMMAND: '✗ Error: Unknown command',
-    
+
+    // Push command
+    PUSH_PROJECT_ID_REQUIRED:
+      'Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath push directly',
+    PUSH_VALIDATION_FAILED: 'Validation failed',
+    PUSH_FAILED_PREFIX: 'Push failed: ',
+    PUSH_FILE_OPERATION_FAILED_PREFIX: 'Failed: ',
+    PUSH_DELETE_FILE_PREFIX: 'Could not delete file ',
+    PUSH_DELETE_FOLDER_PREFIX: 'Could not delete folder ',
+    PUSH_BINDINGS_PARSE_FAILED_PREFIX: 'Failed to parse ',
+    PUSH_CONNECTION_NOT_FOUND_PREFIX: 'Connection not found: ',
+    PUSH_RESOURCE_NOT_FOUND_PREFIX: 'Resource not found: ',
+    PUSH_RESOURCE_PROCESSING_ERROR_PREFIX: 'Error processing resource ',
+    PUSH_MOVE_FOLDER_FAILED_PREFIX: 'Move folder failed: ',
+    PUSH_CREATE_FOLDER_FAILED_PREFIX: 'Create folder failed: ',
+    PUSH_PROJECT_STRUCTURE_REQUIRED: 'Project structure is required before ensuring content root exists.',
+    PUSH_SOURCE_FOLDER_CREATE_FAILED: 'Failed to create source folder; project structure may be inconsistent.',
+    PUSH_LOCK_NOT_ACQUIRED: 'Could not acquire lock on the project. Another user or process may have the lock.',
+    PUSH_REMOTE_METADATA_READ_FAILED_PREFIX: '[push] Could not read remote metadata: ',
+    PUSH_METADATA_DEFAULT_VERSION_SUFFIX: '; using codeVersion 0.1.1',
+    PUSH_TEMP_METADATA_REMOVE_FAILED_PREFIX: '[push] Could not remove temp metadata file: ',
+    PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX: '[push] Could not download remote file for diff: ',
+
     // File operations
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',
     MANUAL_ENV_INSTRUCTION: 'Please add the following to your .env file manually:',
@@ -99,8 +121,11 @@ export const MESSAGES = {
     // Deployment
     APP_DEPLOYED_SUCCESS: '✅ App deployed successfully!',
     APP_UPGRADED_SUCCESS: '✅ App upgraded successfully!',
+
+    // Push
+    PUSH_COMPLETED: 'Push completed successfully.',
   },
-  
+
   INFO: {
     // Spinners/Progress
     REGISTERING_APP: 'Registering app with UiPath...',
@@ -144,6 +169,10 @@ export const MESSAGES = {
     STEP_PUBLISH_PACKAGE: '3. Publish the package: uipath publish',
     
     // Headers
+    PUSH_HEADER: '🚀 UiPath Push',
+    PUSH_RESOURCE_ADDED_PREFIX: '[resources] Added: ',
+    PUSH_RESOURCE_UNCHANGED_PREFIX: '[resources] Unchanged: ',
+    PUSH_RESOURCE_UPDATED_PREFIX: '[resources] Updated: ',
     APP_REGISTRATION: '🚀 UiPath App Registration',
     APP_DEPLOYMENT: '🚀 UiPath App Deployment',
     PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator',
