@@ -41,15 +41,19 @@ import { transformExchange } from '@/services/conversational-agent/helpers';
  *
  * @example
  * ```typescript
+ * import { Exchanges } from '@uipath/uipath-typescript/conversational-agent';
+ *
+ * const exchangesService = new Exchanges(sdk);
+ *
  * // List all exchanges in a conversation
- * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
+ * const conversationExchanges = await exchangesService.getAll(conversationId);
  *
  * // Get a specific exchange with messages
- * const exchangeDetails = await conversationalAgentService.conversations.exchanges.getById(conversationId, exchangeId);
+ * const exchangeDetails = await exchangesService.getById(conversationId, exchangeId);
  *
  * // Submit feedback for an exchange
- * await conversationalAgentService.conversations.exchanges.createFeedback(conversationId, exchangeId, {
- *   rating: 'positive',
+ * await exchangesService.createFeedback(conversationId, exchangeId, {
+ *   rating: FeedbackRating.Positive,
  *   comment: 'Great response!'
  * });
  * ```
@@ -77,14 +81,14 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * @example
    * ```typescript
    * // Get all exchanges (non-paginated)
-   * const conversationExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId);
+   * const conversationExchanges = await exchangesService.getAll(conversationId);
    *
    * // First page with pagination
-   * const firstPageOfExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId, { pageSize: 10 });
+   * const firstPageOfExchanges = await exchangesService.getAll(conversationId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (firstPageOfExchanges.hasNextPage) {
-   *   const nextPageOfExchanges = await conversationalAgentService.conversations.exchanges.getAll(conversationId, { cursor: firstPageOfExchanges.nextCursor });
+   *   const nextPageOfExchanges = await exchangesService.getAll(conversationId, { cursor: firstPageOfExchanges.nextCursor });
    * }
    * ```
    */
@@ -120,32 +124,19 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   /**
    * Gets an exchange by ID with its messages
    *
-   * Retrieves a specific exchange including user and assistant messages.
-   * Returns an ExchangeGetResponse object that provides convenient access
-   * to messages and content.
-   *
    * @param conversationId - The conversation containing the exchange
    * @param exchangeId - The exchange ID to retrieve
    * @param options - Optional parameters for message sorting
-   * @returns Promise resolving to the exchange with helper methods
+   * @returns Promise resolving to {@link ExchangeGetResponse}
    *
    * @example
    * ```typescript
-   * const exchangeDetails = await conversationalAgentService.conversations.exchanges.getById(
-   *   conversationId,
-   *   exchangeId
-   * );
+   * const exchange = await exchangesService.getById(conversationId, exchangeId);
    *
-   * // Access messages via helpers
-   * const userPrompt = exchangeDetails.getUserMessage();
-   * const assistantResponse = exchangeDetails.getAssistantMessage();
-   *
-   * // With message sort order
-   * const exchangeWithDescMessages = await conversationalAgentService.conversations.exchanges.getById(
-   *   conversationId,
-   *   exchangeId,
-   *   { messageSort: 'desc' }
-   * );
+   * // Access messages
+   * for (const message of exchange.messages) {
+   *   console.log(message.role, message.contentParts);
+   * }
    * ```
    */
   @track('ConversationalAgent.Exchanges.GetById')
@@ -182,17 +173,17 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * @example
    * ```typescript
    * // Submit positive feedback
-   * await conversationalAgentService.conversations.exchanges.createFeedback(
+   * await exchangesService.createFeedback(
    *   conversationId,
    *   exchangeId,
-   *   { rating: 'positive', comment: 'Very helpful response!' }
+   *   { rating: FeedbackRating.Positive, comment: 'Very helpful response!' }
    * );
    *
    * // Submit negative feedback with explanation
-   * await conversationalAgentService.conversations.exchanges.createFeedback(
+   * await exchangesService.createFeedback(
    *   conversationId,
    *   exchangeId,
-   *   { rating: 'negative', comment: 'Response was not accurate' }
+   *   { rating: FeedbackRating.Negative, comment: 'Response was not accurate' }
    * );
    * ```
    */
