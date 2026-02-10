@@ -3,6 +3,7 @@ import type { IUiPath } from '../../core/types';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
+  EntityGetRecordByIdOptions,
   EntityInsertOptions,
   EntityBatchInsertOptions,
   EntityInsertResponse,
@@ -143,6 +144,47 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }, options);
   }
 
+  /**
+   * Gets a single entity record by entity ID and record ID
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record
+   * @param options - Query options including expansionLevel
+   * @returns Promise resolving to the entity record
+   *
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>);
+   *
+   * // With expansion level
+   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  @track('Entities.GetRecordById')
+  async getRecordById(
+    entityId: string,
+    recordId: string,
+    options: EntityGetRecordByIdOptions = {}
+  ): Promise<EntityRecord> {
+    const params = createParams({
+      expansionLevel: options.expansionLevel
+    });
+
+    const response = await this.get<EntityRecord>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(entityId, recordId),
+      { params }
+    );
+
+    // Convert PascalCase response to camelCase
+    const camelResponse = pascalToCamelCaseKeys(response.data);
+    // Apply EntityMap transformations
+    const transformedResponse = transformData(camelResponse, EntityMap);
+    return transformedResponse;
+  }
+   
   /**
    * Inserts a single record into an entity by entity ID
    *
