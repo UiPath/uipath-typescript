@@ -286,7 +286,7 @@ describe('EntityService Unit Tests', () => {
     });
   });
 
-  describe('getRecordsById', () => {
+  describe('getAllRecords', () => {
     beforeEach(() => {
       // Reset the mock before each test
       vi.mocked(PaginationHelpers.getAll).mockReset();
@@ -301,7 +301,7 @@ describe('EntityService Unit Tests', () => {
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const result = await entityService.getRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+      const result = await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
       // Verify PaginationHelpers.getAll was called with correct parameters
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
@@ -336,7 +336,7 @@ describe('EntityService Unit Tests', () => {
         pageSize: TEST_CONSTANTS.PAGE_SIZE
       } as EntityGetRecordsByIdOptions;
 
-      const result = await entityService.getRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options) as any;
+      const result = await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options) as any;
 
       // Verify PaginationHelpers.getAll was called with correct parameters
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
@@ -370,7 +370,7 @@ describe('EntityService Unit Tests', () => {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
       } as EntityGetRecordsByIdOptions;
 
-      await entityService.getRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+      await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
       // Verify PaginationHelpers.getAll was called with correct parameters
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
@@ -390,7 +390,7 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
-      await expect(entityService.getRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -473,13 +473,14 @@ describe('EntityService Unit Tests', () => {
   });
 
   describe('insertById', () => {
+  describe('insertRecordsById', () => {
     it('should insert a single record successfully', async () => {
       const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
 
       const mockResponse = createMockSingleInsertResponse(testData);
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+      const result = await entityService.insertRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
 
       // Verify the result is the inserted record with generated record ID
       expect(result).toBeDefined();
@@ -513,7 +514,7 @@ describe('EntityService Unit Tests', () => {
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.insertById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
+      const result = await entityService.insertRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
 
       // Verify options are passed in params
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -535,7 +536,7 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.insertById(
+      await expect(entityService.insertRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
@@ -646,7 +647,7 @@ describe('EntityService Unit Tests', () => {
     });
   });
 
-  describe('updateById', () => {
+  describe('updateRecordsById', () => {
     it('should update records successfully', async () => {
       const testData: EntityRecord[] = [
         { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE },
@@ -656,7 +657,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockUpdateResponse(testData);
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+      const result = await entityService.updateRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
 
       // Verify the result
       expect(result).toBeDefined();
@@ -696,7 +697,7 @@ describe('EntityService Unit Tests', () => {
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
+      const result = await entityService.updateRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
 
       // Verify options are passed in params
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -725,7 +726,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockUpdateResponse(testData, { successCount: 1 });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
+      const result = await entityService.updateRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
 
       expect(result.successRecords).toHaveLength(1);
       expect(result.failureRecords).toHaveLength(1);
@@ -740,14 +741,14 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.updateById(
+      await expect(entityService.updateRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         [{ id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }]
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
-  describe('deleteById', () => {
+  describe('deleteRecordsById', () => {
     it('should delete records successfully', async () => {
       const recordIds = [
         ENTITY_TEST_CONSTANTS.RECORD_ID,
@@ -757,7 +758,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockDeleteResponse(recordIds);
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.deleteById(ENTITY_TEST_CONSTANTS.ENTITY_ID, recordIds);
+      const result = await entityService.deleteRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, recordIds);
 
       // Verify the result
       expect(result).toBeDefined();
@@ -786,7 +787,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockDeleteResponse(recordIds);
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      await entityService.deleteById(ENTITY_TEST_CONSTANTS.ENTITY_ID, recordIds, options);
+      await entityService.deleteRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, recordIds, options);
 
       // Verify options are passed in params
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -810,7 +811,7 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockDeleteResponse(recordIds, { successCount: 1 });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.deleteById(ENTITY_TEST_CONSTANTS.ENTITY_ID, recordIds);
+      const result = await entityService.deleteRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, recordIds);
 
       expect(result.successRecords).toHaveLength(1);
       expect(result.failureRecords).toHaveLength(1);
@@ -825,7 +826,7 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.deleteById(
+      await expect(entityService.deleteRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         [ENTITY_TEST_CONSTANTS.RECORD_ID]
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);

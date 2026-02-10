@@ -14,11 +14,15 @@ describe('Entity Models', () => {
     mockService = {
       getAll: vi.fn(),
       getById: vi.fn(),
+      getAllRecords: vi.fn(),
       getRecordsById: vi.fn(),
       getRecordById: vi.fn(),
+      insertRecordsById: vi.fn(),
       insertById: vi.fn(),
       batchInsertById: vi.fn(),
+      updateRecordsById: vi.fn(),
       updateById: vi.fn(),
+      deleteRecordsById: vi.fn(),
       deleteById: vi.fn(),
       downloadAttachment: vi.fn(),
     } as any;
@@ -36,11 +40,11 @@ describe('Entity Models', () => {
 
         const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
         const mockResponse = createMockSingleInsertResponse(testData);
-        mockService.insertById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insert(testData);
 
-        expect(mockService.insertById).toHaveBeenCalledWith(
+        expect(mockService.insertRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           undefined
@@ -60,11 +64,11 @@ describe('Entity Models', () => {
         const mockResponse = createMockSingleInsertResponse(testData, {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
         });
-        mockService.insertById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insert(testData, options);
 
-        expect(mockService.insertById).toHaveBeenCalledWith(
+        expect(mockService.insertRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           options
@@ -174,11 +178,11 @@ describe('Entity Models', () => {
           { id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_AGE }
         ];
         const mockResponse = createMockUpdateResponse(testData);
-        mockService.updateById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.update(testData);
 
-        expect(mockService.updateById).toHaveBeenCalledWith(
+        expect(mockService.updateRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           undefined
@@ -202,11 +206,11 @@ describe('Entity Models', () => {
         const mockResponse = createMockUpdateResponse(testData, { 
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
         });
-        mockService.updateById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.update(testData, options);
 
-        expect(mockService.updateById).toHaveBeenCalledWith(
+        expect(mockService.updateRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           options
@@ -245,7 +249,7 @@ describe('Entity Models', () => {
           { id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME }
         ];
         const mockResponse = createMockUpdateResponse(testData, { successCount: 1 });
-        mockService.updateById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.update(testData);
 
@@ -274,11 +278,11 @@ describe('Entity Models', () => {
           ENTITY_TEST_CONSTANTS.RECORD_ID_2
         ];
         const mockResponse = createMockDeleteResponse(recordIds);
-        mockService.deleteById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.delete(recordIds);
 
-        expect(mockService.deleteById).toHaveBeenCalledWith(
+        expect(mockService.deleteRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           recordIds,
           undefined
@@ -297,11 +301,11 @@ describe('Entity Models', () => {
           failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
         };
         const mockResponse = createMockDeleteResponse(recordIds);
-        mockService.deleteById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.delete(recordIds, options);
 
-        expect(mockService.deleteById).toHaveBeenCalledWith(
+        expect(mockService.deleteRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           recordIds,
           options
@@ -331,7 +335,7 @@ describe('Entity Models', () => {
           ENTITY_TEST_CONSTANTS.TEST_INVALID_ID
         ];
         const mockResponse = createMockDeleteResponse(recordIds, { successCount: 1 });
-        mockService.deleteById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.delete(recordIds);
 
@@ -360,11 +364,11 @@ describe('Entity Models', () => {
           items: mockRecords,
           totalCount: 5
         };
-        mockService.getRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.getAllRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.getRecords();
 
-        expect(mockService.getRecordsById).toHaveBeenCalledWith(
+        expect(mockService.getAllRecords).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           undefined
         );
@@ -386,11 +390,11 @@ describe('Entity Models', () => {
           items: mockRecords,
           totalCount: 3
         };
-        mockService.getRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.getAllRecords = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.getRecords(options);
 
-        expect(mockService.getRecordsById).toHaveBeenCalledWith(
+        expect(mockService.getAllRecords).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           options
         );

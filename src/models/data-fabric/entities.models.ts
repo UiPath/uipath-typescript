@@ -108,7 +108,7 @@ export interface EntityServiceModel {
 
   /**
    * Gets entity records by entity ID
-   * 
+   *
    * @param entityId - UUID of the entity
    * @param options - Query options
    * @returns Promise resolving to either an array of entity records NonPaginatedResponse<EntityRecord> or a PaginatedResponse<EntityRecord> when pagination options are used.
@@ -116,25 +116,35 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage (non-paginated)
-   * const records = await entities.getRecordsById(<entityId>);
+   * const records = await entities.getAllRecords(<entityId>);
    *
    * // With expansion level
-   * const records = await entities.getRecordsById(<entityId>, {
+   * const records = await entities.getAllRecords(<entityId>, {
    *   expansionLevel: 1
    * });
    *
    * // With pagination
-   * const paginatedResponse = await entities.getRecordsById(<entityId>, {
+   * const paginatedResponse = await entities.getAllRecords(<entityId>, {
    *   pageSize: 50,
    *   expansionLevel: 1
    * });
    *
    * // Navigate to next page
-   * const nextPage = await entities.getRecordsById(<entityId>, {
+   * const nextPage = await entities.getAllRecords(<entityId>, {
    *   cursor: paginatedResponse.nextCursor,
    *   expansionLevel: 1
    * });
    * ```
+   */
+  getAllRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
+
+  /**
+   * @deprecated Use {@link getAllRecords} instead.
+   * @ignore
    */
   getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
     T extends HasPaginationOptions<T>
@@ -181,20 +191,26 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await entities.insertById(<entityId>, { name: "John", age: 30 });
+   * const result = await entities.insertRecordsById(<entityId>, { name: "John", age: 30 });
    *
    * // With options
-   * const result = await entities.insertById(<entityId>, { name: "John", age: 30 }, {
+   * const result = await entities.insertRecordsById(<entityId>, { name: "John", age: 30 }, {
    *   expansionLevel: 1
    * });
    * ```
+   */
+  insertRecordsById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+
+  /**
+   * @deprecated Use {@link insertRecordsById} instead.
+   * @ignore
    */
   insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
 
   /**
    * Inserts one or more records into an entity by entity ID using batch insert
    *
-   * Note: Batch inserts do not trigger Data Fabric trigger events. Use {@link insertById} if you need
+   * Note: Batch inserts do not trigger Data Fabric trigger events. Use {@link insertRecordsById} if you need
    * trigger events to fire for each inserted record.
    *
    * @param id - UUID of the entity
@@ -224,7 +240,7 @@ export interface EntityServiceModel {
 
   /**
    * Updates data in an entity by entity ID
-   * 
+   *
    * @param id - UUID of the entity
    * @param data - Array of records to update. Each record MUST contain the record Id.
    * @param options - Update options
@@ -233,13 +249,13 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await entities.updateById(<entityId>, [
+   * const result = await entities.updateRecordsById(<entityId>, [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ]);
    *
    * // With options
-   * const result = await entities.updateById(<entityId>, [
+   * const result = await entities.updateRecordsById(<entityId>, [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ], {
@@ -247,6 +263,12 @@ export interface EntityServiceModel {
    *   failOnFirst: true
    * });
    * ```
+   */
+  updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
+
+  /**
+   * @deprecated Use {@link updateRecordsById} instead.
+   * @ignore
    */
   updateById(id: string, data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
 
@@ -261,10 +283,16 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await entities.deleteById(<entityId>, [
+   * const result = await entities.deleteRecordsById(<entityId>, [
    *   <recordId-1>, <recordId-2>
    * ]);
    * ```
+   */
+  deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * @deprecated Use {@link deleteRecordsById} instead.
+   * @ignore
    */
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
 
@@ -280,7 +308,7 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // First, get records to obtain the record ID
-   * const records = await entities.getRecordsById("<entityId>");
+   * const records = await entities.getAllRecords("<entityId>");
    * // Get the recordId for the record that contains the attachment
    * const recordId = records.items[0].id;
    *
@@ -412,7 +440,7 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.insertById(entityData.id, data, options);
+      return service.insertRecordsById(entityData.id, data, options);
     },
 
     async batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse> {
@@ -424,13 +452,13 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.updateById(entityData.id, data, options);
+      return service.updateRecordsById(entityData.id, data, options);
     },
 
     async delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.deleteById(entityData.id, recordIds, options);
+      return service.deleteRecordsById(entityData.id, recordIds, options);
     },
 
     async getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
@@ -440,7 +468,7 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.getRecordsById(entityData.id, options) as any;
+      return service.getAllRecords(entityData.id, options) as any;
     },
 
     async getRecord(recordId: string, options?: EntityGetRecordByIdOptions): Promise<EntityRecord> {
