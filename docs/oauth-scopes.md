@@ -25,12 +25,12 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `DataFabric.Schema.Read` |
 | `getById()` | `DataFabric.Schema.Read` |
-| `getRecordsById()` | `DataFabric.Data.Read` |
+| `getAllRecords()` | `DataFabric.Data.Read` |
 | `getRecordById()`  | `DataFabric.Data.Read` |
-| `insertById()` / `insert()` | `DataFabric.Data.Write` |
-| `batchInsertById()` / `batchInsert()` | `DataFabric.Data.Write` |
-| `deleteById()` / `delete()` | `DataFabric.Data.Write` |
-| `updateById()` / `update()` | `DataFabric.Data.Write` |
+| `insertRecordsById()` / `insert()` | `DataFabric.Data.Write` |
+| `batchInsertRecordsById()` / `batchInsert()` | `DataFabric.Data.Write` |
+| `deleteRecordsById()` / `delete()` | `DataFabric.Data.Write` |
+| `updateRecordsById()` / `update()` | `DataFabric.Data.Write` |
 | `downloadAttachment()` | `DataFabric.Data.Read` |
 
 ## ChoiceSets
