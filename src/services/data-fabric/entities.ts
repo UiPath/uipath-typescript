@@ -55,13 +55,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const entity = await entities.getById("<entityId>");
    *
    * // Call operations directly on the entity
-   * const records = await entity.getRecords();
+   * const records = await entity.getAllRecords();
    *
    * // Insert a single record
-   * const insertResult = await entity.insert({ name: "John", age: 30 });
+   * const insertResult = await entity.insertRecord({ name: "John", age: 30 });
    *
    * // Or batch insert multiple records
-   * const batchResult = await entity.batchInsert([
+   * const batchResult = await entity.insertRecords([
    *     { name: "Jane", age: 25 },
    *     { name: "Bob", age: 35 }
    * ]);
@@ -386,7 +386,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const allEntities = await entities.getAll();
    *
    * // Call operations on an entity
-   * const records = await allEntities[0].getRecords();
+   * const records = await allEntities[0].getAllRecords();
    * ```
    */
   @track('Entities.GetAll')

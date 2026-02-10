@@ -34,8 +34,8 @@ describe('Entity Models', () => {
   });
 
   describe('bound methods on entity', () => {
-    describe('entity.insert()', () => {
-      it('should call entity.insert with entity id and single record', async () => {
+    describe('entity.insertRecord()', () => {
+      it('should call entity.insertRecord with entity id and single record', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -43,7 +43,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockSingleInsertResponse(testData);
         mockService.insertRecordById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.insert(testData);
+        const result = await entity.insertRecord(testData);
 
         expect(mockService.insertRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -67,7 +67,7 @@ describe('Entity Models', () => {
         });
         mockService.insertRecordById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.insert(testData, options);
+        const result = await entity.insertRecord(testData, options);
 
         expect(mockService.insertRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -81,12 +81,12 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
-        await expect(entity.insert(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA)).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+        await expect(entity.insertRecord(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA)).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
     });
 
-    describe('entity.batchInsert()', () => {
-      it('should call entity.batchInsert with entity id and data array', async () => {
+    describe('entity.insertRecords()', () => {
+      it('should call entity.insertRecords with entity id and data array', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -97,7 +97,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockInsertResponse(testData);
         mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.batchInsert(testData);
+        const result = await entity.insertRecords(testData);
 
         expect(mockService.insertRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -109,7 +109,7 @@ describe('Entity Models', () => {
         expect(result.failureRecords).toHaveLength(0);
       });
 
-      it('should call entity.batchInsert with options', async () => {
+      it('should call entity.insertRecords with options', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -123,7 +123,7 @@ describe('Entity Models', () => {
         });
         mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.batchInsert(testData, options);
+        const result = await entity.insertRecords(testData, options);
 
         expect(mockService.insertRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -137,10 +137,10 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
-        await expect(entity.batchInsert([ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+        await expect(entity.insertRecords([ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
 
-      it('should handle partial failures in batchInsert', async () => {
+      it('should handle partial failures in insertRecords', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -151,7 +151,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockInsertResponse(testData, { successCount: 1 });
         mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.batchInsert(testData);
+        const result = await entity.insertRecords(testData);
 
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(1);
@@ -169,8 +169,8 @@ describe('Entity Models', () => {
       });
     });
 
-    describe('entity.update()', () => {
-      it('should call entity.update with entity id and data', async () => {
+    describe('entity.updateRecords()', () => {
+      it('should call entity.updateRecords with entity id and data', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -181,7 +181,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockUpdateResponse(testData);
         mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.update(testData);
+        const result = await entity.updateRecords(testData);
 
         expect(mockService.updateRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -209,7 +209,7 @@ describe('Entity Models', () => {
         });
         mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.update(testData, options);
+        const result = await entity.updateRecords(testData, options);
 
         expect(mockService.updateRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -236,7 +236,7 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
-        await expect(entity.update([
+        await expect(entity.updateRecords([
           { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
         ])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
@@ -252,7 +252,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockUpdateResponse(testData, { successCount: 1 });
         mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.update(testData);
+        const result = await entity.updateRecords(testData);
 
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(1);
@@ -269,8 +269,8 @@ describe('Entity Models', () => {
       });
     });
 
-    describe('entity.delete()', () => {
-      it('should call entity.delete with entity id and record ids', async () => {
+    describe('entity.deleteRecords()', () => {
+      it('should call entity.deleteRecords with entity id and record ids', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -281,7 +281,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockDeleteResponse(recordIds);
         mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.delete(recordIds);
+        const result = await entity.deleteRecords(recordIds);
 
         expect(mockService.deleteRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -304,7 +304,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockDeleteResponse(recordIds);
         mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.delete(recordIds, options);
+        const result = await entity.deleteRecords(recordIds, options);
 
         expect(mockService.deleteRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -324,7 +324,7 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
-        await expect(entity.delete([ENTITY_TEST_CONSTANTS.RECORD_ID])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+        await expect(entity.deleteRecords([ENTITY_TEST_CONSTANTS.RECORD_ID])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
 
       it('should handle partial failures in delete', async () => {
@@ -338,7 +338,7 @@ describe('Entity Models', () => {
         const mockResponse = createMockDeleteResponse(recordIds, { successCount: 1 });
         mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.delete(recordIds);
+        const result = await entity.deleteRecords(recordIds);
 
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(1);
@@ -544,10 +544,10 @@ describe('Entity Models', () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
 
-      expect(typeof entity.insert).toBe('function');
-      expect(typeof entity.batchInsert).toBe('function');
-      expect(typeof entity.update).toBe('function');
-      expect(typeof entity.delete).toBe('function');
+      expect(typeof entity.insertRecord).toBe('function');
+      expect(typeof entity.insertRecords).toBe('function');
+      expect(typeof entity.updateRecords).toBe('function');
+      expect(typeof entity.deleteRecords).toBe('function');
       expect(typeof entity.getRecords).toBe('function');
       expect(typeof entity.getRecord).toBe('function');
       expect(typeof entity.downloadAttachment).toBe('function');

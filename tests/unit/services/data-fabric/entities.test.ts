@@ -90,9 +90,10 @@ describe('EntityService Unit Tests', () => {
       );
 
       // Verify entity has methods attached
-      expect(typeof result.insert).toBe('function');
-      expect(typeof result.update).toBe('function');
-      expect(typeof result.delete).toBe('function');
+      expect(typeof result.insertRecord).toBe('function');
+      expect(typeof result.insertRecords).toBe('function');
+      expect(typeof result.updateRecords).toBe('function');
+      expect(typeof result.deleteRecords).toBe('function');
       expect(typeof result.getRecords).toBe('function');
     });
 
@@ -212,9 +213,10 @@ describe('EntityService Unit Tests', () => {
       
       // Verify each entity has methods
       result.forEach(entity => {
-        expect(typeof entity.insert).toBe('function');
-        expect(typeof entity.update).toBe('function');
-        expect(typeof entity.delete).toBe('function');
+        expect(typeof entity.insertRecord).toBe('function');
+        expect(typeof entity.insertRecords).toBe('function');
+        expect(typeof entity.updateRecords).toBe('function');
+        expect(typeof entity.deleteRecords).toBe('function');
         expect(typeof entity.getRecords).toBe('function');
       });
 
