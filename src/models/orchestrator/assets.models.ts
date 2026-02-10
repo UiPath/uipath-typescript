@@ -8,7 +8,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  *
  * ### Usage
  *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
  * import { Assets } from '@uipath/uipath-typescript/assets';

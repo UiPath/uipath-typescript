@@ -18,7 +18,7 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  *
  * ### Usage
  *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
  * import { CaseInstances } from '@uipath/uipath-typescript/cases';
