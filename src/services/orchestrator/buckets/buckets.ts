@@ -21,7 +21,6 @@ import { BUCKET_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../../utils/constants/common';
 import { BucketMap } from '../../../models/orchestrator/buckets.constants';
 import { ODATA_PAGINATION } from '../../../utils/constants/common';
-import axios, { AxiosResponse } from 'axios';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
@@ -333,8 +332,8 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    */
   private async _uploadToUri(
     uriResponse: BucketGetUriResponse, 
-    content: Blob | Buffer | File, 
-  ): Promise<AxiosResponse> {
+    content: Blob | Uint8Array<ArrayBuffer> | File, 
+  ): Promise<Response> {
     const { uri, headers = {}, requiresAuth } = uriResponse;
     
     if (!uri) {
@@ -350,8 +349,10 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       requestHeaders['Authorization'] = `Bearer ${token}`;
     }
    
-    return axios.put(uri, content, {
-      headers: createHeaders(requestHeaders)
+    return fetch(uri, {
+      method: 'PUT',
+      body: content,
+      headers: createHeaders(requestHeaders),
     });
   }
 
