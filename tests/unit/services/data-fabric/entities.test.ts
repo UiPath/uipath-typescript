@@ -472,7 +472,6 @@ describe('EntityService Unit Tests', () => {
     });
   });
 
-  describe('insertById', () => {
   describe('insertRecordsById', () => {
     it('should insert a single record successfully', async () => {
       const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
