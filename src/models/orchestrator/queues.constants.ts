@@ -8,9 +8,9 @@ export const QueueMap: { [key: string]: string } = {
 };
 
 export const QueueItemMap: { [key: string]: string } = {
-  OrganizationUnitId: 'folderId',
-  QueueDefinitionId: 'queueDefinitionId',
-  ProcessingException: 'processingException',
-  SpecificContent: 'specificContent',
-  CreationTime: 'creationTime',
-}; 
+  organizationUnitId: 'folderId',
+  queueDefinitionId: 'queueDefinitionId',
+  processingException: 'processingException',
+  specificContent: 'specificContent',
+  creationTime: 'creationTime'
+};
