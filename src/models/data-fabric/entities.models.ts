@@ -144,7 +144,7 @@ export interface EntityServiceModel {
 
   /**
    * @deprecated Use {@link getAllRecords} instead.
-   * @ignore
+   * @hidden
    */
   getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
     T extends HasPaginationOptions<T>
@@ -203,7 +203,7 @@ export interface EntityServiceModel {
 
   /**
    * @deprecated Use {@link insertRecordsById} instead.
-   * @ignore
+   * @hidden
    */
   insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
 
@@ -268,7 +268,7 @@ export interface EntityServiceModel {
 
   /**
    * @deprecated Use {@link updateRecordsById} instead.
-   * @ignore
+   * @hidden
    */
   updateById(id: string, data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
 
@@ -292,7 +292,7 @@ export interface EntityServiceModel {
 
   /**
    * @deprecated Use {@link deleteRecordsById} instead.
-   * @ignore
+   * @hidden
    */
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
 

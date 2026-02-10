@@ -372,8 +372,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
+   * @hidden
    * @deprecated Use {@link getAllRecords} instead.
-   * @ignore
    */
   async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
     entityId: string,
@@ -387,24 +387,24 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
+   * @hidden
    * @deprecated Use {@link insertRecordsById} instead.
-   * @ignore
    */
   async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
     return this.insertRecordsById(id, data, options);
   }
 
   /**
+   * @hidden
    * @deprecated Use {@link updateRecordsById} instead.
-   * @ignore
    */
   async updateById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
     return this.updateRecordsById(id, data, options);
   }
 
   /**
+   * @hidden
    * @deprecated Use {@link deleteRecordsById} instead.
-   * @ignore
    */
   async deleteById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
     return this.deleteRecordsById(id, recordIds, options);
