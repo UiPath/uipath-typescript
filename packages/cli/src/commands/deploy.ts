@@ -11,7 +11,7 @@ import { MESSAGES } from '../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../utils/api.js';
 import { getEnvironmentConfig, isValidAppName, atomicWriteFileSync } from '../utils/env-config.js';
 import { handleHttpError } from '../utils/error-handler.js';
-import { cliTelemetryClient } from '../telemetry/index.js';
+import { cliTelemetryClient, track } from '../telemetry/index.js';
 
 interface DeployedApp {
   id: string;
@@ -73,6 +73,7 @@ export default class Deploy extends Command {
     }),
   };
 
+  @track('Deploy')
   public async run(): Promise<void> {
     const { flags } = await this.parse(Deploy);
 
