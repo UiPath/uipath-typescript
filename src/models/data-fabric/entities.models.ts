@@ -221,13 +221,13 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await entities.batchInsertById(<entityId>, [
+   * const result = await entities.batchInsertRecordsById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
    *
    * // With options
-   * const result = await entities.batchInsertById(<entityId>, [
+   * const result = await entities.batchInsertRecordsById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -235,6 +235,12 @@ export interface EntityServiceModel {
    *   failOnFirst: true
    * });
    * ```
+   */
+  batchInsertRecordsById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
+
+  /**
+   * @deprecated Use {@link batchInsertRecordsById} instead.
+   * @hidden
    */
   batchInsertById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
@@ -446,7 +452,7 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.batchInsertById(entityData.id, data, options);
+      return service.batchInsertRecordsById(entityData.id, data, options);
     },
 
     async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {

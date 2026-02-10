@@ -243,13 +243,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Basic usage
-   * const result = await entities.batchInsertById("<entityId>", [
+   * const result = await entities.batchInsertRecordsById("<entityId>", [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
    *
    * // With options
-   * const result = await entities.batchInsertById("<entityId>", [
+   * const result = await entities.batchInsertRecordsById("<entityId>", [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -258,8 +258,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.BatchInsertById')
-  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
+  @track('Entities.BatchInsertRecordsById')
+  async batchInsertRecordsById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
@@ -392,6 +392,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
     return this.insertRecordsById(id, data, options);
+  }
+
+  /**
+   * @hidden
+   * @deprecated Use {@link batchInsertRecordsById} instead.
+   */
+  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
+    return this.batchInsertRecordsById(id, data, options);
   }
 
   /**
