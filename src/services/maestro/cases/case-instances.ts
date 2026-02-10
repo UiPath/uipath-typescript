@@ -184,7 +184,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
           const transformed = transformData(caseJson.root.caseAppConfig, CaseAppConfigMap) as any;
           // Remove id field from each overview item
           if (transformed.overview) {
-            transformed.overview = transformed.overview.map(({ id: _id, ...rest }: any) => rest);
+            transformed.overview = transformed.overview.map(({ id: _, ...rest }: any) => rest);
           }
           return transformed;
         })() : undefined;

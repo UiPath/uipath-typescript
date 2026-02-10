@@ -72,7 +72,6 @@ export const getTenantsAndOrganization = async (
 
 export const selectTenantInteractive = async (
   data: TenantsAndOrganizationResponse,
-  _domain: string
 ): Promise<SelectedTenant> => {
   if (!data.organization) {
     throw new Error('No organization found');
