@@ -27,7 +27,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * @example
    * ```typescript
-   * import { ChoiceSets } from '@uipath/uipath-typescript/choicesets';
+   * import { ChoiceSets } from '@uipath/uipath-typescript/entities';
    *
    * const choiceSets = new ChoiceSets(sdk);
    *

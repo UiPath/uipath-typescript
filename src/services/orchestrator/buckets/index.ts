@@ -20,5 +20,5 @@
 
 export { BucketService as Buckets, BucketService } from './buckets';
 
-export type * from '../../../models/orchestrator/buckets.types';
-export type * from '../../../models/orchestrator/buckets.models';
+export * from '../../../models/orchestrator/buckets.types';
+export * from '../../../models/orchestrator/buckets.models';

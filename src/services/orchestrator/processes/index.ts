@@ -22,5 +22,5 @@
 
 export { ProcessService as Processes, ProcessService } from './processes';
 
-export type * from '../../../models/orchestrator/processes.types';
-export type * from '../../../models/orchestrator/processes.models';
+export * from '../../../models/orchestrator/processes.types';
+export * from '../../../models/orchestrator/processes.models';

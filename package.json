@@ -127,7 +127,8 @@
         "build:watch": "rollup -c -w",
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
         "docs:api": "typedoc && npm run docs:post-process",
-        "docs:post-process": "mkdir -p docs/api/interfaces/entity && echo '---\ntitle: Entities\n---\n' | cat - docs/api/interfaces/EntityServiceModel.md > docs/api/interfaces/entity/index.md && rm docs/api/interfaces/EntityServiceModel.md",
+        "docs:post-process": "mkdir -p docs/api/interfaces/entity && mv docs/api/interfaces/EntityServiceModel.md docs/api/interfaces/entity/index.md",
+
         "test": "vitest",
         "test:unit": "vitest tests/unit",
         "test:watch": "vitest --watch",
