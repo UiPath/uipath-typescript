@@ -124,6 +124,7 @@ export const AUTH_CONSTANTS = {
     DEPLOY: [
       'UIPATH_BASE_URL',
       'UIPATH_ORG_ID',
+      'UIPATH_ORG_NAME',
       'UIPATH_TENANT_ID',
       'UIPATH_FOLDER_KEY',
       'UIPATH_ACCESS_TOKEN'
