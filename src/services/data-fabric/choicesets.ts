@@ -1,5 +1,4 @@
 import { BaseService } from '../base';
-import type { IUiPath } from '../../core/types';
 import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.models';
 import { ChoiceSetGetAllResponse, ChoiceSetGetResponse, ChoiceSetGetByIdOptions } from '../../models/data-fabric/choicesets.types';
 import { RawChoiceSetGetAllResponse, RawChoiceSetGetResponse } from '../../models/data-fabric/choicesets.internal-types';
@@ -13,13 +12,6 @@ import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { CHOICESET_VALUES_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../utils/constants/common';
 
 export class ChoiceSetService extends BaseService implements ChoiceSetServiceModel {
-  /**
-   * @hideconstructor
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets all choice sets in the system
    *

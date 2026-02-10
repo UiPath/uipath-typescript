@@ -1,5 +1,4 @@
 import { BaseService } from '../base';
-import type { IUiPath } from '../../core/types';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
@@ -32,15 +31,6 @@ import { track } from '../../core/telemetry';
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
-  /**
-   * Creates an instance of the Entities service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets entity metadata by entity ID with attached operation methods
    *

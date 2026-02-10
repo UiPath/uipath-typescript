@@ -1,5 +1,4 @@
 import { BaseService } from './base';
-import type { IUiPath } from '../core/types';
 import { CollectionResponse } from '../models/common/types';
 import { createHeaders } from '../utils/http/headers';
 import { FOLDER_ID } from '../utils/constants/headers';
@@ -17,15 +16,6 @@ import { addPrefixToKeys } from '../utils/transform';
  * in request headers, and managing cross-folder queries.
  */
 export class FolderScopedService extends BaseService {
-  /**
-   * Creates a folder-scoped service instance.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets resources in a folder with optional query parameters
    * 
