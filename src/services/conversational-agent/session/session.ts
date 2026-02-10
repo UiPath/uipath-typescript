@@ -2,7 +2,7 @@
  * WebSocketSession - WebSocket connection for Conversational Agent
  */
 
-import type { IUiPathSDK } from '@/core/types';
+import type { IUiPath } from '@/core/types';
 import { BaseWebSocket } from '@/core/websocket';
 import type { ConversationalAgentOptions } from '@/models/conversational-agent';
 import { SDKInternalsRegistry } from '@/core/internals';
@@ -22,7 +22,7 @@ export class WebSocketSession extends BaseWebSocket {
    * @param instance - UiPath SDK instance providing authentication and configuration
    * @param options - Optional configuration
    */
-  constructor(instance: IUiPathSDK, options?: ConversationalAgentOptions) {
+  constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
     const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
     super(
       {

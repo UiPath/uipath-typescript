@@ -7,7 +7,7 @@
  */
 
 // Core SDK imports
-import type { IUiPathSDK } from '@/core/types';
+import type { IUiPath } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
@@ -64,7 +64,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * Creates a new MessageService instance
    * @param instance - UiPath SDK instance
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     super(instance);
   }
 

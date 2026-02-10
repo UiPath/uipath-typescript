@@ -3,7 +3,7 @@
  */
 
 // Core SDK imports
-import type { IUiPathSDK } from '@/core/types';
+import type { IUiPath } from '@/core/types';
 import type { ConnectionStatus } from '@/core/websocket';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
@@ -11,7 +11,6 @@ import { BaseService } from '@/services/base';
 // Models
 import type {
   ConversationalAgentServiceModel,
-  ConversationalAgentOptions,
   FeatureFlags,
   RawAgentGetResponse,
   RawAgentGetByIdResponse,
@@ -44,7 +43,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * @param instance - UiPath SDK instance providing authentication and configuration
    * @param options - Optional configuration
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     super(instance);
 
     // Create conversation service with WebSocket support
