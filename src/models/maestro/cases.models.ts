@@ -12,7 +12,7 @@ import { CaseGetAllResponse} from './cases.types';
  *
  * ### Usage
  *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
  * import { Cases } from '@uipath/uipath-typescript/cases';

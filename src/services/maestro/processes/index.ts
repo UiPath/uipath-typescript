@@ -32,9 +32,9 @@ export { MaestroProcessesService as MaestroProcesses, MaestroProcessesService } 
 export { ProcessInstancesService as ProcessInstances, ProcessInstancesService } from './process-instances';
 export { ProcessIncidentsService as ProcessIncidents, ProcessIncidentsService } from './process-incidents';
 
-export type * from '../../../models/maestro/processes.types';
-export type * from '../../../models/maestro/processes.models';
-export type * from '../../../models/maestro/process-instances.types';
-export type * from '../../../models/maestro/process-instances.models';
-export type * from '../../../models/maestro/process-incidents.types';
-export type * from '../../../models/maestro/process-incidents.models';
+export * from '../../../models/maestro/processes.types';
+export * from '../../../models/maestro/processes.models';
+export * from '../../../models/maestro/process-instances.types';
+export * from '../../../models/maestro/process-instances.models';
+export * from '../../../models/maestro/process-incidents.types';
+export * from '../../../models/maestro/process-incidents.models';

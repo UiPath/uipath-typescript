@@ -25,7 +25,7 @@
 export { CasesService as Cases, CasesService } from './cases';
 export { CaseInstancesService as CaseInstances, CaseInstancesService } from './case-instances';
 
-export type * from '../../../models/maestro/cases.types';
-export type * from '../../../models/maestro/cases.models';
-export type * from '../../../models/maestro/case-instances.types';
-export type * from '../../../models/maestro/case-instances.models';
+export * from '../../../models/maestro/cases.types';
+export * from '../../../models/maestro/cases.models';
+export * from '../../../models/maestro/case-instances.types';
+export * from '../../../models/maestro/case-instances.models';

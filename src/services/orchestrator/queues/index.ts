@@ -20,5 +20,5 @@
 
 export { QueueService as Queues, QueueService } from './queues';
 
-export type * from '../../../models/orchestrator/queues.types';
-export type * from '../../../models/orchestrator/queues.models';
+export * from '../../../models/orchestrator/queues.types';
+export * from '../../../models/orchestrator/queues.models';

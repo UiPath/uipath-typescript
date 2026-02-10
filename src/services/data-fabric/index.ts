@@ -26,7 +26,7 @@ export { EntityService as Entities, EntityService } from './entities';
 export { ChoiceSetService as ChoiceSets, ChoiceSetService } from './choicesets';
 
 // Re-export service-specific types
-export type * from '../../models/data-fabric/entities.types';
-export type * from '../../models/data-fabric/entities.models';
-export type * from '../../models/data-fabric/choicesets.types';
-export type * from '../../models/data-fabric/choicesets.models';
+export * from '../../models/data-fabric/entities.types';
+export * from '../../models/data-fabric/entities.models';
+export * from '../../models/data-fabric/choicesets.types';
+export * from '../../models/data-fabric/choicesets.models';
