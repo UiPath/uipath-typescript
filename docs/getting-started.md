@@ -76,7 +76,7 @@
 
 The SDK supports two import patterns. Choose based on your SDK version.
 
-=== "1.0.0-beta.18+"
+=== ">=1.0.0"
 
     ```typescript
     // Import core SDK and only the services you need
@@ -102,7 +102,7 @@ The SDK supports two import patterns. Choose based on your SDK version.
     const allEntities = await entities.getAll();
     ```
 
-=== "Earlier versions (<1.0.0-beta.18)"
+=== "Beta versions"
 
     ```typescript
     // Import everything from the main package
