@@ -1,6 +1,7 @@
 export interface EnvironmentConfig {
   baseUrl: string;
   orgId: string;
+  orgName: string;
   tenantId: string;
   tenantName?: string;
   folderKey?: string;
@@ -29,6 +30,7 @@ export interface AppConfig {
   registeredAt: string;
   deploymentId?: string;
   deployedAt?: string;
+  appType?: string;
 }
 
 /**

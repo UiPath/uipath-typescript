@@ -47,6 +47,7 @@ export const MESSAGES = {
     APP_DEPLOYMENT_FAILED: '❌ App deployment failed',
     APP_UPGRADE_FAILED: '❌ App upgrade failed',
     APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath register app" first',
+    APP_NAME_ALREADY_EXISTS: '❌ This app name is already deployed in this folder. Please choose a different name.',
     DEPLOYMENT_ID_NOT_FOUND: '❌ Could not find deployment ID for the app',
     
     // Ports
@@ -99,7 +100,7 @@ export const MESSAGES = {
     PACKAGE_CREATED_SUCCESS: 'NuGet package created successfully!',
     PACKAGE_CONFIG_VALIDATED: '✅ Package configuration validated',
     CONFIG_FILE_INCLUDED: `✅ Included ${AUTH_CONSTANTS.FILES.SDK_CONFIG} in package`,
-    CONFIG_FILE_CREATED: `✅ Created ${AUTH_CONSTANTS.FILES.SDK_CONFIG} with provided scopes`,
+    CONFIG_FILE_CREATED: `✅ Created ${AUTH_CONSTANTS.FILES.SDK_CONFIG}`,
     CLIENT_ID_CLEARED: '✅ ClientId cleared - UiPath will create a new OAuth client during deployment',
     CLIENT_ID_REUSED: '✅ Existing clientId will be reused in production',
     
@@ -115,6 +116,7 @@ export const MESSAGES = {
   
   INFO: {
     // Spinners/Progress
+    CHECKING_APP_NAME_UNIQUENESS: 'Checking app name availability...',
     DEPLOYING_APP: 'Deploying app...',
     UPGRADING_APP: 'Upgrading app to latest version...',
     CHECKING_DEPLOYMENT_STATUS: 'Checking deployment status...',
