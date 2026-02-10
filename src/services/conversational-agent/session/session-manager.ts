@@ -3,7 +3,7 @@
  */
 
 import type { Socket } from 'socket.io-client';
-import type { IUiPathSDK } from '@/core/types';
+import type { IUiPath } from '@/core/types';
 import type {
   ConversationalAgentOptions,
   ConversationEvent,
@@ -44,7 +44,7 @@ export class SessionManager {
    * @param instance - UiPath SDK instance providing authentication and configuration
    * @param options - Optional configuration
    */
-  constructor(instance: IUiPathSDK, options?: ConversationalAgentOptions) {
+  constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
     this._session = new WebSocketSession(instance, options);
     this._setupEventListeners();
   }

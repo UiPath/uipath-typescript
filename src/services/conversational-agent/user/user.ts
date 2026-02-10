@@ -3,7 +3,7 @@
  */
 
 // Core SDK imports
-import type { IUiPathSDK } from '@/core/types';
+import type { IUiPath } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
@@ -34,7 +34,7 @@ export class UserService extends BaseService implements UserServiceModel {
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     super(instance);
   }
 

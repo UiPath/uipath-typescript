@@ -5,7 +5,7 @@
  */
 
 // Core SDK imports
-import type { IUiPathSDK } from '@/core/types';
+import type { IUiPath } from '@/core/types';
 import { NetworkError } from '@/core/errors';
 import { track } from '@/core/telemetry';
 import { ConnectionStatus } from '@/core/websocket';
@@ -97,7 +97,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * @param instance - UiPath SDK instance providing authentication and configuration
    * @param options - Optional configuration for WebSocket behavior
    */
-  constructor(instance: IUiPathSDK) {
+  constructor(instance: IUiPath) {
     super(instance);
     this._sessionManager = new SessionManager(instance);
   }
