@@ -4,7 +4,8 @@ import {
   QueueGetAllOptions,
   QueueGetByIdOptions,
   QueueItem,
-  QueueItemPayload
+  QueueItemPayload,
+  QueueItemGetAllOptions
 } from '../../../models/orchestrator/queues.types';
 import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
@@ -132,8 +133,43 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   }
 
   /**
+   * Gets queue items with optional filtering and folder scoping
+   *
+   * @param options - Query options including optional folderId
+   * @returns Promise resolving to an array of queue items or paginated result
+   */
+  @track('Queues.GetItems')
+  async getItems<T extends QueueItemGetAllOptions = QueueItemGetAllOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<QueueItem>
+      : NonPaginatedResponse<QueueItem>
+  > {
+    const transformQueueItemResponse = (queueItem: any) =>
+      transformData(pascalToCamelCaseKeys(queueItem) as QueueItem, QueueItemMap);
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => QUEUE_ENDPOINTS.GET_ITEMS,
+      getByFolderEndpoint: QUEUE_ENDPOINTS.GET_ITEMS,
+      transformFn: transformQueueItemResponse,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
+        }
+      }
+    }, options) as any;
+  }
+
+  /**
    * Adds a new item to a queue
-   * 
+   *
    * @param folderId - Required folder ID
    * @param queueName - The name of the queue
    * @param content - The specific data for the item

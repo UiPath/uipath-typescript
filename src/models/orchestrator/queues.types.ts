@@ -38,6 +38,15 @@ export type QueueGetAllOptions = RequestOptions & PaginationOptions & {
   folderId?: number;
 }
 
+/**
+ * Options for getting queue items with optional filtering and folder scoping
+ */
+export type QueueItemGetAllOptions = RequestOptions & PaginationOptions & {
+  /**
+   * Optional folder ID to scope queue items by folder
+   */
+  folderId?: number;
+}
 
 /**
  * Interface for Queue Item Payload (Request)
@@ -70,10 +79,10 @@ export interface QueueItem {
   progress: string;
   reference: string;
   creationTime: string;
+  folderId?: number;
 }
 
 export type QueueGetByIdOptions = BaseOptions
-
 
 /**
  * Interface for Transaction Item (Processed Queue Item)
@@ -86,14 +95,16 @@ export interface TransactionItem extends QueueItem {
  * Interface for starting a transaction
  */
 export interface StartTransactionPayload {
-  startTransactionParameters: {
-    TransactionData: {
-      Name: string;
-      RobotIdentifier?: string;
-      SpecificContent?: Record<string, any>;
-      Reference?: string;
-    };
-  }
+  transactionData: {
+    Name: string;
+    RobotIdentifier?: string;
+    SpecificContent?: Record<string, any>;
+    DeferDate?: string;
+    DueDate?: string;
+    Reference?: string;
+    ReferenceFilterOption?: string;
+    ParentOperationId?: string;
+  };
 }
 
 /**
@@ -101,13 +112,19 @@ export interface StartTransactionPayload {
  */
 export interface TransactionResultPayload {
   transactionResult: {
-    Status: 'Successful' | 'Failed' | 'Abandoned' | 'Retried';
+    IsSuccessful?: boolean;
     ProcessingException?: {
       Reason: string;
       Details?: string;
-      Type?: 'BusinessException' | 'ApplicationException';
+      Type?: string;
+      AssociatedImageFilePath?: string;
+      CreationTime?: string;
     };
+    DeferDate?: string;
+    DueDate?: string;
     Output?: Record<string, any>;
     Analytics?: Record<string, any>;
+    Progress?: string;
+    OperationId?: string;
   }
 }

@@ -1,4 +1,4 @@
-import { QueueGetAllOptions, QueueGetByIdOptions, QueueGetResponse } from './queues.types';
+import { QueueGetAllOptions, QueueGetByIdOptions, QueueGetResponse, QueueItemGetAllOptions, QueueItem } from './queues.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -20,7 +20,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export interface QueueServiceModel {
   /**
    * Gets all queues across folders with optional filtering and folder scoping
-   * 
+   *
    * @signature getAll(options?) → Promise&lt;QueueGetResponse[]&gt;
    * @param options Query options including optional folderId and pagination options
    * @returns Promise resolving to either an array of queues NonPaginatedResponse<QueueGetResponse> or a PaginatedResponse<QueueGetResponse> when pagination options are used.
@@ -57,13 +57,13 @@ export interface QueueServiceModel {
    */
   getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
-    ? PaginatedResponse<QueueGetResponse>
-    : NonPaginatedResponse<QueueGetResponse>
+      ? PaginatedResponse<QueueGetResponse>
+      : NonPaginatedResponse<QueueGetResponse>
   >;
 
   /**
    * Gets a single queue by ID
-   * 
+   *
    * @param id - Queue ID
    * @param folderId - Required folder ID
    * @returns Promise resolving to a queue definition
@@ -76,8 +76,22 @@ export interface QueueServiceModel {
   getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueGetResponse>;
 
   /**
+   * Gets queue items with optional filtering and folder scoping
+   *
+   * @signature getItems(options?) → Promise&lt;QueueItem[]&gt;
+   * @param options Query options including optional folderId and pagination options
+   * @returns Promise resolving to either an array of queue items NonPaginatedResponse<QueueItem> or a PaginatedResponse<QueueItem> when pagination options are used.
+   * {@link QueueItem}
+   */
+  getItems<T extends QueueItemGetAllOptions = QueueItemGetAllOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<QueueItem>
+      : NonPaginatedResponse<QueueItem>
+  >;
+
+  /**
    * Adds a new item to a queue
-   * 
+   *
    * @param folderId - Required folder ID
    * @param queueName - The name of the queue
    * @param content - The specific data for the item
@@ -91,5 +105,5 @@ export interface QueueServiceModel {
     content: Record<string, any>,
     priority?: 'High' | 'Normal' | 'Low',
     reference?: string
-  ): Promise<import('./queues.types').QueueItem>;
-} 
+  ): Promise<QueueItem>;
+}

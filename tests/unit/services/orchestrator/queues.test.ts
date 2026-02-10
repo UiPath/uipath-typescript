@@ -4,7 +4,9 @@ import { QueueService } from '../../../../src/services/orchestrator/queues';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
+  createBasicQueueItem,
   createMockRawQueue,
+  createMockRawQueueItem,
   createMockTransformedQueueCollection
 } from '../../../utils/mocks/queues';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -224,6 +226,179 @@ describe('QueueService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(queueService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getItems', () => {
+    it('should return queue items without pagination options', async () => {
+      const mockResponse = {
+        items: [createBasicQueueItem()],
+        totalCount: 1
+      };
+
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const result = await queueService.getItems();
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serviceAccess: expect.any(Object),
+          getEndpoint: expect.toSatisfy((fn: Function) => fn() === QUEUE_ENDPOINTS.GET_ITEMS),
+          getByFolderEndpoint: QUEUE_ENDPOINTS.GET_ITEMS,
+          transformFn: expect.any(Function),
+          pagination: expect.any(Object)
+        }),
+        undefined
+      );
+
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should configure transformFn to map organizationUnitId to folderId', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: [],
+        totalCount: 0
+      });
+
+      await queueService.getItems();
+
+      const paginationConfig = vi.mocked(PaginationHelpers.getAll).mock.calls[0][0] as any;
+      const transformed = paginationConfig.transformFn(createMockRawQueueItem());
+
+      expect(transformed.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect(transformed.organizationUnitId).toBeUndefined();
+    });
+
+    it('should return queue items filtered by folder ID', async () => {
+      const mockResponse = {
+        items: [createBasicQueueItem()],
+        totalCount: 1
+      };
+
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const options = { folderId: TEST_CONSTANTS.FOLDER_ID };
+      const result = await queueService.getItems(options);
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serviceAccess: expect.any(Object),
+          getEndpoint: expect.toSatisfy((fn: Function) => fn(TEST_CONSTANTS.FOLDER_ID) === QUEUE_ENDPOINTS.GET_ITEMS),
+          getByFolderEndpoint: QUEUE_ENDPOINTS.GET_ITEMS,
+          transformFn: expect.any(Function),
+          pagination: expect.any(Object)
+        }),
+        expect.objectContaining({
+          folderId: TEST_CONSTANTS.FOLDER_ID
+        })
+      );
+
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should return paginated queue items when pagination options provided', async () => {
+      const mockResponse = {
+        items: [createBasicQueueItem()],
+        totalCount: 100,
+        hasNextPage: true,
+        nextCursor: TEST_CONSTANTS.NEXT_CURSOR,
+        previousCursor: null,
+        currentPage: 1,
+        totalPages: 10
+      };
+
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const result = await queueService.getItems({ pageSize: TEST_CONSTANTS.PAGE_SIZE }) as any;
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          pageSize: TEST_CONSTANTS.PAGE_SIZE
+        })
+      );
+
+      expect(result).toEqual(mockResponse);
+      expect(result.hasNextPage).toBe(true);
+      expect(result.nextCursor).toBe(TEST_CONSTANTS.NEXT_CURSOR);
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
+
+      await expect(queueService.getItems()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('addQueueItem', () => {
+    it('should add queue item and map organizationUnitId to folderId', async () => {
+      const mockQueueItem = createMockRawQueueItem();
+      mockApiClient.post.mockResolvedValue(mockQueueItem);
+
+      const specificContent = { ...QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT };
+      const result = await queueService.addQueueItem(
+        TEST_CONSTANTS.FOLDER_ID,
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        specificContent,
+        'Normal',
+        QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE
+      );
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(QUEUE_TEST_CONSTANTS.QUEUE_ITEM_ID);
+      expect(result.queueDefinitionId).toBe(QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID);
+      expect(result.creationTime).toBe(QUEUE_TEST_CONSTANTS.CREATED_TIME);
+      expect(result.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect((result as any).organizationUnitId).toBeUndefined();
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.ADD_ITEM,
+        expect.objectContaining({
+          itemData: expect.objectContaining({
+            Name: QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+            Priority: 'Normal',
+            SpecificContent: specificContent,
+            Reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE
+          })
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+          })
+        })
+      );
+    });
+
+    it('should use Normal as default priority when not provided', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawQueueItem());
+
+      await queueService.addQueueItem(
+        TEST_CONSTANTS.FOLDER_ID,
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        { ...QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        QUEUE_ENDPOINTS.ADD_ITEM,
+        expect.objectContaining({
+          itemData: expect.objectContaining({
+            Priority: 'Normal'
+          })
+        }),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(queueService.addQueueItem(
+        TEST_CONSTANTS.FOLDER_ID,
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        { ...QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT }
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
