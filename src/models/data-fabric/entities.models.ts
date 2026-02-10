@@ -163,7 +163,7 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // First, get records to obtain the record ID
-   * const records = await entities.getRecordsById(<entityId>);
+   * const records = await entities.getAllRecords(<entityId>);
    * // Get the recordId for the record
    * const recordId = records.items[0].id;
    * // Get the record
