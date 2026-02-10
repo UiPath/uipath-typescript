@@ -19,7 +19,7 @@ describe('Entity Models', () => {
       getRecordById: vi.fn(),
       insertRecordById: vi.fn(),
       insertById: vi.fn(),
-      batchInsertRecordsById: vi.fn(),
+      insertRecordsById: vi.fn(),
       batchInsertById: vi.fn(),
       updateRecordsById: vi.fn(),
       updateById: vi.fn(),
@@ -95,11 +95,11 @@ describe('Entity Models', () => {
           ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2
         ];
         const mockResponse = createMockInsertResponse(testData);
-        mockService.batchInsertRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.batchInsert(testData);
 
-        expect(mockService.batchInsertRecordsById).toHaveBeenCalledWith(
+        expect(mockService.insertRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           undefined
@@ -121,11 +121,11 @@ describe('Entity Models', () => {
         const mockResponse = createMockInsertResponse(testData, {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
         });
-        mockService.batchInsertRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.batchInsert(testData, options);
 
-        expect(mockService.batchInsertRecordsById).toHaveBeenCalledWith(
+        expect(mockService.insertRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           options
@@ -149,7 +149,7 @@ describe('Entity Models', () => {
           { name: ENTITY_TEST_CONSTANTS.TEST_INVALID_RECORD_NAME, age: null } // Missing required field
         ];
         const mockResponse = createMockInsertResponse(testData, { successCount: 1 });
-        mockService.batchInsertRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.batchInsert(testData);
 

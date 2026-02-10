@@ -243,13 +243,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Basic usage
-   * const result = await entities.batchInsertRecordsById("<entityId>", [
+   * const result = await entities.insertRecordsById("<entityId>", [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
    *
    * // With options
-   * const result = await entities.batchInsertRecordsById("<entityId>", [
+   * const result = await entities.insertRecordsById("<entityId>", [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -258,8 +258,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.BatchInsertRecordsById')
-  async batchInsertRecordsById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
+  @track('Entities.InsertRecordsById')
+  async insertRecordsById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
@@ -372,53 +372,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * @hidden
-   * @deprecated Use {@link getAllRecords} instead.
-   */
-  async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
-    entityId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  > {
-    return this.getAllRecords(entityId, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link insertRecordById} instead.
-   */
-  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
-    return this.insertRecordById(id, data, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link batchInsertRecordsById} instead.
-   */
-  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
-    return this.batchInsertRecordsById(id, data, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link updateRecordsById} instead.
-   */
-  async updateById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
-    return this.updateRecordsById(id, data, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link deleteRecordsById} instead.
-   */
-  async deleteById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
-    return this.deleteRecordsById(id, recordIds, options);
-  }
-
-  /**
    * Gets all entities in the system
    *
    * @returns Promise resolving to an array of entity metadata
@@ -485,6 +438,53 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
 
     return response.data;
+  }
+
+    /**
+   * @hidden
+   * @deprecated Use {@link getAllRecords} instead.
+   */
+  async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+    entityId: string,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  > {
+    return this.getAllRecords(entityId, options);
+  }
+
+  /**
+   * @hidden
+   * @deprecated Use {@link insertRecordById} instead.
+   */
+  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+    return this.insertRecordById(id, data, options);
+  }
+
+  /**
+   * @hidden
+   * @deprecated Use {@link insertRecordsById} instead.
+   */
+  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
+    return this.insertRecordsById(id, data, options);
+  }
+
+  /**
+   * @hidden
+   * @deprecated Use {@link updateRecordsById} instead.
+   */
+  async updateById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
+    return this.updateRecordsById(id, data, options);
+  }
+
+  /**
+   * @hidden
+   * @deprecated Use {@link deleteRecordsById} instead.
+   */
+  async deleteById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
+    return this.deleteRecordsById(id, recordIds, options);
   }
 
   /**
