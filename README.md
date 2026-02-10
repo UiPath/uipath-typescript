@@ -368,7 +368,7 @@ const records = await entities.getAllRecords('entity-uuid', {
 });
 
 // Insert records
-await entities.insertRecordsById('entity-uuid', [
+await entities.batchInsertRecordsById('entity-uuid', [
   { name: 'John Doe', email: 'john@company.com', status: 'Active' },
   { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' }
 ]);

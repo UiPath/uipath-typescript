@@ -276,7 +276,7 @@ describe('UiPath Legacy Pattern', () => {
       expect(entities.getAll).toBeDefined();
       expect(entities.getById).toBeDefined();
       expect(entities.getAllRecords).toBeDefined();
-      expect(entities.insertRecordsById).toBeDefined();
+      expect(entities.insertRecordById).toBeDefined();
       expect(entities.updateRecordsById).toBeDefined();
       expect(entities.deleteRecordsById).toBeDefined();
     });

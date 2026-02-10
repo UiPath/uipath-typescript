@@ -17,7 +17,7 @@ describe('Entity Models', () => {
       getAllRecords: vi.fn(),
       getRecordsById: vi.fn(),
       getRecordById: vi.fn(),
-      insertRecordsById: vi.fn(),
+      insertRecordById: vi.fn(),
       insertById: vi.fn(),
       batchInsertRecordsById: vi.fn(),
       batchInsertById: vi.fn(),
@@ -41,11 +41,11 @@ describe('Entity Models', () => {
 
         const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
         const mockResponse = createMockSingleInsertResponse(testData);
-        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecordById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insert(testData);
 
-        expect(mockService.insertRecordsById).toHaveBeenCalledWith(
+        expect(mockService.insertRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           undefined
@@ -65,11 +65,11 @@ describe('Entity Models', () => {
         const mockResponse = createMockSingleInsertResponse(testData, {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
         });
-        mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.insertRecordById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insert(testData, options);
 
-        expect(mockService.insertRecordsById).toHaveBeenCalledWith(
+        expect(mockService.insertRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
           options

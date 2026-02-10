@@ -191,18 +191,18 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage
-   * const result = await entities.insertRecordsById(<entityId>, { name: "John", age: 30 });
+   * const result = await entities.insertRecordById(<entityId>, { name: "John", age: 30 });
    *
    * // With options
-   * const result = await entities.insertRecordsById(<entityId>, { name: "John", age: 30 }, {
+   * const result = await entities.insertRecordById(<entityId>, { name: "John", age: 30 }, {
    *   expansionLevel: 1
    * });
    * ```
    */
-  insertRecordsById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+  insertRecordById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
 
   /**
-   * @deprecated Use {@link insertRecordsById} instead.
+   * @deprecated Use {@link insertRecordById} instead.
    * @hidden
    */
   insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
@@ -210,7 +210,7 @@ export interface EntityServiceModel {
   /**
    * Inserts one or more records into an entity by entity ID using batch insert
    *
-   * Note: Batch inserts do not trigger Data Fabric trigger events. Use {@link insertRecordsById} if you need
+   * Note: Batch inserts do not trigger Data Fabric trigger events. Use {@link insertRecordById} if you need
    * trigger events to fire for each inserted record.
    *
    * @param id - UUID of the entity
@@ -446,7 +446,7 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.insertRecordsById(entityData.id, data, options);
+      return service.insertRecordById(entityData.id, data, options);
     },
 
     async batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse> {

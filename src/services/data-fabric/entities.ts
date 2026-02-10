@@ -200,16 +200,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Basic usage
-   * const result = await entities.insertRecordsById("<entityId>", { name: "John", age: 30 });
+   * const result = await entities.insertRecordById("<entityId>", { name: "John", age: 30 });
    *
    * // With options
-   * const result = await entities.insertRecordsById("<entityId>", { name: "John", age: 30 }, {
+   * const result = await entities.insertRecordById("<entityId>", { name: "John", age: 30 }, {
    *   expansionLevel: 1
    * });
    * ```
    */
-  @track('Entities.InsertRecordsById')
-  async insertRecordsById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+  @track('Entities.InsertRecordById')
+  async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel
     });
@@ -388,10 +388,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * @hidden
-   * @deprecated Use {@link insertRecordsById} instead.
+   * @deprecated Use {@link insertRecordById} instead.
    */
   async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
-    return this.insertRecordsById(id, data, options);
+    return this.insertRecordById(id, data, options);
   }
 
   /**
