@@ -76,6 +76,16 @@
                 "default": "./dist/queues/index.cjs"
             }
         },
+        "./users": {
+            "import": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.mjs"
+            },
+            "require": {
+                "types": "./dist/users/index.d.ts",
+                "default": "./dist/users/index.cjs"
+            }
+        },
         "./buckets": {
             "import": {
                 "types": "./dist/buckets/index.d.ts",

@@ -11,7 +11,8 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService
+  AssetService,
+  UserService
 } from './services';
 import { UiPathSDKConfig } from './core/config/sdk-config';
 
@@ -135,6 +136,13 @@ export class UiPath extends UiPathCore {
    */
   get assets(): AssetService {
     return this.getService(AssetService);
+  }
+
+  /**
+   * Access to Orchestrator Users service
+   */
+  get users(): UserService {
+    return this.getService(UserService);
   }
 }
 
