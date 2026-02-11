@@ -19,6 +19,7 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { createMockError } from '../../../utils/mocks/core';
 import type {
   EntityGetRecordsByIdOptions,
+  EntityGetRecordByIdOptions,
   EntityInsertOptions,
   EntityBatchInsertOptions,
   EntityUpdateOptions,
@@ -51,7 +52,7 @@ describe('EntityService Unit Tests', () => {
 
   beforeEach(() => {
     // Create mock instances using centralized setup
-    const { config, executionContext, tokenManager } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
@@ -60,7 +61,7 @@ describe('EntityService Unit Tests', () => {
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    entityService = new EntityService(config, executionContext, tokenManager);
+    entityService = new EntityService(instance);
   });
 
   afterEach(() => {
@@ -390,6 +391,84 @@ describe('EntityService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(entityService.getRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getRecordById', () => {
+    it('should get a single record by entity ID and record ID successfully', async () => {
+      // API returns PascalCase; service converts to camelCase
+      const mockRecordPascal = {
+        Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        Name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
+        Age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
+        Email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email
+      };
+      mockApiClient.get.mockResolvedValue(mockRecordPascal);
+
+      const result = await entityService.getRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID
+      );
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name);
+      expect(result.age).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age);
+      expect(result.email).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        ),
+        { params: {} }
+      );
+    });
+
+    it('should get a record with expansion level option', async () => {
+      const mockRecordPascal = {
+        Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        Name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name
+      };
+      mockApiClient.get.mockResolvedValue(mockRecordPascal);
+
+      const options: EntityGetRecordByIdOptions = {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      };
+
+      const result = await entityService.getRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        options
+      );
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        ),
+        {
+          params: expect.objectContaining({
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          })
+        }
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        entityService.getRecordById(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

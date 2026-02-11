@@ -1,8 +1,9 @@
-import { 
+import {
   RawCaseInstanceGetResponse,
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
+  CaseInstanceReopenOptions,
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse
 } from './case-instances.types';
@@ -12,8 +13,19 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
 
 /**
  * Service model for managing Maestro Case Instances
- * 
+ *
  * Maestro case instances are the running instances of Maestro cases.
+ *
+ * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+ *
+ * ```typescript
+ * import { CaseInstances } from '@uipath/uipath-typescript/cases';
+ *
+ * const caseInstances = new CaseInstances(sdk);
+ * const allInstances = await caseInstances.getAll();
+ * ```
  */
 export interface CaseInstancesServiceModel {
   /**
@@ -25,26 +37,26 @@ export interface CaseInstancesServiceModel {
    * @example
    * ```typescript
    * // Get all case instances (non-paginated)
-   * const instances = await sdk.maestro.cases.instances.getAll();
-   * 
+   * const instances = await caseInstances.getAll();
+   *
    * // Cancel/Close faulted instances using methods directly on instances
    * for (const instance of instances.items) {
    *   if (instance.latestRunStatus === 'Faulted') {
    *     await instance.close({ comment: 'Closing faulted case instance' });
    *   }
    * }
-   * 
+   *
    * // With filtering
-   * const instances = await sdk.maestro.cases.instances.getAll({
+   * const filteredInstances = await caseInstances.getAll({
    *   processKey: 'MyCaseProcess'
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.maestro.cases.instances.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await caseInstances.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.maestro.cases.instances.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await caseInstances.getAll({ cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -65,14 +77,13 @@ export interface CaseInstancesServiceModel {
    * @example
    * ```typescript
    * // Get a specific case instance
-   * const instance = await sdk.maestro.cases.instances.getById(
+   * const instance = await caseInstances.getById(
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
+   *
    * // Access instance properties
    * console.log(`Status: ${instance.latestRunStatus}`);
-   * 
    * ```
    */
   getById(instanceId: string, folderKey: string): Promise<CaseInstanceGetResponse>;
@@ -86,28 +97,27 @@ export interface CaseInstancesServiceModel {
    * @example
    * ```typescript
    * // Close a case instance
-   * const result = await sdk.maestro.cases.instances.close(
+   * const result = await caseInstances.close(
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
-   * or
-   * 
-   * const instance = await sdk.maestro.cases.instances.getById(
+   *
+   * // Or using instance method
+   * const instance = await caseInstances.getById(
    *   <instanceId>,
    *   <folderKey>
    * );
    * const result = await instance.close();
-   * 
+   *
    * console.log(`Closed: ${result.success}`);
    *
    * // Close with a comment
-   * const result = await instance.close({
+   * const resultWithComment = await instance.close({
    *   comment: 'Closing due to invalid input data'
    * });
    *
-   * if (result.success) {
-   *   console.log(`Instance ${result.data.instanceId} status: ${result.data.status}`);
+   * if (resultWithComment.success) {
+   *   console.log(`Instance ${resultWithComment.data.instanceId} status: ${resultWithComment.data.status}`);
    * }
    * ```
    */
@@ -121,6 +131,45 @@ export interface CaseInstancesServiceModel {
    * @returns Promise resolving to operation result with instance data
    */
   pause(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
+   * Reopen a case instance from a specified element
+   * @param instanceId - The ID of the case instance
+   * @param folderKey - Required folder key
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result with instance data
+   * {@link CaseInstanceOperationResponse}
+   * @example
+   * ```typescript
+   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   *
+   * // First, get the available stages for the case instance
+   * const stages = await caseInstances.getStages('<instanceId>', '<folderKey>');
+   * const stageId = stages[0].id; // Select the stage to reopen from
+   *
+   * // Reopen a case instance from a specific stage
+   * const result = await caseInstances.reopen(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   { stageId }
+   * );
+   *
+   * // Reopen with a comment
+   * const result = await caseInstances.reopen(
+   *   '<instanceId>',
+   *   '<folderKey>',
+   *   { stageId, comment: 'Reopening to retry failed stage' }
+   * );
+   *
+   * // Or using instance method
+   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+   * const stages = await instance.getStages();
+   * const result = await instance.reopen({ stageId: stages[0].id });
+   * ```
+   */
+  reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
    * Resume a case instance
@@ -140,11 +189,11 @@ export interface CaseInstancesServiceModel {
    * @example
    * ```typescript
    * // Get execution history for a case instance
-   * const history = await sdk.maestro.cases.instances.getExecutionHistory(
+   * const history = await caseInstances.getExecutionHistory(
    *   <instanceId>,
    *   <folderKey>
    * );
-   * 
+   *
    * // Access element executions
    * if (history.elementExecutions) {
    *   for (const execution of history.elementExecutions) {
@@ -166,15 +215,15 @@ export interface CaseInstancesServiceModel {
    * @example
    * ```typescript
    * // Get stages for a case instance
-   * const stages = await sdk.maestro.cases.instances.getStages(
+   * const stages = await caseInstances.getStages(
    *   <caseInstanceId>,
    *   <folderKey>
    * );
-   * 
+   *
    * // Iterate through stages
    * for (const stage of stages) {
    *   console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
-   *   
+   *
    *   // Check tasks in the stage
    *   for (const taskGroup of stage.tasks) {
    *     for (const task of taskGroup) {
@@ -199,12 +248,12 @@ export interface CaseInstancesServiceModel {
    * @example
    * ```typescript
    * // Get all tasks for a case instance (non-paginated)
-   * const tasks = await sdk.maestro.cases.instances.getActionTasks(
+   * const actionTasks = await caseInstances.getActionTasks(
    *   <caseInstanceId>,
    * );
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.maestro.cases.instances.getActionTasks(
+   * const page1 = await caseInstances.getActionTasks(
    *   <caseInstanceId>,
    *   { pageSize: 10 }
    * );
@@ -213,9 +262,9 @@ export interface CaseInstancesServiceModel {
    *   console.log(`Task: ${task.title}`);
    *   console.log(`Task: ${task.status}`);
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.maestro.cases.instances.getActionTasks(
+   * const page5 = await caseInstances.getActionTasks(
    *   <caseInstanceId>,
    *   {
    *     jumpToPage: 5,
@@ -246,15 +295,23 @@ export interface CaseInstanceMethods {
 
   /**
    * Pauses this case instance
-   * 
+   *
    * @param options - Optional pause options with comment
    * @returns Promise resolving to operation result
    */
   pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
+   * Reopens this case instance from a specified element
+   *
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result
+   */
+  reopen(options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+
+  /**
    * Resumes this case instance
-   * 
+   *
    * @param options - Optional resume options with comment
    * @returns Promise resolving to operation result
    */
@@ -313,6 +370,13 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
 
       return service.pause(instanceData.instanceId, instanceData.folderKey, options);
+    },
+
+    async reopen(options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
+
+      return service.reopen(instanceData.instanceId, instanceData.folderKey, options);
     },
 
     async resume(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {

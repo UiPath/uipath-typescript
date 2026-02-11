@@ -1,91 +1,96 @@
-import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
-import { 
-  CaseInstanceGetResponse, 
+import { BaseService } from '../../base';
+import type { IUiPath } from '../../../core/types';
+import {
+  CaseInstanceGetResponse,
   RawCaseInstanceGetResponse,
   CaseInstanceGetAllWithPaginationOptions,
   CaseInstanceOperationOptions,
   CaseInstanceOperationResponse,
+  CaseInstanceReopenOptions,
   CaseInstancesServiceModel,
   createCaseInstanceWithMethods,
   CaseGetStageResponse,
   StageTask,
   ElementExecutionMetadata,
   CaseInstanceExecutionHistoryResponse
-} from '../../models/maestro';
-import { TaskGetResponse } from '../../models/action-center';
-import { 
+} from '../../../models/maestro';
+import { TaskGetResponse } from '../../../models/action-center';
+import {
   CaseJsonResponse
-} from '../../models/maestro/case-instances.internal-types';
-import { OperationResponse } from '../../models/common/types';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
-import { transformData } from '../../utils/transform';
-import { 
-  CaseInstanceMap, 
-  CaseAppConfigMap, 
-  StageSLAMap, 
+} from '../../../models/maestro/case-instances.internal-types';
+import { OperationResponse } from '../../../models/common/types';
+import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { transformData } from '../../../utils/transform';
+import {
+  CaseInstanceMap,
+  CaseAppConfigMap,
+  StageSLAMap,
   CASE_STAGE_CONSTANTS,
   TimeFieldTransformMap,
   CASE_INSTANCE_TASK_FILTER,
   CASE_INSTANCE_TASK_EXPAND
-} from '../../models/maestro/case-instances.constants';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../utils/constants/common';
-import { track } from '../../core/telemetry';
-import { ProcessType } from '../../models/maestro/cases.internal-types';
-import { FOLDER_KEY } from '../../utils/constants/headers';
-import { createHeaders } from '../../utils/http/headers';
-import { TaskService } from '../action-center/tasks';
-import { TaskGetAllOptions } from '../../models/action-center';
+} from '../../../models/maestro/case-instances.constants';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
+import { track } from '../../../core/telemetry';
+import { ProcessType } from '../../../models/maestro/cases.internal-types';
+import { FOLDER_KEY } from '../../../utils/constants/headers';
+import { createHeaders } from '../../../utils/http/headers';
+import { TaskService } from '../../action-center/tasks';
+import { TaskGetAllOptions } from '../../../models/action-center';
 
 export class CaseInstancesService extends BaseService implements CaseInstancesServiceModel {
   private taskService: TaskService;
-  
+
   /**
-   * @hideconstructor
+   * Creates an instance of the Case Instances service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-    this.taskService = new TaskService(config, executionContext, tokenManager);
+  constructor(instance: IUiPath) {
+    super(instance);
+    this.taskService = new TaskService(instance);
   }
 
   /**
    * Get all case instances with optional filtering and pagination
-   * 
+   *
    * The method returns either:
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param options -Query parameters for filtering instances and pagination
    * @returns Promise resolving to case instances or paginated result
-   * 
+   *
    * @example
    * ```typescript
+   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   *
    * // Get all case instances (non-paginated)
-   * const instances = await sdk.maestro.cases.instances.getAll();
-   * 
+   * const instances = await caseInstances.getAll();
+   *
    * // Close faulted instances using methods directly on instances
    * for (const instance of instances.items) {
    *   if (instance.latestRunStatus === 'Faulted') {
    *     await instance.close({ comment: 'Closing faulted case instance' });
    *   }
    * }
-   * 
+   *
    * // With filtering
-   * const instances = await sdk.maestro.cases.instances.getAll({
+   * const filtered = await caseInstances.getAll({
    *   processKey: 'MyCaseProcess'
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.maestro.cases.instances.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await caseInstances.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.maestro.cases.instances.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await caseInstances.getAll({ cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -139,7 +144,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   }
 
   /**
-   * Get a case instance by ID with operation methods (close, pause, resume)
+   * Get a case instance by ID with operation methods (close, pause, resume, reopen)
    * @param instanceId - The ID of the instance to retrieve
    * @param folderKey - Required folder key
    * @returns Promise<CaseInstanceGetResponse>
@@ -263,7 +268,32 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
-    
+
+    return {
+      success: true,
+      data: response.data
+    };
+  }
+
+  /**
+   * Reopen a case instance from a specified element
+   * @param instanceId - The ID of the case instance to reopen
+   * @param folderKey - Required folder key
+   * @param options - Reopen options containing stageId (the stage ID to resume from) and an optional comment
+   * @returns Promise resolving to operation result with updated instance data
+   */
+  @track('CaseInstances.Reopen')
+  async reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+    // Transform SDK options to API request format
+    const requestBody = {
+      StartElementId: options.stageId,
+      ...(options.comment && { Comment: options.comment })
+    };
+
+    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.CASES.REOPEN(instanceId), requestBody, {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey })
+    });
+
     return {
       success: true,
       data: response.data
@@ -282,7 +312,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
       headers: createHeaders({ [FOLDER_KEY]: folderKey })
     });
-    
+
     return {
       success: true,
       data: response.data
@@ -296,8 +326,10 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @returns Promise resolving to instance execution history
    * @example
    * ```typescript
-   * // Get execution history for a case instance
-   * const history = await sdk.maestro.cases.instances.getExecutionHistory(
+   * import { CaseInstances } from '@uipath/uipath-typescript/cases';
+   *
+   * const caseInstances = new CaseInstances(sdk);
+   * const history = await caseInstances.getExecutionHistory(
    *   'instance-id',
    *   'folder-key'
    * );

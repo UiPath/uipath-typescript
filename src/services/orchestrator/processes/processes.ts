@@ -1,36 +1,36 @@
-import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { CollectionResponse, RequestOptions } from '../../models/common/types';
-import { 
-  ProcessGetResponse, 
-  ProcessGetAllOptions, 
-  ProcessStartRequest, 
+import { BaseService } from '../../base';
+import type { IUiPath } from '../../../core/types';
+import { CollectionResponse, RequestOptions } from '../../../models/common/types';
+import {
+  ProcessGetResponse,
+  ProcessGetAllOptions,
+  ProcessStartRequest,
   ProcessStartResponse,
   ProcessGetByIdOptions
-} from '../../models/orchestrator/processes.types';
-import { ProcessServiceModel } from '../../models/orchestrator/processes.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, reverseMap, transformData } from '../../utils/transform';
-import { createHeaders } from '../../utils/http/headers';
-import { ProcessMap } from '../../models/orchestrator/processes.constants';
-import { TokenManager } from '../../core/auth/token-manager';
-import { FOLDER_ID } from '../../utils/constants/headers';
-import { PROCESS_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { track } from '../../core/telemetry';
+} from '../../../models/orchestrator/processes.types';
+import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
+import { addPrefixToKeys, pascalToCamelCaseKeys, reverseMap, transformData } from '../../../utils/transform';
+import { createHeaders } from '../../../utils/http/headers';
+import { ProcessMap } from '../../../models/orchestrator/processes.constants';
+import { FOLDER_ID } from '../../../utils/constants/headers';
+import { PROCESS_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
+import { PaginationHelpers } from '../../../utils/pagination/helpers';
+import { PaginationType } from '../../../utils/pagination/internal-types';
+import { track } from '../../../core/telemetry';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
  */
 export class ProcessService extends BaseService implements ProcessServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Processes service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: IUiPath) {
+    super(instance);
   }
 
   /**
@@ -45,29 +45,33 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
    * // Standard array return
-   * const processes = await sdk.processes.getAll();
-   * 
+   * const allProcesses = await processes.getAll();
+   *
    * // Get processes within a specific folder
-   * const processes = await sdk.processes.getAll({ 
+   * const folderProcesses = await processes.getAll({
    *   folderId: 123
    * });
-   * 
+   *
    * // Get processes with filtering
-   * const processes = await sdk.processes.getAll({ 
+   * const filteredProcesses = await processes.getAll({
    *   filter: "name eq 'MyProcess'"
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.processes.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await processes.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.processes.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await processes.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.processes.getAll({
+   * const page5 = await processes.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -113,13 +117,17 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
    * // Start a process by process key
-   * const jobs = await sdk.processes.start({
+   * const jobs = await processes.start({
    *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
    * }, 123); // folderId is required
-   * 
+   *
    * // Start a process by name with specific robots
-   * const jobs = await sdk.processes.start({
+   * const jobs = await processes.start({
    *   processName: "MyProcess"
    * }, 123); // folderId is required
    * ```
@@ -177,8 +185,12 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
    * // Get process by ID
-   * const process = await sdk.processes.getById(123, 456);
+   * const process = await processes.getById(123, 456);
    * ```
    */
   @track('Processes.GetById')
