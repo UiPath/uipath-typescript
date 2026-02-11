@@ -32,7 +32,8 @@
         "README.md"
     ],
     "scripts": {
-        "build": "rollup -c",
+        "build": "tsc --noEmit && rollup -c",
+        "typecheck": "tsc --noEmit",
         "build:watch": "rollup -c -w",
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
         "docs:api": "typedoc",
