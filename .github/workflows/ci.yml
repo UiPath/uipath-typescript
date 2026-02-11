@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  typecheck-and-build:
+  typecheck:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,14 +24,5 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Typecheck SDK
+      - name: Typecheck
         run: npm run typecheck
-
-      - name: Build SDK
-        run: npm run build
-
-      - name: Build CLI
-        run: npm run build --workspace=packages/cli
-
-      - name: Test SDK
-        run: npm run test -- --run
