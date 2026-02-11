@@ -180,7 +180,7 @@ export interface EntityServiceModel {
   /**
    * Inserts a single record into an entity by entity ID
    *
-   * Note: Data Fabric supports trigger events only on individual inserts, not on batch inserts.
+   * Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records.
    * Use this method if you need trigger events to fire for the inserted record.
    *
    * @param id - UUID of the entity
@@ -208,9 +208,9 @@ export interface EntityServiceModel {
   insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
 
   /**
-   * Inserts one or more records into an entity by entity ID using batch insert
+   * Inserts one or more records into an entity by entity ID
    *
-   * Note: Batch inserts do not trigger Data Fabric trigger events. Use {@link insertRecordById} if you need
+   * Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use {@link insertRecordById} if you need
    * trigger events to fire for each inserted record.
    *
    * @param id - UUID of the entity
@@ -358,7 +358,7 @@ export interface EntityMethods {
   /**
    * Insert a single record into this entity
    *
-   * Note: Data Fabric supports trigger events only on individual inserts, not on insertsing multiple records.
+   * Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records.
    * Use this method if you need trigger events to fire for the inserted record.
    *
    * @param data - Record to insert

@@ -94,7 +94,7 @@ describe('EntityService Unit Tests', () => {
       expect(typeof result.insertRecords).toBe('function');
       expect(typeof result.updateRecords).toBe('function');
       expect(typeof result.deleteRecords).toBe('function');
-      expect(typeof result.getRecords).toBe('function');
+      expect(typeof result.getAllRecords).toBe('function');
     });
 
     it('should get entity with external fields successfully and transform field metadata', async () => {
@@ -217,7 +217,7 @@ describe('EntityService Unit Tests', () => {
         expect(typeof entity.insertRecords).toBe('function');
         expect(typeof entity.updateRecords).toBe('function');
         expect(typeof entity.deleteRecords).toBe('function');
-        expect(typeof entity.getRecords).toBe('function');
+        expect(typeof entity.getAllRecords).toBe('function');
       });
 
       // Verify the API call
