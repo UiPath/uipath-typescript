@@ -216,7 +216,7 @@ export const ProcessList = () => {
       ) : (
         <div className="space-y-3">
           {processes
-            .toSorted((a, b) => {
+            .sort((a, b) => {
               // Sort by faulted count (descending), then by total activity (descending)
               const aTotal = a.runningCount + a.completedCount + a.faultedCount + a.pendingCount;
               const bTotal = b.runningCount + b.completedCount + b.faultedCount + b.pendingCount;

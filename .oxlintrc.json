@@ -7,7 +7,8 @@
     "rules": {
         "typescript/no-extraneous-class": "off",
         "oxc/no-async-endpoint-handlers": "off",
-        "eslint/preserve-caught-error": "off"
+        "eslint/preserve-caught-error": "off",
+        "unicorn/no-array-sort": "off"
     },
     "ignorePatterns": [
         "dist",
