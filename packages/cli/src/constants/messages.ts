@@ -78,12 +78,11 @@ export const MESSAGES = {
     PUSH_SOURCE_FOLDER_CREATE_FAILED: 'Failed to create source folder; project structure may be inconsistent.',
     PUSH_LOCK_NOT_ACQUIRED: 'Could not acquire lock on the project. Another user or process may have the lock.',
     PUSH_EMAIL_FROM_TOKEN_FAILED_PREFIX: '[push] Could not get email from access token: ',
-    PUSH_REMOTE_METADATA_READ_FAILED_PREFIX: '[push] Could not read remote metadata: ',
-    PUSH_METADATA_DEFAULT_VERSION_SUFFIX: '; using codeVersion 0.1.1',
     /** When local metadata is missing and remote load/download/parse fails; log and fall back to new metadata. */
     PUSH_REMOTE_METADATA_LOAD_FALLBACK_PREFIX: '[push] Could not load remote push_metadata.json: ',
     PUSH_REMOTE_METADATA_LOAD_FALLBACK_SUFFIX: '; using new metadata.',
     PUSH_TEMP_METADATA_REMOVE_FAILED_PREFIX: '[push] Could not remove temp metadata file: ',
+    PUSH_METADATA_UPLOAD_FAILED_PREFIX: '[push] Metadata upload to remote failed: ',
     PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX: '[push] Could not download remote file for diff: ',
 
     // File operations

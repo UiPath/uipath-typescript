@@ -184,13 +184,18 @@ export class WebAppFileHandler {
 
     this.config.logger.log(chalk.gray('[push] Uploading metadata to remote...'));
     const metadataPath = path.join(this.config.rootDir, this.config.manifestFile);
-    await uploadPushMetadataToRemote(
-      this.config,
-      metadataPath,
-      fullRemoteFiles,
-      folderIdMap,
-      this.lockKey
-    );
+    try {
+      await uploadPushMetadataToRemote(
+        this.config,
+        metadataPath,
+        fullRemoteFiles,
+        folderIdMap,
+        this.lockKey
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.config.logger.log(chalk.yellow(MESSAGES.ERRORS.PUSH_METADATA_UPLOAD_FAILED_PREFIX + msg));
+    }
     this.config.logger.log(chalk.gray('[push] Done.'));
   }
 

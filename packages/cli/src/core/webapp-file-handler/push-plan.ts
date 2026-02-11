@@ -132,11 +132,11 @@ export async function computeExecutionPlan(
   }
 
   const contentRootPrefix = remoteContentRoot + '/';
+  const normalizedContentRootPrefix = normalizePathForComparison(contentRootPrefix);
   for (const [folderPath, folder] of remoteFolders.entries()) {
     const normalizedFolder = normalizePathForComparison(folderPath);
     if (requiredFoldersNormalized.has(normalizedFolder)) continue;
-    const normalizedPath = normalizePathForComparison(folderPath);
-    const isUnderContentRoot = normalizedPath.startsWith(normalizePathForComparison(contentRootPrefix));
+    const isUnderContentRoot = normalizedFolder.startsWith(normalizedContentRootPrefix);
     if (isUnderContentRoot && folder.id) {
       plan.deleteFolders.push({ folderId: folder.id, path: folderPath });
     }

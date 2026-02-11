@@ -11,7 +11,6 @@ export interface WebAppPushConfig {
 
 /**
  * Shape of push_metadata.json (local: .uipath/push_metadata.json, remote: source/push_metadata.json).
- * All fields are required except codeVersion (legacy).
  */
 export interface PushMetadata {
   schemaVersion: string;
@@ -19,8 +18,6 @@ export interface PushMetadata {
   description: string;
   lastPushDate: string;
   lastPushAuthor: string;
-  /** Optional; used for legacy/backward compatibility. */
-  codeVersion?: string;
 }
 
 export interface LocalFile {

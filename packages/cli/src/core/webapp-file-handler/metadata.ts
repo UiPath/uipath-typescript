@@ -3,6 +3,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
 import { cliTelemetryClient } from '../../telemetry/index.js';
+import { parseJWT } from '../../auth/core/oidc.js';
 import { PUSH_METADATA_REMOTE_PATH, REMOTE_SOURCE_FOLDER_NAME } from './structure.js';
 import type { WebAppPushConfig, ProjectFile, FileOperationPlan, PushMetadata } from './types.js';
 import type { LocalFile } from './types.js';
@@ -12,34 +13,26 @@ import { computeHash } from './local-files.js';
 /** Default schemaVersion for first-time push (no existing local or remote metadata). */
 const DEFAULT_SCHEMA_VERSION = '1.0.0';
 
-/** Fallback codeVersion when remote metadata cannot be read or does not contain codeVersion. */
-const DEFAULT_CODE_VERSION = '0.1.1';
-
 /** Max length of error message sent to telemetry to avoid oversized payloads. */
 const MAX_TELEMETRY_ERROR_LENGTH = 500;
 
 /**
  * Get push author email from access token (JWT email claim). Returns '' if missing or decode fails.
+ * Uses parseJWT from auth/core/oidc for token parsing.
  */
 export function getPushAuthorEmail(
   accessToken?: string,
   logger?: { log: (message: string) => void }
 ): string {
-  if (accessToken) {
-    try {
-      const parts = accessToken.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(
-          Buffer.from(parts[1], 'base64url').toString('utf-8')
-        ) as { email?: string };
-        if (payload.email && typeof payload.email === 'string') return payload.email;
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (logger) logger.log(chalk.gray(MESSAGES.ERRORS.PUSH_EMAIL_FROM_TOKEN_FAILED_PREFIX + msg));
-    }
+  if (!accessToken) return '';
+  try {
+    const claims = parseJWT(accessToken);
+    return claims.email ?? '';
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (logger) logger.log(chalk.gray(MESSAGES.ERRORS.PUSH_EMAIL_FROM_TOKEN_FAILED_PREFIX + msg));
+    return '';
   }
-  return '';
 }
 
 /**
@@ -94,34 +87,17 @@ function createNewMetadataPayload(config: WebAppPushConfig): PushMetadata {
   };
 }
 
-/** Applies codeVersion from parsed remote metadata (bump patch or set default). Used to avoid duplicate download. */
-function applyCodeVersionFromParsed(
-  metadata: PushMetadata,
-  parsed: { codeVersion?: string }
-): void {
-  if (parsed?.codeVersion && typeof parsed.codeVersion === 'string') {
-    const versionParts = parsed.codeVersion.split('.');
-    if (versionParts.length >= 3) {
-      const patch = parseInt(versionParts[2], 10);
-      versionParts[2] = String(Number.isFinite(patch) ? patch + 1 : 0);
-      metadata.codeVersion = versionParts.join('.');
-    } else {
-      metadata.codeVersion = DEFAULT_CODE_VERSION;
-    }
-  }
-}
-
 /**
  * Prepares the local push_metadata.json for the current push.
  * Source of truth: if local file is missing, we use remote push_metadata.json when present;
  * only when both are missing do we create new metadata with schemaVersion 1.0.0.
- * Updates lastPushDate, lastPushAuthor, and schemaVersion (from plan) and optionally codeVersion from remote.
+ * Updates lastPushDate, lastPushAuthor, and schemaVersion (from plan).
  */
 export async function prepareMetadataFileForPlan(
   config: WebAppPushConfig,
   remoteFiles: Map<string, ProjectFile>,
   downloadRemoteFile: (config: WebAppPushConfig, fileId: string) => Promise<Buffer>,
-  plan?: FileOperationPlan
+  plan: FileOperationPlan
 ): Promise<void> {
   const metadataPath = path.join(config.rootDir, config.manifestFile);
   const metadataDir = path.dirname(metadataPath);
@@ -130,8 +106,6 @@ export async function prepareMetadataFileForPlan(
 
   let metadata: PushMetadata;
   let isNewMetadata = false;
-  /** True when we loaded metadata from remote (ENOENT branch); avoids downloading remote again for codeVersion. */
-  let appliedCodeVersionFromRemote = false;
   try {
     const content = fs.readFileSync(metadataPath, 'utf-8');
     const parsed = JSON.parse(content) as unknown;
@@ -152,8 +126,6 @@ export async function prepareMetadataFileForPlan(
             throw new SyntaxError('Remote push_metadata.json is not a valid JSON object');
           }
           metadata = parsed as PushMetadata;
-          appliedCodeVersionFromRemote = true;
-          applyCodeVersionFromParsed(metadata, parsed as { codeVersion?: string });
         } catch (remoteErr) {
           const msg = remoteErr instanceof Error ? remoteErr.message : String(remoteErr);
           config.logger.log(
@@ -176,31 +148,13 @@ export async function prepareMetadataFileForPlan(
     }
   }
 
-  metadata.lastPushDate = new Date().toISOString();
-  metadata.lastPushAuthor = getPushAuthorEmail(config.envConfig.accessToken, config.logger);
-
-  if (plan && !isNewMetadata) {
-    metadata.schemaVersion = computeNextSchemaVersion(metadata.schemaVersion, plan);
+  if (!isNewMetadata) {
+    metadata.lastPushDate = new Date().toISOString();
+    metadata.lastPushAuthor = getPushAuthorEmail(config.envConfig.accessToken, config.logger);
   }
 
-  // Optional: bump codeVersion from remote metadata when present (legacy). Only download if we didn't already load from remote.
-  if (!appliedCodeVersionFromRemote) {
-    const remoteMetadata = remoteFiles.get(PUSH_METADATA_REMOTE_PATH);
-    if (remoteMetadata) {
-      try {
-        const remoteContent = await downloadRemoteFile(config, remoteMetadata.id);
-        const remoteMetadataObj = JSON.parse(remoteContent.toString('utf-8')) as { codeVersion?: string };
-        applyCodeVersionFromParsed(metadata, remoteMetadataObj);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        config.logger.log(
-          chalk.gray(
-            MESSAGES.ERRORS.PUSH_REMOTE_METADATA_READ_FAILED_PREFIX + msg + MESSAGES.ERRORS.PUSH_METADATA_DEFAULT_VERSION_SUFFIX
-          )
-        );
-        metadata.codeVersion = DEFAULT_CODE_VERSION;
-      }
-    }
+  if (!isNewMetadata) {
+    metadata.schemaVersion = computeNextSchemaVersion(metadata.schemaVersion, plan);
   }
 
   const metadataContent = JSON.stringify(metadata, null, 2);
