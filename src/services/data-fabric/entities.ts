@@ -3,14 +3,19 @@ import type { IUiPath } from '../../core/types';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
+  EntityGetAllRecordsOptions,
   EntityGetRecordByIdOptions,
   EntityInsertOptions,
+  EntityInsertRecordOptions,
   EntityBatchInsertOptions,
+  EntityInsertRecordsOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
   EntityUpdateOptions,
+  EntityUpdateRecordsOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
+  EntityDeleteRecordsOptions,
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
@@ -119,7 +124,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.GetAllRecords')
-  async getAllRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+  async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
     entityId: string,
     options?: T
   ): Promise<
@@ -209,7 +214,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.InsertRecordById')
-  async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+  async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel
     });
@@ -259,7 +264,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.InsertRecordsById')
-  async insertRecordsById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
+  async insertRecordsById(id: string, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
@@ -311,7 +316,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.UpdateRecordsById')
-  async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
+  async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
@@ -352,7 +357,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.DeleteRecordsById')
-  async deleteRecordsById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
+  async deleteRecordsById(id: string, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
     const params = createParams({
       failOnFirst: options.failOnFirst
     });

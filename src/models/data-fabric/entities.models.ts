@@ -11,7 +11,12 @@ import {
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  EntityDownloadAttachmentOptions
+  EntityDownloadAttachmentOptions,
+  EntityInsertRecordsOptions,
+  EntityUpdateRecordsOptions,
+  EntityDeleteRecordsOptions,
+  EntityGetAllRecordsOptions,
+  EntityInsertRecordOptions
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -136,7 +141,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  getAllRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
+  getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(entityId: string, options?: T): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
@@ -199,7 +204,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  insertRecordById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+  insertRecordById(id: string, data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse>;
 
   /**
    * @deprecated Use {@link insertRecordById} instead.
@@ -236,7 +241,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  insertRecordsById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
+  insertRecordsById(id: string, data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse>;
 
   /**
    * @deprecated Use {@link insertRecordsById} instead.
@@ -270,7 +275,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
+  updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
   /**
    * @deprecated Use {@link updateRecordsById} instead.
@@ -294,7 +299,7 @@ export interface EntityServiceModel {
    * ]);
    * ```
    */
-  deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+  deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
 
   /**
    * @deprecated Use {@link deleteRecordsById} instead.
@@ -365,7 +370,7 @@ export interface EntityMethods {
    * @param options - Insert options
    * @returns Promise resolving to the inserted record with generated record ID
    */
-  insertRecord(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+  insertRecord(data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse>;
 
   /**
    * Insert multiple records into this entity using insertRecords
@@ -377,7 +382,7 @@ export interface EntityMethods {
    * @param options - Insert options
    * @returns Promise resolving to batch insert response
    */
-  insertRecords(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
+  insertRecords(data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse>;
 
   /**
    * Update data in this entity
@@ -387,7 +392,7 @@ export interface EntityMethods {
    * @param options - Update options
    * @returns Promise resolving to update response
    */
-  updateRecords(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
+  updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
   /**
    * Delete data from this entity
@@ -396,7 +401,7 @@ export interface EntityMethods {
    * @param options - Delete options
    * @returns Promise resolving to delete response
    */
-  deleteRecords(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+  deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
 
   /**
    * Get all records from this entity
@@ -404,7 +409,7 @@ export interface EntityMethods {
    * @param options - Query options
    * @returns Promise resolving to query response
    */
-  getAllRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
+  getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
