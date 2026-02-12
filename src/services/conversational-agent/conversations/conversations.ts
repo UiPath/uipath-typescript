@@ -14,17 +14,18 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
-  ConversationId,
-  AttachmentCreateResponse,
-  AttachmentUploadResponse,
+  ConversationAttachmentCreateResponse,
+  ConversationAttachmentUploadResponse,
   ConversationCreateResponse,
+  ConversationUpdateResponse,
   ConversationDeleteResponse,
   ConversationGetResponse,
   ConversationServiceModel,
+  ConversationSessionOptions,
   ConversationSessionProvider,
-  CreateConversationOptions,
+  ConversationCreateOptions,
   ConversationGetAllOptions,
-  UpdateConversationOptions,
+  ConversationUpdateOptions,
   RawConversationGetResponse,
   SessionStream
 } from '@/models/conversational-agent';
@@ -41,10 +42,10 @@ import { transformData, transformRequest } from '@/utils/transform';
 // Local imports
 import {
   ConversationEventHelperManagerImpl,
-  type ConversationEventHelperManager,
-  type SessionStartEventOptions
+  type ConversationEventHelperManager
 } from '../helpers';
-import { SessionManager } from '../session';
+import { ExchangeService } from './exchanges';
+import { SessionManager } from './session';
 
 /**
  * Service for creating and managing conversations with UiPath Conversational Agents
@@ -56,10 +57,7 @@ import { SessionManager } from '../session';
  * const conversationalAgent = new ConversationalAgent(sdk);
  *
  * // Access conversations through the main service
- * const conversation = await conversationalAgent.conversations.create({
- *   agentId,
- *   folderId
- * });
+ * const conversation = await conversationalAgent.conversations.create(agentId, folderId);
  *
  * // Or through agent objects (agentId/folderId auto-filled)
  * const agents = await conversationalAgent.getAll();
@@ -71,7 +69,7 @@ import { SessionManager } from '../session';
  *   exchange.onMessageStart((message) => {
  *     if (message.isAssistant) {
  *       message.onContentPartStart((part) => {
- *         if (part.isText) {
+ *         if (part.isMarkdown) {
  *           part.onChunk((chunk) => console.log(chunk.data));
  *         }
  *       });
@@ -81,12 +79,15 @@ import { SessionManager } from '../session';
  *
  * // Send a message
  * const exchange = session.startExchange();
- * exchange.sendMessageWithContentPart({ data: 'Hello!' });
+ * await exchange.sendMessageWithContentPart({ data: 'Hello!' });
  * ```
  */
 export class ConversationService extends BaseService implements ConversationServiceModel, ConversationSessionProvider {
   /** Session manager for WebSocket lifecycle */
   private _sessionManager: SessionManager;
+
+  /** Exchange service for scoped exchange methods on conversation objects */
+  private _exchangeService: ExchangeService;
 
   /** Event helper for conversation events */
   private _eventHelper: ConversationEventHelperManagerImpl | null = null;
@@ -95,11 +96,11 @@ export class ConversationService extends BaseService implements ConversationServ
    * Creates an instance of the Conversations service.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
-   * @param options - Optional configuration for WebSocket behavior
    */
   constructor(instance: IUiPath) {
     super(instance);
     this._sessionManager = new SessionManager(instance);
+    this._exchangeService = new ExchangeService(instance);
   }
 
   // ==================== Conversation CRUD Operations ====================
@@ -107,17 +108,19 @@ export class ConversationService extends BaseService implements ConversationServ
   /**
    * Creates a new conversation
    *
-   * @param options - Options for creating a conversation
+   * @param agentId - The agent ID to create the conversation for
+   * @param folderId - The folder ID containing the agent
+   * @param options - Optional settings for the conversation
    * @returns Promise resolving to the created conversation
    */
   @track('ConversationalAgent.Conversations.Create')
-  async create(options: CreateConversationOptions): Promise<ConversationCreateResponse> {
+  async create(agentId: number, folderId: number, options?: ConversationCreateOptions): Promise<ConversationCreateResponse> {
     // Transform SDK field names to API field names (e.g., agentId → agentReleaseId)
-    const apiPayload = transformRequest(options, ConversationMap);
+    const apiPayload = transformRequest({ agentId, folderId, ...options }, ConversationMap);
 
     const response = await this.post<RawConversationGetResponse>(CONVERSATION_ENDPOINTS.CREATE, apiPayload);
     const transformedData = transformData(response.data, ConversationMap) as RawConversationGetResponse;
-    return createConversationWithMethods(transformedData, this, this);
+    return createConversationWithMethods(transformedData, this, this, this._exchangeService);
   }
 
   /**
@@ -128,15 +131,15 @@ export class ConversationService extends BaseService implements ConversationServ
    *
    * @example
    * ```typescript
-   * const conversation = await conversationsService.getById(conversationId);
+   * const conversation = await conversationalAgent.conversations.getById(conversationId);
    * console.log(conversation.label, conversation.createdTime);
    * ```
    */
   @track('ConversationalAgent.Conversations.GetById')
-  async getById(id: ConversationId): Promise<ConversationGetResponse> {
+  async getById(id: string): Promise<ConversationGetResponse> {
     const response = await this.get<RawConversationGetResponse>(CONVERSATION_ENDPOINTS.GET(id));
     const transformedData = transformData(response.data, ConversationMap) as RawConversationGetResponse;
-    return createConversationWithMethods(transformedData, this, this);
+    return createConversationWithMethods(transformedData, this, this, this._exchangeService);
   }
 
   /**
@@ -152,17 +155,17 @@ export class ConversationService extends BaseService implements ConversationServ
    * @example
    * ```typescript
    * // Get all conversations (non-paginated)
-   * const allConversations = await conversationsService.getAll();
+   * const allConversations = await conversationalAgent.conversations.getAll();
    *
    * // Get conversations with sorting
-   * const sortedConversations = await conversationsService.getAll({ sort: SortOrder.Descending });
+   * const sortedConversations = await conversationalAgent.conversations.getAll({ sort: SortOrder.Descending });
    *
    * // First page with pagination
-   * const firstPageOfConversations = await conversationsService.getAll({ pageSize: 10 });
+   * const firstPageOfConversations = await conversationalAgent.conversations.getAll({ pageSize: 10 });
    *
    * // Navigate using cursor
    * if (firstPageOfConversations.hasNextPage) {
-   *   const nextPageOfConversations = await conversationsService.getAll({
+   *   const nextPageOfConversations = await conversationalAgent.conversations.getAll({
    *     cursor: firstPageOfConversations.nextCursor
    *   });
    * }
@@ -179,7 +182,7 @@ export class ConversationService extends BaseService implements ConversationServ
     // Transform function to convert API timestamps to SDK naming convention and add methods
     const transformFn = (conversation: RawConversationGetResponse) => {
       const transformedData = transformData(conversation, ConversationMap) as RawConversationGetResponse;
-      return createConversationWithMethods(transformedData, this, this);
+      return createConversationWithMethods(transformedData, this, this, this._exchangeService);
     };
 
     return PaginationHelpers.getAll({
@@ -208,22 +211,22 @@ export class ConversationService extends BaseService implements ConversationServ
    *
    * @example
    * ```typescript
-   * const updatedConversation = await conversationsService.updateById(conversationId, {
+   * const updatedConversation = await conversationalAgent.conversations.updateById(conversationId, {
    *   label: 'New conversation title'
    * });
    * ```
    */
   @track('ConversationalAgent.Conversations.UpdateById')
   async updateById(
-    id: ConversationId,
-    options: UpdateConversationOptions
-  ): Promise<ConversationGetResponse> {
+    id: string,
+    options: ConversationUpdateOptions
+  ): Promise<ConversationUpdateResponse> {
     const response = await this.patch<RawConversationGetResponse>(
       CONVERSATION_ENDPOINTS.UPDATE(id),
       options
     );
     const transformedData = transformData(response.data, ConversationMap) as RawConversationGetResponse;
-    return createConversationWithMethods(transformedData, this, this);
+    return createConversationWithMethods(transformedData, this, this, this._exchangeService);
   }
 
   /**
@@ -234,11 +237,11 @@ export class ConversationService extends BaseService implements ConversationServ
    *
    * @example
    * ```typescript
-   * await conversationsService.deleteById(conversationId);
+   * await conversationalAgent.conversations.deleteById(conversationId);
    * ```
    */
   @track('ConversationalAgent.Conversations.DeleteById')
-  async deleteById(id: ConversationId): Promise<ConversationDeleteResponse> {
+  async deleteById(id: string): Promise<ConversationDeleteResponse> {
     const response = await this.delete<ConversationDeleteResponse>(
       CONVERSATION_ENDPOINTS.DELETE(id)
     );
@@ -248,41 +251,9 @@ export class ConversationService extends BaseService implements ConversationServ
   // ==================== Attachments ====================
 
   /**
-   * Creates an attachment entry for a conversation
-   *
-   * Creates the attachment entry and returns upload access details.
-   * The client must handle the file upload using the returned fileUploadAccess.
-   * For most cases, use `uploadAttachment()` instead which handles both steps.
-   *
-   * @param conversationId - The conversation to attach the file to
-   * @param fileName - The name of the file
-   * @returns Promise resolving to the attachment creation response
-   *
-   * @example
-   * ```typescript
-   * const attachmentEntry = await conversationalAgent.conversations.createAttachment(
-   *   conversationId, 'document.pdf'
-   * );
-   * const { url, verb, headers } = attachmentEntry.fileUploadAccess;
-   * ```
-   */
-  @track('ConversationalAgent.Conversations.CreateAttachment')
-  async createAttachment(
-    conversationId: ConversationId,
-    fileName: string
-  ): Promise<AttachmentCreateResponse> {
-    const response = await this.post<AttachmentCreateResponse>(
-      ATTACHMENT_ENDPOINTS.CREATE(conversationId),
-      { name: fileName }
-    );
-    return response.data;
-  }
-
-  /**
    * Uploads a file attachment to a conversation
    *
-   * Convenience method that creates the attachment entry and uploads
-   * the file content in one step.
+   * Uploads a file attachment to a conversation
    *
    * @param conversationId - The conversation to attach the file to
    * @param file - The file to upload
@@ -298,9 +269,9 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   @track('ConversationalAgent.Conversations.UploadAttachment')
   async uploadAttachment(
-    conversationId: ConversationId,
+    conversationId: string,
     file: File
-  ): Promise<AttachmentUploadResponse> {
+  ): Promise<ConversationAttachmentUploadResponse> {
     // Step 1: Create attachment entry and get upload URL
     const { fileUploadAccess, uri, name } = await this.createAttachment(conversationId, file.name);
 
@@ -343,39 +314,22 @@ export class ConversationService extends BaseService implements ConversationServ
   // ==================== Real-time Event Handling ====================
 
   /**
-   * Gets or creates the event helper manager (lazy initialization)
-   * @internal
-   */
-  private _getEvents(): ConversationEventHelperManager {
-    if (this._eventHelper === null) {
-      this._eventHelper = new ConversationEventHelperManagerImpl({
-        emit: (event) => {
-          this._sessionManager.emitEvent(event);
-        }
-      });
-
-      // Connect event dispatcher to session manager
-      this._sessionManager.setEventDispatcher(this._eventHelper);
-    }
-    return this._eventHelper;
-  }
-
-  /**
    * Starts a real-time chat session for a conversation
    *
-   * @param options - Session start options including conversationId
+   * @param conversationId - The conversation ID to start the session for
+   * @param options - Optional session configuration
    * @returns {@link SessionStream} for managing the session
    *
    * @example
    * ```typescript
-   * const session = conversations.startSession({ conversationId: conversation.id });
+   * const session = conversationalAgent.conversations.startSession(conversation.id);
    *
    * // Listen for responses
    * session.onExchangeStart((exchange) => {
    *   exchange.onMessageStart((message) => {
    *     if (message.isAssistant) {
    *       message.onContentPartStart((part) => {
-   *         if (part.isText) {
+   *         if (part.isMarkdown) {
    *           part.onChunk((chunk) => console.log(chunk.data));
    *         }
    *       });
@@ -385,14 +339,14 @@ export class ConversationService extends BaseService implements ConversationServ
    *
    * // Send a message
    * const exchange = session.startExchange();
-   * exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   * await exchange.sendMessageWithContentPart({ data: 'Hello!' });
    *
    * // End the session when done
-   * session.sendSessionEnd();
+   * conversationalAgent.conversations.endSession(conversation.id);
    * ```
    */
-  startSession(args: SessionStartEventOptions): SessionStream {
-    return this._getEvents().startSession(args);
+  startSession(conversationId: string, options?: ConversationSessionOptions): SessionStream {
+    return this._getEvents().startSession({ conversationId, ...options });
   }
 
   /**
@@ -401,7 +355,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * @param conversationId - The conversation ID to get the session for
    * @returns The {@link SessionStream} if active, undefined otherwise
    */
-  getSession(conversationId: ConversationId) {
+  getSession(conversationId: string): SessionStream | undefined {
     return this._getEvents().getSession(conversationId);
   }
 
@@ -416,10 +370,10 @@ export class ConversationService extends BaseService implements ConversationServ
    * @example
    * ```typescript
    * // End session for a specific conversation
-   * conversations.endSession(conversationId);
+   * conversationalAgent.conversations.endSession(conversationId);
    * ```
    */
-  endSession(conversationId: ConversationId): void {
+  endSession(conversationId: string): void {
     const session = this._getEvents().getSession(conversationId);
     if (session) {
       session.sendSessionEnd();
@@ -429,7 +383,7 @@ export class ConversationService extends BaseService implements ConversationServ
   /**
    * Iterator over all active sessions
    */
-  get sessions() {
+  get sessions(): Iterable<SessionStream> {
     return this._getEvents().sessions;
   }
 
@@ -464,5 +418,33 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {
     return this._sessionManager.onConnectionStatusChanged(handler);
+  }
+
+  // ==================== Private Methods ====================
+
+  private _getEvents(): ConversationEventHelperManager {
+    if (this._eventHelper === null) {
+      this._eventHelper = new ConversationEventHelperManagerImpl({
+        emit: (event) => {
+          this._sessionManager.emitEvent(event);
+        }
+      });
+
+      // Connect event dispatcher to session manager
+      this._sessionManager.setEventDispatcher(this._eventHelper);
+    }
+    return this._eventHelper;
+  }
+
+  @track('ConversationalAgent.Conversations.CreateAttachment')
+  private async createAttachment(
+    conversationId: string,
+    fileName: string
+  ): Promise<ConversationAttachmentCreateResponse> {
+    const response = await this.post<ConversationAttachmentCreateResponse>(
+      ATTACHMENT_ENDPOINTS.CREATE(conversationId),
+      { name: fileName }
+    );
+    return response.data;
   }
 }

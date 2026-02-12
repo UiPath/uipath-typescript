@@ -4,16 +4,12 @@
 
 import type { Socket } from 'socket.io-client';
 import type { IUiPath } from '@/core/types';
-import type {
-  ConversationalAgentOptions,
-  ConversationEvent,
-  ConversationId
-} from '@/models/conversational-agent';
+import type { ConversationalAgentOptions, ConversationEvent } from '@/models/conversational-agent';
 import { ConnectionStatus } from '@/core/websocket';
 import type { ConnectionStatusChangedHandler, LogLevel } from '@/core/websocket';
 
-import { WebSocketSession } from './session';
-import { WEBSOCKET_EVENTS } from '../constants';
+import { WebSocketSession } from './websocket-session';
+import { WEBSOCKET_EVENTS } from '../../constants';
 
 /**
  * Interface for dispatching conversation events
@@ -30,10 +26,10 @@ export class SessionManager {
   private _session: WebSocketSession;
 
   /** Per-conversation socket tracking for automatic lifecycle management */
-  private _sessionSockets: Map<ConversationId, Socket> = new Map();
+  private _sessionSockets: Map<string, Socket> = new Map();
 
   /** Reverse mapping: Socket -> Set of conversation IDs using it */
-  private _socketToConversations: Map<Socket, Set<ConversationId>> = new Map();
+  private _socketToConversations: Map<Socket, Set<string>> = new Map();
 
   /** Event dispatcher for routing events to handlers */
   private _eventDispatcher: EventDispatcher | null = null;
@@ -131,7 +127,7 @@ export class SessionManager {
    * @param conversationId - Conversation ID
    * @returns Promise resolving to the connected socket
    */
-  private async _getSocket(conversationId: ConversationId): Promise<Socket> {
+  private async _getSocket(conversationId: string): Promise<Socket> {
     let socket: Socket | undefined = this._sessionSockets.get(conversationId);
 
     // Check if existing socket is stale (disconnected)
@@ -166,8 +162,9 @@ export class SessionManager {
           // Get conversations from reverse mapping (O(1) lookup, no Map iteration)
           const affectedConversations = this._socketToConversations.get(capturedSocket);
           if (affectedConversations) {
-            // Copy the set to avoid modification during iteration
-            for (const convId of [...affectedConversations]) {
+            // Copy: user error handlers may call endSession → releaseSocket → set.delete
+            const conversationIds = Array.from(affectedConversations);
+            for (const convId of conversationIds) {
               this._eventDispatcher?.dispatch({
                 conversationId: convId,
                 conversationError: {
@@ -195,7 +192,7 @@ export class SessionManager {
    *
    * @param conversationId - Conversation ID to release
    */
-  releaseSocket(conversationId: ConversationId): void {
+  releaseSocket(conversationId: string): void {
     const socket = this._sessionSockets.get(conversationId);
     if (socket) {
       this._removeConversationFromSocket(conversationId, socket);
@@ -209,7 +206,7 @@ export class SessionManager {
    * @param conversationId - Conversation ID to remove
    * @param socket - Socket to remove from
    */
-  private _removeConversationFromSocket(conversationId: ConversationId, socket: Socket): void {
+  private _removeConversationFromSocket(conversationId: string, socket: Socket): void {
     const conversationIds = this._socketToConversations.get(socket);
     if (conversationIds) {
       conversationIds.delete(conversationId);
@@ -223,7 +220,7 @@ export class SessionManager {
    *
    * @param conversationId - Conversation ID
    */
-  private _deprecateSocketForConversation(conversationId: ConversationId): void {
+  private _deprecateSocketForConversation(conversationId: string): void {
     const socket = this._sessionSockets.get(conversationId);
     if (socket) {
       this._session.deprecateSocket(socket);
@@ -239,12 +236,12 @@ export class SessionManager {
    * socket tracking. Any active sessions will receive a disconnection error.
    */
   disconnect(): void {
-    // Clear all per-conversation socket tracking
+    // Disconnect first so socket 'disconnect' handlers can notify conversations
+    this._session.disconnect();
+
+    // Then clear tracking maps
     this._sessionSockets.clear();
     this._socketToConversations.clear();
-
-    // Disconnect the underlying WebSocket
-    this._session.disconnect();
   }
 
   /**

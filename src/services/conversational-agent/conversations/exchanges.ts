@@ -6,16 +6,14 @@
  */
 
 // Core SDK imports
-import type { IUiPath } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
+import type { QueryParams } from '@/models/common/request-spec';
 
 // Models
 import type {
-  ConversationId,
   CreateFeedbackOptions,
   Exchange,
-  ExchangeId,
   ExchangeServiceModel,
   FeedbackCreateResponse,
   ExchangeGetAllOptions,
@@ -43,30 +41,22 @@ import { transformExchange } from '@/services/conversational-agent/helpers';
  * ```typescript
  * import { Exchanges } from '@uipath/uipath-typescript/conversational-agent';
  *
- * const exchangesService = new Exchanges(sdk);
+ * const exchanges = new Exchanges(sdk);
  *
  * // List all exchanges in a conversation
- * const conversationExchanges = await exchangesService.getAll(conversationId);
+ * const conversationExchanges = await exchanges.getAll(conversationId);
  *
  * // Get a specific exchange with messages
- * const exchangeDetails = await exchangesService.getById(conversationId, exchangeId);
+ * const exchangeDetails = await exchanges.getById(conversationId, exchangeId);
  *
  * // Submit feedback for an exchange
- * await exchangesService.createFeedback(conversationId, exchangeId, {
+ * await exchanges.createFeedback(conversationId, exchangeId, {
  *   rating: FeedbackRating.Positive,
  *   comment: 'Great response!'
  * });
  * ```
  */
 export class ExchangeService extends BaseService implements ExchangeServiceModel {
-  /**
-   * Creates a new ExchangeService instance
-   * @param instance - UiPath SDK instance
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets all exchanges for a conversation with optional filtering and pagination
    *
@@ -81,28 +71,27 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * @example
    * ```typescript
    * // Get all exchanges (non-paginated)
-   * const conversationExchanges = await exchangesService.getAll(conversationId);
+   * const conversationExchanges = await exchanges.getAll(conversationId);
    *
    * // First page with pagination
-   * const firstPageOfExchanges = await exchangesService.getAll(conversationId, { pageSize: 10 });
+   * const firstPageOfExchanges = await exchanges.getAll(conversationId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (firstPageOfExchanges.hasNextPage) {
-   *   const nextPageOfExchanges = await exchangesService.getAll(conversationId, { cursor: firstPageOfExchanges.nextCursor });
+   *   const nextPageOfExchanges = await exchanges.getAll(conversationId, { cursor: firstPageOfExchanges.nextCursor });
    * }
    * ```
    */
   @track('ConversationalAgent.Exchanges.GetAll')
   async getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
-    conversationId: ConversationId,
+    conversationId: string,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<ExchangeGetResponse>
       : NonPaginatedResponse<ExchangeGetResponse>
   > {
-    // Transform function to convert Exchange to ExchangeGetResponse
-    const transformFn = (exchange: Exchange) => transformExchange(exchange);
+    const transformFn = transformExchange;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -131,7 +120,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    *
    * @example
    * ```typescript
-   * const exchange = await exchangesService.getById(conversationId, exchangeId);
+   * const exchange = await exchanges.getById(conversationId, exchangeId);
    *
    * // Access messages
    * for (const message of exchange.messages) {
@@ -141,11 +130,11 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    */
   @track('ConversationalAgent.Exchanges.GetById')
   async getById(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
+    conversationId: string,
+    exchangeId: string,
     options?: ExchangeGetByIdOptions
   ): Promise<ExchangeGetResponse> {
-    const params: ExchangeGetByIdOptions = {};
+    const params: QueryParams = {};
 
     if (options?.messageSort) {
       params.messageSort = options.messageSort;
@@ -173,14 +162,14 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * @example
    * ```typescript
    * // Submit positive feedback
-   * await exchangesService.createFeedback(
+   * await exchanges.createFeedback(
    *   conversationId,
    *   exchangeId,
    *   { rating: FeedbackRating.Positive, comment: 'Very helpful response!' }
    * );
    *
    * // Submit negative feedback with explanation
-   * await exchangesService.createFeedback(
+   * await exchanges.createFeedback(
    *   conversationId,
    *   exchangeId,
    *   { rating: FeedbackRating.Negative, comment: 'Response was not accurate' }
@@ -189,8 +178,8 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    */
   @track('ConversationalAgent.Exchanges.CreateFeedback')
   async createFeedback(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
+    conversationId: string,
+    exchangeId: string,
     options: CreateFeedbackOptions
   ): Promise<FeedbackCreateResponse> {
     const response = await this.post<FeedbackCreateResponse>(

@@ -3,7 +3,6 @@
  */
 
 // Core SDK imports
-import type { IUiPath } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
@@ -29,15 +28,6 @@ import { transformData } from '@/utils/transform';
  * @internal
  */
 export class UserService extends BaseService implements UserServiceModel {
-  /**
-   * Creates an instance of the User service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets the current user's profile and context settings
    *

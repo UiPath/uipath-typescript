@@ -7,19 +7,14 @@
  */
 
 // Core SDK imports
-import type { IUiPath } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
 import type {
   ContentPart,
-  ContentPartId,
   ContentPartGetResponse,
-  ConversationId,
-  ExchangeId,
   Message,
-  MessageId,
   MessageServiceModel,
   MessageGetResponse
 } from '@/models/conversational-agent';
@@ -40,10 +35,10 @@ import { transformMessage, ContentPartHelper } from '@/services/conversational-a
  * ```typescript
  * import { Messages } from '@uipath/uipath-typescript/conversational-agent';
  *
- * const messagesService = new Messages(sdk);
+ * const messages = new Messages(sdk);
  *
  * // Get a specific message
- * const messageDetails = await messagesService.getById(conversationId, exchangeId, messageId);
+ * const messageDetails = await messages.getById(conversationId, exchangeId, messageId);
  *
  * // Access message properties
  * console.log(messageDetails.role);
@@ -51,7 +46,7 @@ import { transformMessage, ContentPartHelper } from '@/services/conversational-a
  * console.log(messageDetails.toolCalls);
  *
  * // Get external content part data
- * const contentPartDetails = await messagesService.getContentPartById(
+ * const contentPartDetails = await messages.getContentPartById(
  *   conversationId,
  *   exchangeId,
  *   messageId,
@@ -60,14 +55,6 @@ import { transformMessage, ContentPartHelper } from '@/services/conversational-a
  * ```
  */
 export class MessageService extends BaseService implements MessageServiceModel {
-  /**
-   * Creates a new MessageService instance
-   * @param instance - UiPath SDK instance
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets a message by ID
    *
@@ -80,7 +67,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    *
    * @example
    * ```typescript
-   * const message = await messagesService.getById(conversationId, exchangeId, messageId);
+   * const message = await messages.getById(conversationId, exchangeId, messageId);
    *
    * console.log(message.role);
    * console.log(message.contentParts);
@@ -89,9 +76,9 @@ export class MessageService extends BaseService implements MessageServiceModel {
    */
   @track('ConversationalAgent.Messages.GetById')
   async getById(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
-    messageId: MessageId
+    conversationId: string,
+    exchangeId: string,
+    messageId: string
   ): Promise<MessageGetResponse> {
     const result = await this.get<Message>(
       MESSAGE_ENDPOINTS.GET(conversationId, exchangeId, messageId)
@@ -118,7 +105,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * @example
    * ```typescript
    * // Get an external content part (file/attachment)
-   * const contentPartDetails = await messagesService.getContentPartById(
+   * const contentPartDetails = await messages.getContentPartById(
    *   conversationId,
    *   exchangeId,
    *   messageId,
@@ -133,10 +120,10 @@ export class MessageService extends BaseService implements MessageServiceModel {
    */
   @track('ConversationalAgent.Messages.GetContentPartById')
   async getContentPartById(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
-    messageId: MessageId,
-    contentPartId: ContentPartId
+    conversationId: string,
+    exchangeId: string,
+    messageId: string,
+    contentPartId: string
   ): Promise<ContentPartGetResponse> {
     const result = await this.get<ContentPart>(
       MESSAGE_ENDPOINTS.GET_CONTENT_PART(conversationId, exchangeId, messageId, contentPartId)
