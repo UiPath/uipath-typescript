@@ -27,7 +27,7 @@ if (VERSION_CONSTANTS.FLAGS.some(flag => args[0] === flag)) {
     const packageJsonPath = join(__dirname, '../package.json');
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
     console.log(`${VERSION_CONSTANTS.CLI_NAME} version ${packageJson.version || VERSION_CONSTANTS.UNKNOWN_VERSION}`);
-  } catch (error) {
+  } catch {
     // This should never happen in normal circumstances since package.json is required for the CLI to work
     console.error(VERSION_CONSTANTS.ERROR_READING_VERSION);
     process.exit(1);

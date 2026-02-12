@@ -1,5 +1,4 @@
 import { FolderScopedService } from '../../folder-scoped';
-import type { IUiPath } from '../../../core/types';
 import {
   QueueGetResponse,
   QueueGetAllOptions,
@@ -21,15 +20,6 @@ import { track } from '../../../core/telemetry';
  * Service for interacting with UiPath Orchestrator Queues API
  */
 export class QueueService extends FolderScopedService implements QueueServiceModel {
-  /**
-   * Creates an instance of the Queues service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets all queues across folders with optional filtering and folder scoping
    * 
