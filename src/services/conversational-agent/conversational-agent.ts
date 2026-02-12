@@ -33,7 +33,7 @@ import { ConversationService } from './conversations';
  * Service for interacting with UiPath Conversational Agent API
  */
 export class ConversationalAgentService extends BaseService implements ConversationalAgentServiceModel {
-  /** @internal */
+  /** Service for creating and managing conversations. See {@link ConversationServiceModel}. */
   public readonly conversations: ConversationService;
 
   /**
