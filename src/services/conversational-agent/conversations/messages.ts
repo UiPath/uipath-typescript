@@ -111,11 +111,6 @@ export class MessageService extends BaseService implements MessageServiceModel {
    *   messageId,
    *   contentPartId
    * );
-   *
-   * // Check if it's external before fetching
-   * if (contentPartDetails.isDataExternal) {
-   *   const contentData = await contentPartDetails.getData();
-   * }
    * ```
    */
   @track('ConversationalAgent.Messages.GetContentPartById')

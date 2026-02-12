@@ -236,10 +236,19 @@ export class SessionManager {
    * socket tracking. Any active sessions will receive a disconnection error.
    */
   disconnect(): void {
-    // Disconnect first so socket 'disconnect' handlers can notify conversations
+    // Disconnect the current socket via BaseWebSocket (fires 'disconnect' synchronously,
+    // which notifies conversations through the handler registered in _getSocket)
     this._session.disconnect();
 
-    // Then clear tracking maps
+    // Disconnect any deprecated sockets still in the map (BaseWebSocket no longer
+    // tracks these after deprecateSocket(), so we must disconnect them directly)
+    for (const socket of this._socketToConversations.keys()) {
+      if (socket.connected) {
+        socket.disconnect();
+      }
+    }
+
+    // Clear tracking maps (handlers already fired synchronously above)
     this._sessionSockets.clear();
     this._socketToConversations.clear();
   }

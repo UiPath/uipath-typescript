@@ -37,7 +37,7 @@ import { CONVERSATION_ENDPOINTS, ATTACHMENT_ENDPOINTS } from '@/utils/constants/
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
-import { transformData, transformRequest } from '@/utils/transform';
+import { transformData, transformRequest, arrayDictionaryToRecord } from '@/utils/transform';
 
 // Local imports
 import {
@@ -277,13 +277,9 @@ export class ConversationService extends BaseService implements ConversationServ
 
     // Step 2: Upload file to blob storage
     const uploadHeaders: Record<string, string> = {
-      'Content-Type': file.type
+      'Content-Type': file.type,
+      ...arrayDictionaryToRecord(fileUploadAccess.headers)
     };
-
-    // Add custom headers from API response
-    fileUploadAccess.headers.keys.forEach((key, index) => {
-      uploadHeaders[key] = fileUploadAccess.headers.values[index];
-    });
 
     // Add auth header if required by the storage endpoint
     if (fileUploadAccess.requiresAuth) {
