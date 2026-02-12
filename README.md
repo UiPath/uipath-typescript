@@ -362,24 +362,24 @@ const downloadUrl = await buckets.getReadUri({
 
 // Data Fabric Entities - CRUD operations
 const entity = await entities.getById('entity-uuid');
-const records = await entities.getRecordsById('entity-uuid', {
+const records = await entities.getAllRecords('entity-uuid', {
   pageSize: 100,
   expansionLevel: 1
 });
 
 // Insert records
-await entities.insertById('entity-uuid', [
+await entities.insertRecordsById('entity-uuid', [
   { name: 'John Doe', email: 'john@company.com', status: 'Active' },
   { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' }
 ]);
 
 // Update records
-await entities.updateById('entity-uuid', [
+await entities.updateRecordsById('entity-uuid', [
   { Id: 'record-id-1', status: 'Inactive' }
 ]);
 
 // Delete records
-await entities.deleteById('entity-uuid', ['record-id-1', 'record-id-2']);
+await entities.deleteRecordsById('entity-uuid', ['record-id-1', 'record-id-2']);
 ```
 
 </details>
