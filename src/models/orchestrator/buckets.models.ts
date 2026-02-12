@@ -156,13 +156,13 @@ export interface BucketServiceModel {
    *   content: file
    * });
    *
-   * // In Node env with Buffer
-   * const buffer = Buffer.from('file content');
+   * // In Node env with Uint8Array or Buffer
+   * const content = new TextEncoder().encode('file content');
    * const result = await buckets.uploadFile({
    *   bucketId: <bucketId>,
    *   folderId: <folderId>,
    *   path: '/folder/example.txt',
-   *   content: buffer,
+   *   content,
    * });
    * ```
    */

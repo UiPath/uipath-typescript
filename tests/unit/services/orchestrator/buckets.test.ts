@@ -17,7 +17,7 @@ import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import type { BucketGetByIdOptions, BucketGetAllOptions, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetResponse, BlobItem } from '../../../../src/models/orchestrator/buckets.types';
 import { BucketOptions } from '../../../../src/models/orchestrator/buckets.types';
 import { BUCKET_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import axios from 'axios';
+
 import { FOLDER_ID } from '../../../../src/utils/constants/headers';
 import { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import { ODATA_PAGINATION } from '../../../../src/utils/constants/common';
@@ -26,7 +26,7 @@ import { PaginationType } from '../../../../src/utils/pagination/internal-types'
 // ===== MOCKING =====
 // Mock the dependencies
 vi.mock('../../../../src/core/http/api-client');
-vi.mock('axios');
+
 
 // Import mock objects using vi.hoisted() - this ensures they're available before vi.mock() calls
 const mocks = vi.hoisted(() => {
@@ -62,6 +62,7 @@ describe('BucketService Unit Tests', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('getById', () => {
@@ -359,8 +360,8 @@ describe('BucketService Unit Tests', () => {
       });
       mockApiClient.get.mockResolvedValueOnce(mockUploadUriResponse);
 
-      // Mock axios.put for the actual upload
-      vi.mocked(axios.put).mockResolvedValueOnce({status: 201});
+      // Mock fetch for the actual upload
+      const mockFetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(null, { status: 201 }));
 
       const bufferContent = Buffer.from(BUCKET_TEST_CONSTANTS.FILE_CONTENT);
       const result = await bucketService.uploadFile({
@@ -388,17 +389,19 @@ describe('BucketService Unit Tests', () => {
         })
       );
 
-      // Verify axios.put was called with Buffer content and proper header handling
-      expect(axios.put).toHaveBeenCalledWith(
+      // Verify fetch was called with Buffer content and proper header handling
+      expect(mockFetch).toHaveBeenCalledWith(
         BUCKET_TEST_CONSTANTS.UPLOAD_URI,
-        bufferContent, // Verify exact Buffer content is passed
         expect.objectContaining({
-          headers: expect.any(Object) // Headers should be empty object since Keys/Values are empty
+          method: 'PUT',
+          body: bufferContent,
+          headers: expect.any(Object)
         })
       );
 
       // Verify the success logic: status >= 200 && status < 300
       expect(result.success).toBe(true); // 201 is in range [200, 300)
+
     });
 
     it('should upload Blob content file with authentication when requiresAuth is true', async () => {
@@ -412,10 +415,10 @@ describe('BucketService Unit Tests', () => {
       });
       mockApiClient.get.mockResolvedValueOnce(mockUploadUriResponse);
 
-      // Mock axios.put for the actual upload
-      vi.mocked(axios.put).mockResolvedValueOnce({
-        status: BUCKET_TEST_CONSTANTS.UPLOAD_SUCCESS_STATUS_CODE
-      });
+      // Mock fetch for the actual upload
+      const mockFetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(null, { status: BUCKET_TEST_CONSTANTS.UPLOAD_SUCCESS_STATUS_CODE })
+      );
 
       const fileContent = new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]);
       const result = await bucketService.uploadFile({
@@ -443,19 +446,21 @@ describe('BucketService Unit Tests', () => {
         })
       );
 
-      // Verify axios.put was called with authentication headers and transformations
-      expect(axios.put).toHaveBeenCalledWith(
+      // Verify fetch was called with authentication headers and transformations
+      expect(mockFetch).toHaveBeenCalledWith(
         BUCKET_TEST_CONSTANTS.UPLOAD_URI,
-        fileContent,
         expect.objectContaining({
+          method: 'PUT',
+          body: fileContent,
           headers: expect.objectContaining({
-            [BUCKET_TEST_CONSTANTS.CONTENT_TYPE_HEADER]: BUCKET_TEST_CONSTANTS.CONTENT_TYPE, // Verify header transformation from array to record
-            [TEST_CONSTANTS.AUTHORIZATION_HEADER]: TEST_CONSTANTS.BEARER_PREFIX + ' ' + TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN // Verify secret token authentication
+            [BUCKET_TEST_CONSTANTS.CONTENT_TYPE_HEADER]: BUCKET_TEST_CONSTANTS.CONTENT_TYPE,
+            [TEST_CONSTANTS.AUTHORIZATION_HEADER]: TEST_CONSTANTS.BEARER_PREFIX + ' ' + TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN
           })
         })
       );
 
       expect(result.success).toBe(true);
+
     });
 
     it('should automatically refresh expired OAuth token during file upload', async () => {
@@ -472,10 +477,10 @@ describe('BucketService Unit Tests', () => {
       });
       mockApiClient.get.mockResolvedValueOnce(mockUploadUriResponse);
 
-      // Mock axios.put for the actual upload
-      vi.mocked(axios.put).mockResolvedValueOnce({
-        status: BUCKET_TEST_CONSTANTS.UPLOAD_SUCCESS_STATUS_CODE
-      });
+      // Mock fetch for the actual upload
+      const mockFetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(null, { status: BUCKET_TEST_CONSTANTS.UPLOAD_SUCCESS_STATUS_CODE })
+      );
 
       const fileContent = new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]);
       const result = await bucketService.uploadFile({
@@ -493,11 +498,12 @@ describe('BucketService Unit Tests', () => {
       // Verify that getValidAuthToken was called
       expect(getValidAuthTokenSpy).toHaveBeenCalledTimes(1);
 
-      // Verify axios.put was called with refreshed token
-      expect(axios.put).toHaveBeenCalledWith(
+      // Verify fetch was called with refreshed token
+      expect(mockFetch).toHaveBeenCalledWith(
         BUCKET_TEST_CONSTANTS.UPLOAD_URI,
-        fileContent,
         expect.objectContaining({
+          method: 'PUT',
+          body: fileContent,
           headers: expect.objectContaining({
             [BUCKET_TEST_CONSTANTS.CONTENT_TYPE_HEADER]: BUCKET_TEST_CONSTANTS.CONTENT_TYPE,
             [TEST_CONSTANTS.AUTHORIZATION_HEADER]: TEST_CONSTANTS.BEARER_PREFIX + ' ' + TEST_CONSTANTS.REFRESHED_ACCESS_TOKEN
@@ -505,7 +511,8 @@ describe('BucketService Unit Tests', () => {
         })
       );
 
-      getValidAuthTokenSpy.mockRestore();
+
+
     });
 
     it('should upload file with oauth token when not expired', async () => {
@@ -522,10 +529,10 @@ describe('BucketService Unit Tests', () => {
       });
       mockApiClient.get.mockResolvedValueOnce(mockUploadUriResponse);
 
-      // Mock axios.put for the actual upload
-      vi.mocked(axios.put).mockResolvedValueOnce({
-        status: BUCKET_TEST_CONSTANTS.UPLOAD_SUCCESS_STATUS_CODE
-      });
+      // Mock fetch for the actual upload
+      const mockFetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(null, { status: BUCKET_TEST_CONSTANTS.UPLOAD_SUCCESS_STATUS_CODE })
+      );
 
       const fileContent = new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]);
       const result = await bucketService.uploadFile({
@@ -543,11 +550,12 @@ describe('BucketService Unit Tests', () => {
       // Verify getValidAuthToken was called
       expect(getValidAuthTokenSpy).toHaveBeenCalledTimes(1);
 
-      // Verify axios.put was called with original token
-      expect(axios.put).toHaveBeenCalledWith(
+      // Verify fetch was called with original token
+      expect(mockFetch).toHaveBeenCalledWith(
         BUCKET_TEST_CONSTANTS.UPLOAD_URI,
-        fileContent,
         expect.objectContaining({
+          method: 'PUT',
+          body: fileContent,
           headers: expect.objectContaining({
             [BUCKET_TEST_CONSTANTS.CONTENT_TYPE_HEADER]: BUCKET_TEST_CONSTANTS.CONTENT_TYPE,
             [TEST_CONSTANTS.AUTHORIZATION_HEADER]: TEST_CONSTANTS.BEARER_PREFIX + ' ' + TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN
@@ -555,7 +563,8 @@ describe('BucketService Unit Tests', () => {
         })
       );
 
-      getValidAuthTokenSpy.mockRestore();
+
+
     });
 
     it('should throw ValidationError when bucketId is missing', async () => {

@@ -237,7 +237,7 @@ export default class Auth extends Command {
       const tenantsAndOrg = await getTenantsAndOrganization(tokens.accessToken, domain);
       orgSpinner.stop();
       
-      const selectedTenant = await selectTenantInteractive(tenantsAndOrg, domain);
+      const selectedTenant = await selectTenantInteractive(tenantsAndOrg);
       
       // Select folder
       const baseUrl = getBaseUrl(domain);

@@ -1,5 +1,4 @@
 import { BaseService } from '../../base';
-import type { IUiPath } from '../../../core/types';
 import {
   ProcessInstanceGetResponse,
   RawProcessInstanceGetResponse,
@@ -31,16 +30,6 @@ import { BpmnVariableMetadata } from '../../../models/maestro/process-instances.
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
-  /**
-   * Creates an instance of the Process Instances service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
-
   /**
    * Get all process instances with optional filtering and pagination
    *
@@ -226,7 +215,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     
     // Match both self-closing and content-bearing uipath:inputOutput elements
     // Handles: <uipath:inputOutput .../> and <uipath:inputOutput ...>content</uipath:inputOutput>
-    const inputOutputRegex = /<uipath:inputOutput\s+([^\/]+?)(?:\/(?:>)?|>[\s\S]*?<\/uipath:inputOutput>)/g;
+    const inputOutputRegex = /<uipath:inputOutput\s+([^/]+?)(?:\/(?:>)?|>[\s\S]*?<\/uipath:inputOutput>)/g;
     const inputOutputMatches = bpmnXml.matchAll(inputOutputRegex);
     
     for (const match of inputOutputMatches) {

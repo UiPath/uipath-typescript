@@ -254,7 +254,7 @@ export default class RegisterApp extends Command {
       // Read file contents
       try {
         envContent = fs.readFileSync(envPath, 'utf-8');
-      } catch (error) {
+      } catch {
         // File doesn't exist, that's ok
       }
       

@@ -9,6 +9,17 @@ export interface WebAppPushConfig {
   logger: { log: (message: string) => void };
 }
 
+/**
+ * Shape of push_metadata.json (local: .uipath/push_metadata.json, remote: source/push_metadata.json).
+ */
+export interface PushMetadata {
+  schemaVersion: string;
+  projectId: string;
+  description: string;
+  lastPushDate: string;
+  lastPushAuthor: string;
+}
+
 export interface LocalFile {
   path: string;
   absPath: string;

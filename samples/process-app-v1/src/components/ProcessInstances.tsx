@@ -298,7 +298,7 @@ export const ProcessInstances = () => {
       try {
         // Use modular Entities service directly
         const entity: EntityGetResponse = await entities.getById(entityId);
-        const entityRecords = await entity.getRecords({expansionLevel: 2});
+        const entityRecords = await entity.getAllRecords({expansionLevel: 2});
 
         if (entityRecords?.items && entityRecords.items.length > 0) {
           // Find the first record with an attachment

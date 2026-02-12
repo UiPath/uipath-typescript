@@ -275,10 +275,10 @@ describe('UiPath Legacy Pattern', () => {
 
       expect(entities.getAll).toBeDefined();
       expect(entities.getById).toBeDefined();
-      expect(entities.getRecordsById).toBeDefined();
-      expect(entities.insertById).toBeDefined();
-      expect(entities.updateById).toBeDefined();
-      expect(entities.deleteById).toBeDefined();
+      expect(entities.getAllRecords).toBeDefined();
+      expect(entities.insertRecordById).toBeDefined();
+      expect(entities.updateRecordsById).toBeDefined();
+      expect(entities.deleteRecordsById).toBeDefined();
     });
 
     it('should expose all expected methods on tasks service', () => {
@@ -303,6 +303,7 @@ describe('UiPath Legacy Pattern', () => {
   describe('Error Handling', () => {
     it('should handle config validation errors', () => {
       expect(() => {
+        // oxlint-disable-next-line no-new
         new UiPath({
           baseUrl: '',
           orgName: '',

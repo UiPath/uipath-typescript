@@ -1,5 +1,4 @@
 import { FolderScopedService } from '../../folder-scoped';
-import type { IUiPath } from '../../../core/types';
 import { ValidationError, HttpStatus } from '../../../core/errors';
 import {
   BucketGetResponse,
@@ -22,22 +21,12 @@ import { BUCKET_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../../utils/constants/common';
 import { BucketMap } from '../../../models/orchestrator/buckets.constants';
 import { ODATA_PAGINATION } from '../../../utils/constants/common';
-import axios, { AxiosResponse } from 'axios';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
-  /**
-   * Creates an instance of the Buckets service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets a bucket by ID
    * @param bucketId - The ID of the bucket to retrieve
@@ -282,24 +271,19 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       throw new ValidationError({ message: 'content is required for uploadFile' });
     }
 
-    try {
-      
-      const uriResponse = await this._getWriteUri({
-        bucketId,
-        folderId,
-        path,
-      });
+    const uriResponse = await this._getWriteUri({
+      bucketId,
+      folderId,
+      path,
+    });
 
-      // Upload file to the provided URI
-      const response = await this._uploadToUri(uriResponse, content);
-      
-      return {
-        success: response.status >= 200 && response.status < 300,
-        statusCode: response.status
-      };
-    } catch (error) {
-      throw error;
-    }
+    // Upload file to the provided URI
+    const response = await this._uploadToUri(uriResponse, content);
+
+    return {
+      success: response.status >= 200 && response.status < 300,
+      statusCode: response.status
+    };
   }
 
   /**
@@ -348,8 +332,8 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    */
   private async _uploadToUri(
     uriResponse: BucketGetUriResponse, 
-    content: Blob | Buffer | File, 
-  ): Promise<AxiosResponse> {
+    content: Blob | Uint8Array<ArrayBuffer> | File, 
+  ): Promise<Response> {
     const { uri, headers = {}, requiresAuth } = uriResponse;
     
     if (!uri) {
@@ -365,8 +349,10 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       requestHeaders['Authorization'] = `Bearer ${token}`;
     }
    
-    return axios.put(uri, content, {
-      headers: createHeaders(requestHeaders)
+    return fetch(uri, {
+      method: 'PUT',
+      body: content,
+      headers: createHeaders(requestHeaders),
     });
   }
 

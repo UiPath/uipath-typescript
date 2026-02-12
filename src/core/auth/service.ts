@@ -242,7 +242,7 @@ export class AuthService {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
-      } catch(e) {
+      } catch {
         throw new Error("crypto not available in browser")
       }
     }
@@ -267,7 +267,7 @@ export class AuthService {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
-      } catch (e) {
+      } catch {
         throw new Error("crypto not available in browser")
       }
     }

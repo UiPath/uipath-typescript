@@ -50,10 +50,6 @@ type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
 export class UiPath extends UiPathCore {
   private readonly _services: Map<string, any> = new Map();
 
-  constructor(config: UiPathSDKConfig) {
-    super(config);
-  }
-
   private getService<T>(serviceConstructor: ServiceConstructor<T>): T {
     const serviceName = serviceConstructor.name;
     if (!this._services.has(serviceName)) {

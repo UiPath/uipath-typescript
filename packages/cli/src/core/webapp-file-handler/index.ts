@@ -23,4 +23,5 @@ export type {
   ReferencedResourceRequest,
   ReferencedResourceResponse,
   LockInfo,
+  PushMetadata,
 } from './types.js';

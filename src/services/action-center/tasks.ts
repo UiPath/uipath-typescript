@@ -1,5 +1,4 @@
 import { BaseService } from '../base';
-import type { IUiPath } from '../../core/types';
 import { 
   TaskCreateOptions, 
   TaskAssignmentOptions,
@@ -36,15 +35,6 @@ import { processODataArrayResponse } from '../../utils/object';
  * Service for interacting with UiPath Tasks API
  */
 export class TaskService extends BaseService implements TaskServiceModel {
-  /**
-   * Creates an instance of the Tasks service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Creates a new task
    * @param task - The task to be created
