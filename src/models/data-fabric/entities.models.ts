@@ -482,31 +482,31 @@ export type EntityGetResponse = RawEntityGetResponse & EntityMethods;
  */
 function createEntityMethods(entityData: RawEntityGetResponse, service: EntityServiceModel): EntityMethods {
   return {
-    async insertRecord(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
+    async insertRecord(data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.insertRecordById(entityData.id, data, options);
     },
 
-    async insertRecords(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse> {
+    async insertRecords(data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.insertRecordsById(entityData.id, data, options);
     },
 
-    async updateRecords(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
+    async updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.updateRecordsById(entityData.id, data, options);
     },
 
-    async deleteRecords(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse> {
+    async deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.deleteRecordsById(entityData.id, recordIds, options);
     },
 
-    async getAllRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
+    async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<
       T extends HasPaginationOptions<T>
         ? PaginatedResponse<EntityRecord>
         : NonPaginatedResponse<EntityRecord>
