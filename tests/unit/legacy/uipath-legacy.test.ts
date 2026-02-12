@@ -303,6 +303,7 @@ describe('UiPath Legacy Pattern', () => {
   describe('Error Handling', () => {
     it('should handle config validation errors', () => {
       expect(() => {
+        // oxlint-disable-next-line no-new
         new UiPath({
           baseUrl: '',
           orgName: '',

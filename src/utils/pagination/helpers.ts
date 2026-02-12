@@ -39,7 +39,7 @@ export class PaginationHelpers {
         decodeBase64(cursorString)
       );
       return cursorData;
-    } catch (error) {
+    } catch {
       throw new Error('Invalid pagination cursor');
     }
   }
@@ -157,7 +157,7 @@ export class PaginationHelpers {
         type: cursorData.type,
       };
       return filterUndefined(cursorBasedOptions);
-    } catch (error) {
+    } catch {
       throw new Error('Invalid pagination cursor');
     }
   }

@@ -1,5 +1,4 @@
 import { FolderScopedService } from '../../folder-scoped';
-import type { IUiPath } from '../../../core/types';
 import { ValidationError, HttpStatus } from '../../../core/errors';
 import {
   BucketGetResponse,
@@ -29,15 +28,6 @@ import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
-  /**
-   * Creates an instance of the Buckets service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets a bucket by ID
    * @param bucketId - The ID of the bucket to retrieve
@@ -282,24 +272,19 @@ export class BucketService extends FolderScopedService implements BucketServiceM
       throw new ValidationError({ message: 'content is required for uploadFile' });
     }
 
-    try {
-      
-      const uriResponse = await this._getWriteUri({
-        bucketId,
-        folderId,
-        path,
-      });
+    const uriResponse = await this._getWriteUri({
+      bucketId,
+      folderId,
+      path,
+    });
 
-      // Upload file to the provided URI
-      const response = await this._uploadToUri(uriResponse, content);
-      
-      return {
-        success: response.status >= 200 && response.status < 300,
-        statusCode: response.status
-      };
-    } catch (error) {
-      throw error;
-    }
+    // Upload file to the provided URI
+    const response = await this._uploadToUri(uriResponse, content);
+
+    return {
+      success: response.status >= 200 && response.status < 300,
+      statusCode: response.status
+    };
   }
 
   /**
