@@ -18,14 +18,14 @@ import {
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
 import type {
-  EntityGetRecordsByIdOptions,
   EntityGetRecordByIdOptions,
-  EntityInsertOptions,
-  EntityBatchInsertOptions,
-  EntityUpdateOptions,
-  EntityDeleteOptions,
+  EntityInsertRecordOptions,
+  EntityInsertRecordsOptions,
+  EntityUpdateRecordsOptions,
+  EntityDeleteRecordsOptions,
   EntityRecord,
-  EntityDownloadAttachmentOptions
+  EntityDownloadAttachmentOptions,
+  EntityGetAllRecordsOptions
 } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -334,9 +334,9 @@ describe('EntityService Unit Tests', () => {
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const options: EntityGetRecordsByIdOptions = {
+      const options: EntityGetAllRecordsOptions = {
         pageSize: TEST_CONSTANTS.PAGE_SIZE
-      } as EntityGetRecordsByIdOptions;
+      } as EntityGetAllRecordsOptions;
 
       const result = await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options) as any;
 
@@ -368,9 +368,9 @@ describe('EntityService Unit Tests', () => {
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const options: EntityGetRecordsByIdOptions = {
+      const options: EntityGetAllRecordsOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-      } as EntityGetRecordsByIdOptions;
+      } as EntityGetAllRecordsOptions;
 
       await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
@@ -505,7 +505,7 @@ describe('EntityService Unit Tests', () => {
         recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
         createdBy: ENTITY_TEST_CONSTANTS.USER_ID
       };
-      const options: EntityInsertOptions = {
+      const options: EntityInsertRecordOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
       };
 
@@ -583,7 +583,7 @@ describe('EntityService Unit Tests', () => {
         recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
         createdBy: ENTITY_TEST_CONSTANTS.USER_ID
       }];
-      const options: EntityBatchInsertOptions = {
+      const options: EntityInsertRecordsOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
       };
@@ -687,10 +687,10 @@ describe('EntityService Unit Tests', () => {
           updatedBy: ENTITY_TEST_CONSTANTS.USER_ID
         }
       ];
-      const options: EntityUpdateOptions = {
+      const options: EntityUpdateRecordsOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
-      } as EntityUpdateOptions;
+      } as EntityUpdateRecordsOptions;
 
       // With expansionLevel, reference fields should be expanded in the response
       const mockResponse = createMockUpdateResponse(testData, {
@@ -781,9 +781,9 @@ describe('EntityService Unit Tests', () => {
 
     it('should delete records with options', async () => {
       const recordIds = [ENTITY_TEST_CONSTANTS.RECORD_ID];
-      const options: EntityDeleteOptions = {
+      const options: EntityDeleteRecordsOptions = {
         failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
-      } as EntityDeleteOptions;
+      } as EntityDeleteRecordsOptions;
 
       const mockResponse = createMockDeleteResponse(recordIds);
       mockApiClient.post.mockResolvedValue(mockResponse);
