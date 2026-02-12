@@ -8,7 +8,7 @@ import type { ConversationalAgentOptions } from '@/models/conversational-agent';
 import { SDKInternalsRegistry } from '@/core/internals';
 
 import { WEBSOCKET_HEADERS } from '@/utils/constants/headers';
-import { WEBSOCKET_LOGGER_PREFIX } from '../constants';
+import { WEBSOCKET_LOGGER_PREFIX } from '../../constants';
 
 /**
  * WebSocket session for Conversational Agent

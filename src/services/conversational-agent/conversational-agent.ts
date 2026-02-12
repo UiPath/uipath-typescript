@@ -4,7 +4,7 @@
 
 // Core SDK imports
 import type { IUiPath } from '@/core/types';
-import type { ConnectionStatus } from '@/core/websocket';
+import type { ConnectionStatusChangedHandler } from '@/core/websocket';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
@@ -19,8 +19,7 @@ import type {
 } from '@/models/conversational-agent';
 import {
   AgentMap,
-  createAgentWithMethods,
-  createAgentByIdWithMethods
+  createAgentWithMethods
 } from '@/models/conversational-agent';
 
 // Utils
@@ -41,7 +40,6 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * Creates an instance of the ConversationalAgent service.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
-   * @param options - Optional configuration
    */
   constructor(instance: IUiPath) {
     super(instance);
@@ -69,7 +67,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * cleanup();
    * ```
    */
-  onConnectionStatusChanged(handler: (status: ConnectionStatus, error: Error | null) => void): () => void {
+  onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {
     return this.conversations.onConnectionStatusChanged(handler);
   }
 
@@ -122,7 +120,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
   @track('ConversationalAgent.GetById')
   async getById(id: number, folderId: number): Promise<AgentGetByIdResponse> {
     const response = await this.get<RawAgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
-    return createAgentByIdWithMethods(
+    return createAgentWithMethods(
       transformData(response.data, AgentMap) as RawAgentGetByIdResponse,
       this.conversations
     );
