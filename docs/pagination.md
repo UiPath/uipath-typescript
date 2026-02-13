@@ -97,13 +97,17 @@ console.log(`Total count: ${allAssets.totalCount}`);
 ## Quick Reference Table
 
 | Service | Method | Supports `jumpToPage`? |
-|---------|---------|----------------------|
-| `sdk.assets` | `getAll()` | ✅ Yes |
-| `sdk.buckets` | `getAll()` | ✅ Yes | 
-| `sdk.buckets` | `getFiles()` | ❌ No | 
-| `sdk.entities` | `getAll()` | ✅ Yes | 
-| `sdk.processes` | `getAll()` | ✅ Yes | 
-| `sdk.processInstances` | `getAll()` | ❌ No | 
-| `sdk.queues` | `getAll()` | ✅ Yes | 
-| `sdk.tasks` | `getAll()` | ✅ Yes | 
-| `sdk.tasks` | `getUsers()` | ✅ Yes |
+|---------|--------|------------------------|
+| Assets | `getAll()` | ✅ Yes |
+| Buckets | `getAll()` | ✅ Yes |
+| Buckets | `getFileMetaData()` | ❌ No |
+| CaseInstances | `getAll()` | ❌ No |
+| CaseInstances | `getActionTasks()` | ✅ Yes |
+| ChoiceSets | `getById()` | ✅ Yes |
+| Entities | `getRecordsById()` | ✅ Yes |
+| Processes | `getAll()` | ✅ Yes |
+| ProcessInstances | `getAll()` | ❌ No |
+| Queues | `getAll()` | ✅ Yes |
+| Tasks | `getAll()` | ✅ Yes |
+| Tasks | `getUsers()` | ✅ Yes |
+
