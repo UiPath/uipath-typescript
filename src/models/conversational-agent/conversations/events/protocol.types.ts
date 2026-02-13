@@ -2,16 +2,16 @@
  * Event types for Conversational Agent WebSocket protocol
  */
 
-import {
+import type {
   CitationSource,
   ExternalValue,
-  InterruptType,
   JSONValue,
   MessageRole,
   MetaData,
   ToolCallInputValue,
   ToolCallOutputValue
 } from '../types/common.types';
+import { InterruptType } from '../types/common.types';
 
 /**
  * Identifies how sensitive the LLM should be when detecting the start or end of speech.
