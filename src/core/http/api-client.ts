@@ -71,17 +71,6 @@ export class ApiClient {
   private async getDefaultHeaders(): Promise<Record<string, string>> {
     // Get headers from execution context first
     const contextHeaders = this.executionContext.getHeaders();
-    
-    // If Authorization header is already set in context, use that
-    if (contextHeaders['Authorization']) {
-      return {
-        ...contextHeaders,
-        'Content-Type': CONTENT_TYPES.JSON,
-        ...this.defaultHeaders,
-        ...this.clientConfig.headers
-      };
-    }
-
     const token = await this.ensureValidToken();
 
     return {
