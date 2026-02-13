@@ -47,13 +47,13 @@ export interface AgentMethods {
   readonly conversations: AgentConversationServiceModel;
 
   /** Current WebSocket connection status */
-  readonly connectionStatus: ConnectionStatus;
+  get connectionStatus(): ConnectionStatus;
 
   /** Whether the WebSocket connection is currently active */
-  readonly isConnected: boolean;
+  get isConnected(): boolean;
 
   /** Current connection error, or `null` if none */
-  readonly connectionError: Error | null;
+  get connectionError(): Error | null;
 }
 
 /**
@@ -96,5 +96,8 @@ export function createAgentWithMethods<T extends RawAgentGetResponse>(
   conversationService: ConversationServiceModel
 ): T & AgentMethods {
   const methods = createAgentMethods(agentData, conversationService);
-  return Object.assign({}, agentData, methods) as T & AgentMethods;
+  return Object.defineProperties(
+    Object.assign({}, agentData),
+    Object.getOwnPropertyDescriptors(methods)
+  ) as T & AgentMethods;
 }
