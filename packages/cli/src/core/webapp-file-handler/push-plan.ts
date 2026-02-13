@@ -1,6 +1,6 @@
 import * as path from 'path';
 import chalk from 'chalk';
-import { PUSH_METADATA_FILENAME, PUSH_METADATA_RELATIVE_PATH } from '../../constants/api.js';
+import { STUDIO_METADATA_FILENAME, STUDIO_METADATA_RELATIVE_PATH } from '../../constants/api.js';
 import { MESSAGES } from '../../constants/index.js';
 import type {
   FileOperationPlan,
@@ -9,12 +9,7 @@ import type {
   ProjectFolder,
   StructuralMigration,
 } from './types.js';
-import { localPathToRemotePath, PUSH_METADATA_REMOTE_PATH } from './structure.js';
-
-/** Normalize path for comparison: forward slashes and lowercase to avoid false mismatches. */
-function normalizePathForComparison(p: string): string {
-  return p.replace(/\\/g, '/').toLowerCase();
-}
+import { localPathToRemotePath } from './structure.js';
 
 export interface PlanOptions {
   bundlePath: string;
@@ -88,8 +83,8 @@ export async function computeExecutionPlan(
       }
     } else {
       if (
-        localFile.path === PUSH_METADATA_RELATIVE_PATH ||
-        localFile.path === PUSH_METADATA_FILENAME
+        localFile.path === STUDIO_METADATA_RELATIVE_PATH ||
+        localFile.path === STUDIO_METADATA_FILENAME
       ) {
         continue;
       }
@@ -103,40 +98,29 @@ export async function computeExecutionPlan(
 
   for (const [filePath, remoteFile] of remoteFiles.entries()) {
     if (
-      filePath === PUSH_METADATA_REMOTE_PATH ||
-      filePath === PUSH_METADATA_RELATIVE_PATH ||
-      filePath === PUSH_METADATA_FILENAME
+      filePath === STUDIO_METADATA_RELATIVE_PATH ||
+      filePath === STUDIO_METADATA_FILENAME
     ) {
       continue;
     }
     if (processedFileIds.has(remoteFile.id)) continue;
-    const normalizedRemote = normalizePathForComparison(filePath);
+    const normalizedRemote = filePath.replace(/\\/g, '/');
     if (!localRemotePaths.has(normalizedRemote)) {
       plan.deleteFiles.push({ fileId: remoteFile.id, path: filePath });
     }
   }
 
-  // Normalize folder paths for comparison so case or slash differences don't create false "new" folders.
-  const requiredFoldersNormalized = new Set(
-    [...requiredFolders].map(normalizePathForComparison)
-  );
-  const remoteFoldersByNormalized = new Map<string, string>();
-  for (const key of remoteFolders.keys()) {
-    remoteFoldersByNormalized.set(normalizePathForComparison(key), key);
-  }
   for (const folderPath of requiredFolders) {
-    const normalized = normalizePathForComparison(folderPath);
-    if (!remoteFoldersByNormalized.has(normalized)) {
+    if (!remoteFolders.has(folderPath)) {
       plan.createFolders.push({ path: folderPath });
     }
   }
 
   const contentRootPrefix = remoteContentRoot + '/';
-  const normalizedContentRootPrefix = normalizePathForComparison(contentRootPrefix);
   for (const [folderPath, folder] of remoteFolders.entries()) {
-    const normalizedFolder = normalizePathForComparison(folderPath);
-    if (requiredFoldersNormalized.has(normalizedFolder)) continue;
-    const isUnderContentRoot = normalizedFolder.startsWith(normalizedContentRootPrefix);
+    if (requiredFolders.has(folderPath)) continue;
+    const normalizedRemote = folderPath.replace(/\\/g, '/');
+    const isUnderContentRoot = normalizedRemote.startsWith(contentRootPrefix);
     if (isUnderContentRoot && folder.id) {
       plan.deleteFolders.push({ folderId: folder.id, path: folderPath });
     }
@@ -168,8 +152,8 @@ export function computeFirstPushPlan(
 
   for (const localFile of localFiles) {
     if (
-      localFile.path === PUSH_METADATA_RELATIVE_PATH ||
-      localFile.path === PUSH_METADATA_FILENAME
+      localFile.path === STUDIO_METADATA_RELATIVE_PATH ||
+      localFile.path === STUDIO_METADATA_FILENAME
     ) {
       continue;
     }

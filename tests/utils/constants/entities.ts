@@ -86,6 +86,5 @@ export const ENTITY_TEST_CONSTANTS = {
   ERROR_MESSAGE_INSERT_UNIQUENESS: 'Insert data failed. Value uniqueness violation.',
   ERROR_MESSAGE_ENTITY_ID_UNDEFINED: 'Entity ID is undefined',
   ERROR_MESSAGE_ENTITY_NAME_UNDEFINED: 'Entity name is undefined',
-  ERROR_MESSAGE_RECORD_ID_UNDEFINED: 'Record ID is undefined',
 } as const;
 

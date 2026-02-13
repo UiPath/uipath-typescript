@@ -1,4 +1,3 @@
-import path from 'path';
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
 import type {
@@ -15,7 +14,7 @@ import {
 import { collectLocalFiles, computeHash } from './local-files.js';
 import { computeExecutionPlan, computeFirstPushPlan } from './push-plan.js';
 import * as api from './api.js';
-import { prepareMetadataFileForPlan, uploadPushMetadataToRemote } from './metadata.js';
+import { prepareMetadataFileForPlan } from './metadata.js';
 import {
   buildFolderIdMap,
   ensureContentRootExists,
@@ -119,8 +118,7 @@ export class WebAppFileHandler {
     await prepareMetadataFileForPlan(
       this.config,
       fullRemoteFiles,
-      (config, fileId) => api.downloadRemoteFile(config, fileId),
-      plan
+      (config, fileId) => api.downloadRemoteFile(config, fileId)
     );
 
     const folderIdMap = buildFolderIdMap(this.projectStructure!);
@@ -181,21 +179,6 @@ export class WebAppFileHandler {
       () => api.fetchRemoteStructure(this.config),
       this.lockKey
     );
-
-    this.config.logger.log(chalk.gray('[push] Uploading metadata to remote...'));
-    const metadataPath = path.join(this.config.rootDir, this.config.manifestFile);
-    try {
-      await uploadPushMetadataToRemote(
-        this.config,
-        metadataPath,
-        fullRemoteFiles,
-        folderIdMap,
-        this.lockKey
-      );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.config.logger.log(chalk.yellow(MESSAGES.ERRORS.PUSH_METADATA_UPLOAD_FAILED_PREFIX + msg));
-    }
     this.config.logger.log(chalk.gray('[push] Done.'));
   }
 

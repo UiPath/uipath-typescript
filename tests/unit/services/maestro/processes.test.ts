@@ -23,13 +23,13 @@ describe('MaestroProcessesService', () => {
 
   beforeEach(async () => {
     // Create mock instances using centralized setup
-    const { instance } = createServiceTestDependencies();
+    const { config, executionContext, tokenManager } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
     vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 
-    service = new MaestroProcessesService(instance);
+    service = new MaestroProcessesService(config, executionContext, tokenManager);
   });
 
   afterEach(() => {

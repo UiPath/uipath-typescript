@@ -2,9 +2,6 @@ import type { ProjectFile, ProjectFolder, ProjectStructure } from './types.js';
 
 export const REMOTE_SOURCE_FOLDER_NAME = 'source';
 
-/** Remote path for push metadata file (under source, not under build dir). */
-export const PUSH_METADATA_REMOTE_PATH = `${REMOTE_SOURCE_FOLDER_NAME}/push_metadata.json`;
-
 /** Normalize bundle path (strip leading/trailing slashes, use forward slashes). */
 function normalizeBundlePath(bundlePath: string): string {
   return bundlePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '') || bundlePath;

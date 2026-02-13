@@ -35,13 +35,11 @@ export class ApiClient {
   }
 
   /**
-   * Gets a valid authentication token, refreshing if necessary.
-   * Used internally for API requests and exposed for services that need manual auth headers.
-   *
+   * Checks if the current token needs refresh and refreshes it if necessary
    * @returns The valid token
-   * @throws AuthenticationError if no token available or refresh fails
+   * @throws Error if token refresh fails
    */
-  public async getValidToken(): Promise<string> {
+  private async ensureValidToken(): Promise<string> {
     // Try to get token info from context
     const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
     
@@ -84,7 +82,7 @@ export class ApiClient {
       };
     }
 
-    const token = await this.getValidToken();
+    const token = await this.ensureValidToken();
 
     return {
       ...contextHeaders,

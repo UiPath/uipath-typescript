@@ -1,4 +1,4 @@
-import { parseJWT } from '../core/oidc.js';
+import { AccessTokenData, parseJWT } from '../core/oidc.js';
 import inquirer from 'inquirer';
 import { getPortalApiUrl } from '../utils/url.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
@@ -72,6 +72,7 @@ export const getTenantsAndOrganization = async (
 
 export const selectTenantInteractive = async (
   data: TenantsAndOrganizationResponse,
+  domain: string
 ): Promise<SelectedTenant> => {
   if (!data.organization) {
     throw new Error('No organization found');

@@ -4,22 +4,7 @@ import typescript from '@rollup/plugin-typescript'; // Compiles TypeScript to Ja
 import dts from 'rollup-plugin-dts';              // Generates TypeScript declaration files
 import json from '@rollup/plugin-json';           // Imports JSON files as ES6 modules
 import builtins from 'builtin-modules';           // List of Node.js built-in modules (fs, crypto, etc.)
-import { readFileSync } from 'fs';
-
-// Custom plugin to rewrite import paths in .d.ts files
-// This normalizes core import paths to '../core/index' for cleaner output
-function rewriteDtsImports() {
-  return {
-    name: 'rewrite-dts-imports',
-    renderChunk(code) {
-      return code.replace(
-        /from ['"](?:(?:\.\.\/)+|@\/)core\/(?:types|uipath|index)['"]/g,
-        "from '../core/index'"
-      );
-    }
-  };
-}
-
+import { readFileSync } from 'fs'; 
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
@@ -80,7 +65,7 @@ const configs = [
     plugins: createPlugins(false),
     external: allDependencies
   },
-
+  
   // CommonJS bundle (for Node.js and older bundlers)
   {
     input: 'src/index.ts',              // Entry point of the SDK
@@ -93,7 +78,7 @@ const configs = [
     plugins: createPlugins(false),
     external: allDependencies
   },
-
+  
   // UMD bundle (for browsers via script tag or older bundlers)
   {
     input: 'src/index.ts',              // Entry point of the SDK
@@ -105,99 +90,37 @@ const configs = [
     },
     plugins: createBrowserPlugins()
   },
-
-  // Main type definitions
+  
+  // Type definitions for ESM (.mts extension for ESM types)
   {
-    input: 'src/index.ts',
+    input: 'src/index.ts',              // Entry point for types
     output: {
-      file: 'dist/index.d.ts',
+      file: 'dist/index.d.mts',        // TypeScript declaration file for ESM
+      format: 'es'
+    },
+    plugins: [dts()]
+  },
+  
+  // Type definitions for CommonJS (.cts extension for CJS types)
+  {
+    input: 'src/index.ts',              // Entry point for types
+    output: {
+      file: 'dist/index.d.cts',        // TypeScript declaration file for CJS
+      format: 'es'
+    },
+    plugins: [dts()]
+  },
+  
+  // Main type definitions (for legacy TypeScript and package.json "types" field)
+  {
+    input: 'src/index.ts',              // Entry point for types
+    output: {
+      file: 'dist/index.d.ts',         // Main TypeScript declaration file
       format: 'es'
     },
     plugins: [dts()]
   }
 ];
 
-// Service-level entry points for modular imports
-const serviceEntries = [
-  {
-    name: 'core',
-    input: 'src/core/index.ts',
-    output: 'core/index'
-  },
-  {
-    name: 'entities',
-    input: 'src/services/data-fabric/index.ts',
-    output: 'entities/index'
-  },
-  {
-    name: 'tasks',
-    input: 'src/services/action-center/index.ts',
-    output: 'tasks/index'
-  },
-  {
-    name: 'assets',
-    input: 'src/services/orchestrator/assets/index.ts',
-    output: 'assets/index'
-  },
-  {
-    name: 'queues',
-    input: 'src/services/orchestrator/queues/index.ts',
-    output: 'queues/index'
-  },
-  {
-    name: 'buckets',
-    input: 'src/services/orchestrator/buckets/index.ts',
-    output: 'buckets/index'
-  },
-  {
-    name: 'processes',
-    input: 'src/services/orchestrator/processes/index.ts',
-    output: 'processes/index'
-  },
-  {
-    name: 'cases',
-    input: 'src/services/maestro/cases/index.ts',
-    output: 'cases/index'
-  },
-  {
-    name: 'maestro-processes',
-    input: 'src/services/maestro/processes/index.ts',
-    output: 'maestro-processes/index'
-  }
-];
-
-// Generate ESM, CJS, and DTS builds for each service entry
-serviceEntries.forEach(({ name, input, output }) => {
-  // ESM bundle
-  configs.push({
-    input,
-    output: { file: `dist/${output}.mjs`, format: 'es', inlineDynamicImports: true },
-    plugins: createPlugins(false),
-    external: allDependencies
-  });
-
-  // CommonJS bundle
-  configs.push({
-    input,
-    output: { file: `dist/${output}.cjs`, format: 'cjs', exports: 'named', inlineDynamicImports: true },
-    plugins: createPlugins(false),
-    external: allDependencies
-  });
-
-  // Type definitions
-  // Mark core types as external to avoid duplication (cleaner output, smaller files)
-  const isCore = name === 'core';
-  const dtsExternal = isCore ? [] : [/src\/core\//, /\.\.\/core/, /^@\/core/];
-
-  configs.push({
-    input,
-    output: { file: `dist/${output}.d.ts`, format: 'es' },
-    plugins: isCore
-      ? [dts()]
-      : [dts(), rewriteDtsImports()],
-    external: dtsExternal
-  });
-});
-
 // Export all build configurations
-export default configs;
+export default configs; 

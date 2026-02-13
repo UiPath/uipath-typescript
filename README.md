@@ -73,9 +73,7 @@ pnpm add @uipath/uipath-typescript
 ### Quick Start
 
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
-import { Tasks } from '@uipath/uipath-typescript/tasks';
+import { UiPath } from '@uipath/uipath-typescript';
 
 // Initialize the SDK with OAuth
 const sdk = new UiPath({
@@ -90,13 +88,9 @@ const sdk = new UiPath({
 // Initialize OAuth flow
 await sdk.initialize();
 
-// Create service instances
-const maestroProcesses = new MaestroProcesses(sdk);
-const tasks = new Tasks(sdk);
-
 // Use the services
-const processes = await maestroProcesses.getAll();
-const allTasks = await tasks.getAll();
+const processes = await sdk.maestro.processes.getAll();
+const tasks = await sdk.tasks.getAll();
 ```
 
 <div align="right">
@@ -117,8 +111,6 @@ For OAuth, first create a non confidential [External App](https://docs.uipath.co
 <summary><strong>1. OAuth Authentication (Recommended)</strong></summary>
 
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
@@ -138,13 +130,11 @@ await sdk.initialize();
 <summary><strong>2. Secret-based Authentication</strong></summary>
 
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 ```
 
@@ -162,26 +152,19 @@ The `initialize()` method completes the authentication process for the SDK:
 
 #### Example: Secret Authentication (Auto-initialized)
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { Tasks } from '@uipath/uipath-typescript/tasks';
-
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 
 // Ready to use immediately - no initialize() needed
-const tasks = new Tasks(sdk);
-const allTasks = await tasks.getAll();
+const tasks = await sdk.tasks.getAll();
 ```
 
 #### Example: OAuth Authentication (Requires initialize)
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { Tasks } from '@uipath/uipath-typescript/tasks';
-
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
@@ -195,10 +178,9 @@ const sdk = new UiPath({
 try {
   await sdk.initialize();
   console.log('SDK initialized successfully');
-
+  
   // Now you can use the SDK
-  const tasks = new Tasks(sdk);
-  const allTasks = await tasks.getAll();
+  const tasks = await sdk.tasks.getAll();
 } catch (error) {
   console.error('Failed to initialize SDK:', error);
 }
@@ -213,8 +195,6 @@ try {
 
 #### Auto-login on App Load
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
 useEffect(() => {
   const initSDK = async () => {
     const sdk = new UiPath({...oauthConfig});
@@ -257,129 +237,108 @@ useEffect(() => {
 
 ## Usage
 
-The SDK provides access to the following services through modular imports:
+The SDK provides access to the following services through a consistent API:
 
-- `MaestroProcesses` from `@uipath/uipath-typescript/maestro-processes` - Manage agentic maestro processes
-- `ProcessInstances` from `@uipath/uipath-typescript/maestro-processes` - Manage maestro process executions
-- `Cases` from `@uipath/uipath-typescript/cases` - Manage maestro case management processes
-- `CaseInstances` from `@uipath/uipath-typescript/cases` - Manage maestro case executions
-- `Tasks` from `@uipath/uipath-typescript/tasks` - Create and manage tasks
-- `Entities` from `@uipath/uipath-typescript/entities` - Data Fabric entity operations
-- `Processes` from `@uipath/uipath-typescript/processes` - Manage Orchestrator processes
-- `Buckets` from `@uipath/uipath-typescript/buckets` - Manage storage buckets in Orchestrator
-- `Queues` from `@uipath/uipath-typescript/queues` - Manage Orchestrator queues
-- `Assets` from `@uipath/uipath-typescript/assets` - Manage Orchestrator assets
+- `sdk.maestro.processes` - Manage agentic maestro processes
+- `sdk.maestro.processes.instances` - Manage maestro process executions
+- `sdk.maestro.cases` - Manage maestro case management processes
+- `sdk.maestro.cases.instances` - Manage maestro case executions
+- `sdk.tasks` - Create and manage tasks
+- `sdk.entities` - Data Fabric entity operations
+- `sdk.processes` - Manage Orchestrator processes
+- `sdk.buckets` - Manage storage buckets in Orchestrator
+- `sdk.queues` - Manage Orchestrator queues
+- `sdk.assets` - Manage Orchestrator assets
 
 <details>
 <summary><strong>View Example Usage</strong></summary>
 
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { MaestroProcesses, ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
-import { Cases, CaseInstances } from '@uipath/uipath-typescript/cases';
-import { Tasks, TaskType } from '@uipath/uipath-typescript/tasks';
-import { Processes } from '@uipath/uipath-typescript/processes';
-import { Buckets } from '@uipath/uipath-typescript/buckets';
-import { Entities } from '@uipath/uipath-typescript/entities';
-
-// Initialize SDK
-const sdk = new UiPath({ /* config */ });
-
-// Create service instances
-const maestroProcesses = new MaestroProcesses(sdk);
-const processInstances = new ProcessInstances(sdk);
-const cases = new Cases(sdk);
-const caseInstances = new CaseInstances(sdk);
-const tasks = new Tasks(sdk);
-const processes = new Processes(sdk);
-const buckets = new Buckets(sdk);
-const entities = new Entities(sdk);
-
 // Maestro - Get processes and their instances
-const allProcesses = await maestroProcesses.getAll();
-const instances = await processInstances.getAll({
+const processes = await sdk.maestro.processes.getAll();
+const instances = await sdk.maestro.processes.instances.getAll({
   processKey: 'my-process',
   pageSize: 10
 });
 
 // Control Process Instances
-await processInstances.pause(instanceId, 'folder-key');
-await processInstances.resume(instanceId, 'folder-key');
-await processInstances.cancel(instanceId, 'folder-key', {
+await sdk.maestro.processes.instances.pause(instanceId, 'folder-key');
+await sdk.maestro.processes.instances.resume(instanceId, 'folder-key');
+await sdk.maestro.processes.instances.cancel(instanceId, 'folder-key', {
   comment: 'Cancelled due to error'
 });
 
 // Maestro Case Instances
-const caseInstance = await caseInstances.getById(instanceId, 'folder-key');
-const stages = await caseInstances.getStages(instanceId, 'folder-key');
+const caseInstance = await sdk.maestro.cases.instances.getById(instanceId, 'folder-key');
+const stages = await sdk.maestro.cases.instances.getStages(instanceId, 'folder-key');
 
 // Control Case Instances
-await caseInstances.close(instanceId, 'folder-key', {
+await sdk.maestro.cases.instances.close(instanceId, 'folder-key', {
   comment: 'Case resolved successfully'
 });
 
 // Orchestrator Processes - Start a process
-const result = await processes.start({
+const result = await sdk.processes.start({
   processKey: 'MyProcess_Key',
 }, folderId);
 
 // Tasks - Create, assign, and complete
-const task = await tasks.create({
+const task = await sdk.tasks.create({
   title: 'Review Invoice',
   priority: 'High'
 }, folderId);
 
-await tasks.assign({
+await sdk.tasks.assign({
   taskId: task.id,
   userNameOrEmail: 'user@company.com'
 }, folderId);
 
-await tasks.complete(TaskType.App, {
+await sdk.tasks.complete(TaskType.App, {
   taskId: task.id,
   data: {},
   action: 'submit'
 }, folderId);
 
 // Buckets - File operations
-const bucket = await buckets.getById(bucketId, folderId);
-const fileMetadata = await buckets.getFileMetaData(bucketId, folderId, {
+const bucket = await sdk.buckets.getById(bucketId, folderId);
+const fileMetadata = await sdk.buckets.getFileMetaData(bucketId, folderId, {
   prefix: '/invoices/'
 });
 
 // Upload file
-await buckets.uploadFile({
+await sdk.buckets.uploadFile({
   bucketId: bucketId,
   folderId: folderId,
   prefix: '/folder1'
 });
 
 // Get download URL
-const downloadUrl = await buckets.getReadUri({
+const downloadUrl = await sdk.buckets.getReadUri({
   bucketId: bucketId,
   folderId: folderId,
   path: '/folder/file.pdf'
 });
 
 // Data Fabric Entities - CRUD operations
-const entity = await entities.getById('entity-uuid');
-const records = await entities.getAllRecords('entity-uuid', {
+const entity = await sdk.entities.getById('entity-uuid');
+const records = await sdk.entities.getRecordsById('entity-uuid', {
   pageSize: 100,
   expansionLevel: 1
 });
 
 // Insert records
-await entities.insertRecordsById('entity-uuid', [
+await sdk.entities.batchInsertById('entity-uuid', [
   { name: 'John Doe', email: 'john@company.com', status: 'Active' },
   { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' }
 ]);
 
 // Update records
-await entities.updateRecordsById('entity-uuid', [
+await sdk.entities.updateById('entity-uuid', [
   { Id: 'record-id-1', status: 'Inactive' }
 ]);
 
 // Delete records
-await entities.deleteRecordsById('entity-uuid', ['record-id-1', 'record-id-2']);
+await sdk.entities.deleteById('entity-uuid', ['record-id-1', 'record-id-2']);
 ```
 
 </details>

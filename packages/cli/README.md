@@ -194,7 +194,7 @@ Push your local web app build to a Studio Web project. Syncs files under a build
 **Prerequisites:**
 - Environment variables set (see [Prerequisites](#prerequisites)), or pass `--orgId`, `--tenantId`, `--accessToken` (and optionally `--baseUrl`, `--tenantName`) for non-interactive use. `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
 - A built app (e.g. `dist/`, `build/`, or `out/`) at the project root.
-- Optional: `bindings.json` at the project root for resource import; `.uipath/push_metadata.json` for push metadata (created/updated on push).
+- Optional: `bindings.json` at the project root for resource import; `.uipath/studio_metadata.json` for metadata.
 
 ```bash
 # Push using project ID from environment

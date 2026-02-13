@@ -43,7 +43,7 @@ describe('AssetService Unit Tests', () => {
 
   beforeEach(() => {
     // Create mock instances using centralized setup
-    const { instance } = createServiceTestDependencies();
+    const { config, executionContext, tokenManager } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
@@ -52,7 +52,7 @@ describe('AssetService Unit Tests', () => {
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    assetService = new AssetService(instance);
+    assetService = new AssetService(config, executionContext, tokenManager);
   });
 
   afterEach(() => {

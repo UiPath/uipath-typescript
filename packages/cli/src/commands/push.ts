@@ -1,7 +1,7 @@
 import { Command, Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import * as path from 'path';
-import { PUSH_METADATA_RELATIVE_PATH } from '../constants/api.js';
+import { STUDIO_METADATA_RELATIVE_PATH } from '../constants/api.js';
 import { AUTH_CONSTANTS, MESSAGES } from '../constants/index.js';
 import { getEnvironmentConfig } from '../utils/env-config.js';
 import { WebAppFileHandler } from '../core/webapp-file-handler/index.js';
@@ -83,7 +83,7 @@ export default class Push extends Command {
       projectId,
       rootDir,
       bundlePath,
-      manifestFile: PUSH_METADATA_RELATIVE_PATH,
+      manifestFile: STUDIO_METADATA_RELATIVE_PATH,
       envConfig,
       logger: this,
     });

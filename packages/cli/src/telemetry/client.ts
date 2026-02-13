@@ -26,6 +26,8 @@ import {
 import { AUTH_CONSTANTS } from '../constants/auth.js';
 import { TelemetryAttributes } from './types.js';
 
+const { FILES } = AUTH_CONSTANTS;
+
 /**
  * Singleton CLI telemetry client
  */

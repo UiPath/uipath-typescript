@@ -9,17 +9,6 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  * Service for managing UiPath Data Fabric Choice Sets
  *
  * Choice Sets are enumerated lists of values that can be used as field types in entities. They enable single-select or multi-select fields, such as expense types, categories, or status values. [UiPath Choice Sets Guide](https://docs.uipath.com/data-service/automation-cloud/latest/user-guide/choice-sets)
- *
- * ### Usage
- *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
- *
- * ```typescript
- * import { ChoiceSets } from '@uipath/uipath-typescript/entities';
- *
- * const choicesets = new ChoiceSets(sdk);
- * const allChoiceSets = await choicesets.getAll();
- * ```
  */
 export interface ChoiceSetServiceModel {
   /**
@@ -30,17 +19,17 @@ export interface ChoiceSetServiceModel {
    * @example
    * ```typescript
    * // Get all choice sets
-   * const allChoiceSets = await choicesets.getAll();
+   * const choiceSets = await sdk.entities.choicesets.getAll();
    *
    * // Iterate through choice sets
-   * allChoiceSets.forEach(choiceSet => {
+   * choiceSets.forEach(choiceSet => {
    *   console.log(`ChoiceSet: ${choiceSet.displayName} (${choiceSet.name})`);
    *   console.log(`Description: ${choiceSet.description}`);
    *   console.log(`Created by: ${choiceSet.createdBy}`);
    * });
    *
    * // Find a specific choice set by name
-   * const expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');
+   * const expenseTypes = choiceSets.find(cs => cs.name === 'ExpenseTypes');
    *
    * // Check choice set details
    * if (expenseTypes) {
@@ -65,12 +54,12 @@ export interface ChoiceSetServiceModel {
    * @example
    * ```typescript
    * // First, get the choice set ID using getAll()
-   * const allChoiceSets = await choicesets.getAll();
-   * const expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');
+   * const choiceSets = await sdk.entities.choicesets.getAll();
+   * const expenseTypes = choiceSets.find(cs => cs.name === 'ExpenseTypes');
    * const choiceSetId = expenseTypes.id;
    *
    * // Get all values (non-paginated)
-   * const values = await choicesets.getById(choiceSetId);
+   * const values = await sdk.entities.choicesets.getById(choiceSetId);
    *
    * // Iterate through choice set values
    * for (const value of values.items) {
@@ -78,11 +67,11 @@ export interface ChoiceSetServiceModel {
    * }
    *
    * // First page with pagination
-   * const page1 = await choicesets.getById(choiceSetId, { pageSize: 10 });
+   * const page1 = await sdk.entities.choicesets.getById(choiceSetId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
+   *   const page2 = await sdk.entities.choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
    * }
    * ```
    */

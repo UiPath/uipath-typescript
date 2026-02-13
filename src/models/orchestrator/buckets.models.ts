@@ -3,19 +3,8 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 
 /**
  * Service for managing UiPath storage Buckets.
- *
+ * 
  * Buckets are cloud storage containers that can be used to store and manage files used by automation processes. [UiPath Buckets Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-storage-buckets)
- *
- * ### Usage
- *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
- *
- * ```typescript
- * import { Buckets } from '@uipath/uipath-typescript/buckets';
- *
- * const buckets = new Buckets(sdk);
- * const allBuckets = await buckets.getAll();
- * ```
  */
 export interface BucketServiceModel {
   /**
@@ -31,28 +20,28 @@ export interface BucketServiceModel {
    * @example
    * ```typescript
    * // Get all buckets across folders
-   * const allBuckets = await buckets.getAll();
-   *
+   * const buckets = await sdk.buckets.getAll();
+   * 
    * // Get buckets within a specific folder
-   * const folderBuckets = await buckets.getAll({
+   * const buckets = await sdk.buckets.getAll({ 
    *   folderId: <folderId>
    * });
-   *
+   * 
    * // Get buckets with filtering
-   * const filteredBuckets = await buckets.getAll({
+   * const buckets = await sdk.buckets.getAll({ 
    *   filter: "name eq 'MyBucket'"
    * });
-   *
+   * 
    * // First page with pagination
-   * const page1 = await buckets.getAll({ pageSize: 10 });
-   *
+   * const page1 = await sdk.buckets.getAll({ pageSize: 10 });
+   * 
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await buckets.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await sdk.buckets.getAll({ cursor: page1.nextCursor });
    * }
-   *
+   * 
    * // Jump to specific page
-   * const page5 = await buckets.getAll({
+   * const page5 = await sdk.buckets.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -75,7 +64,7 @@ export interface BucketServiceModel {
    * @example
    * ```typescript
    * // Get bucket by ID
-   * const bucket = await buckets.getById(<bucketId>, <folderId>);
+   * const bucket = await sdk.buckets.getById(<bucketId>, <folderId>);
    * ```
    */
   getById(bucketId: number, folderId: number, options?: BucketGetByIdOptions): Promise<BucketGetResponse>;
@@ -95,19 +84,19 @@ export interface BucketServiceModel {
    * @example
    * ```typescript
    * // Get metadata for all files in a bucket
-   * const fileMetadata = await buckets.getFileMetaData(<bucketId>, <folderId>);
-   *
+   * const fileMetadata = await sdk.buckets.getFileMetaData(<bucketId>, <folderId>);
+   * 
    * // Get file metadata with a specific prefix
-   * const prefixMetadata = await buckets.getFileMetaData(<bucketId>, <folderId>, {
+   * const fileMetadata = await sdk.buckets.getFileMetaData(<bucketId>, <folderId>, {
    *   prefix: '/folder1'
    * });
-   *
+   * 
    * // First page with pagination
-   * const page1 = await buckets.getFileMetaData(<bucketId>, <folderId>, { pageSize: 10 });
-   *
+   * const page1 = await sdk.buckets.getFileMetaData(<bucketId>, <folderId>, { pageSize: 10 });
+   * 
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await buckets.getFileMetaData(<bucketId>, <folderId>, { cursor: page1.nextCursor });
+   *   const page2 = await sdk.buckets.getFileMetaData(<bucketId>, <folderId>, { cursor: page1.nextCursor });
    * }
    * ```
    */
@@ -130,8 +119,8 @@ export interface BucketServiceModel {
    * @example
    * ```typescript
    * // Get download URL for a file
-   * const fileAccess = await buckets.getReadUri({
-   *   bucketId: <bucketId>,
+   * const fileAccess = await sdk.buckets.getReadUri({
+   *   bucketId: <bucketId>, 
    *   folderId: <folderId>,
    *   path: '/folder/file.pdf'
    * });
@@ -149,20 +138,20 @@ export interface BucketServiceModel {
    * ```typescript
    * // Upload a file from browser
    * const file = new File(['file content'], 'example.txt');
-   * const result = await buckets.uploadFile({
+   * const result = await sdk.buckets.uploadFile({
    *   bucketId: <bucketId>,
-   *   folderId: <folderId>,
+   *   folderId: <folderId>, 
    *   path: '/folder/example.txt',
    *   content: file
    * });
-   *
-   * // In Node env with Uint8Array or Buffer
-   * const content = new TextEncoder().encode('file content');
-   * const result = await buckets.uploadFile({
+   * 
+   * // In Node env with Buffer
+   * const buffer = Buffer.from('file content');
+   * const result = await sdk.buckets.uploadFile({
    *   bucketId: <bucketId>,
    *   folderId: <folderId>,
    *   path: '/folder/example.txt',
-   *   content,
+   *   content: buffer,
    * });
    * ```
    */

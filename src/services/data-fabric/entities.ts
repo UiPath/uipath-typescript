@@ -1,20 +1,17 @@
 import { BaseService } from '../base';
+import { Config } from '../../core/config/config';
+import { ExecutionContext } from '../../core/context/execution';
+import { TokenManager } from '../../core/auth/token-manager';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
-  EntityGetAllRecordsOptions,
-  EntityGetRecordByIdOptions,
   EntityInsertOptions,
-  EntityInsertRecordOptions,
   EntityBatchInsertOptions,
-  EntityInsertRecordsOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
   EntityUpdateOptions,
-  EntityUpdateRecordsOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
-  EntityDeleteRecordsOptions,
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
@@ -37,26 +34,31 @@ import { track } from '../../core/telemetry';
  */
 export class EntityService extends BaseService implements EntityServiceModel {
   /**
+   * @hideconstructor
+   */
+  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
+    super(config, executionContext, tokenManager);
+  }
+
+  /**
    * Gets entity metadata by entity ID with attached operation methods
-   *
+   * 
    * @param id - UUID of the entity
    * @returns Promise resolving to entity metadata with schema information and operation methods
-   *
+   * 
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   * const entity = await entities.getById("<entityId>");
-   *
+   * // Get entity metadata with methods
+   * const entity = await sdk.entities.getById("<entityId>");
+   * 
    * // Call operations directly on the entity
-   * const records = await entity.getAllRecords();
-   *
+   * const records = await entity.getRecords();
+   * 
    * // Insert a single record
-   * const insertResult = await entity.insertRecord({ name: "John", age: 30 });
+   * const insertResult = await entity.insert({ name: "John", age: 30 });
    *
    * // Or batch insert multiple records
-   * const batchResult = await entity.insertRecords([
+   * const batchResult = await entity.batchInsert([
    *     { name: "Jane", age: 25 },
    *     { name: "Bob", age: 35 }
    * ]);
@@ -81,41 +83,37 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Gets entity records by entity ID
-   *
+   * 
    * @param entityId - UUID of the entity
    * @param options - Query options including expansionLevel and pagination options
    * @returns Promise resolving to an array of entity records or paginated response
-   *
+   * 
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
    * // Basic usage (non-paginated)
-   * const records = await entities.getAllRecords("<entityId>");
-   *
+   * const records = await sdk.entities.getRecordsById(<entityId>);
+   * 
    * // With expansion level
-   * const records = await entities.getAllRecords("<entityId>", {
+   * const records = await sdk.entities.getRecordsById(<entityId>, {
    *   expansionLevel: 1
    * });
-   *
+   * 
    * // With pagination
-   * const paginatedResponse = await entities.getAllRecords("<entityId>", {
+   * const paginatedResponse = await sdk.entities.getRecordsById(<entityId>, {
    *   pageSize: 50,
    *   expansionLevel: 1
    * });
-   *
+   * 
    * // Navigate to next page
-   * const nextPage = await entities.getAllRecords("<entityId>", {
+   * const nextPage = await sdk.entities.getRecordsById(<entityId>, {
    *   cursor: paginatedResponse.nextCursor,
    *   expansionLevel: 1
    * });
    * ```
    */
-  @track('Entities.GetAllRecords')
-  async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
-    entityId: string,
+  @track('Entities.GetRecordsById')
+  async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+    entityId: string, 
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -140,47 +138,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Gets a single entity record by entity ID and record ID
-   *
-   * @param entityId - UUID of the entity
-   * @param recordId - UUID of the record
-   * @param options - Query options including expansionLevel
-   * @returns Promise resolving to the entity record
-   *
-   * @example
-   * ```typescript
-   * // Basic usage
-   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>);
-   *
-   * // With expansion level
-   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>, {
-   *   expansionLevel: 1
-   * });
-   * ```
-   */
-  @track('Entities.GetRecordById')
-  async getRecordById(
-    entityId: string,
-    recordId: string,
-    options: EntityGetRecordByIdOptions = {}
-  ): Promise<EntityRecord> {
-    const params = createParams({
-      expansionLevel: options.expansionLevel
-    });
-
-    const response = await this.get<EntityRecord>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(entityId, recordId),
-      { params }
-    );
-
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    // Apply EntityMap transformations
-    const transformedResponse = transformData(camelResponse, EntityMap);
-    return transformedResponse;
-  }
-   
-  /**
    * Inserts a single record into an entity by entity ID
    *
    * @param entityId - UUID of the entity
@@ -190,21 +147,17 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
    * // Basic usage
-   * const result = await entities.insertRecordById("<entityId>", { name: "John", age: 30 });
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 });
    *
    * // With options
-   * const result = await entities.insertRecordById("<entityId>", { name: "John", age: 30 }, {
+   * const result = await sdk.entities.insertById(<entityId>, { name: "John", age: 30 }, {
    *   expansionLevel: 1
    * });
    * ```
    */
-  @track('Entities.InsertRecordById')
-  async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
+  @track('Entities.InsertById')
+  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel
     });
@@ -233,18 +186,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
    * // Basic usage
-   * const result = await entities.insertRecordsById("<entityId>", [
+   * const result = await sdk.entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ]);
    *
    * // With options
-   * const result = await entities.insertRecordsById("<entityId>", [
+   * const result = await sdk.entities.batchInsertById(<entityId>, [
    *   { name: "John", age: 30 },
    *   { name: "Jane", age: 25 }
    * ], {
@@ -253,8 +202,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.InsertRecordsById')
-  async insertRecordsById(id: string, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
+  @track('Entities.BatchInsertById')
+  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
@@ -276,27 +225,23 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Updates data in an entity by entity ID
-   *
+   * 
    * @param entityId - UUID of the entity
    * @param data - Array of records to update. Each record MUST contain the record Id,
    *               otherwise the update will fail.
    * @param options - Update options
    * @returns Promise resolving to update response
-   *
+   * 
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
    * // Basic usage
-   * const result = await entities.updateRecordsById("<entityId>", [
+   * const result = await sdk.entities.updateById(<entityId>, [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ]);
-   *
+   * 
    * // With options
-   * const result = await entities.updateRecordsById("<entityId>", [
+   * const result = await sdk.entities.updateById(<entityId>, [
    *   { Id: "123", name: "John Updated", age: 31 },
    *   { Id: "456", name: "Jane Updated", age: 26 }
    * ], {
@@ -305,8 +250,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.UpdateRecordsById')
-  async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
+  @track('Entities.UpdateById')
+  async updateById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
       failOnFirst: options.failOnFirst
@@ -328,26 +273,22 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Deletes data from an entity by entity ID
-   *
+   * 
    * @param entityId - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
    * @returns Promise resolving to delete response
-   *
+   * 
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
    * // Basic usage
-   * const result = await entities.deleteRecordsById("<entityId>", [
-   *   "<recordId-1>", "<recordId-2>"
+   * const result = await sdk.entities.deleteById(<entityId>, [
+   *   <recordId-1>, <recordId-2>
    * ]);
    * ```
    */
-  @track('Entities.DeleteRecordsById')
-  async deleteRecordsById(id: string, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
+  @track('Entities.DeleteById')
+  async deleteById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
     const params = createParams({
       failOnFirst: options.failOnFirst
     });
@@ -368,20 +309,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Gets all entities in the system
-   *
+   * 
    * @returns Promise resolving to an array of entity metadata
-   *
+   * 
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
    * // Get all entities
-   * const allEntities = await entities.getAll();
-   *
+   * const entities = await sdk.entities.getAll();
+   * 
    * // Call operations on an entity
-   * const records = await allEntities[0].getAllRecords();
+   * const records = await entities[0].getRecords();
    * ```
    */
   @track('Entities.GetAll')
@@ -410,12 +347,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
    * // Download attachment for a specific record and field
-   * const blob = await entities.downloadAttachment({
+   * const blob = await sdk.entities.downloadAttachment({
    *   entityName: 'Invoice',
    *   recordId: '<record-uuid>',
    *   fieldName: 'Documents'
@@ -433,53 +366,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
 
     return response.data;
-  }
-
-    /**
-   * @hidden
-   * @deprecated Use {@link getAllRecords} instead.
-   */
-  async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
-    entityId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  > {
-    return this.getAllRecords(entityId, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link insertRecordById} instead.
-   */
-  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
-    return this.insertRecordById(id, data, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link insertRecordsById} instead.
-   */
-  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
-    return this.insertRecordsById(id, data, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link updateRecordsById} instead.
-   */
-  async updateById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
-    return this.updateRecordsById(id, data, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link deleteRecordsById} instead.
-   */
-  async deleteById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
-    return this.deleteRecordsById(id, recordIds, options);
   }
 
   /**

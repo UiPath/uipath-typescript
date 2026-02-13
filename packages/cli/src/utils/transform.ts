@@ -22,7 +22,7 @@ function transformCaseKeys<T extends object>(
   if (Array.isArray(data)) {
     return data.map(item => {
       // If the array element is a primitive (string, number, etc.), return it as is
-      if (item === null || typeof item !== 'object' || typeof item === 'string') {
+      if (item === null || typeof item !== 'object' || item instanceof String) {
         return item;
       }
       // Only recursively transform if it's actually an object

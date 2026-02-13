@@ -4,19 +4,8 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 
 /**
  * Service for managing and executing UiPath Automation Processes.
- *
+ * 
  * Processes (also known as automations or workflows) are the core units of automation in UiPath, representing sequences of activities that perform specific business tasks. [UiPath Processes Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-processes)
- *
- * ### Usage
- *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
- *
- * ```typescript
- * import { Processes } from '@uipath/uipath-typescript/processes';
- *
- * const processes = new Processes(sdk);
- * const allProcesses = await processes.getAll();
- * ```
  */
 export interface ProcessServiceModel {
   /**
@@ -30,28 +19,28 @@ export interface ProcessServiceModel {
    * @example
    * ```typescript
    * // Standard array return
-   * const allProcesses = await processes.getAll();
-   *
+   * const processes = await sdk.processes.getAll();
+   * 
    * // Get processes within a specific folder
-   * const folderProcesses = await processes.getAll({
+   * const processes = await sdk.processes.getAll({ 
    *   folderId: <folderId>
    * });
-   *
+   * 
    * // Get processes with filtering
-   * const filteredProcesses = await processes.getAll({
+   * const processes = await sdk.processes.getAll({ 
    *   filter: "name eq 'MyProcess'"
    * });
-   *
+   * 
    * // First page with pagination
-   * const page1 = await processes.getAll({ pageSize: 10 });
-   *
+   * const page1 = await sdk.processes.getAll({ pageSize: 10 });
+   * 
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await processes.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await sdk.processes.getAll({ cursor: page1.nextCursor });
    * }
-   *
+   * 
    * // Jump to specific page
-   * const page5 = await processes.getAll({
+   * const page5 = await sdk.processes.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -74,7 +63,7 @@ export interface ProcessServiceModel {
    * @example
    * ```typescript
    * // Get process by ID
-   * const process = await processes.getById(<processId>, <folderId>);
+   * const process = await sdk.processes.getById(<processId>, <folderId>);
    * ```
    */
   getById(id: number, folderId: number, options?: ProcessGetByIdOptions): Promise<ProcessGetResponse>;
@@ -90,12 +79,12 @@ export interface ProcessServiceModel {
    * @example
    * ```typescript
    * // Start a process by process key
-   * const result = await processes.start({
+   * const process = await sdk.processes.start({
    *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
    * }, <folderId>); // folderId is required
-   *
+   * 
    * // Start a process by name with specific robots
-   * const result = await processes.start({
+   * const process = await sdk.processes.start({
    *   processName: "MyProcess"
    * }, <folderId>); // folderId is required
    * ```

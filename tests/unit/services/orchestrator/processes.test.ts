@@ -43,13 +43,13 @@ describe('ProcessService Unit Tests', () => {
 
   beforeEach(() => {
     // Create mock instances using centralized setup
-    const { instance } = createServiceTestDependencies();
+    const { config, executionContext, tokenManager } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
     vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 
-    service = new ProcessService(instance);
+    service = new ProcessService(config, executionContext, tokenManager);
 
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();

@@ -16,8 +16,6 @@ For OAuth, first create a non confidential [External App](https://docs.uipath.co
 
 
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
@@ -33,13 +31,11 @@ await sdk.initialize();
 
 ## Secret-based Authentication
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 ```
 
@@ -63,26 +59,19 @@ The `initialize()` method completes the authentication process for the SDK:
 
 ### Example: Secret Authentication (Auto-initialized)
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { Tasks } from '@uipath/uipath-typescript/tasks';
-
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token
+  secret: 'your-secret' //PAT Token or Bearer Token 
 });
 
 // Ready to use immediately - no initialize() needed
-const tasks = new Tasks(sdk);
-const allTasks = await tasks.getAll();
+const tasks = await sdk.tasks.getAll();
 ```
 
 ### Example: OAuth Authentication (Requires initialize)
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { Tasks } from '@uipath/uipath-typescript/tasks';
-
 const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
@@ -96,10 +85,9 @@ const sdk = new UiPath({
 try {
   await sdk.initialize();
   console.log('SDK initialized successfully');
-
+  
   // Now you can use the SDK
-  const tasks = new Tasks(sdk);
-  const allTasks = await tasks.getAll();
+  const tasks = await sdk.tasks.getAll();
 } catch (error) {
   console.error('Failed to initialize SDK:', error);
 }
@@ -109,12 +97,9 @@ try {
 
 ### Auto-login on App Load
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
-const sdk = new UiPath({...oauthConfig});
-
 useEffect(() => {
   const initSDK = async () => {
+    const sdk = new UiPath({...oauthConfig});
     await sdk.initialize();
   };
   initSDK();
@@ -123,10 +108,6 @@ useEffect(() => {
 
 ### User-Triggered Login
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core';
-
-const sdk = new UiPath({...oauthConfig});
-
 const onLogin = async () => {
   await sdk.initialize();
 };
@@ -166,8 +147,7 @@ Verify your authentication setup:
 ```typescript
 // test-auth.ts
 import 'dotenv/config';
-import { UiPath } from '@uipath/uipath-typescript/core';
-import { Assets } from '@uipath/uipath-typescript/assets';
+import { UiPath } from '@uipath/uipath-typescript';
 
 async function testAuthentication() {
   const sdk = new UiPath({
@@ -179,14 +159,13 @@ async function testAuthentication() {
 
   try {
     // Test with a simple API call
-    const assets = new Assets(sdk);
-    const allAssets = await assets.getAll();
-    console.log('Authentication successful!');
-    console.log(`Connected to ${process.env.UIPATH_ORG_NAME}/${process.env.UIPATH_TENANT_NAME}`);
-    console.log(`Found ${allAssets.items.length} assets`);
-
+    const assets = await sdk.assets.getAll();
+    console.log('🎉 Authentication successful!');
+    console.log(`✅ Connected to ${process.env.UIPATH_ORG_NAME}/${process.env.UIPATH_TENANT_NAME}`);
+    console.log(`✅ Found ${assets.length} assets`);
+    
   } catch (error) {
-    console.error('Authentication failed:');
+    console.error('❌ Authentication failed:');
     console.error(error.message);
   }
 }

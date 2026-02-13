@@ -54,7 +54,7 @@ export const validateJWT = (token: string): void => {
   try {
     const payload = Buffer.from(parts[1], 'base64').toString('utf8');
     JSON.parse(payload);
-  } catch {
+  } catch (error) {
     throw new Error('Invalid JWT: unable to decode payload');
   }
 };

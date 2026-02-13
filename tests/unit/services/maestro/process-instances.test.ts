@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ProcessInstancesService } from '../../../../src/services/maestro/processes/process-instances';
+import { ProcessInstancesService } from '../../../../src/services/maestro/process-instances';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../../../src/utils/constants/headers';
@@ -41,7 +41,7 @@ describe('ProcessInstancesService', () => {
 
   beforeEach(async () => {
     // Create mock instances using centralized setup
-    const { instance } = createServiceTestDependencies();
+    const { config, executionContext, tokenManager } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
@@ -50,7 +50,7 @@ describe('ProcessInstancesService', () => {
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    service = new ProcessInstancesService(instance);
+    service = new ProcessInstancesService(config, executionContext, tokenManager);
   });
 
   afterEach(() => {

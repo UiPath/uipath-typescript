@@ -6,7 +6,7 @@ Thank you for your interest in contributing to the UiPath TypeScript SDK! We wel
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally
-3. **Create a feature branch** from `develop`
+3. **Create a feature branch** from `main`
 4. **Make your changes** and test them
 5. **Submit a pull request**
 

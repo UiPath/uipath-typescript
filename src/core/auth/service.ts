@@ -1,3 +1,4 @@
+import { BaseService } from '../../services/base';
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from './token-manager';
@@ -6,8 +7,7 @@ import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
-export class AuthService {
-  private config: Config;
+export class AuthService extends BaseService {
   private tokenManager: TokenManager;
 
   constructor(config: Config, executionContext: ExecutionContext) {
@@ -15,9 +15,10 @@ export class AuthService {
     const storedContext = AuthService.getStoredOAuthContext();
     const effectiveConfig = storedContext ? AuthService._mergeConfigWithContext(config, storedContext) : config;
 
-    this.config = effectiveConfig;
     const isOAuth = hasOAuthConfig(effectiveConfig);
-    this.tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
+    const tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
+    super(effectiveConfig, executionContext, tokenManager);
+    this.tokenManager = tokenManager;
 
     // Auto-load token from storage on initialization
     // This ensures isAuthenticated() returns true after page refresh if a valid token exists
@@ -242,7 +243,7 @@ export class AuthService {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
-      } catch {
+      } catch(e) {
         throw new Error("crypto not available in browser")
       }
     }
@@ -267,7 +268,7 @@ export class AuthService {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
-      } catch {
+      } catch (e) {
         throw new Error("crypto not available in browser")
       }
     }

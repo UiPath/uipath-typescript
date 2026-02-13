@@ -41,7 +41,6 @@ export interface AccessTokenData {
   iat: number;              // Issued At - When the token was issued (Unix timestamp)
   authTime: number;         // Authentication time - When the user authenticated
   organizationId?: string;  // Optional organization identifier
-  email?: string;           // Optional email claim (e.g. for push author)
 }
 
 export interface ConfidentialClientConfig {
@@ -114,7 +113,6 @@ export const parseJWT = (token: string): AccessTokenData => {
     iat: claims.iat,
     authTime: claims.auth_time,
     organizationId: claims.organization_id || claims.prt_id,
-    email: typeof claims.email === 'string' ? claims.email : undefined,
   };
 };
 
