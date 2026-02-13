@@ -94,12 +94,11 @@ plugins:
           - api/interfaces/ConversationServiceModel.md: Conversation service methods
           - api/interfaces/ExchangeServiceModel.md: Exchange service methods
           - api/interfaces/MessageServiceModel.md: Message service methods
-          - api/interfaces/ConversationEventHelperManagerModel.md: WebSocket event manager
-          - api/interfaces/SessionEventHelperModel.md: Session event helper
-          - api/interfaces/ExchangeEventHelperModel.md: Exchange event helper
-          - api/interfaces/MessageEventHelperModel.md: Message event helper
-          - api/interfaces/ContentPartEventHelperModel.md: Content part event helper
-          - api/interfaces/ToolCallEventHelperModel.md: Tool call event helper
+          - api/interfaces/SessionStream.md: Real-time WebSocket session
+          - api/interfaces/ExchangeStream.md: Exchange streaming events
+          - api/interfaces/MessageStream.md: Message streaming events
+          - api/interfaces/ContentPartStream.md: Content part streaming events
+          - api/interfaces/ToolCallStream.md: Tool call streaming events
   - termynal:
       prompt_literal_start:
         - "$"
@@ -165,9 +164,11 @@ nav:
   - API Reference:
       - Services:
           - Agents:
-            - Conversational:
-              - Agent: api/interfaces/ConversationalAgentServiceModel.md
-              - Conversations: api/interfaces/ConversationServiceModel.md
+            - Conversational Agent:
+              - conversational-agent/index.md
+              - Conversations:
+                - conversations/index.md
+                - Session: api/interfaces/SessionStream.md
               - Exchanges: api/interfaces/ExchangeServiceModel.md
               - Messages: api/interfaces/MessageServiceModel.md
               - Attachments: api/interfaces/AttachmentServiceModel.md

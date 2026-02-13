@@ -1,6 +1,5 @@
 import type {
   ErrorEndEvent,
-  ErrorId,
   ErrorStartEvent
 } from '@/models/conversational-agent';
 
@@ -26,7 +25,6 @@ import type { SessionEventHelper, SessionEventHelperImpl } from './session-event
  * - Lifecycle state (ended/deleted)
  * - Handler registration for errors, meta events, and deletion
  *
- * @template TId - The ID type for this helper (ConversationId, ExchangeId, etc.)
  * @template TStartEvent - The start event type for this helper
  * @template TEvent - The event type for this helper (used for event buffering)
  */
@@ -44,7 +42,7 @@ export abstract class ConversationEventHelperBase<
    * The active errors for this helper. Entries are added when a start error event is sent or received, and removed
    * when the end error event is sent or received.
    */
-  public readonly errors = new Map<ErrorId, ErrorStartEvent>();
+  public readonly errors = new Map<string, ErrorStartEvent>();
 
   /**
    * Reference to the conversation event helper manager.
@@ -230,7 +228,7 @@ export abstract class ConversationEventHelperBase<
   /**
    * Helper method for dispatching error start events. Used by subclass dispatch implementations.
    */
-  protected dispatchErrorStart(errorId: ErrorId, startError: ErrorStartEvent) {
+  protected dispatchErrorStart(errorId: string, startError: ErrorStartEvent) {
     this.errors.set(errorId, startError);
     this._errorStartHandlers.forEach(cb => cb({ errorId, ...startError }));
     let handled = this._errorStartHandlers.length > 0;
@@ -245,7 +243,7 @@ export abstract class ConversationEventHelperBase<
   /**
    * Helper method for dispatching error end events. Used by subclass dispatch implementations.
    */
-  protected dispatchErrorEnd(errorId: ErrorId, endError: ErrorEndEvent) {
+  protected dispatchErrorEnd(errorId: string, endError: ErrorEndEvent) {
     this.errors.delete(errorId);
     this._errorEndHandlers.forEach(cb => cb({ errorId, ...endError }));
     let handled = this._errorEndHandlers.length > 0;

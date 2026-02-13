@@ -2,10 +2,8 @@ import type {
   Exchange,
   ExchangeEndEvent,
   ExchangeEvent,
-  ExchangeId,
   ExchangeStartEvent,
   MakeRequired,
-  MessageId,
   MessageRole,
   MessageStartEvent,
   MetaEvent
@@ -39,13 +37,13 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
   ExchangeEvent
 > implements ExchangeStream {
 
-  protected readonly _messageMap = new Map<MessageId, MessageEventHelperImpl>();
+  protected readonly _messageMap = new Map<string, MessageEventHelperImpl>();
   protected readonly _messageStartHandlers = new Array<MessageStartHandler>();
   protected readonly _endHandlers = new Array<ExchangeEndHandler>();
 
   constructor(
     public readonly session: SessionEventHelper,
-    public readonly exchangeId: ExchangeId,
+    public readonly exchangeId: string,
 
     /**
      * ExchangeStartEvent used to initialize the ExchangeEventHelper. Will be undefined if some other sub-event
@@ -128,7 +126,7 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
    * @param exchangeId The id of the message to get.
    * @returns The MessageEventHelper for the specified id, or undefined if no such content part exists.
    */
-  public getMessage(messageId: MessageId): MessageEventHelper | undefined {
+  public getMessage(messageId: string): MessageEventHelper | undefined {
     return this._messageMap.get(messageId);
   }
 

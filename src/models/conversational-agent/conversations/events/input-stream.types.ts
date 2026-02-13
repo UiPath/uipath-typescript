@@ -10,10 +10,8 @@ import type {
   AsyncInputStreamChunkEvent,
   AsyncInputStreamEndEvent,
   AsyncInputStreamEvent,
-  AsyncInputStreamId,
   AsyncInputStreamStartEvent,
   ErrorEndEvent,
-  ErrorId,
   ErrorStartEvent,
   MetaEvent
 } from './protocol.types';
@@ -75,9 +73,9 @@ import type {
  * });
  * ```
  */
-export interface AsyncInputStreamStream {
+export interface AsyncInputStream {
   /** Unique identifier for this input stream */
-  readonly streamId: AsyncInputStreamId;
+  readonly streamId: string;
 
   /**
    * The start event, or undefined if not yet received
@@ -99,14 +97,14 @@ export interface AsyncInputStreamStream {
    * @param cb - Callback receiving the error event
    * @returns Cleanup function to remove the handler
    */
-  onErrorStart(cb: (error: { errorId: ErrorId } & ErrorStartEvent) => void): () => void;
+  onErrorStart(cb: (error: { errorId: string } & ErrorStartEvent) => void): () => void;
 
   /**
    * Registers a handler for error end events
    * @param cb - Callback receiving the error end event
    * @returns Cleanup function to remove the handler
    */
-  onErrorEnd(cb: (error: { errorId: ErrorId } & ErrorEndEvent) => void): () => void;
+  onErrorEnd(cb: (error: { errorId: string } & ErrorEndEvent) => void): () => void;
 
   /**
    * Sends a stream chunk
@@ -141,14 +139,14 @@ export interface AsyncInputStreamStream {
    * @param args - Error details including optional error ID and message
    * @internal
    */
-  sendErrorStart(args: { errorId?: ErrorId } & ErrorStartEvent): void;
+  sendErrorStart(args: { errorId?: string } & ErrorStartEvent): void;
 
   /**
    * Sends an error end event for this stream
    * @param args - Error end details including the error ID
    * @internal
    */
-  sendErrorEnd(args: { errorId: ErrorId } & ErrorEndEvent): void;
+  sendErrorEnd(args: { errorId: string } & ErrorEndEvent): void;
 
   /**
    * Sends a metadata event for this stream

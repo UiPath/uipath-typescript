@@ -3,20 +3,6 @@
  * Contains IDs, primitives, and utility types used across conversation types.
  */
 
-/**
- * Identifies a conversation.
- */
-export type ConversationId = string;
-
-/**
- * Identifies an exchange.
- */
-export type ExchangeId = string;
-
-/**
- * Identifies a message.
- */
-export type MessageId = string;
 
 /**
  * Identifies the origin of a message in the conversation.
@@ -27,15 +13,6 @@ export enum MessageRole {
   Assistant = 'assistant'
 }
 
-/**
- * Identifies a message content part.
- */
-export type ContentPartId = string;
-
-/**
- * Identifies an interrupt.
- */
-export type InterruptId = string;
 
 /**
  * Identifies the type of an interrupt.
@@ -44,10 +21,6 @@ export enum InterruptType {
   ToolCallConfirmation = 'uipath_cas_tool_call_confirmation'
 }
 
-/**
- * Identifies a citation.
- */
-export type CitationId = string;
 
 /**
  * Base interface for citation sources.
@@ -74,17 +47,13 @@ export interface CitationSourceUrl extends CitationSourceBase {
   url: string;
 }
 
-/**
- * Identifies the format and type of a message content part. Must conform to the MIME type standard.
- */
-export type MimeType = string;
 
 /**
  * Used when the citation references media, such as a PDF document.
  */
 export interface CitationSourceMedia extends CitationSourceBase {
   /** The mime type of the media. If non-specified, should be discovered through the downloadUrl. */
-  mimeType?: MimeType;
+  mimeType?: string;
   /** Download URL for the media */
   downloadUrl?: string;
   /** The page number for the media, if applicable (e.g. for application/pdf documents) */
@@ -97,15 +66,6 @@ export interface CitationSourceMedia extends CitationSourceBase {
  */
 export type CitationSource = CitationSourceUrl | CitationSourceMedia;
 
-/**
- * Identifies a tool.
- */
-export type ToolName = string;
-
-/**
- * Identifies a tool call and its result.
- */
-export type ToolCallId = string;
 
 /**
  * JSON compatible primitive type.
@@ -184,7 +144,3 @@ export type ToolCallInputValue = JSONObject;
  */
 export type ToolCallOutputValue = JSONValue;
 
-/**
- * A timestamp with the format YYYY-MM-DDThh:mm:ss.sssZ (ISO 8601 with both date and time required and restricted to UTC).
- */
-export type UTCTimeStamp = string;

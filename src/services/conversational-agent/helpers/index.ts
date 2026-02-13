@@ -3,7 +3,6 @@
  *
  * This module exports:
  * - Helper classes for managing WebSocket conversation events
- * - ContentPartHelper for working with content parts
  * - Transformers for converting API responses
  */
 
@@ -14,13 +13,13 @@ export * from './content-part-event-helper';
 export * from './tool-call-event-helper';
 export * from './message-event-helper';
 export * from './exchange-event-helper';
-export * from './async-input-stream-event-helper';
-export * from './async-tool-call-event-helper';
+export * from './input-stream-event-helper';
+export * from './session-tool-call-event-helper';
 export * from './session-event-helper';
 export * from './conversation-event-helper-manager';
 export * from './conversation-type-util';
 
-// Content part helper
+// Content part helper class
 export * from './content-part-helper';
 
 // Transformers
