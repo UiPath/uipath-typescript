@@ -1,41 +1,42 @@
-import { CaseGetAllResponse } from '../../models/maestro';
-import { ProcessType } from '../../models/maestro/cases.internal-types';
-import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
-import type { CasesServiceModel } from '../../models/maestro/cases.models';
-import { track } from '../../core/telemetry';
-import { createParams } from '../../utils/http/params';
+import { CaseGetAllResponse } from '../../../models/maestro';
+import { ProcessType } from '../../../models/maestro/cases.internal-types';
+import { BaseService } from '../../base';
+import type { IUiPath } from '../../../core/types';
+import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import type { CasesServiceModel } from '../../../models/maestro/cases.models';
+import { track } from '../../../core/telemetry';
+import { createParams } from '../../../utils/http/params';
 
 /**
  * Service for interacting with UiPath Maestro Cases
  */
 export class CasesService extends BaseService implements CasesServiceModel {
   /**
-   * @hideconstructor
+   * Creates an instance of the Cases service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
+  constructor(instance: IUiPath) {
+    super(instance);
   }
 
   /**
    * Get all case management processes with their instance statistics
    * @returns Promise resolving to array of Case objects
-   * 
+   *
    * @example
    * ```typescript
-   * // Get all case management processes
-   * const cases = await sdk.maestro.cases.getAll();
-   * 
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   * const allCases = await cases.getAll();
+   *
    * // Access case information
-   * for (const caseProcess of cases) {
+   * for (const caseProcess of allCases) {
    *   console.log(`Case Process: ${caseProcess.processKey}`);
    *   console.log(`Running instances: ${caseProcess.runningCount}`);
    *   console.log(`Completed instances: ${caseProcess.completedCount}`);
    * }
-   * 
    * ```
    */
   @track('Cases.GetAll')

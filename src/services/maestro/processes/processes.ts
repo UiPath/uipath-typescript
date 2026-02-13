@@ -1,15 +1,13 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse } from '../../models/maestro';
-import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
-import type { MaestroProcessesServiceModel } from '../../models/maestro/processes.models';
-import { createProcessWithMethods } from '../../models/maestro/processes.models';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse } from '../../../models/maestro';
+import { BaseService } from '../../base';
+import type { IUiPath } from '../../../core/types';
+import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
+import { createProcessWithMethods } from '../../../models/maestro/processes.models';
 import { BpmnHelpers } from './helpers';
-import { track } from '../../core/telemetry';
-import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_KEY } from '../../utils/constants/headers';
+import { track } from '../../../core/telemetry';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_KEY } from '../../../utils/constants/headers';
 import { ProcessInstancesService } from './process-instances';
 
 /**
@@ -19,29 +17,32 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   private processInstancesService: ProcessInstancesService;
 
   /**
-   * @hideconstructor
+   * Creates an instance of the Maestro Processes service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
    */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-    this.processInstancesService = new ProcessInstancesService(config, executionContext, tokenManager);
+  constructor(instance: IUiPath) {
+    super(instance);
+    this.processInstancesService = new ProcessInstancesService(instance);
   }
 
   /**
    * Get all processes with their instance statistics
    * @returns Promise resolving to array of MaestroProcess objects
-   * 
+   *
    * @example
    * ```typescript
-   * // Get all processes
-   * const processes = await sdk.maestro.processes.getAll();
-   * 
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   * const processes = await maestroProcesses.getAll();
+   *
    * // Access process information
    * for (const process of processes) {
    *   console.log(`Process: ${process.processKey}`);
    *   console.log(`Running instances: ${process.runningCount}`);
    *   console.log(`Faulted instances: ${process.faultedCount}`);
    * }
-   * 
    * ```
    */
   @track('MaestroProcesses.GetAll')

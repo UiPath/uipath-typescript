@@ -15,7 +15,9 @@ Thrown when authentication fails (401 status codes).
 - Missing authentication
 
 ```typescript
-import { AuthenticationError, isAuthenticationError } from '@uipath/uipath-typescript';
+import { UiPath, AuthenticationError, isAuthenticationError } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath(config);
 
 try {
   await sdk.initialize();
@@ -36,10 +38,15 @@ Thrown when access is denied (403 status codes).
 - Scope limitations
 
 ```typescript
-import { AuthorizationError, isAuthorizationError } from '@uipath/uipath-typescript';
+import { UiPath, AuthorizationError, isAuthorizationError } from '@uipath/uipath-typescript/core';
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const assets = new Assets(sdk);
 
 try {
-  const assets = await sdk.assets.getAll({ folderId: 12345 });
+  const folderAssets = await assets.getAll({ folderId: 12345 });
 } catch (error) {
   if (isAuthorizationError(error)) {
     console.log('Access denied:', error.message);
@@ -57,12 +64,17 @@ Thrown when validation fails (400 status codes).
 - Invalid data format
 
 ```typescript
-import { ValidationError, isValidationError } from '@uipath/uipath-typescript';
+import { UiPath, ValidationError, isValidationError } from '@uipath/uipath-typescript/core';
+import { Processes } from '@uipath/uipath-typescript/processes';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const processes = new Processes(sdk);
 
 try {
-  await sdk.processes.start({
+  await processes.start({
     releaseKey: 'invalid-key'
-  });
+  }, folderId);
 } catch (error) {
   if (isValidationError(error)) {
     console.log('Validation failed:', error.message);
@@ -80,10 +92,15 @@ Thrown when requested resources are not found (404 status codes).
 - Process not found
 
 ```typescript
-import { NotFoundError, isNotFoundError } from '@uipath/uipath-typescript';
+import { UiPath, NotFoundError, isNotFoundError } from '@uipath/uipath-typescript/core';
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const assets = new Assets(sdk);
 
 try {
-  const asset = await sdk.assets.getById(99999);
+  const asset = await assets.getById(99999, folderId);
 } catch (error) {
   if (isNotFoundError(error)) {
     console.log('Asset not found:', error.message);
@@ -100,10 +117,15 @@ Thrown when rate limits are exceeded (429 status codes).
 - API rate limiting
 
 ```typescript
-import { RateLimitError, isRateLimitError } from '@uipath/uipath-typescript';
+import { UiPath, RateLimitError, isRateLimitError } from '@uipath/uipath-typescript/core';
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const assets = new Assets(sdk);
 
 try {
-  await sdk.assets.getAll();
+  await assets.getAll();
 } catch (error) {
   if (isRateLimitError(error)) {
     console.log('Rate limit exceeded:', error.message);
@@ -121,10 +143,15 @@ Thrown when server errors occur (5xx status codes).
 - Gateway timeout
 
 ```typescript
-import { ServerError, isServerError } from '@uipath/uipath-typescript';
+import { UiPath, ServerError, isServerError } from '@uipath/uipath-typescript/core';
+import { Queues } from '@uipath/uipath-typescript/queues';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const queues = new Queues(sdk);
 
 try {
-  await sdk.queues.getAll();
+  await queues.getAll();
 } catch (error) {
   if (isServerError(error)) {
     console.log('Server error:', error.message);
@@ -143,10 +170,15 @@ Thrown when network-related errors occur.
 - Network connectivity issues
 
 ```typescript
-import { NetworkError, isNetworkError } from '@uipath/uipath-typescript';
+import { UiPath, NetworkError, isNetworkError } from '@uipath/uipath-typescript/core';
+import { Processes } from '@uipath/uipath-typescript/processes';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const processes = new Processes(sdk);
 
 try {
-  await sdk.processes.getAll();
+  await processes.getAll();
 } catch (error) {
   if (isNetworkError(error)) {
     console.log('Network error:', error.message);
@@ -159,10 +191,15 @@ try {
 
 ### Getting Error Details
 ```typescript
-import { getErrorDetails } from '@uipath/uipath-typescript';
+import { UiPath, getErrorDetails } from '@uipath/uipath-typescript/core';
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const assets = new Assets(sdk);
 
 try {
-  await sdk.assets.getAll();
+  await assets.getAll();
 } catch (error) {
   const details = getErrorDetails(error);
   console.log('Error message:', details.message);
@@ -172,10 +209,15 @@ try {
 
 ### Accessing All Error Properties
 ```typescript
-import { UiPathError } from '@uipath/uipath-typescript';
+import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
+import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const maestroProcesses = new MaestroProcesses(sdk);
 
 try {
-  const process = await sdk.maestro.processes.getById('invalid-id');
+  const allProcesses = await maestroProcesses.getAll();
 } catch (error) {
   if (error instanceof UiPathError) {
     // Access common error properties
@@ -194,8 +236,15 @@ try {
 
 ### Debug Information
 ```typescript
+import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
+import { Processes } from '@uipath/uipath-typescript/processes';
+
+const sdk = new UiPath(config);
+await sdk.initialize();
+const processes = new Processes(sdk);
+
 try {
-  await sdk.processes.start({ releaseKey: 'test' });
+  await processes.start({ releaseKey: 'test' }, folderId);
 } catch (error) {
   if (error instanceof UiPathError) {
     const debugInfo = error.getDebugInfo();

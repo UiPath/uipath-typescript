@@ -23,7 +23,6 @@ export class ErrorFactory {
     errorInfo: ParsedErrorInfo,
   ): HttpError {
     const { message, requestId } = errorInfo;
-
     // Map status codes to error types
     switch (statusCode) {
       case HttpStatus.BAD_REQUEST:
