@@ -3,6 +3,8 @@ import { isBrowser } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
+import { TaskEventsServiceInternal } from '../../services';
+import { jwtDecode, JwtPayload } from 'jwt-decode';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -13,18 +15,20 @@ import { Config } from '../config/config';
 export class TokenManager {
   private currentToken?: TokenInfo;
   private readonly STORAGE_KEY_PREFIX = 'uipath_sdk_user_token-';
-  private refreshPromise: Promise<AuthToken> | null = null;
+  private refreshPromise: Promise<string> | null = null;
   
   /**
    * Creates a new TokenManager instance
    * @param executionContext The execution context
    * @param config The SDK configuration
    * @param isOAuth Whether this is an OAuth-based authentication
+   * @param taskEventsService Internal task events service
    */
   constructor(
     private executionContext: ExecutionContext,
     private config: Config,
-    private isOAuth: boolean = false
+    private isOAuth: boolean = false,
+    private taskEventsService: TaskEventsServiceInternal
   ) {}
 
   /**
@@ -33,12 +37,19 @@ export class TokenManager {
    * @returns true if the token is expired, false otherwise
    */
   public isTokenExpired(tokenInfo?: TokenInfo): boolean {
-    // If no token info or no expiration date, token is not expired
-    if (!tokenInfo?.expiresAt) {
+    // If token exists check expiration date or extract expiration date if null
+    if (tokenInfo) {
+      try {
+        tokenInfo.expiresAt ??= new Date(jwtDecode<JwtPayload>(tokenInfo.token).exp! * 1000);
+        return new Date() >= tokenInfo.expiresAt;
+      }
+      catch (_) {
+        return true;
+      }
+    }
+    else {
       return false;
     }
-    
-    return new Date() >= tokenInfo.expiresAt;
   }
   
   /**
@@ -133,6 +144,18 @@ export class TokenManager {
    * Sets a new token and updates all necessary contexts
    */
   setToken(tokenInfo: TokenInfo): void {
+    if (tokenInfo.type === 'secret' && !tokenInfo.expiresAt) {
+      try {
+        const decodedToken = jwtDecode<JwtPayload>(tokenInfo.token);
+        if (decodedToken.exp) {
+          tokenInfo.expiresAt = new Date(decodedToken.exp * 1000);
+        }
+      }
+      catch (error) {
+        console.warn('Failed to fetch expiry time', error);
+      }
+    }
+
     this.currentToken = tokenInfo;
     
     // Store token in execution context
@@ -216,7 +239,7 @@ export class TokenManager {
    * @returns A promise that resolves to the new AuthToken
    * @throws Error if not in OAuth flow, refresh token is missing, or the request fails
    */
-  public async refreshAccessToken(): Promise<AuthToken> {
+  public async refreshAccessToken(isInActionCenter: boolean = false): Promise<string> {
     // If there's already a refresh in progress, return that promise
     if (this.refreshPromise) {
       return this.refreshPromise;
@@ -224,7 +247,7 @@ export class TokenManager {
 
     try {
       // Create new refresh promise
-      this.refreshPromise = this._doRefreshToken();
+      this.refreshPromise = isInActionCenter ? this._doRefreshTokenInActionCenter() : this._doRefreshToken();
       // Wait for refresh to complete
       const result = await this.refreshPromise;
       return result;
@@ -237,7 +260,7 @@ export class TokenManager {
   /**
    * Internal method to perform the actual token refresh
    */
-  private async _doRefreshToken(): Promise<AuthToken> {
+  private async _doRefreshToken(): Promise<string> {
     // Check if we're in OAuth flow
     if (!hasOAuthConfig(this.config)) {
       throw new Error('refreshAccessToken is only available in OAuth flow');
@@ -280,6 +303,13 @@ export class TokenManager {
       expiresAt: new Date(Date.now() + token.expires_in * 1000),
       refreshToken: token.refresh_token
     });
-    return token;
+    return token.access_token;
+  }
+
+  private async _doRefreshTokenInActionCenter(): Promise<string> {
+    // Send request and wait for the new token from parent via event listener
+    const newToken = await this.taskEventsService.refreshAccessToken();
+
+    return newToken;
   }
 }
