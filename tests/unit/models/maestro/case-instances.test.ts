@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createCaseInstanceWithMethods,
   CaseInstancesServiceModel
 } from '../../../../src/models/maestro/case-instances.models';
-import { 
+import {
   MAESTRO_TEST_CONSTANTS,
   TEST_CONSTANTS,
   createMockOperationResponse,
@@ -11,8 +11,9 @@ import {
   createMockCaseInstanceExecutionHistory,
   createMockCaseStage
 } from '../../../utils/mocks';
-import type { 
+import type {
   CaseInstanceOperationOptions,
+  CaseInstanceReopenOptions,
 } from '../../../../src/models/maestro/case-instances.types';
 
 // ===== TEST SUITE =====
@@ -27,6 +28,7 @@ describe('Case Instance Models', () => {
       close: vi.fn(),
       pause: vi.fn(),
       resume: vi.fn(),
+      reopen: vi.fn(),
       getExecutionHistory: vi.fn(),
       getStages: vi.fn(),
       getActionTasks: vi.fn()
@@ -156,7 +158,7 @@ describe('Case Instance Models', () => {
       it('should call caseInstance.resume with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           status: TEST_CONSTANTS.RUNNING
@@ -175,7 +177,7 @@ describe('Case Instance Models', () => {
       it('should call caseInstance.resume with bound parameters and options', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           status: TEST_CONSTANTS.RUNNING
@@ -184,7 +186,7 @@ describe('Case Instance Models', () => {
         mockService.resume = vi.fn().mockResolvedValue(mockResponse);
 
         await instance.resume(options);
-        
+
         expect(mockService.resume).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
@@ -206,6 +208,78 @@ describe('Case Instance Models', () => {
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
 
         await expect(invalidInstance.resume()).rejects.toThrow('Case instance folder key is undefined');
+      });
+    });
+
+    describe('caseInstance.reopen()', () => {
+      it('should call caseInstance.reopen with bound instanceId, folderKey, and request', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
+
+        const mockResponse = createMockOperationResponse({
+          instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          status: TEST_CONSTANTS.RUNNING
+        });
+        const request: CaseInstanceReopenOptions = {
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
+          comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT
+        };
+        mockService.reopen = vi.fn().mockResolvedValue(mockResponse);
+
+        await instance.reopen(request);
+
+        expect(mockService.reopen).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          request
+        );
+      });
+
+      it('should call caseInstance.reopen with only stageId', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
+
+        const mockResponse = createMockOperationResponse({
+          instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          status: TEST_CONSTANTS.RUNNING
+        });
+        const request: CaseInstanceReopenOptions = {
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+        };
+        mockService.reopen = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await instance.reopen(request);
+
+        expect(mockService.reopen).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          request
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('should throw error if instanceId is undefined', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
+        const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
+
+        const request: CaseInstanceReopenOptions = {
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+        };
+
+        await expect(invalidInstance.reopen(request)).rejects.toThrow('Case instance ID is undefined');
+      });
+
+      it('should throw error if folderKey is undefined', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
+        const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
+
+        const request: CaseInstanceReopenOptions = {
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+        };
+
+        await expect(invalidInstance.reopen(request)).rejects.toThrow('Case instance folder key is undefined');
       });
     });
 
@@ -330,14 +404,15 @@ describe('Case Instance Models', () => {
   describe('createCaseInstanceWithMethods', () => {
     it('should create instance with all bound methods', () => {
       const mockInstanceData = createMockCaseInstance();
-      
+
       const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-      
+
       expect(instance).toHaveProperty('instanceId', MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID);
       expect(instance).toHaveProperty('folderKey', MAESTRO_TEST_CONSTANTS.FOLDER_KEY);
       expect(typeof instance.close).toBe('function');
       expect(typeof instance.pause).toBe('function');
       expect(typeof instance.resume).toBe('function');
+      expect(typeof instance.reopen).toBe('function');
       expect(typeof instance.getExecutionHistory).toBe('function');
       expect(typeof instance.getStages).toBe('function');
       expect(typeof instance.getActionTasks).toBe('function');

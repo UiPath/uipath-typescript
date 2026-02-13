@@ -15,9 +15,13 @@ export interface ProcessIncidentsServiceModel {
    * {@link ProcessIncidentGetAllResponse}
    * @example
    * ```typescript
+   * import { ProcessIncidents } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const processIncidents = new ProcessIncidents(sdk);
+   *
    * // Get all process incidents across all folders
-   * const incidents = await sdk.maestro.processes.incidents.getAll();
-   * 
+   * const incidents = await processIncidents.getAll();
+   *
    * // Access process incident information
    * for (const incident of incidents) {
    *   console.log(`Process: ${incident.processKey}`);

@@ -35,11 +35,25 @@ export interface EntityRecord {
 
 /**
  * Options for getting an entity by Id
+ * @deprecated Use {@link EntityGetRecordByIdOptions} instead for better clarity on getting all records of an entity. This type will be removed in future versions.
  */
 export type EntityGetRecordsByIdOptions = {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
 } & PaginationOptions;
+
+/**
+ * Options for getting all records of an entity
+ */
+export type EntityGetAllRecordsOptions = EntityGetRecordsByIdOptions;
+
+/**
+ * Options for getting a single entity record by entity ID and record ID
+ */
+export interface EntityGetRecordByIdOptions {
+  /** Level of entity expansion (default: 0) */
+  expansionLevel?: number;
+}
 
 /**
  * Common options for entity operations that modify multiple records
@@ -53,6 +67,7 @@ export interface EntityOperationOptions {
 
 /**
  * Options for inserting a single record into an entity
+ * @deprecated Use {@link EntityInsertRecordOptions} instead for better clarity on inserting a single record into an entity. This type will be removed in future versions.
  */
 export interface EntityInsertOptions {
   /** Level of entity expansion (default: 0) */
@@ -60,22 +75,45 @@ export interface EntityInsertOptions {
 }
 
 /**
+ * Options for inserting a single record into an entity
+ */
+export type EntityInsertRecordOptions = EntityInsertOptions;
+
+/**
  * Options for batch inserting data into an entity
+ * @deprecated Use {@link EntityInsertRecordsOptions} instead for better clarity on inserting multiple records into an entity. This type will be removed in future versions.
  */
 export type EntityBatchInsertOptions = EntityOperationOptions;
 
 /**
+ * Options for inserting multiple records into an entity
+ */
+export type EntityInsertRecordsOptions = EntityOperationOptions;
+
+/**
  * Options for updating data in an entity
+ * @deprecated Use {@link EntityUpdateRecordOptions} instead for better clarity on updating records in an entity. This type will be removed in future versions.
  */
 export type EntityUpdateOptions = EntityOperationOptions;
 
 /**
+ * Options for updating data in an entity
+ */
+export type EntityUpdateRecordsOptions = EntityOperationOptions;
+
+/**
  * Options for deleting data from an entity
+ * @deprecated Use {@link EntityDeleteRecordsOptions} instead for better clarity on deleting records from an entity. This type will be removed in future versions.
  */
 export interface EntityDeleteOptions {
   /** Whether to fail on first error (default: false) */
   failOnFirst?: boolean;
 }
+
+/**
+ * Options for deleting records in an entity
+ */
+export type EntityDeleteRecordsOptions = EntityDeleteOptions;
 
 /**
  * Options for downloading an attachment from an entity record
