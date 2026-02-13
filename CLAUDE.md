@@ -70,6 +70,9 @@ Use the AskUserQuestion tool:
 
 **Required config for integration tests:**
 - `baseUrl` - UiPath API base URL (e.g., `https://cloud.uipath.com`, `https://staging.uipath.com`, `https://alpha.uipath.com`)
+- `orgName` - Organization name
+- `tenantName` - Tenant name
+- `secret` - Personal Access Token (PAT) or service account secret
 
 **Example integration test structure:**
 ```typescript
@@ -79,10 +82,10 @@ import { ResourceService } from '../../src/services/<domain>/<name>';
 
 describe('ResourceService Integration Tests', () => {
   const config = {
-    baseUrl: process.env.UIPATH_BASE_URL || 'https://alpha.uipath.com',
-    orgName: process.env.UIPATH_ORG_NAME || '<org-name>',
-    tenantName: process.env.UIPATH_TENANT_NAME || '<tenant-name>',
-    secret: process.env.UIPATH_SECRET || '<secret>',
+    baseUrl: '<baseUrl>',  // e.g., 'https://alpha.uipath.com'
+    orgName: '<org-name>',
+    tenantName: '<tenant-name>',
+    secret: '<secret>',
   };
 
   let sdk: UiPath;

@@ -1,5 +1,4 @@
 import { BaseService } from '../base';
-import type { IUiPath } from '../../core/types';
 import {
   FeedbackCreateOptions,
   FeedbackResponse,
@@ -16,15 +15,6 @@ import { track } from '../../core/telemetry';
  * Service for interacting with UiPath LLMOps Feedback API
  */
 export class FeedbackService extends BaseService implements FeedbackServiceModel {
-  /**
-   * Creates an instance of the Feedback service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Creates new feedback
    *
