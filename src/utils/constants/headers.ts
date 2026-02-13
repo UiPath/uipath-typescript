@@ -26,3 +26,12 @@ export const RESPONSE_TYPES = {
   BLOB: 'blob',
   ARRAYBUFFER: 'arraybuffer'
 } as const;
+
+/**
+ * WebSocket Headers
+ */
+export const WEBSOCKET_HEADERS = {
+  ORGANIZATION_ID: 'x-uipath-internal-accountid',
+  TENANT_ID: 'x-uipath-internal-tenantid',
+  EXTERNAL_USER_ID: 'x-uipath-external-user-id'
+} as const;
