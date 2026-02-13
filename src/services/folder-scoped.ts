@@ -1,7 +1,4 @@
 import { BaseService } from './base';
-import { Config } from '../core/config/config';
-import { ExecutionContext } from '../core/context/execution';
-import { TokenManager } from '../core/auth/token-manager';
 import { CollectionResponse } from '../models/common/types';
 import { createHeaders } from '../utils/http/headers';
 import { FOLDER_ID } from '../utils/constants/headers';
@@ -9,13 +6,16 @@ import { ODATA_PREFIX } from '../utils/constants/common';
 import { addPrefixToKeys } from '../utils/transform';
 
 /**
- * Base service for services that need folder-specific functionality
+ * Base service for services that need folder-specific functionality.
+ *
+ * Extends BaseService with additional methods for working with folder-scoped resources
+ * in UiPath Orchestrator. Services that work with folders (Assets, Queues) extend this class.
+ *
+ * @remarks
+ * This class provides helper methods for making folder-scoped API calls, handling folder IDs
+ * in request headers, and managing cross-folder queries.
  */
 export class FolderScopedService extends BaseService {
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-  }
-
   /**
    * Gets resources in a folder with optional query parameters
    * 

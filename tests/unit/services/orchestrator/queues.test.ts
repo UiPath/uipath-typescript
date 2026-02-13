@@ -39,7 +39,7 @@ describe('QueueService Unit Tests', () => {
 
   beforeEach(() => {
     // Create mock instances using centralized setup
-    const { config, executionContext, tokenManager } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
@@ -48,7 +48,7 @@ describe('QueueService Unit Tests', () => {
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    queueService = new QueueService(config, executionContext, tokenManager);
+    queueService = new QueueService(instance);
   });
 
   afterEach(() => {

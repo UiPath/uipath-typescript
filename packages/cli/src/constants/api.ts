@@ -46,8 +46,8 @@ export const STUDIO_WEB_REFERENCED_RESOURCE_FORCE_UPDATE = 'true';
 export const RESOURCE_CATALOG_SKIP = '0';
 export const RESOURCE_CATALOG_TAKE = '100';
 
-/** Studio Web push: default manifest path; remote may also use STUDIO_METADATA_FILENAME. */
-export const STUDIO_METADATA_RELATIVE_PATH = '.uipath/studio_metadata.json';
-export const STUDIO_METADATA_FILENAME = 'studio_metadata.json';
+/** Push metadata: local path under project root; uploaded to source/push_metadata.json on remote. */
+export const PUSH_METADATA_RELATIVE_PATH = '.uipath/push_metadata.json';
+export const PUSH_METADATA_FILENAME = 'push_metadata.json';
 
 export const APP_URL_TEMPLATE = '/{orgId}/apps_/default/run/production/{tenantId}/{folderKey}/{appSystemName}/public';

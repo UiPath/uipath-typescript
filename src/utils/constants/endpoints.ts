@@ -36,7 +36,8 @@ export const MAESTRO_ENDPOINTS = {
   },
   CASES: {
     GET_CASE_JSON: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/case-json`,
-    GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v1alpha1/element-executions/case-instances/${instanceId}`,
+    GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v1/element-executions/case-instances/${instanceId}`,
+    REOPEN: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/reopen`,
   },
 } as const;
 
@@ -66,6 +67,8 @@ export const DATA_FABRIC_ENDPOINTS = {
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity`,
     GET_ENTITY_RECORDS: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read`,
     GET_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
+    GET_RECORD_BY_ID: (entityId: string, recordId: string) =>
+      `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read/${recordId}`,
     INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert`,
     BATCH_INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert-batch`,
     UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update-batch`,
