@@ -9,14 +9,14 @@ import type { ConnectionStatus } from '@/core/websocket';
 import type { RawAgentGetResponse, RawAgentGetByIdResponse } from './agents.types';
 import type {
   ConversationServiceModel,
-  ConversationGetResponse,
-  CreateConversationOptions
+  ConversationCreateResponse,
+  ConversationCreateOptions
 } from '../conversations';
 
 /**
- * Options for creating a conversation from an agent (without agentId/folderId)
+ * Options for creating a conversation from an agent
  */
-export type AgentCreateConversationOptions = Omit<CreateConversationOptions, 'agentId' | 'folderId'>;
+export type AgentCreateConversationOptions = ConversationCreateOptions;
 
 /**
  * Scoped conversation service for a specific agent.
@@ -36,7 +36,7 @@ export interface AgentConversationServiceModel {
    * const session = conversation.startSession();
    * ```
    */
-  create(options?: AgentCreateConversationOptions): Promise<ConversationGetResponse>;
+  create(options?: AgentCreateConversationOptions): Promise<ConversationCreateResponse>;
 }
 
 /**
@@ -78,12 +78,8 @@ function createAgentMethods(
   conversationService: ConversationServiceModel
 ): AgentMethods {
   const agentConversations: AgentConversationServiceModel = {
-    async create(options: AgentCreateConversationOptions = {}): Promise<ConversationGetResponse> {
-      return conversationService.create({
-        ...options,
-        agentId: agentData.id,
-        folderId: agentData.folderId
-      });
+    async create(options: AgentCreateConversationOptions = {}): Promise<ConversationCreateResponse> {
+      return conversationService.create(agentData.id, agentData.folderId, options);
     }
   };
 
@@ -95,20 +91,10 @@ function createAgentMethods(
   };
 }
 
-/** @internal */
-export function createAgentWithMethods(
-  agentData: RawAgentGetResponse,
+export function createAgentWithMethods<T extends RawAgentGetResponse>(
+  agentData: T,
   conversationService: ConversationServiceModel
-): AgentGetResponse {
+): T & AgentMethods {
   const methods = createAgentMethods(agentData, conversationService);
-  return Object.assign({}, agentData, methods) as AgentGetResponse;
-}
-
-/** @internal */
-export function createAgentByIdWithMethods(
-  agentData: RawAgentGetByIdResponse,
-  conversationService: ConversationServiceModel
-): AgentGetByIdResponse {
-  const methods = createAgentMethods(agentData, conversationService);
-  return Object.assign({}, agentData, methods) as AgentGetByIdResponse;
+  return Object.assign({}, agentData, methods) as T & AgentMethods;
 }

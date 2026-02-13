@@ -1,17 +1,13 @@
 import {
   MessageRole,
-  type ContentPartId,
   type InterruptEndEvent,
-  type InterruptId,
   type InterruptStartEvent,
   type MakeRequired,
   type Message,
   type MessageEndEvent,
   type MessageEvent,
-  type MessageId,
   type MessageStartEvent,
-  type MetaEvent,
-  type ToolCallId
+  type MetaEvent
 } from '@/models/conversational-agent';
 
 import type { ContentPartEventHelper, ContentPartStartEventWithData } from './content-part-event-helper';
@@ -52,17 +48,17 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   MessageEvent
 > implements MessageStream {
 
-  protected readonly _contentPartMap = new Map<ContentPartId, ContentPartEventHelperImpl>();
+  protected readonly _contentPartMap = new Map<string, ContentPartEventHelperImpl>();
   protected readonly _contentPartStartHandlers = new Array<ContentPartStartHandler>();
   protected readonly _endHandlers = new Array<MessageEndHandler>();
   protected readonly _toolCallStartHandlers = new Array<ToolCallStartHandler>();
-  protected readonly _toolCallMap = new Map<ToolCallId, ToolCallEventHelperImpl>();
+  protected readonly _toolCallMap = new Map<string, ToolCallEventHelperImpl>();
   protected readonly _interruptStartHandlers = new Array<InterruptStartHandler>();
   protected readonly _interruptEndHandlers = new Array<InterruptEndHandler>();
 
   constructor(
     public readonly exchange: ExchangeEventHelper,
-    public readonly messageId: MessageId,
+    public readonly messageId: string,
 
     /**
      * MessageStartEvent used to initialize the MessageEventHelper. Will be undefined if some other sub-event was
@@ -180,7 +176,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    * @param contentPartId The id of the content part to get.
    * @returns The ContentPartEventHelper for the specified id, or undefined if no such content part exists.
    */
-  public getContentPart(contentPartId: ContentPartId): ContentPartEventHelper | undefined {
+  public getContentPart(contentPartId: string): ContentPartEventHelper | undefined {
     return this._contentPartMap.get(contentPartId);
   }
 
@@ -226,7 +222,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    * @param toolCallId The id of the tool call to get.
    * @returns The ToolCallEventHelper for the specified id, or undefined if no such tool call exists.
    */
-  public getToolCall(toolCallId: ToolCallId): ToolCallEventHelper | undefined {
+  public getToolCall(toolCallId: string): ToolCallEventHelper | undefined {
     return this._toolCallMap.get(toolCallId);
   }
 
@@ -295,7 +291,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    */
   public onContentPartCompleted(cb: ContentPartCompletedHandler) {
     this.onContentPartStart(contentPart => {
-      contentPart.onComplete(cb);
+      contentPart.onCompleted(cb);
     });
   }
 
@@ -346,7 +342,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   /**
    * Sends an interrupt start event.
    */
-  public sendInterrupt(interruptId: InterruptId, startInterrupt: InterruptStartEvent) {
+  public sendInterrupt(interruptId: string, startInterrupt: InterruptStartEvent) {
     this.assertNotEnded();
     this.emit({
       interrupt: {
@@ -359,7 +355,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   /**
    * Sends an interrupt end event.
    */
-  public sendInterruptEnd(interruptId: InterruptId, endInterrupt: InterruptEndEvent) {
+  public sendInterruptEnd(interruptId: string, endInterrupt: InterruptEndEvent) {
     this.assertNotEnded();
     this.emit({
       interrupt: {

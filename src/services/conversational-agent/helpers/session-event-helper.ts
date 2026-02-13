@@ -1,21 +1,17 @@
 import type {
   AsyncInputStreamEndEvent,
-  AsyncInputStreamId,
   ConversationEvent,
-  ConversationId,
   Exchange,
-  ExchangeId,
   MetaEvent,
   SessionEndEvent,
   SessionStartedEvent,
-  SessionStartEvent,
-  ToolCallId
+  SessionStartEvent
 } from '@/models/conversational-agent';
 
-import type { AsyncInputStreamEventHelper } from './async-input-stream-event-helper';
-import { AsyncInputStreamEventHelperImpl } from './async-input-stream-event-helper';
-import type { AsyncToolCallEventHelper } from './async-tool-call-event-helper';
-import { AsyncToolCallEventHelperImpl } from './async-tool-call-event-helper';
+import type { AsyncInputStreamEventHelper } from './input-stream-event-helper';
+import { AsyncInputStreamEventHelperImpl } from './input-stream-event-helper';
+import type { AsyncToolCallEventHelper } from './session-tool-call-event-helper';
+import { AsyncToolCallEventHelperImpl } from './session-tool-call-event-helper';
 import { ConversationEventHelperBase } from './conversation-event-helper-base';
 import type {
   AnyErrorEndHandler,
@@ -32,9 +28,9 @@ import type {
   InputStreamStartEventOptions,
   InputStreamStartHandler,
   LabelUpdatedHandler,
-  SessionEndHandler as SessionEndHandler,
+  SessionEndHandler,
   SessionEndingHandler,
-  SessionStartedHandler as SessionStartedHandler,
+  SessionStartedHandler,
   ToolCallStartEventWithId
 } from './conversation-event-helper-common';
 import {
@@ -54,12 +50,12 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   ConversationEvent
 > implements SessionStream {
 
-  protected readonly _exchangeMap = new Map<ExchangeId, ExchangeEventHelperImpl>();
+  protected readonly _exchangeMap = new Map<string, ExchangeEventHelperImpl>();
   protected readonly _inputStreamMap = new Map<string, AsyncInputStreamEventHelperImpl>();
   protected readonly _exchangeStartHandlers = new Array<ExchangeStartHandler>();
   protected readonly _inputStreamStartHandlers = new Array<InputStreamStartHandler>();
   protected readonly _asyncToolCallStartHandlers = new Array<AsyncToolCallStartHandler>();
-  protected readonly _asyncToolCallMap = new Map<ToolCallId, AsyncToolCallEventHelperImpl>();
+  protected readonly _asyncToolCallMap = new Map<string, AsyncToolCallEventHelperImpl>();
   protected readonly _labelUpdatedHandlers = new Array<LabelUpdatedHandler>();
   protected readonly _sessionStartedHandlers = new Array<SessionStartedHandler>();
   protected readonly _sessionEndingHandlers = new Array<SessionEndingHandler>();
@@ -70,7 +66,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
 
   constructor(
     manager: ConversationEventHelperManager,
-    public readonly conversationId: ConversationId,
+    public readonly conversationId: string,
 
     /**
      * SessionStartEvent used to initialize the SessionEventHelper. Will be undefined if some other sub-event was
@@ -182,7 +178,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
    * @param exchangeId The id of the exchange to get.
    * @returns The ExchangeEventHelper for the specified id, or undefined if no such exchange exists.
    */
-  public getExchange(exchangeId: ExchangeId): ExchangeEventHelper | undefined {
+  public getExchange(exchangeId: string): ExchangeEventHelper | undefined {
     return this._exchangeMap.get(exchangeId);
   }
 
@@ -216,7 +212,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   /**
    * Iterator over all the async input streams in this session.
    */
-  public get asyncInputStreams(): Iterator<AsyncInputStreamEventHelper> {
+  public get asyncInputStreams(): Iterable<AsyncInputStreamEventHelper> {
     return this._inputStreamMap.values();
   }
 
@@ -225,7 +221,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
    * @param exchangeId The id of the async input stream to get.
    * @returns The AsyncInputStreamEventHelper for the specified id, or undefined if no such async input stream exists.
    */
-  public getAsyncInputStream(streamId: AsyncInputStreamId): AsyncInputStreamEventHelper | undefined {
+  public getAsyncInputStream(streamId: string): AsyncInputStreamEventHelper | undefined {
     return this._inputStreamMap.get(streamId);
   }
 
@@ -260,7 +256,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   /**
    * Iterator over all the async tool call in this session.
    */
-  public get asyncToolCalls(): Iterator<AsyncToolCallEventHelper> {
+  public get asyncToolCalls(): Iterable<AsyncToolCallEventHelper> {
     return this._asyncToolCallMap.values();
   }
 
@@ -269,7 +265,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
    * @param toolCallId The id of the async tool call to get.
    * @returns The AsyncToolCallEventHelper for the specified id, or undefined if no such async tool call exists.
    */
-  public getAsyncToolCall(toolCallId: ToolCallId): AsyncToolCallEventHelper | undefined {
+  public getAsyncToolCall(toolCallId: string): AsyncToolCallEventHelper | undefined {
     return this._asyncToolCallMap.get(toolCallId);
   }
 

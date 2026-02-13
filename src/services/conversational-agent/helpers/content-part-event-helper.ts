@@ -1,13 +1,11 @@
 import type {
   Citation,
-  CitationId,
   CitationOptions,
   CitationSource,
   ContentPart,
   ContentPartChunkEvent,
   ContentPartEndEvent,
   ContentPartEvent,
-  ContentPartId,
   ContentPartStartEvent,
   InlineValue,
   MakeOptional,
@@ -54,7 +52,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
 
   constructor(
     public readonly message: MessageEventHelper,
-    public readonly contentPartId: ContentPartId,
+    public readonly contentPartId: string,
 
     /**
      * ContentPartStartEvent used to initialize the ContentPartEventHelper. Will be undefined if some other sub-event
@@ -84,35 +82,28 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
   }
 
   /**
-   * Whether this content part is text (text/plain, text/markdown, etc.).
-   * @example
-   * ```typescript
-   * message.onContentPartStart((contentPart) => {
-   *   if (contentPart.isText) {
-   *     contentPart.onChunk((chunk) => {
-   *       console.log('Text chunk:', chunk.data);
-   *     });
-   *   }
-   * });
-   * ```
+   * Whether this content part is plain text. Matches `text/plain`.
    */
   public get isText(): boolean {
-    return this.startEventMaybe?.mimeType?.startsWith('text/') ?? false;
+    return this.startEventMaybe?.mimeType === 'text/plain';
+  }
+
+  /**
+   * Whether this content part is markdown. Matches `text/markdown`.
+   */
+  public get isMarkdown(): boolean {
+    return this.startEventMaybe?.mimeType === 'text/markdown';
+  }
+
+  /**
+   * Whether this content part is HTML. Matches `text/html`.
+   */
+  public get isHtml(): boolean {
+    return this.startEventMaybe?.mimeType === 'text/html';
   }
 
   /**
    * Whether this content part is audio content.
-   * @example
-   * ```typescript
-   * message.onContentPartStart((contentPart) => {
-   *   if (contentPart.isAudio) {
-   *     // Handle audio streaming
-   *     contentPart.onChunk((chunk) => {
-   *       audioPlayer.appendBuffer(chunk.data);
-   *     });
-   *   }
-   * });
-   * ```
    */
   public get isAudio(): boolean {
     return this.startEventMaybe?.mimeType?.startsWith('audio/') ?? false;
@@ -123,13 +114,6 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
    */
   public get isImage(): boolean {
     return this.startEventMaybe?.mimeType?.startsWith('image/') ?? false;
-  }
-
-  /**
-   * Whether this content part is markdown text.
-   */
-  public get isMarkdown(): boolean {
-    return this.startEventMaybe?.mimeType === 'text/markdown';
   }
 
   /**
@@ -183,7 +167,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
    * Sends a chunk with citation start event.
    * @throws Error if content part stream has already ended.
    */
-  public sendChunkWithCitationStart(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: CitationId }) {
+  public sendChunkWithCitationStart(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string }) {
     this.assertNotEnded();
     const { citationId, ...rest } = chunk;
     this.emit({
@@ -201,7 +185,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
    * Sends a chunk with citation end event.
    * @throws Error if content part stream has already ended.
    */
-  public sendChunkWithCitationEnd(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: CitationId; sources: CitationSource[] }) {
+  public sendChunkWithCitationEnd(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] }) {
     this.assertNotEnded();
     const { citationId, sources, ...rest } = chunk;
     this.emit({
@@ -219,7 +203,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
    * Sends a chunk with citation start and end event.
    * @throws Error if content part stream has already ended.
    */
-  public sendChunkWithCitation(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: CitationId; sources: CitationSource[] }) {
+  public sendChunkWithCitation(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] }) {
     this.assertNotEnded();
     const { citationId, sources, ...rest } = chunk;
     this.emit({
@@ -314,10 +298,10 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
     this.errors.delete(errorId);
   }
 
-  public onComplete(cb: (completedContentPart: CompletedContentPart) => void) {
+  public onCompleted(cb: (completedContentPart: CompletedContentPart) => void) {
 
     let data = '';
-    const citationOffsets = new Map<CitationId, number>();
+    const citationOffsets = new Map<string, number>();
     const citations = new Array<CitationOptions>();
     const citationErrors = new Array<CitationError>();
 
@@ -405,9 +389,7 @@ export class ContentPartEventHelperImpl extends ContentPartEventHelper {
 
     yield {
       contentPartId: contentPart.contentPartId,
-      endContentPart: {
-        ...(contentPart.isIncomplete ? { interrupted: true } : {})
-      }
+      endContentPart: contentPart.isIncomplete ? { interrupted: true } : {}
     };
 
   }
