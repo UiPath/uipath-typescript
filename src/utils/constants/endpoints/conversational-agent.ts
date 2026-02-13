@@ -2,7 +2,7 @@
  * Conversational Agent Service Endpoints
  */
 
-import { AUTOPILOT_BASE, LLM_OPS_BASE } from './base';
+import { AUTOPILOT_BASE } from './base';
 
 const API_VERSION = 'v1';
 
@@ -67,11 +67,4 @@ export const USER_ENDPOINTS = {
  */
 export const FEATURE_ENDPOINTS = {
   FEATURE_FLAGS: `${AUTOPILOT_BASE}/api/utility/feature-flags`
-} as const;
-
-/**
- * Traces/LLM Ops Endpoints
- */
-export const TRACES_ENDPOINTS = {
-  GET_SPANS: (traceId: string) => `${LLM_OPS_BASE}/api/Traces/spans?traceId=${traceId}`
 } as const;
