@@ -3,22 +3,22 @@
  */
 
 import type {
-  ConversationId,
-  ExchangeId,
-  MessageId,
-  ContentPartId
-} from './types/common.types';
-import type {
   MessageGetResponse,
   ContentPartGetResponse
 } from './exchanges.types';
 
 /**
- * Service for message operations within conversations
+ * Service for retrieving individual messages within an {@link ExchangeServiceModel | Exchange}
  *
- * Messages are the individual turns within an exchange.
+ * A message is a single turn from a user, assistant, or system. Each message includes
+ * a role, contentParts (text, audio, images), toolCalls, and interrupts.
+ * Messages are also returned as part of exchange responses — use this service
+ * when you need to fetch a specific message by ID or retrieve external content parts.
+ * For real-time streaming of messages, see {@link MessageStream}.
  *
  * ### Usage
+ *
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
  * import { Messages } from '@uipath/uipath-typescript/conversational-agent';
@@ -47,17 +47,13 @@ export interface MessageServiceModel {
    * ```
    */
   getById(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
-    messageId: MessageId
+    conversationId: string,
+    exchangeId: string,
+    messageId: string
   ): Promise<MessageGetResponse>;
 
   /**
    * Gets an external content part by ID
-   *
-   * Retrieves content stored externally (e.g., large files or attachments)
-   * rather than inline in the message. Returns 404 for inline content parts (text) —
-   * use the message's contentParts directly for inline content.
    *
    * @param conversationId - The conversation containing the content
    * @param exchangeId - The exchange containing the content
@@ -75,9 +71,9 @@ export interface MessageServiceModel {
    * ```
    */
   getContentPartById(
-    conversationId: ConversationId,
-    exchangeId: ExchangeId,
-    messageId: MessageId,
-    contentPartId: ContentPartId
+    conversationId: string,
+    exchangeId: string,
+    messageId: string,
+    contentPartId: string
   ): Promise<ContentPartGetResponse>;
 }

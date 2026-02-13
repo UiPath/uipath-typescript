@@ -23,6 +23,6 @@ export * from './exchanges.models';
 export * from './messages.models';
 
 // ==================== Event Types ====================
-// WebSocket protocol types and consumer-facing interfaces
+// WebSocket protocol types and interfaces
 export * from './events';
 

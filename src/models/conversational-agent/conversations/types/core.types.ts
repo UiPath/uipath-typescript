@@ -4,23 +4,13 @@
  */
 
 import {
-  CitationId,
   CitationSource,
-  ContentPartId,
-  ConversationId,
-  ExchangeId,
   InlineOrExternalValue,
-  InterruptId,
   InterruptType,
-  MessageId,
   MessageRole,
-  MimeType,
   Simplify,
-  ToolCallId,
   ToolCallInputValue,
-  ToolCallOutputValue,
-  ToolName,
-  UTCTimeStamp
+  ToolCallOutputValue
 } from './common.types';
 
 /**
@@ -31,15 +21,6 @@ export enum SortOrder {
   Descending = 'descending'
 }
 
-/**
- * Trace ID - can be UUID (legacy) or OpenTelemetry-format (32-char hex).
- */
-export type TraceId = string;
-
-/**
- * Span ID - can be UUID (legacy) or OpenTelemetry-format (16-char hex).
- */
-export type SpanId = string;
 
 /**
  * Represents a citation or reference to an external source within a content part.
@@ -48,11 +29,11 @@ export interface Citation {
   /**
    * Unique identifier for the citation.
    */
-  id: CitationId;
+  id: string;
   /**
    * Unique identifier for the citation within its content part.
    */
-  citationId: CitationId;
+  citationId: string;
   /**
    * The offset of the start of the citation target in the content part data.
    */
@@ -68,18 +49,18 @@ export interface Citation {
   /**
    * Timestamp indicating when the citation was created.
    */
-  createdTime: UTCTimeStamp;
+  createdTime: string;
   /**
    * Timestamp indicating when the citation was last updated.
    */
-  updatedTime: UTCTimeStamp;
+  updatedTime: string;
 }
 
 /**
  * Citation options for input operations (without timestamps).
  */
 export interface CitationOptions {
-  citationId: CitationId;
+  citationId: string;
   offset: number;
   length: number;
   sources: CitationSource[];
@@ -97,15 +78,15 @@ export interface ContentPart {
   /**
    * Unique identifier for the content part.
    */
-  id: ContentPartId;
+  id: string;
   /**
    * Unique identifier for the content part within the message.
    */
-  contentPartId: ContentPartId;
+  contentPartId: string;
   /**
    * The MIME type of the content.
    */
-  mimeType: MimeType;
+  mimeType: string;
   /**
    * The actual content data.
    */
@@ -129,11 +110,11 @@ export interface ContentPart {
   /**
    * Timestamp indicating when the content part was created.
    */
-  createdTime: UTCTimeStamp;
+  createdTime: string;
   /**
    * Timestamp indicating when the content part was last updated.
    */
-  updatedTime: UTCTimeStamp;
+  updatedTime: string;
 }
 
 /**
@@ -143,7 +124,7 @@ export interface ToolCallResult {
   /**
    * Timestamp indicating when the result was generated.
    */
-  timestamp?: UTCTimeStamp;
+  timestamp?: string;
   /**
    * The value returned by the tool.
    */
@@ -169,15 +150,15 @@ export interface ToolCall {
   /**
    * Unique identifier for the tool call.
    */
-  id: ToolCallId;
+  id: string;
   /**
    * Unique identifier for the tool call within the message.
    */
-  toolCallId: ToolCallId;
+  toolCallId: string;
   /**
    * The name of the tool being called.
    */
-  name: ToolName;
+  name: string;
   /**
    * Optional input value provided to the tool.
    */
@@ -189,7 +170,7 @@ export interface ToolCall {
   /**
    * Timestamp indicating when the tool call was initiated.
    */
-  timestamp?: UTCTimeStamp;
+  timestamp?: string;
   /**
    * Optional output value returned by the tool's execution.
    */
@@ -197,11 +178,11 @@ export interface ToolCall {
   /**
    * Timestamp indicating when the tool call was created.
    */
-  createdTime: UTCTimeStamp;
+  createdTime: string;
   /**
    * Timestamp indicating when the tool call was last updated.
    */
-  updatedTime: UTCTimeStamp;
+  updatedTime: string;
 }
 
 /**
@@ -211,11 +192,11 @@ export interface Interrupt {
   /**
    * Unique identifier for the interrupt.
    */
-  id: InterruptId;
+  id: string;
   /**
    * Unique identifier for the interrupt within the message.
    */
-  interruptId: InterruptId;
+  interruptId: string;
   /**
    * The type of interrupt.
    */
@@ -231,11 +212,11 @@ export interface Interrupt {
   /**
    * Timestamp indicating when the interrupt was created.
    */
-  createdTime: UTCTimeStamp;
+  createdTime: string;
   /**
    * Timestamp indicating when the interrupt was last updated.
    */
-  updatedTime: UTCTimeStamp;
+  updatedTime: string;
 }
 
 /**
@@ -245,11 +226,11 @@ export interface Message {
   /**
    * Unique identifier for the message.
    */
-  id: MessageId;
+  id: string;
   /**
    * Unique identifier for the message within its exchange.
    */
-  messageId: MessageId;
+  messageId: string;
   /**
    * The role of the message sender.
    */
@@ -269,15 +250,15 @@ export interface Message {
   /**
    * Timestamp indicating when the message was created.
    */
-  createdTime: UTCTimeStamp;
+  createdTime: string;
   /**
    * Timestamp indicating when the message was last updated.
    */
-  updatedTime: UTCTimeStamp;
+  updatedTime: string;
   /**
    * Span identifier for distributed tracing.
    */
-  spanId?: SpanId;
+  spanId?: string;
 }
 
 /**
@@ -295,11 +276,11 @@ export interface Exchange {
   /**
    * Unique identifier for the exchange.
    */
-  id: ExchangeId;
+  id: string;
   /**
    * Identifies the exchange.
    */
-  exchangeId: ExchangeId;
+  exchangeId: string;
   /**
    * Messages in the exchange.
    */
@@ -307,15 +288,15 @@ export interface Exchange {
   /**
    * Timestamp indicating when the exchange was created.
    */
-  createdTime: UTCTimeStamp;
+  createdTime: string;
   /**
    * Timestamp indicating when the exchange was last updated.
    */
-  updatedTime: UTCTimeStamp;
+  updatedTime: string;
   /**
    * Span identifier for distributed tracing.
    */
-  spanId?: SpanId;
+  spanId?: string;
   /**
    * The optional feedback rating given by the user.
    */
@@ -341,19 +322,19 @@ export interface RawConversationGetResponse {
   /**
    * A globally unique identifier for the conversation.
    */
-  id: ConversationId;
+  id: string;
   /**
    * Timestamp indicating when the conversation was created.
    */
-  createdTime: UTCTimeStamp;
+  createdTime: string;
   /**
    * Timestamp indicating when any conversation field(s) are updated.
    */
-  updatedTime: UTCTimeStamp;
+  updatedTime: string;
   /**
    * Timestamp indicating when the conversation last had activity.
    */
-  lastActivityTime: UTCTimeStamp;
+  lastActivityTime: string;
   /**
    * The human-readable label or title for the conversation.
    */
@@ -385,11 +366,11 @@ export interface RawConversationGetResponse {
   /**
    * Trace identifier for distributed tracing.
    */
-  traceId: TraceId;
+  traceId: string;
   /**
    * Span identifier for distributed tracing.
    */
-  spanId?: SpanId;
+  spanId?: string;
   /**
    * Optional configuration options for when the service automatically starts agent job(s).
    */

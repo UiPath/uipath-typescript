@@ -6,21 +6,35 @@ import type { SortOrder, ConversationJobStartOverrides, RawConversationGetRespon
 import type { ConversationGetResponse } from './conversations.models';
 import type { PaginationOptions } from '@/utils/pagination/types';
 
+// ==================== Session Options ====================
+
+/**
+ * Options for starting a session on a conversation object.
+ * Unlike SessionStartEventOptions, conversationId is not needed since it's implicit from the conversation.
+ */
+export interface ConversationSessionOptions {
+  /**
+   * When set, causes events emitted to also be dispatched to event handlers.
+   * This option is useful when the event helper objects are bound to UI components
+   * as it allows a single code path for rendering both user and assistant messages.
+   */
+  echo?: boolean;
+}
+
 // ==================== Conversation Response Types ====================
 
 /** Response for creating a conversation (includes methods) */
 export type ConversationCreateResponse = ConversationGetResponse;
+
+/** Response for updating a conversation (includes methods) */
+export type ConversationUpdateResponse = ConversationGetResponse;
 
 /** Response for deleting a conversation (raw data, no methods needed) */
 export type ConversationDeleteResponse = RawConversationGetResponse;
 
 // ==================== Conversation Request Types ====================
 
-export interface CreateConversationOptions {
-  /** Agent ID (required) */
-  agentId: number;
-  /** Folder ID (required) */
-  folderId: number;
+export interface ConversationCreateOptions {
   /** Human-readable label for the conversation (max 100 chars) */
   label?: string;
   /** Whether the label should be auto-generated and updated after exchanges */
@@ -31,7 +45,7 @@ export interface CreateConversationOptions {
   jobStartOverrides?: ConversationJobStartOverrides;
 }
 
-export interface UpdateConversationOptions {
+export interface ConversationUpdateOptions {
   /** Human-readable label for the conversation */
   label?: string;
   /** Whether the label should be auto-generated and updated after exchanges */
@@ -43,6 +57,7 @@ export interface UpdateConversationOptions {
 }
 
 export type ConversationGetAllOptions = PaginationOptions & {
+  /** Sort order for conversations */
   sort?: SortOrder;
 }
 
@@ -68,7 +83,7 @@ export interface FileUploadAccess {
  * Contains the attachment URI and upload access details for uploading
  * the file content to blob storage.
  */
-export interface AttachmentCreateResponse {
+export interface ConversationAttachmentCreateResponse {
   /** URI to reference this attachment in messages */
   uri: string;
   /** File name */
@@ -80,7 +95,7 @@ export interface AttachmentCreateResponse {
 /**
  * Response for uploading an attachment (after file content is uploaded)
  */
-export interface AttachmentUploadResponse {
+export interface ConversationAttachmentUploadResponse {
   /** URI to reference this attachment in messages */
   uri: string;
   /** File name */

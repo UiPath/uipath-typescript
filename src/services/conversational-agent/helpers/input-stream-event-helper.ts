@@ -2,7 +2,6 @@ import type {
   AsyncInputStreamChunkEvent,
   AsyncInputStreamEndEvent,
   AsyncInputStreamEvent,
-  AsyncInputStreamId,
   AsyncInputStreamStartEvent,
   MetaEvent
 } from '@/models/conversational-agent';
@@ -31,7 +30,7 @@ export abstract class AsyncInputStreamEventHelper extends ConversationEventHelpe
 
   constructor(
     public readonly session: SessionEventHelper,
-    public readonly streamId: AsyncInputStreamId,
+    public readonly streamId: string,
 
     /**
      * AsyncInputStreamStartEvent used to initialize the AsyncInputStreamEventHelper. Will be undefined if some other

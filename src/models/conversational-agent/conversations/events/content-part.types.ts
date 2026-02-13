@@ -1,35 +1,62 @@
 /**
- * Consumer-facing interface for ContentPartEventHelper
+ * Content Part Stream Types
  *
  * Defines the public API for interacting with streaming content parts
  * within a message. Content parts represent text, audio, images, etc.
  */
 
-import type { CitationId, CitationSource, ContentPartId, MakeRequired } from '../types';
+import type { CitationOptions, CitationSource, MakeRequired } from '../types';
 import type {
   ContentPartChunkEvent,
   ContentPartEndEvent,
   ContentPartEvent,
   ContentPartStartEvent,
   ErrorEndEvent,
-  ErrorId,
   ErrorStartEvent,
   MetaEvent
 } from './protocol.types';
-import type { CompletedContentPart } from './completed.types';
 
 /**
- * Consumer-facing model for content part event helpers.
+ * Error encountered during citation processing
+ */
+export type CitationError = {
+  citationId: string;
+  errorType: CitationErrorType;
+};
+
+/**
+ * Types of citation processing errors
+ */
+export enum CitationErrorType {
+  CitationNotEnded = 'CitationNotEnded',
+  CitationNotStarted = 'CitationNotStarted'
+}
+
+/**
+ * Aggregated data for a completed content part
+ *
+ * Contains the full buffered text, citations, and metadata
+ * available after a content part stream has ended.
+ */
+export type CompletedContentPart = ContentPartStartEvent & ContentPartEndEvent & {
+  contentPartId: string;
+  data: string;
+  citations: CitationOptions[];
+  citationErrors: CitationError[];
+};
+
+/**
+ * Model for content part event helpers.
  *
  * A content part is a single piece of content within a message — text,
  * audio, an image, or a transcript. Use the type-check properties
- * (`isText`, `isAudio`, `isImage`, `isMarkdown`, `isTranscript`) to
- * determine the content type and handle it accordingly.
+ * (`isText`, `isMarkdown`, `isHtml`, `isAudio`, `isImage`, `isTranscript`)
+ * to determine the content type and handle it accordingly.
  *
- * @example Streaming text content
+ * @example Streaming markdown content
  * ```typescript
  * message.onContentPartStart((part) => {
- *   if (part.isText) {
+ *   if (part.isMarkdown) {
  *     part.onChunk((chunk) => {
  *       process.stdout.write(chunk.data ?? '');
  *     });
@@ -40,8 +67,12 @@ import type { CompletedContentPart } from './completed.types';
  * @example Handling different content types
  * ```typescript
  * message.onContentPartStart((part) => {
- *   if (part.isMarkdown) {
+ *   if (part.isText) {
+ *     part.onChunk((chunk) => showPlainText(chunk.data ?? ''));
+ *   } else if (part.isMarkdown) {
  *     part.onChunk((chunk) => renderMarkdown(chunk.data ?? ''));
+ *   } else if (part.isHtml) {
+ *     part.onChunk((chunk) => renderHtml(chunk.data ?? ''));
  *   } else if (part.isAudio) {
  *     part.onChunk((chunk) => audioPlayer.enqueue(chunk.data ?? ''));
  *   } else if (part.isImage) {
@@ -55,7 +86,7 @@ import type { CompletedContentPart } from './completed.types';
  * @example Getting complete content with citations (buffered)
  * ```typescript
  * message.onContentPartStart((part) => {
- *   part.onComplete((completed) => {
+ *   part.onCompleted((completed) => {
  *     console.log(`Full text: ${completed.data}`);
  *
  *     // Access citations — each has offset, length, and sources
@@ -79,22 +110,25 @@ import type { CompletedContentPart } from './completed.types';
  */
 export interface ContentPartStream {
   /** Unique identifier for this content part */
-  readonly contentPartId: ContentPartId;
+  readonly contentPartId: string;
 
   /** The MIME type of this content part, or undefined if start event not yet received */
   readonly mimeType: string | undefined;
 
-  /** Whether this content part is text (text/plain, text/markdown, etc.) */
+  /** Whether this content part is plain text. Matches `text/plain`. */
   readonly isText: boolean;
+
+  /** Whether this content part is markdown. Matches `text/markdown`. */
+  readonly isMarkdown: boolean;
+
+  /** Whether this content part is HTML. Matches `text/html`. */
+  readonly isHtml: boolean;
 
   /** Whether this content part is audio content */
   readonly isAudio: boolean;
 
   /** Whether this content part is an image */
   readonly isImage: boolean;
-
-  /** Whether this content part is markdown text */
-  readonly isMarkdown: boolean;
 
   /** Whether this content part is a transcript (from speech-to-text) */
   readonly isTranscript: boolean;
@@ -127,14 +161,14 @@ export interface ContentPartStream {
    * });
    * ```
    */
-  onErrorStart(cb: (error: { errorId: ErrorId } & ErrorStartEvent) => void): () => void;
+  onErrorStart(cb: (error: { errorId: string } & ErrorStartEvent) => void): () => void;
 
   /**
    * Registers a handler for error end events
    * @param cb - Callback receiving the error end event
    * @returns Cleanup function to remove the handler
    */
-  onErrorEnd(cb: (error: { errorId: ErrorId } & ErrorEndEvent) => void): () => void;
+  onErrorEnd(cb: (error: { errorId: string } & ErrorEndEvent) => void): () => void;
 
   /**
    * Registers a handler for content part chunks
@@ -179,7 +213,7 @@ export interface ContentPartStream {
    *
    * @example Getting buffered content with citation data
    * ```typescript
-   * part.onComplete((completed) => {
+   * part.onCompleted((completed) => {
    *   console.log(`Content type: ${completed.mimeType}`);
    *   console.log(`Full text: ${completed.data}`);
    *
@@ -199,7 +233,7 @@ export interface ContentPartStream {
    * });
    * ```
    */
-  onComplete(cb: (completedContentPart: CompletedContentPart) => void): void;
+  onCompleted(cb: (completedContentPart: CompletedContentPart) => void): void;
 
   // ==================== Sending ====================
 
@@ -235,14 +269,14 @@ export interface ContentPartStream {
    * @param args - Error details including optional error ID and message
    * @internal
    */
-  sendErrorStart(args: { errorId?: ErrorId } & ErrorStartEvent): void;
+  sendErrorStart(args: { errorId?: string } & ErrorStartEvent): void;
 
   /**
    * Sends an error end event for this content part
    * @param args - Error end details including the error ID
    * @internal
    */
-  sendErrorEnd(args: { errorId: ErrorId } & ErrorEndEvent): void;
+  sendErrorEnd(args: { errorId: string } & ErrorEndEvent): void;
 
   /**
    * Sends a metadata event for this content part
@@ -260,7 +294,7 @@ export interface ContentPartStream {
    * @param chunk - Chunk data with citation ID
    * @internal
    */
-  sendChunkWithCitationStart(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: CitationId }): void;
+  sendChunkWithCitationStart(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string }): void;
 
   /**
    * Sends a chunk that ends a citation range
@@ -270,7 +304,7 @@ export interface ContentPartStream {
    * @param chunk - Chunk data with citation ID and sources
    * @internal
    */
-  sendChunkWithCitationEnd(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: CitationId; sources: CitationSource[] }): void;
+  sendChunkWithCitationEnd(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] }): void;
 
   /**
    * Sends a chunk that is a complete citation (start and end in one)
@@ -280,7 +314,7 @@ export interface ContentPartStream {
    * @param chunk - Chunk data with citation ID and sources
    * @internal
    */
-  sendChunkWithCitation(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: CitationId; sources: CitationSource[] }): void;
+  sendChunkWithCitation(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] }): void;
 
   /**
    * Emits a raw content part event

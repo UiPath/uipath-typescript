@@ -14,7 +14,7 @@ import type { ConnectionStatus } from '@/core/websocket';
  *
  * ### Usage
  *
- * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/)
+ * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
  * ```typescript
  * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
@@ -25,10 +25,10 @@ import type { ConnectionStatus } from '@/core/websocket';
  * const agents = await conversationalAgent.getAll();
  *
  * // Create a conversation with an agent
- * const conversation = await conversationalAgent.conversations.create({
- *   agentId: agents[0].id,
- *   folderId: agents[0].folderId
- * });
+ * const conversation = await conversationalAgent.conversations.create(
+ *   agents[0].id,
+ *   agents[0].folderId
+ * );
  * ```
  */
 export interface ConversationalAgentServiceModel {
@@ -94,7 +94,7 @@ export interface ConversationalAgentServiceModel {
    */
   onConnectionStatusChanged(handler: (status: ConnectionStatus, error: Error | null) => void): () => void;
 
-  /** @internal */
+  /** Service for creating and managing conversations. See {@link ConversationServiceModel}. */
   readonly conversations: ConversationServiceModel;
 
   /**

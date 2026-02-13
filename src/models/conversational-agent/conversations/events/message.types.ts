@@ -6,11 +6,10 @@
  * users, assistants, or the system.
  */
 
-import type { ContentPartId, InterruptId, MakeRequired, MessageId, MessageRole, ToolCallId } from '../types';
+import type { MakeRequired, MessageRole, Simplify } from '../types';
 import type {
   ContentPartStartEvent,
   ErrorEndEvent,
-  ErrorId,
   ErrorStartEvent,
   InterruptEndEvent,
   InterruptStartEvent,
@@ -20,10 +19,24 @@ import type {
   MetaEvent,
   ToolCallStartEvent
 } from './protocol.types';
-import type { CompletedContentPart, CompletedMessage, CompletedToolCall } from './completed.types';
+import type { CompletedContentPart, ContentPartStream } from './content-part.types';
+import type { CompletedToolCall, ToolCallStream } from './tool-call.types';
 
-import type { ContentPartStream } from './content-part.types';
-import type { ToolCallStream } from './tool-call.types';
+/**
+ * Aggregated data for a completed message
+ *
+ * Contains all content parts, tool calls, and metadata
+ * available after a message stream has ended.
+ */
+export type CompletedMessage = Simplify<
+  {
+    messageId: string;
+    contentParts: Array<CompletedContentPart>;
+    toolCalls: Array<CompletedToolCall>;
+  }
+  & Partial<MessageStartEvent>
+  & MessageEndEvent
+>;
 
 /**
  * Consumer-facing model for message event helpers.
@@ -38,7 +51,7 @@ import type { ToolCallStream } from './tool-call.types';
  * exchange.onMessageStart((message) => {
  *   if (message.isAssistant) {
  *     message.onContentPartStart((part) => {
- *       if (part.isText) {
+ *       if (part.isMarkdown) {
  *         part.onChunk((chunk) => {
  *           process.stdout.write(chunk.data ?? '');
  *         });
@@ -72,7 +85,7 @@ import type { ToolCallStream } from './tool-call.types';
  *     message.onCompleted((completed) => {
  *       console.log(`Message ${completed.messageId} finished`);
  *       for (const part of completed.contentParts) {
- *         console.log(part.text);
+ *         console.log(part.data);
  *       }
  *       for (const tool of completed.toolCalls) {
  *         console.log(`${tool.toolName} → ${tool.output}`);
@@ -91,7 +104,7 @@ import type { ToolCallStream } from './tool-call.types';
  */
 export interface MessageStream {
   /** Unique identifier for this message */
-  readonly messageId: MessageId;
+  readonly messageId: string;
 
   /** The role of this message sender, or undefined if start event not yet received */
   readonly role: MessageRole | undefined;
@@ -133,20 +146,20 @@ export interface MessageStream {
    * });
    * ```
    */
-  onErrorStart(cb: (error: { errorId: ErrorId } & ErrorStartEvent) => void): () => void;
+  onErrorStart(cb: (error: { errorId: string } & ErrorStartEvent) => void): () => void;
 
   /**
    * Registers a handler for error end events
    * @param cb - Callback receiving the error end event
    * @returns Cleanup function to remove the handler
    */
-  onErrorEnd(cb: (error: { errorId: ErrorId } & ErrorEndEvent) => void): () => void;
+  onErrorEnd(cb: (error: { errorId: string } & ErrorEndEvent) => void): () => void;
 
   /**
    * Registers a handler for content part start events
    *
    * Content parts are streamed pieces of content (text, audio, images,
-   * transcripts). Use `part.isText`, `part.isAudio`, etc. to determine type.
+   * transcripts). Use `part.isMarkdown`, `part.isAudio`, etc. to determine type.
    *
    * @param cb - Callback receiving each new content part
    * @returns Cleanup function to remove the handler
@@ -216,7 +229,6 @@ export interface MessageStream {
    * text, citations, and any citation errors.
    *
    * @param cb - Callback receiving the completed content part data
-   * @returns Cleanup function to remove the handler
    *
    * @example Getting completed content parts with citations
    * ```typescript
@@ -245,7 +257,6 @@ export interface MessageStream {
    * The handler receives the merged start and end event data.
    *
    * @param cb - Callback receiving the completed tool call data
-   * @returns Cleanup function to remove the handler
    *
    * @example Getting completed tool calls
    * ```typescript
@@ -265,7 +276,6 @@ export interface MessageStream {
    * all completed content parts and tool calls.
    *
    * @param cb - Callback receiving the completed message data
-   * @returns Cleanup function to remove the handler
    *
    * @example Getting the full buffered message
    * ```typescript
@@ -299,7 +309,7 @@ export interface MessageStream {
    * });
    * ```
    */
-  onInterruptStart(cb: (interrupt: { interruptId: InterruptId; startEvent: InterruptStartEvent }) => void): () => void;
+  onInterruptStart(cb: (interrupt: { interruptId: string; startEvent: InterruptStartEvent }) => void): () => void;
 
   /**
    * Registers a handler for interrupt end events
@@ -314,7 +324,7 @@ export interface MessageStream {
    * });
    * ```
    */
-  onInterruptEnd(cb: (interrupt: { interruptId: InterruptId; endEvent: InterruptEndEvent }) => void): () => void;
+  onInterruptEnd(cb: (interrupt: { interruptId: string; endEvent: InterruptEndEvent }) => void): () => void;
 
   /**
    * Sends an interrupt end event to resolve a pending interrupt
@@ -329,7 +339,7 @@ export interface MessageStream {
    * message.sendInterruptEnd(interruptId, { approved: true });
    * ```
    */
-  sendInterruptEnd(interruptId: InterruptId, endInterrupt: InterruptEndEvent): void;
+  sendInterruptEnd(interruptId: string, endInterrupt: InterruptEndEvent): void;
 
   // ==================== Content Part Management ====================
 
@@ -350,7 +360,7 @@ export interface MessageStream {
    * part.sendContentPartEnd();
    * ```
    */
-  startContentPart(args: { contentPartId?: ContentPartId } & ContentPartStartEvent): ContentPartStream;
+  startContentPart(args: { contentPartId?: string } & ContentPartStartEvent): ContentPartStream;
 
   /**
    * Sends a complete content part with data in one step
@@ -385,7 +395,7 @@ export interface MessageStream {
    * @param contentPartId - The content part ID to look up
    * @returns The content part stream, or undefined if not found
    */
-  getContentPart(contentPartId: ContentPartId): ContentPartStream | undefined;
+  getContentPart(contentPartId: string): ContentPartStream | undefined;
 
   // ==================== Tool Call Management ====================
 
@@ -406,7 +416,7 @@ export interface MessageStream {
    * });
    * ```
    */
-  startToolCall(args: { toolCallId?: ToolCallId } & ToolCallStartEvent): ToolCallStream;
+  startToolCall(args: { toolCallId?: string } & ToolCallStartEvent): ToolCallStream;
 
   /**
    * Iterator over all active tool calls in this message
@@ -418,7 +428,7 @@ export interface MessageStream {
    * @param toolCallId - The tool call ID to look up
    * @returns The tool call stream, or undefined if not found
    */
-  getToolCall(toolCallId: ToolCallId): ToolCallStream | undefined;
+  getToolCall(toolCallId: string): ToolCallStream | undefined;
 
   /**
    * Ends the message
@@ -439,14 +449,14 @@ export interface MessageStream {
    * @param args - Error details including optional error ID and message
    * @internal
    */
-  sendErrorStart(args: { errorId?: ErrorId } & ErrorStartEvent): void;
+  sendErrorStart(args: { errorId?: string } & ErrorStartEvent): void;
 
   /**
    * Sends an error end event for this message
    * @param args - Error end details including the error ID
    * @internal
    */
-  sendErrorEnd(args: { errorId: ErrorId } & ErrorEndEvent): void;
+  sendErrorEnd(args: { errorId: string } & ErrorEndEvent): void;
 
   /**
    * Sends a metadata event for this message
@@ -468,7 +478,7 @@ export interface MessageStream {
    * @param startInterrupt - The interrupt start event data
    * @internal
    */
-  sendInterrupt(interruptId: InterruptId, startInterrupt: InterruptStartEvent): void;
+  sendInterrupt(interruptId: string, startInterrupt: InterruptStartEvent): void;
 
   /**
    * Returns a string representation of this message

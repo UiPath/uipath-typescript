@@ -3,7 +3,6 @@ import type {
   MetaEvent,
   ToolCallEndEvent,
   ToolCallEvent,
-  ToolCallId,
   ToolCallStartEvent
 } from '@/models/conversational-agent';
 
@@ -29,7 +28,7 @@ export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBa
 
   constructor(
     public readonly session: SessionEventHelper,
-    public readonly toolCallId: ToolCallId,
+    public readonly toolCallId: string,
 
     /**
      * ToolCallStartEvent used to initialize the ToolCallEventHelper. Will be undefined if some other sub-event was

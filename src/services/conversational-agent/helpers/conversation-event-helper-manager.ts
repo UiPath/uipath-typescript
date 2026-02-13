@@ -1,6 +1,5 @@
 import type {
-  ConversationEvent,
-  ConversationId
+  ConversationEvent
 } from '@/models/conversational-agent';
 
 import type {
@@ -14,7 +13,7 @@ import type {
   ErrorEndHandler,
   ErrorStartEventOptions,
   SessionStartEventOptions,
-  SessionStartHandler as SessionStartHandler,
+  SessionStartHandler,
   SessionStartHandlerAsync,
   UnhandledErrorEndHandler,
   UnhandledErrorEndHandlerArgs,
@@ -34,7 +33,7 @@ export abstract class ConversationEventHelperManager {
   // users of the SDK.
 
   protected readonly _sessionStartHandlers = new Array<SessionStartHandler>();
-  protected readonly _sessionMap = new Map<ConversationId, SessionEventHelperImpl>();
+  protected readonly _sessionMap = new Map<string, SessionEventHelperImpl>();
 
   protected readonly _anyEventHandlers = new Array<ConversationEventHandler>();
 
@@ -144,7 +143,7 @@ export abstract class ConversationEventHelperManager {
    * @param conversationId The conversation id of the session to retrieve.
    * @returns The existing SessionEventHelper object for the specified conversation id, or undefined if no such session exists.
    */
-  public getSession(conversationId: ConversationId) {
+  public getSession(conversationId: string) {
     return this._sessionMap.get(conversationId);
   }
 

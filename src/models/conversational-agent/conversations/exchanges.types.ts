@@ -54,11 +54,14 @@ export interface ContentPartGetResponse extends ContentPart {
 // ==================== Exchange Options ====================
 
 export type ExchangeGetAllOptions = PaginationOptions & {
+  /** Sort order for exchanges */
   exchangeSort?: SortOrder;
+  /** Sort order for messages within each exchange */
   messageSort?: SortOrder;
 }
 
 export interface ExchangeGetByIdOptions {
+  /** Sort order for messages within the exchange */
   messageSort?: SortOrder;
   /** Index signature for QueryParams compatibility */
   [key: string]: SortOrder | undefined;

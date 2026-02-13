@@ -3,30 +3,15 @@
  */
 
 import {
-  CitationId,
   CitationSource,
-  ContentPartId,
-  ConversationId,
-  ExchangeId,
   ExternalValue,
-  InterruptId,
   InterruptType,
   JSONValue,
-  MessageId,
   MessageRole,
   MetaData,
-  MimeType,
-  ToolCallId,
   ToolCallInputValue,
-  ToolCallOutputValue,
-  ToolName,
-  UTCTimeStamp
+  ToolCallOutputValue
 } from '../types/common.types';
-
-/**
- * Identifies an input stream.
- */
-export type AsyncInputStreamId = string;
 
 /**
  * Identifies how sensitive the LLM should be when detecting the start or end of speech.
@@ -70,11 +55,11 @@ export interface SessionCapabilities {
    * Indicates the mime types which the sender can send in input streams and as message content, provided the receiver
    * indicates they can handle the mime type.
    */
-  mimeTypesEmitted?: MimeType[];
+  mimeTypesEmitted?: string[];
   /**
    * Indicates the mime types the sender can handle. Wildcards such as "*\/*" and "text/*" are allowed.
    */
-  mimeTypesHandled?: MimeType[];
+  mimeTypesHandled?: string[];
   /** Allow custom properties */
   [key: string]: unknown;
 }
@@ -138,7 +123,7 @@ export interface ExchangeStartEvent {
   /**
    * The time the exchange started.
    */
-  timestamp?: UTCTimeStamp;
+  timestamp?: string;
 }
 
 /**
@@ -162,7 +147,7 @@ export interface MessageStartEvent {
   /**
    * Message timestamp.
    */
-  timestamp?: UTCTimeStamp;
+  timestamp?: string;
   /**
    * Required value that identifies the origin of the message (system, user, or agent).
    */
@@ -200,7 +185,7 @@ export interface ContentPartStartEvent {
   /**
    * Describes the type and format of a content part.
    */
-  mimeType: MimeType;
+  mimeType: string;
   /**
    * Optional metadata that can be used for any data pertaining to the starting event stream.
    */
@@ -216,7 +201,7 @@ export interface ContentPartStartEvent {
   /**
    * The time the content part was created.
    */
-  timestamp?: UTCTimeStamp;
+  timestamp?: string;
 }
 
 /**
@@ -236,11 +221,6 @@ export interface ContentPartEndEvent {
    */
   metaData?: MetaData;
 }
-
-/**
- * Error identifier.
- */
-export type ErrorId = string;
 
 /**
  * Represents the start of an error condition.
@@ -268,7 +248,7 @@ export interface ErrorEvent {
   /**
    * An identifier for the error.
    */
-  errorId: ErrorId;
+  errorId: string;
   /**
    * If present, indicates the start of an error condition.
    */
@@ -301,7 +281,7 @@ export interface CitationEvent {
   /**
    * Identifies a set of citation sources.
    */
-  citationId: CitationId;
+  citationId: string;
   /**
    * Indicates the start of a citation target.
    */
@@ -337,7 +317,7 @@ export interface AsyncInputStreamStartEvent {
   /**
    * Describes the type of data sent over the input stream.
    */
-  mimeType: MimeType;
+  mimeType: string;
   /**
    * Determines how sensitive the LLM should be in detecting the start of speech.
    */
@@ -388,11 +368,11 @@ export interface ToolCallStartEvent {
   /**
    * Identifies the tool that is to be called.
    */
-  toolName: ToolName;
+  toolName: string;
   /**
    * The time the tool call was made.
    */
-  timestamp?: UTCTimeStamp;
+  timestamp?: string;
   /**
    * Optional input value provided to the tool when executed.
    */
@@ -410,7 +390,7 @@ export interface ToolCallEndEvent {
   /**
    * The time the result was generated.
    */
-  timestamp?: UTCTimeStamp;
+  timestamp?: string;
   /**
    * Optional output value returned by the tool's execution.
    */
@@ -457,7 +437,7 @@ export interface ToolCallEvent {
   /**
    * Identifies the tool call.
    */
-  toolCallId: ToolCallId;
+  toolCallId: string;
   /**
    * Signals the start of a tool call.
    */
@@ -483,7 +463,7 @@ export interface ToolCallConfirmationValue {
   /**
    * The ID of the tool call being confirmed.
    */
-  toolCallId: ToolCallId;
+  toolCallId: string;
   /**
    * The name of the tool to be called.
    */
@@ -557,7 +537,7 @@ export interface InterruptEvent {
   /**
    * Identifies the interrupt.
    */
-  interruptId: InterruptId;
+  interruptId: string;
   /**
    * Signals the start of an interrupt.
    */
@@ -575,7 +555,7 @@ export interface ContentPartEvent {
   /**
    * Identifies the content part.
    */
-  contentPartId: ContentPartId;
+  contentPartId: string;
   /**
    * Optional value that signals the start of message content.
    */
@@ -605,7 +585,7 @@ export interface MessageEvent {
   /**
    * Identifies a message.
    */
-  messageId: MessageId;
+  messageId: string;
   /**
    * Optional value that signals that start of a message.
    */
@@ -643,7 +623,7 @@ export interface AsyncInputStreamEvent {
   /**
    * Identifies the input stream.
    */
-  streamId: AsyncInputStreamId;
+  streamId: string;
   /**
    * Optional value that signals the start of an input stream.
    */
@@ -673,7 +653,7 @@ export interface ExchangeEvent {
   /**
    * Identifies the exchange.
    */
-  exchangeId: ExchangeId;
+  exchangeId: string;
   /**
    * Optional value that signals the start of an exchange.
    */
@@ -703,7 +683,7 @@ export interface ConversationEvent {
   /**
    * A globally unique identifier for conversation to which the other sub-event and data properties apply.
    */
-  conversationId: ConversationId;
+  conversationId: string;
   /**
    * Signals the start of session for a conversation.
    */

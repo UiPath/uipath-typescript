@@ -1,28 +1,21 @@
 import type {
   AsyncInputStreamChunkEvent,
   AsyncInputStreamEndEvent,
-  AsyncInputStreamId,
   AsyncInputStreamStartEvent,
   ContentPartChunkEvent,
   ContentPartEndEvent,
-  ContentPartId,
   ContentPartStartEvent,
   ConversationEvent,
-  ConversationId,
   ErrorEndEvent,
-  ErrorId,
   ErrorStartEvent,
   ExchangeEndEvent,
-  ExchangeId,
   ExchangeStartEvent,
   InterruptEndEvent,
-  InterruptId,
   InterruptStartEvent,
   LabelUpdatedEvent,
   MakeOptional,
   MakeRequired,
   MessageEndEvent,
-  MessageId,
   MessageStartEvent,
   MetaEvent,
   SessionEndEvent,
@@ -31,7 +24,6 @@ import type {
   SessionStartEvent,
   Simplify,
   ToolCallEndEvent,
-  ToolCallId,
   ToolCallStartEvent
 } from '@/models/conversational-agent';
 
@@ -40,8 +32,8 @@ import type { CitationError, CompletedContentPart, CompletedToolCall, CompletedM
 export type { CitationError, CompletedContentPart, CompletedToolCall, CompletedMessage };
 export { CitationErrorType } from '@/models/conversational-agent';
 
-import type { AsyncInputStreamEventHelper } from './async-input-stream-event-helper';
-import type { AsyncToolCallEventHelper } from './async-tool-call-event-helper';
+import type { AsyncInputStreamEventHelper } from './input-stream-event-helper';
+import type { AsyncToolCallEventHelper } from './session-tool-call-event-helper';
 import type { ContentPartEventHelper } from './content-part-event-helper';
 import type { ConversationEventHelperBase } from './conversation-event-helper-base';
 import type { ExchangeEventHelper } from './exchange-event-helper';
@@ -92,7 +84,7 @@ export type InterruptEndHandler = (interruptEnd: InterruptEndHandlerArgs) => voi
 export type InterruptCompletedHandler = (interruptCompleted: InterruptCompletedHandlerArgs) => void;
 
 export type SessionStartEventOptions = {
-  conversationId: ConversationId;
+  conversationId: string;
 
   /**
    * When set, causes events emitted to also be dispatched to event handlers. This option is useful
@@ -104,18 +96,18 @@ export type SessionStartEventOptions = {
   properties?: ConversationEventHelperProperties;
 
 } & SessionStartEvent;
-export type ErrorEndEventOptions = { errorId: ErrorId } & ErrorEndEvent;
-export type ErrorStartEventOptions = { errorId?: ErrorId } & ErrorStartEvent;
-export type ExchangeStartEventOptions = { exchangeId?: ExchangeId; properties?: ConversationEventHelperProperties } & ExchangeStartEvent;
-export type InputStreamStartEventOptions = { streamId?: AsyncInputStreamId; properties?: ConversationEventHelperProperties } & AsyncInputStreamStartEvent;
-export type MessageStartEventOptions = { messageId?: MessageId; properties?: ConversationEventHelperProperties } & MakeOptional<MessageStartEvent, 'role'>;
-export type ToolCallStartEventWithId = { toolCallId?: ToolCallId; properties?: ConversationEventHelperProperties } & ToolCallStartEvent;
-export type ContentPartStartEventOptions = { contentPartId?: ContentPartId; properties?: ConversationEventHelperProperties } & ContentPartStartEvent;
+export type ErrorEndEventOptions = { errorId: string } & ErrorEndEvent;
+export type ErrorStartEventOptions = { errorId?: string } & ErrorStartEvent;
+export type ExchangeStartEventOptions = { exchangeId?: string; properties?: ConversationEventHelperProperties } & ExchangeStartEvent;
+export type InputStreamStartEventOptions = { streamId?: string; properties?: ConversationEventHelperProperties } & AsyncInputStreamStartEvent;
+export type MessageStartEventOptions = { messageId?: string; properties?: ConversationEventHelperProperties } & MakeOptional<MessageStartEvent, 'role'>;
+export type ToolCallStartEventWithId = { toolCallId?: string; properties?: ConversationEventHelperProperties } & ToolCallStartEvent;
+export type ContentPartStartEventOptions = { contentPartId?: string; properties?: ConversationEventHelperProperties } & ContentPartStartEvent;
 
 export type ConversationEventHelperProperties = Record<string, unknown>;
 
-export type ErrorStartHandlerArgs = { errorId: ErrorId } & ErrorStartEvent;
-export type ErrorEndHandlerArgs = { errorId: ErrorId } & ErrorEndEvent;
+export type ErrorStartHandlerArgs = { errorId: string } & ErrorStartEvent;
+export type ErrorEndHandlerArgs = { errorId: string } & ErrorEndEvent;
 
 export type AnyErrorStartHandlerArgs = { source: ConversationEventErrorSource } & ErrorStartHandlerArgs;
 export type AnyErrorEndHandlerArgs = { source: ConversationEventErrorSource } & ErrorEndHandlerArgs;
@@ -123,9 +115,9 @@ export type AnyErrorEndHandlerArgs = { source: ConversationEventErrorSource } & 
 export type UnhandledErrorStartHandlerArgs = AnyErrorStartHandlerArgs;
 export type UnhandledErrorEndHandlerArgs = AnyErrorEndHandlerArgs;
 
-export type InterruptStartHandlerArgs = { interruptId: InterruptId; startEvent: InterruptStartEvent };
-export type InterruptEndHandlerArgs = { interruptId: InterruptId; endEvent: InterruptEndEvent };
-export type InterruptCompletedHandlerArgs = { interruptId: InterruptId; startEvent: InterruptStartEvent; endEvent: InterruptEndEvent };
+export type InterruptStartHandlerArgs = { interruptId: string; startEvent: InterruptStartEvent };
+export type InterruptEndHandlerArgs = { interruptId: string; endEvent: InterruptEndEvent };
+export type InterruptCompletedHandlerArgs = { interruptId: string; startEvent: InterruptStartEvent; endEvent: InterruptEndEvent };
 
 export type ConversationEventErrorSource = ConversationEventHelperBase<any, any>;
 
