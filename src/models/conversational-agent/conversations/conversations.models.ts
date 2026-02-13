@@ -277,7 +277,7 @@ export interface ConversationServiceModel {
    * if (session) {
    *   // Session already started — safe to send exchanges directly
    *   const exchange = session.startExchange();
-   *   exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   *   await exchange.sendMessageWithContentPart({ data: 'Hello!' });
    * }
    * ```
    */
@@ -405,7 +405,7 @@ export interface ConversationMethods {
    * if (session) {
    *   // Session already started — safe to send exchanges directly
    *   const exchange = session.startExchange();
-   *   exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   *   await exchange.sendMessageWithContentPart({ data: 'Hello!' });
    * }
    * ```
    */

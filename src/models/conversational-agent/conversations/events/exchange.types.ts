@@ -6,11 +6,9 @@
  * containing user and assistant messages.
  */
 
-import type { ExchangeId, MakeRequired, MessageId, MessageRole } from '../types';
-import type { ErrorEndEvent, ErrorId, ErrorStartEvent, ExchangeEndEvent, ExchangeEvent, ExchangeStartEvent, MessageStartEvent, MetaEvent } from './protocol.types';
-import type { CompletedMessage } from './completed.types';
-
-import type { MessageStream } from './message.types';
+import type { MakeRequired, MessageRole } from '../types';
+import type { ErrorEndEvent, ErrorStartEvent, ExchangeEndEvent, ExchangeEvent, ExchangeStartEvent, MessageStartEvent, MetaEvent } from './protocol.types';
+import type { CompletedMessage, MessageStream } from './message.types';
 
 /**
  * Consumer-facing model for exchange event helpers.
@@ -26,7 +24,7 @@ import type { MessageStream } from './message.types';
  *   exchange.onMessageStart((message) => {
  *     if (message.isAssistant) {
  *       message.onContentPartStart((part) => {
- *         if (part.isText) {
+ *         if (part.isMarkdown) {
  *           part.onChunk((chunk) => {
  *             process.stdout.write(chunk.data ?? '');
  *           });
@@ -42,7 +40,7 @@ import type { MessageStream } from './message.types';
  * session.onExchangeStart((exchange) => {
  *   exchange.onMessageCompleted((completed) => {
  *     for (const part of completed.contentParts) {
- *       console.log(part.text);
+ *       console.log(part.data);
  *     }
  *     for (const tool of completed.toolCalls) {
  *       console.log(`${tool.toolName}: ${tool.output}`);
@@ -73,7 +71,7 @@ import type { MessageStream } from './message.types';
  */
 export interface ExchangeStream {
   /** Unique identifier for this exchange */
-  readonly exchangeId: ExchangeId;
+  readonly exchangeId: string;
 
   /**
    * The start event, or undefined if not yet received
@@ -103,14 +101,14 @@ export interface ExchangeStream {
    * });
    * ```
    */
-  onErrorStart(cb: (error: { errorId: ErrorId } & ErrorStartEvent) => void): () => void;
+  onErrorStart(cb: (error: { errorId: string } & ErrorStartEvent) => void): () => void;
 
   /**
    * Registers a handler for error end events
    * @param cb - Callback receiving the error end event
    * @returns Cleanup function to remove the handler
    */
-  onErrorEnd(cb: (error: { errorId: ErrorId } & ErrorEndEvent) => void): () => void;
+  onErrorEnd(cb: (error: { errorId: string } & ErrorEndEvent) => void): () => void;
 
   /**
    * Registers a handler for message start events
@@ -126,7 +124,7 @@ export interface ExchangeStream {
    * exchange.onMessageStart((message) => {
    *   if (message.isAssistant) {
    *     message.onContentPartStart((part) => {
-   *       if (part.isText) {
+   *       if (part.isMarkdown) {
    *         part.onChunk((chunk) => process.stdout.write(chunk.data ?? ''));
    *       }
    *     });
@@ -191,7 +189,7 @@ export interface ExchangeStream {
    * message.sendMessageEnd();
    * ```
    */
-  startMessage(args?: { messageId?: MessageId } & Partial<MessageStartEvent>): MessageStream;
+  startMessage(args?: { messageId?: string } & Partial<MessageStartEvent>): MessageStream;
 
   /**
    * Sends a complete message with a content part in one step
@@ -221,7 +219,7 @@ export interface ExchangeStream {
    * @param messageId - The message ID to look up
    * @returns The message stream, or undefined if not found
    */
-  getMessage(messageId: MessageId): MessageStream | undefined;
+  getMessage(messageId: string): MessageStream | undefined;
 
   /**
    * Ends the exchange
@@ -242,14 +240,14 @@ export interface ExchangeStream {
    * @param args - Error details including optional error ID and message
    * @internal
    */
-  sendErrorStart(args: { errorId?: ErrorId } & ErrorStartEvent): void;
+  sendErrorStart(args: { errorId?: string } & ErrorStartEvent): void;
 
   /**
    * Sends an error end event for this exchange
    * @param args - Error end details including the error ID
    * @internal
    */
-  sendErrorEnd(args: { errorId: ErrorId } & ErrorEndEvent): void;
+  sendErrorEnd(args: { errorId: string } & ErrorEndEvent): void;
 
   /**
    * Sends a metadata event for this exchange
