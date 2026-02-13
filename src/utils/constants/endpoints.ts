@@ -129,3 +129,12 @@ export const ASSET_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Assets(${id})`,
 } as const;
+
+/**
+ * Orchestrator User Service Endpoints
+ */
+export const USERS_ENDPOINTS = {
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Users`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Users(${id})`,
+  GET_CURRENT: `${ORCHESTRATOR_BASE}/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser`,
+} as const;

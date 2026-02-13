@@ -96,6 +96,14 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getAll()` | `OR.Queues` or `OR.Queues.Read` |
 | `getById()` | `OR.Queues` or `OR.Queues.Read` |
 
+## Users
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Users` or `OR.Users.Read` |
+| `getById()` | `OR.Users` or `OR.Users.Read` |
+| `getCurrent()` | `OR.Users` or `OR.Users.Read` |
+
 ## Tasks
 
 | Method | OAuth Scope |

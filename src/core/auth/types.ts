@@ -31,3 +31,23 @@ export interface OAuthContext {
   tenantName: string;
   scope: string;
 }
+
+/**
+ * OAuth/JWT token claims map.
+ */
+export type TokenClaims = Record<string, unknown>;
+
+/**
+ * Normalized identity extracted from token claims.
+ */
+export interface TokenIdentity {
+  userId?: string;
+  username?: string;
+  email?: string;
+  name?: string;
+  givenName?: string;
+  familyName?: string;
+  tenantName?: string;
+  orgName?: string;
+  rawClaims: TokenClaims;
+}
