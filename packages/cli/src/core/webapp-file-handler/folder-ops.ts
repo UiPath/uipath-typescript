@@ -169,7 +169,7 @@ export async function ensureFoldersCreated(
       })
     );
 
-    for (const { folder, folderName, id } of results) {
+    for (const { folder, id } of results) {
       if (id) folderIdMap.set(norm(folder.path), id);
     }
 
