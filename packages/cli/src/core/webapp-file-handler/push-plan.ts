@@ -5,16 +5,13 @@ import { MESSAGES } from '../../constants/index.js';
 import type {
   FileOperationPlan,
   LocalFile,
+  LocalFileWithRemote,
   ProjectFile,
   ProjectFolder,
   StructuralMigration,
 } from './types.js';
-import { localPathToRemotePath, PUSH_METADATA_REMOTE_PATH } from './structure.js';
-
-/** Normalize path for comparison: forward slashes and lowercase to avoid false mismatches. */
-function normalizePathForComparison(p: string): string {
-  return p.replace(/\\/g, '/').toLowerCase();
-}
+import { REMOTE_PATH_SEP } from '../../constants/index.js';
+import { PUSH_METADATA_REMOTE_PATH, REMOTE_SOURCE_FOLDER_NAME, normalizeFolderPath } from './structure.js';
 
 export interface PlanOptions {
   bundlePath: string;
@@ -26,13 +23,18 @@ export interface PlanOptions {
   logger?: { log: (message: string) => void };
 }
 
+/**
+ * Computes add/update/delete plan by diffing local files (with remote paths) against remote files/folders.
+ * Uses normalized path comparison so backend path casing (e.g. Source vs source) does not cause false diffs.
+ * Remote file downloads and hash comparisons run in parallel to speed up the diff.
+ */
 export async function computeExecutionPlan(
-  localFiles: LocalFile[],
+  localFilesWithRemote: LocalFileWithRemote[],
   remoteFiles: Map<string, ProjectFile>,
   remoteFolders: Map<string, ProjectFolder>,
   opts: PlanOptions
 ): Promise<FileOperationPlan> {
-  const { bundlePath, remoteContentRoot, downloadRemoteFile, computeHash, logger } = opts;
+  const { downloadRemoteFile, computeHash, logger } = opts;
   const plan: FileOperationPlan = {
     createFolders: [],
     uploadFiles: [],
@@ -44,14 +46,14 @@ export async function computeExecutionPlan(
   const processedFileIds = new Set<string>();
   const requiredFolders = new Set<string>();
   const localRemotePaths = new Set<string>();
+  /** Files that exist on both sides: we need to download and compare hashes in parallel. */
+  const toCompare: Array<{ localFile: LocalFile; remotePath: string; remoteFile: ProjectFile }> = [];
 
-  for (const localFile of localFiles) {
-    const remotePath = localPathToRemotePath(localFile.path, bundlePath, remoteContentRoot);
+  for (const { localFile, remotePath } of localFilesWithRemote) {
     localRemotePaths.add(remotePath);
-    const remoteFile = remoteFiles.get(remotePath);
-
     const remoteParentPath = path.dirname(remotePath);
-    const parentPathForPlan = remoteParentPath === '.' ? remoteContentRoot : remoteParentPath;
+    const parentPathForPlan =
+      remoteParentPath === '.' ? REMOTE_SOURCE_FOLDER_NAME : remoteParentPath;
     const pathParts = parentPathForPlan.split('/');
     let currentPath = '';
     for (const part of pathParts) {
@@ -59,45 +61,50 @@ export async function computeExecutionPlan(
       requiredFolders.add(currentPath);
     }
 
+    const remoteFile = remoteFiles.get(remotePath);
     if (remoteFile) {
-      processedFileIds.add(remoteFile.id);
-      try {
-        const remoteContent = await downloadRemoteFile(remoteFile.id);
-        const remoteHash = computeHash(remoteContent, localFile.path);
-        if (localFile.hash !== remoteHash) {
-          plan.updateFiles.push({
-            path: localFile.path,
-            localFile,
-            fileId: remoteFile.id,
-          });
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (logger) {
-          logger.log(
-            chalk.gray(
-              `${MESSAGES.ERRORS.PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX}${localFile.path} — ${msg}`
-            )
-          );
-        }
-        plan.updateFiles.push({
-          path: localFile.path,
-          localFile,
-          fileId: remoteFile.id,
-        });
-      }
+      toCompare.push({ localFile, remotePath, remoteFile });
     } else {
       if (
-        localFile.path === PUSH_METADATA_RELATIVE_PATH ||
-        localFile.path === PUSH_METADATA_FILENAME
+        remotePath === PUSH_METADATA_REMOTE_PATH ||
+        remotePath.endsWith(REMOTE_PATH_SEP + PUSH_METADATA_FILENAME)
       ) {
         continue;
       }
       plan.uploadFiles.push({
-        path: localFile.path,
+        path: remotePath,
         localFile,
         parentPath: parentPathForPlan,
       });
+    }
+  }
+
+  const compareResults = await Promise.allSettled(
+    toCompare.map(async ({ localFile, remotePath, remoteFile }) => {
+      const remoteContent = await downloadRemoteFile(remoteFile.id);
+      const remoteHash = computeHash(remoteContent, localFile.path);
+      return { remotePath, localFile, remoteFile, remoteHash };
+    })
+  );
+
+  for (let i = 0; i < compareResults.length; i++) {
+    const result = compareResults[i];
+    const { remotePath, localFile, remoteFile } = toCompare[i];
+    processedFileIds.add(remoteFile.id);
+    if (result.status === 'fulfilled') {
+      if (result.value.remoteHash !== localFile.hash) {
+        plan.updateFiles.push({ path: remotePath, localFile, fileId: remoteFile.id });
+      }
+    } else {
+      const msg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+      if (logger) {
+        logger.log(
+          chalk.gray(
+            `${MESSAGES.ERRORS.PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX}${remotePath} — ${msg} (will update anyway)`
+          )
+        );
+      }
+      plan.updateFiles.push({ path: remotePath, localFile, fileId: remoteFile.id });
     }
   }
 
@@ -110,52 +117,54 @@ export async function computeExecutionPlan(
       continue;
     }
     if (processedFileIds.has(remoteFile.id)) continue;
-    const normalizedRemote = normalizePathForComparison(filePath);
+    const normalizedRemote = normalizeFolderPath(filePath);
     if (!localRemotePaths.has(normalizedRemote)) {
       plan.deleteFiles.push({ fileId: remoteFile.id, path: filePath });
     }
   }
 
-  // Normalize folder paths for comparison so case or slash differences don't create false "new" folders.
-  const requiredFoldersNormalized = new Set(
-    [...requiredFolders].map(normalizePathForComparison)
-  );
+  const requiredFoldersNormalized = new Set([...requiredFolders].map(normalizeFolderPath));
   const remoteFoldersByNormalized = new Map<string, string>();
   for (const key of remoteFolders.keys()) {
-    remoteFoldersByNormalized.set(normalizePathForComparison(key), key);
+    remoteFoldersByNormalized.set(normalizeFolderPath(key), key);
   }
   for (const folderPath of requiredFolders) {
-    const normalized = normalizePathForComparison(folderPath);
-    if (!remoteFoldersByNormalized.has(normalized)) {
+    if (!remoteFoldersByNormalized.has(normalizeFolderPath(folderPath))) {
       plan.createFolders.push({ path: folderPath });
     }
   }
 
-  const contentRootPrefix = remoteContentRoot + '/';
-  const normalizedContentRootPrefix = normalizePathForComparison(contentRootPrefix);
+  const contentRootPrefix = REMOTE_SOURCE_FOLDER_NAME + REMOTE_PATH_SEP;
+  const normalizedContentRootPrefix = normalizeFolderPath(contentRootPrefix);
+  const sourceFolderNorm = normalizeFolderPath(REMOTE_SOURCE_FOLDER_NAME);
   for (const [folderPath, folder] of remoteFolders.entries()) {
-    const normalizedFolder = normalizePathForComparison(folderPath);
+    const normalizedFolder = normalizeFolderPath(folderPath);
     if (requiredFoldersNormalized.has(normalizedFolder)) continue;
-    const isUnderContentRoot = normalizedFolder.startsWith(normalizedContentRootPrefix);
+    const isUnderContentRoot =
+      normalizedFolder === sourceFolderNorm ||
+      normalizedFolder.startsWith(normalizedContentRootPrefix);
     if (isUnderContentRoot && folder.id) {
       plan.deleteFolders.push({ folderId: folder.id, path: folderPath });
     }
   }
 
-  plan.createFolders.sort((a, b) => a.path.split('/').length - b.path.split('/').length);
+  plan.createFolders.sort((a, b) => a.path.split(REMOTE_PATH_SEP).length - b.path.split(REMOTE_PATH_SEP).length);
   plan.deleteFolders.sort(
-    (a, b) => b.path.split('/').length - a.path.split('/').length
+    (a, b) => b.path.split(REMOTE_PATH_SEP).length - a.path.split(REMOTE_PATH_SEP).length
   );
 
   return plan;
 }
 
+/**
+ * Plan for first push: all local files as uploads and required folders as creates.
+ * Skips push_metadata.json (handled separately). Uses normalized path for folder existence check.
+ */
 export function computeFirstPushPlan(
-  localFiles: LocalFile[],
+  localFilesWithRemote: LocalFileWithRemote[],
   remoteFolders: Map<string, ProjectFolder>,
-  opts: { remoteContentRoot: string; bundlePath: string }
+  _opts: { remoteContentRoot: string; bundlePath: string }
 ): FileOperationPlan {
-  const { remoteContentRoot, bundlePath } = opts;
   const plan: FileOperationPlan = {
     createFolders: [],
     uploadFiles: [],
@@ -166,19 +175,19 @@ export function computeFirstPushPlan(
 
   const requiredFolders = new Set<string>();
 
-  for (const localFile of localFiles) {
+  for (const { localFile, remotePath } of localFilesWithRemote) {
     if (
-      localFile.path === PUSH_METADATA_RELATIVE_PATH ||
-      localFile.path === PUSH_METADATA_FILENAME
+      remotePath === PUSH_METADATA_REMOTE_PATH ||
+      remotePath.endsWith(REMOTE_PATH_SEP + PUSH_METADATA_FILENAME)
     ) {
       continue;
     }
-    const remotePath = localPathToRemotePath(localFile.path, bundlePath, remoteContentRoot);
     const remoteParentPath = path.dirname(remotePath);
-    const parentPathForPlan = remoteParentPath === '.' ? remoteContentRoot : remoteParentPath;
+    const parentPathForPlan =
+      remoteParentPath === '.' ? REMOTE_SOURCE_FOLDER_NAME : remoteParentPath;
 
     plan.uploadFiles.push({
-      path: localFile.path,
+      path: remotePath,
       localFile,
       parentPath: parentPathForPlan,
     });
@@ -192,12 +201,14 @@ export function computeFirstPushPlan(
   }
 
   for (const folderPath of requiredFolders) {
-    if (!remoteFolders.has(folderPath)) {
+    const normPath = normalizeFolderPath(folderPath);
+    const hasFolder = remoteFolders.has(folderPath) || [...remoteFolders.keys()].some((k) => normalizeFolderPath(k) === normPath);
+    if (!hasFolder) {
       plan.createFolders.push({ path: folderPath });
     }
   }
 
-  plan.createFolders.sort((a, b) => a.path.split('/').length - b.path.split('/').length);
+  plan.createFolders.sort((a, b) => a.path.split(REMOTE_PATH_SEP).length - b.path.split(REMOTE_PATH_SEP).length);
   return plan;
 }
 

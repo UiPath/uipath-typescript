@@ -4,7 +4,11 @@ import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
 import { cliTelemetryClient } from '../../telemetry/index.js';
 import { parseJWT } from '../../auth/core/oidc.js';
-import { PUSH_METADATA_REMOTE_PATH, REMOTE_SOURCE_FOLDER_NAME } from './structure.js';
+import {
+  PUSH_METADATA_REMOTE_PATH,
+  REMOTE_SOURCE_FOLDER_NAME,
+  WEB_APP_MANIFEST_FILENAME,
+} from './structure.js';
 import type { WebAppPushConfig, ProjectFile, FileOperationPlan, PushMetadata } from './types.js';
 import type { LocalFile } from './types.js';
 import * as api from './api.js';
@@ -84,6 +88,7 @@ function createNewMetadataPayload(config: WebAppPushConfig): PushMetadata {
     description: '',
     lastPushDate: new Date().toISOString(),
     lastPushAuthor: getPushAuthorEmail(config.envConfig.accessToken, config.logger),
+    buildDir: config.bundlePath,
   };
 }
 
@@ -153,6 +158,8 @@ export async function prepareMetadataFileForPlan(
     metadata.lastPushAuthor = getPushAuthorEmail(config.envConfig.accessToken, config.logger);
   }
 
+  metadata.buildDir = config.bundlePath;
+
   if (!isNewMetadata) {
     metadata.schemaVersion = computeNextSchemaVersion(metadata.schemaVersion, plan);
   }
@@ -204,5 +211,51 @@ export async function uploadPushMetadataToRemote(
       REMOTE_SOURCE_FOLDER_NAME,
       lockKey
     );
+  }
+}
+
+/**
+ * Updates the remote project-root webAppManifest.json so that config.bundlePath is set to
+ * "source/<buildDirName>". The manifest lives at project root on the remote (not under source).
+ * If the file does not exist or update fails, the error is logged and not thrown.
+ */
+export async function updateRemoteWebAppManifest(
+  config: WebAppPushConfig,
+  bundlePath: string,
+  fullRemoteFiles: Map<string, ProjectFile>,
+  lockKey: string | null
+): Promise<void> {
+  const remoteFile = fullRemoteFiles.get(WEB_APP_MANIFEST_FILENAME);
+  if (!remoteFile) return;
+
+  try {
+    const content = await api.downloadRemoteFile(config, remoteFile.id);
+    const parsed = JSON.parse(content.toString('utf-8')) as Record<string, unknown>;
+    if (typeof parsed !== 'object' || parsed === null) return;
+    const buildDirName = bundlePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '') || bundlePath;
+    const configObj = (parsed.config as Record<string, unknown>) ?? {};
+    parsed.config = {
+      ...configObj,
+      bundlePath: `${REMOTE_SOURCE_FOLDER_NAME}/${buildDirName}`,
+    };
+
+    const jsonString = JSON.stringify(parsed, null, 2);
+    const newContent = Buffer.from(jsonString, 'utf-8');
+    const localFile: LocalFile = {
+      path: WEB_APP_MANIFEST_FILENAME,
+      absPath: '',
+      hash: computeHash(newContent, WEB_APP_MANIFEST_FILENAME),
+      content: newContent,
+    };
+    await api.updateFile(
+      config,
+      WEB_APP_MANIFEST_FILENAME,
+      localFile,
+      remoteFile.id,
+      lockKey
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    config.logger.log(chalk.gray(MESSAGES.ERRORS.PUSH_WEB_APP_MANIFEST_UPDATE_FAILED_PREFIX + msg));
   }
 }
