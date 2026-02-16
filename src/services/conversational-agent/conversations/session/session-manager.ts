@@ -61,7 +61,7 @@ export class SessionManager {
    *
    * @param level - Log level to set
    */
-  setLogLevel(level: LogLevel): void {
+    setLogLevel(level: LogLevel): void {
     this._session.setLogLevel(level);
   }
 

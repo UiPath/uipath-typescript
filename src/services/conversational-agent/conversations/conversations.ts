@@ -339,7 +339,11 @@ export class ConversationService extends BaseService implements ConversationServ
    * ```
    */
   startSession(conversationId: string, options?: ConversationSessionOptions): SessionStream {
-    return this._getEvents().startSession({ conversationId, ...options });
+    if (options?.logLevel) {
+      this._sessionManager.setLogLevel(options.logLevel);
+    }
+    const { logLevel: _, ...sessionOptions } = options || {};
+    return this._getEvents().startSession({ conversationId, ...sessionOptions });
   }
 
   /**

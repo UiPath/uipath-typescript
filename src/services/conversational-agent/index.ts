@@ -40,6 +40,8 @@ export { User, UserService } from './user';
 // Re-export all types: ID types, model types, request/response types, event types, etc.
 export * from '@/models/conversational-agent';
 
+export { LogLevel } from '@/core/websocket';
+
 // ==================== Event Helpers ====================
 // Re-export all helpers: event helper classes, handler types, error types, etc.
 export * from './helpers';
