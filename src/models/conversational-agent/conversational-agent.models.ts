@@ -7,28 +7,81 @@ import type { FeatureFlags } from './feature-flags.types';
 import type { ConnectionStatus } from '@/core/websocket';
 
 /**
- * Service for managing UiPath Conversational Agents
- *
- * Conversational Agents are AI-powered chat interfaces that enable natural language interactions
- * with UiPath automation.
- *
- * ### Usage
+ * Service for managing UiPath Conversational Agents — AI-powered chat interfaces that enable
+ * natural language interactions with UiPath automation. Discover agents, create conversations,
+ * and stream real-time responses over WebSocket.
  *
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+ *
+ * ## How It Works
+ *
+ * ### Lifecycle
+ *
+ * ```mermaid
+ * graph TD
+ *     A["Agent"] -->|conversations.create| B["Conversation"]
+ *     B -->|startSession| C["Session"]
+ *     B -->|exchanges.getAll| F(["History"])
+ *     C -->|startExchange| D["Exchange"]
+ *     D -->|sendMessage| E["Message"]
+ * ```
+ *
+ * ### Real-Time Event Flow
+ *
+ * Once a session is started, events flow through a nested stream hierarchy:
+ *
+ * ```mermaid
+ * graph TD
+ *     S["SessionStream"]
+ *     S -->|onExchangeStart| E["ExchangeStream"]
+ *     S -->|onSessionEnd| SE(["session closed"])
+ *     E -->|onMessageStart| M["MessageStream"]
+ *     E -->|onExchangeEnd| EE(["exchange complete"])
+ *     M -->|onContentPartStart| CP["ContentPartStream"]
+ *     M -->|onToolCallStart| TC["ToolCallStream"]
+ *     M -->|onInterruptStart| IR(["awaiting approval"])
+ *     CP -->|onChunk| CH(["streaming data"])
+ *     TC -->|onToolCallEnd| TCE(["tool result"])
+ * ```
+ *
+ * ## Usage
  *
  * ```typescript
  * import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
  *
  * const conversationalAgent = new ConversationalAgent(sdk);
  *
- * // List available agents
+ * // 1. Discover agents
  * const agents = await conversationalAgent.getAll();
+ * const agent = agents[0];
  *
- * // Create a conversation with an agent
- * const conversation = await conversationalAgent.conversations.create(
- *   agents[0].id,
- *   agents[0].folderId
- * );
+ * // 2. Create a conversation
+ * const conversation = await agent.conversations.create({ label: 'My Chat' });
+ *
+ * // 3. Start real-time session and listen for responses
+ * const session = conversation.startSession();
+ *
+ * session.onExchangeStart((exchange) => {
+ *   exchange.onMessageStart((message) => {
+ *     if (message.isAssistant) {
+ *       message.onContentPartStart((part) => {
+ *         if (part.isMarkdown) {
+ *           part.onChunk((chunk) => process.stdout.write(chunk.data ?? ''));
+ *         }
+ *       });
+ *     }
+ *   });
+ * });
+ *
+ * // 4. Send a message
+ * const exchange = session.startExchange();
+ * await exchange.sendMessageWithContentPart({ data: 'Hello!' });
+ *
+ * // 5. End session when done
+ * conversation.endSession();
+ *
+ * // 6. Retrieve conversation history (offline)
+ * const exchanges = await conversation.exchanges.getAll();
  * ```
  */
 export interface ConversationalAgentServiceModel {
