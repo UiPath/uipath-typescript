@@ -71,14 +71,14 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `PIMS` |
-| `getById()` | `PIMS` |
+| `getAll()` | `PIMS OR.Execution.Read` |
+| `getById()` | `PIMS OR.Execution.Read` |
 | `close()` | `PIMS` |
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
 | `reopen()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` |
-| `getStages()` | `PIMS` |
+| `getStages()` | `PIMS OR.Execution.Read` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 
 ## Processes
