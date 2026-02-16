@@ -38,7 +38,7 @@ describe('ChoiceSetService Unit Tests', () => {
 
   beforeEach(() => {
     // Create mock instances using centralized setup
-    const { config, executionContext, tokenManager } = createServiceTestDependencies();
+    const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
 
     // Mock the ApiClient constructor
@@ -47,7 +47,7 @@ describe('ChoiceSetService Unit Tests', () => {
     // Reset pagination helpers mock before each test
     vi.mocked(PaginationHelpers.getAll).mockReset();
 
-    choiceSetService = new ChoiceSetService(config, executionContext, tokenManager);
+    choiceSetService = new ChoiceSetService(instance);
   });
 
   afterEach(() => {

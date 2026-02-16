@@ -1,7 +1,4 @@
 import { BaseService } from '../base';
-import { Config } from '../../core/config/config';
-import { ExecutionContext } from '../../core/context/execution';
-import { TokenManager } from '../../core/auth/token-manager';
 import { 
   TaskCreateOptions, 
   TaskAssignmentOptions,
@@ -39,13 +36,6 @@ import { processODataArrayResponse } from '../../utils/object';
  */
 export class TaskService extends BaseService implements TaskServiceModel {
   /**
-   * @hideconstructor
-   */
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    super(config, executionContext, tokenManager);
-  }
-
-  /**
    * Creates a new task
    * @param task - The task to be created
    * @param folderId - Required folder ID
@@ -53,7 +43,10 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * 
    * @example
    * ```typescript
-   * const task = await sdk.tasks.create({
+   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   *
+   * const tasks = new Tasks(sdk);
+   * const task = await tasks.create({
    *   title: "My Task",
    *   priority: TaskPriority.Medium,
    *   data: { key: "value" }
@@ -93,24 +86,28 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   *
+   * const tasks = new Tasks(sdk);
+   *
    * // Standard array return
-   * const users = await sdk.tasks.getUsers(123);
-   * 
+   * const users = await tasks.getUsers(123);
+   *
    * // Get users with filtering
-   * const users = await sdk.tasks.getUsers(123, { 
+   * const users = await tasks.getUsers(123, {
    *   filter: "name eq 'abc'"
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.tasks.getUsers(123, { pageSize: 10 });
-   * 
+   * const page1 = await tasks.getUsers(123, { pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.tasks.getUsers(123, { cursor: page1.nextCursor });
+   *   const page2 = await tasks.getUsers(123, { cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.tasks.getUsers(123, {
+   * const page5 = await tasks.getUsers(123, {
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -162,29 +159,33 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   *
+   * const tasks = new Tasks(sdk);
+   *
    * // Standard array return
-   * const tasks = await sdk.tasks.getAll();
-   * 
+   * const allTasks = await tasks.getAll();
+   *
    * // Get tasks within a specific folder
-   * const tasks = await sdk.tasks.getAll({ 
+   * const folderTasks = await tasks.getAll({
    *   folderId: 123
    * });
    *
    * // Get tasks with admin permissions
-   * const tasks = await sdk.tasks.getAll({
+   * const adminTasks = await tasks.getAll({
    *   asTaskAdmin: true
    * });
-   * 
+   *
    * // First page with pagination
-   * const page1 = await sdk.tasks.getAll({ pageSize: 10 });
-   * 
+   * const page1 = await tasks.getAll({ pageSize: 10 });
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await sdk.tasks.getAll({ cursor: page1.nextCursor });
+   *   const page2 = await tasks.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
-   * const page5 = await sdk.tasks.getAll({
+   * const page5 = await tasks.getAll({
    *   jumpToPage: 5,
    *   pageSize: 10
    * });
@@ -242,9 +243,13 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   *
+   * const tasks = new Tasks(sdk);
+   *
    * // Get task by ID
-   * const task = await sdk.tasks.getById(123);
-   * 
+   * const task = await tasks.getById(123);
+   *
    * // If the task is a form task, it will automatically return form-specific data
    * ```
    */
@@ -289,20 +294,24 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   *
+   * const tasks = new Tasks(sdk);
+   *
    * // Assign a single task to a user by ID
-   * const result = await sdk.tasks.assign({
+   * const result = await tasks.assign({
    *   taskId: 123,
    *   userId: 456
    * });
-   * 
+   *
    * // Assign a single task to a user by email
-   * const result = await sdk.tasks.assign({
+   * const result = await tasks.assign({
    *   taskId: 123,
    *   userNameOrEmail: "user@example.com"
    * });
-   * 
+   *
    * // Assign multiple tasks
-   * const result = await sdk.tasks.assign([
+   * const result = await tasks.assign([
    *   {
    *     taskId: 123,
    *     userId: 456
@@ -346,20 +355,24 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   *
+   * const tasks = new Tasks(sdk);
+   *
    * // Reassign a single task to a user by ID
-   * const result = await sdk.tasks.reassign({
+   * const result = await tasks.reassign({
    *   taskId: 123,
    *   userId: 456
    * });
-   * 
+   *
    * // Reassign a single task to a user by email
-   * const result = await sdk.tasks.reassign({
+   * const result = await tasks.reassign({
    *   taskId: 123,
    *   userNameOrEmail: "user@example.com"
    * });
-   * 
+   *
    * // Reassign multiple tasks
-   * const result = await sdk.tasks.reassign([
+   * const result = await tasks.reassign([
    *   {
    *     taskId: 123,
    *     userId: 456
@@ -403,11 +416,15 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * 
    * @example
    * ```typescript
+   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   *
+   * const tasks = new Tasks(sdk);
+   *
    * // Unassign a single task
-   * const result = await sdk.tasks.unassign(123);
-   * 
+   * const result = await tasks.unassign(123);
+   *
    * // Unassign multiple tasks
-   * const result = await sdk.tasks.unassign([123, 456, 789]);
+   * const result = await tasks.unassign([123, 456, 789]);
    * ```
    */
   @track('Tasks.Unassign')
@@ -441,16 +458,20 @@ export class TaskService extends BaseService implements TaskServiceModel {
    *
    * @example
    * ```typescript
+   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   *
+   * const tasks = new Tasks(sdk);
+   *
    * // Complete an app task
-   * await sdk.tasks.complete({
+   * await tasks.complete({
    *   type: TaskType.App,
    *   taskId: 456,
    *   data: {},
    *   action: "submit"
    * }, 123); // folderId is required
-   * 
+   *
    * // Complete an external task
-   * await sdk.tasks.complete({
+   * await tasks.complete({
    *   type: TaskType.External,
    *   taskId: 789
    * }, 123); // folderId is required
