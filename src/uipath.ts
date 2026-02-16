@@ -122,7 +122,7 @@ export class UiPath extends UiPathCore {
   get buckets(): BucketService {
     return this.getService(BucketService);
   }
-  
+
   /**
    * Access to Orchestrator Queues service
    */
