@@ -12,6 +12,7 @@ export * from './tasks';
 export * from './entities';
 export * from './choicesets';
 export * from './buckets';
+export * from './jobs';
 export * from './processes';
 export * from './assets';
 export * from './queues';

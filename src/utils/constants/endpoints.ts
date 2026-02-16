@@ -104,6 +104,18 @@ export const IDENTITY_ENDPOINTS = {
 } as const;
 
 /**
+ * Orchestrator Job Service Endpoints
+ */
+export const JOB_ENDPOINTS = {
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Jobs(${id})`,
+  STOP: (id: number) => `${ORCHESTRATOR_BASE}/odata/Jobs(${id})/UiPath.Server.Configuration.OData.StopJob`,
+  STOP_JOBS: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs`,
+  RESTART: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob`,
+  RESUME: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob`,
+} as const;
+
+/**
  * Orchestrator Process Service Endpoints
  */
 export const PROCESS_ENDPOINTS = {

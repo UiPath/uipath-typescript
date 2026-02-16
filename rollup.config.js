@@ -150,6 +150,11 @@ const serviceEntries = [
     output: 'buckets/index'
   },
   {
+    name: 'jobs',
+    input: 'src/services/orchestrator/jobs/index.ts',
+    output: 'jobs/index'
+  },
+  {
     name: 'processes',
     input: 'src/services/orchestrator/processes/index.ts',
     output: 'processes/index'
