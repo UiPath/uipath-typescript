@@ -58,8 +58,6 @@ export class MessageService extends BaseService implements MessageServiceModel {
   /**
    * Gets a message by ID
    *
-   * Gets a message by ID
-   *
    * @param conversationId - The conversation containing the message
    * @param exchangeId - The exchange containing the message
    * @param messageId - The message ID to retrieve

@@ -252,9 +252,6 @@ export class ConversationService extends BaseService implements ConversationServ
 
   /**
    * Uploads a file attachment to a conversation
-   *
-   * Uploads a file attachment to a conversation
-   *
    * @param conversationId - The conversation to attach the file to
    * @param file - The file to upload
    * @returns Promise resolving to the attachment metadata with URI
