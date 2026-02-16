@@ -1,9 +1,10 @@
 import { ExecutionContext } from '../context/execution';
-import { isBrowser } from '../../utils/platform';
+import { isBrowser, isInActionCenter } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
+import { ActionCenterTokenManager } from './action-center-token-manager';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -15,7 +16,8 @@ export class TokenManager {
   private currentToken?: TokenInfo;
   private readonly STORAGE_KEY_PREFIX = 'uipath_sdk_user_token-';
   private refreshPromise: Promise<AuthToken> | null = null;
-  
+  private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
+
   /**
    * Creates a new TokenManager instance
    * @param executionContext The execution context
@@ -26,7 +28,12 @@ export class TokenManager {
     private executionContext: ExecutionContext,
     private config: Config,
     private isOAuth: boolean = false
-  ) {}
+  ) {
+    if (isInActionCenter) {
+      this.actionCenterTokenManager = new ActionCenterTokenManager(config, (tokenInfo) => this.setToken(tokenInfo));
+      this.isOAuth = false;
+    }
+  }
 
   /**
    * Checks if a token is expired
@@ -56,6 +63,10 @@ export class TokenManager {
       throw new AuthenticationError({
         message: 'No authentication token available. Make sure to initialize the SDK first.'
       });
+    }
+
+    if (this.actionCenterTokenManager) {
+      return await this.actionCenterTokenManager.refreshAccessToken(tokenInfo);
     }
 
     // For secret-based tokens, they never expire
@@ -223,9 +234,6 @@ export class TokenManager {
   clearToken(): void {
     this.currentToken = undefined;
     this.executionContext.set('tokenInfo', undefined);
-    const headers = this.executionContext.getHeaders();
-    delete headers['Authorization'];
-    this.executionContext.setHeaders(headers);
     
     // Remove from session storage if this is an OAuth token
     if (isBrowser && this.isOAuth) {
@@ -242,11 +250,6 @@ export class TokenManager {
    */
   private _updateExecutionContext(tokenInfo: TokenInfo): void {
     this.executionContext.set('tokenInfo', tokenInfo);
-    
-    // Update authorization header
-    this.executionContext.setHeaders({
-      'Authorization': `Bearer ${tokenInfo.token}`
-    });
   }
 
   /**
