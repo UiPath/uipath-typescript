@@ -47,8 +47,8 @@ export interface ConversationSessionProvider {
 /**
  * Service for creating and managing conversations with UiPath Conversational Agents
  *
- * A conversation represents a chat thread between a user and an AI agent, storing
- * metadata such as id, label, timestamps, agentId, and folderId. To retrieve the
+ * A conversation is a long-lived interaction with a specific agent with shared context.
+ * It persists across sessions and can be resumed at any time. To retrieve the
  * conversation history, use the {@link ExchangeServiceModel | Exchanges} service.
  * For real-time chat, see {@link SessionStream | Session}.
  *
