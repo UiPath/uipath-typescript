@@ -22,7 +22,7 @@ import type {
   ConversationGetResponse,
   ConversationServiceModel,
   ConversationSessionOptions,
-  ConversationSessionProvider,
+  ConversationSessionMethods,
   ConversationCreateOptions,
   ConversationGetAllOptions,
   ConversationUpdateOptions,
@@ -82,7 +82,7 @@ import { SessionManager } from './session';
  * await exchange.sendMessageWithContentPart({ data: 'Hello!' });
  * ```
  */
-export class ConversationService extends BaseService implements ConversationServiceModel, ConversationSessionProvider {
+export class ConversationService extends BaseService implements ConversationServiceModel, ConversationSessionMethods {
   /** Session manager for WebSocket lifecycle */
   private _sessionManager: SessionManager;
 
@@ -252,7 +252,7 @@ export class ConversationService extends BaseService implements ConversationServ
 
   /**
    * Uploads a file attachment to a conversation
-   * @param conversationId - The conversation to attach the file to
+   * @param id - The ID of the conversation to attach the file to
    * @param file - The file to upload
    * @returns Promise resolving to the attachment metadata with URI
    *
@@ -266,11 +266,11 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   @track('ConversationalAgent.Conversations.UploadAttachment')
   async uploadAttachment(
-    conversationId: string,
+    id: string,
     file: File
   ): Promise<ConversationAttachmentUploadResponse> {
     // Step 1: Create attachment entry and get upload URL
-    const { fileUploadAccess, uri, name } = await this.createAttachment(conversationId, file.name);
+    const { fileUploadAccess, uri, name } = await this.createAttachment(id, file.name);
 
     // Step 2: Upload file to blob storage
     const uploadHeaders: Record<string, string> = {
