@@ -33,34 +33,8 @@ import type { ExchangeStream } from './exchange.types';
  * The `SessionStream` is the top-level entry point — events flow down through
  * exchanges, messages, content parts, and tool calls.
  *
- * ## Real-Time Chat Flow
+ * ### Usage
  *
- * Events flow through a nested hierarchy. Each level provides typed
- * stream helpers for subscribing to its children:
- *
- * ```
- * SessionStream (WebSocket connection)
- * ├── onSessionStarted         → session is ready
- * ├── onExchangeStart          → new request/response cycle
- * │   └── ExchangeStream
- * │       ├── onMessageStart   → user or assistant message
- * │       │   └── MessageStream
- * │       │       ├── onContentPartStart  → text, audio, image content
- * │       │       │   └── ContentPartStream
- * │       │       │       ├── onChunk          → streaming data
- * │       │       │       └── onContentPartEnd → part finished
- * │       │       ├── onToolCallStart     → agent invokes a tool
- * │       │       │   └── ToolCallStream
- * │       │       │       └── onToolCallEnd    → tool result
- * │       │       └── onInterruptStart    → needs user approval
- * │       │           └── sendInterruptEnd → user responds
- * │       └── onExchangeEnd
- * └── onSessionEnd             → session closed
- * ```
- *
- * ## Quick Start
- *
- * @example Streaming text responses
  * ```typescript
  * const session = conversation.startSession();
  *
@@ -81,16 +55,6 @@ import type { ExchangeStream } from './exchange.types';
  * // End the session when done
  * conversation.endSession();
  * ```
- *
- * ## Related Streams
- *
- * The following stream types are returned by SessionStream methods.
- * Click through for detailed API reference:
- *
- * - {@link ExchangeStream} — Returned by `startExchange()` / `onExchangeStart()`. Manages messages within a request-response cycle.
- * - {@link MessageStream} — Returned by `exchange.startMessage()` / `exchange.onMessageStart()`. Contains content parts, tool calls, and interrupts.
- * - {@link ContentPartStream} — Returned by `message.startContentPart()` / `message.onContentPartStart()`. Streams text, audio, image, or transcript data.
- * - {@link ToolCallStream} — Returned by `message.startToolCall()` / `message.onToolCallStart()`. Manages tool call lifecycle within a message.
  */
 export interface SessionStream {
   /** The conversation ID this session belongs to */
