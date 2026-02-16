@@ -9,3 +9,6 @@ export * from './common.types';
 
 // Core domain models: Conversation, Exchange, Message, ContentPart, ToolCall, etc.
 export * from './core.types';
+
+// WebSocket protocol types and event stream interfaces
+export * from './events';

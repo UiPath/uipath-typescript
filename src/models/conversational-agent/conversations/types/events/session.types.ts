@@ -6,7 +6,7 @@
  * for exchanges, messages, and streaming content.
  */
 
-import type { Exchange } from '../types';
+import type { Exchange } from '..';
 import type {
   AsyncInputStreamStartEvent,
   ConversationEvent,

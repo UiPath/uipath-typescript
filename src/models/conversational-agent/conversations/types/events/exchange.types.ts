@@ -6,7 +6,7 @@
  * containing user and assistant messages.
  */
 
-import type { MakeRequired, MessageRole } from '../types';
+import type { MakeRequired, MessageRole } from '..';
 import type { ErrorEndEvent, ErrorStartEvent, ExchangeEndEvent, ExchangeEvent, ExchangeStartEvent, MessageStartEvent, MetaEvent } from './protocol.types';
 import type { CompletedMessage, MessageStream } from './message.types';
 

@@ -20,14 +20,14 @@ import type { ExchangeServiceModel, ConversationExchangeServiceModel } from './e
 import type { ExchangeGetByIdOptions, CreateFeedbackOptions } from './exchanges.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 import type { ConnectionStatus, ConnectionStatusChangedHandler } from '@/core/websocket';
-import type { SessionStream } from './events/session.types';
+import type { SessionStream } from './types/events/session.types';
 
 /**
- * Provider interface for session operations.
+ * Methods interface for session operations.
  * This allows the conversation object to access session methods without
  * depending on the full ConversationService implementation.
  */
-export interface ConversationSessionProvider {
+export interface ConversationSessionMethods {
   /**
    * Starts a real-time chat session for a conversation
    */
@@ -154,12 +154,22 @@ export interface ConversationServiceModel {
    * @param id - The conversation ID to retrieve
    * @returns Promise resolving to {@link ConversationGetResponse} with bound methods
    *
-   * @example
+   * @example Resume with a real-time session
    * ```typescript
    * const conversation = await conversationalAgent.conversations.getById(conversationId);
-   *
-   * // Resume with a real-time session
    * const session = conversation.startSession();
+   * ```
+   *
+   * @example
+   * ```typescript
+   * //Retrieve conversation history
+   * const conversation = await conversationalAgent.conversations.getById(conversationId);
+   * const allExchanges = await conversation.exchanges.getAll();
+   * for (const exchange of allExchanges.items) {
+   *   for (const message of exchange.messages) {
+   *     console.log(`${message.role}: ${message.contentParts.map(p => p.data).join('')}`);
+   *   }
+   * }
    * ```
    */
   getById(id: string): Promise<ConversationGetResponse>;
@@ -199,9 +209,7 @@ export interface ConversationServiceModel {
   /**
    * Uploads a file attachment to a conversation
    *
-   * Uploads a file attachment to a conversation
-   *
-   * @param conversationId - The conversation to attach the file to
+   * @param id - The ID of the conversation to attach the file to
    * @param file - The file to upload
    * @returns Promise resolving to attachment metadata with URI
    * {@link ConversationAttachmentUploadResponse}
@@ -212,7 +220,7 @@ export interface ConversationServiceModel {
    * console.log(`Uploaded: ${attachment.uri}`);
    * ```
    */
-  uploadAttachment(conversationId: string, file: File): Promise<ConversationAttachmentUploadResponse>;
+  uploadAttachment(id: string, file: File): Promise<ConversationAttachmentUploadResponse>;
 
   // ==================== Real-time Event Handling ====================
 
@@ -413,8 +421,6 @@ export interface ConversationMethods {
   /**
    * Uploads a file attachment to this conversation
    *
-   * Uploads a file attachment to a conversation
-   *
    * @param file - The file to upload
    * @returns Promise resolving to attachment metadata with URI
    * {@link ConversationAttachmentUploadResponse}
@@ -438,14 +444,14 @@ export type ConversationGetResponse = RawConversationGetResponse & ConversationM
  *
  * @param conversationData - The conversation data (response from API)
  * @param service - The conversation service instance
- * @param sessionProvider - Optional session provider for WebSocket session methods
+ * @param sessionMethods - Optional session methods for WebSocket session operations
  * @param exchangeService - Optional exchange service for scoped exchange methods
  * @returns Object containing conversation methods
  */
 function createConversationMethods(
   conversationData: RawConversationGetResponse,
   service: ConversationServiceModel,
-  sessionProvider?: ConversationSessionProvider,
+  sessionMethods?: ConversationSessionMethods,
   exchangeService?: ExchangeServiceModel
 ): ConversationMethods {
   return {
@@ -481,29 +487,29 @@ function createConversationMethods(
 
     startSession(options?: ConversationSessionOptions): SessionStream {
       if (!conversationData.id) throw new Error('Conversation ID is undefined');
-      if (!sessionProvider) {
+      if (!sessionMethods) {
         throw new Error('Session methods are not available. Use ConversationService to create conversations with session support.');
       }
 
-      return sessionProvider.startSession(conversationData.id, options);
+      return sessionMethods.startSession(conversationData.id, options);
     },
 
     getSession(): SessionStream | undefined {
       if (!conversationData.id) throw new Error('Conversation ID is undefined');
-      if (!sessionProvider) {
+      if (!sessionMethods) {
         throw new Error('Session methods are not available. Use ConversationService to create conversations with session support.');
       }
 
-      return sessionProvider.getSession(conversationData.id);
+      return sessionMethods.getSession(conversationData.id);
     },
 
     endSession(): void {
       if (!conversationData.id) throw new Error('Conversation ID is undefined');
-      if (!sessionProvider) {
+      if (!sessionMethods) {
         throw new Error('Session methods are not available. Use ConversationService to create conversations with session support.');
       }
 
-      sessionProvider.endSession(conversationData.id);
+      sessionMethods.endSession(conversationData.id);
     },
 
     async uploadAttachment(file: File): Promise<ConversationAttachmentUploadResponse> {
@@ -518,16 +524,16 @@ function createConversationMethods(
  *
  * @param conversationData - The conversation data from API
  * @param service - The conversation service instance
- * @param sessionProvider - Optional session provider for WebSocket session methods
+ * @param sessionMethods - Optional session methods for WebSocket session operations
  * @param exchangeService - Optional exchange service for scoped exchange methods
  * @returns A conversation object with added methods
  */
 export function createConversationWithMethods(
   conversationData: RawConversationGetResponse,
   service: ConversationServiceModel,
-  sessionProvider?: ConversationSessionProvider,
+  sessionMethods?: ConversationSessionMethods,
   exchangeService?: ExchangeServiceModel
 ): ConversationGetResponse {
-  const methods = createConversationMethods(conversationData, service, sessionProvider, exchangeService);
+  const methods = createConversationMethods(conversationData, service, sessionMethods, exchangeService);
   return Object.assign({}, conversationData, methods) as ConversationGetResponse;
 }

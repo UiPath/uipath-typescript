@@ -10,8 +10,8 @@ import type {
   MetaData,
   ToolCallInputValue,
   ToolCallOutputValue
-} from '../types/common.types';
-import { InterruptType } from '../types/common.types';
+} from '../common.types';
+import { InterruptType } from '../common.types';
 
 /**
  * Identifies how sensitive the LLM should be when detecting the start or end of speech.
@@ -528,7 +528,7 @@ export type InterruptStartEvent = ToolCallConfirmationInterruptStartEvent | Gene
 /**
  * Signals the interrupt end event with the provided value.
  */
-export type InterruptEndEvent = unknown;
+export type InterruptEndEvent = Record<string, unknown>;
 
 /**
  * Encapsulates interrupt-related events within a message.
