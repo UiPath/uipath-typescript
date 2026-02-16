@@ -1,0 +1,300 @@
+#root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.page-center {
+  text-align: center;
+  margin-top: 20vh;
+}
+
+.btn-primary {
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #0067ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+.btn-primary:hover {
+  background-color: #0052cc;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+.btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+/* Dashboard layout */
+.dashboard {
+  padding: 2rem 0;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+}
+
+/* Cases table */
+.cases-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.cases-table th,
+.cases-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cases-table th {
+  font-weight: 600;
+  color: #555;
+  font-size: 13px;
+}
+
+.cases-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.case-link {
+  color: #0067ff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.case-link:hover {
+  text-decoration: underline;
+}
+
+.faulted {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.location-cell {
+  color: #555;
+}
+
+.status-message {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
+
+.status-message.error {
+  color: #d32f2f;
+}
+
+.empty-row {
+  text-align: center;
+  color: #999;
+  padding: 2rem;
+}
+
+.back-link {
+  color: #0067ff;
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* HITL iframe */
+.hitl-iframe-container {
+  width: 300%;
+  margin-left: -100%;
+  height: 75vh;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hitl-iframe-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.no-tasks-message {
+  padding: 3rem;
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+}
+
+/* Tab bar */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 1.5rem;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  color: #666;
+}
+
+.tab-button:hover {
+  color: #333;
+}
+
+.tab-button.active {
+  color: #0067ff;
+  border-bottom-color: #0067ff;
+}
+
+/* Task details */
+.task-details-panel {
+  padding: 1rem 0;
+}
+
+.task-title {
+  margin: 0 0 1rem 0;
+  font-size: 20px;
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.task-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.task-badge.priority {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.task-assigned {
+  font-size: 13px;
+  color: #555;
+}
+
+/* Task form (dynamic data fields) */
+.task-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 2rem;
+}
+
+.task-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.task-form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.task-form-input {
+  padding: 8px 12px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  min-height: 36px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.task-form-input:focus {
+  outline: none;
+  border-color: #0067ff;
+  box-shadow: 0 0 0 2px rgba(0, 103, 255, 0.15);
+}
+
+/* Task action buttons */
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-approve {
+  background-color: #4caf50;
+}
+
+.btn-approve:hover:not(:disabled) {
+  background-color: #388e3c;
+}
+
+.btn-reject {
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.btn-reject:hover:not(:disabled) {
+  background-color: #b71c1c;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-approve:disabled,
+.btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-hint {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}

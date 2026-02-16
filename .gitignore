@@ -10,6 +10,8 @@ dist/
 build/
 lib/
 *.tsbuildinfo
+bin/
+obj/
 
 # IDE and editor files
 .idea/
