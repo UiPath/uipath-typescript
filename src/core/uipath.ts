@@ -184,4 +184,13 @@ export class UiPath implements IUiPath {
     return this.#authService.getToken();
   }
 
+  /**
+   * Logout from the SDK, clearing all authentication state.
+   * After calling this method, the user will need to re-initialize to authenticate again.
+   */
+  public logout(): void {
+    this.#authService.logout();
+    this.#initialized = false;
+  }
+
 }

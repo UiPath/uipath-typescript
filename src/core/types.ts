@@ -45,4 +45,10 @@ export interface IUiPath {
    * Get the current authentication token
    */
   getToken(): string | undefined;
+
+  /**
+   * Logout from the SDK, clearing all authentication state.
+   * After calling this method, the user will need to re-initialize to authenticate again.
+   */
+  logout(): void;
 }

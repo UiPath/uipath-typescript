@@ -1,6 +1,6 @@
 import { ExecutionContext } from '../context/execution';
 import { isBrowser } from '../../utils/platform';
-import { AuthToken, TokenInfo } from './types';
+import { AuthToken, TokenInfo, AUTH_STORAGE_KEYS } from './types';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 
@@ -12,7 +12,7 @@ import { Config } from '../config/config';
  */
 export class TokenManager {
   private currentToken?: TokenInfo;
-  private readonly STORAGE_KEY_PREFIX = 'uipath_sdk_user_token-';
+  private readonly STORAGE_KEY_PREFIX = AUTH_STORAGE_KEYS.TOKEN_PREFIX;
   private refreshPromise: Promise<AuthToken> | null = null;
   
   /**
