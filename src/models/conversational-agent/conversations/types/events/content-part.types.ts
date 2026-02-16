@@ -5,7 +5,7 @@
  * within a message. Content parts represent text, audio, images, etc.
  */
 
-import type { CitationOptions, CitationSource, MakeRequired } from '../types';
+import type { CitationOptions, CitationSource, MakeRequired } from '..';
 import type {
   ContentPartChunkEvent,
   ContentPartEndEvent,

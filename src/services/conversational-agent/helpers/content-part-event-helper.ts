@@ -229,9 +229,6 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
     this.delete();
   }
 
-  /**
-   * @deprecated Use sendContentPartEnd
-   */
   public sendEndContentPart(endContentPart: ContentPartEndEvent = {}) {
     this.sendContentPartEnd(endContentPart);
   }
@@ -260,9 +257,6 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
     };
   }
 
-  /**
-   * @deprecated Use onContentPartEnd
-   */
   public onEndContentPart(cb: ContentPartEndHandler) {
     this.onContentPartEnd(cb);
   }

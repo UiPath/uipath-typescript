@@ -22,7 +22,4 @@ export * from './exchanges.models';
 // Message service types
 export * from './messages.models';
 
-// ==================== Event Types ====================
-// WebSocket protocol types and interfaces
-export * from './events';
 

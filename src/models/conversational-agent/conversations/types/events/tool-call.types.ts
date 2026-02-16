@@ -6,7 +6,7 @@
  * made by the assistant during a conversation.
  */
 
-import type { MakeRequired } from '../types';
+import type { MakeRequired } from '..';
 import type { ErrorEndEvent, ErrorStartEvent, MetaEvent, ToolCallEndEvent, ToolCallEvent, ToolCallStartEvent } from './protocol.types';
 
 /**

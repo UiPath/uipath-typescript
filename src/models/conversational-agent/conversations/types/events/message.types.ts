@@ -6,7 +6,7 @@
  * users, assistants, or the system.
  */
 
-import type { MakeRequired, MessageRole, Simplify } from '../types';
+import type { MakeRequired, MessageRole, Simplify } from '..';
 import type {
   ContentPartStartEvent,
   ErrorEndEvent,
