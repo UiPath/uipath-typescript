@@ -1,10 +1,11 @@
 import { ExecutionContext } from '../context/execution';
-import { isBrowser } from '../../utils/platform';
+import { isBrowser, isInActionCenter } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
+import { ActionCenterTokenManager } from './action-center-token-manager';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -15,6 +16,7 @@ import { AuthenticationError, HttpStatus } from '../errors';
 export class TokenManager {
   private currentToken?: TokenInfo;
   private refreshPromise: Promise<AuthToken> | null = null;
+  private readonly actionCenterTokenRefreshFn: ((tokenInfo: TokenInfo) => Promise<string>) | null = null;
   
   /**
    * Creates a new TokenManager instance
@@ -26,7 +28,13 @@ export class TokenManager {
     private executionContext: ExecutionContext,
     private config: Config,
     private isOAuth: boolean = false
-  ) {}
+  ) {
+    if (isInActionCenter) {
+      const acTokenManager = new ActionCenterTokenManager(config, (tokenInfo) => this.setToken(tokenInfo));
+      this.actionCenterTokenRefreshFn = (tokenInfo: TokenInfo) => acTokenManager.refreshAccessToken(tokenInfo);
+      this.isOAuth = false;
+    }
+  }
 
   /**
    * Checks if a token is expired
@@ -56,6 +64,10 @@ export class TokenManager {
       throw new AuthenticationError({
         message: 'No authentication token available. Make sure to initialize the SDK first.'
       });
+    }
+
+    if (this.actionCenterTokenRefreshFn) {
+      return await this.actionCenterTokenRefreshFn(tokenInfo);
     }
 
     // For secret-based tokens, they never expire
