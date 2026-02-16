@@ -48,6 +48,19 @@ export interface ConversationSessionOptions {
    * as it allows a single code path for rendering both user and assistant messages.
    */
   echo?: boolean;
+
+  /**
+   * Sets the log level for WebSocket session debugging.
+   * When set, enables logging at the specified level for the underlying WebSocket connection.
+   *
+   * @example
+   * ```typescript
+   * import { LogLevel } from '@uipath/uipath-typescript/conversational-agent';
+   *
+   * const session = conversation.startSession({ logLevel: LogLevel.Debug });
+   * ```
+   */
+  logLevel?: LogLevel;
 }
 
 // ==================== Conversation Response Types ====================
