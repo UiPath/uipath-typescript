@@ -22,7 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
         run: npm ci
@@ -51,13 +50,25 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Publish to GitHub Packages
-        run: npm publish --registry=https://npm.pkg.github.com
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup registry for npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
         run: npm publish --provenance --access public
+
+      - name: Setup registry for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Publish to GitHub Packages
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Summary
         run: |
@@ -69,8 +80,8 @@ jobs:
           echo "### Completed Steps:" >> $GITHUB_STEP_SUMMARY
           echo "- Updated telemetry constants" >> $GITHUB_STEP_SUMMARY
           echo "- Built TypeScript package" >> $GITHUB_STEP_SUMMARY
-          echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY
