@@ -137,7 +137,7 @@ export default class Pack extends Command {
 
     if (!isVersionUpgrade) {
       // Validate environment variables or flags for uniqueness check
-      const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY, this, flags);
+      const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.PACK, this, flags);
       if (!envConfig) {
         process.exit(1);
       }
