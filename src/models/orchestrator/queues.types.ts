@@ -39,13 +39,21 @@ export type QueueGetAllOptions = RequestOptions & PaginationOptions & {
 }
 
 /**
- * Options for getting queue items with optional filtering and folder scoping
+ * Query options for retrieving queue items.
+ * Folder and queue scoping are passed as explicit method arguments.
  */
-export type QueueItemGetAllOptions = RequestOptions & PaginationOptions & {
-  /**
-   * Optional folder ID to scope queue items by folder
-   */
-  folderId?: number;
+export type QueueItemQueryOptions = RequestOptions & PaginationOptions;
+
+/**
+ * Optional settings for inserting a queue item.
+ */
+export type QueueItemInsertOptions = {
+  priority?: 'High' | 'Normal' | 'Low';
+  reference?: string;
+  dueDate?: string;
+  deferDate?: string;
+  riskSlaDate?: string;
+  progress?: string;
 }
 
 /**
@@ -72,13 +80,13 @@ export interface QueueItem {
   key: string;
   status: string;
   priority: string;
-  queueDefinitionId: number;
+  queueId: number;
   processingException: any;
   specificContent: Record<string, any>;
   output: any;
   progress: string;
   reference: string;
-  creationTime: string;
+  createdTime: string;
   folderId?: number;
 }
 

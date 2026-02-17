@@ -76,13 +76,13 @@ export const createBasicQueueItem = (overrides: Partial<QueueItem> = {}): QueueI
     key: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_KEY,
     status: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_STATUS,
     priority: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PRIORITY,
-    queueDefinitionId: QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID,
+    queueId: QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID,
     processingException: null,
     specificContent: QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT,
     output: null,
     progress: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PROGRESS,
     reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE,
-    creationTime: QUEUE_TEST_CONSTANTS.CREATED_TIME,
+    createdTime: QUEUE_TEST_CONSTANTS.CREATED_TIME,
     folderId: TEST_CONSTANTS.FOLDER_ID
   }, overrides);
 };

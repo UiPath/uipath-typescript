@@ -11,8 +11,7 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService,
-  TransactionService
+  AssetService
 } from './services';
 import { UiPathSDKConfig } from './core/config/sdk-config';
 
@@ -138,12 +137,6 @@ export class UiPath extends UiPathCore {
     return this.getService(AssetService);
   }
 
-  /**
-   * Access to Orchestrator Transactions service
-   */
-  get transactions(): TransactionService {
-    return this.getService(TransactionService);
-  }
 }
 
 // Factory function for creating UiPath instance

@@ -5,7 +5,11 @@ import {
   QueueGetByIdOptions,
   QueueItem,
   QueueItemPayload,
-  QueueItemGetAllOptions
+  QueueItemQueryOptions,
+  QueueItemInsertOptions,
+  TransactionItem,
+  StartTransactionPayload,
+  TransactionResultPayload
 } from '../../../models/orchestrator/queues.types';
 import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
@@ -133,13 +137,17 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   }
 
   /**
-   * Gets queue items with optional filtering and folder scoping
+   * Gets queue items for a specific queue in a folder.
    *
-   * @param options - Query options including optional folderId
+   * @param queueId - Required queue ID
+   * @param folderId - Required folder ID
+   * @param options - Query options including filtering and pagination
    * @returns Promise resolving to an array of queue items or paginated result
    */
   @track('Queues.GetItems')
-  async getItems<T extends QueueItemGetAllOptions = QueueItemGetAllOptions>(
+  async getItems<T extends QueueItemQueryOptions = QueueItemQueryOptions>(
+    queueId: number,
+    folderId: number,
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -148,6 +156,10 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   > {
     const transformQueueItemResponse = (queueItem: any) =>
       transformData(pascalToCamelCaseKeys(queueItem) as QueueItem, QueueItemMap);
+
+    const filter = options?.filter
+      ? `(${options.filter}) and queueDefinitionId eq ${queueId}`
+      : `queueDefinitionId eq ${queueId}`;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -164,33 +176,39 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
         }
       }
-    }, options) as any;
+    }, {
+      ...(options || {}),
+      folderId,
+      filter
+    } as any) as any;
   }
 
   /**
-   * Adds a new item to a queue
+   * Inserts a new item into a queue
    *
-   * @param folderId - Required folder ID
    * @param queueName - The name of the queue
-   * @param content - The specific data for the item
-   * @param priority - Optional priority (High, Normal, Low)
-   * @param reference - Optional reference string
+   * @param specificContent - The specific data for the item
+   * @param folderId - Required folder ID
+   * @param options - Optional queue item options
    * @returns Promise resolving to the created Queue Item
    */
-  @track('Queues.AddQueueItem')
-  async addQueueItem(
-    folderId: number,
+  @track('Queues.InsertQueueItem')
+  async insertQueueItem(
     queueName: string,
-    content: Record<string, any>,
-    priority: 'High' | 'Normal' | 'Low' = 'Normal',
-    reference?: string
+    specificContent: Record<string, any>,
+    folderId: number,
+    options: QueueItemInsertOptions = {}
   ): Promise<QueueItem> {
     const payload: QueueItemPayload = {
       itemData: {
         Name: queueName,
-        Priority: priority,
-        SpecificContent: content,
-        Reference: reference
+        Priority: options.priority ?? 'Normal',
+        SpecificContent: specificContent,
+        Reference: options.reference,
+        DueDate: options.dueDate,
+        DeferDate: options.deferDate,
+        RiskSlaDate: options.riskSlaDate,
+        Progress: options.progress
       }
     };
 
@@ -203,5 +221,46 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     );
 
     return transformData(pascalToCamelCaseKeys(response.data) as QueueItem, QueueItemMap);
+  }
+
+  /**
+   * Starts a transaction by getting the next item from the queue.
+   */
+  @track('Queues.StartTransaction')
+  async startTransaction(folderId: number, queueName: string, robotIdentifier?: string): Promise<TransactionItem> {
+    const payload: StartTransactionPayload = {
+      transactionData: {
+        Name: queueName,
+        RobotIdentifier: robotIdentifier
+      }
+    };
+
+    const response = await this.post<TransactionItem>(
+      QUEUE_ENDPOINTS.START_TRANSACTION,
+      payload,
+      {
+        headers: createHeaders({ [FOLDER_ID]: folderId })
+      }
+    );
+
+    return transformData(pascalToCamelCaseKeys(response.data), QueueItemMap) as TransactionItem;
+  }
+
+  /**
+   * Sets the result of a transaction.
+   */
+  @track('Queues.SetTransactionResult')
+  async setTransactionResult(
+    folderId: number,
+    queueItemId: number,
+    transactionResult: TransactionResultPayload['transactionResult']
+  ): Promise<void> {
+    await this.post(
+      QUEUE_ENDPOINTS.SET_TRANSACTION_RESULT(queueItemId),
+      { transactionResult },
+      {
+        headers: createHeaders({ [FOLDER_ID]: folderId })
+      }
+    );
   }
 }
