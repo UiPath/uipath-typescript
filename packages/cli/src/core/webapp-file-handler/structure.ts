@@ -15,7 +15,7 @@ export const PUSH_METADATA_REMOTE_PATH = `${REMOTE_SOURCE_FOLDER_NAME}/push_meta
 export const WEB_APP_MANIFEST_FILENAME = 'webAppManifest.json';
 
 /** Normalize bundle path (strip leading/trailing slashes, use forward slashes). */
-function normalizeBundlePath(bundlePath: string): string {
+export function normalizeBundlePath(bundlePath: string): string {
   return bundlePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '') || bundlePath;
 }
 

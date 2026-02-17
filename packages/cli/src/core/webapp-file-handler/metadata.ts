@@ -8,6 +8,7 @@ import {
   PUSH_METADATA_REMOTE_PATH,
   REMOTE_SOURCE_FOLDER_NAME,
   WEB_APP_MANIFEST_FILENAME,
+  normalizeBundlePath,
 } from './structure.js';
 import type { WebAppPushConfig, ProjectFile, FileOperationPlan, PushMetadata } from './types.js';
 import type { LocalFile } from './types.js';
@@ -126,7 +127,7 @@ export async function prepareMetadataFileForPlan(
       if (remoteEntry) {
         try {
           const remoteContent = await downloadRemoteFile(config, remoteEntry.id);
-          const parsed = JSON.parse(remoteContent.toString('utf-8')) as unknown;
+          const parsed = JSON.parse(remoteContent.toString()) as unknown;
           if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
             throw new SyntaxError('Remote push_metadata.json is not a valid JSON object');
           }
@@ -230,9 +231,9 @@ export async function updateRemoteWebAppManifest(
 
   try {
     const content = await api.downloadRemoteFile(config, remoteFile.id);
-    const parsed = JSON.parse(content.toString('utf-8')) as Record<string, unknown>;
+    const parsed = JSON.parse(content.toString()) as Record<string, unknown>;
     if (typeof parsed !== 'object' || parsed === null) return;
-    const buildDirName = bundlePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '') || bundlePath;
+    const buildDirName = normalizeBundlePath(bundlePath);
     const configObj = (parsed.config as Record<string, unknown>) ?? {};
     parsed.config = {
       ...configObj,
@@ -240,7 +241,7 @@ export async function updateRemoteWebAppManifest(
     };
 
     const jsonString = JSON.stringify(parsed, null, 2);
-    const newContent = Buffer.from(jsonString, 'utf-8');
+    const newContent = Buffer.from(jsonString);
     const localFile: LocalFile = {
       path: WEB_APP_MANIFEST_FILENAME,
       absPath: '',

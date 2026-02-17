@@ -29,6 +29,7 @@ import {
   ensureContentRootExists,
   ensureFoldersCreated,
   cleanupEmptyFolders,
+  hasFolderByPath,
 } from './folder-ops.js';
 import {
   executeFileOperations,
@@ -53,16 +54,6 @@ function buildLocalFilesWithRemote(
     localFilesWithRemote.push({ localFile: f, remotePath: getRemotePathForLocalPath(f.path, bundlePath, remoteContentRoot) });
   }
   return { localFilesWithRemote, buildCount: buildFiles.length, sourceCount: sourceFiles.length };
-}
-
-/** Returns true if remote folders contain the given path (exact or normalized). */
-function hasRemoteFolder(foldersMap: Map<string, { id: string | null }>, folderPath: string): boolean {
-  const norm = normalizeFolderPath(folderPath);
-  return (
-    foldersMap.has(folderPath) ||
-    foldersMap.has(norm) ||
-    [...foldersMap.keys()].some((k) => normalizeFolderPath(k) === norm)
-  );
 }
 
 export type {
@@ -110,7 +101,7 @@ export class WebAppFileHandler {
     const fullRemoteFiles = getRemoteFilesMap(this.projectStructure);
     const fullRemoteFolders = getRemoteFoldersMap(this.projectStructure);
     const remoteContentRoot = getRemoteContentRoot(this.config.bundlePath);
-    const contentRootExists = hasRemoteFolder(fullRemoteFolders, remoteContentRoot);
+    const contentRootExists = hasFolderByPath(fullRemoteFolders, remoteContentRoot);
 
     let plan: FileOperationPlan;
     if (!contentRootExists) {
@@ -124,10 +115,7 @@ export class WebAppFileHandler {
         }
       );
       const remoteFolders = getRemoteFoldersMap(this.projectStructure!);
-      plan = computeFirstPushPlan(localFilesWithRemote, remoteFolders, {
-        remoteContentRoot,
-        bundlePath: this.config.bundlePath,
-      });
+      plan = computeFirstPushPlan(localFilesWithRemote, remoteFolders);
       this.config.logger.log(
         chalk.gray(`[push] Plan: ${plan.uploadFiles.length} to upload, ${plan.createFolders.length} folders to create.`)
       );
@@ -230,17 +218,12 @@ export class WebAppFileHandler {
       this.config.logger.log(chalk.yellow(MESSAGES.ERRORS.PUSH_METADATA_UPLOAD_FAILED_PREFIX + msg));
     }
     this.config.logger.log(chalk.gray('[push] Updating web app manifest...'));
-    try {
-      await updateRemoteWebAppManifest(
-        this.config,
-        this.config.bundlePath,
-        fullRemoteFiles,
-        this.lockKey
-      );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.config.logger.log(chalk.yellow(MESSAGES.ERRORS.PUSH_WEB_APP_MANIFEST_UPDATE_FAILED_PREFIX + msg));
-    }
+    await updateRemoteWebAppManifest(
+      this.config,
+      this.config.bundlePath,
+      fullRemoteFiles,
+      this.lockKey
+    );
     this.config.logger.log(chalk.gray('[push] Done.'));
   }
 

@@ -212,34 +212,6 @@ export async function createFolder(
   }
 }
 
-export async function moveFolder(
-  config: WebAppPushConfig,
-  folderId: string,
-  parentId: string,
-  lockKey: string | null
-): Promise<void> {
-  const endpoint = API_ENDPOINTS.STUDIO_WEB_MOVE_FOLDER.replace('{projectId}', config.projectId);
-  const baseUrl = buildApiUrl(config, endpoint);
-  const url = `${baseUrl}?api-version=${STUDIO_WEB_API_VERSION}`;
-  const headers = createHeaders({
-    bearerToken: config.envConfig.accessToken,
-    tenantId: config.envConfig.tenantId,
-    contentType: AUTH_CONSTANTS.CONTENT_TYPES.JSON,
-  });
-  if (lockKey) headers[STUDIO_WEB_HEADERS.LOCK_KEY] = lockKey;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ folderId, parentId }),
-  });
-  if (!response.ok) {
-    const err = await response.text().catch(() => '');
-    const errMsg = `Move folder failed: ${response.status} ${response.statusText} ${err.slice(0, 80)}`;
-    trackApiFailure('moveFolder', errMsg, response.status);
-    throw new Error(errMsg);
-  }
-}
-
 export async function downloadRemoteFile(
   config: WebAppPushConfig,
   fileId: string

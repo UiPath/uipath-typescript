@@ -163,6 +163,11 @@ export function collectSourceFiles(
 ): LocalFile[] {
   const files: LocalFile[] = [];
   const ig = buildPushIgnoreFilter(rootDir);
-  collectSourceFilesRecursive(rootDir, rootDir, bundlePath, ig, files, computeHash);
+  try {
+    collectSourceFilesRecursive(rootDir, rootDir, bundlePath, ig, files, computeHash);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return files;
+    throw error;
+  }
   return files;
 }

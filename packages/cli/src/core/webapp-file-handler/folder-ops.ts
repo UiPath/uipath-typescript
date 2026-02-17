@@ -11,8 +11,14 @@ import {
 } from './structure.js';
 import * as api from './api.js';
 
-/** Returns true if folderPath exists in the map (by exact or normalized key). Backend may return different casing. */
-function hasFolderByPath(foldersMap: Map<string, ProjectFolder>, folderPath: string): boolean {
+/**
+ * Returns true if folderPath exists in the map (by exact or normalized key).
+ * Used for "folder exists on remote" checks; backend may return different casing (e.g. Source vs source).
+ */
+export function hasFolderByPath(
+  foldersMap: Map<string, ProjectFolder>,
+  folderPath: string
+): boolean {
   const norm = normalizeFolderPath(folderPath);
   return (
     foldersMap.has(folderPath) ||
@@ -118,8 +124,7 @@ function resolveFolderIdAfterCreate(
   const pathId = byPath?.id;
   if (pathId) return pathId;
   const byName = afterCreate.get(folderName);
-  const nameId = byName?.id;
-  return nameId ?? undefined;
+  return byName?.id ?? undefined;
 }
 
 /**
@@ -173,8 +178,8 @@ export async function ensureFoldersCreated(
       if (id) folderIdMap.set(norm(folder.path), id);
     }
 
-    const hadNull = results.some((r) => !r.id);
-    if (hadNull) {
+    const someFolderCreatesReturnedNull = results.some((r) => !r.id);
+    if (someFolderCreatesReturnedNull) {
       cliTelemetryClient.track('Cli.Push.FolderCreateConflict', {
         message: 'One or more create folder returned null; refetching to resolve parent ids',
         depth: String(depth),
@@ -188,9 +193,9 @@ export async function ensureFoldersCreated(
     }
   }
 
-  const next = await api.fetchRemoteStructure(config);
-  setStructure(next);
-  const afterCreate = getRemoteFoldersMap(next);
+  const structureAfterFolderCreation = await api.fetchRemoteStructure(config);
+  setStructure(structureAfterFolderCreation);
+  const afterCreate = getRemoteFoldersMap(structureAfterFolderCreation);
   for (const folder of plan.createFolders) {
     if (folderIdMap.has(norm(folder.path))) continue;
     const folderName = folder.path.split('/').filter(Boolean).pop()!;

@@ -162,8 +162,7 @@ export async function computeExecutionPlan(
  */
 export function computeFirstPushPlan(
   localFilesWithRemote: LocalFileWithRemote[],
-  remoteFolders: Map<string, ProjectFolder>,
-  _opts: { remoteContentRoot: string; bundlePath: string }
+  remoteFolders: Map<string, ProjectFolder>
 ): FileOperationPlan {
   const plan: FileOperationPlan = {
     createFolders: [],
