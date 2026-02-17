@@ -35,34 +35,6 @@ export interface ConversationSessionOptions {
   logLevel?: LogLevel;
 }
 
-// ==================== Session Options ====================
-
-/**
- * Options for starting a session on a conversation object.
- * Unlike SessionStartEventOptions, conversationId is not needed since it's implicit from the conversation.
- */
-export interface ConversationSessionOptions {
-  /**
-   * When set, causes events emitted to also be dispatched to event handlers.
-   * This option is useful when the event helper objects are bound to UI components
-   * as it allows a single code path for rendering both user and assistant messages.
-   */
-  echo?: boolean;
-
-  /**
-   * Sets the log level for WebSocket session debugging.
-   * When set, enables logging at the specified level for the underlying WebSocket connection.
-   *
-   * @example
-   * ```typescript
-   * import { LogLevel } from '@uipath/uipath-typescript/conversational-agent';
-   *
-   * const session = conversation.startSession({ logLevel: LogLevel.Debug });
-   * ```
-   */
-  logLevel?: LogLevel;
-}
-
 // ==================== Conversation Response Types ====================
 
 /** Response for creating a conversation (includes methods) */

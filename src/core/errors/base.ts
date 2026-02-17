@@ -33,7 +33,7 @@ export abstract class UiPathError extends Error {
     this.requestId = params.requestId;
     this.timestamp = new Date();
 
-    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    // Maintains proper stack trace for where our error was thrown
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }

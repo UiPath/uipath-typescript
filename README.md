@@ -269,6 +269,8 @@ The SDK provides access to the following services through modular imports:
 - `Buckets` from `@uipath/uipath-typescript/buckets` - Manage storage buckets in Orchestrator
 - `Queues` from `@uipath/uipath-typescript/queues` - Manage Orchestrator queues
 - `Assets` from `@uipath/uipath-typescript/assets` - Manage Orchestrator assets
+- `ConversationalAgent` from `@uipath/uipath-typescript/conversational-agent` - Interact with Conversational Agents (real-time streaming, conversations, sessions)
+- `Exchanges` from `@uipath/uipath-typescript/conversational-agent` - Manage conversation exchanges and feedback
 
 <details>
 <summary><strong>View Example Usage</strong></summary>
@@ -395,6 +397,7 @@ await entities.deleteRecordsById('entity-uuid', ['record-id-1', 'record-id-2']);
 Check out the [`/samples`](./samples) folder to see sample applications built using the SDK:
 
 - **[process-app](./samples/process-app)**: A Maestro process management application demonstrating OAuth authentication and SDK usage
+- **[conversational-agent-app](./samples/conversational-agent-app)**: A Conversational Agent chat application with real-time streaming, conversation management, file attachments, tool call visualization, and feedback
 
 <div align="right">
 
