@@ -64,8 +64,17 @@ export const MESSAGES = {
     PUSH_PROJECT_ID_REQUIRED:
       'Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath push directly',
     PUSH_VALIDATION_FAILED: 'Validation failed',
+    /** Shown when --build-dir path does not exist. */
+    PUSH_BUILD_DIR_NOT_FOUND: "Build directory not found.",
+    /** Shown when --build-dir path exists but is not a directory. */
+    PUSH_BUILD_DIR_NOT_DIRECTORY: "Build path is not a directory.",
+    /** Steps to fix build-dir / push setup; shown after build dir validation errors. */
+    PUSH_BUILD_DIR_STEPS:
+      'Steps:\n  1. Build your project (e.g. npm run build or your framework\'s build command).\n  2. Run: uipath push <project-id> --build-dir <your-build-dir>\n  Example: uipath push my-project-id --build-dir dist',
     PUSH_FAILED_PREFIX: 'Push failed: ',
     PUSH_FILE_OPERATION_FAILED_PREFIX: 'Failed: ',
+    /** When create returns 409; we skip so push does not fail. */
+    PUSH_FILE_ALREADY_EXISTS_SKIP: '[push] Skipped (already exists): ',
     PUSH_DELETE_FILE_PREFIX: 'Could not delete file ',
     PUSH_DELETE_FOLDER_PREFIX: 'Could not delete folder ',
     PUSH_BINDINGS_PARSE_FAILED_PREFIX: 'Failed to parse ',
@@ -83,6 +92,8 @@ export const MESSAGES = {
     PUSH_REMOTE_METADATA_LOAD_FALLBACK_SUFFIX: '; using new metadata.',
     PUSH_TEMP_METADATA_REMOVE_FAILED_PREFIX: '[push] Could not remove temp metadata file: ',
     PUSH_METADATA_UPLOAD_FAILED_PREFIX: '[push] Metadata upload to remote failed: ',
+    /** When remote webAppManifest.json update fails (download/parse/upload). */
+    PUSH_WEB_APP_MANIFEST_UPDATE_FAILED_PREFIX: '[push] Updating web app manifest failed: ',
     PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX: '[push] Could not download remote file for diff: ',
 
     // File operations

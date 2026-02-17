@@ -47,6 +47,14 @@ const REFERENCED_RESOURCE_STATUS_MAP: Record<string, 'ADDED' | 'UNCHANGED' | 'UP
   UNCHANGED: 'UNCHANGED',
 };
 
+/** Thrown when createFile receives 409 Conflict (file already exists). Callers can treat as non-fatal and skip. */
+export class FileAlreadyExistsError extends Error {
+  constructor(public readonly filePath: string) {
+    super(`File already exists: ${filePath}`);
+    this.name = 'FileAlreadyExistsError';
+  }
+}
+
 function trackApiFailure(apiMethod: string, errorMessage: string, statusCode?: number): void {
   cliTelemetryClient.track('Cli.Push.ApiFailure', {
     api_method: apiMethod,
@@ -157,10 +165,12 @@ export async function putLock(config: WebAppPushConfig): Promise<void> {
   }
 }
 
-export async function createFolderAtRoot(
+export async function createFolder(
   config: WebAppPushConfig,
   name: string,
-  lockKey: string | null
+  lockKey: string | null,
+  parentId?: string | null,
+  path?: string | null
 ): Promise<string | null> {
   const url = buildApiUrl(
     config,
@@ -172,11 +182,14 @@ export async function createFolderAtRoot(
     contentType: AUTH_CONSTANTS.CONTENT_TYPES.JSON,
   });
   if (lockKey) headers[STUDIO_WEB_HEADERS.LOCK_KEY] = lockKey;
+  const body: { name: string; parentId?: string; path?: string } = { name };
+  if (parentId) body.parentId = parentId;
+  if (path) body.path = path;
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ name }),
+      body: JSON.stringify(body),
     });
     if (response.ok) {
       const ct = response.headers.get('content-type');
@@ -189,41 +202,13 @@ export async function createFolderAtRoot(
     if (response.status === 409) return null;
     const err = await response.text().catch(() => '');
     const errMsg = `Create folder '${name}' failed: ${response.status} ${err.slice(0, 80)}`;
-    trackApiFailure('createFolderAtRoot', errMsg, response.status);
+    trackApiFailure('createFolder', errMsg, response.status);
     throw new Error(errMsg);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
-    trackApiFailure('createFolderAtRoot', msg);
+    trackApiFailure('createFolder', msg);
     config.logger.log(chalk.yellow(`${MESSAGES.ERRORS.PUSH_CREATE_FOLDER_FAILED_PREFIX}${name} — ${msg}`));
     return null;
-  }
-}
-
-export async function moveFolder(
-  config: WebAppPushConfig,
-  folderId: string,
-  parentId: string,
-  lockKey: string | null
-): Promise<void> {
-  const endpoint = API_ENDPOINTS.STUDIO_WEB_MOVE_FOLDER.replace('{projectId}', config.projectId);
-  const baseUrl = buildApiUrl(config, endpoint);
-  const url = `${baseUrl}?api-version=${STUDIO_WEB_API_VERSION}`;
-  const headers = createHeaders({
-    bearerToken: config.envConfig.accessToken,
-    tenantId: config.envConfig.tenantId,
-    contentType: AUTH_CONSTANTS.CONTENT_TYPES.JSON,
-  });
-  if (lockKey) headers[STUDIO_WEB_HEADERS.LOCK_KEY] = lockKey;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ folderId, parentId }),
-  });
-  if (!response.ok) {
-    const err = await response.text().catch(() => '');
-    const errMsg = `Move folder failed: ${response.status} ${response.statusText} ${err.slice(0, 80)}`;
-    trackApiFailure('moveFolder', errMsg, response.status);
-    throw new Error(errMsg);
   }
 }
 
@@ -288,10 +273,14 @@ export async function createFile(
     API_ENDPOINTS.STUDIO_WEB_CREATE_FILE.replace('{projectId}', config.projectId)
   );
   const { form, headers } = buildFileUploadForm(config, filePath, localFile, lockKey);
+  form.append('path', filePath); // Full remote path (e.g. source/src/App.tsx) so backend can create folder hierarchy
   if (parentId) form.append('parentId', parentId);
   else if (parentPath) form.append('parentPath', parentPath);
   const response = await fetch(url, { method: 'POST', headers, body: form });
   if (!response.ok) {
+    if (response.status === 409) {
+      throw new FileAlreadyExistsError(filePath);
+    }
     const errMsg = `Failed to upload file '${filePath}': ${response.status} ${response.statusText}`;
     trackApiFailure('createFile', errMsg, response.status);
     throw new Error(errMsg);
