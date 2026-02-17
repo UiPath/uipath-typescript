@@ -170,9 +170,8 @@ nav:
           - Agents:
             - Conversational Agent:
               - conversational-agent/index.md
-              - Conversations:
-                - conversations/index.md
-                - Session: api/interfaces/SessionStream.md
+              - Conversations: conversations/index.md
+              - Session: api/interfaces/SessionStream.md
               - Exchanges: api/interfaces/ExchangeServiceModel.md
               - Messages: api/interfaces/MessageServiceModel.md
           - Assets: api/interfaces/AssetServiceModel.md
