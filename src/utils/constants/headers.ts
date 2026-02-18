@@ -28,9 +28,9 @@ export const RESPONSE_TYPES = {
 } as const;
 
 /**
- * WebSocket Headers
+ * Query parameter keys sent during WebSocket connection
  */
-export const WEBSOCKET_HEADERS = {
+export const WEBSOCKET_QUERY_PARAMS = {
   ORGANIZATION_ID: 'x-uipath-internal-accountid',
   TENANT_ID: 'x-uipath-internal-tenantid',
   EXTERNAL_USER_ID: 'x-uipath-external-user-id'

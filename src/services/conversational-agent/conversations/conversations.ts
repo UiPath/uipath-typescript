@@ -384,6 +384,13 @@ export class ConversationService extends BaseService implements ConversationServ
     return this._getEvents().sessions;
   }
 
+  /**
+   * @internal
+   */
+  get events(): ConversationEventHelperManager {
+    return this._getEvents();
+  }
+
   // ==================== Connection Management ====================
 
   /**

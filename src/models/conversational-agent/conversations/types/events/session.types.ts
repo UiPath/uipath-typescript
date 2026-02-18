@@ -35,9 +35,15 @@ import type { ExchangeStream } from './exchange.types';
  *
  * ### Usage
  *
+ * **Important:** Always wait for `onSessionStarted` before calling
+ * `startExchange`. The session must be fully connected via WebSocket
+ * before exchanges can be sent — calling `startExchange` earlier may
+ * lose events or cause errors.
+ *
  * ```typescript
  * const session = conversation.startSession();
  *
+ * // Set up handlers for incoming assistant responses
  * session.onExchangeStart((exchange) => {
  *   exchange.onMessageStart((message) => {
  *     if (message.isAssistant) {
@@ -52,9 +58,27 @@ import type { ExchangeStream } from './exchange.types';
  *   });
  * });
  *
+ * // Wait for the session to be ready, then send a message
+ * session.onSessionStarted(() => {
+ *   const exchange = session.startExchange();
+ *   exchange.sendMessageWithContentPart({
+ *     data: 'Hello!',
+ *     role: MessageRole.User
+ *   });
+ * });
+ *
  * // End the session when done
  * conversation.endSession();
  * ```
+ *
+ * ### Related Streams
+ *
+ * | Stream | Description |
+ * | --- | --- |
+ * | {@link ExchangeStream} | A single request-response cycle within a session. Contains user and assistant messages. |
+ * | {@link MessageStream} | A single message (user, assistant, or system). Contains content parts and tool calls. |
+ * | {@link ContentPartStream} | A piece of streamed content (text, audio, image, transcript). Delivers data via `onChunk`. |
+ * | {@link ToolCallStream} | An external tool invocation by the assistant. Has a start event (name, input) and end event (output). |
  */
 export interface SessionStream {
   /** The conversation ID this session belongs to */
@@ -219,8 +243,14 @@ export interface SessionStream {
    *
    * @example
    * ```typescript
-   * session.onSessionStarted((event) => {
-   *   console.log('Session is ready');
+   * session.onSessionStarted(() => {
+   *   console.log('Session is ready — now safe to start exchanges');
+   *
+   *   const exchange = session.startExchange();
+   *   exchange.sendMessageWithContentPart({
+   *     data: 'Hello!',
+   *     role: MessageRole.User
+   *   });
    * });
    * ```
    */
@@ -345,18 +375,21 @@ export interface SessionStream {
    *   });
    * });
    *
-   * // Send first user message
-   * const exchange1 = session.startExchange();
-   * await exchange1.sendMessageWithContentPart({
-   *   data: 'What is the weather today?',
-   *   role: MessageRole.User
-   * });
+   * // Wait for session to be ready before starting exchanges
+   * session.onSessionStarted(async () => {
+   *   // Send first user message
+   *   const exchange1 = session.startExchange();
+   *   await exchange1.sendMessageWithContentPart({
+   *     data: 'What is the weather today?',
+   *     role: MessageRole.User
+   *   });
    *
-   * // Send follow-up in a new exchange
-   * const exchange2 = session.startExchange();
-   * await exchange2.sendMessageWithContentPart({
-   *   data: 'And tomorrow?',
-   *   role: MessageRole.User
+   *   // Send follow-up in a new exchange
+   *   const exchange2 = session.startExchange();
+   *   await exchange2.sendMessageWithContentPart({
+   *     data: 'And tomorrow?',
+   *     role: MessageRole.User
+   *   });
    * });
    * ```
    */

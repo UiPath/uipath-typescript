@@ -51,22 +51,28 @@ import type { CompletedMessage, MessageStream } from './message.types';
  *
  * @example Sending a user message with convenience method
  * ```typescript
- * const exchange = session.startExchange();
- * await exchange.sendMessageWithContentPart({
- *   data: 'Hello, how can you help me?',
- *   role: MessageRole.User
+ * // Call startExchange inside onSessionStarted to ensure the session is ready
+ * session.onSessionStarted(() => {
+ *   const exchange = session.startExchange();
+ *   exchange.sendMessageWithContentPart({
+ *     data: 'Hello, how can you help me?',
+ *     role: MessageRole.User
+ *   });
  * });
  * ```
  *
  * @example Sending a user message with streaming parts
  * ```typescript
- * const exchange = session.startExchange();
- * const message = exchange.startMessage({ role: MessageRole.User });
- * const part = message.startContentPart({ mimeType: 'text/plain' });
- * part.sendChunk({ data: 'Hello, ' });
- * part.sendChunk({ data: 'how can you help me?' });
- * part.sendContentPartEnd();
- * message.sendMessageEnd();
+ * // Call startExchange inside onSessionStarted to ensure the session is ready
+ * session.onSessionStarted(() => {
+ *   const exchange = session.startExchange();
+ *   const message = exchange.startMessage({ role: MessageRole.User });
+ *   const part = message.startContentPart({ mimeType: 'text/plain' });
+ *   part.sendChunk({ data: 'Hello, ' });
+ *   part.sendChunk({ data: 'how can you help me?' });
+ *   part.sendContentPartEnd();
+ *   message.sendMessageEnd();
+ * });
  * ```
  */
 export interface ExchangeStream {

@@ -22,8 +22,9 @@ import type { ConnectionStatus } from '@/core/websocket';
  *     A["Agent"] -->|conversations.create| B["Conversation"]
  *     B -->|startSession| C["Session"]
  *     B -->|exchanges.getAll| F(["History"])
- *     C -->|startExchange| D["Exchange"]
- *     D -->|sendMessage| E["Message"]
+ *     C -->|onSessionStarted| D["Ready"]
+ *     D -->|startExchange| E["Exchange"]
+ *     E -->|sendMessage| G["Message"]
  * ```
  *
  * ### Real-Time Event Flow
@@ -73,9 +74,11 @@ import type { ConnectionStatus } from '@/core/websocket';
  *   });
  * });
  *
- * // 4. Send a message
- * const exchange = session.startExchange();
- * await exchange.sendMessageWithContentPart({ data: 'Hello!' });
+ * // 4. Wait for session to be ready, then send a message
+ * session.onSessionStarted(() => {
+ *   const exchange = session.startExchange();
+ *   exchange.sendMessageWithContentPart({ data: 'Hello!' });
+ * });
  *
  * // 5. End session when done
  * conversation.endSession();

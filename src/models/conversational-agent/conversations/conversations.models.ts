@@ -253,9 +253,11 @@ export interface ConversationServiceModel {
    *   });
    * });
    *
-   * // Send a message
-   * const exchange = session.startExchange();
-   * await exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   * // Wait for session to be ready, then send a message
+   * session.onSessionStarted(() => {
+   *   const exchange = session.startExchange();
+   *   exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   * });
    *
    * // End the session when done
    * conversationalAgent.conversations.endSession(conversation.id);
@@ -273,8 +275,9 @@ export interface ConversationServiceModel {
    * ```typescript
    * const session = conversationalAgent.conversations.getSession(conversationId);
    * if (session) {
+   *   // Session already started — safe to send exchanges directly
    *   const exchange = session.startExchange();
-   *   await exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   *   exchange.sendMessageWithContentPart({ data: 'Hello!' });
    * }
    * ```
    */
@@ -382,9 +385,11 @@ export interface ConversationMethods {
    *   });
    * });
    *
-   * // Send a message
-   * const exchange = session.startExchange();
-   * await exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   * // Wait for session to be ready, then send a message
+   * session.onSessionStarted(() => {
+   *   const exchange = session.startExchange();
+   *   exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   * });
    * ```
    */
   startSession(options?: ConversationSessionOptions): SessionStream;
@@ -398,8 +403,9 @@ export interface ConversationMethods {
    * ```typescript
    * const session = conversation.getSession();
    * if (session) {
+   *   // Session already started — safe to send exchanges directly
    *   const exchange = session.startExchange();
-   *   await exchange.sendMessageWithContentPart({ data: 'Hello!' });
+   *   exchange.sendMessageWithContentPart({ data: 'Hello!' });
    * }
    * ```
    */
