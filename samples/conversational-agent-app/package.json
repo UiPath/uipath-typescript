@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@uipath/uipath-typescript": "file:../../",
     "katex": "^0.16.22",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -270,7 +270,6 @@ The SDK provides access to the following services through modular imports:
 - `Queues` from `@uipath/uipath-typescript/queues` - Manage Orchestrator queues
 - `Assets` from `@uipath/uipath-typescript/assets` - Manage Orchestrator assets
 - `ConversationalAgent` from `@uipath/uipath-typescript/conversational-agent` - Interact with Conversational Agents (real-time streaming, conversations, sessions)
-- `Exchanges` from `@uipath/uipath-typescript/conversational-agent` - Manage conversation exchanges and feedback
 
 <details>
 <summary><strong>View Example Usage</strong></summary>
