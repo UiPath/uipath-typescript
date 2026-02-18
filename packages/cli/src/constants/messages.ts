@@ -59,7 +59,43 @@ export const MESSAGES = {
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
     UNKNOWN_COMMAND: '✗ Error: Unknown command',
-    
+
+    // Push command
+    PUSH_PROJECT_ID_REQUIRED:
+      'Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath push directly',
+    PUSH_VALIDATION_FAILED: 'Validation failed',
+    /** Shown when --build-dir path does not exist. */
+    PUSH_BUILD_DIR_NOT_FOUND: "Build directory not found.",
+    /** Shown when --build-dir path exists but is not a directory. */
+    PUSH_BUILD_DIR_NOT_DIRECTORY: "Build path is not a directory.",
+    /** Steps to fix build-dir / push setup; shown after build dir validation errors. */
+    PUSH_BUILD_DIR_STEPS:
+      'Steps:\n  1. Build your project (e.g. npm run build or your framework\'s build command).\n  2. Run: uipath push <project-id> --build-dir <your-build-dir>\n  Example: uipath push my-project-id --build-dir dist',
+    PUSH_FAILED_PREFIX: 'Push failed: ',
+    PUSH_FILE_OPERATION_FAILED_PREFIX: 'Failed: ',
+    /** When create returns 409; we skip so push does not fail. */
+    PUSH_FILE_ALREADY_EXISTS_SKIP: '[push] Skipped (already exists): ',
+    PUSH_DELETE_FILE_PREFIX: 'Could not delete file ',
+    PUSH_DELETE_FOLDER_PREFIX: 'Could not delete folder ',
+    PUSH_BINDINGS_PARSE_FAILED_PREFIX: 'Failed to parse ',
+    PUSH_CONNECTION_NOT_FOUND_PREFIX: 'Connection not found: ',
+    PUSH_RESOURCE_NOT_FOUND_PREFIX: 'Resource not found: ',
+    PUSH_RESOURCE_PROCESSING_ERROR_PREFIX: 'Error processing resource ',
+    PUSH_MOVE_FOLDER_FAILED_PREFIX: 'Move folder failed: ',
+    PUSH_CREATE_FOLDER_FAILED_PREFIX: 'Create folder failed: ',
+    PUSH_PROJECT_STRUCTURE_REQUIRED: 'Project structure is required before ensuring content root exists.',
+    PUSH_SOURCE_FOLDER_CREATE_FAILED: 'Failed to create source folder; project structure may be inconsistent.',
+    PUSH_LOCK_NOT_ACQUIRED: 'Could not acquire lock on the project. Another user or process may have the lock.',
+    PUSH_EMAIL_FROM_TOKEN_FAILED_PREFIX: '[push] Could not get email from access token: ',
+    /** When local metadata is missing and remote load/download/parse fails; log and fall back to new metadata. */
+    PUSH_REMOTE_METADATA_LOAD_FALLBACK_PREFIX: '[push] Could not load remote push_metadata.json: ',
+    PUSH_REMOTE_METADATA_LOAD_FALLBACK_SUFFIX: '; using new metadata.',
+    PUSH_TEMP_METADATA_REMOVE_FAILED_PREFIX: '[push] Could not remove temp metadata file: ',
+    PUSH_METADATA_UPLOAD_FAILED_PREFIX: '[push] Metadata upload to remote failed: ',
+    /** When remote webAppManifest.json update fails (download/parse/upload). */
+    PUSH_WEB_APP_MANIFEST_UPDATE_FAILED_PREFIX: '[push] Updating web app manifest failed: ',
+    PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX: '[push] Could not download remote file for diff: ',
+
     // File operations
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',
     MANUAL_ENV_INSTRUCTION: 'Please add the following to your .env file manually:',
@@ -99,8 +135,11 @@ export const MESSAGES = {
     // Deployment
     APP_DEPLOYED_SUCCESS: '✅ App deployed successfully!',
     APP_UPGRADED_SUCCESS: '✅ App upgraded successfully!',
+
+    // Push
+    PUSH_COMPLETED: 'Push completed successfully.',
   },
-  
+
   INFO: {
     // Spinners/Progress
     REGISTERING_APP: 'Registering app with UiPath...',
@@ -144,6 +183,10 @@ export const MESSAGES = {
     STEP_PUBLISH_PACKAGE: '3. Publish the package: uipath publish',
     
     // Headers
+    PUSH_HEADER: '🚀 UiPath Push',
+    PUSH_RESOURCE_ADDED_PREFIX: '[resources] Added: ',
+    PUSH_RESOURCE_UNCHANGED_PREFIX: '[resources] Unchanged: ',
+    PUSH_RESOURCE_UPDATED_PREFIX: '[resources] Updated: ',
     APP_REGISTRATION: '🚀 UiPath App Registration',
     APP_DEPLOYMENT: '🚀 UiPath App Deployment',
     PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator',

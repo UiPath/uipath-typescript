@@ -1,6 +1,6 @@
 # @uipath/cli
 
-UiPath CLI tool for authentication, packaging, publishing, and deploying web applications to UiPath.
+UiPath CLI tool for authentication, packaging, publishing, deploying, and pushing web applications to UiPath.
 
 ## Installation
 
@@ -187,6 +187,56 @@ This command will:
 - If not deployed: perform initial deployment
 - Display the app URL after successful deployment
 
+### Push (Studio Web)
+
+Push your local web app build to a Studio Web project. Syncs files under a build directory to the remote project and optionally imports referenced resources (assets, processes, connections, etc.) from `bindings.json`.
+
+**Prerequisites:**
+- Environment variables set (see [Prerequisites](#prerequisites)), or pass `--orgId`, `--tenantId`, `--accessToken` (and optionally `--baseUrl`, `--tenantName`) for non-interactive use. `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
+- A built app (e.g. `dist/`, `build/`, or `out/`) at the project root.
+- Optional: `bindings.json` at the project root for resource import; `.uipath/push_metadata.json` for push metadata (created/updated on push).
+
+```bash
+# Push using project ID from environment
+uipath push
+
+# Push with project ID
+uipath push <project-id>
+
+# Non-interactive (e.g. CI): pass org, tenant, and token via flags
+uipath push <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
+
+# Use a different build directory (e.g. Create React App uses "build")
+uipath push <project-id> --build-dir build
+
+# Push and skip importing referenced resources from bindings.json
+uipath push <project-id> --ignore-resources
+
+# Combine flags
+uipath push <project-id> --build-dir out --ignore-resources --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
+```
+
+**Arguments:**
+| Argument     | Description |
+|-------------|-------------|
+| `project-id` | WebApp Project ID (solution ID). Optional if `UIPATH_PROJECT_ID` is set in `.env`. |
+
+**Flags:**
+| Flag | Description |
+|------|-------------|
+| `--build-dir` | Relative path to the build output directory (e.g. `dist`, `build`, `out`). Default: `dist`. |
+| `--ignore-resources` | Skip importing referenced resources (assets, processes, connections, etc.) to the Studio Web solution. Default: false. |
+| `--baseUrl` | UiPath base URL (default: https://cloud.uipath.com). Overrides env. |
+| `--orgId` | UiPath organization ID. Overrides env. |
+| `--tenantId` | UiPath tenant ID. Overrides env. |
+| `--tenantName` | UiPath tenant name. Overrides env. |
+| `--accessToken` | UiPath bearer token for authentication. Overrides env. |
+
+This command will:
+- Validate the build directory exists and required files are present
+- Acquire a lock on the remote project, then sync your build files (add/update/delete) under the project’s content root
+- Optionally import resources referenced in `bindings.json` into the solution
+
 ## Commands
 
 - [`uipath auth`](#authentication) - Authenticate with UiPath (interactive or client credentials)
@@ -194,22 +244,28 @@ This command will:
 - [`uipath pack`](#packaging) - Package web applications as UiPath NuGet packages
 - [`uipath publish`](#publishing) - Publish packages to Orchestrator
 - [`uipath deploy`](#deploying) - Deploy or upgrade apps to UiPath
+- [`uipath push`](#push-studio-web) - Push local build to Studio Web project (atomic sync)
 
 
 ## Workflow
 
+**Pack → Publish → Deploy:**
 1. **Register the app**: `uipath register app --name MyApp` (gets app URL for OAuth)
 2. **Build your application**: Use your framework's build command (e.g., `npm run build`, `ng build`)
 3. **Pack the application**: `uipath pack ./dist` (uses saved app config)
 4. **Publish the package**: `uipath publish` (uploads to Orchestrator)
 5. **Deploy the app**: `uipath deploy` (deploys or upgrades the app)
 
+**Push (Studio Web):**
+1. **Build your application**: Use your framework's build command.
+2. **Push to Studio Web**: `uipath push <project-id>` from the project root. Use `--build-dir build` (or `out`, etc.) if your framework uses a different output folder than `dist`.
+
 ## Framework Support
 
-This CLI works with any web framework that generates a `dist` folder:
-- Angular (`ng build`)
-- React (`npm run build`)
-- Static HTML/CSS/JS projects
+This CLI works with any web framework that produces a static build:
+- Angular (`ng build`) — default output: `dist/`
+- React / Create React App (`npm run build`) — use `--build-dir build` with push
+- Vite, Vue, static HTML/CSS/JS — default `dist/` or use `--build-dir` for custom output
 
 ## Development
 

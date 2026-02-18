@@ -20,5 +20,5 @@
 
 export { AssetService as Assets, AssetService } from './assets';
 
-export type * from '../../../models/orchestrator/assets.types';
-export type * from '../../../models/orchestrator/assets.models';
+export * from '../../../models/orchestrator/assets.types';
+export * from '../../../models/orchestrator/assets.models';

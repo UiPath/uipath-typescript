@@ -263,3 +263,8 @@ video {
     background: rgba(255,255,255,0.2);
     border-color: rgba(255,255,255,0.4);
 }
+
+/* Center Mermaid diagrams */
+.mermaid {
+    text-align: center;
+}

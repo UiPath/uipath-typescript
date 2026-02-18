@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.0.0-beta.18",
+    "version": "1.0.0",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -116,6 +116,16 @@
                 "default": "./dist/maestro-processes/index.cjs"
             }
         },
+        "./conversational-agent": {
+            "import": {
+                "types": "./dist/conversational-agent/index.d.ts",
+                "default": "./dist/conversational-agent/index.mjs"
+            },
+            "require": {
+                "types": "./dist/conversational-agent/index.d.ts",
+                "default": "./dist/conversational-agent/index.cjs"
+            }
+        },
         "./feedback": {
             "import": {
                 "types": "./dist/feedback/index.d.ts",
@@ -136,7 +146,10 @@
         "build": "rollup -c",
         "build:watch": "rollup -c -w",
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
-        "docs:api": "typedoc",
+        "docs:api": "typedoc && npm run docs:post-process",
+        "docs:post-process": "node scripts/docs-post-process.mjs",
+        "lint": "oxlint",
+        "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:unit": "vitest tests/unit",
         "test:watch": "vitest --watch",
@@ -145,12 +158,13 @@
     },
     "dependencies": {
         "@opentelemetry/sdk-logs": "^0.204.0",
-        "axios": "^1.12.0"
+        "socket.io-client": "^4.8.1"
     },
     "peerDependencies": {
         "zod": "^4.2.1"
     },
     "devDependencies": {
+        "@rollup/plugin-alias": "^6.0.0",
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.2.0",
@@ -161,6 +175,7 @@
         "@vitest/ui": "^3.2.4",
         "builtin-modules": "^3.3.0",
         "dotenv": "^17.2.0",
+        "oxlint": "^1.43.0",
         "rimraf": "^6.0.1",
         "rollup": "^4.53.2",
         "rollup-plugin-dts": "^6.1.0",

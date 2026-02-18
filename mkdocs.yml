@@ -84,11 +84,21 @@ plugins:
           - api/interfaces/QueueServiceModel.md: Queue service methods
           - api/interfaces/BucketServiceModel.md: Bucket service methods
           - api/interfaces/TaskServiceModel.md: Task service methods
-          - api/interfaces/EntityServiceModel.md: Entity service methods
+          - api/interfaces/entity/index.md: Entity service methods
+          - api/interfaces/ChoiceSetServiceModel.md: Choice set service methods
           - api/interfaces/MaestroProcessesServiceModel.md: Maestro process methods
           - api/interfaces/ProcessInstancesServiceModel.md: Process instance methods
           - api/interfaces/CasesServiceModel.md: Maestro Case methods
           - api/interfaces/CaseInstancesServiceModel.md: Maestro Case instance methods
+          - api/interfaces/ConversationalAgentServiceModel.md: Conversational Agent main service
+          - api/interfaces/ConversationServiceModel.md: Conversation service methods
+          - api/interfaces/ExchangeServiceModel.md: Exchange service methods
+          - api/interfaces/MessageServiceModel.md: Message service methods
+          - api/interfaces/SessionStream.md: Real-time WebSocket session
+          - api/interfaces/ExchangeStream.md: Exchange streaming events
+          - api/interfaces/MessageStream.md: Message streaming events
+          - api/interfaces/ContentPartStream.md: Content part streaming events
+          - api/interfaces/ToolCallStream.md: Tool call streaming events
   - termynal:
       prompt_literal_start:
         - "$"
@@ -128,7 +138,11 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
@@ -153,9 +167,19 @@ nav:
       - Error Handling: error-handling.md
   - API Reference:
       - Services:
+          - Agents:
+            - Conversational Agent:
+              - conversational-agent/index.md
+              - Conversations:
+                - conversations/index.md
+              - Session: api/interfaces/SessionStream.md
+              - Exchanges: api/interfaces/ExchangeServiceModel.md
+              - Messages: api/interfaces/MessageServiceModel.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
-          - Entities: api/interfaces/EntityServiceModel.md
+          - Entities:
+            - api/interfaces/entity/index.md
+            - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
           - Maestro:
             - Processes: api/interfaces/MaestroProcessesServiceModel.md
             - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
@@ -168,3 +192,6 @@ nav:
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
   - Release Policy: release-policy.md
+  - API Guide:
+      - Data Fabric: https://docs.uipath.com/data-service/automation-cloud/latest/api-guide/get-entity-endpoint
+      - Orchestrator: https://docs.uipath.com/orchestrator/automation-cloud/latest/api-guide/introduction

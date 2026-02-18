@@ -1,5 +1,4 @@
 import { FolderScopedService } from '../../folder-scoped';
-import type { IUiPath } from '../../../core/types';
 import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
@@ -18,15 +17,6 @@ import { track } from '../../../core/telemetry';
  * Service for interacting with UiPath Orchestrator Assets API
  */
 export class AssetService extends FolderScopedService implements AssetServiceModel {
-  /**
-   * Creates an instance of the Assets service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets all assets across folders with optional filtering and folder scoping
    * 

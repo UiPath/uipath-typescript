@@ -362,24 +362,24 @@ const downloadUrl = await buckets.getReadUri({
 
 // Data Fabric Entities - CRUD operations
 const entity = await entities.getById('entity-uuid');
-const records = await entities.getRecordsById('entity-uuid', {
+const records = await entities.getAllRecords('entity-uuid', {
   pageSize: 100,
   expansionLevel: 1
 });
 
 // Insert records
-await entities.insertById('entity-uuid', [
+await entities.insertRecordsById('entity-uuid', [
   { name: 'John Doe', email: 'john@company.com', status: 'Active' },
   { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' }
 ]);
 
 // Update records
-await entities.updateById('entity-uuid', [
+await entities.updateRecordsById('entity-uuid', [
   { Id: 'record-id-1', status: 'Inactive' }
 ]);
 
 // Delete records
-await entities.deleteById('entity-uuid', ['record-id-1', 'record-id-2']);
+await entities.deleteRecordsById('entity-uuid', ['record-id-1', 'record-id-2']);
 ```
 
 </details>
@@ -405,6 +405,23 @@ Check out the [`/samples`](./samples) folder to see sample applications built us
 ## Development
 
 Before submitting a pull request, please review our [Contribution Guidelines](https://uipath.github.io/uipath-typescript/CONTRIBUTING/).
+
+### Running Documentation Locally
+
+To build and serve the documentation locally using MkDocs:
+
+**Prerequisites:**
+- Python
+- Node.js 18.x or higher
+- npm 8.x or higher
+
+**Steps:**
+```bash
+pip3 install -r docs/requirements.txt
+npm run docs:api
+mkdocs build
+mkdocs serve
+```
 
 <div align="right">
 

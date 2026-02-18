@@ -1,5 +1,4 @@
 import { BaseService } from '../base';
-import type { IUiPath } from '../../core/types';
 import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.models';
 import { ChoiceSetGetAllResponse, ChoiceSetGetResponse, ChoiceSetGetByIdOptions } from '../../models/data-fabric/choicesets.types';
 import { RawChoiceSetGetAllResponse, RawChoiceSetGetResponse } from '../../models/data-fabric/choicesets.internal-types';
@@ -14,20 +13,13 @@ import { CHOICESET_VALUES_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from 
 
 export class ChoiceSetService extends BaseService implements ChoiceSetServiceModel {
   /**
-   * @hideconstructor
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
-  /**
    * Gets all choice sets in the system
    *
    * @returns Promise resolving to an array of choice set metadata
    *
    * @example
    * ```typescript
-   * import { ChoiceSets } from '@uipath/uipath-typescript/choicesets';
+   * import { ChoiceSets } from '@uipath/uipath-typescript/entities';
    *
    * const choiceSets = new ChoiceSets(sdk);
    *
