@@ -53,8 +53,8 @@ export function ChatInput({
     }
   }, [])
 
-  const removeAttachment = useCallback((index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index))
+  const removeAttachment = useCallback((file: File) => {
+    setAttachments(prev => prev.filter(f => f !== file))
   }, [])
 
   return (
@@ -63,9 +63,9 @@ export function ChatInput({
         {/* Attachments preview */}
         {attachments.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
-            {attachments.map((file, index) => (
+            {attachments.map((file) => (
               <div
-                key={index}
+                key={`${file.name}-${file.size}-${file.lastModified}`}
                 className="flex items-center gap-2 bg-chat-input px-3 py-1.5 rounded-lg text-sm"
               >
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +73,7 @@ export function ChatInput({
                 </svg>
                 <span className="truncate max-w-[150px]">{file.name}</span>
                 <button
-                  onClick={() => removeAttachment(index)}
+                  onClick={() => removeAttachment(file)}
                   className="text-gray-400 hover:text-white"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -74,6 +74,7 @@ function simulateConnectError(message = 'Connection failed'): void {
 describe('BaseWebSocket Unit Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
 
     mockSocketInstance = {
       id: 'socket-123',
@@ -93,7 +94,7 @@ describe('BaseWebSocket Unit Tests', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   // ==================== Connection Status Management ====================

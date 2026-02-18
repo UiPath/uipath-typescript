@@ -22,72 +22,67 @@ function loadKatex() {
 // ─── Content parsing: split markdown from ```html and ```latex fenced blocks ───
 
 interface ContentBlock {
+  id: string
   type: 'markdown' | 'html' | 'latex'
   content: string
 }
 
+function findNextFence(
+  lowerContent: string,
+  pos: number
+): { openIdx: number; blockType: 'html' | 'latex' } | null {
+  const htmlIdx = lowerContent.indexOf('```html', pos)
+  const latexIdx = lowerContent.indexOf('```latex', pos)
+
+  if (htmlIdx !== -1 && (latexIdx === -1 || htmlIdx <= latexIdx)) {
+    return { openIdx: htmlIdx, blockType: 'html' }
+  }
+  if (latexIdx !== -1) {
+    return { openIdx: latexIdx, blockType: 'latex' }
+  }
+  return null
+}
+
+function addTrimmedBlock(parts: ContentBlock[], type: ContentBlock['type'], text: string) {
+  const trimmed = text.trim()
+  if (trimmed) parts.push({ id: `block-${parts.length}`, type, content: trimmed })
+}
+
 function parseContentWithSpecialBlocks(content: string): ContentBlock[] {
-  if (!content) return [{ type: 'markdown', content: '' }]
+  if (!content) return [{ id: 'block-empty', type: 'markdown', content: '' }]
 
   const parts: ContentBlock[] = []
   const lowerContent = content.toLowerCase()
   let pos = 0
 
   while (pos < content.length) {
-    // Find next opening fence: ```html or ```latex
-    const htmlIdx = lowerContent.indexOf('```html', pos)
-    const latexIdx = lowerContent.indexOf('```latex', pos)
+    const fence = findNextFence(lowerContent, pos)
+    if (!fence) break
 
-    let openIdx = -1
-    let blockType: 'html' | 'latex' = 'html'
-
-    if (htmlIdx !== -1 && (latexIdx === -1 || htmlIdx <= latexIdx)) {
-      openIdx = htmlIdx
-      blockType = 'html'
-    } else if (latexIdx !== -1) {
-      openIdx = latexIdx
-      blockType = 'latex'
-    }
-
-    if (openIdx === -1) break
-
-    // Skip past the tag name to find the newline
-    const tagEnd = openIdx + 3 + blockType.length
+    const tagEnd = fence.openIdx + 3 + fence.blockType.length
     const newlineIdx = content.indexOf('\n', tagEnd)
     if (newlineIdx === -1) break
 
-    // Only whitespace allowed between tag name and newline
     if (content.slice(tagEnd, newlineIdx).trim() !== '') {
       pos = tagEnd
       continue
     }
 
-    // Find closing ```
     const contentStart = newlineIdx + 1
     const closeIdx = content.indexOf('```', contentStart)
     if (closeIdx === -1) break
 
-    // Add preceding markdown
-    if (openIdx > pos) {
-      const md = content.slice(pos, openIdx).trim()
-      if (md) parts.push({ type: 'markdown', content: md })
+    if (fence.openIdx > pos) {
+      addTrimmedBlock(parts, 'markdown', content.slice(pos, fence.openIdx))
     }
-
-    // Add special block
-    const blockContent = content.slice(contentStart, closeIdx).trim()
-    if (blockContent) parts.push({ type: blockType, content: blockContent })
-
+    addTrimmedBlock(parts, fence.blockType, content.slice(contentStart, closeIdx))
     pos = closeIdx + 3
   }
 
-  // Add remaining content
   if (pos < content.length) {
-    const md = content.slice(pos).trim()
-    if (md) parts.push({ type: 'markdown', content: md })
+    addTrimmedBlock(parts, 'markdown', content.slice(pos))
   }
-
-  if (parts.length === 0) return [{ type: 'markdown', content }]
-  return parts
+  return parts.length > 0 ? parts : [{ id: 'block-fallback', type: 'markdown', content }]
 }
 
 // ─── SandboxedHtml ───
@@ -242,51 +237,53 @@ function RenderedLatex({ latex }: { latex: string }) {
   )
 }
 
+// ─── Markdown component overrides (extracted to module level to avoid re-creation) ───
+
+function MarkdownCode({ className, children, ...props }: any) {
+  const match = /language-(\w+)/.exec(className || '')
+  const isInline = !match
+
+  if (isInline) {
+    return (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    )
+  }
+
+  return (
+    <div className="relative group">
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <CodeCopyButton text={String(children)} />
+      </div>
+      <code className={className} {...props}>
+        {children}
+      </code>
+    </div>
+  )
+}
+
+function MarkdownAnchor({ children, href, ...props }: any) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-accent hover:underline"
+      {...props}
+    >
+      {children}
+    </a>
+  )
+}
+
+const markdownComponents = { code: MarkdownCode, a: MarkdownAnchor }
+
 // ─── Markdown renderer shared across blocks ───
 
 function MarkdownBlock({ content }: { content: string }) {
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        code({ className, children, ...props }) {
-          const match = /language-(\w+)/.exec(className || '')
-          const isInline = !match
-
-          if (isInline) {
-            return (
-              <code className={className} {...props}>
-                {children}
-              </code>
-            )
-          }
-
-          return (
-            <div className="relative group">
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <CodeCopyButton text={String(children)} />
-              </div>
-              <code className={className} {...props}>
-                {children}
-              </code>
-            </div>
-          )
-        },
-        a({ children, href, ...props }) {
-          return (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline"
-              {...props}
-            >
-              {children}
-            </a>
-          )
-        }
-      }}
-    >
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
       {content}
     </ReactMarkdown>
   )
@@ -326,13 +323,121 @@ function ContentRenderer({ message }: { message: ChatMessage }) {
 
   return (
     <>
-      {blocks.map((block, i) => {
-        if (block.type === 'html') return <SandboxedHtml key={i} html={block.content} />
-        if (block.type === 'latex') return <RenderedLatex key={i} latex={block.content} />
-        return <MarkdownBlock key={i} content={block.content} />
+      {blocks.map((block) => {
+        if (block.type === 'html') return <SandboxedHtml key={block.id} html={block.content} />
+        if (block.type === 'latex') return <RenderedLatex key={block.id} latex={block.content} />
+        return <MarkdownBlock key={block.id} content={block.content} />
       })}
     </>
   )
+}
+
+// ─── MessageAvatar ───
+
+function MessageAvatar({ isUser, isSystem }: { isUser: boolean; isSystem: boolean }) {
+  if (isUser) {
+    return (
+      <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-blue-500/20">
+        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      </div>
+    )
+  }
+  if (isSystem) {
+    return (
+      <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-yellow-500/20">
+        <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+    )
+  }
+  return (
+    <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-accent/20">
+      <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    </div>
+  )
+}
+
+// ─── MessageActions ───
+
+function MessageActions({
+  message,
+  onCopy,
+  copied,
+  onFeedback
+}: {
+  message: ChatMessage
+  onCopy: () => void
+  copied: boolean
+  onFeedback?: (messageId: string, rating: 'positive' | 'negative') => void
+}) {
+  return (
+    <div className="flex items-center gap-2 mt-3 opacity-0 hover:opacity-100 transition-opacity">
+      <button
+        onClick={onCopy}
+        className="p-1.5 hover:bg-white/10 rounded transition-colors"
+        title={copied ? 'Copied!' : 'Copy message'}
+      >
+        {copied ? (
+          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        )}
+      </button>
+      <button
+        onClick={() => onFeedback?.(message.id, 'positive')}
+        className={`p-1.5 hover:bg-white/10 rounded transition-colors ${
+          message.feedbackRating === 'positive' ? 'bg-green-500/20' : ''
+        }`}
+        title="Good response"
+      >
+        <svg className={`w-4 h-4 ${message.feedbackRating === 'positive' ? 'text-green-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+        </svg>
+      </button>
+      <button
+        onClick={() => onFeedback?.(message.id, 'negative')}
+        className={`p-1.5 hover:bg-white/10 rounded transition-colors ${
+          message.feedbackRating === 'negative' ? 'bg-red-500/20' : ''
+        }`}
+        title="Bad response"
+      >
+        <svg className={`w-4 h-4 ${message.feedbackRating === 'negative' ? 'text-red-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
+// ─── Helper functions (avoid nested ternaries) ───
+
+function getRoleLabel(isUser: boolean, isSystem: boolean): string {
+  if (isUser) return 'You'
+  if (isSystem) return 'System'
+  return 'Assistant'
+}
+
+function MessageContent({ message, isUser }: { message: ChatMessage; isUser: boolean }) {
+  if (isUser) {
+    return <p className="whitespace-pre-wrap">{message.content}</p>
+  }
+  if (message.contentType === 'image' && message.imageData) {
+    return (
+      <div className="rounded-lg overflow-hidden max-w-md">
+        <img src={`data:image/png;base64,${message.imageData}`} alt="Visual content generated by assistant" className="w-full h-auto" />
+      </div>
+    )
+  }
+  return <ContentRenderer message={message} />
 }
 
 // ─── MessageBubble ───
@@ -354,41 +459,20 @@ export const MessageBubble = memo(function MessageBubble({ message, onFeedback, 
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const roleLabel = getRoleLabel(isUser, isSystem)
+  const showActions = !isUser && !isSystem && !message.isStreaming
+
   return (
     <div className={`px-6 py-4 ${isUser ? 'bg-transparent' : 'bg-chat-input/30'}`}>
       <div className="flex gap-4">
-        {/* Avatar */}
-        <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
-          isUser ? 'bg-blue-500/20' : isSystem ? 'bg-yellow-500/20' : 'bg-accent/20'
-        }`}>
-          {isUser ? (
-            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          ) : isSystem ? (
-            <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          )}
-        </div>
+        <MessageAvatar isUser={isUser} isSystem={isSystem} />
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Role label */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium">
-              {isUser ? 'You' : isSystem ? 'System' : 'Assistant'}
-            </span>
-            <span className="text-xs text-gray-500">
-              {formatTime(message.timestamp)}
-            </span>
+            <span className="text-sm font-medium">{roleLabel}</span>
+            <span className="text-xs text-gray-500">{formatTime(message.timestamp)}</span>
           </div>
 
-          {/* Tool Calls */}
           {message.toolCalls && message.toolCalls.length > 0 && (
             <div className="space-y-2 mb-3">
               {message.toolCalls.map((tc) => (
@@ -397,45 +481,22 @@ export const MessageBubble = memo(function MessageBubble({ message, onFeedback, 
             </div>
           )}
 
-          {/* Interrupt Banner */}
           {message.interrupt && (
-            <InterruptBanner
-              interrupt={message.interrupt}
-              messageId={message.id}
-              onResolve={onResolveInterrupt}
-            />
+            <InterruptBanner interrupt={message.interrupt} messageId={message.id} onResolve={onResolveInterrupt} />
           )}
 
-          {/* Message content - multimodal branching */}
           <div className={`markdown-content ${message.isStreaming ? 'typing-cursor' : ''}`}>
-            {isUser ? (
-              <p className="whitespace-pre-wrap">{message.content}</p>
-            ) : message.contentType === 'image' && message.imageData ? (
-              <div className="rounded-lg overflow-hidden max-w-md">
-                <img
-                  src={`data:image/png;base64,${message.imageData}`}
-                  alt="Generated image"
-                  className="w-full h-auto"
-                />
-              </div>
-            ) : (
-              <ContentRenderer message={message} />
-            )}
+            <MessageContent message={message} isUser={isUser} />
           </div>
 
-          {/* Citations */}
           {message.citations && message.citations.length > 0 && (
             <CitationsList citations={message.citations} />
           )}
 
-          {/* Attachments */}
           {message.attachments && message.attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
-              {message.attachments.map((attachment, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded text-xs text-gray-400"
-                >
+              {message.attachments.map((attachment) => (
+                <div key={attachment} className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded text-xs text-gray-400">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
@@ -445,47 +506,8 @@ export const MessageBubble = memo(function MessageBubble({ message, onFeedback, 
             </div>
           )}
 
-          {/* Actions for assistant messages */}
-          {!isUser && !isSystem && !message.isStreaming && (
-            <div className="flex items-center gap-2 mt-3 opacity-0 hover:opacity-100 transition-opacity">
-              <button
-                onClick={handleCopyMessage}
-                className="p-1.5 hover:bg-white/10 rounded transition-colors"
-                title={copied ? 'Copied!' : 'Copy message'}
-              >
-                {copied ? (
-                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                )}
-              </button>
-              <button
-                onClick={() => onFeedback?.(message.id, 'positive')}
-                className={`p-1.5 hover:bg-white/10 rounded transition-colors ${
-                  message.feedbackRating === 'positive' ? 'bg-green-500/20' : ''
-                }`}
-                title="Good response"
-              >
-                <svg className={`w-4 h-4 ${message.feedbackRating === 'positive' ? 'text-green-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                </svg>
-              </button>
-              <button
-                onClick={() => onFeedback?.(message.id, 'negative')}
-                className={`p-1.5 hover:bg-white/10 rounded transition-colors ${
-                  message.feedbackRating === 'negative' ? 'bg-red-500/20' : ''
-                }`}
-                title="Bad response"
-              >
-                <svg className={`w-4 h-4 ${message.feedbackRating === 'negative' ? 'text-red-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-                </svg>
-              </button>
-            </div>
+          {showActions && (
+            <MessageActions message={message} onCopy={handleCopyMessage} copied={copied} onFeedback={onFeedback} />
           )}
         </div>
       </div>
@@ -495,20 +517,23 @@ export const MessageBubble = memo(function MessageBubble({ message, onFeedback, 
 
 // ─── ToolCallCard ───
 
+function getToolCallStatusColor(toolCall: ToolCallInfo): string {
+  if (toolCall.isError) return 'text-red-400 bg-red-500/10 border-red-500/20'
+  if (toolCall.isComplete) return 'text-green-400 bg-green-500/10 border-green-500/20'
+  return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
+}
+
+function getToolCallStatusLabel(toolCall: ToolCallInfo): string {
+  if (toolCall.isError) return 'Error'
+  if (toolCall.isComplete) return 'Completed'
+  return 'Running...'
+}
+
 const ToolCallCard = memo(function ToolCallCard({ toolCall }: { toolCall: ToolCallInfo }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  const statusColor = toolCall.isError
-    ? 'text-red-400 bg-red-500/10 border-red-500/20'
-    : toolCall.isComplete
-      ? 'text-green-400 bg-green-500/10 border-green-500/20'
-      : 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
-
-  const statusLabel = toolCall.isError
-    ? 'Error'
-    : toolCall.isComplete
-      ? 'Completed'
-      : 'Running...'
+  const statusColor = getToolCallStatusColor(toolCall)
+  const statusLabel = getToolCallStatusLabel(toolCall)
 
   return (
     <div className={`border rounded-lg overflow-hidden ${statusColor}`}>

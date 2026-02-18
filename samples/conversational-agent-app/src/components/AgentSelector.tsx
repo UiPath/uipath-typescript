@@ -58,11 +58,12 @@ export function AgentSelector() {
       {/* Dropdown */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-chat-input border border-white/10 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
-          {isLoadingAgents ? (
+          {isLoadingAgents && (
             <div className="p-3 text-center text-gray-400">
               <Spinner className="w-5 h-5 border-accent mx-auto" />
             </div>
-          ) : agents.length === 0 ? (
+          )}
+          {!isLoadingAgents && agents.length === 0 && (
             <div className="p-3 text-center text-gray-500">
               <p className="text-sm mb-2">No agents available</p>
               <button
@@ -75,7 +76,8 @@ export function AgentSelector() {
                 Refresh
               </button>
             </div>
-          ) : (
+          )}
+          {!isLoadingAgents && agents.length > 0 && (
             agents.map((agent) => (
               <button
                 key={agent.id}

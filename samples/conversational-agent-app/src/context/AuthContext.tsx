@@ -2,7 +2,7 @@
  * AuthContext - Manages SDK authentication (same pattern as process-app)
  */
 
-import { useState, useEffect, createContext, useContext, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useCallback, createContext, useContext, type ReactNode } from 'react'
 import { UiPath } from '@uipath/uipath-typescript/core'
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core'
 
@@ -47,7 +47,7 @@ export function AuthProvider({ children, config }: { children: ReactNode; config
     initializeAuth()
   }, [uipathSDK])
 
-  const login = async () => {
+  const login = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -61,17 +61,21 @@ export function AuthProvider({ children, config }: { children: ReactNode; config
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [uipathSDK])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setIsAuthenticated(false)
     setError(null)
     // Create new SDK instance for next login
     setUipathSDK(new UiPath(config))
-  }
+  }, [config])
+
+  const contextValue = useMemo(() => ({
+    isAuthenticated, isLoading, uipathSDK, login, logout, error
+  }), [isAuthenticated, isLoading, uipathSDK, login, logout, error])
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, uipathSDK, login, logout, error }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

@@ -29,7 +29,116 @@ import type { ChatMessage, ToolCallInfo, CitationInfo, InterruptInfo } from '../
 type SetMessagesFn = (fn: (prev: ChatMessage[]) => ChatMessage[]) => void
 type PendingInterruptMap = Map<string, { message: MessageStream; interruptId: string }>
 
-// ─── Module-level helper: set up event handlers for an assistant message ───
+// ─── State update helpers (reduce callback nesting) ───
+
+function updateMessage(
+  setMessages: SetMessagesFn,
+  id: string,
+  updates: Partial<ChatMessage>
+) {
+  setMessages(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m))
+}
+
+function updateMessageWith(
+  setMessages: SetMessagesFn,
+  id: string,
+  updater: (m: ChatMessage) => Partial<ChatMessage>
+) {
+  setMessages(prev => prev.map(m => m.id === id ? { ...m, ...updater(m) } : m))
+}
+
+// ─── Citation mapping ───
+
+function mapCitations(completed: CompletedContentPart): CitationInfo[] {
+  return (completed.citations || []).map(c => ({
+    citationId: c.citationId,
+    offset: c.offset,
+    length: c.length,
+    sources: c.sources.map(s => ({
+      title: s.title,
+      number: s.number,
+      url: isCitationSourceUrl(s) ? s.url : undefined,
+      downloadUrl: isCitationSourceMedia(s) ? s.downloadUrl : undefined
+    }))
+  }))
+}
+
+// ─── Tool call completion ───
+
+function handleToolCallComplete(
+  setMessages: SetMessagesFn,
+  assistantId: string,
+  toolCallId: string,
+  endEvent: { output?: unknown; isError?: boolean }
+) {
+  const output = typeof endEvent.output === 'string'
+    ? endEvent.output
+    : JSON.stringify(endEvent.output ?? '')
+  setMessages(prev => prev.map(m =>
+    m.id === assistantId
+      ? {
+          ...m,
+          toolCalls: (m.toolCalls || []).map(tc =>
+            tc.toolCallId === toolCallId
+              ? { ...tc, output, isError: endEvent.isError, isComplete: true }
+              : tc
+          )
+        }
+      : m
+  ))
+}
+
+// ─── Content part handlers ───
+
+function handleStreamingContent(
+  part: any,
+  assistantId: string,
+  exchangeId: string,
+  setMessages: SetMessagesFn,
+  state: { fullContent: string },
+  contentType: ChatMessage['contentType']
+) {
+  part.onChunk((chunk: any) => {
+    state.fullContent += chunk.data || ''
+    updateMessage(setMessages, assistantId, { content: state.fullContent, contentType })
+  })
+
+  part.onCompleted((completed: CompletedContentPart) => {
+    const citations = mapCitations(completed)
+    updateMessageWith(setMessages, assistantId, (m) => ({
+      content: state.fullContent,
+      contentType,
+      isStreaming: false,
+      exchangeId,
+      citations: citations.length > 0 ? citations : m.citations
+    }))
+  })
+}
+
+function handleImageContent(
+  part: any,
+  assistantId: string,
+  exchangeId: string,
+  setMessages: SetMessagesFn
+) {
+  let imageChunks = ''
+
+  part.onChunk((chunk: any) => {
+    imageChunks += chunk.data || ''
+    updateMessage(setMessages, assistantId, { contentType: 'image', imageData: imageChunks })
+  })
+
+  part.onContentPartEnd(() => {
+    updateMessage(setMessages, assistantId, {
+      contentType: 'image',
+      imageData: imageChunks,
+      isStreaming: false,
+      exchangeId
+    })
+  })
+}
+
+// ─── Assistant message event handler setup ───
 
 function setupAssistantHandlers(
   message: MessageStream,
@@ -38,167 +147,80 @@ function setupAssistantHandlers(
   setMessages: SetMessagesFn,
   pendingInterruptRef: { current: PendingInterruptMap }
 ) {
-  let fullContent = ''
+  const contentState = { fullContent: '' }
 
-  // Tool calls
   message.onToolCallStart((toolCall) => {
-    const { toolName, input } = toolCall.startEvent
-    const toolCallInfo: ToolCallInfo = {
+    const info: ToolCallInfo = {
       toolCallId: toolCall.toolCallId,
-      toolName,
-      input: typeof input === 'string' ? input : JSON.stringify(input ?? ''),
+      toolName: toolCall.startEvent.toolName,
+      input: typeof toolCall.startEvent.input === 'string'
+        ? toolCall.startEvent.input
+        : JSON.stringify(toolCall.startEvent.input ?? ''),
       isComplete: false
     }
-
-    setMessages(prev => prev.map(m =>
-      m.id === assistantMessageId
-        ? { ...m, toolCalls: [...(m.toolCalls || []), toolCallInfo] }
-        : m
-    ))
-
+    updateMessageWith(setMessages, assistantMessageId, (m) => ({
+      toolCalls: [...(m.toolCalls || []), info]
+    }))
     toolCall.onToolCallEnd((endEvent) => {
-      setMessages(prev => prev.map(m =>
-        m.id === assistantMessageId
-          ? {
-              ...m,
-              toolCalls: (m.toolCalls || []).map(tc =>
-                tc.toolCallId === toolCall.toolCallId
-                  ? {
-                      ...tc,
-                      output: typeof endEvent.output === 'string'
-                        ? endEvent.output
-                        : JSON.stringify(endEvent.output ?? ''),
-                      isError: endEvent.isError,
-                      isComplete: true
-                    }
-                  : tc
-              )
-            }
-          : m
-      ))
+      handleToolCallComplete(setMessages, assistantMessageId, toolCall.toolCallId, endEvent)
     })
   })
 
-  // Interrupts
   message.onInterruptStart(({ interruptId, startEvent }) => {
     const interruptInfo: InterruptInfo = {
       interruptId,
       type: startEvent.type,
-      value: startEvent.type === InterruptType.ToolCallConfirmation
-        ? startEvent.value
-        : undefined,
+      value: startEvent.type === InterruptType.ToolCallConfirmation ? startEvent.value : undefined,
       resolved: false
     }
-
-    pendingInterruptRef.current.set(assistantMessageId, {
-      message,
-      interruptId
-    })
-
-    setMessages(prev => prev.map(m =>
-      m.id === assistantMessageId ? { ...m, interrupt: interruptInfo } : m
-    ))
+    pendingInterruptRef.current.set(assistantMessageId, { message, interruptId })
+    updateMessage(setMessages, assistantMessageId, { interrupt: interruptInfo })
   })
 
-  // Content parts (text/html, text, image, markdown + citations)
   message.onContentPartStart((part) => {
     const mimeType = part.startEvent?.mimeType
-
     if (mimeType === 'text/html') {
-      // HTML content — accumulate like text but tag as 'html'
-      part.onChunk((chunk) => {
-        fullContent += chunk.data || ''
-        setMessages(prev => prev.map(m =>
-          m.id === assistantMessageId
-            ? { ...m, content: fullContent, contentType: 'html' as const }
-            : m
-        ))
-      })
-
-      part.onCompleted((completed: CompletedContentPart) => {
-        const citations: CitationInfo[] = (completed.citations || []).map(c => ({
-          citationId: c.citationId,
-          offset: c.offset,
-          length: c.length,
-          sources: c.sources.map(s => ({
-            title: s.title,
-            number: s.number,
-            url: isCitationSourceUrl(s) ? s.url : undefined,
-            downloadUrl: isCitationSourceMedia(s) ? s.downloadUrl : undefined
-          }))
-        }))
-
-        setMessages(prev => prev.map(m =>
-          m.id === assistantMessageId
-            ? {
-                ...m,
-                content: fullContent,
-                contentType: 'html' as const,
-                isStreaming: false,
-                exchangeId,
-                citations: citations.length > 0 ? citations : m.citations
-              }
-            : m
-        ))
-      })
+      handleStreamingContent(part, assistantMessageId, exchangeId, setMessages, contentState, 'html')
     } else if (part.isText || part.isMarkdown) {
       const contentType = part.isMarkdown ? 'markdown' as const : 'text' as const
-
-      part.onChunk((chunk) => {
-        fullContent += chunk.data || ''
-        setMessages(prev => prev.map(m =>
-          m.id === assistantMessageId
-            ? { ...m, content: fullContent, contentType }
-            : m
-        ))
-      })
-
-      part.onCompleted((completed: CompletedContentPart) => {
-        const citations: CitationInfo[] = (completed.citations || []).map(c => ({
-          citationId: c.citationId,
-          offset: c.offset,
-          length: c.length,
-          sources: c.sources.map(s => ({
-            title: s.title,
-            number: s.number,
-            url: isCitationSourceUrl(s) ? s.url : undefined,
-            downloadUrl: isCitationSourceMedia(s) ? s.downloadUrl : undefined
-          }))
-        }))
-
-        setMessages(prev => prev.map(m =>
-          m.id === assistantMessageId
-            ? {
-                ...m,
-                content: fullContent,
-                contentType,
-                isStreaming: false,
-                exchangeId,
-                citations: citations.length > 0 ? citations : m.citations
-              }
-            : m
-        ))
-      })
+      handleStreamingContent(part, assistantMessageId, exchangeId, setMessages, contentState, contentType)
     } else if (part.isImage) {
-      let imageChunks = ''
-
-      part.onChunk((chunk) => {
-        imageChunks += chunk.data || ''
-        setMessages(prev => prev.map(m =>
-          m.id === assistantMessageId
-            ? { ...m, contentType: 'image', imageData: imageChunks }
-            : m
-        ))
-      })
-
-      part.onContentPartEnd(() => {
-        setMessages(prev => prev.map(m =>
-          m.id === assistantMessageId
-            ? { ...m, contentType: 'image', imageData: imageChunks, isStreaming: false, exchangeId }
-            : m
-        ))
-      })
+      handleImageContent(part, assistantMessageId, exchangeId, setMessages)
     }
+  })
+}
+
+// ─── Exchange event handler setup (extracted to reduce nesting in ensureSession) ───
+
+function setupExchangeHandlers(
+  session: SessionStream,
+  exchangeAssistantIdRef: { current: Map<string, string> },
+  setMessages: SetMessagesFn,
+  pendingInterruptRef: { current: PendingInterruptMap },
+  setIsStreaming: (v: boolean) => void,
+  setError: (error: string | null) => void
+) {
+  session.onExchangeStart((exchange) => {
+    const assistantId = exchangeAssistantIdRef.current.get(exchange.exchangeId)
+    if (!assistantId) return
+
+    setIsStreaming(true)
+
+    exchange.onMessageStart((message) => {
+      if (!message.isAssistant) return
+      setupAssistantHandlers(message, assistantId, exchange.exchangeId, setMessages, pendingInterruptRef)
+    })
+
+    exchange.onExchangeEnd(() => {
+      exchangeAssistantIdRef.current.delete(exchange.exchangeId)
+      setIsStreaming(false)
+    })
+
+    exchange.onErrorStart((err) => {
+      exchangeAssistantIdRef.current.delete(exchange.exchangeId)
+      setError(err.message || 'Exchange error')
+      setIsStreaming(false)
+    })
   })
 }
 
@@ -265,83 +287,47 @@ export function useChat(
   // ─── Session management ───
 
   const ensureSession = useCallback((): Promise<void> => {
+    if (sessionRef.current) return Promise.resolve()
+
+    const conversation = conversationRef.current
+    if (!conversation) {
+      return Promise.reject(new Error('No active conversation. Please create a conversation first.'))
+    }
+
+    let session: SessionStream
+    try {
+      session = conversation.startSession({ echo: true, logLevel: LogLevel.Debug })
+    } catch (err) {
+      return Promise.reject(err instanceof Error ? err : new Error('Failed to start session'))
+    }
+
+    setupExchangeHandlers(
+      session, exchangeAssistantIdRef, setMessages, pendingInterruptRef, setIsStreaming, setError
+    )
+
+    session.onLabelUpdated((event) => {
+      onLabelUpdateRef.current?.(event.label)
+    })
+
     return new Promise<void>((resolve, reject) => {
-      if (sessionRef.current) {
+      session.onSessionStarted(() => {
+        sessionRef.current = session
         resolve()
-        return
-      }
+      })
 
-      const conversation = conversationRef.current
-      if (!conversation) {
-        reject(new Error('No active conversation. Please create a conversation first.'))
-        return
-      }
+      session.onSessionEnd(() => {
+        sessionRef.current = null
+        setIsStreaming(false)
+      })
 
-      try {
-        // echo: true ensures onExchangeStart fires for ALL exchanges,
-        // giving us a single code path for handling responses.
-        const session = conversation.startSession({ echo: true, logLevel: LogLevel.Debug })
-
-        session.onExchangeStart((exchange) => {
-          // For client-initiated exchanges, the assistantId was pre-registered
-          // in exchangeAssistantIdRef before calling startExchange().
-          const assistantId = exchangeAssistantIdRef.current.get(exchange.exchangeId)
-          if (!assistantId) return // Ignore unexpected exchanges
-
-          setIsStreaming(true)
-
-          exchange.onMessageStart((message) => {
-            // Skip echoed user messages
-            if (!message.isAssistant) return
-
-            setupAssistantHandlers(
-              message,
-              assistantId,
-              exchange.exchangeId,
-              setMessages,
-              pendingInterruptRef
-            )
-          })
-
-          exchange.onExchangeEnd(() => {
-            exchangeAssistantIdRef.current.delete(exchange.exchangeId)
-            setIsStreaming(false)
-          })
-
-          exchange.onErrorStart((err) => {
-            exchangeAssistantIdRef.current.delete(exchange.exchangeId)
-            setError(err.message || 'Exchange error')
-            setIsStreaming(false)
-          })
-        })
-
-        session.onSessionStarted(() => {
-          sessionRef.current = session
-          resolve()
-        })
-
-        session.onSessionEnd(() => {
-          sessionRef.current = null
-          setIsStreaming(false)
-        })
-
-        session.onErrorStart((err) => {
-          setIsStreaming(false)
-          // Before session is established, reject the ensureSession promise.
-          // After session is established, surface the error via setError.
-          if (!sessionRef.current) {
-            reject(new Error(err.message || 'Session error'))
-          } else {
-            setError(err.message || 'Session error')
-          }
-        })
-
-        session.onLabelUpdated((event) => {
-          onLabelUpdateRef.current?.(event.label)
-        })
-      } catch (err) {
-        reject(err instanceof Error ? err : new Error('Failed to start session'))
-      }
+      session.onErrorStart((err) => {
+        setIsStreaming(false)
+        if (!sessionRef.current) {
+          reject(new Error(err.message || 'Session error'))
+        } else {
+          setError(err.message || 'Session error')
+        }
+      })
     })
   }, [setError])
 
@@ -361,7 +347,7 @@ export function useChat(
       const response = await exchanges.getAll(conversationId, { pageSize: 20 })
       setExchangesHasMore(response.hasNextPage)
       exchangesCursorRef.current = response.nextCursor
-      setMessages(exchangesToChatMessages(response.items.reverse()))
+      setMessages(exchangesToChatMessages(response.items.toReversed()))
     } catch (err) {
       console.error('Failed to load history:', err)
     }
@@ -378,7 +364,7 @@ export function useChat(
       })
       setExchangesHasMore(response.hasNextPage)
       exchangesCursorRef.current = response.nextCursor
-      const olderMsgs = exchangesToChatMessages(response.items.reverse())
+      const olderMsgs = exchangesToChatMessages(response.items.toReversed())
       setMessages(prev => [...olderMsgs, ...prev])
     } catch (err) {
       console.error('Failed to load more exchanges:', err)

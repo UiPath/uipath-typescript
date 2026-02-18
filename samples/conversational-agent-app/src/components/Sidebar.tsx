@@ -98,17 +98,19 @@ export function Sidebar() {
 
       {/* Conversation list */}
       <div className="flex-1 overflow-y-auto">
-        {isLoadingConversations && conversations.length === 0 ? (
+        {isLoadingConversations && conversations.length === 0 && (
           <div className="p-4 text-center text-gray-400">
             <Spinner className="w-5 h-5 border-accent mx-auto mb-2" />
             Loading...
           </div>
-        ) : conversations.length === 0 ? (
+        )}
+        {!isLoadingConversations && conversations.length === 0 && (
           <div className="p-4 text-center text-gray-500">
             <p className="mb-2">No conversations yet</p>
             <p className="text-sm">Select an agent and start a new chat</p>
           </div>
-        ) : (
+        )}
+        {conversations.length > 0 && (
           <div className="p-2">
             {conversations.map((conversation) => (
               <ConversationItem
@@ -145,11 +147,7 @@ export function Sidebar() {
       {/* Connection status */}
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center gap-2 text-sm text-gray-400">
-          <div className={`w-2 h-2 rounded-full ${
-            connectionStatus === 'Connected' ? 'bg-green-500' :
-            connectionStatus === 'Connecting' ? 'bg-yellow-500 animate-pulse' :
-            'bg-gray-500'
-          }`} />
+          <div className={`w-2 h-2 rounded-full ${getConnectionDotClass(connectionStatus)}`} />
           <span>{connectionStatus}</span>
         </div>
         <button
@@ -211,7 +209,10 @@ const ConversationItem = memo(function ConversationItem({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
       className={`group p-3 rounded-lg cursor-pointer mb-1 transition-colors ${
         isActive ? 'bg-white/10' : 'hover:bg-white/5'
       }`}
@@ -273,6 +274,12 @@ const ConversationItem = memo(function ConversationItem({
 })
 
 // ─── Utilities ───
+
+function getConnectionDotClass(status: string): string {
+  if (status === 'Connected') return 'bg-green-500'
+  if (status === 'Connecting') return 'bg-yellow-500 animate-pulse'
+  return 'bg-gray-500'
+}
 
 function formatDate(date: string | Date | undefined) {
   if (!date) return ''
