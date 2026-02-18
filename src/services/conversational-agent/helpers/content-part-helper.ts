@@ -5,6 +5,7 @@
 import type {
   Citation,
   ContentPart,
+  ContentPartGetResponse,
   InlineOrExternalValue
 } from '@/models/conversational-agent';
 import { isExternalValue, isInlineValue } from './conversation-type-util';
@@ -13,7 +14,7 @@ import { isExternalValue, isInlineValue } from './conversation-type-util';
  * Helper class that wraps ContentPart with convenience methods
  * for accessing inline/external data.
  */
-export class ContentPartHelper implements ContentPart {
+export class ContentPartHelper implements ContentPartGetResponse {
   /** Unique identifier for the content part (alias for contentPartId) */
   public id: string;
   /** Unique identifier for the content part */

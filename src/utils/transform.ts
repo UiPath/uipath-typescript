@@ -301,7 +301,7 @@ export function addPrefixToKeys<T extends object>(
  * Creates a new map with the keys and values reversed
  * @param map The original map to reverse
  * @returns A new map with keys and values swapped
- * 
+ *
  * @example
  * ```typescript
  * const original = { key1: 'value1', key2: 'value2' };
@@ -314,6 +314,57 @@ export function reverseMap<T extends Record<string, string>>(map: T): Record<str
     acc[value] = key;
     return acc;
   }, {} as Record<string, string>);
+}
+
+/**
+ * Transforms request data from SDK field names to API field names.
+ *
+ * This is the inverse of `transformData` - while `transformData` converts
+ * API responses to SDK format (API → SDK), this function converts SDK
+ * requests to API format (SDK → API).
+ *
+ * @param data The request data with SDK field names
+ * @param responseMap The response mapping (API → SDK) - will be automatically reversed
+ * @returns A new object with API field names
+ *
+ * @example
+ * ```typescript
+ * // Response map: API field → SDK field
+ * const ProcessMap = { releaseKey: 'processKey', releaseName: 'processName' };
+ *
+ * // SDK request with SDK field names
+ * const sdkRequest = { processKey: 'abc-123', processName: 'MyProcess' };
+ *
+ * // Transform to API format
+ * const apiRequest = transformRequest(sdkRequest, ProcessMap);
+ * // Result: { releaseKey: 'abc-123', releaseName: 'MyProcess' }
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Conversation example
+ * const ConversationMap = { agentReleaseId: 'agentId' };
+ *
+ * const sdkOptions = { agentId: 123, folderId: 456, label: 'My Chat' };
+ * const apiPayload = transformRequest(sdkOptions, ConversationMap);
+ * // Result: { agentReleaseId: 123, folderId: 456, label: 'My Chat' }
+ * ```
+ */
+export function transformRequest<T extends object>(
+  data: T,
+  responseMap: FieldMapping
+): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...(data as Record<string, unknown>) };
+  const requestMap = reverseMap(responseMap);
+
+  for (const [sdkField, apiField] of Object.entries(requestMap)) {
+    if (sdkField in result) {
+      result[apiField] = result[sdkField];
+      delete result[sdkField];
+    }
+  }
+
+  return result;
 }
 
 /**

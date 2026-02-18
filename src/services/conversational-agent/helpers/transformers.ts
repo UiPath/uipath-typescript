@@ -1,11 +1,10 @@
 /**
  * Transformers for Conversational Agent Service
  *
- * Transform API responses to use helper classes for convenience.
+ * Transform API responses to use helper classes and SDK naming conventions.
  */
 
-import type { Exchange, Message } from '@/models/conversational-agent';
-import type { MessageGetResponse, ExchangeGetResponse } from '@/models/conversational-agent';
+import type { Exchange, Message, ExchangeGetResponse, MessageGetResponse } from '@/models/conversational-agent';
 import { ExchangeMap, MessageMap } from '@/models/conversational-agent';
 import { transformData } from '@/utils/transform';
 import { ContentPartHelper } from './content-part-helper';
