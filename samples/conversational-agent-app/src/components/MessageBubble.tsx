@@ -30,24 +30,60 @@ function parseContentWithSpecialBlocks(content: string): ContentBlock[] {
   if (!content) return [{ type: 'markdown', content: '' }]
 
   const parts: ContentBlock[] = []
-  const specialBlockRegex = /```(html|latex)\s*\n([\s\S]*?)```/gi
-  let lastIndex = 0
-  let match: RegExpExecArray | null
+  const lowerContent = content.toLowerCase()
+  let pos = 0
 
-  while ((match = specialBlockRegex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      const mdContent = content.slice(lastIndex, match.index).trim()
-      if (mdContent) parts.push({ type: 'markdown', content: mdContent })
+  while (pos < content.length) {
+    // Find next opening fence: ```html or ```latex
+    const htmlIdx = lowerContent.indexOf('```html', pos)
+    const latexIdx = lowerContent.indexOf('```latex', pos)
+
+    let openIdx = -1
+    let blockType: 'html' | 'latex' = 'html'
+
+    if (htmlIdx !== -1 && (latexIdx === -1 || htmlIdx <= latexIdx)) {
+      openIdx = htmlIdx
+      blockType = 'html'
+    } else if (latexIdx !== -1) {
+      openIdx = latexIdx
+      blockType = 'latex'
     }
-    const blockType = match[1].toLowerCase() as 'html' | 'latex'
-    const blockContent = match[2].trim()
+
+    if (openIdx === -1) break
+
+    // Skip past the tag name to find the newline
+    const tagEnd = openIdx + 3 + blockType.length
+    const newlineIdx = content.indexOf('\n', tagEnd)
+    if (newlineIdx === -1) break
+
+    // Only whitespace allowed between tag name and newline
+    if (content.slice(tagEnd, newlineIdx).trim() !== '') {
+      pos = tagEnd
+      continue
+    }
+
+    // Find closing ```
+    const contentStart = newlineIdx + 1
+    const closeIdx = content.indexOf('```', contentStart)
+    if (closeIdx === -1) break
+
+    // Add preceding markdown
+    if (openIdx > pos) {
+      const md = content.slice(pos, openIdx).trim()
+      if (md) parts.push({ type: 'markdown', content: md })
+    }
+
+    // Add special block
+    const blockContent = content.slice(contentStart, closeIdx).trim()
     if (blockContent) parts.push({ type: blockType, content: blockContent })
-    lastIndex = match.index + match[0].length
+
+    pos = closeIdx + 3
   }
 
-  if (lastIndex < content.length) {
-    const mdContent = content.slice(lastIndex).trim()
-    if (mdContent) parts.push({ type: 'markdown', content: mdContent })
+  // Add remaining content
+  if (pos < content.length) {
+    const md = content.slice(pos).trim()
+    if (md) parts.push({ type: 'markdown', content: md })
   }
 
   if (parts.length === 0) return [{ type: 'markdown', content }]

@@ -436,7 +436,7 @@ export function useChat(
     if (!sessionRef.current) return
 
     // Pre-register assistantId so onExchangeStart (fired by echo) can find it
-    const exchangeId = `exchange-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const exchangeId = `exchange-${Date.now()}-${crypto.randomUUID().slice(0, 12)}`
     exchangeAssistantIdRef.current.set(exchangeId, assistantMessageId)
 
     const exchange = sessionRef.current.startExchange({ exchangeId })
