@@ -21,6 +21,7 @@ export interface ConversationSessionOptions {
    */
   echo?: boolean;
 
+
   /**
    * Sets the log level for WebSocket session debugging.
    * When set, enables logging at the specified level for the underlying WebSocket connection.

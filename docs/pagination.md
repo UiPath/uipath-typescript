@@ -119,6 +119,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Buckets | `getAll()` | ✅ Yes |
 | Buckets | `getFiles()` | ❌ No |
 | Entities | `getAll()` | ✅ Yes |
+| Entities | `getAllRecords()` | ✅ Yes |
 | Processes | `getAll()` | ✅ Yes |
 | ProcessInstances | `getAll()` | ❌ No |
 | CaseInstances | `getAll()` | ❌ No |

@@ -7,3 +7,4 @@ export const PIMS_BASE = 'pims_';
 export const DATAFABRIC_BASE = 'datafabric_';
 export const IDENTITY_BASE = 'identity_';
 export const AUTOPILOT_BASE = 'autopilotforeveryone_';
+export const LLM_OPS_BASE = 'llmopstenant_';

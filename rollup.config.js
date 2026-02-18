@@ -27,9 +27,6 @@ function rewriteDtsImports() {
   };
 }
 
-
-
-
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 const allDependencies = [

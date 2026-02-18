@@ -63,6 +63,8 @@ export type ExchangeGetAllOptions = PaginationOptions & {
 export interface ExchangeGetByIdOptions {
   /** Sort order for messages within the exchange */
   messageSort?: SortOrder;
+  /** Index signature for QueryParams compatibility */
+  [key: string]: SortOrder | undefined;
 }
 
 // ==================== Feedback Types ====================
