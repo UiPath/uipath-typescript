@@ -2,6 +2,14 @@
 
 This document helps Claude Code understand and work with this codebase efficiently.
 
+**📌 Quick Navigation:**
+- [Claude Instructions](#claude-instructions) - How Claude should work with this project
+- [Onboarding Guide](#onboarding-a-new-service) - Step-by-step service creation
+- [Quick Reference](#quick-reference-essential-commands) - Essential commands
+- [Anti-Patterns](#anti-patterns-to-avoid) - Common mistakes to avoid
+
+---
+
 ## Project Overview
 
 This is the official UiPath TypeScript SDK providing programmatic access to UiPath services (Orchestrator, Maestro, Data Fabric, LLMOps, Action Center).
@@ -11,32 +19,35 @@ This is the official UiPath TypeScript SDK providing programmatic access to UiPa
 - Each service can be imported independently: `import { Feedback } from '@uipath/uipath-typescript/feedback'`
 - Services extend `BaseService` and use dependency injection via `IUiPath` instance
 - Uses Rollup for building ESM, CJS, and UMD bundles
+- TypeScript 5.3+ (strict mode) • Vitest • Zod • Axios • OpenTelemetry
 
 ## Project Structure
 
 ```
 src/
-├── core/                    # SDK core (auth, config, http client, telemetry)
-│   ├── auth/               # Token management
-│   ├── config/             # Configuration handling
-│   ├── http/               # API client
-│   └── telemetry/          # Tracking decorators
-├── models/                  # TypeScript types and interfaces
-│   ├── <domain>/           # e.g., llmops/, maestro/, orchestrator/
-│   │   ├── <name>.types.ts     # Public types (exported to consumers)
-│   │   └── <name>.models.ts    # Service model interfaces
-├── services/               # Service implementations
-│   ├── base.ts            # BaseService class (all services extend this)
-│   └── <domain>/          # e.g., llmops/, maestro/, orchestrator/
-│       ├── <name>.ts          # Service implementation
-│       └── index.ts           # Module exports
-└── utils/
+├── core/              # Core SDK (auth, config, context, errors, http, telemetry)
+│   ├── auth/         # Token management
+│   ├── config/       # Configuration handling
+│   ├── http/         # API client
+│   └── telemetry/    # Tracking decorators
+├── models/           # Data models and types
+│   └── <domain>/
+│       ├── <name>.types.ts         # Public API types
+│       ├── <name>.models.ts        # Service model interfaces
+│       ├── <name>.constants.ts     # Constants and mappings
+│       └── <name>.internal-types.ts # Internal types (not exported)
+├── services/         # Service implementations
+│   ├── base.ts      # BaseService class (all services extend this)
+│   └── <domain>/    # e.g., llmops/, maestro/, orchestrator/
+│       ├── <name>.ts      # Service implementation
+│       └── index.ts       # Module exports
+└── utils/           # Utility functions
     └── constants/
         └── endpoints.ts   # API endpoint constants
 
 tests/
-└── unit/
-    └── services/<domain>/<name>.test.ts
+├── unit/            # Unit tests with mocks
+└── integration/     # Integration tests (real API calls)
 ```
 
 ---
@@ -58,9 +69,6 @@ Use the AskUserQuestion tool with these options:
 - Reduces back-and-forth and implementation errors
 - Ensures SDK matches the actual API contract
 
-**Example prompt to use:**
-> "Do you have a Swagger/OpenAPI spec file for the new service? This will help me generate accurate types, endpoints, and method signatures automatically."
-
 ### IMPORTANT: Ask for Integration Test Config After Implementation
 
 **After completing the service/method implementation, ALWAYS ask if the user wants to write integration tests and request the necessary configuration.**
@@ -74,9 +82,9 @@ Use the AskUserQuestion tool:
 - `tenantName` - Tenant name
 - `secret` - Personal Access Token (PAT) or service account secret
 
-**Example integration test structure:**
+**Integration test template:**
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { UiPath } from '../../src/core/uipath';
 import { ResourceService } from '../../src/services/<domain>/<name>';
 
@@ -102,15 +110,26 @@ describe('ResourceService Integration Tests', () => {
     expect(result).toBeDefined();
     expect(result.id).toBeDefined();
   });
-
-  it('should get all resources via real API', async () => {
-    const results = await service.getAll();
-    expect(Array.isArray(results)).toBe(true);
-  });
 });
 ```
 
-**Integration test file location:** `tests/integration/services/<domain>/<name>.integration.test.ts`
+**Integration test location:** `tests/integration/services/<domain>/<name>.integration.test.ts`
+
+### CRITICAL: Code Quality Rules
+
+**Before submitting any code, ALWAYS:**
+1. **Remove redundant constructors** - If constructor only calls `super()`, delete it entirely
+2. **Remove unused imports** - Clean up all unused imports and types
+3. **Remove unused variables** - No declared-but-unused variables
+4. **Run linter** - Fix all oxlint errors and warnings (`npx oxlint`)
+5. **Build verification** - Ensure `npm run build` succeeds
+6. **Test verification** - Ensure all tests pass
+
+**Linter will catch:**
+- Unused imports (e.g., `import type { IUiPath }` when not used)
+- Unused variables
+- Redundant constructors that only call super()
+- Dead code
 
 ---
 
@@ -197,7 +216,6 @@ Create `src/services/<domain>/<name>.ts`:
 
 ```typescript
 import { BaseService } from '../base';
-import type { IUiPath } from '../../core/types';
 import {
   ResourceCreateOptions,
   ResourceResponse,
@@ -210,13 +228,8 @@ import { track } from '../../core/telemetry';
  * Service for interacting with UiPath <Domain> <Resource> API
  */
 export class ResourceService extends BaseService implements ResourceServiceModel {
-  /**
-   * Creates an instance of the Resource service.
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
+  // NOTE: Only add constructor if you need custom initialization
+  // If constructor only calls super(), DELETE IT - it's redundant and will fail linting
 
   /**
    * Creates a new resource
@@ -249,7 +262,7 @@ export class ResourceService extends BaseService implements ResourceServiceModel
 - `this.post<T>(path, body?, options?)` - POST request
 - `this.put<T>(path, body?, options?)` - PUT request
 - `this.patch<T>(path, body?, options?)` - PATCH request
-- `this.delete<T>(path, options?)` - DELETE request
+- `this.delete<T>(path, options?)` - DELETE request (use `super.delete()` to avoid name conflicts)
 
 ### Step 5: Create Module Index (Export File)
 
@@ -416,26 +429,176 @@ return this.requestWithPagination<T>(method, path, paginationOptions, {
 });
 ```
 
+**Two Pagination Types:**
+- **OFFSET**: OData APIs (Tasks, Assets, Queues). Parameters: `$skip`, `$top`, `$count`
+- **TOKEN**: Buckets, some endpoints. Parameters: `continuationToken`, `limit`
+
 ### Error Handling
+
+**Available Error Types:** `AuthenticationError` (401) • `AuthorizationError` (403) • `NotFoundError` (404) • `ValidationError` (400) • `RateLimitError` (429) • `ServerError` (500+) • `NetworkError`
+
+**Use Type Guards:**
+```typescript
+try {
+  await sdk.tasks.create(taskData, folderId);
+} catch (error) {
+  if (isAuthenticationError(error)) { /* handle auth */ }
+  else if (isValidationError(error)) { /* handle validation */ }
+}
+```
+
 Errors are handled automatically by `BaseService`. Custom errors are in `src/core/errors/`.
+
+### Transformation Pattern
+
+The SDK applies **three transformations** in order:
+
+1. **Case Conversion**: `pascalToCamelCaseKeys()` - API responses (PascalCase) → camelCase
+2. **Field Mapping**: `transformData(data, fieldMap)` - Rename fields for consistency
+3. **Value Mapping**: `applyDataTransforms(data, { field, valueMap })` - Convert values to SDK enums
 
 ---
 
-## Commands
+## Anti-Patterns to Avoid
+
+### 1. Don't Add Redundant Constructors (CRITICAL)
+❌ **BAD**: Constructor that only calls super()
+```typescript
+export class ResourceService extends BaseService {
+  constructor(instance: IUiPath) {
+    super(instance);  // Redundant - will fail linting!
+  }
+}
+```
+
+✅ **GOOD**: No constructor (or constructor with actual logic)
+```typescript
+export class ResourceService extends BaseService {
+  // No constructor needed - BaseService handles it
+
+  async create() { /* ... */ }
+}
+```
+
+### 2. Don't Leave Unused Imports/Variables (CRITICAL)
+❌ **BAD**: Unused imports and variables
+```typescript
+import type { IUiPath } from '../../core/types';  // Not used - will fail linting!
+import { FeedbackResponse } from './types';       // Not used - will fail linting!
+
+const unusedVariable = 123;  // Not used - will fail linting!
+```
+
+✅ **GOOD**: Only import what you use
+```typescript
+import { FeedbackCreateOptions } from './types';  // Actually used
+```
+
+### 3. Don't Bypass Base Service Classes
+❌ **BAD**: Directly use axios or instantiate ApiClient
+✅ **GOOD**: Extend BaseService and use `this.get()`, `this.post()`, etc.
+
+### 4. Don't Use Any Type
+❌ **BAD**: `async getData(): Promise<any>`
+✅ **GOOD**: `async getData(): Promise<TaskResponse>`
+
+### 5. Don't Skip Transformations
+❌ **BAD**: Return raw API response
+✅ **GOOD**: Apply all three transformations: case → field → value
+
+### 6. Don't Export Internal Types
+❌ **BAD**: Export from `*.internal-types.ts` in public API
+✅ **GOOD**: Only export from `*.types.ts` and `*.models.ts`
+
+### 7. Don't Commit Sensitive Files (CRITICAL)
+❌ **BAD**: Committing .env files, credentials, or hardcoded secrets
+✅ **GOOD**: Use .gitignore and environment variables
+
+**Files That Must NEVER Be Committed:**
+- `.env`, `.env.local`, `.env.*.local`
+- `credentials.json`, `secrets.json`
+- `*.key`, `*.pem`, `*.p12`
+- Any file containing API keys, tokens, passwords
+
+---
+
+## Testing Guidelines
+
+### Test Structure
+
+**Pattern:**
+```typescript
+// ===== IMPORTS =====
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// ===== MOCKING =====
+vi.mock('path/to/api-client');
+
+// ===== TEST SUITE =====
+describe('ServiceClass Unit Tests', () => {
+  beforeEach(() => { /* setup */ });
+  afterEach(() => { vi.clearAllMocks(); });
+
+  describe('methodName', () => {
+    it('should handle success case', async () => {
+      // Arrange → Act → Assert
+      expect(mockApiClient.method).toHaveBeenCalledWith(/*...*/);
+    });
+  });
+});
+```
+
+**Rules:**
+- MUST organize with clear sections (IMPORTS, MOCKING, TEST SUITE)
+- MUST use descriptive names: `should [expected behavior] when [condition]`
+- MUST test both success and error scenarios
+- MUST use Arrange-Act-Assert pattern
+- MUST mock external dependencies
+- MUST reset mocks in `afterEach`
+
+**Test Coverage:** 80% minimum for new code • 100% for critical paths (auth, API calls)
+
+---
+
+## Quick Reference: Essential Commands
+
+### For Development
 
 ```bash
-npm run build          # Build the SDK
-npm run test           # Run all tests
-npm run test:unit      # Run unit tests only
-npm run test:watch     # Run tests in watch mode
-npm run test:coverage  # Run tests with coverage
+# Build & Test
+npm run build          # Build the SDK (must succeed with 0 errors)
+npm test              # Run all tests
+npm run test:unit     # Run unit tests only
+npm run test:watch    # Watch mode for development
+npm run test:coverage # Generate coverage report
+
+# Quality Checks
+npx oxlint            # Run linter (must be 0 errors, 0 warnings)
+npx tsc --noEmit      # Type check without emitting files
+
+# Clean slate
+npm run clean         # Remove dist, node_modules, package-lock.json
+```
+
+### Before Submitting PR
+
+```bash
+# Pre-submission checklist commands
+npm run build         # ✅ Must succeed
+npm test             # ✅ All tests must pass
+npx oxlint           # ✅ Must be 0 errors, 0 warnings
+git status           # ✅ Verify no .env or credential files staged
 ```
 
 ---
 
 ## Checklist for New Service
 
+**Pre-Implementation:**
 - [ ] Swagger/OpenAPI spec obtained from user
+- [ ] User confirmed config for integration tests (if applicable)
+
+**Implementation:**
 - [ ] Endpoints defined in `src/utils/constants/endpoints.ts`
 - [ ] Types created in `src/models/<domain>/<name>.types.ts`
 - [ ] Model interface in `src/models/<domain>/<name>.models.ts`
@@ -445,6 +608,26 @@ npm run test:coverage  # Run tests with coverage
 - [ ] Entry added to `rollup.config.js` serviceEntries
 - [ ] Export added to `package.json` exports field
 - [ ] Unit tests in `tests/unit/services/<domain>/<name>.test.ts`
-- [ ] Build passes: `npm run build`
-- [ ] Tests pass: `npm run test`
 - [ ] (Optional) Integration tests in `tests/integration/services/<domain>/<name>.integration.test.ts`
+
+**Quality Checks:**
+- [ ] **No redundant constructors** (remove if only calls super())
+- [ ] **No unused imports or variables** (oxlint will catch these)
+- [ ] **No .env or credential files committed**
+- [ ] Build passes: `npm run build` (0 errors)
+- [ ] Tests pass: `npm test` (report exact count)
+- [ ] Linting passes: `npx oxlint` (0 errors, 0 warnings)
+- [ ] JSDoc documentation with examples
+- [ ] All public methods have `@track` decorator
+
+---
+
+## Advanced Topics
+
+For detailed information on architecture, pagination, transformations, and PR review guidelines, see `CLAUDE-PR-REVIEW.md`.
+
+---
+
+**Remember**: This SDK is used by developers worldwide and by LLMs for AI-assisted development. Every API should be **intuitive**, **well-documented**, **type-safe**, and **maintainable**. Consistency is more valuable than cleverness.
+
+**When in doubt:** Look at existing implementations (Feedback, Tasks, Entities) and follow their patterns exactly.
