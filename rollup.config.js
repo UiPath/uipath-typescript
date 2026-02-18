@@ -27,7 +27,6 @@ function rewriteDtsImports() {
   };
 }
 
-
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 const allDependencies = [
@@ -179,6 +178,11 @@ const serviceEntries = [
     name: 'maestro-processes',
     input: 'src/services/maestro/processes/index.ts',
     output: 'maestro-processes/index'
+  },
+  {
+    name: 'conversational-agent',
+    input: 'src/services/conversational-agent/index.ts',
+    output: 'conversational-agent/index'
   }
 ];
 

@@ -36,23 +36,25 @@ import type { TokenManager } from '../auth/token-manager';
  *
  * @example
  * ```typescript
- * class ConversationalSession extends BaseWebSocket {
- *   constructor(sdk: UiPath) {
- *     const { config, context, tokenManager } = SDKInternalsRegistry.get(sdk);
- *     super(config, context, tokenManager, 'ConversationalSession');
+ * class WebSocketSession extends BaseWebSocket {
+ *   constructor(instance: IUiPath) {
+ *     const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
+ *     super(config, context, tokenManager, 'WebSocketSession');
  *   }
  *
- *   connect(orgId: string, tenantId: string): void {
- *     this.connectWithOptions({
- *       query: {
- *         'x-uipath-internal-accountid': orgId,
- *         'x-uipath-internal-tenantid': tenantId
- *       }
- *     });
+ *   connect(): void {
+ *     const query: Record<string, string> = {};
+ *     if (this._config.orgName) {
+ *       query['x-uipath-internal-accountid'] = this._config.orgName;
+ *     }
+ *     if (this._config.tenantName) {
+ *       query['x-uipath-internal-tenantid'] = this._config.tenantName;
+ *     }
+ *     this.connectWithOptions({ query });
  *   }
  *
  *   protected override onDisconnectedWhileWaiting(): void {
- *     this.connect(this._config.organizationId, this._config.tenantId);
+ *     this.connect();
  *   }
  * }
  * ```
