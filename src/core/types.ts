@@ -9,6 +9,7 @@
  */
 
 import type { BaseConfig } from './config/sdk-config';
+import type { TokenClaims, TokenIdentity } from './auth/types';
 
 export interface IUiPath {
   /** Read-only configuration for the SDK instance */
@@ -45,4 +46,16 @@ export interface IUiPath {
    * Get the current authentication token
    */
   getToken(): string | undefined;
+
+  /**
+   * Get decoded claims from the current OAuth token.
+   * Returns undefined if token is missing or malformed.
+   */
+  getTokenClaims(): TokenClaims | undefined;
+
+  /**
+   * Get normalized identity derived from the current OAuth token claims.
+   * Returns undefined if token is missing or malformed.
+   */
+  getTokenIdentity(): TokenIdentity | undefined;
 }

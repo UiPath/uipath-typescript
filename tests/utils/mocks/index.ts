@@ -15,6 +15,7 @@ export * from './buckets';
 export * from './processes';
 export * from './assets';
 export * from './queues';
+export * from './users';
 export * from './pagination';
 
 // Re-export constants for convenience

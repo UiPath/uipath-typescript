@@ -161,6 +161,11 @@ const serviceEntries = [
     output: 'queues/index'
   },
   {
+    name: 'users',
+    input: 'src/services/orchestrator/users/index.ts',
+    output: 'users/index'
+  },
+  {
     name: 'buckets',
     input: 'src/services/orchestrator/buckets/index.ts',
     output: 'buckets/index'

@@ -10,3 +10,5 @@ export * from './processes.types';
 export * from './processes.models';
 export * from './queues.types';
 export * from './queues.models';
+export * from './users.types';
+export * from './users.models';

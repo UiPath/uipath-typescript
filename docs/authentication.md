@@ -147,6 +147,8 @@ useEffect(() => {
 - `sdk.isAuthenticated()` - Check if user has valid token
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
+- `sdk.getTokenClaims()` - Decode current token claims locally (no API call)
+- `sdk.getTokenIdentity()` - Get normalized identity from claims locally (no API call)
 
 ---
 
