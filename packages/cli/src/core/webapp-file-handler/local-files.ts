@@ -6,9 +6,11 @@ import type { LocalFile } from './types.js';
 import { DOTFILE_PREFIX, PUSH_IGNORE_PATTERNS } from '../../constants/index.js';
 
 const GITIGNORE_FILENAME = '.gitignore';
+const UIPATHIGNORE_FILENAME = '.uipathignore';
 
 /**
- * Builds an ignore filter: PUSH_IGNORE_PATTERNS plus .gitignore content if present.
+ * Builds an ignore filter: PUSH_IGNORE_PATTERNS, then .gitignore, then .uipathignore (if present).
+ * .uipathignore behaves like .gitignore — user-defined patterns for files/folders to exclude from push.
  * Paths must be relative to rootDir (forward slashes).
  */
 export function buildPushIgnoreFilter(rootDir: string): Ignore {
@@ -19,7 +21,14 @@ export function buildPushIgnoreFilter(rootDir: string): Ignore {
     const content = fs.readFileSync(gitignorePath, 'utf-8');
     ig.add(content);
   } catch {
-    // No .gitignore or unreadable; continue with pattern-based ignore only.
+    // No .gitignore or unreadable; continue.
+  }
+  const uipathignorePath = path.join(rootDir, UIPATHIGNORE_FILENAME);
+  try {
+    const content = fs.readFileSync(uipathignorePath, 'utf-8');
+    ig.add(content);
+  } catch {
+    // No .uipathignore or unreadable; continue.
   }
   return ig;
 }

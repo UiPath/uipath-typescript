@@ -23,6 +23,7 @@ import {
   prepareMetadataFileForPlan,
   uploadPushMetadataToRemote,
   updateRemoteWebAppManifest,
+  ensureSchemaVersionNotBehindRemote,
 } from './metadata.js';
 import {
   buildFolderIdMap,
@@ -102,6 +103,13 @@ export class WebAppFileHandler {
     const fullRemoteFolders = getRemoteFoldersMap(this.projectStructure);
     const remoteContentRoot = getRemoteContentRoot(this.config.bundlePath);
     const contentRootExists = hasFolderByPath(fullRemoteFolders, remoteContentRoot);
+
+    this.config.logger.log(chalk.gray('[push] Checking code version (local vs remote)...'));
+    await ensureSchemaVersionNotBehindRemote(
+      this.config,
+      fullRemoteFiles,
+      (cfg, fileId) => api.downloadRemoteFile(cfg, fileId)
+    );
 
     let plan: FileOperationPlan;
     if (!contentRootExists) {

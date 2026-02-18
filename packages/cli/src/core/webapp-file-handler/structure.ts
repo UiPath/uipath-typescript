@@ -3,9 +3,14 @@ import type { ProjectFile, ProjectFolder, ProjectStructure } from './types.js';
 /** Remote root folder name for pushed content (build + source). All pushed files live under this. */
 export const REMOTE_SOURCE_FOLDER_NAME = 'source';
 
+/** Normalize path to forward slashes. Use for parsing or comparing remote paths (getRemoteFilesMap / getRemoteFoldersMap use /). */
+export function normalizePathToForwardSlashes(p: string): string {
+  return p.replace(/\\/g, '/');
+}
+
 /** Normalize folder path for map lookups. Backend may return different casing (e.g. Source); this avoids false mismatches. */
 export function normalizeFolderPath(p: string): string {
-  return p.replace(/\\/g, '/').toLowerCase();
+  return normalizePathToForwardSlashes(p).toLowerCase();
 }
 
 /** Remote path for push metadata file (under source, not under build dir). */

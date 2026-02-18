@@ -1,5 +1,9 @@
 import type { EnvironmentConfig } from '../../types/index.js';
 
+/**
+ * Config used by both push and pull. Push uses all fields (rootDir = project root, bundlePath/manifestFile for build and metadata).
+ * Pull uses projectId, rootDir (target dir), envConfig, logger; bundlePath and manifestFile are passed as placeholders so the same type is accepted by the API layer.
+ */
 export interface WebAppPushConfig {
   projectId: string;
   rootDir: string;

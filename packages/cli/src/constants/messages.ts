@@ -95,6 +95,23 @@ export const MESSAGES = {
     /** When remote webAppManifest.json update fails (download/parse/upload). */
     PUSH_WEB_APP_MANIFEST_UPDATE_FAILED_PREFIX: '[push] Updating web app manifest failed: ',
     PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX: '[push] Could not download remote file for diff: ',
+    /** When local schemaVersion is less than remote; ask user to pull first. */
+    PUSH_SCHEMA_VERSION_BEHIND_REMOTE:
+      "Your local code version is behind the remote. Please run 'uipath pull' to get the latest changes, then push again.",
+
+    // Pull command
+    PULL_PROJECT_ID_REQUIRED:
+      'Project ID is required. Use: uipath pull <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath pull directly',
+    PULL_VALIDATION_FAILED: 'Validation failed',
+    PULL_FAILED_PREFIX: 'Pull failed: ',
+    PULL_TARGET_DIR_NOT_FOUND: 'Target directory does not exist.',
+    PULL_TARGET_DIR_NOT_DIRECTORY: 'Target path is not a directory.',
+    PULL_PROJECT_NOT_FOUND: 'Project not found or empty in Studio Web.',
+    PULL_PROJECT_TYPE_UNSUPPORTED: 'Project type is not supported. Expected a Web App project (webAppManifest.json with type: "App_ProCode") or .uiproj (with ProjectType: "WebApp").',
+    PULL_WEB_APP_MANIFEST_TYPE_INVALID: 'webAppManifest.json must have "type": "App_ProCode" to pull.',
+    PULL_UIPROJ_PROJECT_TYPE_INVALID: '.uiproj file must have "ProjectType": "WebApp" to pull.',
+    PULL_OVERWRITE_CONFLICTS: 'Pull would overwrite existing local file(s). Use --overwrite to allow overwriting, or move/back up files and try again.',
+    PULL_FILE_DOWNLOAD_FAILED_PREFIX: 'Failed to download file: ',
 
     // File operations
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',
@@ -138,6 +155,9 @@ export const MESSAGES = {
 
     // Push
     PUSH_COMPLETED: 'Push completed successfully.',
+
+    // Pull
+    PULL_COMPLETED: 'Pull completed successfully.',
   },
 
   INFO: {
@@ -184,6 +204,11 @@ export const MESSAGES = {
     
     // Headers
     PUSH_HEADER: '🚀 UiPath Push',
+    PULL_HEADER: '⬇️ UiPath Pull',
+    /** Progress line during file download (e.g. "Pulling files... 3/10 completed"). */
+    PULL_PROGRESS: 'Pulling files...',
+    /** When remote push_metadata.json cannot be read; we pull all files under source/. */
+    PULL_METADATA_READ_FALLBACK: '[pull] Could not read remote push_metadata.json',
     PUSH_RESOURCE_ADDED_PREFIX: '[resources] Added: ',
     PUSH_RESOURCE_UNCHANGED_PREFIX: '[resources] Unchanged: ',
     PUSH_RESOURCE_UPDATED_PREFIX: '[resources] Updated: ',
@@ -202,6 +227,7 @@ export const MESSAGES = {
   },
   
   PROMPTS: {
+    PULL_OVERWRITE_CONFIRM: 'This pull will overwrite one or more local files. Do you want to continue? (Y/n)',
     ENTER_APP_NAME: 'Enter app name:',
     ENTER_PACKAGE_NAME: 'Enter package name:',
     ENTER_PACKAGE_DESCRIPTION: 'Enter package description:',
