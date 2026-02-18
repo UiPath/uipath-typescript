@@ -79,10 +79,13 @@ export interface FeedbackResponse {
  * Options for retrieving multiple feedback entries
  */
 export interface FeedbackGetAllOptions {
-  filter?: string;
-  orderby?: string;
-  top?: number;
   skip?: number;
+  take?: number;
+  agentId?: string;
+  agentVersion?: string;
+  status?: FeedbackStatus;
+  traceId?: string;
+  spanId?: string;
   [key: string]: string | number | boolean | undefined;
 }
 
