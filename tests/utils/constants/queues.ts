@@ -6,11 +6,23 @@
 export const QUEUE_TEST_CONSTANTS = {
   // Queue IDs
   QUEUE_ID: 456,
+  QUEUE_ITEM_ID: 654,
+  QUEUE_DEFINITION_ID: 789,
 
   // Queue Metadata
   QUEUE_NAME: 'InvoiceProcessing',
   QUEUE_KEY: '87654321-4321-4321-4321-cba987654321',
   QUEUE_DESCRIPTION: 'Queue for processing invoices',
+  QUEUE_ITEM_KEY: '12345678-1234-1234-1234-123456789abc',
+  QUEUE_ITEM_STATUS: 'New',
+  QUEUE_ITEM_PRIORITY: 'Normal',
+  QUEUE_ITEM_REFERENCE: 'INV-1001',
+  QUEUE_ITEM_PROGRESS: 'Queued',
+  ROBOT_IDENTIFIER: 'robot-123',
+  SPECIFIC_CONTENT: {
+    invoiceNumber: 'INV-1001',
+    amount: 1500
+  },
 
   // Queue Configuration
   MAX_NUMBER_OF_RETRIES: 1,

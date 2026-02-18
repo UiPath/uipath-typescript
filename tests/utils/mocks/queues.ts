@@ -2,7 +2,7 @@
  * Queue service mock utilities - Queue-specific mocks only
  * Uses generic utilities from core.ts for base functionality
  */
-import { QueueGetResponse } from '../../../src/models/orchestrator/queues.types';
+import { QueueGetResponse, QueueItem } from '../../../src/models/orchestrator/queues.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { QUEUE_TEST_CONSTANTS } from '../constants/queues';
 import { TEST_CONSTANTS } from '../constants/common';
@@ -38,6 +38,52 @@ export const createMockRawQueue = (overrides: Partial<any> = {}): any => {
     CreationTime: QUEUE_TEST_CONSTANTS.CREATED_TIME,
     OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID,
     OrganizationUnitFullyQualifiedName: TEST_CONSTANTS.FOLDER_NAME,
+  }, overrides);
+};
+
+/**
+ * Creates a mock queue item with RAW API format (before transformation)
+ *
+ * @param overrides - Optional overrides for specific fields
+ * @returns Raw queue item data as returned by the API
+ */
+export const createMockRawQueueItem = (overrides: Partial<any> = {}): any => {
+  return createMockBaseResponse({
+    Id: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_ID,
+    Key: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_KEY,
+    Status: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_STATUS,
+    Priority: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PRIORITY,
+    QueueDefinitionId: QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID,
+    ProcessingException: null,
+    SpecificContent: QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT,
+    Output: null,
+    Progress: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PROGRESS,
+    Reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE,
+    CreationTime: QUEUE_TEST_CONSTANTS.CREATED_TIME,
+    OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID
+  }, overrides);
+};
+
+/**
+ * Creates a queue item object with transformed field names (camelCase)
+ *
+ * @param overrides - Optional overrides for specific fields
+ * @returns Queue item data with SDK field names
+ */
+export const createBasicQueueItem = (overrides: Partial<QueueItem> = {}): QueueItem => {
+  return createMockBaseResponse({
+    id: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_ID,
+    key: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_KEY,
+    status: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_STATUS,
+    priority: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PRIORITY,
+    queueId: QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID,
+    processingException: null,
+    specificContent: QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT,
+    output: null,
+    progress: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PROGRESS,
+    reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE,
+    createdTime: QUEUE_TEST_CONSTANTS.CREATED_TIME,
+    folderId: TEST_CONSTANTS.FOLDER_ID
   }, overrides);
 };
 
