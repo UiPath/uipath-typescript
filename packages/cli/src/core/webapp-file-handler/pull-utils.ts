@@ -5,8 +5,42 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { PUSH_METADATA_RELATIVE_PATH, PUSH_METADATA_FILENAME } from '../../constants/api.js';
+import { PULL_WEB_APP_MANIFEST, PULL_UIPROJ_EXTENSION } from '../../constants/pull.js';
 import { REMOTE_SOURCE_FOLDER_NAME, normalizePathToForwardSlashes } from './structure.js';
 import type { ProjectFile } from './types.js';
+
+/** Markers that indicate a directory is likely the root of an app project (for pull target-dir soft check). */
+const PROJECT_ROOT_MARKERS = [
+  'package.json',
+  PULL_WEB_APP_MANIFEST, // webAppManifest.json
+  '.uipath',
+] as const;
+
+/**
+ * Returns true if dir looks like a project root (has package.json, webAppManifest.json, .uipath, or a .uiproj file).
+ * Used to warn when pulling into the current directory and it does not look like a project root.
+ */
+export function looksLikeProjectRoot(dir: string): boolean {
+  try {
+    for (const name of PROJECT_ROOT_MARKERS) {
+      const p = path.join(dir, name);
+      if (fs.existsSync(p)) {
+        if (name === '.uipath') {
+          if (fs.statSync(p).isDirectory()) return true;
+        } else {
+          return true;
+        }
+      }
+    }
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    if (entries.some((e) => e.isFile() && e.name.toLowerCase().endsWith(PULL_UIPROJ_EXTENSION))) {
+      return true;
+    }
+  } catch {
+    // If we can't read the directory, treat as not project root (will warn).
+  }
+  return false;
+}
 
 /** Remote path prefix for content we pull (e.g. "source/"). Only paths under this are pulled. */
 const SOURCE_PREFIX = `${REMOTE_SOURCE_FOLDER_NAME}/`;

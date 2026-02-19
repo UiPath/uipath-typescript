@@ -99,10 +99,33 @@ export async function fetchRemoteStructure(
 }
 
 /**
+ * Releases the project lock. Call after push completes (success or failure) so the project is not
+ * left locked until backend timeout. DELETE /Project/{projectId}/Lock/{lockKey}.
+ */
+export async function releaseLock(config: WebAppPushConfig, lockKey: string): Promise<void> {
+  const url = buildApiUrl(
+    config,
+    `${API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)}/${encodeURIComponent(lockKey)}?api-version=${STUDIO_WEB_API_VERSION}`
+  );
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: createHeaders({
+      bearerToken: config.envConfig.accessToken,
+      tenantId: config.envConfig.tenantId,
+    }),
+  });
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    const errMsg = `Release lock failed: ${response.status} ${response.statusText}${errText ? ` — ${errText.slice(0, 80)}` : ''}`;
+    trackApiFailure('releaseLock', errMsg, response.status);
+    throw new Error(errMsg);
+  }
+}
+
+/**
  * Acquires the project/solution lock for push operations.
  * GET returns lock info; if none exists (projectLockKey/solutionLockKey empty), we acquire via PUT
- * and then retry GET to obtain the keys. The client does not explicitly release the lock; its
- * lifecycle (e.g. timeout or session) is managed by the backend, consistent with uipath-python.
+ * and then retry GET to obtain the keys. Call releaseLock when done (success or failure).
  */
 export async function retrieveLock(config: WebAppPushConfig): Promise<LockInfo | null> {
   const url = buildApiUrl(

@@ -16,7 +16,8 @@ export {
   type ModifiedResource,
 } from './handler.js';
 
-export { runPull, ProjectPullError, type RunPullOptions } from './run-pull.js';
+export { runPull, type RunPullOptions } from './run-pull.js';
+export { looksLikeProjectRoot } from './pull-utils.js';
 
 export type {
   Bindings,

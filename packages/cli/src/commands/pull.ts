@@ -6,7 +6,7 @@ import { PUSH_METADATA_RELATIVE_PATH } from '../constants/api.js';
 import { AUTH_CONSTANTS, MESSAGES } from '../constants/index.js';
 import { PULL_OVERWRITE_LIST_MAX_DISPLAY } from '../constants/pull.js';
 import { getEnvironmentConfig } from '../utils/env-config.js';
-import { runPull, ProjectPullError } from '../core/webapp-file-handler/index.js';
+import { runPull, looksLikeProjectRoot } from '../core/webapp-file-handler/index.js';
 import { track } from '../telemetry/index.js';
 
 export default class Pull extends Command {
@@ -35,8 +35,9 @@ export default class Pull extends Command {
       description: 'Allow overwriting existing local files',
       default: false,
     }),
-    'target-dir': Flags.string({
-      description: 'Local directory to write pulled files (default: current working directory)',
+    targetDir: Flags.string({
+      description:
+        'Local directory to write pulled files; should be the root of the app project (default: current working directory)',
     }),
     baseUrl: Flags.string({
       description: 'UiPath base URL (default: https://cloud.uipath.com)',
@@ -46,9 +47,6 @@ export default class Pull extends Command {
     }),
     tenantId: Flags.string({
       description: 'UiPath tenant ID',
-    }),
-    tenantName: Flags.string({
-      description: 'UiPath tenant name',
     }),
     accessToken: Flags.string({
       description: 'UiPath bearer token for authentication',
@@ -71,9 +69,29 @@ export default class Pull extends Command {
       process.exit(1);
     }
 
-    const rootDir = flags['target-dir']
-      ? path.resolve(process.cwd(), flags['target-dir'])
+    const rootDir = flags.targetDir
+      ? path.resolve(process.cwd(), flags.targetDir)
       : process.cwd();
+
+    // Soft check: when target is CWD, warn if it doesn't look like project root and optionally prompt.
+    const targetIsCwd = !flags.targetDir;
+    if (targetIsCwd && !looksLikeProjectRoot(rootDir)) {
+      this.log(chalk.yellow(MESSAGES.ERRORS.PULL_TARGET_NOT_PROJECT_ROOT_WARNING));
+      if (process.stdin.isTTY) {
+        const { continueAnyway } = await inquirer.prompt<{ continueAnyway: boolean }>([
+          {
+            type: 'confirm',
+            name: 'continueAnyway',
+            message: MESSAGES.PROMPTS.PULL_CONTINUE_NOT_PROJECT_ROOT,
+            default: false,
+          },
+        ]);
+        if (!continueAnyway) {
+          this.log(chalk.gray('Pull cancelled.'));
+          process.exit(0);
+        }
+      }
+    }
 
     // Same config shape as push (WebAppPushConfig); bundlePath and manifestFile are placeholders so runPull and the API layer accept the same type.
     const config = {
@@ -113,12 +131,8 @@ export default class Pull extends Command {
       await runPull(config, { overwrite: flags.overwrite, promptOverwrite });
       this.log(chalk.green(MESSAGES.SUCCESS.PULL_COMPLETED));
     } catch (error) {
-      if (error instanceof ProjectPullError) {
-        this.log(chalk.red(`${MESSAGES.ERRORS.PULL_FAILED_PREFIX}${error.message}`));
-      } else {
-        const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
-        this.log(chalk.red(`${MESSAGES.ERRORS.PULL_FAILED_PREFIX}${msg}`));
-      }
+      const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
+      this.log(chalk.red(`${MESSAGES.ERRORS.PULL_FAILED_PREFIX}${msg}`));
       process.exit(1);
     }
   }

@@ -207,13 +207,13 @@ uipath push <project-id>
 uipath push <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
 
 # Use a different build directory (e.g. Create React App uses "build")
-uipath push <project-id> --build-dir build
+uipath push <project-id> --buildDir build
 
 # Push and skip importing referenced resources from bindings.json
-uipath push <project-id> --ignore-resources
+uipath push <project-id> --ignoreResources
 
 # Combine flags
-uipath push <project-id> --build-dir out --ignore-resources --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
+uipath push <project-id> --buildDir out --ignoreResources --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
 ```
 
 **Arguments:**
@@ -224,8 +224,8 @@ uipath push <project-id> --build-dir out --ignore-resources --orgId <org-id> --t
 **Flags:**
 | Flag | Description |
 |------|-------------|
-| `--build-dir` | Relative path to the build output directory (e.g. `dist`, `build`, `out`). Default: `dist`. |
-| `--ignore-resources` | Skip importing referenced resources (assets, processes, connections, etc.) to the Studio Web solution. Default: false. |
+| `--buildDir` | Relative path to the build output directory (e.g. `dist`, `build`, `out`). Default: `dist`. |
+| `--ignoreResources` | Skip importing referenced resources (assets, processes, connections, etc.) to the Studio Web solution. Default: false. |
 | `--baseUrl` | UiPath base URL (default: https://cloud.uipath.com). Overrides env. |
 | `--orgId` | UiPath organization ID. Overrides env. |
 | `--tenantId` | UiPath tenant ID. Overrides env. |
@@ -269,7 +269,7 @@ uipath pull
 uipath pull <project-id>
 
 # Pull into a specific directory
-uipath pull <project-id> --target-dir ./my-project
+uipath pull <project-id> --targetDir ./my-project
 
 # Allow overwriting existing local files (no prompt)
 uipath pull <project-id> --overwrite
@@ -286,7 +286,7 @@ uipath pull <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <
 **Flags:**
 | Flag | Description |
 |------|-------------|
-| `--target-dir` | Local directory to write pulled files. Default: current working directory. |
+| `--targetDir` | Local directory to write pulled files. Default: current working directory. |
 | `--overwrite` | Allow overwriting existing local files without prompting. Default: false. |
 | `--baseUrl` | UiPath base URL (default: https://cloud.uipath.com). Overrides env. |
 | `--orgId` | UiPath organization ID. Overrides env. |
@@ -324,10 +324,10 @@ This command will:
 
 **Push (Studio Web):**
 1. **Build your application**: Use your framework's build command.
-2. **Push to Studio Web**: `uipath push <project-id>` from the project root. Use `--build-dir build` (or `out`, etc.) if your framework uses a different output folder than `dist`.
+2. **Push to Studio Web**: `uipath push <project-id>` from the project root. Use `--buildDir build` (or `out`, etc.) if your framework uses a different output folder than `dist`.
 
 **Pull (Studio Web):**
-1. **Pull from Studio Web**: `uipath pull <project-id>` from the directory where you want the project files (or use `--target-dir`). Only files under remote `source/` are downloaded; build output is excluded.
+1. **Pull from Studio Web**: `uipath pull <project-id>` from the directory where you want the project files (or use `--targetDir`). Only files under remote `source/` are downloaded; build output is excluded.
 2. **Edit locally** and run builds/tests as needed.
 3. **Push changes back**: `uipath push <project-id>` when ready (ensure you have pulled latest first if others contribute).
 
@@ -335,8 +335,8 @@ This command will:
 
 This CLI works with any web framework that produces a static build:
 - Angular (`ng build`) — default output: `dist/`
-- React / Create React App (`npm run build`) — use `--build-dir build` with push
-- Vite, Vue, static HTML/CSS/JS — default `dist/` or use `--build-dir` for custom output
+- React / Create React App (`npm run build`) — use `--buildDir build` with push
+- Vite, Vue, static HTML/CSS/JS — default `dist/` or use `--buildDir` for custom output
 
 ## Development
 

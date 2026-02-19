@@ -112,6 +112,9 @@ export const MESSAGES = {
     PULL_UIPROJ_PROJECT_TYPE_INVALID: '.uiproj file must have "ProjectType": "WebApp" to pull.',
     PULL_OVERWRITE_CONFLICTS: 'Pull would overwrite existing local file(s). Use --overwrite to allow overwriting, or move/back up files and try again.',
     PULL_FILE_DOWNLOAD_FAILED_PREFIX: 'Failed to download file: ',
+    /** Soft check: target dir (CWD) has no package.json, .uiproj, or .uipath. */
+    PULL_TARGET_NOT_PROJECT_ROOT_WARNING:
+      'This directory does not look like a project root (no package.json, webAppManifest.json, .uiproj, or .uipath). Pull will create or overwrite files here. Are you in the right directory?',
 
     // File operations
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',
@@ -228,6 +231,7 @@ export const MESSAGES = {
   
   PROMPTS: {
     PULL_OVERWRITE_CONFIRM: 'This pull will overwrite one or more local files. Do you want to continue? (Y/n)',
+    PULL_CONTINUE_NOT_PROJECT_ROOT: 'Continue anyway? (y/N)',
     ENTER_APP_NAME: 'Enter app name:',
     ENTER_PACKAGE_NAME: 'Enter package name:',
     ENTER_PACKAGE_DESCRIPTION: 'Enter package description:',

@@ -89,6 +89,23 @@ export class WebAppFileHandler {
     this.lockKey = lockInfo.projectLockKey ?? lockInfo.solutionLockKey ?? null;
     this.config.logger.log(chalk.gray('[push] Lock acquired.'));
 
+    try {
+      await this.runPushWithLock();
+    } finally {
+      if (this.lockKey) {
+        try {
+          await api.releaseLock(this.config, this.lockKey);
+          this.config.logger.log(chalk.gray('[push] Lock released.'));
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.config.logger.log(chalk.yellow(`[push] Could not release lock: ${msg}`));
+        }
+        this.lockKey = null;
+      }
+    }
+  }
+
+  private async runPushWithLock(): Promise<void> {
     this.config.logger.log(chalk.gray('[push] Fetching remote structure...'));
     this.projectStructure = await api.fetchRemoteStructure(this.config);
     const { localFilesWithRemote, buildCount, sourceCount } = buildLocalFilesWithRemote(

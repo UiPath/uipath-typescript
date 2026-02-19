@@ -26,9 +26,6 @@ import {
   getFolderPathsForFiles,
 } from './pull-utils.js';
 import { validateProjectType } from './pull-validation.js';
-import { ProjectPullError } from './pull-errors.js';
-
-export { ProjectPullError };
 
 /** Max length of error message sent to telemetry (align with api.ts). */
 const MAX_TELEMETRY_ERROR_LENGTH = 500;
@@ -59,14 +56,14 @@ export async function runPull(
       reason: 'target_dir_invalid',
       error_message: MESSAGES.ERRORS.PULL_TARGET_DIR_NOT_FOUND,
     });
-    throw new ProjectPullError(MESSAGES.ERRORS.PULL_TARGET_DIR_NOT_FOUND);
+    throw new Error(MESSAGES.ERRORS.PULL_TARGET_DIR_NOT_FOUND);
   }
   if (!fs.statSync(rootDir).isDirectory()) {
     cliTelemetryClient.track('Cli.Pull.Failed', {
       reason: 'target_dir_invalid',
       error_message: MESSAGES.ERRORS.PULL_TARGET_DIR_NOT_DIRECTORY,
     });
-    throw new ProjectPullError(MESSAGES.ERRORS.PULL_TARGET_DIR_NOT_DIRECTORY);
+    throw new Error(MESSAGES.ERRORS.PULL_TARGET_DIR_NOT_DIRECTORY);
   }
 
   logger.log(chalk.gray('[pull] Fetching remote structure...'));
@@ -78,7 +75,7 @@ export async function runPull(
       reason: 'project_not_found',
       error_message: MESSAGES.ERRORS.PULL_PROJECT_NOT_FOUND,
     });
-    throw new ProjectPullError(MESSAGES.ERRORS.PULL_PROJECT_NOT_FOUND);
+    throw new Error(MESSAGES.ERRORS.PULL_PROJECT_NOT_FOUND);
   }
 
   const fullFilesMap = getRemoteFilesMap(structure);
@@ -140,7 +137,7 @@ export async function runPull(
         const proceed = await options.promptOverwrite(overwrites);
         if (!proceed) {
           cliTelemetryClient.track('Cli.Pull.Failed', { reason: 'overwrite_aborted' });
-          throw new ProjectPullError(MESSAGES.ERRORS.PULL_OVERWRITE_CONFLICTS);
+          throw new Error(MESSAGES.ERRORS.PULL_OVERWRITE_CONFLICTS);
         }
       } else {
         logger.log(chalk.yellow(MESSAGES.ERRORS.PULL_OVERWRITE_CONFLICTS));
@@ -151,7 +148,7 @@ export async function runPull(
           logger.log(chalk.yellow(`  ... and ${overwrites.length - PULL_OVERWRITE_LIST_MAX_DISPLAY} more.`));
         }
         cliTelemetryClient.track('Cli.Pull.Failed', { reason: 'overwrite_conflicts' });
-        throw new ProjectPullError(MESSAGES.ERRORS.PULL_OVERWRITE_CONFLICTS);
+        throw new Error(MESSAGES.ERRORS.PULL_OVERWRITE_CONFLICTS);
       }
     }
   }
@@ -235,7 +232,7 @@ export async function runPull(
       error_message: msg.length > MAX_TELEMETRY_ERROR_LENGTH ? `${msg.slice(0, MAX_TELEMETRY_ERROR_LENGTH)}...` : msg,
       failed_count: failedPaths.length,
     });
-    throw new ProjectPullError(msg, failedPaths);
+    throw new Error(msg);
   }
 
   cliTelemetryClient.track('Cli.Pull.Completed', { file_count: entries.length });

@@ -28,11 +28,12 @@ export default class Push extends Command {
 
   static override flags = {
     help: Flags.help({ char: 'h' }),
-    'build-dir': Flags.string({
-      description: 'Relative path to the build output directory (e.g. dist, build, out). Default: dist',
+    buildDir: Flags.string({
+      description:
+        'Relative path to the build output directory; should be the root of the build output (e.g. dist, build, out). Default: dist',
       default: 'dist',
     }),
-    'ignore-resources': Flags.boolean({
+    ignoreResources: Flags.boolean({
       description: 'Skip importing the referenced resources to Studio Web solution',
       default: false,
     }),
@@ -44,9 +45,6 @@ export default class Push extends Command {
     }),
     tenantId: Flags.string({
       description: 'UiPath tenant ID',
-    }),
-    tenantName: Flags.string({
-      description: 'UiPath tenant name',
     }),
     accessToken: Flags.string({
       description: 'UiPath bearer token for authentication',
@@ -70,7 +68,7 @@ export default class Push extends Command {
     }
 
     const rootDir = process.cwd();
-    const bundlePath = path.normalize(flags['build-dir']).replace(/\\/g, '/');
+    const bundlePath = path.normalize(flags.buildDir).replace(/\\/g, '/');
 
     try {
       Preconditions.validate(rootDir, bundlePath);
@@ -90,7 +88,7 @@ export default class Push extends Command {
 
     try {
       await handler.push();
-      await handler.importReferencedResources(flags['ignore-resources']);
+      await handler.importReferencedResources(flags.ignoreResources);
       this.log(chalk.green(MESSAGES.SUCCESS.PUSH_COMPLETED));
     } catch (error) {
       const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
