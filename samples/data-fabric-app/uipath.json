@@ -1,0 +1,8 @@
+{
+  "scope": "DataFabric.Data.Read DataFabric.Schema.Read DataFabric.Data.Write OR.Users",
+  "clientId": "",
+  "orgName": "",
+  "tenantName": "",
+  "baseUrl": "",
+  "redirectUri": ""
+}

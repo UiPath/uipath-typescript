@@ -1,0 +1,8 @@
+{
+  "scope": "PIMS OR.Execution.Read OR.Tasks OR.Tasks.Read",
+  "clientId": "",
+  "orgName": "",
+  "tenantName": "",
+  "baseUrl": "",
+  "redirectUri": ""
+}

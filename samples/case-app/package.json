@@ -1,5 +1,5 @@
 {
-  "name": "process-app-task",
+  "name": "case-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@uipath/uipath-typescript": "^1.0.0-beta.18",
+    "@uipath/uipath-ts-cli": "file:../../uipath-uipath-ts-cli-1.0.0-beta.6.tgz",
+    "@uipath/uipath-typescript": "^1.0.0",
     "path-browserify": "^1.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
