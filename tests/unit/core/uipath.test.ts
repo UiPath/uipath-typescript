@@ -322,7 +322,7 @@ describe('UiPath Core', () => {
       mockLogout.mockClear();
     });
 
-    it('should call authService.logout and reset initialized state', () => {
+    it('should skip silently for secret-based auth', () => {
       const sdk = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
@@ -334,8 +334,8 @@ describe('UiPath Core', () => {
 
       sdk.logout();
 
-      expect(mockLogout).toHaveBeenCalledOnce();
-      expect(sdk.isInitialized()).toBe(false);
+      expect(mockLogout).not.toHaveBeenCalled();
+      expect(sdk.isInitialized()).toBe(true);
     });
 
     it('should work for OAuth-configured instances', () => {

@@ -1,6 +1,7 @@
 import { ExecutionContext } from '../context/execution';
 import { isBrowser } from '../../utils/platform';
-import { AuthToken, TokenInfo, AUTH_STORAGE_KEYS } from './types';
+import { AuthToken, TokenInfo } from './types';
+import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 
@@ -12,7 +13,6 @@ import { Config } from '../config/config';
  */
 export class TokenManager {
   private currentToken?: TokenInfo;
-  private readonly STORAGE_KEY_PREFIX = AUTH_STORAGE_KEYS.TOKEN_PREFIX;
   private refreshPromise: Promise<AuthToken> | null = null;
   
   /**
@@ -45,7 +45,7 @@ export class TokenManager {
    * Gets the storage key for this TokenManager instance
    */
   private _getStorageKey(): string {
-    return `${this.STORAGE_KEY_PREFIX}${this.config.clientId}`;
+    return `${AUTH_STORAGE_KEYS.TOKEN_PREFIX}${this.config.clientId}`;
   }
   
   /**

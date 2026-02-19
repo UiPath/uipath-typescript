@@ -1,7 +1,8 @@
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from './token-manager';
-import { AuthToken, TokenInfo, OAuthContext, AUTH_STORAGE_KEYS } from './types';
+import { AuthToken, TokenInfo, OAuthContext } from './types';
+import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -221,7 +222,7 @@ export class AuthService {
   public logout(): void {
     this.tokenManager.clearToken();
 
-    // Clear OAuth context from session storage, These are normally cleaned up in _handleOAuthCallback after a successful
+    // Clear OAuth context from session storage. These are normally cleaned up in _handleOAuthCallback after a successful
     // token exchange, but if a user calls logout() while an OAuth flow is
     // mid-redirect (before callback completes), they'd be left behind.
 

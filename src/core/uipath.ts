@@ -189,6 +189,10 @@ export class UiPath implements IUiPath {
    * After calling this method, the user will need to re-initialize to authenticate again.
    */
   public logout(): void {
+    // Secret-based auth has no session to end — skip silently
+    if (hasSecretConfig(this.#config)) {
+      return;
+    }
     this.#authService.logout();
     this.#initialized = false;
   }
