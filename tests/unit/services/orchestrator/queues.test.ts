@@ -206,7 +206,7 @@ describe('QueueService Unit Tests', () => {
     });
   });
 
-  describe('getItems', () => {
+  describe('getQueueItems', () => {
     it('should return queue items scoped to a specific queue and folder', async () => {
       const mockResponse = {
         items: [createBasicQueueItem()],
@@ -215,7 +215,7 @@ describe('QueueService Unit Tests', () => {
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const result = await queueService.getItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID);
+      const result = await queueService.getQueueItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID);
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -237,7 +237,7 @@ describe('QueueService Unit Tests', () => {
     it('should configure transformFn to map queue and folder fields', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
 
-      await queueService.getItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID);
+      await queueService.getQueueItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID);
 
       const paginationConfig = vi.mocked(PaginationHelpers.getAll).mock.calls[0][0] as any;
       const transformed = paginationConfig.transformFn(createMockRawQueueItem());
@@ -245,9 +245,11 @@ describe('QueueService Unit Tests', () => {
       expect(transformed.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
       expect(transformed.queueId).toBe(QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID);
       expect(transformed.createdTime).toBe(QUEUE_TEST_CONSTANTS.CREATED_TIME);
+      expect(transformed.content).toEqual(QUEUE_TEST_CONSTANTS.CONTENT);
       expect((transformed as any).organizationUnitId).toBeUndefined();
       expect((transformed as any).queueDefinitionId).toBeUndefined();
       expect((transformed as any).creationTime).toBeUndefined();
+      expect((transformed as any).specificContent).toBeUndefined();
     });
 
     it('should return paginated queue items when pagination options provided', async () => {
@@ -263,7 +265,7 @@ describe('QueueService Unit Tests', () => {
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const result = await queueService.getItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID, {
+      const result = await queueService.getQueueItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID, {
         pageSize: TEST_CONSTANTS.PAGE_SIZE
       }) as any;
 
@@ -284,7 +286,7 @@ describe('QueueService Unit Tests', () => {
     it('should merge existing filters with queue ID filter', async () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
 
-      await queueService.getItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID, {
+      await queueService.getQueueItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID, {
         filter: "status eq 'New'"
       });
 
@@ -302,7 +304,7 @@ describe('QueueService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(
-        queueService.getItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID)
+        queueService.getQueueItems(QUEUE_TEST_CONSTANTS.QUEUE_ID, TEST_CONSTANTS.FOLDER_ID)
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -312,11 +314,11 @@ describe('QueueService Unit Tests', () => {
       const mockQueueItem = createMockRawQueueItem();
       mockApiClient.post.mockResolvedValue(mockQueueItem);
 
-      const specificContent = { ...QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT };
+      const content = { ...QUEUE_TEST_CONSTANTS.CONTENT };
       const result = await queueService.insertQueueItem(
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-        specificContent,
         TEST_CONSTANTS.FOLDER_ID,
+        content,
         {
           priority: 'Normal',
           reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE
@@ -328,9 +330,11 @@ describe('QueueService Unit Tests', () => {
       expect(result.queueId).toBe(QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID);
       expect(result.createdTime).toBe(QUEUE_TEST_CONSTANTS.CREATED_TIME);
       expect(result.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect(result.content).toEqual(QUEUE_TEST_CONSTANTS.CONTENT);
       expect((result as any).queueDefinitionId).toBeUndefined();
       expect((result as any).creationTime).toBeUndefined();
       expect((result as any).organizationUnitId).toBeUndefined();
+      expect((result as any).specificContent).toBeUndefined();
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         QUEUE_ENDPOINTS.ADD_ITEM,
@@ -338,7 +342,7 @@ describe('QueueService Unit Tests', () => {
           itemData: expect.objectContaining({
             Name: QUEUE_TEST_CONSTANTS.QUEUE_NAME,
             Priority: 'Normal',
-            SpecificContent: specificContent,
+            SpecificContent: content,
             Reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE
           })
         }),
@@ -355,8 +359,8 @@ describe('QueueService Unit Tests', () => {
 
       await queueService.insertQueueItem(
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-        { ...QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT },
-        TEST_CONSTANTS.FOLDER_ID
+        TEST_CONSTANTS.FOLDER_ID,
+        { ...QUEUE_TEST_CONSTANTS.CONTENT }
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -376,8 +380,8 @@ describe('QueueService Unit Tests', () => {
 
       await expect(queueService.insertQueueItem(
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-        { ...QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT },
-        TEST_CONSTANTS.FOLDER_ID
+        TEST_CONSTANTS.FOLDER_ID,
+        { ...QUEUE_TEST_CONSTANTS.CONTENT }
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -387,9 +391,8 @@ describe('QueueService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue(createMockRawQueueItem());
 
       const result = await queueService.startTransaction(
-        TEST_CONSTANTS.FOLDER_ID,
         QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-        QUEUE_TEST_CONSTANTS.ROBOT_IDENTIFIER
+        TEST_CONSTANTS.FOLDER_ID
       );
 
       expect(result).toBeDefined();
@@ -402,8 +405,7 @@ describe('QueueService Unit Tests', () => {
         QUEUE_ENDPOINTS.START_TRANSACTION,
         expect.objectContaining({
           transactionData: expect.objectContaining({
-            Name: QUEUE_TEST_CONSTANTS.QUEUE_NAME,
-            RobotIdentifier: QUEUE_TEST_CONSTANTS.ROBOT_IDENTIFIER
+            Name: QUEUE_TEST_CONSTANTS.QUEUE_NAME
           })
         }),
         expect.objectContaining({
@@ -419,8 +421,8 @@ describe('QueueService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(error);
 
       await expect(queueService.startTransaction(
-        TEST_CONSTANTS.FOLDER_ID,
-        QUEUE_TEST_CONSTANTS.QUEUE_NAME
+        QUEUE_TEST_CONSTANTS.QUEUE_NAME,
+        TEST_CONSTANTS.FOLDER_ID
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -430,8 +432,8 @@ describe('QueueService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
       const transactionResult = {
-        IsSuccessful: true,
-        Output: { completed: true }
+        isSuccessful: true,
+        output: { completed: true }
       };
 
       await queueService.setTransactionResult(
@@ -443,7 +445,10 @@ describe('QueueService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         QUEUE_ENDPOINTS.SET_TRANSACTION_RESULT(QUEUE_TEST_CONSTANTS.QUEUE_ITEM_ID),
         expect.objectContaining({
-          transactionResult
+          transactionResult: {
+            IsSuccessful: true,
+            Output: { completed: true }
+          }
         }),
         expect.objectContaining({
           headers: expect.objectContaining({
@@ -460,7 +465,7 @@ describe('QueueService Unit Tests', () => {
       await expect(queueService.setTransactionResult(
         TEST_CONSTANTS.FOLDER_ID,
         QUEUE_TEST_CONSTANTS.QUEUE_ITEM_ID,
-        { IsSuccessful: false, ProcessingException: { Reason: 'ValidationError' } }
+        { isSuccessful: false, processingException: { reason: 'ValidationError' } }
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

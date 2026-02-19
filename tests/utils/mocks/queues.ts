@@ -2,7 +2,7 @@
  * Queue service mock utilities - Queue-specific mocks only
  * Uses generic utilities from core.ts for base functionality
  */
-import { QueueGetResponse, QueueItem } from '../../../src/models/orchestrator/queues.types';
+import { QueueGetResponse, QueueItemResponse } from '../../../src/models/orchestrator/queues.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { QUEUE_TEST_CONSTANTS } from '../constants/queues';
 import { TEST_CONSTANTS } from '../constants/common';
@@ -55,7 +55,7 @@ export const createMockRawQueueItem = (overrides: Partial<any> = {}): any => {
     Priority: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PRIORITY,
     QueueDefinitionId: QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID,
     ProcessingException: null,
-    SpecificContent: QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT,
+    SpecificContent: QUEUE_TEST_CONSTANTS.CONTENT,
     Output: null,
     Progress: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PROGRESS,
     Reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE,
@@ -70,7 +70,9 @@ export const createMockRawQueueItem = (overrides: Partial<any> = {}): any => {
  * @param overrides - Optional overrides for specific fields
  * @returns Queue item data with SDK field names
  */
-export const createBasicQueueItem = (overrides: Partial<QueueItem> = {}): QueueItem => {
+export const createBasicQueueItem = (
+  overrides: Partial<QueueItemResponse> = {}
+): QueueItemResponse => {
   return createMockBaseResponse({
     id: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_ID,
     key: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_KEY,
@@ -78,7 +80,7 @@ export const createBasicQueueItem = (overrides: Partial<QueueItem> = {}): QueueI
     priority: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PRIORITY,
     queueId: QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID,
     processingException: null,
-    specificContent: QUEUE_TEST_CONSTANTS.SPECIFIC_CONTENT,
+    content: QUEUE_TEST_CONSTANTS.CONTENT,
     output: null,
     progress: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PROGRESS,
     reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE,

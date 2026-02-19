@@ -10,5 +10,6 @@ export const QueueMap: { [key: string]: string } = {
 export const QueueItemMap: { [key: string]: string } = {
   organizationUnitId: 'folderId',
   queueDefinitionId: 'queueId',
-  creationTime: 'createdTime'
+  creationTime: 'createdTime',
+  specificContent: 'content'
 };

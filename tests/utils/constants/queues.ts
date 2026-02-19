@@ -18,8 +18,7 @@ export const QUEUE_TEST_CONSTANTS = {
   QUEUE_ITEM_PRIORITY: 'Normal',
   QUEUE_ITEM_REFERENCE: 'INV-1001',
   QUEUE_ITEM_PROGRESS: 'Queued',
-  ROBOT_IDENTIFIER: 'robot-123',
-  SPECIFIC_CONTENT: {
+  CONTENT: {
     invoiceNumber: 'INV-1001',
     amount: 1500
   },

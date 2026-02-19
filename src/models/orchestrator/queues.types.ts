@@ -54,35 +54,33 @@ export type QueueItemInsertOptions = {
   deferDate?: string;
   riskSlaDate?: string;
   progress?: string;
+};
+
+/**
+ * Queue item request shape (SDK surface).
+ */
+export interface QueueItemRequest {
+  priority?: 'High' | 'Normal' | 'Low';
+  name?: string;
+  content: Record<string, any>;
+  reference?: string;
+  dueDate?: string;
+  deferDate?: string;
+  riskSlaDate?: string;
+  progress?: string;
 }
 
 /**
- * Interface for Queue Item Payload (Request)
+ * Queue item response shape (SDK surface).
  */
-export interface QueueItemPayload {
-  itemData: {
-    Priority?: 'High' | 'Normal' | 'Low';
-    Name?: string;
-    SpecificContent: Record<string, any>;
-    Reference?: string;
-    DueDate?: string;
-    DeferDate?: string;
-    RiskSlaDate?: string;
-    Progress?: string;
-  }
-}
-
-/**
- * Interface for Queue Item (Response)
- */
-export interface QueueItem {
+export interface QueueItemResponse {
   id: number;
   key: string;
   status: string;
   priority: string;
   queueId: number;
   processingException: any;
-  specificContent: Record<string, any>;
+  content: Record<string, any>;
   output: any;
   progress: string;
   reference: string;
@@ -90,49 +88,44 @@ export interface QueueItem {
   folderId?: number;
 }
 
-export type QueueGetByIdOptions = BaseOptions
+export type QueueGetByIdOptions = BaseOptions;
 
 /**
- * Interface for Transaction Item (Processed Queue Item)
+ * Transaction item response shape (SDK surface).
  */
-export interface TransactionItem extends QueueItem {
-  // Inherits from QueueItem but might have specific runtime fields
+export interface TransactionItemResponse extends QueueItemResponse {
+  // Intentionally extends QueueItemResponse.
 }
 
 /**
- * Interface for starting a transaction
+ * Start transaction request shape (SDK surface).
  */
-export interface StartTransactionPayload {
-  transactionData: {
-    Name: string;
-    RobotIdentifier?: string;
-    SpecificContent?: Record<string, any>;
-    DeferDate?: string;
-    DueDate?: string;
-    Reference?: string;
-    ReferenceFilterOption?: string;
-    ParentOperationId?: string;
+export interface TransactionRequest {
+  name: string;
+  content?: Record<string, any>;
+  deferDate?: string;
+  dueDate?: string;
+  reference?: string;
+  referenceFilterOption?: string;
+  parentOperationId?: string;
+}
+
+/**
+ * Transaction result payload shape (SDK surface).
+ */
+export interface TransactionResult {
+  isSuccessful?: boolean;
+  processingException?: {
+    reason: string;
+    details?: string;
+    type?: string;
+    associatedImageFilePath?: string;
+    creationTime?: string;
   };
-}
-
-/**
- * Interface for setting transaction result
- */
-export interface TransactionResultPayload {
-  transactionResult: {
-    IsSuccessful?: boolean;
-    ProcessingException?: {
-      Reason: string;
-      Details?: string;
-      Type?: string;
-      AssociatedImageFilePath?: string;
-      CreationTime?: string;
-    };
-    DeferDate?: string;
-    DueDate?: string;
-    Output?: Record<string, any>;
-    Analytics?: Record<string, any>;
-    Progress?: string;
-    OperationId?: string;
-  }
+  deferDate?: string;
+  dueDate?: string;
+  output?: Record<string, any>;
+  analytics?: Record<string, any>;
+  progress?: string;
+  operationId?: string;
 }
