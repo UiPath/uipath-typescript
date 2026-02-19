@@ -10,17 +10,11 @@ const USI_COLORS = {
 };
 
 interface CaseInstancesHomeProps {
+  processKey: string;
+  caseName: string;
   onSelectInstance: (instanceId: string, folderKey: string) => void;
+  onBack: () => void;
 }
-
-// Package filter configuration
-// const PACKAGE_ID = 'USI.UMarket.CaseManagement.UMarket.New.business';
-const PACKAGE_ID = 'USI.UMarket.1.CaseManagement.UMarket.New.business';
-// const PROCESS_KEY = 'fe97d075-2ea6-47e6-9ded-a609a4f3c0c6'
-// const PROCESS_KEY ='cb6a0085-149a-484d-b9f9-83ebc8cf23dc'
-const PROCESS_KEY = 'fe97d075-2ea6-47e6-9ded-a609a4f3c0c6'
-
-// const PACKAGE_VERSION = '1.0.2';
 
 const getStatusColor = (status: string) => {
   switch (status?.toLowerCase()) {
@@ -50,7 +44,7 @@ const formatDate = (dateString: string | undefined) => {
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
-export const CaseInstancesHome = ({ onSelectInstance }: CaseInstancesHomeProps) => {
+export const CaseInstancesHome = ({ processKey, caseName, onSelectInstance, onBack }: CaseInstancesHomeProps) => {
   const { sdk } = useAuth();
   const [instances, setInstances] = useState<CaseInstanceGetResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,8 +60,7 @@ export const CaseInstancesHome = ({ onSelectInstance }: CaseInstancesHomeProps) 
 
     try {
       const response = await sdk.maestro.cases.instances.getAll({
-        processKey: PROCESS_KEY,
-        // packageVersion: PACKAGE_VERSION,
+        processKey,
       });
 
       setInstances(response.items || []);
@@ -77,7 +70,7 @@ export const CaseInstancesHome = ({ onSelectInstance }: CaseInstancesHomeProps) 
     } finally {
       setIsLoading(false);
     }
-  }, [sdk]);
+  }, [sdk, processKey]);
 
   useEffect(() => {
     loadInstances();
@@ -132,7 +125,7 @@ export const CaseInstancesHome = ({ onSelectInstance }: CaseInstancesHomeProps) 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* USI Header */}
+      {/* Header */}
       <header
         className="shadow-lg"
         style={{ backgroundColor: USI_COLORS.primary }}
@@ -140,7 +133,15 @@ export const CaseInstancesHome = ({ onSelectInstance }: CaseInstancesHomeProps) 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* USI Logo placeholder - using text for now */}
+              <button
+                onClick={onBack}
+                className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-sm">Back</span>
+              </button>
               <div className="flex items-center gap-3">
                 <div
                   className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl"
@@ -149,8 +150,8 @@ export const CaseInstancesHome = ({ onSelectInstance }: CaseInstancesHomeProps) 
                   USI
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">UMarket</h1>
-                  <p className="text-sm text-blue-200">Case Management Portal</p>
+                  <h1 className="text-2xl font-bold text-white">{caseName}</h1>
+                  <p className="text-sm text-blue-200">Case Instances</p>
                 </div>
               </div>
             </div>
@@ -242,7 +243,7 @@ export const CaseInstancesHome = ({ onSelectInstance }: CaseInstancesHomeProps) 
               Case Instances
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {PACKAGE_ID}
+              {caseName}
             </p>
           </div>
 

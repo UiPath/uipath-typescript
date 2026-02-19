@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { LoginScreen } from './components/LoginScreen';
 import { CaseInstanceView } from './components/CaseInstanceView';
 import { CaseInstancesHome } from './components/CaseInstancesHome';
+import { CasesHome } from './components/CasesHome';
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript';
 
 const authConfig: UiPathSDKConfig = {
@@ -16,6 +17,11 @@ const authConfig: UiPathSDKConfig = {
   scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access CM.Cases.Read CM.Cases.Write OR.Users',
 };
 
+interface SelectedCase {
+  processKey: string;
+  caseName: string;
+}
+
 interface SelectedInstance {
   instanceId: string;
   folderKey: string;
@@ -23,6 +29,7 @@ interface SelectedInstance {
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [selectedCase, setSelectedCase] = useState<SelectedCase | null>(null);
   const [selectedInstance, setSelectedInstance] = useState<SelectedInstance | null>(null);
 
   if (isLoading) {
@@ -40,20 +47,32 @@ function AppContent() {
     return <LoginScreen />;
   }
 
-  // Show home page when no instance is selected
-  if (!selectedInstance) {
+  // Level 1: Show all cases when no case is selected
+  if (!selectedCase) {
     return (
-      <CaseInstancesHome
-        onSelectInstance={(instanceId, folderKey) => setSelectedInstance({ instanceId, folderKey })}
+      <CasesHome
+        onSelectCase={(processKey, caseName) => setSelectedCase({ processKey, caseName })}
       />
     );
   }
 
-  // Show case instance view when an instance is selected
+  // Level 2: Show case instances when a case is selected but no instance
+  if (!selectedInstance) {
+    return (
+      <CaseInstancesHome
+        processKey={selectedCase.processKey}
+        caseName={selectedCase.caseName}
+        onSelectInstance={(instanceId, folderKey) => setSelectedInstance({ instanceId, folderKey })}
+        onBack={() => setSelectedCase(null)}
+      />
+    );
+  }
+
+  // Level 3: Show case instance view when an instance is selected
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header
-        caseTitle="Case"
+        caseTitle={selectedCase.caseName}
         onBack={() => setSelectedInstance(null)}
       />
       <CaseInstanceView
