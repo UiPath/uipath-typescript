@@ -1,0 +1,12 @@
+{
+  "name": "uipath-coded-apps",
+  "version": "0.0.1",
+  "description": "Create, debug and deploy UiPath coded apps with AI-powered assistance",
+  "author": {
+    "name": "UiPath"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/UiPath/uipath-typescript",
+  "repository": "https://github.com/UiPath/uipath-typescript",
+  "keywords": ["uipath", "automation", "sdk", "coded apps"]
+}

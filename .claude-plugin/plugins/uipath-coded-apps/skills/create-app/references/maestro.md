@@ -1,0 +1,269 @@
+# Maestro Reference
+
+## Imports
+
+```typescript
+import { MaestroProcesses, ProcessInstances, ProcessIncidents } from '@uipath/uipath-typescript/maestro-processes';
+import { Cases, CaseInstances } from '@uipath/uipath-typescript/cases';
+```
+
+## Scopes
+
+- All Maestro operations: `PIMS`
+- ProcessInstances.getBpmn: also requires `OR.Execution.Read`
+- CaseInstances.getActionTasks: also requires `OR.Tasks` or `OR.Tasks.Read`
+
+## Types to Import
+
+```typescript
+// Maestro Processes
+import type {
+  MaestroProcessGetAllResponse,
+  RawMaestroProcessGetAllResponse,
+  ProcessMethods,
+} from '@uipath/uipath-typescript/maestro-processes';
+
+// Process Instances
+import type {
+  ProcessInstanceGetResponse,
+  RawProcessInstanceGetResponse,
+  ProcessInstanceMethods,
+  ProcessInstanceGetAllWithPaginationOptions,
+  ProcessInstanceGetAllOptions,
+  ProcessInstanceOperationOptions,
+  ProcessInstanceOperationResponse,
+  ProcessInstanceExecutionHistoryResponse,
+  BpmnXmlString,
+  ProcessInstanceGetVariablesResponse,
+  ProcessInstanceGetVariablesOptions,
+  ProcessInstanceRun,
+} from '@uipath/uipath-typescript/maestro-processes';
+
+// Process Incidents
+import type {
+  ProcessIncidentGetResponse,
+  ProcessIncidentGetAllResponse,
+} from '@uipath/uipath-typescript/maestro-processes';
+
+// Cases
+import type {
+  CaseGetAllResponse,
+} from '@uipath/uipath-typescript/cases';
+
+// Case Instances
+import type {
+  CaseInstanceGetResponse,
+  RawCaseInstanceGetResponse,
+  CaseInstanceMethods,
+  CaseInstanceGetAllWithPaginationOptions,
+  CaseInstanceGetAllOptions,
+  CaseInstanceOperationOptions,
+  CaseInstanceOperationResponse,
+  CaseInstanceReopenOptions,
+  CaseGetStageResponse,
+  CaseInstanceExecutionHistoryResponse,
+  StageTask,
+} from '@uipath/uipath-typescript/cases';
+```
+
+## Enums
+
+```typescript
+import {
+  ProcessIncidentStatus,    // Open, Closed
+  ProcessIncidentType,      // System, User, Deployment
+  ProcessIncidentSeverity,  // Error, Warning
+  DebugMode,                // None, Default, StepByStep, SingleStep
+} from '@uipath/uipath-typescript/maestro-processes';
+
+import {
+  StageTaskType,               // external-agent, rpa, process, agent, action, api-workflow
+  EscalationRecipientScope,    // user, usergroup
+  EscalationActionType,        // notification
+  EscalationTriggerType,       // sla-breached, at-risk
+  SLADurationUnit,             // h, d, w, m
+} from '@uipath/uipath-typescript/cases';
+```
+
+## MaestroProcesses Service
+
+### getAll()
+
+Returns `Promise<MaestroProcessGetAllResponse[]>`. Each process has: `processKey`, `packageId`, `name`, `folderKey`, `folderName`, `packageVersions`, `versionCount`, plus instance count fields (`runningCount`, `faultedCount`, `completedCount`, `pausedCount`, `cancelledCount`, `pendingCount`, `retryingCount`, `resumingCount`, `pausingCount`, `cancelingCount`). Each process has an attached `getIncidents()` method.
+
+### getIncidents(processKey: string, folderKey: string)
+
+Returns `Promise<ProcessIncidentGetResponse[]>`. Each incident has: `instanceId`, `elementId`, `folderKey`, `processKey`, `incidentId`, `incidentStatus`, `incidentType`, `errorCode`, `errorMessage`, `errorTime`, `errorDetails`, `debugMode`, `incidentSeverity`, `incidentElementActivityType`, `incidentElementActivityName`.
+
+## Process-Attached Methods (ProcessMethods)
+
+Returned by `getAll()` on each `MaestroProcessGetAllResponse`:
+
+- `process.getIncidents()` -> `Promise<ProcessIncidentGetResponse[]>`
+
+## ProcessIncidents Service
+
+### getAll()
+
+Returns `Promise<ProcessIncidentGetAllResponse[]>`. Each item has: `count`, `errorMessage`, `errorCode`, `firstOccuranceTime`, `processKey`.
+
+## ProcessInstanceGetResponse Fields
+
+`instanceId: string`, `packageKey: string`, `packageId: string`, `packageVersion: string`, `latestRunId: string`, `latestRunStatus: string`, `processKey: string`, `folderKey: string`, `userId: number`, `instanceDisplayName: string`, `startedByUser: string`, `source: string`, `creatorUserKey: string`, `startedTime: string`, `completedTime: string | null`, `instanceRuns: ProcessInstanceRun[]`. Plus all `ProcessInstanceMethods`.
+
+## ProcessInstances Service
+
+### getAll(options?: ProcessInstanceGetAllWithPaginationOptions)
+
+Returns `NonPaginatedResponse<ProcessInstanceGetResponse>` or `PaginatedResponse<ProcessInstanceGetResponse>`. Token-based pagination. Filter options: `processKey`, `packageId`, `packageVersion`, `errorCode`.
+
+### getById(id: string, folderKey: string)
+
+Returns `Promise<ProcessInstanceGetResponse>` with attached methods.
+
+### cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions)
+
+Returns `Promise<OperationResponse<ProcessInstanceOperationResponse>>`. Options: `{ comment?: string }`.
+
+### pause(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions)
+
+Same signature and return type as cancel.
+
+### resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions)
+
+Same signature and return type as cancel.
+
+### getExecutionHistory(instanceId: string)
+
+Returns `Promise<ProcessInstanceExecutionHistoryResponse[]>`. Each span has: `id`, `traceId`, `parentId`, `name`, `startedTime`, `endTime`, `attributes`, `createdTime`, `updatedTime?`, `expiredTime`.
+
+### getBpmn(instanceId: string, folderKey: string)
+
+Returns `Promise<BpmnXmlString>` (a string of BPMN XML).
+
+### getVariables(instanceId: string, folderKey: string, options?: ProcessInstanceGetVariablesOptions)
+
+Returns `Promise<ProcessInstanceGetVariablesResponse>` with `{ elements, globalVariables, instanceId, parentElementId }`. Options: `{ parentElementId?: string }`.
+
+### getIncidents(instanceId: string, folderKey: string)
+
+Returns `Promise<ProcessIncidentGetResponse[]>`.
+
+## ProcessInstance-Attached Methods (ProcessInstanceMethods)
+
+Returned by `getAll()` and `getById()` on each `ProcessInstanceGetResponse`:
+
+- `instance.cancel(options?)` -> `Promise<OperationResponse<ProcessInstanceOperationResponse>>`
+- `instance.pause(options?)` -> `Promise<OperationResponse<ProcessInstanceOperationResponse>>`
+- `instance.resume(options?)` -> `Promise<OperationResponse<ProcessInstanceOperationResponse>>`
+- `instance.getIncidents()` -> `Promise<ProcessIncidentGetResponse[]>`
+- `instance.getExecutionHistory()` -> `Promise<ProcessInstanceExecutionHistoryResponse[]>`
+- `instance.getBpmn()` -> `Promise<BpmnXmlString>`
+- `instance.getVariables(options?)` -> `Promise<ProcessInstanceGetVariablesResponse>`
+
+## Cases Service
+
+### getAll()
+
+Returns `Promise<CaseGetAllResponse[]>`. Each case has: `processKey`, `packageId`, `name`, `folderKey`, `folderName`, `packageVersions`, `versionCount`, plus instance count fields (same as MaestroProcesses).
+
+## CaseInstanceGetResponse Fields
+
+`instanceId: string`, `packageKey: string`, `packageId: string`, `packageVersion: string`, `latestRunId: string`, `latestRunStatus: string`, `processKey: string`, `folderKey: string`, `userId: number`, `instanceDisplayName: string`, `startedByUser: string`, `source: string`, `creatorUserKey: string`, `startedTime: string`, `completedTime: string`, `instanceRuns: CaseInstanceRun[]`, `caseAppConfig?: CaseAppConfig`, `caseType?: string`, `caseTitle?: string`. Plus all `CaseInstanceMethods`.
+
+## CaseInstanceExecutionHistoryResponse Fields
+
+`creationUserKey: string | null`, `folderKey: string`, `instanceDisplayName: string`, `instanceId: string`, `packageId: string`, `packageKey: string`, `packageVersion: string`, `processKey: string`, `source: string`, `status: string`, `startedTime: string`, `completedTime: string | null`, `elementExecutions: ElementExecutionMetadata[]`.
+
+## CaseGetStageResponse Fields
+
+`id: string`, `name: string`, `sla?: StageSLA`, `status: string`, `tasks: StageTask[][]`.
+
+## StageTask Fields
+
+`id: string`, `name: string`, `completedTime: string`, `startedTime: string`, `status: string`, `type: StageTaskType`.
+
+## CaseInstances Service
+
+### getAll(options?: CaseInstanceGetAllWithPaginationOptions)
+
+Returns `NonPaginatedResponse<CaseInstanceGetResponse>` or `PaginatedResponse<CaseInstanceGetResponse>`. Filter options: `processKey`, `packageId`, `packageVersion`, `errorCode`.
+
+### getById(instanceId: string, folderKey: string)
+
+Returns `Promise<CaseInstanceGetResponse>` with attached methods.
+
+### close(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions)
+
+Returns `Promise<OperationResponse<CaseInstanceOperationResponse>>`. Options: `{ comment?: string }`.
+
+### pause / resume
+
+Same signature pattern as close.
+
+### reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions)
+
+Options: `{ stageId: string, comment?: string }`. The `stageId` is required - get it from `getStages()`.
+
+### getStages(caseInstanceId: string, folderKey: string)
+
+Returns `Promise<CaseGetStageResponse[]>`. Each stage has: `id`, `name`, `sla`, `status`, `tasks: StageTask[][]`.
+
+### getExecutionHistory(instanceId: string, folderKey: string)
+
+Returns `Promise<CaseInstanceExecutionHistoryResponse>` with `{ elementExecutions, instanceId, status, startedTime, completedTime, ... }`.
+
+### getActionTasks(caseInstanceId: string, options?: TaskGetAllOptions)
+
+Returns `NonPaginatedResponse<TaskGetResponse>` or `PaginatedResponse<TaskGetResponse>`. Requires `OR.Tasks` scope.
+
+## CaseInstance-Attached Methods (CaseInstanceMethods)
+
+- `instance.close(options?)` -> `Promise<OperationResponse<CaseInstanceOperationResponse>>`
+- `instance.pause(options?)` -> `Promise<OperationResponse<CaseInstanceOperationResponse>>`
+- `instance.resume(options?)` -> `Promise<OperationResponse<CaseInstanceOperationResponse>>`
+- `instance.reopen(options)` -> `Promise<OperationResponse<CaseInstanceOperationResponse>>`
+- `instance.getExecutionHistory()` -> `Promise<CaseInstanceExecutionHistoryResponse>`
+- `instance.getStages()` -> `Promise<CaseGetStageResponse[]>`
+- `instance.getActionTasks(options?)` -> pagination-aware, returns tasks
+
+## Usage Example
+
+```typescript
+import { useMemo, useEffect, useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
+import type { ProcessInstanceGetResponse } from '@uipath/uipath-typescript/maestro-processes';
+
+function InstanceDashboard() {
+  const { sdk } = useAuth();
+  const processInstances = useMemo(() => new ProcessInstances(sdk), [sdk]);
+  const [instances, setInstances] = useState<ProcessInstanceGetResponse[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const result = await processInstances.getAll({ pageSize: 20 });
+      setInstances(result.items);
+    };
+    load();
+  }, [processInstances]);
+
+  const handleCancel = async (instance: ProcessInstanceGetResponse) => {
+    const result = await instance.cancel({ comment: 'Cancelled from dashboard' });
+    if (result.success) {
+      // Refresh list
+    }
+  };
+
+  return (
+    <div>
+      {instances.map(inst => (
+        <div key={inst.instanceId}>
+          <span>{inst.instanceDisplayName} - {inst.latestRunStatus}</span>
+          <button onClick={() => handleCancel(inst)}>Cancel</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
