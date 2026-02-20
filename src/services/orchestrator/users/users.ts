@@ -16,15 +16,6 @@ import { track } from '../../../core/telemetry';
  */
 export class UserService extends BaseService implements UserServiceModel {
   /**
-   * Creates an instance of the Users service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
-  /**
    * Gets users with optional filtering and pagination.
    */
   @track('Users.GetAll')
@@ -32,11 +23,17 @@ export class UserService extends BaseService implements UserServiceModel {
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<UserGetResponse>
-      : NonPaginatedResponse<UserGetResponse>
+    ? PaginatedResponse<UserGetResponse>
+    : NonPaginatedResponse<UserGetResponse>
   > {
     const transformUserResponse = (user: any) =>
       transformData(pascalToCamelCaseKeys(user) as UserGetResponse, UserMap);
+
+    // Filter out internal pagination keys so they do not get OData prefixed (e.g. $pageSize)
+    const apiOptions = { ...options } as Record<string, any>;
+    delete apiOptions.pageSize;
+    delete apiOptions.cursor;
+    delete apiOptions.jumpToPage;
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -52,7 +49,7 @@ export class UserService extends BaseService implements UserServiceModel {
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
         }
       }
-    }, options) as any;
+    }, apiOptions as T) as any;
   }
 
   /**

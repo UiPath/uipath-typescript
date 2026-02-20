@@ -7,6 +7,8 @@ import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import type { IUiPath } from './types';
 import type { TokenClaims, TokenIdentity } from './auth/types';
+import { parseJwtToken } from '../utils/auth/jwtUtils';
+import { ClaimReader } from './auth/claimReader';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -190,12 +192,7 @@ export class UiPath implements IUiPath {
    * Returns undefined if token is missing or malformed.
    */
   public getTokenClaims(): TokenClaims | undefined {
-    const token = this.getToken();
-    if (!token) {
-      return undefined;
-    }
-
-    return this.decodeJwtClaims(token);
+    return parseJwtToken(this.getToken());
   }
 
   /**
@@ -208,73 +205,19 @@ export class UiPath implements IUiPath {
       return undefined;
     }
 
+    const reader = new ClaimReader(claims);
+
     return {
-      userId: this.getFirstStringClaim(claims, ['sub', 'user_id', 'uid']),
-      username: this.getFirstStringClaim(claims, ['preferred_username', 'upn', 'unique_name']),
-      email: this.getFirstStringClaim(claims, ['email']),
-      name: this.getFirstStringClaim(claims, ['name']),
-      givenName: this.getFirstStringClaim(claims, ['given_name']),
-      familyName: this.getFirstStringClaim(claims, ['family_name']),
-      tenantName: this.getFirstStringClaim(claims, ['tenantName', 'tenant']),
-      orgName: this.getFirstStringClaim(claims, ['orgName', 'org']),
-      rawClaims: claims
+      userId: reader.getUserId(),
+      username: reader.getUsername(),
+      email: reader.getEmail(),
+      name: reader.getName(),
+      givenName: reader.getGivenName(),
+      familyName: reader.getFamilyName(),
+      tenantName: reader.getTenantName(),
+      orgName: reader.getOrgName(),
+      rawClaims: reader.getRawClaims()
     };
   }
-
-  private decodeJwtClaims(token: string): TokenClaims | undefined {
-    const parts = token.split('.');
-    if (parts.length !== 3 || parts.some((part) => part.length === 0)) {
-      return undefined;
-    }
-
-    try {
-      const payload = this.base64UrlDecode(parts[1]);
-      const parsed = JSON.parse(payload);
-
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        return undefined;
-      }
-
-      return parsed as TokenClaims;
-    } catch {
-      return undefined;
-    }
-  }
-
-  private base64UrlDecode(value: string): string {
-    const base64 = value
-      .replace(/-/g, '+')
-      .replace(/_/g, '/')
-      .padEnd(Math.ceil(value.length / 4) * 4, '=');
-
-    if (typeof atob === 'function') {
-      try {
-        return decodeURIComponent(
-          Array.from(atob(base64))
-            .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
-            .join('')
-        );
-      } catch {
-        return atob(base64);
-      }
-    }
-
-    if (typeof Buffer !== 'undefined') {
-      return Buffer.from(base64, 'base64').toString('utf-8');
-    }
-
-    throw new Error('No base64 decoder available');
-  }
-
-  private getFirstStringClaim(claims: TokenClaims, keys: string[]): string | undefined {
-    for (const key of keys) {
-      const value = claims[key];
-      if (typeof value === 'string' && value.length > 0) {
-        return value;
-      }
-    }
-
-    return undefined;
-  }
-
 }
+

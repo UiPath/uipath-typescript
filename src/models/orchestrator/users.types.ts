@@ -2,9 +2,13 @@ import { BaseOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
- * Interface for user role response details.
+ * Enum for user role response details.
  */
-export type UserRoleType = 'Mixed' | 'Tenant' | 'Folder';
+export enum UserRoleType {
+  Mixed = 'Mixed',
+  Tenant = 'Tenant',
+  Folder = 'Folder'
+}
 
 export interface UserRoleInfo {
   userId?: number;
@@ -17,6 +21,18 @@ export interface UserRoleInfo {
 
 /**
  * Interface for user response.
+ *
+ * @example
+ * ```typescript
+ * const user: UserGetResponse = {
+ *   id: 321,
+ *   userName: 'jane.doe',
+ *   emailAddress: 'jane.doe@uipath.com',
+ *   isActive: true,
+ *   createdTime: '2024-01-01T09:00:00Z',
+ *   type: 'DirectoryUser'
+ * };
+ * ```
  */
 export interface UserGetResponse {
   id: number;
@@ -32,7 +48,6 @@ export interface UserGetResponse {
   isActive?: boolean;
   createdTime?: string;
   authenticationSource?: string;
-  password?: string;
   isExternalLicensed?: boolean;
   userRoles?: UserRoleInfo[];
   rolesList?: string[];
