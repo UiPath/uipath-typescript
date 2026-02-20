@@ -9,7 +9,7 @@ import type { ConnectionStatus } from '@/core/websocket';
 /**
  * Service for managing UiPath Conversational Agents — AI-powered chat interfaces that enable
  * natural language interactions with UiPath automation. Discover agents, create conversations,
- * and stream real-time responses over WebSocket.
+ * and stream real-time responses over WebSocket. [UiPath Conversational Agents Guide](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/conversational-agents)
  *
  * Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
  *
