@@ -67,6 +67,7 @@ describe('UiPath Core', () => {
 
     it('should validate required config fields', () => {
       expect(() => {
+        // oxlint-disable-next-line no-new
         new UiPath({
           baseUrl: '',
           orgName: '',

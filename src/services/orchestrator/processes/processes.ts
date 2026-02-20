@@ -1,5 +1,4 @@
 import { BaseService } from '../../base';
-import type { IUiPath } from '../../../core/types';
 import { CollectionResponse, RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
@@ -24,15 +23,6 @@ import { track } from '../../../core/telemetry';
  * Service for interacting with UiPath Orchestrator Processes API
  */
 export class ProcessService extends BaseService implements ProcessServiceModel {
-  /**
-   * Creates an instance of the Processes service.
-   *
-   * @param instance - UiPath SDK instance providing authentication and configuration
-   */
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
-
   /**
    * Gets all processes across folders with optional filtering and folder scoping
    * 

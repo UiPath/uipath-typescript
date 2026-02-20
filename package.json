@@ -138,6 +138,8 @@
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
         "docs:api": "typedoc && npm run docs:post-process",
         "docs:post-process": "mkdir -p docs/api/interfaces/entity && echo '---\ntitle: Entities\n---\n' | cat - docs/api/interfaces/EntityServiceModel.md > docs/api/interfaces/entity/index.md && rm docs/api/interfaces/EntityServiceModel.md",
+        "lint": "oxlint",
+        "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:unit": "vitest tests/unit",
         "test:watch": "vitest --watch",
@@ -145,8 +147,7 @@
         "test:coverage": "vitest --coverage"
     },
     "dependencies": {
-        "@opentelemetry/sdk-logs": "^0.204.0",
-        "axios": "^1.12.0"
+        "@opentelemetry/sdk-logs": "^0.204.0"
     },
     "peerDependencies": {
         "zod": "^4.2.1"
@@ -162,6 +163,7 @@
         "@vitest/ui": "^3.2.4",
         "builtin-modules": "^3.3.0",
         "dotenv": "^17.2.0",
+        "oxlint": "^1.43.0",
         "rimraf": "^6.0.1",
         "rollup": "^4.53.2",
         "rollup-plugin-dts": "^6.1.0",
