@@ -14,7 +14,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^9.0.1",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "@uipath/uipath-typescript": "^1.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
