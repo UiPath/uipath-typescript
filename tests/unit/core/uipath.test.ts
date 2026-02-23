@@ -12,13 +12,16 @@ const mockTokenManager = {
   hasValidToken: () => true
 };
 
+const mockLogout = vi.fn();
+
 vi.mock('../../../src/core/auth/service', () => {
   const AuthService: any = vi.fn().mockImplementation(() => ({
     getTokenManager: () => mockTokenManager,
     hasValidToken: () => true,
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
-    authenticate: vi.fn().mockResolvedValue(true)
+    authenticate: vi.fn().mockResolvedValue(true),
+    logout: mockLogout
   }));
 
   AuthService.isInOAuthCallback = vi.fn(() => false);
@@ -309,6 +312,44 @@ describe('UiPath Core', () => {
 
       expect(secretSdk.isInitialized()).toBe(true);
       expect(oauthSdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('Logout', () => {
+    beforeEach(() => {
+      mockLogout.mockClear();
+    });
+
+    it('should skip silently for secret-based auth', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      expect(sdk.isInitialized()).toBe(true);
+
+      sdk.logout();
+
+      expect(mockLogout).not.toHaveBeenCalled();
+      expect(sdk.isInitialized()).toBe(true);
+    });
+
+    it('should work for OAuth-configured instances', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        clientId: TEST_CONSTANTS.CLIENT_ID,
+        redirectUri: 'http://localhost:3000/callback',
+        scope: 'offline_access'
+      });
+
+      sdk.logout();
+
+      expect(mockLogout).toHaveBeenCalledOnce();
+      expect(sdk.isInitialized()).toBe(false);
     });
   });
 
