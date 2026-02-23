@@ -206,6 +206,7 @@ export const createMockApiResponse = (items: any[], totalCount?: number) => ({
 export const createMockPaginationServiceAccess = (): PaginationServiceAccess => {
   return {
     get: vi.fn(),
+    post: vi.fn(),
     requestWithPagination: vi.fn()
   };
 };
