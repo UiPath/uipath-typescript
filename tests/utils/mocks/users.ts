@@ -64,13 +64,26 @@ export const createMockTransformedUserCollection = (
     emailAddress: `user${index + 1}@uipath.com`
   }));
 
-  return createMockBaseResponse({
+  const response = createMockBaseResponse({
     items,
-    totalCount: options?.totalCount || count,
-    ...(options?.hasNextPage !== undefined && { hasNextPage: options.hasNextPage }),
-    ...(options?.nextCursor && { nextCursor: options.nextCursor }),
-    ...(options?.previousCursor !== undefined && { previousCursor: options.previousCursor }),
-    ...(options?.currentPage !== undefined && { currentPage: options.currentPage }),
-    ...(options?.totalPages !== undefined && { totalPages: options.totalPages })
+    totalCount: options?.totalCount ?? count
   });
+
+  if (options?.hasNextPage !== undefined) {
+    response.hasNextPage = options.hasNextPage;
+  }
+  if (options?.nextCursor) {
+    response.nextCursor = options.nextCursor;
+  }
+  if (options?.previousCursor !== undefined) {
+    response.previousCursor = options.previousCursor;
+  }
+  if (options?.currentPage !== undefined) {
+    response.currentPage = options.currentPage;
+  }
+  if (options?.totalPages !== undefined) {
+    response.totalPages = options.totalPages;
+  }
+
+  return response;
 };

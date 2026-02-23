@@ -166,12 +166,11 @@ describe('UserService Unit Tests', () => {
 
       const result = await userService.getAll(options) as any;
 
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
-        })
-      );
+      expect(PaginationHelpers.getAll).toHaveBeenCalledTimes(1);
+      const getAllCalls = vi.mocked(PaginationHelpers.getAll).mock.calls;
+      const [paginationConfig, paginationOptions] = getAllCalls[0];
+      expect(paginationConfig.getEndpoint()).toBe(USERS_ENDPOINTS.GET_ALL);
+      expect(paginationOptions?.pageSize).toBe(TEST_CONSTANTS.PAGE_SIZE);
       expect(result).toEqual(mockResponse);
       expect(result.hasNextPage).toBe(true);
       expect(result.nextCursor).toBe(TEST_CONSTANTS.NEXT_CURSOR);

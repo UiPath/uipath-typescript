@@ -357,24 +357,12 @@ describe('UiPath Core', () => {
       expect(sdk.getTokenClaims()).toBeUndefined();
     });
 
-    it('should return undefined claims for malformed token payload', () => {
-      mockAccessToken = 'a.b.c';
-
-      const sdk = createSecretSdk();
-
-      expect(sdk.getTokenClaims()).toBeUndefined();
-    });
-
-    it('should return undefined claims for token with missing JWT signature segment', () => {
-      mockAccessToken = 'a.b';
-
-      const sdk = createSecretSdk();
-
-      expect(sdk.getTokenClaims()).toBeUndefined();
-    });
-
-    it('should return undefined claims for token with empty JWT segment', () => {
-      mockAccessToken = 'a..c';
+    it.each([
+      ['malformed token payload', 'a.b.c'],
+      ['token with missing JWT signature segment', 'a.b'],
+      ['token with empty JWT segment', 'a..c']
+    ])('should return undefined claims for %s', (_description, malformedToken) => {
+      mockAccessToken = malformedToken;
 
       const sdk = createSecretSdk();
 
