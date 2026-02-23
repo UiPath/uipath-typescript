@@ -49,3 +49,6 @@ export * from './errors';
 
 // Pagination (common across all services)
 export * from '../utils/pagination';
+
+// Export telemetry
+export * from './telemetry';
