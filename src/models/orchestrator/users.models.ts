@@ -11,6 +11,9 @@ export interface UserServiceModel {
   /**
    * Gets users with optional OData filtering and pagination.
    *
+   * @param options Optional OData and pagination options
+   * @returns List response or paginated response based on provided options
+   *
    * @example
    * ```typescript
    * const result = await sdk.users.getAll({
@@ -29,6 +32,10 @@ export interface UserServiceModel {
   /**
    * Gets a single user by ID.
    *
+   * @param id User identifier
+   * @param options Optional OData options
+   * @returns User details for the requested ID
+   *
    * @example
    * ```typescript
    * const user = await sdk.users.getById(321, {
@@ -41,6 +48,9 @@ export interface UserServiceModel {
 
   /**
    * Gets the currently authenticated user from Orchestrator.
+   *
+   * @param options Optional OData options
+   * @returns Current user details, or `undefined` when no content is returned
    *
    * @example
    * ```typescript

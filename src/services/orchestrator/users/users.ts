@@ -1,5 +1,4 @@
 import { BaseService } from '../../base';
-import type { IUiPath } from '../../../core/types';
 import { UserServiceModel } from '../../../models/orchestrator/users.models';
 import { UserGetAllOptions, UserGetByIdOptions, UserGetCurrentOptions, UserGetResponse } from '../../../models/orchestrator/users.types';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
@@ -17,6 +16,17 @@ import { track } from '../../../core/telemetry';
 export class UserService extends BaseService implements UserServiceModel {
   /**
    * Gets users with optional filtering and pagination.
+   *
+   * @param options Optional OData and pagination options
+   * @returns List response or paginated response based on provided options
+   *
+   * @example
+   * ```typescript
+   * const users = await sdk.users.getAll({
+   *   filter: "userName eq 'jane.doe'",
+   *   pageSize: 10
+   * });
+   * ```
    */
   @track('Users.GetAll')
   async getAll<T extends UserGetAllOptions = UserGetAllOptions>(
@@ -29,16 +39,11 @@ export class UserService extends BaseService implements UserServiceModel {
     const transformUserResponse = (user: any) =>
       transformData(pascalToCamelCaseKeys(user) as UserGetResponse, UserMap);
 
-    // Filter out internal pagination keys so they do not get OData prefixed (e.g. $pageSize)
-    const apiOptions = { ...options } as Record<string, any>;
-    delete apiOptions.pageSize;
-    delete apiOptions.cursor;
-    delete apiOptions.jumpToPage;
-
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => USERS_ENDPOINTS.GET_ALL,
       transformFn: transformUserResponse,
+      excludeFromPrefix: ['pageSize', 'cursor', 'jumpToPage'],
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
@@ -49,11 +54,22 @@ export class UserService extends BaseService implements UserServiceModel {
           countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
         }
       }
-    }, apiOptions as T) as any;
+    }, options) as any;
   }
 
   /**
    * Gets a single user by ID.
+   *
+   * @param id User identifier
+   * @param options Optional OData options
+   * @returns User details for the requested ID
+   *
+   * @example
+   * ```typescript
+   * const user = await sdk.users.getById(321, {
+   *   select: 'id,userName,emailAddress'
+   * });
+   * ```
    */
   @track('Users.GetById')
   async getById(id: number, options: UserGetByIdOptions = {}): Promise<UserGetResponse> {
@@ -72,6 +88,16 @@ export class UserService extends BaseService implements UserServiceModel {
 
   /**
    * Gets the current user from Orchestrator.
+   *
+   * @param options Optional OData options
+   * @returns Current user details, or `undefined` when no content is returned
+   *
+   * @example
+   * ```typescript
+   * const currentUser = await sdk.users.getCurrent({
+   *   select: 'id,userName'
+   * });
+   * ```
    */
   @track('Users.GetCurrent')
   async getCurrent(options: UserGetCurrentOptions = {}): Promise<UserGetResponse | undefined> {

@@ -119,60 +119,20 @@ const configs = [
 
 // Service-level entry points for modular imports
 const serviceEntries = [
-  {
-    name: 'core',
-    input: 'src/core/index.ts',
-    output: 'core/index'
-  },
-  {
-    name: 'entities',
-    input: 'src/services/data-fabric/index.ts',
-    output: 'entities/index'
-  },
-  {
-    name: 'tasks',
-    input: 'src/services/action-center/index.ts',
-    output: 'tasks/index'
-  },
-  {
-    name: 'assets',
-    input: 'src/services/orchestrator/assets/index.ts',
-    output: 'assets/index'
-  },
-  {
-    name: 'queues',
-    input: 'src/services/orchestrator/queues/index.ts',
-    output: 'queues/index'
-  },
-  {
-    name: 'users',
-    input: 'src/services/orchestrator/users/index.ts',
-    output: 'users/index'
-  },
-  {
-    name: 'buckets',
-    input: 'src/services/orchestrator/buckets/index.ts',
-    output: 'buckets/index'
-  },
-  {
-    name: 'processes',
-    input: 'src/services/orchestrator/processes/index.ts',
-    output: 'processes/index'
-  },
-  {
-    name: 'cases',
-    input: 'src/services/maestro/cases/index.ts',
-    output: 'cases/index'
-  },
-  {
-    name: 'maestro-processes',
-    input: 'src/services/maestro/processes/index.ts',
-    output: 'maestro-processes/index'
-  }
+  ['core', 'src/core/index.ts', 'core/index'],
+  ['entities', 'src/services/data-fabric/index.ts', 'entities/index'],
+  ['tasks', 'src/services/action-center/index.ts', 'tasks/index'],
+  ['assets', 'src/services/orchestrator/assets/index.ts', 'assets/index'],
+  ['queues', 'src/services/orchestrator/queues/index.ts', 'queues/index'],
+  ['users', 'src/services/orchestrator/users/index.ts', 'users/index'],
+  ['buckets', 'src/services/orchestrator/buckets/index.ts', 'buckets/index'],
+  ['processes', 'src/services/orchestrator/processes/index.ts', 'processes/index'],
+  ['cases', 'src/services/maestro/cases/index.ts', 'cases/index'],
+  ['maestro-processes', 'src/services/maestro/processes/index.ts', 'maestro-processes/index']
 ];
 
 // Generate ESM, CJS, and DTS builds for each service entry
-serviceEntries.forEach(({ name, input, output }) => {
+serviceEntries.forEach(([name, input, output]) => {
   // ESM bundle
   configs.push({
     input,

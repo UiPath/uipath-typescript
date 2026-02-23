@@ -32,6 +32,19 @@ vi.mock('../../../src/core/auth/service', () => {
 
 vi.mock('../../../src/core/http/api-client');
 
+const createJwt = (payload: Record<string, unknown>): string => {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${header}.${body}.signature`;
+};
+
+const createSecretSdk = () => new UiPath({
+  baseUrl: TEST_CONSTANTS.BASE_URL,
+  orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+  tenantName: TEST_CONSTANTS.TENANT_ID,
+  secret: TEST_CONSTANTS.CLIENT_SECRET
+});
+
 // ===== TEST SUITE =====
 describe('UiPath Core', () => {
   beforeEach(() => {
@@ -319,12 +332,6 @@ describe('UiPath Core', () => {
   });
 
   describe('Token Claims Helpers', () => {
-    const createJwt = (payload: Record<string, unknown>): string => {
-      const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-      const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-      return `${header}.${body}.signature`;
-    };
-
     it('should return decoded token claims for valid JWT', () => {
       mockAccessToken = createJwt({
         sub: 'abc-123',
@@ -332,12 +339,7 @@ describe('UiPath Core', () => {
         email: 'jane.doe@uipath.com'
       });
 
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
-      });
+      const sdk = createSecretSdk();
 
       const claims = sdk.getTokenClaims();
 
@@ -350,12 +352,7 @@ describe('UiPath Core', () => {
     it('should return undefined claims when token is missing', () => {
       mockAccessToken = undefined;
 
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
-      });
+      const sdk = createSecretSdk();
 
       expect(sdk.getTokenClaims()).toBeUndefined();
     });
@@ -363,12 +360,7 @@ describe('UiPath Core', () => {
     it('should return undefined claims for malformed token payload', () => {
       mockAccessToken = 'a.b.c';
 
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
-      });
+      const sdk = createSecretSdk();
 
       expect(sdk.getTokenClaims()).toBeUndefined();
     });
@@ -376,12 +368,7 @@ describe('UiPath Core', () => {
     it('should return undefined claims for token with missing JWT signature segment', () => {
       mockAccessToken = 'a.b';
 
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
-      });
+      const sdk = createSecretSdk();
 
       expect(sdk.getTokenClaims()).toBeUndefined();
     });
@@ -389,14 +376,26 @@ describe('UiPath Core', () => {
     it('should return undefined claims for token with empty JWT segment', () => {
       mockAccessToken = 'a..c';
 
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
-      });
+      const sdk = createSecretSdk();
 
       expect(sdk.getTokenClaims()).toBeUndefined();
+    });
+
+    it('should decode claims when Buffer is unavailable but atob is available', () => {
+      mockAccessToken = createJwt({
+        sub: 'browser-subject'
+      });
+
+      const originalBuffer = globalThis.Buffer;
+
+      try {
+        // Simulate browser-like runtime where Buffer is not present.
+        (globalThis as any).Buffer = undefined;
+        const sdk = createSecretSdk();
+        expect(sdk.getTokenClaims()?.sub).toBe('browser-subject');
+      } finally {
+        (globalThis as any).Buffer = originalBuffer;
+      }
     });
 
     it('should return normalized token identity with OIDC claim precedence', () => {
@@ -414,12 +413,7 @@ describe('UiPath Core', () => {
         orgName: 'org-primary'
       });
 
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
-      });
+      const sdk = createSecretSdk();
 
       const identity = sdk.getTokenIdentity();
 
@@ -443,12 +437,7 @@ describe('UiPath Core', () => {
         org: 'alias-org'
       });
 
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
-      });
+      const sdk = createSecretSdk();
 
       const identity = sdk.getTokenIdentity();
 
@@ -462,12 +451,7 @@ describe('UiPath Core', () => {
     it('should return undefined identity when token cannot be decoded', () => {
       mockAccessToken = 'not-a-jwt';
 
-      const sdk = new UiPath({
-        baseUrl: TEST_CONSTANTS.BASE_URL,
-        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-        tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
-      });
+      const sdk = createSecretSdk();
 
       expect(sdk.getTokenIdentity()).toBeUndefined();
     });

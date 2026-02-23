@@ -25,6 +25,18 @@ describe('UserService Unit Tests', () => {
   let userService: UserService;
   let mockApiClient: any;
 
+  const expectGetCalledWithODataParams = (
+    endpoint: string,
+    params: Record<string, unknown>
+  ) => {
+    expect(mockApiClient.get).toHaveBeenCalledWith(
+      endpoint,
+      expect.objectContaining({
+        params: expect.objectContaining(params)
+      })
+    );
+  };
+
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
@@ -69,15 +81,12 @@ describe('UserService Unit Tests', () => {
       };
 
       await userService.getById(USER_TEST_CONSTANTS.USER_ID, options);
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
+      expectGetCalledWithODataParams(
         USERS_ENDPOINTS.GET_BY_ID(USER_TEST_CONSTANTS.USER_ID),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            '$select': USER_TEST_CONSTANTS.ODATA_SELECT_FIELDS,
-            '$expand': USER_TEST_CONSTANTS.ODATA_EXPAND_FIELDS
-          })
-        })
+        {
+          '$select': USER_TEST_CONSTANTS.ODATA_SELECT_FIELDS,
+          '$expand': USER_TEST_CONSTANTS.ODATA_EXPAND_FIELDS
+        }
       );
     });
 
@@ -104,15 +113,9 @@ describe('UserService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result?.id).toBe(USER_TEST_CONSTANTS.USER_ID);
       expect(result?.userName).toBe(USER_TEST_CONSTANTS.USERNAME);
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        USERS_ENDPOINTS.GET_CURRENT,
-        expect.objectContaining({
-          params: expect.objectContaining({
-            '$select': USER_TEST_CONSTANTS.ODATA_SELECT_FIELDS
-          })
-        })
-      );
+      expectGetCalledWithODataParams(USERS_ENDPOINTS.GET_CURRENT, {
+        '$select': USER_TEST_CONSTANTS.ODATA_SELECT_FIELDS
+      });
     });
 
     it('should return undefined when API returns no content', async () => {
