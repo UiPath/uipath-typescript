@@ -7,11 +7,9 @@ import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../uti
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 
 // ===== MOCKING =====
-const mockClearToken = vi.fn();
 const mockTokenManager = {
   getToken: () => 'mock-access-token',
-  hasValidToken: () => true,
-  clearToken: mockClearToken
+  hasValidToken: () => true
 };
 
 const mockLogout = vi.fn();

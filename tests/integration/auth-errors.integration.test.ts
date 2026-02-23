@@ -14,6 +14,9 @@ function isForbiddenError(error: any, keywords: string[] = []): boolean {
     error.status === 403 ||
     error.statusCode === 401 ||
     error.status === 401 ||
+    // Server may return HTML (redirect/error page) for invalid org/tenant,
+    // causing a JSON parse error — this still indicates rejection
+    (error instanceof SyntaxError && error.message?.includes('is not valid JSON')) ||
     allKeywords.some(kw => error.message?.toLowerCase().includes(kw))
   );
 }
