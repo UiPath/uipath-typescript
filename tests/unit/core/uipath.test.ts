@@ -27,6 +27,7 @@ vi.mock('../../../src/core/auth/service', () => {
   AuthService.isInOAuthCallback = vi.fn(() => false);
   AuthService.getStoredOAuthContext = vi.fn(() => null);
   AuthService._mergeConfigWithContext = vi.fn((config: any) => config);
+  AuthService._clearStoredOAuthContext = vi.fn();
 
   return { AuthService };
 });
