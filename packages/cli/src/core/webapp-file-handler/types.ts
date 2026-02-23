@@ -18,6 +18,8 @@ export interface PushMetadata {
   description: string;
   lastPushDate: string;
   lastPushAuthor: string;
+  /** Build folder name from --build-dir (e.g. "dist", "build"). Default: "dist". */
+  buildDir?: string;
 }
 
 export interface LocalFile {
@@ -25,6 +27,12 @@ export interface LocalFile {
   absPath: string;
   hash: string;
   content: Buffer;
+}
+
+/** Local file plus its remote path (source/... or source/<buildDir>/...). Used for unified push plan. */
+export interface LocalFileWithRemote {
+  localFile: LocalFile;
+  remotePath: string;
 }
 
 export interface ProjectFile {

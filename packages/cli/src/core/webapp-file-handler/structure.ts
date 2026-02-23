@@ -1,12 +1,21 @@
 import type { ProjectFile, ProjectFolder, ProjectStructure } from './types.js';
 
+/** Remote root folder name for pushed content (build + source). All pushed files live under this. */
 export const REMOTE_SOURCE_FOLDER_NAME = 'source';
+
+/** Normalize folder path for map lookups. Backend may return different casing (e.g. Source); this avoids false mismatches. */
+export function normalizeFolderPath(p: string): string {
+  return p.replace(/\\/g, '/').toLowerCase();
+}
 
 /** Remote path for push metadata file (under source, not under build dir). */
 export const PUSH_METADATA_REMOTE_PATH = `${REMOTE_SOURCE_FOLDER_NAME}/push_metadata.json`;
 
+/** Remote project-root manifest filename (at root, not under source). Updated on push with config.bundlePath. */
+export const WEB_APP_MANIFEST_FILENAME = 'webAppManifest.json';
+
 /** Normalize bundle path (strip leading/trailing slashes, use forward slashes). */
-function normalizeBundlePath(bundlePath: string): string {
+export function normalizeBundlePath(bundlePath: string): string {
   return bundlePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '') || bundlePath;
 }
 
@@ -16,20 +25,50 @@ export function getRemoteContentRoot(bundlePath: string): string {
   return name ? `${REMOTE_SOURCE_FOLDER_NAME}/${name}` : REMOTE_SOURCE_FOLDER_NAME;
 }
 
+/**
+ * Remote path for a file under the build dir (e.g. local "dist/index.html" -> "source/dist/index.html").
+ */
 export function localPathToRemotePath(
   localPath: string,
   bundlePath: string,
   remoteContentRoot: string
 ): string {
   const normalized = localPath.replace(/\\/g, '/');
-  const prefix = bundlePath + '/';
+  const prefix = bundlePath.replace(/\\/g, '/').replace(/\/+$/, '') + '/';
   if (normalized.startsWith(prefix)) {
     return remoteContentRoot + '/' + normalized.slice(prefix.length);
   }
-  if (normalized === bundlePath) {
+  if (normalized === bundlePath.replace(/\\/g, '/').replace(/\/+$/, '')) {
     return remoteContentRoot;
   }
   return remoteContentRoot + '/' + normalized;
+}
+
+/**
+ * Remote path for a source file at project root (e.g. "package.json" -> "source/package.json").
+ */
+export function sourceLocalPathToRemotePath(localPath: string): string {
+  const normalized = localPath.replace(/\\/g, '/');
+  return normalized ? `${REMOTE_SOURCE_FOLDER_NAME}/${normalized}` : REMOTE_SOURCE_FOLDER_NAME;
+}
+
+/**
+ * Given a local path (relative to project root), returns the remote path.
+ * - If under bundlePath: source/<buildDir>/...
+ * - Otherwise: source/...
+ */
+export function getRemotePathForLocalPath(
+  localPath: string,
+  bundlePath: string,
+  remoteContentRoot: string
+): string {
+  const normalized = localPath.replace(/\\/g, '/');
+  const buildDirNorm = bundlePath.replace(/\\/g, '/').replace(/\/+$/, '');
+  const prefix = buildDirNorm ? buildDirNorm + '/' : '';
+  if (buildDirNorm && (normalized === buildDirNorm || normalized.startsWith(prefix))) {
+    return localPathToRemotePath(localPath, bundlePath, remoteContentRoot);
+  }
+  return sourceLocalPathToRemotePath(localPath);
 }
 
 /** Keeps only entries whose key equals remoteContentRoot or starts with remoteContentRoot + '/'. */

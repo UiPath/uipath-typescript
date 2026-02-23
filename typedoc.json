@@ -15,8 +15,8 @@
     "private": false,
     "inherited": false
   },
-  "excludeTags": ["@internal", "@ignore"],
-  "sort": ["source-order"],
+  "excludeTags": ["@ignore"],
+  "sort": ["alphabetical"],
   "kindSortOrder": [
     "Document",
     "Project", 

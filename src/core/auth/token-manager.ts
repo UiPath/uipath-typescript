@@ -4,6 +4,7 @@ import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
+import { AuthenticationError, HttpStatus } from '../errors';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -37,10 +38,49 @@ export class TokenManager {
     if (!tokenInfo?.expiresAt) {
       return false;
     }
-    
+
     return new Date() >= tokenInfo.expiresAt;
   }
-  
+
+  /**
+   * Gets a valid authentication token, refreshing if necessary.
+   * This is the single source of truth for token validation and refresh logic.
+   *
+   * @returns The valid token string
+   * @throws AuthenticationError if no token available or refresh fails
+   */
+  public async getValidToken(): Promise<string> {
+    const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
+
+    if (!tokenInfo) {
+      throw new AuthenticationError({
+        message: 'No authentication token available. Make sure to initialize the SDK first.'
+      });
+    }
+
+    // For secret-based tokens, they never expire
+    if (tokenInfo.type === 'secret') {
+      return tokenInfo.token;
+    }
+
+    // If token is not expired, return it
+    if (!this.isTokenExpired(tokenInfo)) {
+      return tokenInfo.token;
+    }
+
+    // Token is expired, refresh it
+    try {
+      const newToken = await this.refreshAccessToken();
+      return newToken.access_token;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new AuthenticationError({
+        message: `Token refresh failed: ${message}. Please re-authenticate.`,
+        statusCode: HttpStatus.UNAUTHORIZED
+      });
+    }
+  }
+
   /**
    * Gets the storage key for this TokenManager instance
    */

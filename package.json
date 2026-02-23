@@ -1,6 +1,6 @@
 {
     "name": "@uipath/uipath-typescript",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "UiPath TypeScript SDK",
     "license": "MIT",
     "keywords": [
@@ -115,6 +115,16 @@
                 "types": "./dist/maestro-processes/index.d.ts",
                 "default": "./dist/maestro-processes/index.cjs"
             }
+        },
+        "./conversational-agent": {
+            "import": {
+                "types": "./dist/conversational-agent/index.d.ts",
+                "default": "./dist/conversational-agent/index.mjs"
+            },
+            "require": {
+                "types": "./dist/conversational-agent/index.d.ts",
+                "default": "./dist/conversational-agent/index.cjs"
+            }
         }
     },
     "files": [
@@ -127,22 +137,30 @@
         "build:watch": "rollup -c -w",
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
         "docs:api": "typedoc && npm run docs:post-process",
-        "docs:post-process": "mkdir -p docs/api/interfaces/entity && echo '---\ntitle: Entities\n---\n' | cat - docs/api/interfaces/EntityServiceModel.md > docs/api/interfaces/entity/index.md && rm docs/api/interfaces/EntityServiceModel.md",
+        "docs:post-process": "node scripts/docs-post-process.mjs",
         "lint": "oxlint",
         "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:unit": "vitest tests/unit",
+        "test:integration": "vitest --config vitest.integration.config.ts",
+        "test:integration:v0": "vitest --config vitest.integration.config.ts --testNamePattern='\\[v0\\]'",
+        "test:integration:v1": "vitest --config vitest.integration.config.ts --testNamePattern='\\[v1\\]'",
+        "test:integration:smoke": "vitest tests/integration/shared/smoke.integration.test.ts --config vitest.integration.config.ts",
+        "test:integration:watch": "vitest --config vitest.integration.config.ts --watch",
+        "test:all": "npm run test:unit && npm run test:integration",
         "test:watch": "vitest --watch",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest --coverage"
     },
     "dependencies": {
-        "@opentelemetry/sdk-logs": "^0.204.0"
+        "@opentelemetry/sdk-logs": "^0.204.0",
+        "socket.io-client": "^4.8.1"
     },
     "peerDependencies": {
         "zod": "^4.2.1"
     },
     "devDependencies": {
+        "@rollup/plugin-alias": "^6.0.0",
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-json": "^6.0.0",
         "@rollup/plugin-node-resolve": "^15.2.0",

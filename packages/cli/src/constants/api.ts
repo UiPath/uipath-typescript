@@ -11,7 +11,6 @@ export const API_ENDPOINTS = {
   STUDIO_WEB_CREATE_FILE: '/studio_/backend/api/Project/{projectId}/FileOperations/File',
   STUDIO_WEB_UPDATE_FILE: '/studio_/backend/api/Project/{projectId}/FileOperations/File/{fileId}',
   STUDIO_WEB_CREATE_FOLDER: '/studio_/backend/api/Project/{projectId}/FileOperations/Folder',
-  STUDIO_WEB_MOVE_FOLDER: '/studio_/backend/api/Project/{projectId}/FileOperations/Folder/Move',
   // Resource Catalog endpoints
   RESOURCE_CATALOG_ENTITIES: '/resourcecatalog_/Entities/{resourceType}',
   // Connections endpoint
