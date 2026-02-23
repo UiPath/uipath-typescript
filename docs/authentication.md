@@ -147,6 +147,8 @@ useEffect(() => {
 - `sdk.isAuthenticated()` - Check if user has valid token
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
+- `sdk.getToken()` - Get the logged-in user's access token
+- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again)
 
 ---
 

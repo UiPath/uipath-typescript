@@ -1,6 +1,7 @@
 import { ExecutionContext } from '../context/execution';
 import { isBrowser } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
+import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
@@ -13,7 +14,6 @@ import { AuthenticationError, HttpStatus } from '../errors';
  */
 export class TokenManager {
   private currentToken?: TokenInfo;
-  private readonly STORAGE_KEY_PREFIX = 'uipath_sdk_user_token-';
   private refreshPromise: Promise<AuthToken> | null = null;
   
   /**
@@ -85,7 +85,7 @@ export class TokenManager {
    * Gets the storage key for this TokenManager instance
    */
   private _getStorageKey(): string {
-    return `${this.STORAGE_KEY_PREFIX}${this.config.clientId}`;
+    return `${AUTH_STORAGE_KEYS.TOKEN_PREFIX}${this.config.clientId}`;
   }
   
   /**
