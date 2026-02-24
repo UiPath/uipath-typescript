@@ -12,8 +12,17 @@ export class AuthService {
   private tokenManager: TokenManager;
 
   constructor(config: Config, executionContext: ExecutionContext) {
-    // Check if we should use stored OAuth context instead of provided config
-    const storedContext = AuthService.getStoredOAuthContext();
+    // Only use stored OAuth context when completing an active callback (URL has ?code=).
+    // If stored context exists but we're NOT in a callback, it's stale from a
+    // failed/abandoned flow (e.g. scope mismatch, invalid redirect URI) and must
+    // be cleared so the fresh config takes effect.
+    const isCallback = AuthService.isInOAuthCallback();
+    const storedContext = isCallback ? AuthService.getStoredOAuthContext() : null;
+
+    if (!isCallback) {
+      AuthService._clearStoredOAuthContext();
+    }
+
     const effectiveConfig = storedContext ? AuthService._mergeConfigWithContext(config, storedContext) : config;
 
     this.config = effectiveConfig;
@@ -66,6 +75,21 @@ export class AuthService {
       sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
       console.warn('Failed to parse stored OAuth context from session storage', error);
       return null;
+    }
+  }
+
+  /**
+   * Clear stale OAuth context from session storage.
+   * Called when there is no active OAuth callback, meaning any stored context
+   * is left over from a failed or abandoned flow.
+   */
+  private static _clearStoredOAuthContext(): void {
+    if (!isBrowser) return;
+    try {
+      sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+      sessionStorage.removeItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+    } catch {
+      // Ignore storage errors
     }
   }
 
