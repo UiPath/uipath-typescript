@@ -10,16 +10,14 @@ import {
   WEB_APP_MANIFEST_FILENAME,
   normalizeBundlePath,
 } from './structure.js';
-import type { WebAppPushConfig, ProjectFile, FileOperationPlan, PushMetadata } from './types.js';
+import { MAX_TELEMETRY_ERROR_LENGTH } from '../../constants/api.js';
+import type { WebAppProjectConfig, ProjectFile, FileOperationPlan, PushMetadata } from './types.js';
 import type { LocalFile } from './types.js';
 import * as api from './api.js';
 import { computeHash } from './local-files.js';
 
 /** Default schemaVersion for first-time push (no existing local or remote metadata). */
 const DEFAULT_SCHEMA_VERSION = '1.0.0';
-
-/** Max length of error message sent to telemetry to avoid oversized payloads. */
-const MAX_TELEMETRY_ERROR_LENGTH = 500;
 
 /**
  * Get push author email from access token (JWT email claim). Returns '' if missing or decode fails.
@@ -55,6 +53,30 @@ function parseSchemaVersion(version: unknown): { major: number; minor: number; p
 }
 
 /**
+ * Compares two schema versions. Returns -1 if a < b, 0 if a === b, 1 if a > b.
+ */
+function compareSchemaVersions(a: unknown, b: unknown): number {
+  const va = parseSchemaVersion(a);
+  const vb = parseSchemaVersion(b);
+  if (va.major !== vb.major) return va.major < vb.major ? -1 : 1;
+  if (va.minor !== vb.minor) return va.minor < vb.minor ? -1 : 1;
+  if (va.patch !== vb.patch) return va.patch < vb.patch ? -1 : 1;
+  return 0;
+}
+
+/** Thrown when local push_metadata schemaVersion is behind remote (someone else pushed); user should pull first. */
+export class PushBehindRemoteError extends Error {
+  constructor(
+    public readonly localVersion: string,
+    public readonly remoteVersion: string
+  ) {
+    const msg = `${MESSAGES.ERRORS.PUSH_SCHEMA_VERSION_BEHIND_REMOTE} Your version: ${localVersion}. Remote version: ${remoteVersion}.`;
+    super(msg);
+    this.name = 'PushBehindRemoteError';
+  }
+}
+
+/**
  * Computes the next schemaVersion from the current version and the push plan.
  * Uses the same counts as the handler's plan log: add (uploadFiles), update (updateFiles), delete (deleteFiles), folders to delete (deleteFolders).
  * - Major bump (e.g. 1.0.0 → 2.0.0): only when something is removed — deleteFiles or deleteFolders.
@@ -82,7 +104,7 @@ function computeNextSchemaVersion(
 }
 
 /** Builds a new metadata payload for first-time push (schemaVersion 1.0.0). */
-function createNewMetadataPayload(config: WebAppPushConfig): PushMetadata {
+function createNewMetadataPayload(config: WebAppProjectConfig): PushMetadata {
   return {
     schemaVersion: DEFAULT_SCHEMA_VERSION,
     projectId: config.projectId,
@@ -94,15 +116,57 @@ function createNewMetadataPayload(config: WebAppPushConfig): PushMetadata {
 }
 
 /**
+ * Ensures local push_metadata schemaVersion is not behind remote (for multi-contributor safety).
+ * If remote has a greater schemaVersion, throws PushBehindRemoteError so the user is asked to pull first.
+ */
+export async function ensureSchemaVersionNotBehindRemote(
+  config: WebAppProjectConfig,
+  remoteFiles: Map<string, ProjectFile>,
+  downloadRemoteFile: (config: WebAppProjectConfig, fileId: string) => Promise<Buffer>
+): Promise<void> {
+  const remoteEntry = remoteFiles.get(PUSH_METADATA_REMOTE_PATH);
+  if (!remoteEntry) return;
+
+  let localVersion: string | null = null;
+  const metadataPath = path.join(config.rootDir, config.manifestFile);
+  try {
+    const content = fs.readFileSync(metadataPath, 'utf-8');
+    const parsed = JSON.parse(content) as { schemaVersion?: unknown };
+    if (parsed?.schemaVersion != null) {
+      localVersion = String(parsed.schemaVersion);
+    }
+  } catch {
+    return;
+  }
+
+  if (localVersion == null) return;
+
+  const remoteContent = await downloadRemoteFile(config, remoteEntry.id);
+  let remoteVersion = DEFAULT_SCHEMA_VERSION;
+  try {
+    const remoteParsed = JSON.parse(remoteContent.toString()) as { schemaVersion?: unknown };
+    if (remoteParsed?.schemaVersion != null) {
+      remoteVersion = String(remoteParsed.schemaVersion);
+    }
+  } catch {
+    // Malformed remote metadata: assume default version and continue (local version check still applies).
+  }
+
+  if (compareSchemaVersions(localVersion, remoteVersion) < 0) {
+    throw new PushBehindRemoteError(localVersion, remoteVersion);
+  }
+}
+
+/**
  * Prepares the local push_metadata.json for the current push.
  * Source of truth: if local file is missing, we use remote push_metadata.json when present;
  * only when both are missing do we create new metadata with schemaVersion 1.0.0.
  * Updates lastPushDate, lastPushAuthor, and schemaVersion (from plan).
  */
 export async function prepareMetadataFileForPlan(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   remoteFiles: Map<string, ProjectFile>,
-  downloadRemoteFile: (config: WebAppPushConfig, fileId: string) => Promise<Buffer>,
+  downloadRemoteFile: (config: WebAppProjectConfig, fileId: string) => Promise<Buffer>,
   plan: FileOperationPlan
 ): Promise<void> {
   const metadataPath = path.join(config.rootDir, config.manifestFile);
@@ -186,7 +250,7 @@ export async function prepareMetadataFileForPlan(
  * Uploads the local push_metadata.json to the remote at source/push_metadata.json (not under build dir).
  */
 export async function uploadPushMetadataToRemote(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   metadataPath: string,
   fullRemoteFiles: Map<string, ProjectFile>,
   folderIdMap: Map<string, string>,
@@ -221,7 +285,7 @@ export async function uploadPushMetadataToRemote(
  * If the file does not exist or update fails, the error is logged and not thrown.
  */
 export async function updateRemoteWebAppManifest(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   bundlePath: string,
   fullRemoteFiles: Map<string, ProjectFile>,
   lockKey: string | null

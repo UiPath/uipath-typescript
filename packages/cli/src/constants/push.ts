@@ -13,6 +13,7 @@ export const PUSH_IGNORE_PATTERNS = [
   'node_modules/',
   '.uipath/',
   '.gitignore',
+  '.uipathignore',
   '.env',
   '.env.local',
   '.env.*.local',

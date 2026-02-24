@@ -4,7 +4,7 @@
 export {
   WebAppFileHandler,
   convertPlanToMigration,
-  type WebAppPushConfig,
+  type WebAppProjectConfig,
   type LocalFile,
   type ProjectFile,
   type ProjectFolder,
@@ -15,6 +15,9 @@ export {
   type AddedResource,
   type ModifiedResource,
 } from './handler.js';
+
+export { runPull, type RunPullOptions } from './run-pull.js';
+export { isProjectRootDirectory } from './pull-utils.js';
 
 export type {
   Bindings,

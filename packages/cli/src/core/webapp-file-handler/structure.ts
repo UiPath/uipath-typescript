@@ -3,9 +3,14 @@ import type { ProjectFile, ProjectFolder, ProjectStructure } from './types.js';
 /** Remote root folder name for pushed content (build + source). All pushed files live under this. */
 export const REMOTE_SOURCE_FOLDER_NAME = 'source';
 
+/** Normalize path to forward slashes. Use for parsing or comparing remote paths (getRemoteFilesMap / getRemoteFoldersMap use /). */
+export function normalizePathToForwardSlashes(p: string): string {
+  return p.replace(/\\/g, '/');
+}
+
 /** Normalize folder path for map lookups. Backend may return different casing (e.g. Source); this avoids false mismatches. */
 export function normalizeFolderPath(p: string): string {
-  return p.replace(/\\/g, '/').toLowerCase();
+  return normalizePathToForwardSlashes(p).toLowerCase();
 }
 
 /** Remote path for push metadata file (under source, not under build dir). */
@@ -14,9 +19,12 @@ export const PUSH_METADATA_REMOTE_PATH = `${REMOTE_SOURCE_FOLDER_NAME}/push_meta
 /** Remote project-root manifest filename (at root, not under source). Updated on push with config.bundlePath. */
 export const WEB_APP_MANIFEST_FILENAME = 'webAppManifest.json';
 
-/** Normalize bundle path (strip leading/trailing slashes, use forward slashes). */
+/** Normalize bundle path (strip leading/trailing slashes, use forward slashes). No regex (ReDoS-safe). */
 export function normalizeBundlePath(bundlePath: string): string {
-  return bundlePath.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '') || bundlePath;
+  let s = bundlePath.split('\\').join('/');
+  while (s.length > 0 && s.startsWith('/')) s = s.slice(1);
+  while (s.length > 0 && s.endsWith('/')) s = s.slice(0, -1);
+  return s || bundlePath;
 }
 
 /** Remote root for pushed content: source/<buildDir> (e.g. source/dist). All build dir files go under this path. */
@@ -34,11 +42,12 @@ export function localPathToRemotePath(
   remoteContentRoot: string
 ): string {
   const normalized = localPath.replace(/\\/g, '/');
-  const prefix = bundlePath.replace(/\\/g, '/').replace(/\/+$/, '') + '/';
-  if (normalized.startsWith(prefix)) {
+  const buildDirNorm = normalizeBundlePath(bundlePath);
+  const prefix = buildDirNorm ? buildDirNorm + '/' : '';
+  if (buildDirNorm && normalized.startsWith(prefix)) {
     return remoteContentRoot + '/' + normalized.slice(prefix.length);
   }
-  if (normalized === bundlePath.replace(/\\/g, '/').replace(/\/+$/, '')) {
+  if (buildDirNorm && normalized === buildDirNorm) {
     return remoteContentRoot;
   }
   return remoteContentRoot + '/' + normalized;
@@ -63,7 +72,7 @@ export function getRemotePathForLocalPath(
   remoteContentRoot: string
 ): string {
   const normalized = localPath.replace(/\\/g, '/');
-  const buildDirNorm = bundlePath.replace(/\\/g, '/').replace(/\/+$/, '');
+  const buildDirNorm = normalizeBundlePath(bundlePath);
   const prefix = buildDirNorm ? buildDirNorm + '/' : '';
   if (buildDirNorm && (normalized === buildDirNorm || normalized.startsWith(prefix))) {
     return localPathToRemotePath(localPath, bundlePath, remoteContentRoot);

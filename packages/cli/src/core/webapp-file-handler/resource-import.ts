@@ -3,7 +3,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
 import type {
-  WebAppPushConfig,
+  WebAppProjectConfig,
   Bindings,
   Resource,
   ReferencedResourceRequest,
@@ -37,7 +37,7 @@ function transformType(type: string | null): string | null {
 }
 
 export async function runImportReferencedResources(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   lockKey: string | null
 ): Promise<void> {
   const bindingsPath = path.join(config.rootDir, BINDINGS_FILE_NAME);

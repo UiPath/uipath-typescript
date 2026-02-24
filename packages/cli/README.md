@@ -1,6 +1,6 @@
 # @uipath/cli
 
-UiPath CLI tool for authentication, packaging, publishing, deploying, and pushing web applications to UiPath.
+UiPath CLI tool for authentication, packaging, publishing, deploying, and pushing or pulling web applications to and from UiPath (including Studio Web).
 
 ## Installation
 
@@ -194,7 +194,7 @@ Push your local web app build to a Studio Web project. Syncs files under a build
 **Prerequisites:**
 - Environment variables set (see [Prerequisites](#prerequisites)), or pass `--orgId`, `--tenantId`, `--accessToken` (and optionally `--baseUrl`, `--tenantName`) for non-interactive use. `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
 - A built app (e.g. `dist/`, `build/`, or `out/`) at the project root.
-- Optional: `bindings.json` at the project root for resource import; `.uipath/push_metadata.json` for push metadata (created/updated on push).
+- Optional: `bindings.json` at the project root for resource import; `.uipath/push_metadata.json` for push metadata (created/updated on push). Optional: `.uipathignore` to exclude additional files or folders from push (see [Ignoring files from push](#ignoring-files-from-push)).
 
 ```bash
 # Push using project ID from environment
@@ -207,13 +207,13 @@ uipath push <project-id>
 uipath push <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
 
 # Use a different build directory (e.g. Create React App uses "build")
-uipath push <project-id> --build-dir build
+uipath push <project-id> --buildDir build
 
 # Push and skip importing referenced resources from bindings.json
-uipath push <project-id> --ignore-resources
+uipath push <project-id> --ignoreResources
 
 # Combine flags
-uipath push <project-id> --build-dir out --ignore-resources --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
+uipath push <project-id> --buildDir out --ignoreResources --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
 ```
 
 **Arguments:**
@@ -224,18 +224,81 @@ uipath push <project-id> --build-dir out --ignore-resources --orgId <org-id> --t
 **Flags:**
 | Flag | Description |
 |------|-------------|
-| `--build-dir` | Relative path to the build output directory (e.g. `dist`, `build`, `out`). Default: `dist`. |
-| `--ignore-resources` | Skip importing referenced resources (assets, processes, connections, etc.) to the Studio Web solution. Default: false. |
+| `--buildDir` | Relative path to the build output directory (e.g. `dist`, `build`, `out`). Default: `dist`. |
+| `--ignoreResources` | Skip importing referenced resources (assets, processes, connections, etc.) to the Studio Web solution. Default: false. |
 | `--baseUrl` | UiPath base URL (default: https://cloud.uipath.com). Overrides env. |
 | `--orgId` | UiPath organization ID. Overrides env. |
 | `--tenantId` | UiPath tenant ID. Overrides env. |
-| `--tenantName` | UiPath tenant name. Overrides env. |
 | `--accessToken` | UiPath bearer token for authentication. Overrides env. |
 
 This command will:
 - Validate the build directory exists and required files are present
 - Acquire a lock on the remote project, then sync your build files (add/update/delete) under the project’s content root
 - Optionally import resources referenced in `bindings.json` into the solution
+
+#### Ignoring files from push
+
+You can exclude files or folders from the push using:
+
+- **`.gitignore`** — Patterns in your project's `.gitignore` are respected (e.g. `node_modules/`, `*.log`). The CLI also always excludes things like `node_modules/`, `.uipath/`, `.env*`, and dotfiles.
+- **`.uipathignore`** — Optional file at the project root. It works like `.gitignore`: one pattern per line (e.g. `coverage/`, `src/temp/`, `*.map`). Use it for paths you want to keep out of the push but not necessarily out of git. The `.uipathignore` file itself is never pushed.
+
+Example `.uipathignore`:
+
+```
+# Exclude from push
+coverage/
+*.map
+src/drafts/
+```
+
+### Pull (Studio Web)
+
+Pull project files from a Studio Web project into your local workspace. Syncs only files under the remote `source/` folder and writes them at the target directory root. Build output (`buildDir` from remote `push_metadata.json`, e.g. `output/` or `dist/`) is excluded so you get source code only.
+
+**Prerequisites:**
+- Environment variables set (see [Prerequisites](#prerequisites)), or pass `--orgId`, `--tenantId`, `--accessToken` (and optionally `--baseUrl`, `--tenantName`) for non-interactive use. `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
+- The remote project must be a Studio Web coded app (project has `webAppManifest.json` with `type: "App_ProCode"`).
+
+```bash
+# Pull using project ID from environment (files written to current directory)
+uipath pull
+
+# Pull with project ID
+uipath pull <project-id>
+
+# Pull into a specific directory
+uipath pull <project-id> --targetDir ./my-project
+
+# Allow overwriting existing local files (no prompt)
+uipath pull <project-id> --overwrite
+
+# Non-interactive (e.g. CI): pass org, tenant, and token via flags
+uipath pull <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <token>
+```
+
+**Arguments:**
+| Argument     | Description |
+|-------------|-------------|
+| `project-id` | WebApp Project ID (solution ID). Optional if `UIPATH_PROJECT_ID` is set in `.env`. |
+
+**Flags:**
+| Flag | Description |
+|------|-------------|
+| `--targetDir` | Local directory to write pulled files. Default: current working directory. |
+| `--overwrite` | Allow overwriting existing local files without prompting. Default: false. |
+| `--baseUrl` | UiPath base URL (default: https://cloud.uipath.com). Overrides env. |
+| `--orgId` | UiPath organization ID. Overrides env. |
+| `--tenantId` | UiPath tenant ID. Overrides env. |
+| `--accessToken` | UiPath bearer token for authentication. Overrides env. |
+
+This command will:
+- Validate the target directory exists and the remote project type (webAppManifest.json)
+- Fetch remote structure and filter to files under `source/` only; exclude the build output folder 
+- If local files would be overwritten and `--overwrite` is not set: in an interactive terminal, prompt "Do you want to continue? (Y/n)"; otherwise fail with a message to use `--overwrite` or move files
+- Recreate the folder hierarchy and download files in parallel
+
+**Note:** Pull does not delete local files that are no longer on the remote; it only adds or overwrites. Use `--overwrite` when you want the local tree to match the remote content for the paths that exist remotely.
 
 ## Commands
 
@@ -245,6 +308,7 @@ This command will:
 - [`uipath publish`](#publishing) - Publish packages to Orchestrator
 - [`uipath deploy`](#deploying) - Deploy or upgrade apps to UiPath
 - [`uipath push`](#push-studio-web) - Push local build to Studio Web project (atomic sync)
+- [`uipath pull`](#pull-studio-web) - Pull project files from Studio Web into local workspace
 
 
 ## Workflow
@@ -258,14 +322,19 @@ This command will:
 
 **Push (Studio Web):**
 1. **Build your application**: Use your framework's build command.
-2. **Push to Studio Web**: `uipath push <project-id>` from the project root. Use `--build-dir build` (or `out`, etc.) if your framework uses a different output folder than `dist`.
+2. **Push to Studio Web**: `uipath push <project-id>` from the project root. Use `--buildDir build` (or `out`, etc.) if your framework uses a different output folder than `dist`.
+
+**Pull (Studio Web):**
+1. **Pull from Studio Web**: `uipath pull <project-id>` from the directory where you want the project files (or use `--targetDir`). Only files under remote `source/` are downloaded; build output is excluded.
+2. **Edit locally** and run builds/tests as needed.
+3. **Push changes back**: `uipath push <project-id>` when ready (ensure you have pulled latest first if others contribute).
 
 ## Framework Support
 
 This CLI works with any web framework that produces a static build:
 - Angular (`ng build`) — default output: `dist/`
-- React / Create React App (`npm run build`) — use `--build-dir build` with push
-- Vite, Vue, static HTML/CSS/JS — default `dist/` or use `--build-dir` for custom output
+- React / Create React App (`npm run build`) — use `--buildDir build` with push
+- Vite, Vue, static HTML/CSS/JS — default `dist/` or use `--buildDir` for custom output
 
 ## Development
 
