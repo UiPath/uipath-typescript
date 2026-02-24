@@ -57,9 +57,14 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
-        run: |
-          echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
-          npm publish --provenance --access public
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3.0.2
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          retry_wait_seconds: 15
+          command: |
+            echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
+            npm publish --provenance --access public
 
       - name: Publish to GitHub Packages
         run: |
