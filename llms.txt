@@ -1,0 +1,31 @@
+# UiPath TypeScript SDK
+
+## Getting Started
+
+- [Getting Started](https://uipath.github.io/uipath-typescript/getting-started/index.md): Introduction to UiPath TypeScript SDK
+- [Authentication](https://uipath.github.io/uipath-typescript/authentication/index.md): Authentication setup
+- [Pagination](https://uipath.github.io/uipath-typescript/pagination/index.md): Pagination guide
+
+## API Reference
+
+- [Assets](https://uipath.github.io/uipath-typescript/api/interfaces/AssetServiceModel/index.md): Asset service methods
+- [Processes](https://uipath.github.io/uipath-typescript/api/interfaces/ProcessServiceModel/index.md): Process service methods
+- [Queues](https://uipath.github.io/uipath-typescript/api/interfaces/QueueServiceModel/index.md): Queue service methods
+- [Buckets](https://uipath.github.io/uipath-typescript/api/interfaces/BucketServiceModel/index.md): Bucket service methods
+- [Tasks](https://uipath.github.io/uipath-typescript/api/interfaces/TaskServiceModel/index.md): Task service methods
+- [Entities](https://uipath.github.io/uipath-typescript/api/interfaces/entity/index.md): Entity service methods
+- [Choice Sets](https://uipath.github.io/uipath-typescript/api/interfaces/ChoiceSetServiceModel/index.md): Choice set service methods
+- [Processes](https://uipath.github.io/uipath-typescript/api/interfaces/MaestroProcessesServiceModel/index.md): Maestro process methods
+- [Process Instances](https://uipath.github.io/uipath-typescript/api/interfaces/ProcessInstancesServiceModel/index.md): Process instance methods
+- [Cases](https://uipath.github.io/uipath-typescript/api/interfaces/CasesServiceModel/index.md): Maestro Case methods
+- [Case Instances](https://uipath.github.io/uipath-typescript/api/interfaces/CaseInstancesServiceModel/index.md): Maestro Case instance methods
+- [ConversationalAgentServiceModel](https://uipath.github.io/uipath-typescript/api/interfaces/ConversationalAgentServiceModel/index.md): Conversational Agent main service
+- [ConversationServiceModel](https://uipath.github.io/uipath-typescript/api/interfaces/ConversationServiceModel/index.md): Conversation service methods
+- [Exchanges](https://uipath.github.io/uipath-typescript/api/interfaces/ExchangeServiceModel/index.md): Exchange service methods
+- [Messages](https://uipath.github.io/uipath-typescript/api/interfaces/MessageServiceModel/index.md): Message service methods
+- [Session](https://uipath.github.io/uipath-typescript/api/interfaces/SessionStream/index.md): Real-time WebSocket session
+- [ExchangeStream](https://uipath.github.io/uipath-typescript/api/interfaces/ExchangeStream/index.md): Exchange streaming events
+- [MessageStream](https://uipath.github.io/uipath-typescript/api/interfaces/MessageStream/index.md): Message streaming events
+- [ContentPartStream](https://uipath.github.io/uipath-typescript/api/interfaces/ContentPartStream/index.md): Content part streaming events
+- [ToolCallStream](https://uipath.github.io/uipath-typescript/api/interfaces/ToolCallStream/index.md): Tool call streaming events
+

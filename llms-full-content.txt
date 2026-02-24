@@ -1,0 +1,5321 @@
+# UiPath TypeScript SDK
+
+# Getting Started
+
+# Getting Started
+
+## Prerequisites
+
+- **Node.js** 20.x or higher
+- **npm** 8.x or higher (or yarn/pnpm)
+- **TypeScript** 4.5+ (for TypeScript projects)
+
+## Install the SDK
+
+npm install @uipath/uipath-typescript\
+found 0 vulnerabilities
+
+yarn add @uipath/uipath-typescript✨ Done in 1.85s.
+
+pnpm add @uipath/uipath-typescript
+
+## Project Setup
+
+mkdir my-uipath-project && cd my-uipath-projectnpm init -yWrote to package.jsonnpm install typescript @types/node ts-node --save-dev\
+added x packages in 1snpx tsc --initCreated a new tsconfig.jsonnpm install @uipath/uipath-typescript\
+added x packages in 1s
+
+mkdir my-uipath-project && cd my-uipath-projectnpm init -yWrote to package.jsonnpm install @uipath/uipath-typescript\
+added x packages in 1s
+
+## **Import & Initialize**
+
+The SDK supports two import patterns. Choose based on your SDK version.
+
+```
+// Import core SDK and only the services you need
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+// Configure and initialize the SDK
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-org',
+  tenantName: 'your-tenant',
+  clientId: 'your-client-id',
+  redirectUri: 'http://localhost:3000/callback',
+  scope: 'OR.Tasks OR.DataService'
+});
+
+await sdk.initialize();
+
+// Create service instances
+const entities = new Entities(sdk);
+
+// Use the services
+const allEntities = await entities.getAll();
+```
+
+```
+// Import everything from the main package
+import { UiPath } from '@uipath/uipath-typescript';
+
+// Configure and initialize the SDK
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-org',
+  tenantName: 'your-tenant',
+  clientId: 'your-client-id',
+  redirectUri: 'http://localhost:3000/callback',
+  scope: 'OR.Tasks OR.DataService'
+});
+
+await sdk.initialize();
+
+// Access services directly from sdk instance
+const allTasks = await sdk.tasks.getAll();
+const allEntities = await sdk.entities.getAll();
+```
+
+**Note:** This pattern still works in newer versions but it includes all services in your bundle regardless of usage.
+
+## **Telemetry**
+
+To improve the developer experience, the SDK collects basic usage data about method invocations. For details on UiPath’s privacy practices, see our [privacy policy](https://www.uipath.com/legal/privacy-policy).
+
+## **Vibe Coding**
+
+The SDK is designed for rapid prototyping and development, making it perfect for vibe coding. Here are two ways to get started:
+
+### **Option 1: AI IDE Integration**
+
+After installing the SDK, supercharge your development with AI IDEs:
+
+1. **Install the SDK**: `npm install @uipath/uipath-typescript`
+1. **Drag & Drop**: From your `node_modules/@uipath/uipath-typescript` folder, drag the entire package into your AI IDE
+1. **Start Prompting**: Your AI assistant now has full context of the SDK!
+
+**Works with:**
+
+- **GitHub Copilot**
+- **Cursor**
+- **Claude**
+- **Any AI coding assistant**
+
+### **Option 2: Copy Documentation for LLMs**
+
+Give your AI assistant complete context by copying our documentation:
+
+**For Maximum Context:**
+
+1. **Download Complete Documentation**: [llms-full-content.txt](/uipath-typescript/llms-full-content.txt)
+1. **Copy and Paste**: Copy the entire content and paste it into your AI chat
+1. **Start Prompting**: Your AI now has complete SDK knowledge!
+
+**For Specific Features:**
+
+1. **Use the copy button** (📋) on any documentation page
+1. **Paste into your AI chat**
+1. **Ask specific questions** about that feature
+
+# Authentication
+
+The SDK supports two authentication methods:
+
+## OAuth Authentication (Recommended)
+
+For OAuth, first create a non confidential [External App](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications).
+
+1. In UiPath Cloud: **Admin** → **External Applications**
+1. Click **Add Application** → **Non Confidential Application**
+1. Configure:
+
+- **Name**: Your app name
+- **Redirect URI**: For eg, `http://localhost:3000` (for development)
+- **Scopes**: Select permissions you need ([see scopes guide](/uipath-typescript/oauth-scopes))
+
+4. Save and copy the **Client ID**
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  clientId: 'your-client-id',
+  redirectUri: 'your-redirect-uri',
+  scope: 'your-scopes'
+});
+
+// IMPORTANT: OAuth requires calling initialize()
+await sdk.initialize();
+```
+
+## Secret-based Authentication
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  secret: 'your-secret' //PAT Token or Bearer Token
+});
+```
+
+To Generate a PAT Token:
+
+1. Log in to [UiPath Cloud](https://cloud.uipath.com)
+1. Go to **User Profile** → **Preferences** → **Personal Access Token**
+1. Click **Create Token**
+1. Give it a name and expiration date
+1. Provide relevant scopes
+
+## SDK Initialization - The initialize() Method
+
+### When to Use initialize()
+
+The `initialize()` method completes the authentication process for the SDK:
+
+- **Secret Authentication**: Auto-initializes when creating the SDK instance - **no need to call initialize()**
+- **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
+
+### Example: Secret Authentication (Auto-initialized)
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { Tasks } from '@uipath/uipath-typescript/tasks';
+
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  secret: 'your-secret' //PAT Token or Bearer Token
+});
+
+// Ready to use immediately - no initialize() needed
+const tasks = new Tasks(sdk);
+const allTasks = await tasks.getAll();
+```
+
+### Example: OAuth Authentication (Requires initialize)
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { Tasks } from '@uipath/uipath-typescript/tasks';
+
+const sdk = new UiPath({
+  baseUrl: 'https://cloud.uipath.com',
+  orgName: 'your-organization',
+  tenantName: 'your-tenant',
+  clientId: 'your-client-id',
+  redirectUri: 'http://localhost:3000',
+  scope: 'your-scopes'
+});
+
+// Must initialize before using services
+try {
+  await sdk.initialize();
+  console.log('SDK initialized successfully');
+
+  // Now you can use the SDK
+  const tasks = new Tasks(sdk);
+  const allTasks = await tasks.getAll();
+} catch (error) {
+  console.error('Failed to initialize SDK:', error);
+}
+```
+
+## OAuth Integration Patterns
+
+### Auto-login on App Load
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath({...oauthConfig});
+
+useEffect(() => {
+  const initSDK = async () => {
+    await sdk.initialize();
+  };
+  initSDK();
+}, []);
+```
+
+### User-Triggered Login
+
+```
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath({...oauthConfig});
+
+const onLogin = async () => {
+  await sdk.initialize();
+};
+
+// Handle OAuth callback
+const oauthCompleted = useRef(false);
+useEffect(() => {
+  if (sdk.isInitialized() && !oauthCompleted.current) {
+    oauthCompleted.current = true;
+    sdk.completeOAuth();
+  }
+}, []);
+```
+
+### Available OAuth Methods
+
+- `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
+- `sdk.isInitialized()` - Check if SDK initialization completed
+- `sdk.isAuthenticated()` - Check if user has valid token
+- `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
+- `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
+- `sdk.getToken()` - Get the logged-in user's access token
+- `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again)
+
+______________________________________________________________________
+
+## Quick Test Script
+
+Create `.env` file:
+
+```
+# .env
+UIPATH_BASE_URL=https://cloud.uipath.com
+UIPATH_ORG_NAME=your-organization-name
+UIPATH_TENANT_NAME=your-tenant-name
+UIPATH_SECRET=your-pat-token
+```
+
+Verify your authentication setup:
+
+```
+// test-auth.ts
+import 'dotenv/config';
+import { UiPath } from '@uipath/uipath-typescript/core';
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+async function testAuthentication() {
+  const sdk = new UiPath({
+    baseUrl: process.env.UIPATH_BASE_URL!,
+    orgName: process.env.UIPATH_ORG_NAME!,
+    tenantName: process.env.UIPATH_TENANT_NAME!,
+    secret: process.env.UIPATH_SECRET!
+  });
+
+  try {
+    // Test with a simple API call
+    const assets = new Assets(sdk);
+    const allAssets = await assets.getAll();
+    console.log('Authentication successful!');
+    console.log(`Connected to ${process.env.UIPATH_ORG_NAME}/${process.env.UIPATH_TENANT_NAME}`);
+    console.log(`Found ${allAssets.items.length} assets`);
+
+  } catch (error) {
+    console.error('Authentication failed:');
+    console.error(error.message);
+  }
+}
+
+testAuthentication();
+```
+
+Run it: `npx ts-node test-auth.ts`
+
+# Pagination
+
+## Overview
+
+The SDK supports two pagination approaches:
+
+1. **Cursor-based Navigation**: Use opaque cursors to navigate between pages
+1. **Page Jump**: Jump directly to specific page numbers (when supported) [↗ Refer to the Quick Reference Table](#quick-reference-table)
+
+You can specify either cursor OR jumpToPage, but **not** both.
+
+All paginated methods return a [`PaginatedResponse<T>`](/uipath-typescript/api/interfaces/PaginatedResponse) when pagination parameters are provided, or a [`NonPaginatedResponse<T>`](/uipath-typescript/api/interfaces/NonPaginatedResponse) when no pagination parameters are specified.
+
+## Types
+
+### [PaginationOptions](/uipath-typescript/api/type-aliases/PaginationOptions)
+
+```
+type PaginationOptions = {
+  pageSize?: number;      // Size of the page to fetch (items per page)
+  cursor?: string;        // Opaque string containing all information needed to fetch next page
+  jumpToPage?: number;    // Direct page number navigation
+}
+```
+
+### [PaginatedResponse](/uipath-typescript/api/interfaces/PaginatedResponse)
+
+```
+interface PaginatedResponse<T> {
+  items: T[];                           // The items in the current page
+  totalCount?: number;                  // Total count of items across all pages (if available)
+  hasNextPage: boolean;                 // Whether more pages are available
+  nextCursor?: PaginationCursor;        // Cursor to fetch the next page (if available)
+  previousCursor?: PaginationCursor;    // Cursor to fetch the previous page (if available)
+  currentPage?: number;                 // Current page number (1-based, if available)
+  totalPages?: number;                  // Total number of pages (if available)
+  supportsPageJump: boolean;            // Whether this pagination type supports jumping to arbitrary pages
+}
+```
+
+## Usage Examples
+
+### Basic Pagination
+
+```
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const assets = new Assets(sdk);
+
+// Get first page with 10 items
+const firstPage = await assets.getAll({ pageSize: 10 });
+
+console.log(`Got ${firstPage.items.length} items`);
+console.log(`Total items: ${firstPage.totalCount}`);
+console.log(`Has next page: ${firstPage.hasNextPage}`);
+```
+
+### Cursor-based Navigation
+
+```
+import { Assets, AssetGetResponse } from '@uipath/uipath-typescript/assets';
+import { PaginatedResponse } from '@uipath/uipath-typescript/core';
+
+const assets = new Assets(sdk);
+
+// Navigate through pages using cursors
+let currentPage = await assets.getAll({ pageSize: 10 }) as PaginatedResponse<AssetGetResponse>;
+
+while (currentPage.hasNextPage) {
+  // Process current page items
+  currentPage.items.forEach(item => console.log(item.name));
+
+  // Get next page using cursor
+  currentPage = await assets.getAll({
+    cursor: currentPage.nextCursor
+  }) as PaginatedResponse<AssetGetResponse>;
+}
+```
+
+### Page Jumping
+
+```
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const assets = new Assets(sdk);
+
+// Jump directly to page 5 (when supported)
+const page5 = await assets.getAll({
+  jumpToPage: 5,
+  pageSize: 20
+});
+
+// Check if page jumping is supported
+if (page5.supportsPageJump) {
+  console.log(`Currently on page ${page5.currentPage} of ${page5.totalPages}`);
+}
+```
+
+### Non-paginated Requests
+
+```
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const assets = new Assets(sdk);
+
+// Get all items without pagination
+const allAssets = await assets.getAll();
+
+console.log(`Retrieved ${allAssets.items.length} assets`);
+console.log(`Total count: ${allAssets.totalCount}`);
+```
+
+## Quick Reference Table
+
+| Service                           | Method             | Supports `jumpToPage`? |
+| --------------------------------- | ------------------ | ---------------------- |
+| Assets                            | `getAll()`         | ✅ Yes                 |
+| Buckets                           | `getAll()`         | ✅ Yes                 |
+| Buckets                           | `getFiles()`       | ❌ No                  |
+| Entities                          | `getAll()`         | ✅ Yes                 |
+| Entities                          | `getAllRecords()`  | ✅ Yes                 |
+| Processes                         | `getAll()`         | ✅ Yes                 |
+| ProcessInstances                  | `getAll()`         | ❌ No                  |
+| CaseInstances                     | `getAll()`         | ❌ No                  |
+| CaseInstances                     | `getActionTasks()` | ✅ Yes                 |
+| Queues                            | `getAll()`         | ✅ Yes                 |
+| Tasks                             | `getAll()`         | ✅ Yes                 |
+| Tasks                             | `getUsers()`       | ✅ Yes                 |
+| ConversationalAgent.conversations | `getAll()`         | ❌ No                  |
+| ConversationalAgent.exchanges     | `getAll()`         | ❌ No                  |
+# API Reference
+
+Service for managing UiPath Assets.
+
+Assets are key-value pairs that can be used to store configuration data, credentials, and other settings used by automation processes. [UiPath Assets Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-assets)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const assets = new Assets(sdk);
+const allAssets = await assets.getAll();
+```
+
+## Methods
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`AssetGetResponse`](../AssetGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`AssetGetResponse`](../AssetGetResponse/)>>
+
+Gets all assets across folders with optional filtering
+
+#### Type Parameters
+
+| Type Parameter                                                               | Default type                                                   |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `T` *extends* [`AssetGetAllOptions`](../../type-aliases/AssetGetAllOptions/) | [`AssetGetAllOptions`](../../type-aliases/AssetGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`AssetGetResponse`](../AssetGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`AssetGetResponse`](../AssetGetResponse/)>>
+
+Promise resolving to either an array of assets NonPaginatedResponse or a PaginatedResponse when pagination options are used. [AssetGetResponse](../AssetGetResponse/)
+
+#### Example
+
+```
+// Standard array return
+// With folder
+const folderAssets = await assets.getAll({ folderId: <folderId> });
+
+// First page with pagination
+const page1 = await assets.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await assets.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await assets.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`id`: `number`, `folderId`: `number`, `options?`: [`BaseOptions`](../BaseOptions/)): `Promise`\<[`AssetGetResponse`](../AssetGetResponse/)>
+
+Gets a single asset by ID
+
+#### Parameters
+
+| Parameter  | Type                             | Description                                |
+| ---------- | -------------------------------- | ------------------------------------------ |
+| `id`       | `number`                         | Asset ID                                   |
+| `folderId` | `number`                         | Required folder ID                         |
+| `options?` | [`BaseOptions`](../BaseOptions/) | Optional query parameters (expand, select) |
+
+#### Returns
+
+`Promise`\<[`AssetGetResponse`](../AssetGetResponse/)>
+
+Promise resolving to a single asset [AssetGetResponse](../AssetGetResponse/)
+
+#### Example
+
+```
+// Get asset by ID
+const asset = await assets.getById(<assetId>, <folderId>);
+```
+
+Service for managing and executing UiPath Automation Processes.
+
+Processes (also known as automations or workflows) are the core units of automation in UiPath, representing sequences of activities that perform specific business tasks. [UiPath Processes Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-processes)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Processes } from '@uipath/uipath-typescript/processes';
+
+const processes = new Processes(sdk);
+const allProcesses = await processes.getAll();
+```
+
+## Methods
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ProcessGetResponse`](../ProcessGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ProcessGetResponse`](../ProcessGetResponse/)>>
+
+Gets all processes across folders with optional filtering Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided, or a PaginatedResponse when any pagination parameter is provided
+
+#### Type Parameters
+
+| Type Parameter                                                                   | Default type                                                       |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `T` *extends* [`ProcessGetAllOptions`](../../type-aliases/ProcessGetAllOptions/) | [`ProcessGetAllOptions`](../../type-aliases/ProcessGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ProcessGetResponse`](../ProcessGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ProcessGetResponse`](../ProcessGetResponse/)>>
+
+Promise resolving to either an array of processes NonPaginatedResponse or a PaginatedResponse when pagination options are used. [ProcessGetResponse](../ProcessGetResponse/)
+
+#### Example
+
+```
+// Standard array return
+const allProcesses = await processes.getAll();
+
+// Get processes within a specific folder
+const folderProcesses = await processes.getAll({
+  folderId: <folderId>
+});
+
+// Get processes with filtering
+const filteredProcesses = await processes.getAll({
+  filter: "name eq 'MyProcess'"
+});
+
+// First page with pagination
+const page1 = await processes.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await processes.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await processes.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`id`: `number`, `folderId`: `number`, `options?`: [`BaseOptions`](../BaseOptions/)): `Promise`\<[`ProcessGetResponse`](../ProcessGetResponse/)>
+
+Gets a single process by ID
+
+#### Parameters
+
+| Parameter  | Type                             | Description               |
+| ---------- | -------------------------------- | ------------------------- |
+| `id`       | `number`                         | Process ID                |
+| `folderId` | `number`                         | Required folder ID        |
+| `options?` | [`BaseOptions`](../BaseOptions/) | Optional query parameters |
+
+#### Returns
+
+`Promise`\<[`ProcessGetResponse`](../ProcessGetResponse/)>
+
+Promise resolving to a single process [ProcessGetResponse](../ProcessGetResponse/)
+
+#### Example
+
+```
+// Get process by ID
+const process = await processes.getById(<processId>, <folderId>);
+```
+
+______________________________________________________________________
+
+### start()
+
+> **start**(`request`: [`ProcessStartRequest`](../../type-aliases/ProcessStartRequest/), `folderId`: `number`, `options?`: [`RequestOptions`](../RequestOptions/)): `Promise`\<[`ProcessStartResponse`](../ProcessStartResponse/)[]>
+
+Starts a process with the specified configuration
+
+#### Parameters
+
+| Parameter  | Type                                                             | Description                 |
+| ---------- | ---------------------------------------------------------------- | --------------------------- |
+| `request`  | [`ProcessStartRequest`](../../type-aliases/ProcessStartRequest/) | Process start configuration |
+| `folderId` | `number`                                                         | Required folder ID          |
+| `options?` | [`RequestOptions`](../RequestOptions/)                           | Optional request options    |
+
+#### Returns
+
+`Promise`\<[`ProcessStartResponse`](../ProcessStartResponse/)[]>
+
+Promise resolving to array of started process instances [ProcessStartResponse](../ProcessStartResponse/)
+
+#### Example
+
+```
+// Start a process by process key
+const result = await processes.start({
+  processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}, <folderId>); // folderId is required
+
+// Start a process by name with specific robots
+const result = await processes.start({
+  processName: "MyProcess"
+}, <folderId>); // folderId is required
+```
+
+Service for managing UiPath Queues
+
+Queues are a fundamental component of UiPath automation that enable distributed and scalable processing of work items. [UiPath Queues Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-queues-and-transactions)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Queues } from '@uipath/uipath-typescript/queues';
+
+const queues = new Queues(sdk);
+const allQueues = await queues.getAll();
+```
+
+## Methods
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`QueueGetResponse`](../QueueGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`QueueGetResponse`](../QueueGetResponse/)>>
+
+Gets all queues across folders with optional filtering and folder scoping
+
+#### Type Parameters
+
+| Type Parameter                                                               | Default type                                                   |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `T` *extends* [`QueueGetAllOptions`](../../type-aliases/QueueGetAllOptions/) | [`QueueGetAllOptions`](../../type-aliases/QueueGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`QueueGetResponse`](../QueueGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`QueueGetResponse`](../QueueGetResponse/)>>
+
+Promise resolving to either an array of queues NonPaginatedResponse or a PaginatedResponse when pagination options are used. [QueueGetResponse](../QueueGetResponse/)
+
+#### Signature
+
+getAll(options?) → Promise\<QueueGetResponse[]>
+
+#### Example
+
+```
+// Standard array return
+const allQueues = await queues.getAll();
+
+// Get queues within a specific folder
+const folderQueues = await queues.getAll({
+  folderId: <folderId>
+});
+
+// Get queues with filtering
+const filteredQueues = await queues.getAll({
+  filter: "name eq 'MyQueue'"
+});
+
+// First page with pagination
+const page1 = await queues.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await queues.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await queues.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`id`: `number`, `folderId`: `number`, `options?`: [`BaseOptions`](../BaseOptions/)): `Promise`\<[`QueueGetResponse`](../QueueGetResponse/)>
+
+Gets a single queue by ID
+
+#### Parameters
+
+| Parameter  | Type                             | Description        |
+| ---------- | -------------------------------- | ------------------ |
+| `id`       | `number`                         | Queue ID           |
+| `folderId` | `number`                         | Required folder ID |
+| `options?` | [`BaseOptions`](../BaseOptions/) | -                  |
+
+#### Returns
+
+`Promise`\<[`QueueGetResponse`](../QueueGetResponse/)>
+
+Promise resolving to a queue definition
+
+#### Example
+
+```
+// Get queue by ID
+const queue = await queues.getById(<queueId>, <folderId>);
+```
+
+Service for managing UiPath storage Buckets.
+
+Buckets are cloud storage containers that can be used to store and manage files used by automation processes. [UiPath Buckets Guide](https://docs.uipath.com/orchestrator/automation-cloud/latest/user-guide/about-storage-buckets)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Buckets } from '@uipath/uipath-typescript/buckets';
+
+const buckets = new Buckets(sdk);
+const allBuckets = await buckets.getAll();
+```
+
+## Methods
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`BucketGetResponse`](../BucketGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`BucketGetResponse`](../BucketGetResponse/)>>
+
+Gets all buckets across folders with optional filtering
+
+The method returns either:
+
+- A NonPaginatedResponse with data and totalCount (when no pagination parameters are provided)
+- A paginated result with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                                 | Default type                                                     |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `T` *extends* [`BucketGetAllOptions`](../../type-aliases/BucketGetAllOptions/) | [`BucketGetAllOptions`](../../type-aliases/BucketGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                      |
+| ---------- | ---- | ---------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`BucketGetResponse`](../BucketGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`BucketGetResponse`](../BucketGetResponse/)>>
+
+Promise resolving to either an array of buckets NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BucketGetResponse](../BucketGetResponse/)
+
+#### Example
+
+```
+// Get all buckets across folders
+const allBuckets = await buckets.getAll();
+
+// Get buckets within a specific folder
+const folderBuckets = await buckets.getAll({
+  folderId: <folderId>
+});
+
+// Get buckets with filtering
+const filteredBuckets = await buckets.getAll({
+  filter: "name eq 'MyBucket'"
+});
+
+// First page with pagination
+const page1 = await buckets.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await buckets.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await buckets.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`bucketId`: `number`, `folderId`: `number`, `options?`: [`BaseOptions`](../BaseOptions/)): `Promise`\<[`BucketGetResponse`](../BucketGetResponse/)>
+
+Gets a single bucket by ID
+
+#### Parameters
+
+| Parameter  | Type                             | Description               |
+| ---------- | -------------------------------- | ------------------------- |
+| `bucketId` | `number`                         | Bucket ID                 |
+| `folderId` | `number`                         | Required folder ID        |
+| `options?` | [`BaseOptions`](../BaseOptions/) | Optional query parameters |
+
+#### Returns
+
+`Promise`\<[`BucketGetResponse`](../BucketGetResponse/)>
+
+Promise resolving to a bucket definition [BucketGetResponse](../BucketGetResponse/)
+
+#### Example
+
+```
+// Get bucket by ID
+const bucket = await buckets.getById(<bucketId>, <folderId>);
+```
+
+______________________________________________________________________
+
+### getFileMetaData()
+
+> **getFileMetaData**\<`T`>(`bucketId`: `number`, `folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`BlobItem`](../BlobItem/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`BlobItem`](../BlobItem/)>>
+
+Gets metadata for files in a bucket with optional filtering and pagination
+
+The method returns either:
+
+- A NonPaginatedResponse with items array (when no pagination parameters are provided)
+- A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                                                                               | Default type                                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `T` *extends* [`BucketGetFileMetaDataWithPaginationOptions`](../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/) | [`BucketGetFileMetaDataWithPaginationOptions`](../../type-aliases/BucketGetFileMetaDataWithPaginationOptions/) |
+
+#### Parameters
+
+| Parameter  | Type     | Description                                                             |
+| ---------- | -------- | ----------------------------------------------------------------------- |
+| `bucketId` | `number` | The ID of the bucket to get file metadata from                          |
+| `folderId` | `number` | Required folder ID for organization unit context                        |
+| `options?` | `T`      | Optional parameters for filtering, pagination and access URL generation |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`BlobItem`](../BlobItem/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`BlobItem`](../BlobItem/)>>
+
+Promise resolving to either an array of files metadata NonPaginatedResponse or a PaginatedResponse when pagination options are used. [BlobItem](../BlobItem/)
+
+#### Example
+
+```
+// Get metadata for all files in a bucket
+const fileMetadata = await buckets.getFileMetaData(<bucketId>, <folderId>);
+
+// Get file metadata with a specific prefix
+const prefixMetadata = await buckets.getFileMetaData(<bucketId>, <folderId>, {
+  prefix: '/folder1'
+});
+
+// First page with pagination
+const page1 = await buckets.getFileMetaData(<bucketId>, <folderId>, { pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await buckets.getFileMetaData(<bucketId>, <folderId>, { cursor: page1.nextCursor });
+}
+```
+
+______________________________________________________________________
+
+### getReadUri()
+
+> **getReadUri**(`options`: [`BucketGetUriOptions`](../BucketGetUriOptions/)): `Promise`\<[`BucketGetUriResponse`](../BucketGetUriResponse/)>
+
+Gets a direct download URL for a file in the bucket
+
+#### Parameters
+
+| Parameter | Type                                             | Description                                                     |
+| --------- | ------------------------------------------------ | --------------------------------------------------------------- |
+| `options` | [`BucketGetUriOptions`](../BucketGetUriOptions/) | Contains bucketId, folderId, file path and optional expiry time |
+
+#### Returns
+
+`Promise`\<[`BucketGetUriResponse`](../BucketGetUriResponse/)>
+
+Promise resolving to blob file access information [BucketGetUriResponse](../BucketGetUriResponse/)
+
+#### Example
+
+```
+// Get download URL for a file
+const fileAccess = await buckets.getReadUri({
+  bucketId: <bucketId>,
+  folderId: <folderId>,
+  path: '/folder/file.pdf'
+});
+```
+
+______________________________________________________________________
+
+### uploadFile()
+
+> **uploadFile**(`options`: [`BucketUploadFileOptions`](../BucketUploadFileOptions/)): `Promise`\<[`BucketUploadResponse`](../BucketUploadResponse/)>
+
+Uploads a file to a bucket
+
+#### Parameters
+
+| Parameter | Type                                                     | Description                                                                                    |
+| --------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `options` | [`BucketUploadFileOptions`](../BucketUploadFileOptions/) | Options for file upload including bucket ID, folder ID, path, content, and optional parameters |
+
+#### Returns
+
+`Promise`\<[`BucketUploadResponse`](../BucketUploadResponse/)>
+
+Promise resolving bucket upload response [BucketUploadResponse](../BucketUploadResponse/)
+
+#### Example
+
+```
+// Upload a file from browser
+const file = new File(['file content'], 'example.txt');
+const result = await buckets.uploadFile({
+  bucketId: <bucketId>,
+  folderId: <folderId>,
+  path: '/folder/example.txt',
+  content: file
+});
+
+// In Node env with Uint8Array or Buffer
+const content = new TextEncoder().encode('file content');
+const result = await buckets.uploadFile({
+  bucketId: <bucketId>,
+  folderId: <folderId>,
+  path: '/folder/example.txt',
+  content,
+});
+```
+
+Service for managing UiPath Action Center
+
+Tasks are task-based automation components that can be integrated into applications and processes. They represent discrete units of work that can be triggered and monitored through the UiPath API. [UiPath Action Center Guide](https://docs.uipath.com/automation-cloud/docs/actions)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Tasks } from '@uipath/uipath-typescript/tasks';
+
+const tasks = new Tasks(sdk);
+const allTasks = await tasks.getAll();
+```
+
+## Methods
+
+### assign()
+
+> **assign**(`options`: [`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/) | [`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/)[]): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/)[] | [`TaskAssignmentResponse`](../TaskAssignmentResponse/)[]>>
+
+Assigns tasks to users
+
+#### Parameters
+
+| Parameter | Type                                                                 | Description                                                            |
+| --------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `options` | [`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/) | [`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/)[] |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/)[] | [`TaskAssignmentResponse`](../TaskAssignmentResponse/)[]>>
+
+Promise resolving to array of task assignment results [TaskAssignmentResponse](../TaskAssignmentResponse/)
+
+#### Example
+
+```
+// Assign a single task to a user by ID
+const result = await tasks.assign({
+  taskId: <taskId>,
+  userId: <userId>
+});
+
+// Or using instance method
+const task = await tasks.getById(<taskId>);
+const result = await task.assign({
+  userId: <userId>
+});
+
+// Assign a single task to a user by email
+const result = await tasks.assign({
+  taskId: <taskId>,
+  userNameOrEmail: "user@example.com"
+});
+
+// Assign multiple tasks
+const result = await tasks.assign([
+  { taskId: <taskId1>, userId: <userId> },
+  { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
+]);
+```
+
+______________________________________________________________________
+
+### complete()
+
+> **complete**(`options`: [`TaskCompletionOptions`](../../type-aliases/TaskCompletionOptions/), `folderId`: `number`): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskCompletionOptions`](../../type-aliases/TaskCompletionOptions/)>>
+
+Completes a task with the specified type and data
+
+#### Parameters
+
+| Parameter  | Type                                                                 | Description                                                          |
+| ---------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `options`  | [`TaskCompletionOptions`](../../type-aliases/TaskCompletionOptions/) | The completion options including task type, taskId, data, and action |
+| `folderId` | `number`                                                             | Required folder ID                                                   |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskCompletionOptions`](../../type-aliases/TaskCompletionOptions/)>>
+
+Promise resolving to completion result [TaskCompleteOptions](../../type-aliases/TaskCompleteOptions/)
+
+#### Example
+
+```
+// Complete an app task
+await tasks.complete({
+  type: TaskType.App,
+  taskId: <taskId>,
+  data: {},
+  action: "submit"
+}, <folderId>); // folderId is required
+
+// Complete an external task
+await tasks.complete({
+  type: TaskType.External,
+  taskId: <taskId>
+}, <folderId>); // folderId is required
+```
+
+______________________________________________________________________
+
+### create()
+
+> **create**(`options`: [`TaskCreateOptions`](../TaskCreateOptions/), `folderId`: `number`): `Promise`\<[`TaskCreateResponse`](../../type-aliases/TaskCreateResponse/)>
+
+Creates a new task
+
+#### Parameters
+
+| Parameter  | Type                                         | Description            |
+| ---------- | -------------------------------------------- | ---------------------- |
+| `options`  | [`TaskCreateOptions`](../TaskCreateOptions/) | The task to be created |
+| `folderId` | `number`                                     | Required folder ID     |
+
+#### Returns
+
+`Promise`\<[`TaskCreateResponse`](../../type-aliases/TaskCreateResponse/)>
+
+Promise resolving to the created task [TaskCreateResponse](../../type-aliases/TaskCreateResponse/)
+
+#### Example
+
+```
+import { TaskPriority } from '@uipath/uipath-typescript';
+const task = await tasks.create({
+  title: "My Task",
+  priority: TaskPriority.Medium
+}, <folderId>); // folderId is required
+```
+
+______________________________________________________________________
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>>
+
+Gets all tasks across folders with optional filtering
+
+#### Type Parameters
+
+| Type Parameter                                                             | Default type                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `T` *extends* [`TaskGetAllOptions`](../../type-aliases/TaskGetAllOptions/) | [`TaskGetAllOptions`](../../type-aliases/TaskGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                                        |
+| ---------- | ---- | ---------------------------------------------------------------------------------- |
+| `options?` | `T`  | Query options including optional folderId, asTaskAdmin flag and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>>
+
+Promise resolving to either an array of tasks NonPaginatedResponse or a PaginatedResponse when pagination options are used. [TaskGetResponse](../../type-aliases/TaskGetResponse/)
+
+#### Example
+
+```
+// Standard array return
+const allTasks = await tasks.getAll();
+
+// Get tasks within a specific folder
+const folderTasks = await tasks.getAll({
+  folderId: 123
+});
+
+// Get tasks with admin permissions
+// This fetches tasks across folders where the user has Task.View, Task.Edit and TaskAssignment.Create permissions
+const adminTasks = await tasks.getAll({
+  asTaskAdmin: true
+});
+
+// Get tasks without admin permissions (default)
+// This fetches tasks across folders where the user has Task.View and Task.Edit permissions
+const userTasks = await tasks.getAll({
+  asTaskAdmin: false
+});
+
+// First page with pagination
+const page1 = await tasks.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await tasks.getAll({ cursor: page1.nextCursor });
+}
+
+// Jump to specific page
+const page5 = await tasks.getAll({
+  jumpToPage: 5,
+  pageSize: 10
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`id`: `number`, `options?`: [`BaseOptions`](../BaseOptions/), `folderId?`: `number`): `Promise`\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>
+
+Gets a task by ID IMPORTANT: For form tasks, folderId must be provided.
+
+#### Parameters
+
+| Parameter   | Type                             | Description                                  |
+| ----------- | -------------------------------- | -------------------------------------------- |
+| `id`        | `number`                         | The ID of the task to retrieve               |
+| `options?`  | [`BaseOptions`](../BaseOptions/) | Optional query parameters                    |
+| `folderId?` | `number`                         | Optional folder ID (REQUIRED for form tasks) |
+
+#### Returns
+
+`Promise`\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>
+
+Promise resolving to the task [TaskGetResponse](../../type-aliases/TaskGetResponse/)
+
+#### Example
+
+```
+// Get a task by ID
+const task = await tasks.getById(<taskId>);
+
+// Get a form task by ID
+const formTask = await tasks.getById(<taskId>, <folderId>);
+
+// Access form task properties
+console.log(formTask.formLayout);
+```
+
+______________________________________________________________________
+
+### getUsers()
+
+> **getUsers**\<`T`>(`folderId`: `number`, `options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`UserLoginInfo`](../UserLoginInfo/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`UserLoginInfo`](../UserLoginInfo/)>>
+
+Gets users in the given folder who have Tasks.View and Tasks.Edit permissions Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided, or a PaginatedResponse when any pagination parameter is provided
+
+#### Type Parameters
+
+| Type Parameter                                                                 | Default type                                                     |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `T` *extends* [`TaskGetUsersOptions`](../../type-aliases/TaskGetUsersOptions/) | [`TaskGetUsersOptions`](../../type-aliases/TaskGetUsersOptions/) |
+
+#### Parameters
+
+| Parameter  | Type     | Description                              |
+| ---------- | -------- | ---------------------------------------- |
+| `folderId` | `number` | The folder ID to get users from          |
+| `options?` | `T`      | Optional query and pagination parameters |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`UserLoginInfo`](../UserLoginInfo/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`UserLoginInfo`](../UserLoginInfo/)>>
+
+Promise resolving to either an array of users NonPaginatedResponse or a PaginatedResponse when pagination options are used. [UserLoginInfo](../UserLoginInfo/)
+
+#### Example
+
+```
+// Get users from a folder
+const users = await tasks.getUsers(<folderId>);
+
+// Access user properties
+console.log(users.items[0].name);
+console.log(users.items[0].emailAddress);
+```
+
+______________________________________________________________________
+
+### reassign()
+
+> **reassign**(`options`: [`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/) | [`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/)[]): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/)[] | [`TaskAssignmentResponse`](../TaskAssignmentResponse/)[]>>
+
+Reassigns tasks to new users
+
+#### Parameters
+
+| Parameter | Type                                                                 | Description                                                            |
+| --------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `options` | [`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/) | [`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/)[] |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskAssignmentOptions`](../../type-aliases/TaskAssignmentOptions/)[] | [`TaskAssignmentResponse`](../TaskAssignmentResponse/)[]>>
+
+Promise resolving to array of task assignment results [TaskAssignmentResponse](../TaskAssignmentResponse/)
+
+#### Example
+
+```
+// Reassign a single task to a user by ID
+const result = await tasks.reassign({
+  taskId: <taskId>,
+  userId: <userId>
+});
+
+// Or using instance method
+const task = await tasks.getById(<taskId>);
+const result = await task.reassign({
+  userId: <userId>
+});
+
+// Reassign a single task to a user by email
+const result = await tasks.reassign({
+  taskId: <taskId>,
+  userNameOrEmail: "user@example.com"
+});
+
+// Reassign multiple tasks
+const result = await tasks.reassign([
+  { taskId: <taskId1>, userId: <userId> },
+  { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
+]);
+```
+
+______________________________________________________________________
+
+### unassign()
+
+> **unassign**(`taskId`: `number` | `number`[]): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskAssignmentResponse`](../TaskAssignmentResponse/)[] | { `taskId`: `number`; }[]>>
+
+Unassigns tasks (removes current assignees)
+
+#### Parameters
+
+| Parameter | Type     | Description |
+| --------- | -------- | ----------- |
+| `taskId`  | `number` | `number`[]  |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`TaskAssignmentResponse`](../TaskAssignmentResponse/)[] | { `taskId`: `number`; }[]>>
+
+Promise resolving to array of task assignment results [TaskAssignmentResponse](../TaskAssignmentResponse/)
+
+#### Example
+
+```
+// Unassign a single task
+const result = await tasks.unassign(<taskId>);
+
+// Or using instance method
+const task = await tasks.getById(<taskId>);
+const result = await task.unassign();
+
+// Unassign multiple tasks
+const result = await tasks.unassign([<taskId1>, <taskId2>, <taskId3>]);
+```
+
+Service for managing UiPath Data Fabric Entities.
+
+Entities are collections of records that can be used to store and manage data in the Data Fabric. [UiPath Data Fabric Guide](https://docs.uipath.com/data-service/automation-cloud/latest/user-guide/introduction)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+const allEntities = await entities.getAll();
+```
+
+## Methods
+
+### deleteRecordsById()
+
+> **deleteRecordsById**(`id`: `string`, `recordIds`: `string`[], `options?`: [`EntityDeleteOptions`](../EntityDeleteOptions/)): `Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Deletes data from an entity by entity ID
+
+#### Parameters
+
+| Parameter   | Type                                             | Description                     |
+| ----------- | ------------------------------------------------ | ------------------------------- |
+| `id`        | `string`                                         | UUID of the entity              |
+| `recordIds` | `string`[]                                       | Array of record UUIDs to delete |
+| `options?`  | [`EntityDeleteOptions`](../EntityDeleteOptions/) | Delete options                  |
+
+#### Returns
+
+`Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Promise resolving to delete response [EntityDeleteResponse](../../type-aliases/EntityDeleteResponse/)
+
+#### Example
+
+```
+// Basic usage
+const result = await entities.deleteRecordsById(<entityId>, [
+  <recordId-1>, <recordId-2>
+]);
+```
+
+______________________________________________________________________
+
+### downloadAttachment()
+
+> **downloadAttachment**(`options`: [`EntityDownloadAttachmentOptions`](../EntityDownloadAttachmentOptions/)): `Promise`\<`Blob`>
+
+Downloads an attachment stored in a File-type field of an entity record.
+
+#### Parameters
+
+| Parameter | Type                                                                     | Description                                            |
+| --------- | ------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `options` | [`EntityDownloadAttachmentOptions`](../EntityDownloadAttachmentOptions/) | Options containing entityName, recordId, and fieldName |
+
+#### Returns
+
+`Promise`\<`Blob`>
+
+Promise resolving to Blob containing the file content
+
+#### Example
+
+```
+import { Entities } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+
+// First, get records to obtain the record ID
+const records = await entities.getAllRecords("<entityId>");
+// Get the recordId for the record that contains the attachment
+const recordId = records.items[0].id;
+
+// Download attachment using service method
+const response = await entities.downloadAttachment({
+  entityName: 'Invoice',
+  recordId: recordId,
+  fieldName: 'Documents'
+});
+
+// Or download using entity method
+const entity = await entities.getById("<entityId>");
+const blob = await entity.downloadAttachment(recordId, 'Documents');
+
+// Browser: Display Image
+const url = URL.createObjectURL(response);
+document.getElementById('image').src = url;
+// Call URL.revokeObjectURL(url) when done
+
+// Browser: Display PDF in iframe
+const url = URL.createObjectURL(response);
+document.getElementById('pdf-viewer').src = url;
+// Call URL.revokeObjectURL(url) when done
+
+// Browser: Render PDF with PDF.js
+const arrayBuffer = await response.arrayBuffer();
+const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+// Node.js: Save to file
+const buffer = Buffer.from(await response.arrayBuffer());
+fs.writeFileSync('attachment.pdf', buffer);
+```
+
+______________________________________________________________________
+
+### getAll()
+
+> **getAll**(): `Promise`\<[`EntityGetResponse`](../../type-aliases/EntityGetResponse/)[]>
+
+Gets all entities in the system
+
+#### Returns
+
+`Promise`\<[`EntityGetResponse`](../../type-aliases/EntityGetResponse/)[]>
+
+Promise resolving to either an array of entities NonPaginatedResponse or a PaginatedResponse when pagination options are used. [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+
+#### Example
+
+```
+// Get all entities
+const allEntities = await entities.getAll();
+
+// Iterate through entities
+allEntities.forEach(entity => {
+  console.log(`Entity: ${entity.displayName} (${entity.name})`);
+  console.log(`Type: ${entity.entityType}`);
+});
+
+// Find a specific entity by name
+const customerEntity = allEntities.find(e => e.name === 'Customer');
+
+// Use entity methods directly
+if (customerEntity) {
+  const records = await customerEntity.getAllRecords();
+  console.log(`Customer records: ${records.items.length}`);
+
+  // Insert a single record
+  const insertResult = await customerEntity.insertRecord({ name: "John", age: 30 });
+
+  // Or batch insert multiple records
+  const batchResult = await customerEntity.insertRecords([
+    { name: "Jane", age: 25 },
+    { name: "Bob", age: 35 }
+  ]);
+}
+```
+
+______________________________________________________________________
+
+### getAllRecords()
+
+> **getAllRecords**\<`T`>(`entityId`: `string`, `options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`EntityRecord`](../EntityRecord/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`EntityRecord`](../EntityRecord/)>>
+
+Gets entity records by entity ID
+
+#### Type Parameters
+
+| Type Parameter                                                                                 | Default type                                                                     |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `T` *extends* [`EntityGetRecordsByIdOptions`](../../type-aliases/EntityGetRecordsByIdOptions/) | [`EntityGetRecordsByIdOptions`](../../type-aliases/EntityGetRecordsByIdOptions/) |
+
+#### Parameters
+
+| Parameter  | Type     | Description        |
+| ---------- | -------- | ------------------ |
+| `entityId` | `string` | UUID of the entity |
+| `options?` | `T`      | Query options      |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`EntityRecord`](../EntityRecord/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`EntityRecord`](../EntityRecord/)>>
+
+Promise resolving to either an array of entity records NonPaginatedResponse or a PaginatedResponse when pagination options are used. [EntityRecord](../EntityRecord/)
+
+#### Example
+
+```
+// Basic usage (non-paginated)
+const records = await entities.getAllRecords(<entityId>);
+
+// With expansion level
+const records = await entities.getAllRecords(<entityId>, {
+  expansionLevel: 1
+});
+
+// With pagination
+const paginatedResponse = await entities.getAllRecords(<entityId>, {
+  pageSize: 50,
+  expansionLevel: 1
+});
+
+// Navigate to next page
+const nextPage = await entities.getAllRecords(<entityId>, {
+  cursor: paginatedResponse.nextCursor,
+  expansionLevel: 1
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`id`: `string`): `Promise`\<[`EntityGetResponse`](../../type-aliases/EntityGetResponse/)>
+
+Gets entity metadata by entity ID with attached operation methods
+
+#### Parameters
+
+| Parameter | Type     | Description        |
+| --------- | -------- | ------------------ |
+| `id`      | `string` | UUID of the entity |
+
+#### Returns
+
+`Promise`\<[`EntityGetResponse`](../../type-aliases/EntityGetResponse/)>
+
+Promise resolving to entity metadata with operation methods [EntityGetResponse](../../type-aliases/EntityGetResponse/)
+
+#### Example
+
+```
+import { Entities, ChoiceSets } from '@uipath/uipath-typescript/entities';
+
+const entities = new Entities(sdk);
+const choicesets = new ChoiceSets(sdk);
+
+// Get entity metadata with methods
+const entity = await entities.getById(<entityId>);
+
+// Call operations directly on the entity
+const records = await entity.getAllRecords();
+
+// If a field references a ChoiceSet, get the choiceSetId from records.fields
+const choiceSetId = records.fields[0].referenceChoiceSet?.id;
+if (choiceSetId) {
+  const choiceSetValues = await choicesets.getById(choiceSetId);
+}
+
+// Insert a single record
+const insertResult = await entity.insertRecord({ name: "John", age: 30 });
+
+// Or batch insert multiple records
+const batchResult = await entity.insertRecords([
+    { name: "Jane", age: 25 },
+    { name: "Bob", age: 35 }
+]);
+```
+
+______________________________________________________________________
+
+### getRecordById()
+
+> **getRecordById**(`entityId`: `string`, `recordId`: `string`, `options?`: [`EntityGetRecordByIdOptions`](../EntityGetRecordByIdOptions/)): `Promise`\<[`EntityRecord`](../EntityRecord/)>
+
+Gets a single entity record by entity ID and record ID
+
+#### Parameters
+
+| Parameter  | Type                                                           | Description        |
+| ---------- | -------------------------------------------------------------- | ------------------ |
+| `entityId` | `string`                                                       | UUID of the entity |
+| `recordId` | `string`                                                       | UUID of the record |
+| `options?` | [`EntityGetRecordByIdOptions`](../EntityGetRecordByIdOptions/) | Query options      |
+
+#### Returns
+
+`Promise`\<[`EntityRecord`](../EntityRecord/)>
+
+Promise resolving to a single entity record [EntityRecord](../EntityRecord/)
+
+#### Example
+
+```
+// First, get records to obtain the record ID
+const records = await entities.getAllRecords(<entityId>);
+// Get the recordId for the record
+const recordId = records.items[0].id;
+// Get the record
+const record = await entities.getRecordById(<entityId>, recordId);
+
+// With expansion level
+const record = await entities.getRecordById(<entityId>, recordId, {
+  expansionLevel: 1
+});
+```
+
+______________________________________________________________________
+
+### insertRecordById()
+
+> **insertRecordById**(`id`: `string`, `data`: `Record`\<`string`, `any`>, `options?`: [`EntityInsertOptions`](../EntityInsertOptions/)): `Promise`\<[`EntityRecord`](../EntityRecord/)>
+
+Inserts a single record into an entity by entity ID
+
+Note: Data Fabric supports trigger events only on individual inserts, not on inserting multiple records. Use this method if you need trigger events to fire for the inserted record.
+
+#### Parameters
+
+| Parameter  | Type                                             | Description        |
+| ---------- | ------------------------------------------------ | ------------------ |
+| `id`       | `string`                                         | UUID of the entity |
+| `data`     | `Record`\<`string`, `any`>                       | Record to insert   |
+| `options?` | [`EntityInsertOptions`](../EntityInsertOptions/) | Insert options     |
+
+#### Returns
+
+`Promise`\<[`EntityRecord`](../EntityRecord/)>
+
+Promise resolving to the inserted record with generated record ID [EntityInsertResponse](../../type-aliases/EntityInsertResponse/)
+
+#### Example
+
+```
+// Basic usage
+const result = await entities.insertRecordById(<entityId>, { name: "John", age: 30 });
+
+// With options
+const result = await entities.insertRecordById(<entityId>, { name: "John", age: 30 }, {
+  expansionLevel: 1
+});
+```
+
+______________________________________________________________________
+
+### insertRecordsById()
+
+> **insertRecordsById**(`id`: `string`, `data`: `Record`\<`string`, `any`>[], `options?`: [`EntityOperationOptions`](../EntityOperationOptions/)): `Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Inserts one or more records into an entity by entity ID
+
+Note: Records inserted using insertRecordsById will not trigger Data Fabric trigger events. Use [insertRecordById](#insertrecordbyid) if you need trigger events to fire for each inserted record.
+
+#### Parameters
+
+| Parameter  | Type                                                   | Description                |
+| ---------- | ------------------------------------------------------ | -------------------------- |
+| `id`       | `string`                                               | UUID of the entity         |
+| `data`     | `Record`\<`string`, `any`>[]                           | Array of records to insert |
+| `options?` | [`EntityOperationOptions`](../EntityOperationOptions/) | Insert options             |
+
+#### Returns
+
+`Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Promise resolving to insert response [EntityBatchInsertResponse](../../type-aliases/EntityBatchInsertResponse/)
+
+#### Example
+
+```
+// Basic usage
+const result = await entities.insertRecordsById(<entityId>, [
+  { name: "John", age: 30 },
+  { name: "Jane", age: 25 }
+]);
+
+// With options
+const result = await entities.insertRecordsById(<entityId>, [
+  { name: "John", age: 30 },
+  { name: "Jane", age: 25 }
+], {
+  expansionLevel: 1,
+  failOnFirst: true
+});
+```
+
+______________________________________________________________________
+
+### updateRecordsById()
+
+> **updateRecordsById**(`id`: `string`, `data`: [`EntityRecord`](../EntityRecord/)[], `options?`: [`EntityOperationOptions`](../EntityOperationOptions/)): `Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Updates data in an entity by entity ID
+
+#### Parameters
+
+| Parameter  | Type                                                   | Description                                                         |
+| ---------- | ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `id`       | `string`                                               | UUID of the entity                                                  |
+| `data`     | [`EntityRecord`](../EntityRecord/)[]                   | Array of records to update. Each record MUST contain the record Id. |
+| `options?` | [`EntityOperationOptions`](../EntityOperationOptions/) | Update options                                                      |
+
+#### Returns
+
+`Promise`\<[`EntityOperationResponse`](../EntityOperationResponse/)>
+
+Promise resolving to update response [EntityUpdateResponse](../../type-aliases/EntityUpdateResponse/)
+
+#### Example
+
+```
+// Basic usage
+const result = await entities.updateRecordsById(<entityId>, [
+  { Id: "123", name: "John Updated", age: 31 },
+  { Id: "456", name: "Jane Updated", age: 26 }
+]);
+
+// With options
+const result = await entities.updateRecordsById(<entityId>, [
+  { Id: "123", name: "John Updated", age: 31 },
+  { Id: "456", name: "Jane Updated", age: 26 }
+], {
+  expansionLevel: 1,
+  failOnFirst: true
+});
+```
+
+Service for managing UiPath Data Fabric Choice Sets
+
+Choice Sets are enumerated lists of values that can be used as field types in entities. They enable single-select or multi-select fields, such as expense types, categories, or status values. [UiPath Choice Sets Guide](https://docs.uipath.com/data-service/automation-cloud/latest/user-guide/choice-sets)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { ChoiceSets } from '@uipath/uipath-typescript/entities';
+
+const choicesets = new ChoiceSets(sdk);
+const allChoiceSets = await choicesets.getAll();
+```
+
+## Methods
+
+### getAll()
+
+> **getAll**(): `Promise`\<[`ChoiceSetGetAllResponse`](../ChoiceSetGetAllResponse/)[]>
+
+Gets all choice sets in the org
+
+#### Returns
+
+`Promise`\<[`ChoiceSetGetAllResponse`](../ChoiceSetGetAllResponse/)[]>
+
+Promise resolving to an array of choice set metadata [ChoiceSetGetAllResponse](../ChoiceSetGetAllResponse/)
+
+#### Example
+
+```
+// Get all choice sets
+const allChoiceSets = await choicesets.getAll();
+
+// Iterate through choice sets
+allChoiceSets.forEach(choiceSet => {
+  console.log(`ChoiceSet: ${choiceSet.displayName} (${choiceSet.name})`);
+  console.log(`Description: ${choiceSet.description}`);
+  console.log(`Created by: ${choiceSet.createdBy}`);
+});
+
+// Find a specific choice set by name
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');
+
+// Check choice set details
+if (expenseTypes) {
+  console.log(`Last updated: ${expenseTypes.updatedTime}`);
+  console.log(`Updated by: ${expenseTypes.updatedBy}`);
+}
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**\<`T`>(`choiceSetId`: `string`, `options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ChoiceSetGetResponse`](../ChoiceSetGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ChoiceSetGetResponse`](../ChoiceSetGetResponse/)>>
+
+Gets choice set values by choice set ID with optional pagination
+
+The method returns either:
+
+- A NonPaginatedResponse with items array (when no pagination parameters are provided)
+- A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                             | Default type                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `T` *extends* [`PaginationOptions`](../../type-aliases/PaginationOptions/) | [`PaginationOptions`](../../type-aliases/PaginationOptions/) |
+
+#### Parameters
+
+| Parameter     | Type     | Description            |
+| ------------- | -------- | ---------------------- |
+| `choiceSetId` | `string` | UUID of the choice set |
+| `options?`    | `T`      | Pagination options     |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ChoiceSetGetResponse`](../ChoiceSetGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ChoiceSetGetResponse`](../ChoiceSetGetResponse/)>>
+
+Promise resolving to choice set values or paginated result [ChoiceSetGetResponse](../ChoiceSetGetResponse/)
+
+#### Example
+
+```
+// First, get the choice set ID using getAll()
+const allChoiceSets = await choicesets.getAll();
+const expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');
+const choiceSetId = expenseTypes.id;
+
+// Get all values (non-paginated)
+const values = await choicesets.getById(choiceSetId);
+
+// Iterate through choice set values
+for (const value of values.items) {
+  console.log(`Value: ${value.displayName}`);
+}
+
+// First page with pagination
+const page1 = await choicesets.getById(choiceSetId, { pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
+}
+```
+
+Service for managing UiPath Maestro Processes
+
+UiPath Maestro is a cloud-native orchestration layer that coordinates bots, AI agents, and humans for seamless, intelligent automation of complex workflows. [UiPath Maestro Guide](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/introduction-to-maestro)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+
+const maestroProcesses = new MaestroProcesses(sdk);
+const allProcesses = await maestroProcesses.getAll();
+```
+
+## Methods
+
+### getAll()
+
+> **getAll**(): `Promise`\<[`MaestroProcessGetAllResponse`](../../type-aliases/MaestroProcessGetAllResponse/)[]>
+
+#### Returns
+
+`Promise`\<[`MaestroProcessGetAllResponse`](../../type-aliases/MaestroProcessGetAllResponse/)[]>
+
+Promise resolving to array of MaestroProcess objects with methods [MaestroProcessGetAllResponse](../../type-aliases/MaestroProcessGetAllResponse/)
+
+#### Example
+
+```
+// Get all processes
+const allProcesses = await maestroProcesses.getAll();
+
+// Access process information and incidents
+for (const process of allProcesses) {
+  console.log(`Process: ${process.processKey}`);
+  console.log(`Running instances: ${process.runningCount}`);
+  console.log(`Faulted instances: ${process.faultedCount}`);
+
+  // Get incidents for this process
+  const incidents = await process.getIncidents();
+  console.log(`Incidents: ${incidents.length}`);
+}
+```
+
+______________________________________________________________________
+
+### getIncidents()
+
+> **getIncidents**(`processKey`: `string`, `folderKey`: `string`): `Promise`\<[`ProcessIncidentGetResponse`](../ProcessIncidentGetResponse/)[]>
+
+Get incidents for a specific process
+
+#### Parameters
+
+| Parameter    | Type     | Description                                 |
+| ------------ | -------- | ------------------------------------------- |
+| `processKey` | `string` | The key of the process to get incidents for |
+| `folderKey`  | `string` | The folder key for authorization            |
+
+#### Returns
+
+`Promise`\<[`ProcessIncidentGetResponse`](../ProcessIncidentGetResponse/)[]>
+
+Promise resolving to array of incidents for the process [ProcessIncidentGetResponse](../ProcessIncidentGetResponse/)
+
+#### Example
+
+```
+// Get incidents for a specific process
+const incidents = await maestroProcesses.getIncidents('<processKey>', '<folderKey>');
+
+// Access incident details
+for (const incident of incidents) {
+  console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);
+  console.log(`Status: ${incident.incidentStatus}`);
+  console.log(`Error: ${incident.errorMessage}`);
+}
+```
+
+Service for managing UiPath Maestro Process instances
+
+Maestro process instances are the running instances of Maestro processes. [UiPath Maestro Process Instances Guide](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/all-instances-view)
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
+
+const processInstances = new ProcessInstances(sdk);
+const allInstances = await processInstances.getAll();
+```
+
+## Methods
+
+### cancel()
+
+> **cancel**(`instanceId`: `string`, `folderKey`: `string`, `options?`: [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/)): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Cancel a process instance
+
+#### Parameters
+
+| Parameter    | Type                                                                     | Description                                |
+| ------------ | ------------------------------------------------------------------------ | ------------------------------------------ |
+| `instanceId` | `string`                                                                 | The ID of the instance to cancel           |
+| `folderKey`  | `string`                                                                 | The folder key for authorization           |
+| `options?`   | [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/) | Optional cancellation options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+#### Example
+
+```
+// Cancel a process instance
+const result = await processInstances.cancel(
+  <instanceId>,
+  <folderKey>
+);
+
+// Or using instance method
+const instance = await processInstances.getById(
+  <instanceId>,
+  <folderKey>
+);
+const result = await instance.cancel();
+
+console.log(`Cancelled: ${result.success}`);
+
+// Cancel with a comment
+const resultWithComment = await instance.cancel({
+  comment: 'Cancelling due to invalid input data'
+});
+
+if (resultWithComment.success) {
+  console.log(`Instance ${resultWithComment.data.instanceId} status: ${resultWithComment.data.status}`);
+}
+```
+
+______________________________________________________________________
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)>>
+
+Get all process instances with optional filtering and pagination
+
+The method returns either:
+
+- A NonPaginatedResponse with items array (when no pagination parameters are provided)
+- A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                                                                               | Default type                                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `T` *extends* [`ProcessInstanceGetAllWithPaginationOptions`](../../type-aliases/ProcessInstanceGetAllWithPaginationOptions/) | [`ProcessInstanceGetAllWithPaginationOptions`](../../type-aliases/ProcessInstanceGetAllWithPaginationOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                             |
+| ---------- | ---- | ------------------------------------------------------- |
+| `options?` | `T`  | Query parameters for filtering instances and pagination |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)>>
+
+Promise resolving to either an array of process instances NonPaginatedResponse or a PaginatedResponse when pagination options are used. [ProcessInstanceGetResponse](../../type-aliases/ProcessInstanceGetResponse/)
+
+#### Example
+
+```
+// Get all instances (non-paginated)
+const instances = await processInstances.getAll();
+
+// Cancel faulted instances using methods directly on instances
+for (const instance of instances.items) {
+  if (instance.latestRunStatus === 'Faulted') {
+    await instance.cancel({ comment: 'Cancelling faulted instance' });
+  }
+}
+
+// With filtering
+const filteredInstances = await processInstances.getAll({
+  processKey: 'MyProcess'
+});
+
+// First page with pagination
+const page1 = await processInstances.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await processInstances.getAll({ cursor: page1.nextCursor });
+}
+```
+
+______________________________________________________________________
+
+### getBpmn()
+
+> **getBpmn**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<`string`>
+
+Get BPMN XML file for a process instance
+
+#### Parameters
+
+| Parameter    | Type     | Description                            |
+| ------------ | -------- | -------------------------------------- |
+| `instanceId` | `string` | The ID of the instance to get BPMN for |
+| `folderKey`  | `string` | The folder key for authorization       |
+
+#### Returns
+
+`Promise`\<`string`>
+
+Promise resolving to BPMN XML file [BpmnXmlString](../../type-aliases/BpmnXmlString/)
+
+#### Example
+
+```
+// Get BPMN XML for a process instance
+const bpmnXml = await processInstances.getBpmn(
+  <instanceId>,
+  <folderKey>
+);
+
+// Render BPMN diagram in frontend using bpmn-js
+import BpmnViewer from 'bpmn-js/lib/Viewer';
+
+const viewer = new BpmnViewer({
+  container: '#bpmn-diagram'
+});
+
+await viewer.importXML(bpmnXml);
+
+// Zoom to fit the diagram
+viewer.get('canvas').zoom('fit-viewport');
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`id`: `string`, `folderKey`: `string`): `Promise`\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)>
+
+Get a process instance by ID with operation methods (cancel, pause, resume)
+
+#### Parameters
+
+| Parameter   | Type     | Description                        |
+| ----------- | -------- | ---------------------------------- |
+| `id`        | `string` | The ID of the instance to retrieve |
+| `folderKey` | `string` | The folder key for authorization   |
+
+#### Returns
+
+`Promise`\<[`ProcessInstanceGetResponse`](../../type-aliases/ProcessInstanceGetResponse/)>
+
+Promise resolving to a process instance [ProcessInstanceGetResponse](../../type-aliases/ProcessInstanceGetResponse/)
+
+#### Example
+
+```
+// Get a specific process instance
+const instance = await processInstances.getById(
+  <instanceId>,
+  <folderKey>
+);
+
+// Access instance properties
+console.log(`Status: ${instance.latestRunStatus}`);
+```
+
+______________________________________________________________________
+
+### getExecutionHistory()
+
+> **getExecutionHistory**(`instanceId`: `string`): `Promise`\<[`ProcessInstanceExecutionHistoryResponse`](../ProcessInstanceExecutionHistoryResponse/)[]>
+
+Get execution history (spans) for a process instance
+
+#### Parameters
+
+| Parameter    | Type     | Description                               |
+| ------------ | -------- | ----------------------------------------- |
+| `instanceId` | `string` | The ID of the instance to get history for |
+
+#### Returns
+
+`Promise`\<[`ProcessInstanceExecutionHistoryResponse`](../ProcessInstanceExecutionHistoryResponse/)[]>
+
+Promise resolving to execution history [ProcessInstanceExecutionHistoryResponse](../ProcessInstanceExecutionHistoryResponse/)
+
+#### Example
+
+```
+// Get execution history for a process instance
+const history = await processInstances.getExecutionHistory(
+  <instanceId>
+);
+
+// Analyze execution timeline
+history.forEach(span => {
+  console.log(`Activity: ${span.name}`);
+  console.log(`Start: ${span.startTime}`);
+  console.log(`Duration: ${span.duration}ms`);
+});
+```
+
+______________________________________________________________________
+
+### getIncidents()
+
+> **getIncidents**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<[`ProcessIncidentGetResponse`](../ProcessIncidentGetResponse/)[]>
+
+Get incidents for a process instance
+
+#### Parameters
+
+| Parameter    | Type     | Description                                 |
+| ------------ | -------- | ------------------------------------------- |
+| `instanceId` | `string` | The ID of the instance to get incidents for |
+| `folderKey`  | `string` | The folder key for authorization            |
+
+#### Returns
+
+`Promise`\<[`ProcessIncidentGetResponse`](../ProcessIncidentGetResponse/)[]>
+
+Promise resolving to array of incidents for the processinstance [ProcessIncidentGetResponse](../ProcessIncidentGetResponse/)
+
+#### Example
+
+```
+// Get incidents for a specific instance
+const incidents = await processInstances.getIncidents('<instanceId>', '<folderKey>');
+
+// Access process incident details
+for (const incident of incidents) {
+  console.log(`Element: ${incident.incidentElementActivityName} (${incident.incidentElementActivityType})`);
+  console.log(`Severity: ${incident.incidentSeverity}`);
+  console.log(`Error: ${incident.errorMessage}`);
+}
+```
+
+______________________________________________________________________
+
+### getVariables()
+
+> **getVariables**(`instanceId`: `string`, `folderKey`: `string`, `options?`: [`ProcessInstanceGetVariablesOptions`](../ProcessInstanceGetVariablesOptions/)): `Promise`\<[`ProcessInstanceGetVariablesResponse`](../ProcessInstanceGetVariablesResponse/)>
+
+Get global variables for a process instance
+
+#### Parameters
+
+| Parameter    | Type                                                                           | Description                                                            |
+| ------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `instanceId` | `string`                                                                       | The ID of the instance to get variables for                            |
+| `folderKey`  | `string`                                                                       | The folder key for authorization                                       |
+| `options?`   | [`ProcessInstanceGetVariablesOptions`](../ProcessInstanceGetVariablesOptions/) | Optional options including parentElementId to filter by parent element |
+
+#### Returns
+
+`Promise`\<[`ProcessInstanceGetVariablesResponse`](../ProcessInstanceGetVariablesResponse/)>
+
+Promise resolving to variables response with elements and globals [ProcessInstanceGetVariablesResponse](../ProcessInstanceGetVariablesResponse/)
+
+#### Example
+
+```
+// Get all variables for a process instance
+const variables = await processInstances.getVariables(
+  <instanceId>,
+  <folderKey>
+);
+
+// Access global variables
+console.log('Global variables:', variables.globalVariables);
+
+// Iterate through global variables with metadata
+variables.globalVariables?.forEach(variable => {
+  console.log(`Variable: ${variable.name} (${variable.id})`);
+  console.log(`  Type: ${variable.type}`);
+  console.log(`  Element: ${variable.elementId}`);
+  console.log(`  Value: ${variable.value}`);
+});
+
+// Get variables for a specific parent element
+const elementVariables = await processInstances.getVariables(
+  <instanceId>,
+  <folderKey>,
+  { parentElementId: <parentElementId> }
+);
+```
+
+______________________________________________________________________
+
+### pause()
+
+> **pause**(`instanceId`: `string`, `folderKey`: `string`, `options?`: [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/)): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Pause a process instance
+
+#### Parameters
+
+| Parameter    | Type                                                                     | Description                         |
+| ------------ | ------------------------------------------------------------------------ | ----------------------------------- |
+| `instanceId` | `string`                                                                 | The ID of the instance to pause     |
+| `folderKey`  | `string`                                                                 | The folder key for authorization    |
+| `options?`   | [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/) | Optional pause options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+______________________________________________________________________
+
+### resume()
+
+> **resume**(`instanceId`: `string`, `folderKey`: `string`, `options?`: [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/)): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Resume a process instance
+
+#### Parameters
+
+| Parameter    | Type                                                                     | Description                          |
+| ------------ | ------------------------------------------------------------------------ | ------------------------------------ |
+| `instanceId` | `string`                                                                 | The ID of the instance to resume     |
+| `folderKey`  | `string`                                                                 | The folder key for authorization     |
+| `options?`   | [`ProcessInstanceOperationOptions`](../ProcessInstanceOperationOptions/) | Optional resume options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`ProcessInstanceOperationResponse`](../ProcessInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+Service for managing UiPath Maestro Cases
+
+UiPath Maestro Case Management describes solutions that help manage and automate the full flow of complex E2E scenarios.
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Cases } from '@uipath/uipath-typescript/cases';
+
+const cases = new Cases(sdk);
+const allCases = await cases.getAll();
+```
+
+## Methods
+
+### getAll()
+
+> **getAll**(): `Promise`\<[`CaseGetAllResponse`](../CaseGetAllResponse/)[]>
+
+#### Returns
+
+`Promise`\<[`CaseGetAllResponse`](../CaseGetAllResponse/)[]>
+
+Promise resolving to array of Case objects [CaseGetAllResponse](../CaseGetAllResponse/)
+
+#### Example
+
+```
+// Get all case management processes
+const allCases = await cases.getAll();
+
+// Access case information
+for (const caseProcess of allCases) {
+  console.log(`Case Process: ${caseProcess.processKey}`);
+  console.log(`Running instances: ${caseProcess.runningCount}`);
+  console.log(`Completed instances: ${caseProcess.completedCount}`);
+}
+```
+
+Service model for managing Maestro Case Instances
+
+Maestro case instances are the running instances of Maestro cases.
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { CaseInstances } from '@uipath/uipath-typescript/cases';
+
+const caseInstances = new CaseInstances(sdk);
+const allInstances = await caseInstances.getAll();
+```
+
+## Methods
+
+### close()
+
+> **close**(`instanceId`: `string`, `folderKey`: `string`, `options?`: [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/)): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Close/Cancel a case instance
+
+#### Parameters
+
+| Parameter    | Type                                                               | Description                         |
+| ------------ | ------------------------------------------------------------------ | ----------------------------------- |
+| `instanceId` | `string`                                                           | The ID of the instance to cancel    |
+| `folderKey`  | `string`                                                           | Required folder key                 |
+| `options?`   | [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/) | Optional close options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+#### Example
+
+```
+// Close a case instance
+const result = await caseInstances.close(
+  <instanceId>,
+  <folderKey>
+);
+
+// Or using instance method
+const instance = await caseInstances.getById(
+  <instanceId>,
+  <folderKey>
+);
+const result = await instance.close();
+
+console.log(`Closed: ${result.success}`);
+
+// Close with a comment
+const resultWithComment = await instance.close({
+  comment: 'Closing due to invalid input data'
+});
+
+if (resultWithComment.success) {
+  console.log(`Instance ${resultWithComment.data.instanceId} status: ${resultWithComment.data.status}`);
+}
+```
+
+______________________________________________________________________
+
+### getActionTasks()
+
+> **getActionTasks**\<`T`>(`caseInstanceId`: `string`, `options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>>
+
+Get human in the loop tasks associated with a case instance
+
+The method returns either:
+
+- An array of tasks (when no pagination parameters are provided)
+- A paginated result with navigation cursors (when any pagination parameter is provided)
+
+#### Type Parameters
+
+| Type Parameter                                                             | Default type                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `T` *extends* [`TaskGetAllOptions`](../../type-aliases/TaskGetAllOptions/) | [`TaskGetAllOptions`](../../type-aliases/TaskGetAllOptions/) |
+
+#### Parameters
+
+| Parameter        | Type     | Description                               |
+| ---------------- | -------- | ----------------------------------------- |
+| `caseInstanceId` | `string` | The ID of the case instance               |
+| `options?`       | `T`      | Optional filtering and pagination options |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`TaskGetResponse`](../../type-aliases/TaskGetResponse/)>>
+
+Promise resolving to human in the loop tasks associated with the case instance
+
+#### Example
+
+```
+// Get all tasks for a case instance (non-paginated)
+const actionTasks = await caseInstances.getActionTasks(
+  <caseInstanceId>,
+);
+
+// First page with pagination
+const page1 = await caseInstances.getActionTasks(
+  <caseInstanceId>,
+  { pageSize: 10 }
+);
+// Iterate through tasks
+for (const task of page1.items) {
+  console.log(`Task: ${task.title}`);
+  console.log(`Task: ${task.status}`);
+}
+
+// Jump to specific page
+const page5 = await caseInstances.getActionTasks(
+  <caseInstanceId>,
+  {
+    jumpToPage: 5,
+    pageSize: 10
+  }
+);
+```
+
+______________________________________________________________________
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)>>
+
+Get all case instances with optional filtering and pagination
+
+#### Type Parameters
+
+| Type Parameter                                                                                                         | Default type                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `T` *extends* [`CaseInstanceGetAllWithPaginationOptions`](../../type-aliases/CaseInstanceGetAllWithPaginationOptions/) | [`CaseInstanceGetAllWithPaginationOptions`](../../type-aliases/CaseInstanceGetAllWithPaginationOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                             |
+| ---------- | ---- | ------------------------------------------------------- |
+| `options?` | `T`  | Query parameters for filtering instances and pagination |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)>>
+
+Promise resolving to either an array of case instances NonPaginatedResponse or a PaginatedResponse when pagination options are used. [CaseInstanceGetResponse](../../type-aliases/CaseInstanceGetResponse/)
+
+#### Example
+
+```
+// Get all case instances (non-paginated)
+const instances = await caseInstances.getAll();
+
+// Cancel/Close faulted instances using methods directly on instances
+for (const instance of instances.items) {
+  if (instance.latestRunStatus === 'Faulted') {
+    await instance.close({ comment: 'Closing faulted case instance' });
+  }
+}
+
+// With filtering
+const filteredInstances = await caseInstances.getAll({
+  processKey: 'MyCaseProcess'
+});
+
+// First page with pagination
+const page1 = await caseInstances.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (page1.hasNextPage) {
+  const page2 = await caseInstances.getAll({ cursor: page1.nextCursor });
+}
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)>
+
+Get a specific case instance by ID
+
+#### Parameters
+
+| Parameter    | Type     | Description          |
+| ------------ | -------- | -------------------- |
+| `instanceId` | `string` | The case instance ID |
+| `folderKey`  | `string` | Required folder key  |
+
+#### Returns
+
+`Promise`\<[`CaseInstanceGetResponse`](../../type-aliases/CaseInstanceGetResponse/)>
+
+Promise resolving to case instance with methods [CaseInstanceGetResponse](../../type-aliases/CaseInstanceGetResponse/)
+
+#### Example
+
+```
+// Get a specific case instance
+const instance = await caseInstances.getById(
+  <instanceId>,
+  <folderKey>
+);
+
+// Access instance properties
+console.log(`Status: ${instance.latestRunStatus}`);
+```
+
+______________________________________________________________________
+
+### getExecutionHistory()
+
+> **getExecutionHistory**(`instanceId`: `string`, `folderKey`: `string`): `Promise`\<[`CaseInstanceExecutionHistoryResponse`](../CaseInstanceExecutionHistoryResponse/)>
+
+Get execution history for a case instance
+
+#### Parameters
+
+| Parameter    | Type     | Description                 |
+| ------------ | -------- | --------------------------- |
+| `instanceId` | `string` | The ID of the case instance |
+| `folderKey`  | `string` | Required folder key         |
+
+#### Returns
+
+`Promise`\<[`CaseInstanceExecutionHistoryResponse`](../CaseInstanceExecutionHistoryResponse/)>
+
+Promise resolving to instance execution history [CaseInstanceExecutionHistoryResponse](../CaseInstanceExecutionHistoryResponse/)
+
+#### Example
+
+```
+// Get execution history for a case instance
+const history = await caseInstances.getExecutionHistory(
+  <instanceId>,
+  <folderKey>
+);
+
+// Access element executions
+if (history.elementExecutions) {
+  for (const execution of history.elementExecutions) {
+    console.log(`Element: ${execution.elementName} - Status: ${execution.status}`);
+  }
+}
+```
+
+______________________________________________________________________
+
+### getStages()
+
+> **getStages**(`caseInstanceId`: `string`, `folderKey`: `string`): `Promise`\<[`CaseGetStageResponse`](../CaseGetStageResponse/)[]>
+
+Get stages and its associated tasks information for a case instance
+
+#### Parameters
+
+| Parameter        | Type     | Description                 |
+| ---------------- | -------- | --------------------------- |
+| `caseInstanceId` | `string` | The ID of the case instance |
+| `folderKey`      | `string` | Required folder key         |
+
+#### Returns
+
+`Promise`\<[`CaseGetStageResponse`](../CaseGetStageResponse/)[]>
+
+Promise resolving to an array of case stages with their tasks and status
+
+#### Example
+
+```
+// Get stages for a case instance
+const stages = await caseInstances.getStages(
+  <caseInstanceId>,
+  <folderKey>
+);
+
+// Iterate through stages
+for (const stage of stages) {
+  console.log(`Stage: ${stage.name} - Status: ${stage.status}`);
+
+  // Check tasks in the stage
+  for (const taskGroup of stage.tasks) {
+    for (const task of taskGroup) {
+      console.log(`  Task: ${task.name} - Status: ${task.status}`);
+    }
+  }
+}
+```
+
+______________________________________________________________________
+
+### pause()
+
+> **pause**(`instanceId`: `string`, `folderKey`: `string`, `options?`: [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/)): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Pause a case instance
+
+#### Parameters
+
+| Parameter    | Type                                                               | Description                         |
+| ------------ | ------------------------------------------------------------------ | ----------------------------------- |
+| `instanceId` | `string`                                                           | The ID of the instance to pause     |
+| `folderKey`  | `string`                                                           | Required folder key                 |
+| `options?`   | [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/) | Optional pause options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+______________________________________________________________________
+
+### reopen()
+
+> **reopen**(`instanceId`: `string`, `folderKey`: `string`, `options`: [`CaseInstanceReopenOptions`](../CaseInstanceReopenOptions/)): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Reopen a case instance from a specified element
+
+#### Parameters
+
+| Parameter    | Type                                                         | Description                                                                             |
+| ------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `instanceId` | `string`                                                     | The ID of the case instance                                                             |
+| `folderKey`  | `string`                                                     | Required folder key                                                                     |
+| `options`    | [`CaseInstanceReopenOptions`](../CaseInstanceReopenOptions/) | Reopen options containing stageId (the stage ID to resume from) and an optional comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data [CaseInstanceOperationResponse](../CaseInstanceOperationResponse/)
+
+#### Example
+
+```
+import { CaseInstances } from '@uipath/uipath-typescript/cases';
+
+const caseInstances = new CaseInstances(sdk);
+
+// First, get the available stages for the case instance
+const stages = await caseInstances.getStages('<instanceId>', '<folderKey>');
+const stageId = stages[0].id; // Select the stage to reopen from
+
+// Reopen a case instance from a specific stage
+const result = await caseInstances.reopen(
+  '<instanceId>',
+  '<folderKey>',
+  { stageId }
+);
+
+// Reopen with a comment
+const result = await caseInstances.reopen(
+  '<instanceId>',
+  '<folderKey>',
+  { stageId, comment: 'Reopening to retry failed stage' }
+);
+
+// Or using instance method
+const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+const stages = await instance.getStages();
+const result = await instance.reopen({ stageId: stages[0].id });
+```
+
+______________________________________________________________________
+
+### resume()
+
+> **resume**(`instanceId`: `string`, `folderKey`: `string`, `options?`: [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/)): `Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Resume a case instance
+
+#### Parameters
+
+| Parameter    | Type                                                               | Description                          |
+| ------------ | ------------------------------------------------------------------ | ------------------------------------ |
+| `instanceId` | `string`                                                           | The ID of the instance to resume     |
+| `folderKey`  | `string`                                                           | Required folder key                  |
+| `options?`   | [`CaseInstanceOperationOptions`](../CaseInstanceOperationOptions/) | Optional resume options with comment |
+
+#### Returns
+
+`Promise`\<[`OperationResponse`](../OperationResponse/)\<[`CaseInstanceOperationResponse`](../CaseInstanceOperationResponse/)>>
+
+Promise resolving to operation result with instance data
+
+Service for managing UiPath Conversational Agents — AI-powered chat interfaces that enable natural language interactions with UiPath automation. Discover agents, create conversations, and stream real-time responses over WebSocket. [UiPath Conversational Agents Guide](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/conversational-agents)
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+## How It Works
+
+### Lifecycle
+
+```
+graph TD
+    A["Agent"] -->|conversations.create| B["Conversation"]
+    B -->|startSession| C["Session"]
+    B -->|exchanges.getAll| F(["History"])
+    C -->|onSessionStarted| D["Ready"]
+    D -->|startExchange| E["Exchange"]
+    E -->|sendMessage| G["Message"]
+```
+
+### Real-Time Event Flow
+
+Once a session is started, events flow through a nested stream hierarchy:
+
+```
+graph TD
+    S["SessionStream"]
+    S -->|onExchangeStart| E["ExchangeStream"]
+    S -->|onSessionEnd| SE(["session closed"])
+    E -->|onMessageStart| M["MessageStream"]
+    E -->|onExchangeEnd| EE(["exchange complete"])
+    M -->|onContentPartStart| CP["ContentPartStream"]
+    M -->|onToolCallStart| TC["ToolCallStream"]
+    M -->|onInterruptStart| IR(["awaiting approval"])
+    CP -->|onChunk| CH(["streaming data"])
+    TC -->|onToolCallEnd| TCE(["tool result"])
+```
+
+## Usage
+
+```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
+const conversationalAgent = new ConversationalAgent(sdk);
+
+// 1. Discover agents
+const agents = await conversationalAgent.getAll();
+const agent = agents[0];
+
+// 2. Create a conversation
+const conversation = await agent.conversations.create({ label: 'My Chat' });
+
+// 3. Start real-time session and listen for responses
+const session = conversation.startSession();
+
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    if (message.isAssistant) {
+      message.onContentPartStart((part) => {
+        if (part.isMarkdown) {
+          part.onChunk((chunk) => process.stdout.write(chunk.data ?? ''));
+        }
+      });
+    }
+  });
+});
+
+// 4. Wait for session to be ready, then send a message
+session.onSessionStarted(() => {
+  const exchange = session.startExchange();
+  exchange.sendMessageWithContentPart({ data: 'Hello!' });
+});
+
+// 5. End session when done
+conversation.endSession();
+
+// 6. Retrieve conversation history (offline)
+const exchanges = await conversation.exchanges.getAll();
+```
+
+## Properties
+
+| Property        | Modifier   | Type                                                       | Description                                                                                                    |
+| --------------- | ---------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `conversations` | `readonly` | [`ConversationServiceModel`](../ConversationServiceModel/) | Service for creating and managing conversations. See [ConversationServiceModel](../ConversationServiceModel/). |
+
+## Methods
+
+### getAll()
+
+> **getAll**(`folderId?`: `number`): `Promise`\<[`AgentGetResponse`](../../type-aliases/AgentGetResponse/)[]>
+
+Gets all available conversational agents
+
+#### Parameters
+
+| Parameter   | Type     | Description                         |
+| ----------- | -------- | ----------------------------------- |
+| `folderId?` | `number` | Optional folder ID to filter agents |
+
+#### Returns
+
+`Promise`\<[`AgentGetResponse`](../../type-aliases/AgentGetResponse/)[]>
+
+Promise resolving to an array of agents [AgentGetResponse](../../type-aliases/AgentGetResponse/)
+
+#### Examples
+
+```
+const agents = await conversationalAgent.getAll();
+const agent = agents[0];
+
+// Create conversation directly from agent (agentId and folderId are auto-filled)
+const conversation = await agent.conversations.create({ label: 'My Chat' });
+```
+
+```
+const agents = await conversationalAgent.getAll(folderId);
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`id`: `number`, `folderId`: `number`): `Promise`\<[`AgentGetByIdResponse`](../../type-aliases/AgentGetByIdResponse/)>
+
+Gets a specific agent by ID
+
+#### Parameters
+
+| Parameter  | Type     | Description                           |
+| ---------- | -------- | ------------------------------------- |
+| `id`       | `number` | ID of the agent release               |
+| `folderId` | `number` | ID of the folder containing the agent |
+
+#### Returns
+
+`Promise`\<[`AgentGetByIdResponse`](../../type-aliases/AgentGetByIdResponse/)>
+
+Promise resolving to the agent [AgentGetByIdResponse](../../type-aliases/AgentGetByIdResponse/)
+
+#### Example
+
+```
+const agent = await conversationalAgent.getById(agentId, folderId);
+
+// Create conversation directly from agent (agentId and folderId are auto-filled)
+const conversation = await agent.conversations.create({ label: 'My Chat' });
+```
+
+______________________________________________________________________
+
+### onConnectionStatusChanged()
+
+> **onConnectionStatusChanged**(`handler`: (`status`: `ConnectionStatus`, `error`: `null` | `Error`) => `void`): () => `void`
+
+Registers a handler that is called whenever the WebSocket connection status changes.
+
+#### Parameters
+
+| Parameter | Type                                           | Description        |
+| --------- | ---------------------------------------------- | ------------------ |
+| `handler` | (`status`: `ConnectionStatus`, `error`: `null` | `Error`) => `void` |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+const cleanup = conversationalAgent.onConnectionStatusChanged((status, error) => {
+  console.log('Connection status:', status);
+  if (error) {
+    console.error('Connection error:', error.message);
+  }
+});
+
+// Later, remove the handler
+cleanup();
+```
+
+Service for creating and managing conversations with UiPath Conversational Agents
+
+A conversation is a long-lived interaction with a specific agent with shared context. It persists across sessions and can be resumed at any time. To retrieve the conversation history, use the [Exchanges](../ExchangeServiceModel/) service. For real-time chat, see [Session](../SessionStream/).
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { ConversationalAgent } from '@uipath/uipath-typescript/conversational-agent';
+
+const conversationalAgent = new ConversationalAgent(sdk);
+
+// Access conversations through the main service
+const conversation = await conversationalAgent.conversations.create(agentId, folderId);
+
+// Or through agent objects (agentId/folderId auto-filled)
+const agents = await conversationalAgent.getAll();
+const agentConversation = await agents[0].conversations.create({ label: 'My Chat' });
+```
+
+## Methods
+
+### create()
+
+> **create**(`agentId`: `number`, `folderId`: `number`, `options?`: [`ConversationCreateOptions`](../ConversationCreateOptions/)): `Promise`\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)>
+
+Creates a new conversation
+
+The returned conversation has bound methods for lifecycle management: `update()`, `delete()`, and `startSession()`.
+
+#### Parameters
+
+| Parameter  | Type                                                         | Description                                 |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------- |
+| `agentId`  | `number`                                                     | The agent ID to create the conversation for |
+| `folderId` | `number`                                                     | The folder ID containing the agent          |
+| `options?` | [`ConversationCreateOptions`](../ConversationCreateOptions/) | Optional settings for the conversation      |
+
+#### Returns
+
+`Promise`\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)>
+
+Promise resolving to [ConversationCreateResponse](../../type-aliases/ConversationCreateResponse/) with bound methods
+
+#### Example
+
+```
+const conversation = await conversationalAgent.conversations.create(
+  agentId,
+  folderId,
+  { label: 'Customer Support Session' }
+);
+
+// Update the conversation
+await conversation.update({ label: 'Renamed Chat' });
+
+// Start a real-time session
+const session = conversation.startSession();
+
+// Delete the conversation
+await conversation.delete();
+```
+
+______________________________________________________________________
+
+### deleteById()
+
+> **deleteById**(`id`: `string`): `Promise`\<[`RawConversationGetResponse`](../RawConversationGetResponse/)>
+
+Deletes a conversation by ID
+
+#### Parameters
+
+| Parameter | Type     | Description                   |
+| --------- | -------- | ----------------------------- |
+| `id`      | `string` | The conversation ID to delete |
+
+#### Returns
+
+`Promise`\<[`RawConversationGetResponse`](../RawConversationGetResponse/)>
+
+Promise resolving to [ConversationDeleteResponse](../../type-aliases/ConversationDeleteResponse/)
+
+#### Example
+
+```
+await conversationalAgent.conversations.deleteById(conversationId);
+```
+
+______________________________________________________________________
+
+### endSession()
+
+> **endSession**(`conversationId`: `string`): `void`
+
+Ends an active session for a conversation
+
+Sends a session end event and releases the socket for the conversation. If no active session exists for the given conversation, this is a no-op.
+
+#### Parameters
+
+| Parameter        | Type     | Description                                |
+| ---------------- | -------- | ------------------------------------------ |
+| `conversationId` | `string` | The conversation ID to end the session for |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+// End session for a specific conversation
+conversationalAgent.conversations.endSession(conversationId);
+```
+
+______________________________________________________________________
+
+### getAll()
+
+> **getAll**\<`T`>(`options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)>>
+
+Gets all conversations with optional filtering and pagination
+
+#### Type Parameters
+
+| Type Parameter                                                                             | Default type                                                                 |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `T` *extends* [`ConversationGetAllOptions`](../../type-aliases/ConversationGetAllOptions/) | [`ConversationGetAllOptions`](../../type-aliases/ConversationGetAllOptions/) |
+
+#### Parameters
+
+| Parameter  | Type | Description                                                                 |
+| ---------- | ---- | --------------------------------------------------------------------------- |
+| `options?` | `T`  | Options for querying conversations including optional pagination parameters |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)>>
+
+Promise resolving to either an array of conversations NonPaginatedResponse or a PaginatedResponse when pagination options are used
+
+#### Examples
+
+```
+const allConversations = await conversationalAgent.conversations.getAll();
+
+for (const conversation of allConversations.items) {
+  console.log(`${conversation.label} - created: ${conversation.createdTime}`);
+}
+```
+
+```
+// First page
+const firstPage = await conversationalAgent.conversations.getAll({ pageSize: 10 });
+
+// Navigate using cursor
+if (firstPage.hasNextPage) {
+  const nextPage = await conversationalAgent.conversations.getAll({
+    cursor: firstPage.nextCursor
+  });
+}
+```
+
+```
+const result = await conversationalAgent.conversations.getAll({
+  sort: SortOrder.Descending,
+  pageSize: 20
+});
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`id`: `string`): `Promise`\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)>
+
+Gets a conversation by ID
+
+The returned conversation has bound methods for lifecycle management: `update()`, `delete()`, and `startSession()`.
+
+#### Parameters
+
+| Parameter | Type     | Description                     |
+| --------- | -------- | ------------------------------- |
+| `id`      | `string` | The conversation ID to retrieve |
+
+#### Returns
+
+`Promise`\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)>
+
+Promise resolving to [ConversationGetResponse](../../type-aliases/ConversationGetResponse/) with bound methods
+
+#### Examples
+
+```
+const conversation = await conversationalAgent.conversations.getById(conversationId);
+const session = conversation.startSession();
+```
+
+```
+//Retrieve conversation history
+const conversation = await conversationalAgent.conversations.getById(conversationId);
+const allExchanges = await conversation.exchanges.getAll();
+for (const exchange of allExchanges.items) {
+  for (const message of exchange.messages) {
+    console.log(`${message.role}: ${message.contentParts.map(p => p.data).join('')}`);
+  }
+}
+```
+
+______________________________________________________________________
+
+### getSession()
+
+> **getSession**(`conversationId`: `string`): `undefined` | [`SessionStream`](../SessionStream/)
+
+Retrieves an active session by conversation ID
+
+#### Parameters
+
+| Parameter        | Type     | Description                                |
+| ---------------- | -------- | ------------------------------------------ |
+| `conversationId` | `string` | The conversation ID to get the session for |
+
+#### Returns
+
+`undefined` | [`SessionStream`](../SessionStream/)
+
+The session helper if active, undefined otherwise
+
+#### Example
+
+```
+const session = conversationalAgent.conversations.getSession(conversationId);
+if (session) {
+  // Session already started — safe to send exchanges directly
+  const exchange = session.startExchange();
+  exchange.sendMessageWithContentPart({ data: 'Hello!' });
+}
+```
+
+______________________________________________________________________
+
+### startSession()
+
+> **startSession**(`conversationId`: `string`, `options?`: [`ConversationSessionOptions`](../ConversationSessionOptions/)): [`SessionStream`](../SessionStream/)
+
+Starts a real-time chat session for a conversation
+
+Creates a WebSocket session and returns a SessionStream for sending and receiving messages in real-time.
+
+#### Parameters
+
+| Parameter        | Type                                                           | Description                                  |
+| ---------------- | -------------------------------------------------------------- | -------------------------------------------- |
+| `conversationId` | `string`                                                       | The conversation ID to start the session for |
+| `options?`       | [`ConversationSessionOptions`](../ConversationSessionOptions/) | Optional session configuration               |
+
+#### Returns
+
+[`SessionStream`](../SessionStream/)
+
+SessionStream for managing the session
+
+#### Example
+
+```
+const session = conversationalAgent.conversations.startSession(conversation.id);
+
+// Listen for responses using helper methods
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    // Use message.isAssistant to filter AI responses
+    if (message.isAssistant) {
+      message.onContentPartStart((part) => {
+        // Use part.isMarkdown to handle text content
+        if (part.isMarkdown) {
+          part.onChunk((chunk) => console.log(chunk.data));
+        }
+      });
+    }
+  });
+});
+
+// Wait for session to be ready, then send a message
+session.onSessionStarted(() => {
+  const exchange = session.startExchange();
+  exchange.sendMessageWithContentPart({ data: 'Hello!' });
+});
+
+// End the session when done
+conversationalAgent.conversations.endSession(conversation.id);
+```
+
+______________________________________________________________________
+
+### updateById()
+
+> **updateById**(`id`: `string`, `options`: [`ConversationUpdateOptions`](../ConversationUpdateOptions/)): `Promise`\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)>
+
+Updates a conversation by ID
+
+#### Parameters
+
+| Parameter | Type                                                         | Description                   |
+| --------- | ------------------------------------------------------------ | ----------------------------- |
+| `id`      | `string`                                                     | The conversation ID to update |
+| `options` | [`ConversationUpdateOptions`](../ConversationUpdateOptions/) | Fields to update              |
+
+#### Returns
+
+`Promise`\<[`ConversationGetResponse`](../../type-aliases/ConversationGetResponse/)>
+
+Promise resolving to [ConversationGetResponse](../../type-aliases/ConversationGetResponse/) with bound methods
+
+#### Example
+
+```
+const updatedConversation = await conversationalAgent.conversations.updateById(conversationId, {
+  label: 'Updated Name'
+});
+```
+
+______________________________________________________________________
+
+### uploadAttachment()
+
+> **uploadAttachment**(`id`: `string`, `file`: `File`): `Promise`\<[`ConversationAttachmentUploadResponse`](../ConversationAttachmentUploadResponse/)>
+
+Uploads a file attachment to a conversation
+
+#### Parameters
+
+| Parameter | Type     | Description                                      |
+| --------- | -------- | ------------------------------------------------ |
+| `id`      | `string` | The ID of the conversation to attach the file to |
+| `file`    | `File`   | The file to upload                               |
+
+#### Returns
+
+`Promise`\<[`ConversationAttachmentUploadResponse`](../ConversationAttachmentUploadResponse/)>
+
+Promise resolving to attachment metadata with URI [ConversationAttachmentUploadResponse](../ConversationAttachmentUploadResponse/)
+
+#### Example
+
+```
+const attachment = await conversationalAgent.conversations.uploadAttachment(conversationId, file);
+console.log(`Uploaded: ${attachment.uri}`);
+```
+
+Service for retrieving exchanges and managing feedback within a [Conversation](../ConversationServiceModel/)
+
+An exchange represents a single request-response cycle — typically one user question and the agent's reply. Each exchange response includes its [Messages](../MessageServiceModel/), making this the primary way to retrieve conversation history. For real-time streaming of exchanges, see [ExchangeStream](../ExchangeStream/).
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Exchanges } from '@uipath/uipath-typescript/conversational-agent';
+
+const exchanges = new Exchanges(sdk);
+const conversationExchanges = await exchanges.getAll(conversationId);
+```
+
+## Methods
+
+### createFeedback()
+
+> **createFeedback**(`conversationId`: `string`, `exchangeId`: `string`, `options`: [`CreateFeedbackOptions`](../CreateFeedbackOptions/)): `Promise`\<[`FeedbackCreateResponse`](../FeedbackCreateResponse/)>
+
+Creates feedback for an exchange
+
+#### Parameters
+
+| Parameter        | Type                                                 | Description                                         |
+| ---------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| `conversationId` | `string`                                             | The conversation containing the exchange            |
+| `exchangeId`     | `string`                                             | The exchange to provide feedback for                |
+| `options`        | [`CreateFeedbackOptions`](../CreateFeedbackOptions/) | Feedback data including rating and optional comment |
+
+#### Returns
+
+`Promise`\<[`FeedbackCreateResponse`](../FeedbackCreateResponse/)>
+
+Promise resolving to the feedback creation response [FeedbackCreateResponse](../FeedbackCreateResponse/)
+
+#### Example
+
+```
+await exchanges.createFeedback(
+  conversationId,
+  exchangeId,
+  { rating: FeedbackRating.Positive, comment: 'Very helpful!' }
+);
+```
+
+______________________________________________________________________
+
+### getAll()
+
+> **getAll**\<`T`>(`conversationId`: `string`, `options?`: `T`): `Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ExchangeGetResponse`](../ExchangeGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ExchangeGetResponse`](../ExchangeGetResponse/)>>
+
+Gets all exchanges for a conversation with optional filtering and pagination
+
+#### Type Parameters
+
+| Type Parameter                                                                     | Default type                                                         |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `T` *extends* [`ExchangeGetAllOptions`](../../type-aliases/ExchangeGetAllOptions/) | [`ExchangeGetAllOptions`](../../type-aliases/ExchangeGetAllOptions/) |
+
+#### Parameters
+
+| Parameter        | Type     | Description                                                             |
+| ---------------- | -------- | ----------------------------------------------------------------------- |
+| `conversationId` | `string` | The conversation ID to get exchanges for                                |
+| `options?`       | `T`      | Options for querying exchanges including optional pagination parameters |
+
+#### Returns
+
+`Promise`\<`T` *extends* [`HasPaginationOptions`](../../type-aliases/HasPaginationOptions/)\<`T`> ? [`PaginatedResponse`](../PaginatedResponse/)\<[`ExchangeGetResponse`](../ExchangeGetResponse/)> : [`NonPaginatedResponse`](../NonPaginatedResponse/)\<[`ExchangeGetResponse`](../ExchangeGetResponse/)>>
+
+Promise resolving to either an array of exchanges [NonPaginatedResponse](../NonPaginatedResponse/)\<[ExchangeGetResponse](../ExchangeGetResponse/)> or a [PaginatedResponse](../PaginatedResponse/)\<[ExchangeGetResponse](../ExchangeGetResponse/)> when pagination options are used
+
+#### Example
+
+```
+// Get all exchanges (non-paginated)
+const conversationExchanges = await exchanges.getAll(conversationId);
+
+// First page with pagination
+const firstPageOfExchanges = await exchanges.getAll(conversationId, { pageSize: 10 });
+
+// Navigate using cursor
+if (firstPageOfExchanges.hasNextPage) {
+  const nextPageOfExchanges = await exchanges.getAll(conversationId, {
+    cursor: firstPageOfExchanges.nextCursor
+  });
+}
+```
+
+______________________________________________________________________
+
+### getById()
+
+> **getById**(`conversationId`: `string`, `exchangeId`: `string`, `options?`: [`ExchangeGetByIdOptions`](../ExchangeGetByIdOptions/)): `Promise`\<[`ExchangeGetResponse`](../ExchangeGetResponse/)>
+
+Gets an exchange by ID with its messages
+
+#### Parameters
+
+| Parameter        | Type                                                   | Description                              |
+| ---------------- | ------------------------------------------------------ | ---------------------------------------- |
+| `conversationId` | `string`                                               | The conversation containing the exchange |
+| `exchangeId`     | `string`                                               | The exchange ID to retrieve              |
+| `options?`       | [`ExchangeGetByIdOptions`](../ExchangeGetByIdOptions/) | Optional parameters for message sorting  |
+
+#### Returns
+
+`Promise`\<[`ExchangeGetResponse`](../ExchangeGetResponse/)>
+
+Promise resolving to [ExchangeGetResponse](../ExchangeGetResponse/)
+
+#### Example
+
+```
+const exchange = await exchanges.getById(conversationId, exchangeId);
+
+// Access messages
+for (const message of exchange.messages) {
+  console.log(message.role, message.contentParts);
+}
+```
+
+Service for retrieving individual messages within an [Exchange](../ExchangeServiceModel/)
+
+A message is a single turn from a user, assistant, or system. Each message includes a role, contentParts (text, audio, images), toolCalls, and interrupts. Messages are also returned as part of exchange responses — use this service when you need to fetch a specific message by ID or retrieve external content parts. For real-time streaming of messages, see [MessageStream](../MessageStream/).
+
+### Usage
+
+Prerequisites: Initialize the SDK first - see [Getting Started](/uipath-typescript/getting-started/#import-initialize)
+
+```
+import { Messages } from '@uipath/uipath-typescript/conversational-agent';
+
+const message = new Messages(sdk);
+const messageDetails = await message.getById(conversationId, exchangeId, messageId);
+```
+
+## Methods
+
+### getById()
+
+> **getById**(`conversationId`: `string`, `exchangeId`: `string`, `messageId`: `string`): `Promise`\<[`MessageGetResponse`](../MessageGetResponse/)>
+
+Gets a message by ID
+
+Returns the message including its content parts, tool calls, and interrupts.
+
+#### Parameters
+
+| Parameter        | Type     | Description                             |
+| ---------------- | -------- | --------------------------------------- |
+| `conversationId` | `string` | The conversation containing the message |
+| `exchangeId`     | `string` | The exchange containing the message     |
+| `messageId`      | `string` | The message ID to retrieve              |
+
+#### Returns
+
+`Promise`\<[`MessageGetResponse`](../MessageGetResponse/)>
+
+Promise resolving to [MessageGetResponse](../MessageGetResponse/)
+
+#### Example
+
+```
+const message = await messages.getById(conversationId, exchangeId, messageId);
+
+console.log(message.role);
+console.log(message.contentParts);
+console.log(message.toolCalls);
+```
+
+______________________________________________________________________
+
+### getContentPartById()
+
+> **getContentPartById**(`conversationId`: `string`, `exchangeId`: `string`, `messageId`: `string`, `contentPartId`: `string`): `Promise`\<[`ContentPartGetResponse`](../ContentPartGetResponse/)>
+
+Gets an external content part by ID
+
+#### Parameters
+
+| Parameter        | Type     | Description                             |
+| ---------------- | -------- | --------------------------------------- |
+| `conversationId` | `string` | The conversation containing the content |
+| `exchangeId`     | `string` | The exchange containing the content     |
+| `messageId`      | `string` | The message containing the content part |
+| `contentPartId`  | `string` | The content part ID to retrieve         |
+
+#### Returns
+
+`Promise`\<[`ContentPartGetResponse`](../ContentPartGetResponse/)>
+
+Promise resolving to [ContentPartGetResponse](../ContentPartGetResponse/)
+
+#### Example
+
+```
+const contentPart = await messages.getContentPartById(
+  conversationId,
+  exchangeId,
+  messageId,
+  contentPartId
+);
+```
+
+Real-time WebSocket session for two-way communication within a [Conversation](../ConversationServiceModel/).
+
+Send messages and receive agent responses through a nested stream hierarchy. The `SessionStream` is the top-level entry point — events flow down through exchanges, messages, content parts, and tool calls.
+
+### Usage
+
+**Important:** Always wait for `onSessionStarted` before calling `startExchange`. The session must be fully connected via WebSocket before exchanges can be sent — calling `startExchange` earlier may lose events or cause errors.
+
+```
+const session = conversation.startSession();
+
+// Set up handlers for incoming assistant responses
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    if (message.isAssistant) {
+      message.onContentPartStart((part) => {
+        if (part.isMarkdown) {
+          part.onChunk((chunk) => {
+            process.stdout.write(chunk.data ?? '');
+          });
+        }
+      });
+    }
+  });
+});
+
+// Wait for the session to be ready, then send a message
+session.onSessionStarted(() => {
+  const exchange = session.startExchange();
+  exchange.sendMessageWithContentPart({
+    data: 'Hello!',
+    role: MessageRole.User
+  });
+});
+
+// End the session when done
+conversation.endSession();
+```
+
+### Related Streams
+
+| Stream                                     | Description                                                                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| [ExchangeStream](../ExchangeStream/)       | A single request-response cycle within a session. Contains user and assistant messages.               |
+| [MessageStream](../MessageStream/)         | A single message (user, assistant, or system). Contains content parts and tool calls.                 |
+| [ContentPartStream](../ContentPartStream/) | A piece of streamed content (text, audio, image, transcript). Delivers data via `onChunk`.            |
+| [ToolCallStream](../ToolCallStream/)       | An external tool invocation by the assistant. Has a start event (name, input) and end event (output). |
+
+## Properties
+
+| Property         | Modifier   | Type                                                | Description                                        |
+| ---------------- | ---------- | --------------------------------------------------- | -------------------------------------------------- |
+| `conversationId` | `readonly` | `string`                                            | The conversation ID this session belongs to        |
+| `ended`          | `readonly` | `boolean`                                           | Whether this session has ended                     |
+| `exchanges`      | `readonly` | `Iterable`\<[`ExchangeStream`](../ExchangeStream/)> | Iterator over all active exchanges in this session |
+
+## Methods
+
+### getExchange()
+
+> **getExchange**(`exchangeId`: `string`): `undefined` | [`ExchangeStream`](../ExchangeStream/)
+
+Retrieves an exchange by ID
+
+#### Parameters
+
+| Parameter    | Type     | Description                |
+| ------------ | -------- | -------------------------- |
+| `exchangeId` | `string` | The exchange ID to look up |
+
+#### Returns
+
+`undefined` | [`ExchangeStream`](../ExchangeStream/)
+
+The exchange stream, or undefined if not found
+
+______________________________________________________________________
+
+### onErrorEnd()
+
+> **onErrorEnd**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void`): () => `void`
+
+Registers a handler for error end events at the session level
+
+#### Parameters
+
+| Parameter | Type                                                                                 | Description                            |
+| --------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void` | Callback receiving the error end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+session.onErrorEnd((error) => {
+  console.log(`Error ${error.errorId} resolved`);
+});
+```
+
+______________________________________________________________________
+
+### onErrorStart()
+
+> **onErrorStart**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void`): () => `void`
+
+Registers a handler for error start events at the session level
+
+#### Parameters
+
+| Parameter | Type                                                                                     | Description                        |
+| --------- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void` | Callback receiving the error event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+session.onErrorStart((error) => {
+  console.error(`Session error [${error.errorId}]: ${error.message}`);
+});
+```
+
+______________________________________________________________________
+
+### onExchangeStart()
+
+> **onExchangeStart**(`cb`: (`exchange`: [`ExchangeStream`](../ExchangeStream/)) => `void`): () => `void`
+
+Registers a handler for exchange start events
+
+This is the primary entry point for handling agent responses. Each exchange represents a request-response cycle containing user and assistant messages.
+
+#### Parameters
+
+| Parameter | Type                                                           | Description                          |
+| --------- | -------------------------------------------------------------- | ------------------------------------ |
+| `cb`      | (`exchange`: [`ExchangeStream`](../ExchangeStream/)) => `void` | Callback receiving each new exchange |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Examples
+
+```
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    if (message.isAssistant) {
+      message.onContentPartStart((part) => {
+        if (part.isMarkdown) {
+          part.onChunk((chunk) => renderMarkdown(chunk.data ?? ''));
+        } else if (part.isAudio) {
+          part.onChunk((chunk) => audioPlayer.enqueue(chunk.data ?? ''));
+        } else if (part.isImage) {
+          part.onChunk((chunk) => imageBuffer.append(chunk.data ?? ''));
+        } else if (part.isTranscript) {
+          part.onChunk((chunk) => showTranscript(chunk.data ?? ''));
+        }
+      });
+    }
+  });
+});
+```
+
+```
+session.onExchangeStart((exchange) => {
+  exchange.onMessageCompleted((completed) => {
+    console.log(`Message ${completed.messageId} (role: ${completed.role})`);
+    for (const part of completed.contentParts) {
+      console.log(part.data);
+    }
+    for (const tool of completed.toolCalls) {
+      console.log(`${tool.toolName} → ${tool.output}`);
+    }
+  });
+});
+```
+
+```
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    if (message.isAssistant) {
+      // Stream tool call events
+      message.onToolCallStart((toolCall) => {
+        const { toolName, input } = toolCall.startEvent;
+        console.log(`Calling ${toolName}:`, JSON.parse(input ?? '{}'));
+        toolCall.onToolCallEnd((end) => {
+          console.log(`Result:`, JSON.parse(end.output ?? '{}'));
+        });
+      });
+
+      // Handle confirmation interrupts
+      message.onInterruptStart(({ interruptId, startEvent }) => {
+        if (startEvent.type === 'uipath_cas_tool_call_confirmation') {
+          message.sendInterruptEnd(interruptId, { approved: true });
+        }
+      });
+    }
+  });
+});
+```
+
+______________________________________________________________________
+
+### onLabelUpdated()
+
+> **onLabelUpdated**(`cb`: (`event`: [`LabelUpdatedEvent`](../LabelUpdatedEvent/)) => `void`): () => `void`
+
+Registers a handler for conversation label updates
+
+Fired when the conversation label changes, typically when the server auto-generates a title based on the first message.
+
+#### Parameters
+
+| Parameter | Type                                                              | Description                                                                          |
+| --------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `cb`      | (`event`: [`LabelUpdatedEvent`](../LabelUpdatedEvent/)) => `void` | Callback receiving the [LabelUpdatedEvent](../LabelUpdatedEvent/) with the new label |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+session.onLabelUpdated((event) => {
+  console.log(`New label: ${event.label} (auto: ${event.autogenerated})`);
+  updateConversationTitle(event.label);
+});
+```
+
+______________________________________________________________________
+
+### onSessionEnd()
+
+> **onSessionEnd**(`cb`: (`event`: [`SessionEndEvent`](../SessionEndEvent/)) => `void`): () => `void`
+
+Registers a handler for session end events
+
+Fired when the session has fully closed.
+
+#### Parameters
+
+| Parameter | Type                                                          | Description                      |
+| --------- | ------------------------------------------------------------- | -------------------------------- |
+| `cb`      | (`event`: [`SessionEndEvent`](../SessionEndEvent/)) => `void` | Callback receiving the end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+session.onSessionEnd((event) => {
+  console.log('Session ended');
+});
+```
+
+______________________________________________________________________
+
+### onSessionEnding()
+
+> **onSessionEnding**(`cb`: (`event`: [`SessionEndingEvent`](../SessionEndingEvent/)) => `void`): () => `void`
+
+Registers a handler for session ending events
+
+Fired when the session is about to end. Use this for cleanup before the session fully closes.
+
+#### Parameters
+
+| Parameter | Type                                                                | Description                         |
+| --------- | ------------------------------------------------------------------- | ----------------------------------- |
+| `cb`      | (`event`: [`SessionEndingEvent`](../SessionEndingEvent/)) => `void` | Callback receiving the ending event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+session.onSessionEnding((event) => {
+  console.log('Session is ending, performing cleanup...');
+});
+```
+
+______________________________________________________________________
+
+### onSessionStarted()
+
+> **onSessionStarted**(`cb`: (`event`: [`SessionStartedEvent`](../SessionStartedEvent/)) => `void`): () => `void`
+
+Registers a handler for session started events
+
+Fired when the WebSocket connection is established and the session is ready to send and receive events.
+
+#### Parameters
+
+| Parameter | Type                                                                  | Description                          |
+| --------- | --------------------------------------------------------------------- | ------------------------------------ |
+| `cb`      | (`event`: [`SessionStartedEvent`](../SessionStartedEvent/)) => `void` | Callback receiving the started event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+session.onSessionStarted(() => {
+  console.log('Session is ready — now safe to start exchanges');
+
+  const exchange = session.startExchange();
+  exchange.sendMessageWithContentPart({
+    data: 'Hello!',
+    role: MessageRole.User
+  });
+});
+```
+
+______________________________________________________________________
+
+### startExchange()
+
+> **startExchange**(`args?`: { `exchangeId?`: `string`; } & [`ExchangeStartEvent`](../ExchangeStartEvent/)): [`ExchangeStream`](../ExchangeStream/)
+
+Starts a new exchange in this session
+
+Each exchange is a request-response cycle. Use `sendMessageWithContentPart` on the returned [ExchangeStream](../ExchangeStream/) to send a user message, or `startMessage` for fine-grained control.
+
+#### Parameters
+
+| Parameter | Type                                                                          | Description                     |
+| --------- | ----------------------------------------------------------------------------- | ------------------------------- |
+| `args?`   | { `exchangeId?`: `string`; } & [`ExchangeStartEvent`](../ExchangeStartEvent/) | Optional exchange start options |
+
+#### Returns
+
+[`ExchangeStream`](../ExchangeStream/)
+
+The exchange stream for sending messages
+
+#### Example
+
+```
+const session = conversation.startSession();
+
+// Listen for all assistant responses
+session.onExchangeStart((exchange) => {
+  exchange.onMessageCompleted((completed) => {
+    if (completed.role === MessageRole.Assistant) {
+      for (const part of completed.contentParts) {
+        console.log('Assistant:', part.data);
+      }
+    }
+  });
+});
+
+// Wait for session to be ready before starting exchanges
+session.onSessionStarted(async () => {
+  // Send first user message
+  const exchange1 = session.startExchange();
+  await exchange1.sendMessageWithContentPart({
+    data: 'What is the weather today?',
+    role: MessageRole.User
+  });
+
+  // Send follow-up in a new exchange
+  const exchange2 = session.startExchange();
+  await exchange2.sendMessageWithContentPart({
+    data: 'And tomorrow?',
+    role: MessageRole.User
+  });
+});
+```
+
+Consumer-facing model for exchange event helpers.
+
+An exchange represents a single request-response cycle within a session. Each exchange contains one or more messages (typically a user message followed by an assistant response). Use exchanges to group related turns in a multi-turn conversation.
+
+## Examples
+
+```
+session.onExchangeStart((exchange) => {
+  exchange.onMessageStart((message) => {
+    if (message.isAssistant) {
+      message.onContentPartStart((part) => {
+        if (part.isMarkdown) {
+          part.onChunk((chunk) => {
+            process.stdout.write(chunk.data ?? '');
+          });
+        }
+      });
+    }
+  });
+});
+```
+
+```
+session.onExchangeStart((exchange) => {
+  exchange.onMessageCompleted((completed) => {
+    for (const part of completed.contentParts) {
+      console.log(part.data);
+    }
+    for (const tool of completed.toolCalls) {
+      console.log(`${tool.toolName}: ${tool.output}`);
+    }
+  });
+});
+```
+
+```
+// Call startExchange inside onSessionStarted to ensure the session is ready
+session.onSessionStarted(() => {
+  const exchange = session.startExchange();
+  exchange.sendMessageWithContentPart({
+    data: 'Hello, how can you help me?',
+    role: MessageRole.User
+  });
+});
+```
+
+```
+// Call startExchange inside onSessionStarted to ensure the session is ready
+session.onSessionStarted(() => {
+  const exchange = session.startExchange();
+  const message = exchange.startMessage({ role: MessageRole.User });
+  const part = message.startContentPart({ mimeType: 'text/plain' });
+  part.sendChunk({ data: 'Hello, ' });
+  part.sendChunk({ data: 'how can you help me?' });
+  part.sendContentPartEnd();
+  message.sendMessageEnd();
+});
+```
+
+## Properties
+
+| Property     | Modifier   | Type                                              | Description                                        |
+| ------------ | ---------- | ------------------------------------------------- | -------------------------------------------------- |
+| `ended`      | `readonly` | `boolean`                                         | Whether this exchange has ended                    |
+| `exchangeId` | `readonly` | `string`                                          | Unique identifier for this exchange                |
+| `messages`   | `readonly` | `Iterable`\<[`MessageStream`](../MessageStream/)> | Iterator over all active messages in this exchange |
+
+## Methods
+
+### getMessage()
+
+> **getMessage**(`messageId`: `string`): `undefined` | [`MessageStream`](../MessageStream/)
+
+Retrieves a message by ID
+
+#### Parameters
+
+| Parameter   | Type     | Description               |
+| ----------- | -------- | ------------------------- |
+| `messageId` | `string` | The message ID to look up |
+
+#### Returns
+
+`undefined` | [`MessageStream`](../MessageStream/)
+
+The message stream, or undefined if not found
+
+______________________________________________________________________
+
+### onErrorEnd()
+
+> **onErrorEnd**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void`): () => `void`
+
+Registers a handler for error end events
+
+#### Parameters
+
+| Parameter | Type                                                                                 | Description                            |
+| --------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void` | Callback receiving the error end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+______________________________________________________________________
+
+### onErrorStart()
+
+> **onErrorStart**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void`): () => `void`
+
+Registers a handler for error start events
+
+#### Parameters
+
+| Parameter | Type                                                                                     | Description                        |
+| --------- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void` | Callback receiving the error event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+exchange.onErrorStart((error) => {
+  console.error(`Exchange error [${error.errorId}]: ${error.message}`);
+});
+```
+
+______________________________________________________________________
+
+### onExchangeEnd()
+
+> **onExchangeEnd**(`cb`: (`endExchange`: [`ExchangeEndEvent`](../ExchangeEndEvent/)) => `void`): () => `void`
+
+Registers a handler for exchange end events
+
+#### Parameters
+
+| Parameter | Type                                                                  | Description                      |
+| --------- | --------------------------------------------------------------------- | -------------------------------- |
+| `cb`      | (`endExchange`: [`ExchangeEndEvent`](../ExchangeEndEvent/)) => `void` | Callback receiving the end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+exchange.onExchangeEnd((endEvent) => {
+  console.log('Exchange completed');
+});
+```
+
+______________________________________________________________________
+
+### onMessageCompleted()
+
+> **onMessageCompleted**(`cb`: (`completedMessage`: { `contentParts`: [`CompletedContentPart`](../../type-aliases/CompletedContentPart/)[]; `exchangeSequence?`: `number`; `messageId`: `string`; `metaData?`: [`JSONObject`](../../type-aliases/JSONObject/); `role?`: [`MessageRole`](../../enumerations/MessageRole/); `timestamp?`: `string`; `toolCalls`: [`CompletedToolCall`](../../type-aliases/CompletedToolCall/)[]; }) => `void`): `void`
+
+Registers a handler called when a message finishes
+
+Convenience method that combines onMessageStart + message.onCompleted. The handler receives the aggregated message data including all content parts and tool calls.
+
+#### Parameters
+
+| Parameter | Type                                                                                                                                                                                                                                                                                                                                                                                                         | Description                                   |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| `cb`      | (`completedMessage`: { `contentParts`: [`CompletedContentPart`](../../type-aliases/CompletedContentPart/)[]; `exchangeSequence?`: `number`; `messageId`: `string`; `metaData?`: [`JSONObject`](../../type-aliases/JSONObject/); `role?`: [`MessageRole`](../../enumerations/MessageRole/); `timestamp?`: `string`; `toolCalls`: [`CompletedToolCall`](../../type-aliases/CompletedToolCall/)[]; }) => `void` | Callback receiving the completed message data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+exchange.onMessageCompleted((message) => {
+  console.log(`Message ${message.messageId} (role: ${message.role})`);
+  console.log(`Content parts: ${message.contentParts.length}`);
+  console.log(`Tool calls: ${message.toolCalls.length}`);
+});
+```
+
+______________________________________________________________________
+
+### onMessageStart()
+
+> **onMessageStart**(`cb`: (`message`: [`MessageStream`](../MessageStream/)) => `void`): () => `void`
+
+Registers a handler for message start events
+
+Each exchange typically contains a user message and an assistant response. Use `message.isAssistant` or `message.isUser` to filter.
+
+#### Parameters
+
+| Parameter | Type                                                        | Description                         |
+| --------- | ----------------------------------------------------------- | ----------------------------------- |
+| `cb`      | (`message`: [`MessageStream`](../MessageStream/)) => `void` | Callback receiving each new message |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+exchange.onMessageStart((message) => {
+  if (message.isAssistant) {
+    message.onContentPartStart((part) => {
+      if (part.isMarkdown) {
+        part.onChunk((chunk) => process.stdout.write(chunk.data ?? ''));
+      }
+    });
+  }
+});
+```
+
+______________________________________________________________________
+
+### sendExchangeEnd()
+
+> **sendExchangeEnd**(`endExchange?`: [`ExchangeEndEvent`](../ExchangeEndEvent/)): `void`
+
+Ends the exchange
+
+#### Parameters
+
+| Parameter      | Type                                       | Description             |
+| -------------- | ------------------------------------------ | ----------------------- |
+| `endExchange?` | [`ExchangeEndEvent`](../ExchangeEndEvent/) | Optional end event data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+exchange.sendExchangeEnd();
+```
+
+______________________________________________________________________
+
+### sendMessageWithContentPart()
+
+> **sendMessageWithContentPart**(`options`: { `data`: `string`; `mimeType?`: `string`; `role?`: [`MessageRole`](../../enumerations/MessageRole/); }): `Promise`\<`void`>
+
+Sends a complete message with a content part in one step
+
+Convenience method that creates a message, adds a content part with the given data, and ends both the content part and message.
+
+#### Parameters
+
+| Parameter           | Type                                                                                                    | Description             |
+| ------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `options`           | { `data`: `string`; `mimeType?`: `string`; `role?`: [`MessageRole`](../../enumerations/MessageRole/); } | Message content options |
+| `options.data`      | `string`                                                                                                | -                       |
+| `options.mimeType?` | `string`                                                                                                | -                       |
+| `options.role?`     | [`MessageRole`](../../enumerations/MessageRole/)                                                        | -                       |
+
+#### Returns
+
+`Promise`\<`void`>
+
+#### Example
+
+```
+await exchange.sendMessageWithContentPart({
+  data: 'What is the weather today?',
+  role: MessageRole.User
+});
+```
+
+______________________________________________________________________
+
+### startMessage()
+
+> **startMessage**(`args?`: { `messageId?`: `string`; } & `Partial`\<[`MessageStartEvent`](../MessageStartEvent/)>): [`MessageStream`](../MessageStream/)
+
+Starts a new message in this exchange
+
+Use this for fine-grained control over message construction. For simple text messages, prefer [sendMessageWithContentPart](#sendmessagewithcontentpart).
+
+#### Parameters
+
+| Parameter | Type                                                                                   | Description                                   |
+| --------- | -------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `args?`   | { `messageId?`: `string`; } & `Partial`\<[`MessageStartEvent`](../MessageStartEvent/)> | Optional message start options including role |
+
+#### Returns
+
+[`MessageStream`](../MessageStream/)
+
+The message stream for sending content
+
+#### Example
+
+```
+const message = exchange.startMessage({ role: MessageRole.User });
+const part = message.startContentPart({ mimeType: 'text/plain' });
+part.sendChunk({ data: 'Analyze this image: ' });
+part.sendContentPartEnd();
+message.sendMessageEnd();
+```
+
+Consumer-facing model for message event helpers.
+
+A message represents a single turn from a user, assistant, or system. Messages contain content parts (text, audio, images) and tool calls. The `role` property and convenience booleans (`isUser`, `isAssistant`, `isSystem`) let you filter by sender.
+
+## Examples
+
+```
+exchange.onMessageStart((message) => {
+  if (message.isAssistant) {
+    message.onContentPartStart((part) => {
+      if (part.isMarkdown) {
+        part.onChunk((chunk) => {
+          process.stdout.write(chunk.data ?? '');
+        });
+      }
+    });
+  }
+});
+```
+
+```
+exchange.onMessageStart((message) => {
+  if (message.isAssistant) {
+    message.onToolCallStart((toolCall) => {
+      console.log(`Tool: ${toolCall.startEvent.toolName}`);
+    });
+
+    message.onInterruptStart(({ interruptId, startEvent }) => {
+      if (startEvent.type === 'uipath_cas_tool_call_confirmation') {
+        message.sendInterruptEnd(interruptId, { approved: true });
+      }
+    });
+  }
+});
+```
+
+```
+exchange.onMessageStart((message) => {
+  if (message.isAssistant) {
+    message.onCompleted((completed) => {
+      console.log(`Message ${completed.messageId} finished`);
+      for (const part of completed.contentParts) {
+        console.log(part.data);
+      }
+      for (const tool of completed.toolCalls) {
+        console.log(`${tool.toolName} → ${tool.output}`);
+      }
+    });
+  }
+});
+```
+
+```
+const message = exchange.startMessage({ role: MessageRole.User });
+await message.sendContentPart({ data: 'Hello!', mimeType: 'text/plain' });
+message.sendMessageEnd();
+```
+
+## Properties
+
+| Property       | Modifier   | Type                                                      | Description                                            |
+| -------------- | ---------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| `contentParts` | `readonly` | `Iterable`\<[`ContentPartStream`](../ContentPartStream/)> | Iterator over all active content parts in this message |
+| `ended`        | `readonly` | `boolean`                                                 | Whether this message has ended                         |
+| `isAssistant`  | `readonly` | `boolean`                                                 | Whether this message is from the assistant             |
+| `isSystem`     | `readonly` | `boolean`                                                 | Whether this message is a system message               |
+| `isUser`       | `readonly` | `boolean`                                                 | Whether this message is from the user                  |
+| `messageId`    | `readonly` | `string`                                                  | Unique identifier for this message                     |
+| `role`         | `readonly` | `undefined`                                               | [`MessageRole`](../../enumerations/MessageRole/)       |
+| `toolCalls`    | `readonly` | `Iterable`\<[`ToolCallStream`](../ToolCallStream/)>       | Iterator over all active tool calls in this message    |
+
+## Methods
+
+### getContentPart()
+
+> **getContentPart**(`contentPartId`: `string`): `undefined` | [`ContentPartStream`](../ContentPartStream/)
+
+Retrieves a content part by ID
+
+#### Parameters
+
+| Parameter       | Type     | Description                    |
+| --------------- | -------- | ------------------------------ |
+| `contentPartId` | `string` | The content part ID to look up |
+
+#### Returns
+
+`undefined` | [`ContentPartStream`](../ContentPartStream/)
+
+The content part stream, or undefined if not found
+
+______________________________________________________________________
+
+### getToolCall()
+
+> **getToolCall**(`toolCallId`: `string`): `undefined` | [`ToolCallStream`](../ToolCallStream/)
+
+Retrieves a tool call by ID
+
+#### Parameters
+
+| Parameter    | Type     | Description                 |
+| ------------ | -------- | --------------------------- |
+| `toolCallId` | `string` | The tool call ID to look up |
+
+#### Returns
+
+`undefined` | [`ToolCallStream`](../ToolCallStream/)
+
+The tool call stream, or undefined if not found
+
+______________________________________________________________________
+
+### onCompleted()
+
+> **onCompleted**(`cb`: (`completedMessage`: { `contentParts`: [`CompletedContentPart`](../../type-aliases/CompletedContentPart/)[]; `exchangeSequence?`: `number`; `messageId`: `string`; `metaData?`: [`JSONObject`](../../type-aliases/JSONObject/); `role?`: [`MessageRole`](../../enumerations/MessageRole/); `timestamp?`: `string`; `toolCalls`: [`CompletedToolCall`](../../type-aliases/CompletedToolCall/)[]; }) => `void`): `void`
+
+Registers a handler called when the entire message finishes
+
+The handler receives the aggregated message data including all completed content parts and tool calls.
+
+#### Parameters
+
+| Parameter | Type                                                                                                                                                                                                                                                                                                                                                                                                         | Description                                   |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| `cb`      | (`completedMessage`: { `contentParts`: [`CompletedContentPart`](../../type-aliases/CompletedContentPart/)[]; `exchangeSequence?`: `number`; `messageId`: `string`; `metaData?`: [`JSONObject`](../../type-aliases/JSONObject/); `role?`: [`MessageRole`](../../enumerations/MessageRole/); `timestamp?`: `string`; `toolCalls`: [`CompletedToolCall`](../../type-aliases/CompletedToolCall/)[]; }) => `void` | Callback receiving the completed message data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+message.onCompleted((completed) => {
+  console.log(`Message ${completed.messageId} (role: ${completed.role})`);
+  console.log('Text:', completed.contentParts.map(p => p.data).join(''));
+  console.log('Tool calls:', completed.toolCalls.length);
+});
+```
+
+______________________________________________________________________
+
+### onContentPartCompleted()
+
+> **onContentPartCompleted**(`cb`: (`completedContentPart`: [`CompletedContentPart`](../../type-aliases/CompletedContentPart/)) => `void`): `void`
+
+Registers a handler called when a content part finishes
+
+Convenience method that combines onContentPartStart + onContentPartEnd. The handler receives the full buffered content part data including text, citations, and any citation errors.
+
+#### Parameters
+
+| Parameter | Type                                                                                                   | Description                                        |
+| --------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| `cb`      | (`completedContentPart`: [`CompletedContentPart`](../../type-aliases/CompletedContentPart/)) => `void` | Callback receiving the completed content part data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+message.onContentPartCompleted((completed) => {
+  console.log(`[${completed.mimeType}] ${completed.data}`);
+
+  // Access citations if present
+  for (const citation of completed.citations) {
+    const citedText = completed.data.substring(citation.offset, citation.offset + citation.length);
+    console.log(`Citation "${citedText}" from:`, citation.sources);
+  }
+
+  // Check for citation errors
+  for (const error of completed.citationErrors) {
+    console.warn(`Citation error [${error.citationId}]: ${error.errorType}`);
+  }
+});
+```
+
+______________________________________________________________________
+
+### onContentPartStart()
+
+> **onContentPartStart**(`cb`: (`contentPart`: [`ContentPartStream`](../ContentPartStream/)) => `void`): () => `void`
+
+Registers a handler for content part start events
+
+Content parts are streamed pieces of content (text, audio, images, transcripts). Use `part.isMarkdown`, `part.isAudio`, etc. to determine type.
+
+#### Parameters
+
+| Parameter | Type                                                                    | Description                              |
+| --------- | ----------------------------------------------------------------------- | ---------------------------------------- |
+| `cb`      | (`contentPart`: [`ContentPartStream`](../ContentPartStream/)) => `void` | Callback receiving each new content part |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+message.onContentPartStart((part) => {
+  if (part.isMarkdown) {
+    part.onChunk((chunk) => renderMarkdown(chunk.data ?? ''));
+  } else if (part.isAudio) {
+    part.onChunk((chunk) => audioPlayer.enqueue(chunk.data ?? ''));
+  } else if (part.isImage) {
+    part.onChunk((chunk) => imageBuffer.append(chunk.data ?? ''));
+  } else if (part.isTranscript) {
+    part.onChunk((chunk) => showTranscript(chunk.data ?? ''));
+  }
+});
+```
+
+______________________________________________________________________
+
+### onErrorEnd()
+
+> **onErrorEnd**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void`): () => `void`
+
+Registers a handler for error end events
+
+#### Parameters
+
+| Parameter | Type                                                                                 | Description                            |
+| --------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void` | Callback receiving the error end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+______________________________________________________________________
+
+### onErrorStart()
+
+> **onErrorStart**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void`): () => `void`
+
+Registers a handler for error start events
+
+#### Parameters
+
+| Parameter | Type                                                                                     | Description                        |
+| --------- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void` | Callback receiving the error event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+message.onErrorStart((error) => {
+  console.error(`Message error [${error.errorId}]: ${error.message}`);
+});
+```
+
+______________________________________________________________________
+
+### onInterruptEnd()
+
+> **onInterruptEnd**(`cb`: (`interrupt`: { `endEvent`: [`InterruptEndEvent`](../../type-aliases/InterruptEndEvent/); `interruptId`: `string`; }) => `void`): () => `void`
+
+Registers a handler for interrupt end events
+
+#### Parameters
+
+| Parameter | Type                                                                                                                            | Description                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `cb`      | (`interrupt`: { `endEvent`: [`InterruptEndEvent`](../../type-aliases/InterruptEndEvent/); `interruptId`: `string`; }) => `void` | Callback receiving the interrupt ID and end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+message.onInterruptEnd(({ interruptId, endEvent }) => {
+  console.log(`Interrupt ${interruptId} resolved`);
+});
+```
+
+______________________________________________________________________
+
+### onInterruptStart()
+
+> **onInterruptStart**(`cb`: (`interrupt`: { `interruptId`: `string`; `startEvent`: [`InterruptStartEvent`](../../type-aliases/InterruptStartEvent/); }) => `void`): () => `void`
+
+Registers a handler for interrupt start events
+
+Interrupts represent pause points where the agent needs external input, such as tool call confirmation requests.
+
+#### Parameters
+
+| Parameter | Type                                                                                                                                  | Description                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `cb`      | (`interrupt`: { `interruptId`: `string`; `startEvent`: [`InterruptStartEvent`](../../type-aliases/InterruptStartEvent/); }) => `void` | Callback receiving the interrupt ID and start event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+message.onInterruptStart(({ interruptId, startEvent }) => {
+  if (startEvent.type === 'uipath_cas_tool_call_confirmation') {
+    // Show confirmation UI, then respond
+    message.sendInterruptEnd(interruptId, { approved: true });
+  }
+});
+```
+
+______________________________________________________________________
+
+### onMessageEnd()
+
+> **onMessageEnd**(`cb`: (`endMessage`: [`MessageEndEvent`](../MessageEndEvent/)) => `void`): () => `void`
+
+Registers a handler for message end events
+
+#### Parameters
+
+| Parameter | Type                                                               | Description                      |
+| --------- | ------------------------------------------------------------------ | -------------------------------- |
+| `cb`      | (`endMessage`: [`MessageEndEvent`](../MessageEndEvent/)) => `void` | Callback receiving the end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+message.onMessageEnd((endEvent) => {
+  console.log('Message ended');
+});
+```
+
+______________________________________________________________________
+
+### onToolCallCompleted()
+
+> **onToolCallCompleted**(`cb`: (`completedToolCall`: [`CompletedToolCall`](../../type-aliases/CompletedToolCall/)) => `void`): `void`
+
+Registers a handler called when a tool call finishes
+
+Convenience method that combines onToolCallStart + onToolCallEnd. The handler receives the merged start and end event data.
+
+#### Parameters
+
+| Parameter | Type                                                                                          | Description                                     |
+| --------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `cb`      | (`completedToolCall`: [`CompletedToolCall`](../../type-aliases/CompletedToolCall/)) => `void` | Callback receiving the completed tool call data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+message.onToolCallCompleted((toolCall) => {
+  console.log(`Tool: ${toolCall.toolName}`);
+  console.log(`Input: ${toolCall.input}`);
+  console.log(`Output: ${toolCall.output}`);
+});
+```
+
+______________________________________________________________________
+
+### onToolCallStart()
+
+> **onToolCallStart**(`cb`: (`toolCall`: [`ToolCallStream`](../ToolCallStream/)) => `void`): () => `void`
+
+Registers a handler for tool call start events
+
+Tool calls represent the agent invoking external tools. Each tool call has a name, input, and eventually an output when it completes.
+
+#### Parameters
+
+| Parameter | Type                                                           | Description                           |
+| --------- | -------------------------------------------------------------- | ------------------------------------- |
+| `cb`      | (`toolCall`: [`ToolCallStream`](../ToolCallStream/)) => `void` | Callback receiving each new tool call |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+message.onToolCallStart((toolCall) => {
+  const { toolName, input } = toolCall.startEvent;
+  console.log(`Calling ${toolName}:`, JSON.parse(input ?? '{}'));
+
+  toolCall.onToolCallEnd((end) => {
+    console.log(`Result:`, JSON.parse(end.output ?? '{}'));
+  });
+});
+```
+
+______________________________________________________________________
+
+### sendContentPart()
+
+> **sendContentPart**(`args`: { `data?`: `string`; `mimeType?`: `string`; }): `Promise`\<`void`>
+
+Sends a complete content part with data in one step
+
+Convenience method that creates a content part, sends the data as a chunk, and ends the content part. Defaults to mimeType "text/markdown".
+
+#### Parameters
+
+| Parameter        | Type                                          | Description                              |
+| ---------------- | --------------------------------------------- | ---------------------------------------- |
+| `args`           | { `data?`: `string`; `mimeType?`: `string`; } | Content part data and optional mime type |
+| `args.data?`     | `string`                                      | -                                        |
+| `args.mimeType?` | `string`                                      | -                                        |
+
+#### Returns
+
+`Promise`\<`void`>
+
+#### Examples
+
+```
+await message.sendContentPart({ data: 'Hello world!' });
+```
+
+```
+await message.sendContentPart({
+  data: 'Plain text content',
+  mimeType: 'text/plain'
+});
+```
+
+______________________________________________________________________
+
+### sendInterruptEnd()
+
+> **sendInterruptEnd**(`interruptId`: `string`, `endInterrupt`: [`InterruptEndEvent`](../../type-aliases/InterruptEndEvent/)): `void`
+
+Sends an interrupt end event to resolve a pending interrupt
+
+Call this to respond to an interrupt received via onInterruptStart.
+
+#### Parameters
+
+| Parameter      | Type                                                         | Description                                                   |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
+| `interruptId`  | `string`                                                     | The interrupt ID to respond to                                |
+| `endInterrupt` | [`InterruptEndEvent`](../../type-aliases/InterruptEndEvent/) | The response data (e.g., approval for tool call confirmation) |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+message.sendInterruptEnd(interruptId, { approved: true });
+```
+
+______________________________________________________________________
+
+### sendMessageEnd()
+
+> **sendMessageEnd**(`endMessage?`: [`MessageEndEvent`](../MessageEndEvent/)): `void`
+
+Ends the message
+
+#### Parameters
+
+| Parameter     | Type                                     | Description             |
+| ------------- | ---------------------------------------- | ----------------------- |
+| `endMessage?` | [`MessageEndEvent`](../MessageEndEvent/) | Optional end event data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+message.sendMessageEnd();
+```
+
+______________________________________________________________________
+
+### startContentPart()
+
+> **startContentPart**(`args`: { `contentPartId?`: `string`; } & [`ContentPartStartEvent`](../ContentPartStartEvent/)): [`ContentPartStream`](../ContentPartStream/)
+
+Starts a new content part stream in this message
+
+Use this for streaming content in chunks. For sending complete content in one call, prefer [sendContentPart](#sendcontentpart).
+
+#### Parameters
+
+| Parameter | Type                                                                                   | Description                                    |
+| --------- | -------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `args`    | { `contentPartId?`: `string`; } & [`ContentPartStartEvent`](../ContentPartStartEvent/) | Content part start options including mime type |
+
+#### Returns
+
+[`ContentPartStream`](../ContentPartStream/)
+
+The content part stream for sending chunks
+
+#### Example
+
+```
+const part = message.startContentPart({ mimeType: 'text/markdown' });
+part.sendChunk({ data: '# Hello\n' });
+part.sendChunk({ data: 'This is **markdown** content.' });
+part.sendContentPartEnd();
+```
+
+______________________________________________________________________
+
+### startToolCall()
+
+> **startToolCall**(`args`: { `toolCallId?`: `string`; } & [`ToolCallStartEvent`](../ToolCallStartEvent/)): [`ToolCallStream`](../ToolCallStream/)
+
+Starts a new tool call in this message
+
+#### Parameters
+
+| Parameter | Type                                                                          | Description                                 |
+| --------- | ----------------------------------------------------------------------------- | ------------------------------------------- |
+| `args`    | { `toolCallId?`: `string`; } & [`ToolCallStartEvent`](../ToolCallStartEvent/) | Tool call start options including tool name |
+
+#### Returns
+
+[`ToolCallStream`](../ToolCallStream/)
+
+The tool call stream for managing the tool call lifecycle
+
+#### Example
+
+```
+const toolCall = message.startToolCall({
+  toolName: 'get-weather',
+  input: JSON.stringify({ city: 'London' })
+});
+toolCall.sendToolCallEnd({
+  output: JSON.stringify({ temperature: 18, condition: 'cloudy' })
+});
+```
+
+Model for content part event helpers.
+
+A content part is a single piece of content within a message — text, audio, an image, or a transcript. Use the type-check properties (`isText`, `isMarkdown`, `isHtml`, `isAudio`, `isImage`, `isTranscript`) to determine the content type and handle it accordingly.
+
+## Examples
+
+```
+message.onContentPartStart((part) => {
+  if (part.isMarkdown) {
+    part.onChunk((chunk) => {
+      process.stdout.write(chunk.data ?? '');
+    });
+  }
+});
+```
+
+```
+message.onContentPartStart((part) => {
+  if (part.isText) {
+    part.onChunk((chunk) => showPlainText(chunk.data ?? ''));
+  } else if (part.isMarkdown) {
+    part.onChunk((chunk) => renderMarkdown(chunk.data ?? ''));
+  } else if (part.isHtml) {
+    part.onChunk((chunk) => renderHtml(chunk.data ?? ''));
+  } else if (part.isAudio) {
+    part.onChunk((chunk) => audioPlayer.enqueue(chunk.data ?? ''));
+  } else if (part.isImage) {
+    part.onChunk((chunk) => imageBuffer.append(chunk.data ?? ''));
+  } else if (part.isTranscript) {
+    part.onChunk((chunk) => showTranscript(chunk.data ?? ''));
+  }
+});
+```
+
+```
+message.onContentPartStart((part) => {
+  part.onCompleted((completed) => {
+    console.log(`Full text: ${completed.data}`);
+
+    // Access citations — each has offset, length, and sources
+    for (const citation of completed.citations) {
+      const citedText = completed.data.substring(
+        citation.offset,
+        citation.offset + citation.length
+      );
+      console.log(`"${citedText}" cited from:`, citation.sources);
+    }
+  });
+});
+```
+
+```
+message.onContentPartCompleted((completed) => {
+  console.log(`[${completed.mimeType}] ${completed.data}`);
+});
+```
+
+## Properties
+
+| Property        | Modifier   | Type        | Description                                                     |
+| --------------- | ---------- | ----------- | --------------------------------------------------------------- |
+| `contentPartId` | `readonly` | `string`    | Unique identifier for this content part                         |
+| `ended`         | `readonly` | `boolean`   | Whether this content part has ended                             |
+| `isAudio`       | `readonly` | `boolean`   | Whether this content part is audio content                      |
+| `isHtml`        | `readonly` | `boolean`   | Whether this content part is HTML. Matches `text/html`.         |
+| `isImage`       | `readonly` | `boolean`   | Whether this content part is an image                           |
+| `isMarkdown`    | `readonly` | `boolean`   | Whether this content part is markdown. Matches `text/markdown`. |
+| `isText`        | `readonly` | `boolean`   | Whether this content part is plain text. Matches `text/plain`.  |
+| `isTranscript`  | `readonly` | `boolean`   | Whether this content part is a transcript (from speech-to-text) |
+| `mimeType`      | `readonly` | `undefined` | `string`                                                        |
+
+## Methods
+
+### onChunk()
+
+> **onChunk**(`cb`: (`chunk`: [`ContentPartChunkEvent`](../ContentPartChunkEvent/)) => `void`): () => `void`
+
+Registers a handler for content part chunks
+
+Chunks are the fundamental unit of streaming data. Each chunk contains a piece of the content (text, audio data, etc.).
+
+#### Parameters
+
+| Parameter | Type                                                                      | Description                   |
+| --------- | ------------------------------------------------------------------------- | ----------------------------- |
+| `cb`      | (`chunk`: [`ContentPartChunkEvent`](../ContentPartChunkEvent/)) => `void` | Callback receiving each chunk |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+part.onChunk((chunk) => {
+  process.stdout.write(chunk.data ?? '');
+});
+```
+
+______________________________________________________________________
+
+### onCompleted()
+
+> **onCompleted**(`cb`: (`completedContentPart`: [`CompletedContentPart`](../../type-aliases/CompletedContentPart/)) => `void`): `void`
+
+Registers a handler called when this content part finishes
+
+The handler receives the aggregated content part data including all buffered text, citations, and any citation errors.
+
+#### Parameters
+
+| Parameter | Type                                                                                                   | Description                                        |
+| --------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| `cb`      | (`completedContentPart`: [`CompletedContentPart`](../../type-aliases/CompletedContentPart/)) => `void` | Callback receiving the completed content part data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+part.onCompleted((completed) => {
+  console.log(`Content type: ${completed.mimeType}`);
+  console.log(`Full text: ${completed.data}`);
+
+  // Citations provide offset/length into the text and source references
+  for (const citation of completed.citations) {
+    const citedText = completed.data.substring(
+      citation.offset,
+      citation.offset + citation.length
+    );
+    console.log(`"${citedText}" — sources:`, citation.sources);
+  }
+
+  // Citation errors indicate malformed citation ranges
+  if (completed.citationErrors.length > 0) {
+    console.warn('Citation errors:', completed.citationErrors);
+  }
+});
+```
+
+______________________________________________________________________
+
+### onContentPartEnd()
+
+> **onContentPartEnd**(`cb`: (`endContentPart`: [`ContentPartEndEvent`](../ContentPartEndEvent/)) => `void`): () => `void`
+
+Registers a handler for content part end events
+
+#### Parameters
+
+| Parameter | Type                                                                           | Description                      |
+| --------- | ------------------------------------------------------------------------------ | -------------------------------- |
+| `cb`      | (`endContentPart`: [`ContentPartEndEvent`](../ContentPartEndEvent/)) => `void` | Callback receiving the end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+part.onContentPartEnd((endEvent) => {
+  console.log('Content part finished');
+});
+```
+
+______________________________________________________________________
+
+### onErrorEnd()
+
+> **onErrorEnd**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void`): () => `void`
+
+Registers a handler for error end events
+
+#### Parameters
+
+| Parameter | Type                                                                                 | Description                            |
+| --------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void` | Callback receiving the error end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+______________________________________________________________________
+
+### onErrorStart()
+
+> **onErrorStart**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void`): () => `void`
+
+Registers a handler for error start events
+
+#### Parameters
+
+| Parameter | Type                                                                                     | Description                        |
+| --------- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void` | Callback receiving the error event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+part.onErrorStart((error) => {
+  console.error(`Content part error: ${error.message}`);
+});
+```
+
+______________________________________________________________________
+
+### sendChunk()
+
+> **sendChunk**(`chunk`: [`ContentPartChunkEvent`](../ContentPartChunkEvent/)): `void`
+
+Sends a content part chunk
+
+#### Parameters
+
+| Parameter | Type                                                 | Description        |
+| --------- | ---------------------------------------------------- | ------------------ |
+| `chunk`   | [`ContentPartChunkEvent`](../ContentPartChunkEvent/) | Chunk data to send |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+part.sendChunk({ data: 'Hello ' });
+part.sendChunk({ data: 'world!' });
+```
+
+______________________________________________________________________
+
+### sendContentPartEnd()
+
+> **sendContentPartEnd**(`endContentPart?`: [`ContentPartEndEvent`](../ContentPartEndEvent/)): `void`
+
+Ends the content part stream
+
+#### Parameters
+
+| Parameter         | Type                                             | Description             |
+| ----------------- | ------------------------------------------------ | ----------------------- |
+| `endContentPart?` | [`ContentPartEndEvent`](../ContentPartEndEvent/) | Optional end event data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+part.sendContentPartEnd();
+```
+
+Consumer-facing model for tool call event helpers.
+
+A tool call represents the agent invoking an external tool (API call, database query, etc.) during a conversation. Tool calls live within a message and have a start event (with tool name and input) and an end event (with the output/result).
+
+## Examples
+
+```
+message.onToolCallStart((toolCall) => {
+  console.log(`Tool: ${toolCall.startEvent.toolName}`);
+  toolCall.onToolCallEnd((endEvent) => {
+    console.log('Tool call completed:', endEvent.output);
+  });
+});
+```
+
+```
+message.onToolCallStart((toolCall) => {
+  const { toolName, input } = toolCall.startEvent;
+  const parsedInput = JSON.parse(input ?? '{}');
+  console.log(`Calling ${toolName} with:`, parsedInput);
+
+  toolCall.onToolCallEnd((endEvent) => {
+    const result = JSON.parse(endEvent.output ?? '{}');
+    console.log(`${toolName} returned:`, result);
+  });
+});
+```
+
+```
+message.onToolCallStart(async (toolCall) => {
+  const { toolName, input } = toolCall.startEvent;
+
+  // Execute the tool and return the result
+  const result = await executeTool(toolName, input);
+  toolCall.sendToolCallEnd({
+    output: JSON.stringify(result)
+  });
+});
+```
+
+## Properties
+
+| Property     | Modifier   | Type      | Description                          |
+| ------------ | ---------- | --------- | ------------------------------------ |
+| `ended`      | `readonly` | `boolean` | Whether this tool call has ended     |
+| `toolCallId` | `readonly` | `string`  | Unique identifier for this tool call |
+
+## Methods
+
+### onErrorEnd()
+
+> **onErrorEnd**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void`): () => `void`
+
+Registers a handler for error end events
+
+#### Parameters
+
+| Parameter | Type                                                                                 | Description                            |
+| --------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorEndEvent`](../ErrorEndEvent/)) => `void` | Callback receiving the error end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+______________________________________________________________________
+
+### onErrorStart()
+
+> **onErrorStart**(`cb`: (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void`): () => `void`
+
+Registers a handler for error start events
+
+#### Parameters
+
+| Parameter | Type                                                                                     | Description                        |
+| --------- | ---------------------------------------------------------------------------------------- | ---------------------------------- |
+| `cb`      | (`error`: { `errorId`: `string`; } & [`ErrorStartEvent`](../ErrorStartEvent/)) => `void` | Callback receiving the error event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+toolCall.onErrorStart((error) => {
+  console.error(`Tool call error: ${error.message}`);
+});
+```
+
+______________________________________________________________________
+
+### onToolCallEnd()
+
+> **onToolCallEnd**(`cb`: (`endToolCall`: [`ToolCallEndEvent`](../ToolCallEndEvent/)) => `void`): () => `void`
+
+Registers a handler for tool call end events
+
+#### Parameters
+
+| Parameter | Type                                                                  | Description                      |
+| --------- | --------------------------------------------------------------------- | -------------------------------- |
+| `cb`      | (`endToolCall`: [`ToolCallEndEvent`](../ToolCallEndEvent/)) => `void` | Callback receiving the end event |
+
+#### Returns
+
+Cleanup function to remove the handler
+
+> (): `void`
+
+##### Returns
+
+`void`
+
+#### Example
+
+```
+toolCall.onToolCallEnd((endEvent) => {
+  console.log('Output:', endEvent.output);
+});
+```
+
+______________________________________________________________________
+
+### sendToolCallEnd()
+
+> **sendToolCallEnd**(`endToolCall?`: [`ToolCallEndEvent`](../ToolCallEndEvent/)): `void`
+
+Ends the tool call
+
+#### Parameters
+
+| Parameter      | Type                                       | Description             |
+| -------------- | ------------------------------------------ | ----------------------- |
+| `endToolCall?` | [`ToolCallEndEvent`](../ToolCallEndEvent/) | Optional end event data |
+
+#### Returns
+
+`void`
+
+#### Example
+
+```
+toolCall.sendToolCallEnd({
+  output: JSON.stringify({ temperature: 18, condition: 'cloudy' })
+});
+```
