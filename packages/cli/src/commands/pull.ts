@@ -11,7 +11,7 @@ import { track } from '../telemetry/index.js';
 
 export default class Pull extends Command {
   static override description =
-    'Pull project files from Studio Web into the local workspace';
+    'Pull project files from Studio Web into the local workspace. Run from the root of your project, or use --targetDir to specify the target directory.';
 
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
@@ -130,6 +130,7 @@ export default class Pull extends Command {
     try {
       await runPull(config, { overwrite: flags.overwrite, promptOverwrite });
       this.log(chalk.green(MESSAGES.SUCCESS.PULL_COMPLETED));
+      process.exit(0);
     } catch (error) {
       const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
       this.log(chalk.red(`${MESSAGES.ERRORS.PULL_FAILED_PREFIX}${msg}`));
