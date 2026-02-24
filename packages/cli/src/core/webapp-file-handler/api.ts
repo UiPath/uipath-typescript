@@ -54,6 +54,14 @@ export class FileAlreadyExistsError extends Error {
   }
 }
 
+/** On 401, throws with auth message (run "uipath auth") so push/pull instruct user to sign in again. */
+async function throwIfUnauthorized(
+  response: Parameters<typeof handleHttpError>[0],
+  context: string
+): Promise<void> {
+  if (response.status === 401) await handleHttpError(response, context);
+}
+
 function trackApiFailure(apiMethod: string, errorMessage: string, statusCode?: number): void {
   cliTelemetryClient.track('Cli.Push.ApiFailure', {
     api_method: apiMethod,
@@ -114,6 +122,7 @@ export async function releaseLock(config: WebAppProjectConfig, lockKey: string):
     }),
   });
   if (!response.ok) {
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_RELEASE_LOCK);
     const errText = await response.text().catch(() => '');
     const errMsg = `Release lock failed: ${response.status} ${response.statusText}${errText ? ` — ${errText.slice(0, 80)}` : ''}`;
     trackApiFailure('releaseLock', errMsg, response.status);
@@ -151,12 +160,14 @@ export async function retrieveLock(config: WebAppProjectConfig): Promise<LockInf
           }),
         });
         if (retry.ok) return (await retry.json()) as LockInfo;
+        await throwIfUnauthorized(retry, MESSAGES.ERROR_CONTEXT.PUSH_ACQUIRE_LOCK);
         const retryErr = `Lock was acquired but retrieving the lock key failed (${retry.status} ${retry.statusText}); the project may remain locked on the server.`;
         trackApiFailure('retrieveLock', retryErr, retry.status);
         throw new Error(retryErr);
       }
       return lockInfo;
     }
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_ACQUIRE_LOCK);
     return null;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -180,6 +191,7 @@ export async function putLock(config: WebAppProjectConfig): Promise<void> {
     }),
   });
   if (!response.ok) {
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_ACQUIRE_LOCK);
     const errText = await response.text().catch(() => '');
     const errMsg = `Acquire lock failed: ${response.status} ${response.statusText}${errText ? ` — ${errText.slice(0, 80)}` : ''}`;
     trackApiFailure('putLock', errMsg, response.status);
@@ -222,6 +234,7 @@ export async function createFolder(
       return null;
     }
     if (response.status === 409) return null;
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const err = await response.text().catch(() => '');
     const errMsg = `Create folder '${name}' failed: ${response.status} ${err.slice(0, 80)}`;
     trackApiFailure('createFolder', errMsg, response.status);
@@ -253,6 +266,7 @@ export async function downloadRemoteFile(
     }),
   });
   if (!response.ok) {
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errMsg = `Failed to download file ${fileId}: ${response.statusText}`;
     trackApiFailure('downloadRemoteFile', errMsg, response.status);
     throw new Error(errMsg);
@@ -303,6 +317,7 @@ export async function createFile(
     if (response.status === 409) {
       throw new FileAlreadyExistsError(filePath);
     }
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errMsg = `Failed to upload file '${filePath}': ${response.status} ${response.statusText}`;
     trackApiFailure('createFile', errMsg, response.status);
     throw new Error(errMsg);
@@ -326,6 +341,7 @@ export async function updateFile(
   const { form, headers } = buildFileUploadForm(config, filePath, localFile, lockKey);
   const response = await fetch(url, { method: 'PUT', headers, body: form });
   if (!response.ok) {
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errMsg = `Failed to update file '${filePath}': ${response.status} ${response.statusText}`;
     trackApiFailure('updateFile', errMsg, response.status);
     throw new Error(errMsg);
@@ -351,6 +367,7 @@ export async function deleteItem(
   if (lockKey) headers[STUDIO_WEB_HEADERS.LOCK_KEY] = lockKey;
   const response = await fetch(url, { method: 'DELETE', headers });
   if (!response.ok) {
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errMsg = `Failed to delete item ${itemId}: ${response.status} ${response.statusText}`;
     trackApiFailure('deleteItem', errMsg, response.status);
     throw new Error(errMsg);
@@ -370,6 +387,7 @@ export async function getSolutionId(config: WebAppProjectConfig): Promise<string
     }),
   });
   if (!response.ok) {
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errMsg = `Failed to get solution ID: ${response.status} ${response.statusText}`;
     trackApiFailure('getSolutionId', errMsg, response.status);
     throw new Error(errMsg);
@@ -457,6 +475,7 @@ export async function findResourceInCatalog(
   const responseText = await response.text();
   const contentType = response.headers.get('content-type') || '';
   if (!response.ok) {
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errMsg = `Failed to search resource catalog: ${response.status} ${response.statusText}`;
     trackApiFailure('findResourceInCatalog', errMsg, response.status);
     throw new Error(errMsg);
@@ -506,6 +525,7 @@ export async function retrieveConnection(
       trackApiFailure('retrieveConnection', errMsg, 404);
       throw new Error(errMsg);
     }
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errMsg = `Failed to retrieve connection: ${response.status} ${response.statusText}`;
     trackApiFailure('retrieveConnection', errMsg, response.status);
     throw new Error(errMsg);
@@ -617,6 +637,7 @@ export async function createReferencedResource(
     body: JSON.stringify(payload),
   });
   if (!response.ok) {
+    await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errorText = await response.text();
     const msg = parseCreateReferencedResourceError(
       errorText,

@@ -85,7 +85,7 @@ export const MESSAGES = {
     PUSH_CREATE_FOLDER_FAILED_PREFIX: 'Create folder failed: ',
     PUSH_PROJECT_STRUCTURE_REQUIRED: 'Project structure is required before ensuring content root exists.',
     PUSH_SOURCE_FOLDER_CREATE_FAILED: 'Failed to create source folder; project structure may be inconsistent.',
-    PUSH_LOCK_NOT_ACQUIRED: 'Could not acquire lock on the project. Another user or process may have the lock.',
+    PUSH_LOCK_NOT_ACQUIRED: 'Could not acquire lock on the project.',
     PUSH_EMAIL_FROM_TOKEN_FAILED_PREFIX: '[push] Could not get email from access token: ',
     /** When local metadata is missing and remote load/download/parse fails; log and fall back to new metadata. */
     PUSH_REMOTE_METADATA_LOAD_FALLBACK_PREFIX: '[push] Could not load remote push_metadata.json: ',
@@ -266,6 +266,9 @@ export const MESSAGES = {
     CLIENT_CREDENTIALS_AUTH: 'client credentials authentication',
     APP_DEPLOYMENT: 'app deployment',
     APP_UPGRADE: 'app upgrade',
+    PUSH_ACQUIRE_LOCK: 'acquire lock',
+    PUSH_RELEASE_LOCK: 'release lock',
+    PUSH_PULL_OPERATION: 'push/pull operation',
   },
 } as const;
 

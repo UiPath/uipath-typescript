@@ -90,6 +90,7 @@ export default class Push extends Command {
       await handler.push();
       await handler.importReferencedResources(flags.ignoreResources);
       this.log(chalk.green(MESSAGES.SUCCESS.PUSH_COMPLETED));
+      process.exit(0);
     } catch (error) {
       const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
       this.log(chalk.red(`${MESSAGES.ERRORS.PUSH_FAILED_PREFIX}${msg}`));
