@@ -264,6 +264,38 @@ video {
     border-color: rgba(255,255,255,0.4);
 }
 
+/* TypeDoc signature blockquotes */
+.md-typeset blockquote {
+    background-color: var(--md-code-bg-color);
+    border-left: none;
+    border-radius: 0.1rem;
+    padding: 0.9em 1.2em;
+    font-family: var(--md-code-font-family);
+    font-size: 0.85em;
+    line-height: 1.5;
+    color: var(--md-code-fg-color);
+    overflow-x: auto;
+}
+
+.md-typeset blockquote p {
+    margin: 0;
+}
+
+.md-typeset blockquote code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+    color: inherit;
+    box-shadow: none;
+}
+
+.md-typeset blockquote a,
+.md-typeset blockquote a:hover {
+    text-decoration: none;
+    color: var(--md-typeset-a-color);
+}
+
 /* Center Mermaid diagrams */
 .mermaid {
     text-align: center;
