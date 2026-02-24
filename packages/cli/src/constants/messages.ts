@@ -64,13 +64,13 @@ export const MESSAGES = {
     PUSH_PROJECT_ID_REQUIRED:
       'Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath push directly',
     PUSH_VALIDATION_FAILED: 'Validation failed',
-    /** Shown when --build-dir path does not exist. */
+    /** Shown when --buildDir path does not exist. */
     PUSH_BUILD_DIR_NOT_FOUND: "Build directory not found.",
-    /** Shown when --build-dir path exists but is not a directory. */
+    /** Shown when --buildDir path exists but is not a directory. */
     PUSH_BUILD_DIR_NOT_DIRECTORY: "Build path is not a directory.",
-    /** Steps to fix build-dir / push setup; shown after build dir validation errors. */
+    /** Steps to fix buildDir / push setup; shown after build dir validation errors. */
     PUSH_BUILD_DIR_STEPS:
-      'Steps:\n  1. Build your project (e.g. npm run build or your framework\'s build command).\n  2. Run: uipath push <project-id> --build-dir <your-build-dir>\n  Example: uipath push my-project-id --build-dir dist',
+      'Steps:\n  1. Build your project (e.g. npm run build or your framework\'s build command).\n  2. Run: uipath push <project-id> --buildDir <your-buildDir>\n  Example: uipath push my-project-id --buildDir dist',
     PUSH_FAILED_PREFIX: 'Push failed: ',
     PUSH_FILE_OPERATION_FAILED_PREFIX: 'Failed: ',
     /** When create returns 409; we skip so push does not fail. */
@@ -95,6 +95,27 @@ export const MESSAGES = {
     /** When remote webAppManifest.json update fails (download/parse/upload). */
     PUSH_WEB_APP_MANIFEST_UPDATE_FAILED_PREFIX: '[push] Updating web app manifest failed: ',
     PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX: '[push] Could not download remote file for diff: ',
+    /** When local schemaVersion is less than remote; ask user to pull first. */
+    PUSH_SCHEMA_VERSION_BEHIND_REMOTE:
+      "Your local code version is behind the remote. Please run 'uipath pull' to get the latest changes, then push again.",
+
+    // Pull command
+    PULL_PROJECT_ID_REQUIRED:
+      'Project ID is required. Use: uipath pull <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath pull directly',
+    PULL_FAILED_PREFIX: 'Pull failed: ',
+    PULL_TARGET_DIR_NOT_FOUND: 'Target directory does not exist.',
+    PULL_TARGET_DIR_NOT_DIRECTORY: 'Target path is not a directory.',
+    PULL_PROJECT_NOT_FOUND: 'Project not found or empty in Studio Web.',
+    /** Shown when pull fails project-type validation (unsupported project or invalid manifest). User-facing; no internal manifest details. */
+    PULL_PROJECT_NOT_SUPPORTED:
+      'The project you are pulling is not supported. Only Studio Web coded app projects can be pulled. Please check that you have the correct project ID.',
+    PULL_OVERWRITE_CONFLICTS: 'Pull would overwrite existing local file(s). Use --overwrite to allow overwriting, or move/back up files and try again.',
+    /** Shown when user declines the overwrite prompt (says no). Avoids repeating PULL_OVERWRITE_CONFLICTS. */
+    PULL_OVERWRITE_DECLINED: 'Overwrite declined. Pull cancelled.',
+    PULL_FILE_DOWNLOAD_FAILED_PREFIX: 'Failed to download file: ',
+    /** Soft check: target dir (CWD) has no package.json, webAppManifest.json, or .uipath. */
+    PULL_TARGET_NOT_PROJECT_ROOT_WARNING:
+      'This directory does not look like a project root (no package.json, webAppManifest.json, or .uipath). Pull will create or overwrite files here. Are you in the right directory?',
 
     // File operations
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',
@@ -138,6 +159,9 @@ export const MESSAGES = {
 
     // Push
     PUSH_COMPLETED: 'Push completed successfully.',
+
+    // Pull
+    PULL_COMPLETED: 'Pull completed successfully.',
   },
 
   INFO: {
@@ -184,6 +208,11 @@ export const MESSAGES = {
     
     // Headers
     PUSH_HEADER: '🚀 UiPath Push',
+    PULL_HEADER: '⬇️ UiPath Pull',
+    /** Progress line during file download (e.g. "Pulling files... 3/10 completed"). */
+    PULL_PROGRESS: 'Pulling files...',
+    /** When remote push_metadata.json cannot be read; we pull all files under source/. */
+    PULL_METADATA_READ_FALLBACK: '[pull] Could not read remote push_metadata.json',
     PUSH_RESOURCE_ADDED_PREFIX: '[resources] Added: ',
     PUSH_RESOURCE_UNCHANGED_PREFIX: '[resources] Unchanged: ',
     PUSH_RESOURCE_UPDATED_PREFIX: '[resources] Updated: ',
@@ -202,6 +231,8 @@ export const MESSAGES = {
   },
   
   PROMPTS: {
+    PULL_OVERWRITE_CONFIRM: 'This pull will overwrite one or more local files. Do you want to continue? (Y/n)',
+    PULL_CONTINUE_NOT_PROJECT_ROOT: 'Continue anyway? (y/N)',
     ENTER_APP_NAME: 'Enter app name:',
     ENTER_PACKAGE_NAME: 'Enter package name:',
     ENTER_PACKAGE_DESCRIPTION: 'Enter package description:',
