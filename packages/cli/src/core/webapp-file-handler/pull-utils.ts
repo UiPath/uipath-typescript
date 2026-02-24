@@ -7,7 +7,11 @@ import * as path from 'path';
 import { PUSH_METADATA_RELATIVE_PATH, PUSH_METADATA_FILENAME } from '../../constants/api.js';
 import { AUTH_CONSTANTS } from '../../constants/index.js';
 import { PULL_WEB_APP_MANIFEST, PACKAGE_JSON_FILENAME } from '../../constants/pull.js';
-import { REMOTE_SOURCE_FOLDER_NAME, normalizePathToForwardSlashes } from './structure.js';
+import {
+  REMOTE_SOURCE_FOLDER_NAME,
+  normalizePathToForwardSlashes,
+  normalizeBundlePath,
+} from './structure.js';
 import type { ProjectFile } from './types.js';
 
 /** Markers that indicate a directory is likely the root of an app project (for pull target-dir soft check). */
@@ -80,12 +84,11 @@ export function getLocalRelativePath(relativePath: string): string {
 /**
  * Returns true if relativePath is exactly buildDir or under buildDir/.
  * Used to exclude build output from pull (no files and no folder skeleton).
- * Normalizes buildDir (forward slashes, no trailing slash) for consistent behavior.
- * Shared with push (local-files) for the same "under build dir" check.
+ * Uses normalizeBundlePath from structure (same as push) for consistent behavior; ReDoS-safe.
  */
 export function isPathUnderBuildDir(relativePath: string, buildDir: string | null): boolean {
   if (!buildDir) return false;
-  const norm = buildDir.replace(/\\/g, '/').replace(/\/+$/, '');
+  const norm = normalizeBundlePath(buildDir);
   if (!norm) return false;
   return relativePath === norm || relativePath.startsWith(`${norm}/`);
 }
