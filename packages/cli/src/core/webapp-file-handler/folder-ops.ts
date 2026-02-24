@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
 import { cliTelemetryClient } from '../../telemetry/index.js';
-import type { WebAppPushConfig, FileOperationPlan, ProjectFolder, ProjectStructure } from './types.js';
+import type { WebAppProjectConfig, FileOperationPlan, ProjectFolder, ProjectStructure } from './types.js';
 import {
   getRemoteFoldersMap,
   getRemoteContentRoot,
@@ -52,7 +52,7 @@ export function buildFolderIdMap(structure: ProjectStructure): Map<string, strin
  * so hierarchy is correct. Uses normalized path comparison for backend path casing.
  */
 export async function ensureContentRootExists(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   lockKey: string | null,
   getStructure: () => ProjectStructure | null,
   setStructure: (s: ProjectStructure) => void
@@ -98,7 +98,7 @@ export async function ensureContentRootExists(
  * Used when createFolder returns null (e.g. 409 conflict) so subsequent creates get correct parentId.
  */
 async function refetchAndMergeFolderIds(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   folderIdMap: Map<string, string>,
   setStructure: (s: ProjectStructure) => void
 ): Promise<Map<string, ProjectFolder>> {
@@ -147,7 +147,7 @@ function groupFoldersByDepth(createFolders: FileOperationPlan['createFolders']):
  * createFolder returns null (e.g. 409), refetches once for that level and merges ids.
  */
 export async function ensureFoldersCreated(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   plan: FileOperationPlan,
   folderIdMap: Map<string, string>,
   setStructure: (s: ProjectStructure) => void,
@@ -205,7 +205,7 @@ export async function ensureFoldersCreated(
 }
 
 export async function cleanupEmptyFolders(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   remoteContentRoot: string,
   fetchStructure: () => Promise<ProjectStructure>,
   lockKey: string | null

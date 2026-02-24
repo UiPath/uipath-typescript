@@ -10,6 +10,7 @@ import {
   STUDIO_WEB_REFERENCED_RESOURCE_FORCE_UPDATE,
   RESOURCE_CATALOG_SKIP,
   RESOURCE_CATALOG_TAKE,
+  MAX_TELEMETRY_ERROR_LENGTH,
 } from '../../constants/api.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { MESSAGES } from '../../constants/index.js';
@@ -17,7 +18,7 @@ import { createHeaders } from '../../utils/api.js';
 import { handleHttpError } from '../../utils/error-handler.js';
 import { cliTelemetryClient } from '../../telemetry/index.js';
 import type {
-  WebAppPushConfig,
+  WebAppProjectConfig,
   LocalFile,
   LockInfo,
   ProjectStructure,
@@ -27,8 +28,6 @@ import type {
   ReferencedResourceRequest,
   ReferencedResourceResponse,
 } from './types.js';
-
-const MAX_TELEMETRY_ERROR_LENGTH = 500;
 
 const RESOURCE_CATALOG_TYPE_MAP: Record<string, string> = {
   asset: 'asset',
@@ -65,7 +64,7 @@ function trackApiFailure(apiMethod: string, errorMessage: string, statusCode?: n
   });
 }
 
-export function buildApiUrl(config: WebAppPushConfig, endpoint: string, tenantScoped = false): string {
+export function buildApiUrl(config: WebAppProjectConfig, endpoint: string, tenantScoped = false): string {
   const { baseUrl, orgId, tenantId } = config.envConfig;
   if (tenantScoped) {
     return `${baseUrl}/${orgId}/${tenantId}${endpoint}`;
@@ -74,7 +73,7 @@ export function buildApiUrl(config: WebAppPushConfig, endpoint: string, tenantSc
 }
 
 export async function fetchRemoteStructure(
-  config: WebAppPushConfig
+  config: WebAppProjectConfig
 ): Promise<ProjectStructure> {
   const url = buildApiUrl(
     config,
@@ -102,7 +101,7 @@ export async function fetchRemoteStructure(
  * Releases the project lock. Call after push completes (success or failure) so the project is not
  * left locked until backend timeout. DELETE /Project/{projectId}/Lock/{lockKey}.
  */
-export async function releaseLock(config: WebAppPushConfig, lockKey: string): Promise<void> {
+export async function releaseLock(config: WebAppProjectConfig, lockKey: string): Promise<void> {
   const url = buildApiUrl(
     config,
     `${API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)}/${encodeURIComponent(lockKey)}?api-version=${STUDIO_WEB_API_VERSION}`
@@ -127,7 +126,7 @@ export async function releaseLock(config: WebAppPushConfig, lockKey: string): Pr
  * GET returns lock info; if none exists (projectLockKey/solutionLockKey empty), we acquire via PUT
  * and then retry GET to obtain the keys. Call releaseLock when done (success or failure).
  */
-export async function retrieveLock(config: WebAppPushConfig): Promise<LockInfo | null> {
+export async function retrieveLock(config: WebAppProjectConfig): Promise<LockInfo | null> {
   const url = buildApiUrl(
     config,
     API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)
@@ -168,7 +167,7 @@ export async function retrieveLock(config: WebAppPushConfig): Promise<LockInfo |
   }
 }
 
-export async function putLock(config: WebAppPushConfig): Promise<void> {
+export async function putLock(config: WebAppProjectConfig): Promise<void> {
   const url = buildApiUrl(
     config,
     `${API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)}/${STUDIO_WEB_LOCK_ACQUIRE_PATH}?api-version=${STUDIO_WEB_API_VERSION}`
@@ -189,7 +188,7 @@ export async function putLock(config: WebAppPushConfig): Promise<void> {
 }
 
 export async function createFolder(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   name: string,
   lockKey: string | null,
   parentId?: string | null,
@@ -236,7 +235,7 @@ export async function createFolder(
 }
 
 export async function downloadRemoteFile(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   fileId: string
 ): Promise<Buffer> {
   const url = buildApiUrl(
@@ -262,7 +261,7 @@ export async function downloadRemoteFile(
 }
 
 function buildFileUploadForm(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   filePath: string,
   localFile: LocalFile,
   lockKey: string | null
@@ -284,7 +283,7 @@ function buildFileUploadForm(
 }
 
 export async function createFile(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   filePath: string,
   localFile: LocalFile,
   parentId: string | null,
@@ -311,7 +310,7 @@ export async function createFile(
 }
 
 export async function updateFile(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   filePath: string,
   localFile: LocalFile,
   fileId: string,
@@ -334,7 +333,7 @@ export async function updateFile(
 }
 
 export async function deleteItem(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   itemId: string,
   lockKey: string | null
 ): Promise<void> {
@@ -358,7 +357,7 @@ export async function deleteItem(
   }
 }
 
-export async function getSolutionId(config: WebAppPushConfig): Promise<string> {
+export async function getSolutionId(config: WebAppProjectConfig): Promise<string> {
   const url = buildApiUrl(
     config,
     API_ENDPOINTS.STUDIO_WEB_PROJECT.replace('{projectId}', config.projectId)
@@ -414,7 +413,7 @@ function parseCatalogResponse(
   responseText: string,
   contentType: string,
   response: { status: number; statusText: string },
-  config: WebAppPushConfig
+  config: WebAppProjectConfig
 ): { value?: unknown[]; items?: unknown[] } {
   if (!contentType.includes(AUTH_CONSTANTS.CONTENT_TYPES.JSON) && responseText.trim().startsWith('<!DOCTYPE')) {
     const errMsg = `API returned HTML instead of JSON. Status: ${response.status}`;
@@ -432,7 +431,7 @@ function parseCatalogResponse(
 }
 
 export async function findResourceInCatalog(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   resourceType: string,
   name: string,
   folderPath: string,
@@ -487,7 +486,7 @@ export function mapFolder(f: Record<string, unknown>): ResourceFolder {
 }
 
 export async function retrieveConnection(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   connectionKey: string
 ): Promise<Connection> {
   const url = buildApiUrl(
@@ -550,7 +549,7 @@ function getScopedLockKey(lockKey: string | null, fullyQualifiedName: string): s
 }
 
 function buildCreateReferencedResourceHeaders(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   lockKeyHeader: string | null
 ): Record<string, string> {
   const headers = createHeaders({
@@ -566,7 +565,7 @@ function parseCreateReferencedResourceError(
   errorText: string,
   status: number,
   statusText: string,
-  config: WebAppPushConfig
+  config: WebAppProjectConfig
 ): string {
   let msg = `Failed to create referenced resource: ${status} ${statusText}`;
   try {
@@ -597,7 +596,7 @@ function parseCreateReferencedResourceResponse(data: {
 }
 
 export async function createReferencedResource(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   solutionId: string,
   request: ReferencedResourceRequest,
   lockKey: string | null

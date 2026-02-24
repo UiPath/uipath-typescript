@@ -10,16 +10,14 @@ import {
   WEB_APP_MANIFEST_FILENAME,
   normalizeBundlePath,
 } from './structure.js';
-import type { WebAppPushConfig, ProjectFile, FileOperationPlan, PushMetadata } from './types.js';
+import { MAX_TELEMETRY_ERROR_LENGTH } from '../../constants/api.js';
+import type { WebAppProjectConfig, ProjectFile, FileOperationPlan, PushMetadata } from './types.js';
 import type { LocalFile } from './types.js';
 import * as api from './api.js';
 import { computeHash } from './local-files.js';
 
 /** Default schemaVersion for first-time push (no existing local or remote metadata). */
 const DEFAULT_SCHEMA_VERSION = '1.0.0';
-
-/** Max length of error message sent to telemetry to avoid oversized payloads. */
-const MAX_TELEMETRY_ERROR_LENGTH = 500;
 
 /**
  * Get push author email from access token (JWT email claim). Returns '' if missing or decode fails.
@@ -106,7 +104,7 @@ function computeNextSchemaVersion(
 }
 
 /** Builds a new metadata payload for first-time push (schemaVersion 1.0.0). */
-function createNewMetadataPayload(config: WebAppPushConfig): PushMetadata {
+function createNewMetadataPayload(config: WebAppProjectConfig): PushMetadata {
   return {
     schemaVersion: DEFAULT_SCHEMA_VERSION,
     projectId: config.projectId,
@@ -122,9 +120,9 @@ function createNewMetadataPayload(config: WebAppPushConfig): PushMetadata {
  * If remote has a greater schemaVersion, throws PushBehindRemoteError so the user is asked to pull first.
  */
 export async function ensureSchemaVersionNotBehindRemote(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   remoteFiles: Map<string, ProjectFile>,
-  downloadRemoteFile: (config: WebAppPushConfig, fileId: string) => Promise<Buffer>
+  downloadRemoteFile: (config: WebAppProjectConfig, fileId: string) => Promise<Buffer>
 ): Promise<void> {
   const remoteEntry = remoteFiles.get(PUSH_METADATA_REMOTE_PATH);
   if (!remoteEntry) return;
@@ -144,8 +142,15 @@ export async function ensureSchemaVersionNotBehindRemote(
   if (localVersion == null) return;
 
   const remoteContent = await downloadRemoteFile(config, remoteEntry.id);
-  const remoteParsed = JSON.parse(remoteContent.toString()) as { schemaVersion?: unknown };
-  const remoteVersion = remoteParsed?.schemaVersion != null ? String(remoteParsed.schemaVersion) : DEFAULT_SCHEMA_VERSION;
+  let remoteVersion = DEFAULT_SCHEMA_VERSION;
+  try {
+    const remoteParsed = JSON.parse(remoteContent.toString()) as { schemaVersion?: unknown };
+    if (remoteParsed?.schemaVersion != null) {
+      remoteVersion = String(remoteParsed.schemaVersion);
+    }
+  } catch {
+    // Malformed remote metadata: assume default version and continue (local version check still applies).
+  }
 
   if (compareSchemaVersions(localVersion, remoteVersion) < 0) {
     throw new PushBehindRemoteError(localVersion, remoteVersion);
@@ -159,9 +164,9 @@ export async function ensureSchemaVersionNotBehindRemote(
  * Updates lastPushDate, lastPushAuthor, and schemaVersion (from plan).
  */
 export async function prepareMetadataFileForPlan(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   remoteFiles: Map<string, ProjectFile>,
-  downloadRemoteFile: (config: WebAppPushConfig, fileId: string) => Promise<Buffer>,
+  downloadRemoteFile: (config: WebAppProjectConfig, fileId: string) => Promise<Buffer>,
   plan: FileOperationPlan
 ): Promise<void> {
   const metadataPath = path.join(config.rootDir, config.manifestFile);
@@ -245,7 +250,7 @@ export async function prepareMetadataFileForPlan(
  * Uploads the local push_metadata.json to the remote at source/push_metadata.json (not under build dir).
  */
 export async function uploadPushMetadataToRemote(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   metadataPath: string,
   fullRemoteFiles: Map<string, ProjectFile>,
   folderIdMap: Map<string, string>,
@@ -280,7 +285,7 @@ export async function uploadPushMetadataToRemote(
  * If the file does not exist or update fails, the error is logged and not thrown.
  */
 export async function updateRemoteWebAppManifest(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   bundlePath: string,
   fullRemoteFiles: Map<string, ProjectFile>,
   lockKey: string | null

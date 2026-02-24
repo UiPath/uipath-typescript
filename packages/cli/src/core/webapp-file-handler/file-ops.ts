@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
-import type { WebAppPushConfig, FileOperationPlan, FileOpsResult } from './types.js';
+import type { WebAppProjectConfig, FileOperationPlan, FileOpsResult } from './types.js';
 import * as api from './api.js';
 
 const { FileAlreadyExistsError } = api;
@@ -14,7 +14,7 @@ function createFileOpsResult(): FileOpsResult {
  * Caller should check result.failedCount and throw (or handle) when operations did not all succeed.
  */
 export async function executeFileOperations(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   plan: FileOperationPlan,
   lockKey: string | null
 ): Promise<FileOpsResult> {
@@ -72,7 +72,7 @@ export async function executeFileOperations(
 
 /** Runs all file deletes in parallel. */
 export async function deleteFiles(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   files: Array<{ fileId: string; path: string }>,
   lockKey: string | null
 ): Promise<FileOpsResult> {
@@ -100,7 +100,7 @@ export async function deleteFiles(
 
 /** Deletes folders sequentially to preserve depth order (children before parents). */
 export async function deleteFolders(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   folders: Array<{ folderId: string; path: string }>,
   lockKey: string | null
 ): Promise<FileOpsResult> {

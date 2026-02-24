@@ -6,18 +6,18 @@ import { PUSH_METADATA_RELATIVE_PATH } from '../constants/api.js';
 import { AUTH_CONSTANTS, MESSAGES } from '../constants/index.js';
 import { PULL_OVERWRITE_LIST_MAX_DISPLAY } from '../constants/pull.js';
 import { getEnvironmentConfig } from '../utils/env-config.js';
-import { runPull, looksLikeProjectRoot } from '../core/webapp-file-handler/index.js';
+import { runPull, isProjectRootDirectory } from '../core/webapp-file-handler/index.js';
 import { track } from '../telemetry/index.js';
 
 export default class Pull extends Command {
   static override description =
-    'Pull project files from Studio Web into the local workspace (mirror of push)';
+    'Pull project files from Studio Web into the local workspace';
 
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> <project-id>',
     '<%= config.bin %> <%= command.id %> <project-id> --overwrite',
-    '<%= config.bin %> <%= command.id %> --target-dir ./my-project',
+    '<%= config.bin %> <%= command.id %> --targetDir ./my-project',
     '<%= config.bin %> <%= command.id %> <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <token>',
   ];
 
@@ -66,7 +66,7 @@ export default class Pull extends Command {
     const projectId = args['project-id'] || process.env.UIPATH_PROJECT_ID;
     if (!projectId) {
       this.log(chalk.red(MESSAGES.ERRORS.PULL_PROJECT_ID_REQUIRED));
-      process.exit(1);
+      return;
     }
 
     const rootDir = flags.targetDir
@@ -75,7 +75,7 @@ export default class Pull extends Command {
 
     // Soft check: when target is CWD, warn if it doesn't look like project root and optionally prompt.
     const targetIsCwd = !flags.targetDir;
-    if (targetIsCwd && !looksLikeProjectRoot(rootDir)) {
+    if (targetIsCwd && !isProjectRootDirectory(rootDir)) {
       this.log(chalk.yellow(MESSAGES.ERRORS.PULL_TARGET_NOT_PROJECT_ROOT_WARNING));
       if (process.stdin.isTTY) {
         const { continueAnyway } = await inquirer.prompt<{ continueAnyway: boolean }>([
@@ -93,7 +93,7 @@ export default class Pull extends Command {
       }
     }
 
-    // Same config shape as push (WebAppPushConfig); bundlePath and manifestFile are placeholders so runPull and the API layer accept the same type.
+    // Same config shape as push (WebAppProjectConfig); bundlePath and manifestFile are placeholders so runPull and the API layer accept the same type.
     const config = {
       projectId,
       rootDir,

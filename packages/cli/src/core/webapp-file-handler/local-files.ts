@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import ignore, { type Ignore } from 'ignore';
 import type { LocalFile } from './types.js';
+import { isPathUnderBuildDir } from './pull-utils.js';
 import { DOTFILE_PREFIX, PUSH_IGNORE_PATTERNS } from '../../constants/index.js';
 
 const GITIGNORE_FILENAME = '.gitignore';
@@ -110,15 +111,6 @@ export function collectLocalFiles(rootDir: string, bundlePath: string): LocalFil
   return files;
 }
 
-/**
- * Returns true if relPath (forward slashes, relative to root) is under the build dir.
- */
-function isUnderBuildDir(relPath: string, bundlePath: string): boolean {
-  const norm = bundlePath.replace(/\\/g, '/').replace(/\/+$/, '');
-  if (!norm) return false;
-  return relPath === norm || relPath.startsWith(norm + '/');
-}
-
 function collectSourceFilesRecursive(
   dir: string,
   rootDir: string,
@@ -135,7 +127,7 @@ function collectSourceFilesRecursive(
     if (relPath.startsWith('..') || path.isAbsolute(relPath)) continue;
 
     if (entry.isDirectory()) {
-      if (isUnderBuildDir(relPath, bundlePath)) continue;
+      if (isPathUnderBuildDir(relPath, bundlePath)) continue;
       const relPathSlash = relPath + '/';
       if (ig.ignores(relPath) || ig.ignores(relPathSlash)) continue;
       collectSourceFilesRecursive(
@@ -147,7 +139,7 @@ function collectSourceFilesRecursive(
         computeHashForFile
       );
     } else if (entry.isFile()) {
-      if (isUnderBuildDir(relPath, bundlePath)) continue;
+      if (isPathUnderBuildDir(relPath, bundlePath)) continue;
       if (ig.ignores(relPath)) continue;
       const content = fs.readFileSync(fullPath);
       files.push({

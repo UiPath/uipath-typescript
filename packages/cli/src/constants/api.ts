@@ -45,6 +45,9 @@ export const STUDIO_WEB_REFERENCED_RESOURCE_FORCE_UPDATE = 'true';
 export const RESOURCE_CATALOG_SKIP = '0';
 export const RESOURCE_CATALOG_TAKE = '100';
 
+/** Max length of error message sent to telemetry (truncate with "..." to avoid oversized payloads). */
+export const MAX_TELEMETRY_ERROR_LENGTH = 500;
+
 /** Push metadata: local path under project root; uploaded to source/push_metadata.json on remote. */
 export const PUSH_METADATA_RELATIVE_PATH = '.uipath/push_metadata.json';
 export const PUSH_METADATA_FILENAME = 'push_metadata.json';

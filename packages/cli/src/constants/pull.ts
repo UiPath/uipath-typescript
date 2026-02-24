@@ -8,11 +8,11 @@ export const PULL_WEB_APP_MANIFEST = 'webAppManifest.json';
 /** Required value in webAppManifest.json "type" field for pull to be allowed. */
 export const PULL_WEB_APP_MANIFEST_TYPE = 'App_ProCode';
 
-/** File extension that indicates a classic automation project (.uiproj). */
-export const PULL_UIPROJ_EXTENSION = '.uiproj';
+/** Filename used as a project-root marker (e.g. for isProjectRootDirectory). */
+export const PACKAGE_JSON_FILENAME = 'package.json';
 
-/** Required value in .uiproj "ProjectType" field for pull to be allowed. */
-export const PULL_UIPROJ_PROJECT_TYPE = 'WebApp';
+/** Fallback build dir to exclude from pull when remote push_metadata.json is missing or invalid (matches push default). */
+export const PULL_DEFAULT_BUILD_DIR = 'dist';
 
 /** Max number of files to download (and write) in parallel. */
 export const PULL_DOWNLOAD_CONCURRENCY = 10;

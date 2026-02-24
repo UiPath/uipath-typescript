@@ -229,7 +229,6 @@ uipath push <project-id> --buildDir out --ignoreResources --orgId <org-id> --ten
 | `--baseUrl` | UiPath base URL (default: https://cloud.uipath.com). Overrides env. |
 | `--orgId` | UiPath organization ID. Overrides env. |
 | `--tenantId` | UiPath tenant ID. Overrides env. |
-| `--tenantName` | UiPath tenant name. Overrides env. |
 | `--accessToken` | UiPath bearer token for authentication. Overrides env. |
 
 This command will:
@@ -259,7 +258,7 @@ Pull project files from a Studio Web project into your local workspace. Syncs on
 
 **Prerequisites:**
 - Environment variables set (see [Prerequisites](#prerequisites)), or pass `--orgId`, `--tenantId`, `--accessToken` (and optionally `--baseUrl`, `--tenantName`) for non-interactive use. `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
-- The remote project must be a supported type: Web App (`webAppManifest.json` with `type: "App_ProCode"`) and automation project (`.uiproj` with `ProjectType: "WebApp"`).
+- The remote project must be a Studio Web coded app (project has `webAppManifest.json` with `type: "App_ProCode"`).
 
 ```bash
 # Pull using project ID from environment (files written to current directory)
@@ -291,11 +290,10 @@ uipath pull <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <
 | `--baseUrl` | UiPath base URL (default: https://cloud.uipath.com). Overrides env. |
 | `--orgId` | UiPath organization ID. Overrides env. |
 | `--tenantId` | UiPath tenant ID. Overrides env. |
-| `--tenantName` | UiPath tenant name. Overrides env. |
 | `--accessToken` | UiPath bearer token for authentication. Overrides env. |
 
 This command will:
-- Validate the target directory exists and the remote project type (webAppManifest or .uiproj)
+- Validate the target directory exists and the remote project type (webAppManifest.json)
 - Fetch remote structure and filter to files under `source/` only; exclude the build output folder 
 - If local files would be overwritten and `--overwrite` is not set: in an interactive terminal, prompt "Do you want to continue? (Y/n)"; otherwise fail with a message to use `--overwrite` or move files
 - Recreate the folder hierarchy and download files in parallel

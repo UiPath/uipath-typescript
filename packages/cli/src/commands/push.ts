@@ -14,8 +14,8 @@ export default class Push extends Command {
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> <project-id>',
-    '<%= config.bin %> <%= command.id %> <project-id> --ignore-resources',
-    '<%= config.bin %> <%= command.id %> <project-id> --build-dir build',
+    '<%= config.bin %> <%= command.id %> <project-id> --ignoreResources',
+    '<%= config.bin %> <%= command.id %> <project-id> --buildDir build',
     '<%= config.bin %> <%= command.id %> <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <token>',
   ];
 

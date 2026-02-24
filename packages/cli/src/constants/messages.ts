@@ -64,13 +64,13 @@ export const MESSAGES = {
     PUSH_PROJECT_ID_REQUIRED:
       'Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath push directly',
     PUSH_VALIDATION_FAILED: 'Validation failed',
-    /** Shown when --build-dir path does not exist. */
+    /** Shown when --buildDir path does not exist. */
     PUSH_BUILD_DIR_NOT_FOUND: "Build directory not found.",
-    /** Shown when --build-dir path exists but is not a directory. */
+    /** Shown when --buildDir path exists but is not a directory. */
     PUSH_BUILD_DIR_NOT_DIRECTORY: "Build path is not a directory.",
-    /** Steps to fix build-dir / push setup; shown after build dir validation errors. */
+    /** Steps to fix buildDir / push setup; shown after build dir validation errors. */
     PUSH_BUILD_DIR_STEPS:
-      'Steps:\n  1. Build your project (e.g. npm run build or your framework\'s build command).\n  2. Run: uipath push <project-id> --build-dir <your-build-dir>\n  Example: uipath push my-project-id --build-dir dist',
+      'Steps:\n  1. Build your project (e.g. npm run build or your framework\'s build command).\n  2. Run: uipath push <project-id> --buildDir <your-buildDir>\n  Example: uipath push my-project-id --buildDir dist',
     PUSH_FAILED_PREFIX: 'Push failed: ',
     PUSH_FILE_OPERATION_FAILED_PREFIX: 'Failed: ',
     /** When create returns 409; we skip so push does not fail. */
@@ -102,19 +102,20 @@ export const MESSAGES = {
     // Pull command
     PULL_PROJECT_ID_REQUIRED:
       'Project ID is required. Use: uipath pull <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath pull directly',
-    PULL_VALIDATION_FAILED: 'Validation failed',
     PULL_FAILED_PREFIX: 'Pull failed: ',
     PULL_TARGET_DIR_NOT_FOUND: 'Target directory does not exist.',
     PULL_TARGET_DIR_NOT_DIRECTORY: 'Target path is not a directory.',
     PULL_PROJECT_NOT_FOUND: 'Project not found or empty in Studio Web.',
-    PULL_PROJECT_TYPE_UNSUPPORTED: 'Project type is not supported. Expected a Web App project (webAppManifest.json with type: "App_ProCode") or .uiproj (with ProjectType: "WebApp").',
-    PULL_WEB_APP_MANIFEST_TYPE_INVALID: 'webAppManifest.json must have "type": "App_ProCode" to pull.',
-    PULL_UIPROJ_PROJECT_TYPE_INVALID: '.uiproj file must have "ProjectType": "WebApp" to pull.',
+    /** Shown when pull fails project-type validation (unsupported project or invalid manifest). User-facing; no internal manifest details. */
+    PULL_PROJECT_NOT_SUPPORTED:
+      'The project you are pulling is not supported. Only Studio Web coded app projects can be pulled. Please check that you have the correct project ID.',
     PULL_OVERWRITE_CONFLICTS: 'Pull would overwrite existing local file(s). Use --overwrite to allow overwriting, or move/back up files and try again.',
+    /** Shown when user declines the overwrite prompt (says no). Avoids repeating PULL_OVERWRITE_CONFLICTS. */
+    PULL_OVERWRITE_DECLINED: 'Overwrite declined. Pull cancelled.',
     PULL_FILE_DOWNLOAD_FAILED_PREFIX: 'Failed to download file: ',
-    /** Soft check: target dir (CWD) has no package.json, .uiproj, or .uipath. */
+    /** Soft check: target dir (CWD) has no package.json, webAppManifest.json, or .uipath. */
     PULL_TARGET_NOT_PROJECT_ROOT_WARNING:
-      'This directory does not look like a project root (no package.json, webAppManifest.json, .uiproj, or .uipath). Pull will create or overwrite files here. Are you in the right directory?',
+      'This directory does not look like a project root (no package.json, webAppManifest.json, or .uipath). Pull will create or overwrite files here. Are you in the right directory?',
 
     // File operations
     FAILED_TO_UPDATE_ENV: 'Failed to update .env file:',

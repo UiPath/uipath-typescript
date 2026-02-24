@@ -5,36 +5,33 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { PUSH_METADATA_RELATIVE_PATH, PUSH_METADATA_FILENAME } from '../../constants/api.js';
-import { PULL_WEB_APP_MANIFEST, PULL_UIPROJ_EXTENSION } from '../../constants/pull.js';
+import { AUTH_CONSTANTS } from '../../constants/index.js';
+import { PULL_WEB_APP_MANIFEST, PACKAGE_JSON_FILENAME } from '../../constants/pull.js';
 import { REMOTE_SOURCE_FOLDER_NAME, normalizePathToForwardSlashes } from './structure.js';
 import type { ProjectFile } from './types.js';
 
 /** Markers that indicate a directory is likely the root of an app project (for pull target-dir soft check). */
 const PROJECT_ROOT_MARKERS = [
-  'package.json',
+  PACKAGE_JSON_FILENAME,
   PULL_WEB_APP_MANIFEST, // webAppManifest.json
-  '.uipath',
+  AUTH_CONSTANTS.FILES.UIPATH_DIR, // .uipath
 ] as const;
 
 /**
- * Returns true if dir looks like a project root (has package.json, webAppManifest.json, .uipath, or a .uiproj file).
- * Used to warn when pulling into the current directory and it does not look like a project root.
+ * Returns true if dir is a project root (has package.json, webAppManifest.json, or .uipath directory).
+ * Used to warn when pulling into the current directory and it is not a project root.
  */
-export function looksLikeProjectRoot(dir: string): boolean {
+export function isProjectRootDirectory(dir: string): boolean {
   try {
     for (const name of PROJECT_ROOT_MARKERS) {
       const p = path.join(dir, name);
       if (fs.existsSync(p)) {
-        if (name === '.uipath') {
+        if (name === AUTH_CONSTANTS.FILES.UIPATH_DIR) {
           if (fs.statSync(p).isDirectory()) return true;
         } else {
           return true;
         }
       }
-    }
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    if (entries.some((e) => e.isFile() && e.name.toLowerCase().endsWith(PULL_UIPROJ_EXTENSION))) {
-      return true;
     }
   } catch {
     // If we can't read the directory, treat as not project root (will warn).
@@ -83,10 +80,14 @@ export function getLocalRelativePath(relativePath: string): string {
 /**
  * Returns true if relativePath is exactly buildDir or under buildDir/.
  * Used to exclude build output from pull (no files and no folder skeleton).
+ * Normalizes buildDir (forward slashes, no trailing slash) for consistent behavior.
+ * Shared with push (local-files) for the same "under build dir" check.
  */
 export function isPathUnderBuildDir(relativePath: string, buildDir: string | null): boolean {
   if (!buildDir) return false;
-  return relativePath === buildDir || relativePath.startsWith(`${buildDir}/`);
+  const norm = buildDir.replace(/\\/g, '/').replace(/\/+$/, '');
+  if (!norm) return false;
+  return relativePath === norm || relativePath.startsWith(`${norm}/`);
 }
 
 /**

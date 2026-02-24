@@ -2,7 +2,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
 import type {
-  WebAppPushConfig,
+  WebAppProjectConfig,
   FileOperationPlan,
   ProjectStructure,
 } from './types.js';
@@ -58,7 +58,7 @@ function buildLocalFilesWithRemote(
 }
 
 export type {
-  WebAppPushConfig,
+  WebAppProjectConfig,
   LocalFile,
   ProjectFile,
   ProjectFolder,
@@ -70,11 +70,11 @@ export { convertPlanToMigration } from './push-plan.js';
 export type { StructuralMigration, AddedResource, ModifiedResource } from './types.js';
 
 export class WebAppFileHandler {
-  private config: WebAppPushConfig;
+  private config: WebAppProjectConfig;
   private projectStructure: ProjectStructure | null = null;
   private lockKey: string | null = null;
 
-  constructor(config: WebAppPushConfig) {
+  constructor(config: WebAppProjectConfig) {
     this.config = config;
   }
 
@@ -256,8 +256,19 @@ export class WebAppFileHandler {
     if (ignoreResources) return;
     this.config.logger.log(chalk.gray('[resources] Importing referenced resources...'));
     const lockInfo = await api.retrieveLock(this.config);
-    const lockKey = lockInfo?.projectLockKey ?? null;
-    await runImportReferencedResources(this.config, lockKey);
-    this.config.logger.log(chalk.gray('[resources] Done.'));
+    const lockKey = lockInfo?.projectLockKey ?? lockInfo?.solutionLockKey ?? null;
+    try {
+      await runImportReferencedResources(this.config, lockKey);
+      this.config.logger.log(chalk.gray('[resources] Done.'));
+    } finally {
+      if (lockKey) {
+        try {
+          await api.releaseLock(this.config, lockKey);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          this.config.logger.log(chalk.yellow(`[resources] Could not release lock: ${msg}`));
+        }
+      }
+    }
   }
 }

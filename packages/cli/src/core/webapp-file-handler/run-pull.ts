@@ -6,12 +6,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
-import { PUSH_METADATA_RELATIVE_PATH } from '../../constants/api.js';
+import { PUSH_METADATA_RELATIVE_PATH, MAX_TELEMETRY_ERROR_LENGTH } from '../../constants/api.js';
 import {
   PULL_DOWNLOAD_CONCURRENCY,
+  PULL_DEFAULT_BUILD_DIR,
   PULL_OVERWRITE_LIST_MAX_DISPLAY,
 } from '../../constants/pull.js';
-import type { WebAppPushConfig, ProjectFile } from './types.js';
+import type { WebAppProjectConfig, ProjectFile } from './types.js';
 import { getRemoteFilesMap, getRemoteFoldersMap, PUSH_METADATA_REMOTE_PATH } from './structure.js';
 import * as api from './api.js';
 import { cliTelemetryClient } from '../../telemetry/index.js';
@@ -26,9 +27,6 @@ import {
   getFolderPathsForFiles,
 } from './pull-utils.js';
 import { validateProjectType } from './pull-validation.js';
-
-/** Max length of error message sent to telemetry (align with api.ts). */
-const MAX_TELEMETRY_ERROR_LENGTH = 500;
 
 /** Options for runPull. promptOverwrite is called when there are conflicting paths and overwrite is false (e.g. for interactive Y/N). */
 export interface RunPullOptions {
@@ -46,7 +44,7 @@ export interface RunPullOptions {
  * - push_metadata.json, when present, contains optional buildDir (string); invalid JSON or missing key is non-fatal (we pull all under source/).
  */
 export async function runPull(
-  config: WebAppPushConfig,
+  config: WebAppProjectConfig,
   options: RunPullOptions
 ): Promise<void> {
   const { rootDir, logger } = config;
@@ -81,7 +79,7 @@ export async function runPull(
   const fullFilesMap = getRemoteFilesMap(structure);
   const fullFoldersMap = getRemoteFoldersMap(structure);
 
-  config.logger.log(chalk.gray('[pull] Validating project type (webAppManifest.json or .uiproj)...'));
+  config.logger.log(chalk.gray('[pull] Validating project type (webAppManifest.json)...'));
   try {
     await validateProjectType(config, fullFilesMap);
   } catch (err) {
@@ -100,7 +98,7 @@ export async function runPull(
   }
 
   // Exclude source/<buildDir>/ so build output is not pulled (buildDir from remote push_metadata.json).
-  // If metadata is missing or invalid, we assume no buildDir and pull everything under source/.
+  // If metadata is missing or invalid, use PULL_DEFAULT_BUILD_DIR ('dist') as fallback so we still exclude source/dist/.
   let buildDirToExclude: string | null = null;
   const remoteMetadataEntry = fullFilesMap.get(PUSH_METADATA_REMOTE_PATH);
   if (remoteMetadataEntry) {
@@ -121,8 +119,19 @@ export async function runPull(
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      logger.log(chalk.gray(`${MESSAGES.INFO.PULL_METADATA_READ_FALLBACK} (${msg}); pulling all files under source/`));
+      logger.log(chalk.gray(`${MESSAGES.INFO.PULL_METADATA_READ_FALLBACK} (${msg}); excluding ${PULL_DEFAULT_BUILD_DIR}/ as fallback.`));
     }
+  }
+  if (buildDirToExclude === null) {
+    buildDirToExclude = PULL_DEFAULT_BUILD_DIR;
+    const filtered = new Map<string, ProjectFile>();
+    for (const [remotePath, file] of filesMap) {
+      const relativePath = stripSourcePrefix(remotePath);
+      const underBuildDir = isPathUnderBuildDir(relativePath, buildDirToExclude);
+      if (!underBuildDir) filtered.set(remotePath, file);
+    }
+    filesMap = filtered;
+    logger.log(chalk.gray(`[pull] Skipping build output folder: ${buildDirToExclude}`));
   }
 
   if (filesMap.size === 0) {
@@ -137,7 +146,7 @@ export async function runPull(
         const proceed = await options.promptOverwrite(overwrites);
         if (!proceed) {
           cliTelemetryClient.track('Cli.Pull.Failed', { reason: 'overwrite_aborted' });
-          throw new Error(MESSAGES.ERRORS.PULL_OVERWRITE_CONFLICTS);
+          throw new Error(MESSAGES.ERRORS.PULL_OVERWRITE_DECLINED);
         }
       } else {
         logger.log(chalk.yellow(MESSAGES.ERRORS.PULL_OVERWRITE_CONFLICTS));
@@ -166,10 +175,6 @@ export async function runPull(
   }
   const allFolderPaths = new Set<string>([...folderPathsFromFolders, ...folderPathsFromFilesStripped]);
   allFolderPaths.delete('');
-  if (buildDirToExclude) {
-    const toRemove = [...allFolderPaths].filter((fp) => isPathUnderBuildDir(fp, buildDirToExclude));
-    toRemove.forEach((fp) => allFolderPaths.delete(fp));
-  }
   const hasPushMetadata = [...filesMap.keys()].some(
     (p) => getLocalRelativePath(stripSourcePrefix(p)) === PUSH_METADATA_RELATIVE_PATH
   );
@@ -184,7 +189,7 @@ export async function runPull(
   let completedCount = 0;
   const progressPrefix = MESSAGES.INFO.PULL_PROGRESS;
 
-  const processOne = async ([remotePath, file]: [string, ProjectFile]): Promise<void> => {
+  const downloadAndWriteFile = async ([remotePath, file]: [string, ProjectFile]): Promise<void> => {
     const relativePath = getLocalRelativePath(stripSourcePrefix(remotePath));
     const localPath = remotePathToLocal(rootDir, relativePath);
     try {
@@ -211,7 +216,7 @@ export async function runPull(
   }
   const running = new Set<Promise<void>>();
   for (const entry of entries) {
-    const promise = processOne(entry);
+    const promise = downloadAndWriteFile(entry);
     running.add(promise);
     promise.finally(() => {
       running.delete(promise);
