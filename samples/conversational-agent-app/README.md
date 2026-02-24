@@ -24,7 +24,7 @@ npm install @uipath/uipath-typescript
 3. Configure:
    - **Name**: Your app name (e.g., "Conversational Agent App")
    - **Redirect URI**: `http://localhost:5173/callback` (for development)
-   - **Scopes**: `OR.Execution`, `OR.Folders`, `OR.Jobs`, `ConversationalAgents`, `Traces.API`
+   - **Scopes**: `OR.Execution`, `OR.Folders`, `OR.Jobs`, `ConversationalAgents`, `Traces.Api`
 
 4. Save and copy the **Client ID**
 
@@ -42,7 +42,7 @@ npm install @uipath/uipath-typescript
    VITE_UIPATH_BASE_URL=https://cloud.uipath.com
    VITE_UIPATH_CLIENT_ID=your-oauth-client-id
    VITE_UIPATH_REDIRECT_URI=http://localhost:5173/callback
-   VITE_UIPATH_SCOPE=OR.Execution OR.Folders OR.Jobs ConversationalAgents Traces.API
+   VITE_UIPATH_SCOPE=OR.Execution OR.Folders OR.Jobs ConversationalAgents Traces.Api
    VITE_UIPATH_ORG_NAME=your-organization-name
    VITE_UIPATH_TENANT_NAME=your-tenant-name
    ```
