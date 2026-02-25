@@ -5,56 +5,70 @@ const modes: InitMode[] = ['v0', 'v1'];
 
 describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
+  let testChoiceSetId: string | null = null;
 
-  describe('Basic choiceset operations', () => {
-    it('should instantiate choicesets service', async () => {
+  describe('getAll', () => {
+    it('should retrieve all choice sets', async () => {
       const { choiceSets } = getServices();
+      const result = await choiceSets.getAll();
 
-      expect(choiceSets).toBeDefined();
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
 
-      console.log(
-        'Note: ChoiceSet CRUD operations require specific entity configuration. ' +
-          'Full testing requires pre-configured entities with choice set fields.'
-      );
-    });
+      if (result.length === 0) {
+        throw new Error('No choice sets available for getById testing');
+      }
 
-    it('should verify choiceset service has expected methods', async () => {
-      const { choiceSets } = getServices();
-
-      expect(typeof choiceSets.getAll).toBe('function');
-
-      console.log(
-        'ChoiceSet tests are entity-dependent. Configure a test entity with choice sets ' +
-          'to enable full CRUD testing.'
-      );
+      const choiceSet = result[0] as any;
+      testChoiceSetId = choiceSet.id;
+      
+      expect(choiceSet.name).toBeDefined();
+      expect(choiceSet.displayName).toBeDefined();
+      expect(typeof choiceSet.name).toBe('string');
+      expect(typeof choiceSet.displayName).toBe('string');
+      expect(testChoiceSetId).toBeDefined();
+      expect(typeof testChoiceSetId).toBe('string');
     });
   });
 
-  describe('ChoiceSet structure validation', () => {
-    it('should validate choicesets service is properly structured', () => {
+  describe('getById', () => {
+    it('should retrieve choice set values by choice set ID', async () => {
       const { choiceSets } = getServices();
 
-      expect(choiceSets).toBeDefined();
-      expect(typeof choiceSets).toBe('object');
+      if (!testChoiceSetId) {
+        throw new Error('No choice set ID available for getById testing');
+      }
+
+      const result = await choiceSets.getById(testChoiceSetId);
+
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+
+      if (result.items.length > 0) {
+        const value = result.items[0];
+        expect(value.id).toBeDefined();
+        expect(value.name).toBeDefined();
+        expect(value.displayName).toBeDefined();
+        expect(typeof value.id).toBe('string');
+      }
     });
 
-    it('should be independent from entities service', () => {
-      const { entities, choiceSets } = getServices();
+    it('should retrieve choice set values with pagination options', async () => {
+      const { choiceSets } = getServices();
 
-      expect(choiceSets).toBeDefined();
-      expect(entities).toBeDefined();
-      expect(choiceSets).not.toBe(entities);
-    });
-  });
+      if (!testChoiceSetId) {
+        throw new Error('No choice set ID available for paginated getById testing');
+      }
 
-  describe('Service verification', () => {
-    it('should use the same SDK instance as other services', () => {
-      const services = getServices();
+      const result = await choiceSets.getById(testChoiceSetId, {
+        pageSize: 5,
+      });
 
-      expect(services.sdk).toBeDefined();
-      expect(services.choiceSets).toBeDefined();
-      expect(services.entities).toBeDefined();
-      expect(services.sdk.isAuthenticated()).toBe(true);
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeLessThanOrEqual(5);
     });
   });
 });
