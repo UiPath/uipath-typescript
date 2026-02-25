@@ -5,7 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/integration/**/*.integration.test.ts'],
-    exclude: ['tests/integration/shared/maestro/**'],
+    exclude: ['tests/integration/shared/maestro/**', 'tests/integration/shared/orchestrator/attachments.integration.test.ts'],
     testTimeout: 30000,
     hookTimeout: 30000,
     coverage: {

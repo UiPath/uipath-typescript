@@ -47,6 +47,7 @@ function mapJsonTypeToSystemType(type: JsonDataType, format?: JsonFormatType): V
     case JsonDataType.number: return VBDataType.decimal;
     case JsonDataType.boolean: return VBDataType.boolean;
     case JsonDataType.object: return VBDataType.object;
+    case JsonDataType.file: return VBDataType.iresource;
     default: 
       throw new Error(`${MESSAGES.ERRORS.UNSUPPORTED_JSON_DATA_TYPE} ${type}`);
   }

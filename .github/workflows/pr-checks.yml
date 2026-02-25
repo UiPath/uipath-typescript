@@ -59,6 +59,7 @@ jobs:
           echo "data_fabric_test_choiceset_id=${{ secrets.UIPATH_DATA_FABRIC_TEST_CHOICESET_ID_DEV || secrets.UIPATH_DATA_FABRIC_TEST_CHOICESET_ID }}" >> $GITHUB_OUTPUT
           echo "data_fabric_test_record_id=${{ secrets.UIPATH_DATA_FABRIC_TEST_RECORD_ID_DEV || secrets.UIPATH_DATA_FABRIC_TEST_RECORD_ID }}" >> $GITHUB_OUTPUT
           echo "data_fabric_test_attachment_field=${{ secrets.UIPATH_DATA_FABRIC_TEST_ATTACHMENT_FIELD_DEV || secrets.UIPATH_DATA_FABRIC_TEST_ATTACHMENT_FIELD }}" >> $GITHUB_OUTPUT
+          echo "orchestrator_attachment_id=${{ secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID_DEV || secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID }}" >> $GITHUB_OUTPUT
 
       - name: Create Integration Test Configuration
         if: github.base_ref == 'main'
@@ -78,6 +79,7 @@ jobs:
           DATA_FABRIC_TEST_RECORD_ID=${{ steps.config.outputs.data_fabric_test_record_id }}
           DATA_FABRIC_TEST_ATTACHMENT_FIELD=${{ steps.config.outputs.data_fabric_test_attachment_field }}
           ORCHESTRATOR_TEST_PROCESS_KEY=${{ steps.config.outputs.orchestrator_test_process_key }}
+          ORCHESTRATOR_ATTACHMENT_ID=${{ steps.config.outputs.orchestrator_attachment_id }}
           EOF
 
       - name: Run Integration Tests

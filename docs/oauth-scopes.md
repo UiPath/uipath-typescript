@@ -15,6 +15,12 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
 
+## Attachments
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getById()` | `OR.Folders` or `OR.Folders.Read` |
+
 ## Buckets
 
 | Method | OAuth Scope |
