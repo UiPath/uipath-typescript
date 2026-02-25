@@ -66,6 +66,16 @@
                 "default": "./dist/assets/index.cjs"
             }
         },
+        "./attachments": {
+            "import": {
+                "types": "./dist/attachments/index.d.ts",
+                "default": "./dist/attachments/index.mjs"
+            },
+            "require": {
+                "types": "./dist/attachments/index.d.ts",
+                "default": "./dist/attachments/index.cjs"
+            }
+        },
         "./queues": {
             "import": {
                 "types": "./dist/queues/index.d.ts",

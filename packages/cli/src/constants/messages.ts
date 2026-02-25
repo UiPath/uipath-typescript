@@ -126,6 +126,7 @@ export const MESSAGES = {
     //Action schema validations
     INVALID_PROPERTY_TYPE: 'Invalid type. Must be one of: string, integer, number, boolean, array, object',
     INVALID_PROPERTY_FORMAT: 'Invalid format. Must be one of: uuid, date',
+    INVALID_TYPE_FOR_FORMAT: 'Format is only supported for type string',
     MISSING_ITEMS_ARRAY: 'Array properties must have an "items" field',
     NESTED_ARRAYS_NOT_SUPPORTED: 'Nested arrays are not allowed. Array items cannot be of type array',
     SECTION_TYPE_INVALID: 'Section type must be "object"',
