@@ -6,6 +6,7 @@ import { validateConfig, normalizeBaseUrl } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
 import type { IUiPath } from './types';
+import { isInActionCenter } from '../utils/platform';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -91,9 +92,11 @@ export class UiPath implements IUiPath {
     // Track SDK initialization
     trackEvent('Sdk.Auth');
 
-    // Auto-initialize for secret-based auth
-    if (hasSecretAuth) {
-      this.#authService.authenticateWithSecret(config.secret);
+    /** Auto-initialize for secret-based auth
+     * When viewed in Action Center, initialize tokenInfo with empty token. When an sdk call is made Action Center passes the token to sdk.
+     */
+    if (hasSecretAuth || isInActionCenter) {
+      this.#authService.authenticateWithSecret(config.secret ?? '');
       this.#initialized = true;
     }
   }

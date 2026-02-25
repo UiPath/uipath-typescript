@@ -1,5 +1,6 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { BucketGetUriResponse } from '../common';
 
 /**
  * Service for managing UiPath storage Buckets.

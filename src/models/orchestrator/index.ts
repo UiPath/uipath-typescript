@@ -10,3 +10,5 @@ export * from './processes.types';
 export * from './processes.models';
 export * from './queues.types';
 export * from './queues.models';
+export * from './attachments.types';
+export * from './attachments.models';

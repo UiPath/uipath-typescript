@@ -45,3 +45,40 @@ export interface RequestOptions extends BaseOptions {
   filter?: string;
   orderby?: string;
 }
+
+/**
+ * Maps header names to their values
+ * 
+ * @example
+ * ```typescript
+ * {
+ *   "x-ms-blob-type": "BlockBlob"
+ * }
+ * ```
+ */
+export type ResponseDictionary = Record<string, string>;
+
+/**
+ * Response from the GetReadUri API
+ */
+export interface BucketGetUriResponse {
+  /**
+   * The URI for accessing the blob file
+   */
+  uri: string;
+  
+  /**
+   * HTTP method to use with the URI
+   */
+  httpMethod: string;
+  
+  /**
+   * Whether authentication is required to access the URI
+   */
+  requiresAuth: boolean;
+  
+  /**
+   * Headers to be included in the request
+   */
+  headers: ResponseDictionary;
+}

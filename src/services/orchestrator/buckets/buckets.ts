@@ -4,7 +4,6 @@ import {
   BucketGetResponse,
   BucketGetAllOptions,
   BucketGetByIdOptions,
-  BucketGetUriResponse,
   BucketGetReadUriOptions,
   BucketGetFileMetaDataWithPaginationOptions,
   BucketUploadFileOptions,
@@ -25,6 +24,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { BucketGetUriResponse } from '../../../models/common';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
   /**
