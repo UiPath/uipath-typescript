@@ -11,6 +11,7 @@ import {
   ChoiceSetService,
   TaskService,
   ProcessService,
+  AttachmentService,
   BucketService,
   QueueService,
   AssetService
@@ -231,12 +232,19 @@ export class UiPath {
   }
 
   /**
+   * Access to Orchestrator Attachments service
+   */
+  get attachments(): AttachmentService {
+    return this.getService(AttachmentService);
+  }
+
+  /**
    * Access to Orchestrator Buckets service
    */
   get buckets(): BucketService {
     return this.getService(BucketService);
   }
-  
+
   /**
    * Access to Orchestrator Queues service
    */

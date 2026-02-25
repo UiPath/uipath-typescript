@@ -13,6 +13,7 @@ export enum JsonDataType {
   boolean = 'boolean',
   array = 'array',
   object = 'object',
+  file = 'file',
 }
 
 export enum JsonFormatType {
@@ -36,6 +37,7 @@ export enum VBDataType {
   dateOnly = 'System.DateOnly',
   guid = 'System.Guid',
   object = 'System.Object',
+  iresource = 'UiPath.Platform.ResourceHandling.IResource',
 }
 
 export const JsonSchemaPropertySchema: z.ZodType<JsonSchemaProperty> = z.lazy(() =>
@@ -47,6 +49,7 @@ export const JsonSchemaPropertySchema: z.ZodType<JsonSchemaProperty> = z.lazy(()
       JsonDataType.boolean,
       JsonDataType.array,
       JsonDataType.object,
+      JsonDataType.file,
     ], { message: MESSAGES.ERRORS.INVALID_PROPERTY_TYPE }),
     required: z.boolean().optional(),
     description: z.string().optional(),
@@ -63,6 +66,14 @@ export const JsonSchemaPropertySchema: z.ZodType<JsonSchemaProperty> = z.lazy(()
     return true;
   }, {
     message: MESSAGES.ERRORS.MISSING_ITEMS_ARRAY
+  })
+  .refine((data) => {
+    if (data.format && data.type!== JsonDataType.string) {   // for preventing nested arrays
+      return false;
+    }
+    return true;
+  }, {
+    message: MESSAGES.ERRORS.INVALID_TYPE_FOR_FORMAT,
   })
   .refine((data) => {
     if (data.type === JsonDataType.array && data.items) {   // for preventing nested arrays

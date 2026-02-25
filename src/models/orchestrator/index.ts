@@ -2,6 +2,8 @@
 // Export when models are implemented
 export * from './assets.types';
 export * from './assets.models';
+export * from './attachments.types';
+export * from './attachments.models';
 export * from './buckets.types';
 export * from './buckets.models';
 // export * from './folder';
