@@ -8,6 +8,7 @@ import {
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { generateTestResourceName } from '../../utils/helpers';
+import { TaskType } from '../../../../src/models/action-center/tasks.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -71,6 +72,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const taskData = {
         title: testTaskTitle,
         priority: 'Medium' as const,
+        type: TaskType.External,
         data: {
           description: 'Integration test task - will be automatically cleaned up',
           testFlag: true,
@@ -200,7 +202,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
           const userId = users.items[0].id;
 
-          const result = await tasks.assign({
+          const _result = await tasks.assign({
             taskId: createdTaskId,
             userId: userId,
           });
@@ -242,7 +244,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
         const result = await tasks.complete({
           taskId: createdTaskId,
-          type: 'ExternalTask',
+          type: TaskType.External,
           data: {
             completed: true,
             completedAt: new Date().toISOString(),
