@@ -60,3 +60,10 @@ export const ASSET_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Assets(${id})`,
 } as const;
+
+/**
+ * Orchestrator Attachment Service Endpoints
+ */
+export const JOB_ATTACHMENT_ENDPOINTS = {
+  GET_BY_ID: (id: string) => `${ORCHESTRATOR_BASE}/odata/Attachments(${id})`,
+} as const;
