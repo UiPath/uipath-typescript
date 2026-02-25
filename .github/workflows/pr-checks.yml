@@ -50,7 +50,7 @@ jobs:
           echo "org_name=${{ secrets.UIPATH_ORG_NAME_DEV || secrets.UIPATH_ORG_NAME }}" >> $GITHUB_OUTPUT
           echo "tenant_name=${{ secrets.UIPATH_TENANT_NAME_DEV || secrets.UIPATH_TENANT_NAME }}" >> $GITHUB_OUTPUT
           echo "secret=${{ secrets.UIPATH_SECRET_DEV || secrets.UIPATH_SECRET }}" >> $GITHUB_OUTPUT
-          echo "integration_test_folder_id=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER }}" >> $GITHUB_OUTPUT
+          echo "integration_test_folder_id=${{ secrets.TEST_FOLDER_ID || secrets.UIPATH_INTEGRATION_TEST_FOLDER }}" >> $GITHUB_OUTPUT
 
       - name: Create Integration Test Configuration
         if: github.base_ref == 'main'
