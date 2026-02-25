@@ -8,6 +8,7 @@ import {
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { generateTestResourceName } from '../../utils/helpers';
+import { TaskType } from '../../../../src/models/action-center/tasks.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -71,6 +72,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const taskData = {
         title: testTaskTitle,
         priority: 'Medium' as const,
+        type: TaskType.External,
         data: {
           description: 'Integration test task - will be automatically cleaned up',
           testFlag: true,
@@ -90,9 +92,8 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         createdTaskId = result.id;
         registerResource('tasks', { id: createdTaskId, folderId });
       } catch (error: any) {
-        console.log(
-          'Task creation failed. This may require specific Action Center configuration:',
-          error.message
+        throw new Error(
+          `Task creation failed. This may require specific Action Center configuration: ${error.message}`
         );
       }
     });
@@ -101,8 +102,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
   describe('getById', () => {
     it('should retrieve the created task by ID', async () => {
       if (!createdTaskId) {
-        console.log('No task ID available for testing');
-        return;
+        throw new Error('No task ID available for testing');
       }
 
       const { tasks } = getServices();
@@ -117,7 +117,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         expect(result.id).toBe(createdTaskId);
         expect(result.title).toBe(testTaskTitle);
       } catch (error: any) {
-        console.log('Get task by ID failed:', error.message);
+        throw new Error(`Get task by ID failed: ${error.message}`);
       }
     });
   });
@@ -142,14 +142,13 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
           expect(user.id).toBeDefined();
         }
       } catch (error: any) {
-        console.log('Get users failed:', error.message);
+        throw new Error(`Get users failed: ${error.message}`);
       }
     });
 
     it('should assign a task to a user', async () => {
       if (!createdTaskId) {
-        console.log('No task ID available for testing');
-        return;
+        throw new Error('No task ID available for testing');
       }
 
       const { tasks } = getServices();
@@ -161,8 +160,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         const users = await tasks.getUsers(folderId!);
 
         if (users.items.length === 0) {
-          console.log('No users available to assign task');
-          return;
+          throw new Error('No users available to assign task');
         }
 
         const userId = users.items[0].id;
@@ -178,14 +176,13 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         const task = await tasks.getById(createdTaskId, folderId!);
         expect(task.assignedToUser).toBeDefined();
       } catch (error: any) {
-        console.log('Task assignment failed:', error.message);
+        throw new Error(`Task assignment failed: ${error.message}`);
       }
     });
 
     it('should unassign a task', async () => {
       if (!createdTaskId) {
-        console.log('No task ID available for testing');
-        return;
+        throw new Error('No task ID available for testing');
       }
 
       const { tasks } = getServices();
@@ -194,17 +191,32 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       try {
-        const result = await tasks.unassign({
-          taskIds: [createdTaskId],
-        });
+        let task = await tasks.getById(createdTaskId, folderId!);
+
+        if (task.assignedToUser === null || task.assignedToUser === undefined) {
+          const users = await tasks.getUsers(folderId!);
+
+          if (users.items.length === 0) {
+            throw new Error('No users available to assign task');
+          }
+
+          const userId = users.items[0].id;
+
+          const _result = await tasks.assign({
+            taskId: createdTaskId,
+            userId: userId,
+          });
+        }
+
+        const result = await tasks.unassign(createdTaskId);
 
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
 
-        const task = await tasks.getById(createdTaskId, folderId!);
+        task = await tasks.getById(createdTaskId, folderId!);
         expect(task.assignedToUser === null || task.assignedToUser === undefined).toBe(true);
       } catch (error: any) {
-        console.log('Task unassignment failed:', error.message);
+        throw new Error(`Task unassignment failed: ${error.message}`);
       }
     });
   });
@@ -212,8 +224,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
   describe('complete', () => {
     it('should complete a task', async () => {
       if (!createdTaskId) {
-        console.log('No task ID available for testing');
-        return;
+        throw new Error('No task ID available for testing');
       }
 
       const { tasks } = getServices();
@@ -233,13 +244,12 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
         const result = await tasks.complete({
           taskId: createdTaskId,
-          type: 'FormTask',
-          action: 'Submit',
+          type: TaskType.External,
           data: {
             completed: true,
             completedAt: new Date().toISOString(),
           },
-        });
+        }, folderId!);
 
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
@@ -249,9 +259,8 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
         createdTaskId = null;
       } catch (error: any) {
-        console.log(
-          'Task completion failed. This may require specific task configuration:',
-          error.message
+        throw new Error(
+          `Task completion failed. This may require specific task configuration: ${error.message}`
         );
       }
     });
@@ -269,8 +278,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       });
 
       if (result.items.length === 0) {
-        console.log('No tasks available to validate structure');
-        return;
+        throw new Error('No tasks available to validate structure');
       }
 
       const task = result.items[0];

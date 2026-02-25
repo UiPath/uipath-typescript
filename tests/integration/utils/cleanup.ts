@@ -75,7 +75,7 @@ export async function cleanupTestEntityRecords(
   try {
     const { entities } = getServices();
     await retryWithBackoff(async () => {
-      await entities.deleteById(entityId, recordIds);
+      await entities.deleteRecordsById(entityId, recordIds);
     });
     console.log(`Cleaned up ${recordIds.length} test entity records for entity ${entityId}`);
   } catch (error) {
@@ -166,5 +166,6 @@ export async function cleanupAllTestResources(): Promise<void> {
 // - cleanupTestQueue: sdk.queues has no delete method (read-only)
 // - cleanupTestAsset: sdk.assets has no delete method (read-only)
 // - cleanupTestBucket: sdk.buckets has no delete method (read-only)
+// - cleanupTestChoiceSet: sdk.choiceSets has no delete method (read-only)
 //
 // These resources must be managed through the UiPath UI or other APIs.
