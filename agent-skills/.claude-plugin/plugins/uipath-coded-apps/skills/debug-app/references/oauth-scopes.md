@@ -172,7 +172,7 @@ import { Tasks } from '@uipath/uipath-typescript/tasks';
 
 ### Conversational Agent
 
-Combined scopes needed: `OR.Execution` · `OR.Folders` · `OR.Jobs` · `ConversationalAgents` · `Traces.API`
+Combined scopes needed: `OR.Execution` · `OR.Folders` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api`
 
 #### Agents
 
@@ -199,7 +199,7 @@ Combined scopes needed: `OR.Execution` · `OR.Folders` · `OR.Jobs` · `Conversa
 |--------|---------------|
 | `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
-| `createFeedback()` | `OR.Execution`, `OR.Jobs`, `Traces.API` |
+| `createFeedback()` | `OR.Execution`, `OR.Jobs`, `Traces.Api` |
 
 #### Messages
 
@@ -229,12 +229,12 @@ PIMS OR.Execution.Read OR.Tasks.Read
 
 **Example 4:** App uses Conversational Agent
 ```
-OR.Execution OR.Folders OR.Jobs ConversationalAgents Traces.API
+OR.Execution OR.Folders OR.Jobs ConversationalAgents Traces.Api
 ```
 
 **Example 5:** Full-featured app with everything
 ```
-OR.Assets OR.Administration DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write PIMS OR.Execution OR.Folders OR.Jobs OR.Jobs.Write OR.Queues OR.Tasks ConversationalAgents Traces.API
+OR.Assets OR.Administration DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write PIMS OR.Execution OR.Folders OR.Jobs OR.Jobs.Write OR.Queues OR.Tasks ConversationalAgents Traces.Api
 ```
 
 ## UiPath External Application Resource Mapping
@@ -247,7 +247,7 @@ When adding scopes in the UiPath Admin UI (External Applications → Edit → "A
 | **Data Fabric API** | `DataFabric.Schema.Read`, `DataFabric.Data.Read`, `DataFabric.Data.Write` |
 | **PIMS** | `PIMS` |
 | **ConversationalAgents** | `ConversationalAgents` |
-| **Traces.API** | `Traces.API` |
+| **Traces.Api** | `Traces.Api` |
 
 **Direct edit URL pattern:** `{baseUrl}/{orgName}/portal_/admin/external-apps/oauth/edit/{clientId}`
 
@@ -275,4 +275,4 @@ When adding scopes in the UiPath Admin UI (External Applications → Edit → "A
 | `OR.Tasks.Read` | Tasks (read-only), CaseInstances (getActionTasks) |
 | `OR.Tasks.Write` | Tasks (write operations) |
 | `PIMS` | MaestroProcesses, ProcessInstances, Cases, CaseInstances |
-| `Traces.API` | Exchanges (createFeedback) |
+| `Traces.Api` | Exchanges (createFeedback) |

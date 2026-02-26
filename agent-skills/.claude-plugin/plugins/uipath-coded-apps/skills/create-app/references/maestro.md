@@ -91,6 +91,19 @@ import {
 
 Returns `Promise<MaestroProcessGetAllResponse[]>`. Each process has: `processKey`, `packageId`, `name`, `folderKey`, `folderName`, `packageVersions`, `versionCount`, plus instance count fields (`runningCount`, `faultedCount`, `completedCount`, `pausedCount`, `cancelledCount`, `pendingCount`, `retryingCount`, `resumingCount`, `pausingCount`, `cancelingCount`). Each process has an attached `getIncidents()` method.
 
+**NOTE:** Maestro responses include `folderKey` (GUID string) but NOT `folderId` (number). If you need to call an Orchestrator method that requires `folderId` (e.g., `Processes.start()`), you must bridge using `Processes.getAll()` — see "Bridging folderKey ↔ folderId" in [orchestrator.md](orchestrator.md). **NEVER use `parseInt(folderKey)`** — it returns `NaN`.
+
+**CRITICAL — `name` is NOT `processKey`:** The human-readable process name (e.g., `"Loan.Origination.and.Review"`) is the `name` field. The `processKey` is a separate internal identifier (e.g., `"a1b2c3d4-..."`). When the user provides a process name, you MUST first call `MaestroProcesses.getAll()`, find the process where `name` matches, then extract its `processKey` and `folderKey` to use in subsequent calls like `ProcessInstances.getAll({ processKey })`. **NEVER use the process name as the processKey.**
+
+```typescript
+const maestroProcesses = new MaestroProcesses(sdk);
+const allProcesses = await maestroProcesses.getAll();
+const target = allProcesses.find(p => p.name === 'Loan.Origination.and.Review');
+if (!target) throw new Error('Process not found');
+// Now use target.processKey and target.folderKey for instance queries
+const instances = await processInstances.getAll({ processKey: target.processKey, pageSize: 20 });
+```
+
 ### getIncidents(processKey: string, folderKey: string)
 
 Returns `Promise<ProcessIncidentGetResponse[]>`. Each incident has: `instanceId`, `elementId`, `folderKey`, `processKey`, `incidentId`, `incidentStatus`, `incidentType`, `errorCode`, `errorMessage`, `errorTime`, `errorDetails`, `debugMode`, `incidentSeverity`, `incidentElementActivityType`, `incidentElementActivityName`.
@@ -144,6 +157,25 @@ Returns `Promise<BpmnXmlString>` (a string of BPMN XML).
 ### getVariables(instanceId: string, folderKey: string, options?: ProcessInstanceGetVariablesOptions)
 
 Returns `Promise<ProcessInstanceGetVariablesResponse>` with `{ elements, globalVariables, instanceId, parentElementId }`. Options: `{ parentElementId?: string }`.
+
+**Response structure:**
+
+- `globalVariables: GlobalVariableMetaData[]` — Named variables with types. Each has:
+  - `id: string` — unique identifier
+  - `name: string` — human-readable variable name (e.g., `"loanAmount"`, `"applicantName"`)
+  - `type: string` — value type (`"integer"`, `"string"`, `"boolean"`, or custom types)
+  - `value: any` — the current value (can be primitive, object, or array)
+  - `source: string` — name of the BPMN element that set/owns this variable
+  - `elementId: string` — BPMN element ID
+- `elements: ElementMetaData[]` — Per-element execution data (activity steps). Each has:
+  - `elementId: string` — BPMN element ID (e.g., `"Activity_XYRXSH"`)
+  - `elementRunId: string` — unique run identifier
+  - `isMarker: boolean` — whether this is a marker element
+  - `inputs: Record<string, any>` — input arguments passed to the element (can be deeply nested objects)
+  - `inputDefinitions: Record<string, any>` — schema/definitions for inputs
+  - `outputs: Record<string, any>` — output values produced by the element (can be deeply nested objects)
+
+**UI rendering — MANDATORY:** See [patterns.md](patterns.md) section "Rendering Process Instance Data" for how to display variables and element data properly. **NEVER dump raw JSON** — always parse and render structured UI.
 
 ### getIncidents(instanceId: string, folderKey: string)
 

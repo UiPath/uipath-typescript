@@ -141,13 +141,67 @@ Returns `NonPaginatedResponse<ProcessGetResponse>` or `PaginatedResponse<Process
 
 Returns `Promise<ProcessGetResponse>`.
 
-`ProcessGetResponse` fields: `key`, `packageKey`, `packageVersion`, `isLatestVersion`, `description`, `name`, `packageType`, `targetFramework`, `robotSize`, `autoUpdate`, `id`, `folderId`, `folderName`, `createdTime`, `lastModifiedTime`.
+`ProcessGetResponse` fields: `key`, `packageKey`, `packageVersion`, `isLatestVersion`, `description`, `name`, `packageType`, `targetFramework`, `robotSize`, `autoUpdate`, `id`, `folderId`, `folderName`, `folderKey`, `createdTime`, `lastModifiedTime`.
 
 ### start(request: ProcessStartRequest, folderId: number, options?: RequestOptions)
 
 Returns `Promise<ProcessStartResponse[]>`. The `request` must include either `processKey` or `processName`. Optional fields: `strategy`, `robotIds`, `jobsCount`, `inputArguments`, `jobPriority`.
 
 `ProcessStartResponse` fields: `key`, `startTime`, `endTime`, `state`, `source`, `processName`, `type`, `id`, `folderId`.
+
+## Bridging folderKey ↔ folderId
+
+Maestro services return `folderKey` (GUID string), but Orchestrator services like `Processes.start()` require `folderId` (number). These are **completely different identifiers** — `parseInt(folderKey)` gives `NaN`.
+
+**NEVER do this:**
+```typescript
+// WRONG — folderKey is a GUID like "a1b2c3d4-e5f6-...", parseInt returns NaN
+const folderId = parseInt(process.folderKey, 10);
+await processes.start(request, folderId);
+```
+
+**Correct pattern — resolve folderId from Orchestrator:**
+
+```typescript
+import { Processes } from '@uipath/uipath-typescript/processes';
+import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+
+// 1. Get the Maestro process (has folderKey and processKey, but no folderId)
+const maestro = new MaestroProcesses(sdk);
+const maestroProcesses = await maestro.getAll();
+const target = maestroProcesses.find(p => p.name === 'My Process');
+// target.folderKey = "a1b2c3d4-e5f6-..." (GUID)
+// target.processKey = the Orchestrator release key (use for Processes.start())
+// target.packageId = the NuGet package identifier (NOT the processKey!)
+
+// 2. Get Orchestrator processes to find the matching folderId
+const processes = new Processes(sdk);
+const orchResult = await processes.getAll();
+// ProcessGetResponse has BOTH folderKey and folderId
+const orchProcess = orchResult.items.find(p => p.folderKey === target.folderKey);
+const folderId = orchProcess?.folderId;
+
+// 3. Now start the process with the correct fields:
+//    - processKey comes from MaestroProcess.processKey (NOT packageId!)
+//    - folderId comes from the Orchestrator bridge above
+if (folderId) {
+  await processes.start({ processKey: target.processKey }, folderId);
+}
+```
+
+**Cache the mapping:** If your app frequently bridges between Maestro and Orchestrator, resolve the `folderKey → folderId` mapping once on load and cache it in a `Map<string, number>` or React state. Don't re-query on every operation.
+
+```typescript
+// Build a folderKey → folderId lookup map (do once)
+const orchProcesses = await processes.getAll();
+const folderMap = new Map<string, number>();
+for (const p of orchProcesses.items) {
+  if (p.folderKey && p.folderId) {
+    folderMap.set(p.folderKey, p.folderId);
+  }
+}
+// Use: folderMap.get(maestroProcess.folderKey) → folderId
+```
 
 ## Usage Example
 
