@@ -109,3 +109,41 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `unassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `complete()` | `OR.Tasks` or `OR.Tasks.Write` |
+
+## Conversational Agent
+
+Combined scopes needed: `OR.Execution` · `OR.Folders` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api`
+
+### Agents
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Execution` or `OR.Execution.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read` |
+
+### Conversations
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `create()` | `OR.Execution`, `OR.Folders`, `OR.Jobs` |
+| `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `updateById()` | `OR.Execution`, `OR.Jobs` |
+| `deleteById()` | `OR.Execution`, `OR.Jobs` |
+| `startSession()` | `OR.Execution`, `OR.Jobs`, `ConversationalAgents` |
+| `uploadAttachment()` | `OR.Execution`, `OR.Jobs` |
+
+### Exchanges
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `createFeedback()` | `OR.Execution`, `OR.Jobs`, `Traces.Api` |
+
+### Messages
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getContentPartById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |

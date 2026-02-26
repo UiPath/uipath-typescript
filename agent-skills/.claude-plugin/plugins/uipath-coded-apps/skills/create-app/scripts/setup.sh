@@ -53,12 +53,11 @@ echo ""
 
 # --- Project scaffolding ---
 echo "==> Creating Vite project: $APP_NAME"
-npm create vite@latest "$APP_NAME" -- --template react-ts
+npx --yes create-vite@latest "$APP_NAME" --template react-ts
 cd "$APP_NAME"
 
 echo "==> Installing dependencies"
-npm install @uipath/uipath-typescript path-browserify
-npm install -D tailwindcss@3 postcss autoprefixer
+npm install @uipath/uipath-typescript path-browserify tailwindcss@3 postcss autoprefixer
 
 echo "==> Writing vite.config.ts"
 cat > vite.config.ts << 'VITEEOF'

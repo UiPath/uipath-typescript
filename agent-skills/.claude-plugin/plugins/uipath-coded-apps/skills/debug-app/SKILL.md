@@ -178,7 +178,7 @@ For each SDK service found in the app's code, look up the specific methods used 
 - Some services need multiple scopes simultaneously (e.g., `CaseInstances.getAll()` needs both `PIMS` AND `OR.Execution.Read`)
 - `ProcessInstances.getBpmn()` needs `OR.Execution.Read`, not `PIMS`
 - `CaseInstances.getActionTasks()` needs `OR.Tasks` or `OR.Tasks.Read`, not `PIMS`
-- Conversational Agent services need `OR.Execution`, `OR.Folders`, `OR.Jobs`, `ConversationalAgents`, and `Traces.API`
+- Conversational Agent services need `OR.Execution`, `OR.Folders`, `OR.Jobs`, `ConversationalAgents`, and `Traces.Api`
 
 ### 2B.2: Compare Against Configured Scopes
 
