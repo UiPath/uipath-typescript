@@ -1,3 +1,6 @@
+import type { IUiPath } from '../../core/types';
+import { SDKInternalsRegistry } from '../../core/internals';
+import { NetworkError } from '../../core/errors';
 import { BaseService } from '../base';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
@@ -19,7 +22,9 @@ import {
   EntityRecord,
   RawEntityGetResponse,
   EntityFieldDataType,
-  EntityDownloadAttachmentOptions
+  EntityDownloadAttachmentOptions,
+  EntityUploadAttachmentOptions,
+  EntityUploadAttachmentResponse
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -36,6 +41,17 @@ import { track } from '../../core/telemetry';
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
+  private readonly baseUrl: string;
+  private readonly orgName: string;
+  private readonly tenantName: string;
+
+  constructor(instance: IUiPath) {
+    super(instance);
+    const { config } = SDKInternalsRegistry.get(instance);
+    this.baseUrl = config.baseUrl;
+    this.orgName = config.orgName;
+    this.tenantName = config.tenantName;
+  }
   /**
    * Gets entity metadata by entity ID with attached operation methods
    *
@@ -433,6 +449,68 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
 
     return response.data;
+  }
+
+  /**
+   * Uploads an attachment to a File-type field of an entity record
+   *
+   * @param options - Options containing entityName, recordId, fieldName, file, and optional expansionLevel
+   * @returns Promise resolving to the upload response
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Upload a file attachment
+   * const response = await entities.uploadAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: '<record-uuid>',
+   *   fieldName: 'Documents',
+   *   file: file
+   * });
+   * ```
+   */
+  @track('Entities.UploadAttachment')
+  async uploadAttachment(options: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
+    const { entityName, recordId, fieldName, file, expansionLevel } = options;
+
+    const endpoint = DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityName, recordId, fieldName);
+    const normalizedPath = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    const url = new URL(
+      `${this.orgName}/${this.tenantName}/${normalizedPath}`,
+      this.baseUrl
+    );
+
+    if (expansionLevel !== undefined) {
+      url.searchParams.set('expansionLevel', expansionLevel.toString());
+    }
+
+    const formData = new FormData();
+    if (file instanceof Uint8Array) {
+      formData.append('file', new Blob([file.buffer]));
+    } else {
+      formData.append('file', file);
+    }
+
+    const token = await this.getValidAuthToken();
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new NetworkError({
+        message: `Failed to upload attachment: ${response.status} ${response.statusText}`,
+        statusCode: response.status
+      });
+    }
+
+    return response.json();
   }
 
     /**

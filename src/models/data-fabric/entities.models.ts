@@ -12,6 +12,8 @@ import {
   EntityRecord,
   RawEntityGetResponse,
   EntityDownloadAttachmentOptions,
+  EntityUploadAttachmentOptions,
+  EntityUploadAttachmentResponse,
   EntityInsertRecordsOptions,
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
@@ -354,6 +356,47 @@ export interface EntityServiceModel {
    * ```
    */
   downloadAttachment(options: EntityDownloadAttachmentOptions): Promise<Blob>;
+
+  /**
+   * Uploads an attachment to a File-type field of an entity record.
+   *
+   * Uses multipart/form-data to upload the file content to the specified field.
+   *
+   * @param options - Options containing entityName, recordId, fieldName, file, and optional expansionLevel
+   * @returns Promise resolving to the upload response
+   * {@link EntityUploadAttachmentResponse}
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Browser: Upload a file from an input element
+   * const fileInput = document.getElementById('file-input') as HTMLInputElement;
+   * const file = fileInput.files[0];
+   * const response = await entities.uploadAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: '<recordId>',
+   *   fieldName: 'Documents',
+   *   file: file
+   * });
+   *
+   * // Node.js: Upload a file from disk
+   * const fileBuffer = fs.readFileSync('document.pdf');
+   * const blob = new Blob([fileBuffer], { type: 'application/pdf' });
+   * const response = await entities.uploadAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: '<recordId>',
+   *   fieldName: 'Documents',
+   *   file: blob
+   * });
+   *
+   * // Or upload using entity method
+   * const entity = await entities.getById('<entityId>');
+   * const response = await entity.uploadAttachment('<recordId>', 'Documents', file);
+   * ```
+   */
+  uploadAttachment(options: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
 }
 
 /**
@@ -432,6 +475,17 @@ export interface EntityMethods {
    * @returns Promise resolving to Blob containing the file content
    */
   downloadAttachment(recordId: string, fieldName: string): Promise<Blob>;
+
+  /**
+   * Uploads an attachment to a File-type field of an entity record
+   *
+   * @param recordId - UUID of the record to upload the attachment to
+   * @param fieldName - Name of the File-type field
+   * @param file - File to upload (Blob, File, or Uint8Array)
+   * @param expansionLevel - Optional expansion level (default: 0)
+   * @returns Promise resolving to the upload response
+   */
+  uploadAttachment(recordId: string, fieldName: string, file: Blob | File | Uint8Array, expansionLevel?: number): Promise<EntityUploadAttachmentResponse>;
 
   /**
    * @deprecated Use {@link insertRecord} instead.
@@ -530,6 +584,18 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
         entityName: entityData.name,
         recordId,
         fieldName
+      });
+    },
+
+    async uploadAttachment(recordId: string, fieldName: string, file: Blob | File | Uint8Array, expansionLevel?: number): Promise<EntityUploadAttachmentResponse> {
+      if (!entityData.name) throw new Error('Entity name is undefined');
+
+      return service.uploadAttachment({
+        entityName: entityData.name,
+        recordId,
+        fieldName,
+        file,
+        expansionLevel
       });
     },
 
