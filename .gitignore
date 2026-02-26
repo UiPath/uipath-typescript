@@ -61,6 +61,4 @@ docs/api/
 site/
 .uipath/
 
-# Claude Code local settings (keep commands/ tracked for slash commands)
-.claude/*
-!.claude/commands/
+.claude
