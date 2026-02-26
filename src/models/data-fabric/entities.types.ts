@@ -128,6 +128,27 @@ export interface EntityDownloadAttachmentOptions {
 }
 
 /**
+ * Options for uploading an attachment to an entity record
+ */
+export interface EntityUploadAttachmentOptions {
+  /** Entity name */
+  entityName: string;
+  /** Record ID (UUID) */
+  recordId: string;
+  /** Field name of the File-type field */
+  fieldName: string;
+  /** File to upload (Blob, File, or Uint8Array) */
+  file: Blob | File | Uint8Array;
+  /** Optional expansion level (default: 0) */
+  expansionLevel?: number;
+}
+
+/**
+ * Response from uploading an attachment to an entity record
+ */
+export type EntityUploadAttachmentResponse = Record<string, unknown>;
+
+/**
  * Represents a failure record in an entity operation
  */
 export interface FailureRecord {
