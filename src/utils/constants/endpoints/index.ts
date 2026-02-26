@@ -20,3 +20,6 @@ export * from './identity';
 
 // Conversational Agent endpoints
 export * from './conversational-agent';
+
+// LLMOps endpoints
+export * from './llmops';

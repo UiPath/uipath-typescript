@@ -125,6 +125,16 @@
                 "types": "./dist/conversational-agent/index.d.ts",
                 "default": "./dist/conversational-agent/index.cjs"
             }
+        },
+        "./feedback": {
+            "import": {
+                "types": "./dist/feedback/index.d.ts",
+                "default": "./dist/feedback/index.mjs"
+            },
+            "require": {
+                "types": "./dist/feedback/index.d.ts",
+                "default": "./dist/feedback/index.cjs"
+            }
         }
     },
     "files": [
