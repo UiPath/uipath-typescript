@@ -56,11 +56,14 @@ export const createMockRawQueueItem = (overrides: Partial<any> = {}): any => {
     QueueDefinitionId: QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID,
     ProcessingException: null,
     SpecificContent: QUEUE_TEST_CONSTANTS.CONTENT,
-    Output: null,
+    SpecificData: QUEUE_TEST_CONSTANTS.SPECIFIC_DATA,
+    Output: QUEUE_TEST_CONSTANTS.OUTPUT,
+    OutputData: QUEUE_TEST_CONSTANTS.OUTPUT_DATA,
     Progress: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PROGRESS,
     Reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE,
     CreationTime: QUEUE_TEST_CONSTANTS.CREATED_TIME,
-    OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID
+    OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID,
+    OrganizationUnitFullyQualifiedName: TEST_CONSTANTS.FOLDER_NAME
   }, overrides);
 };
 
@@ -81,11 +84,14 @@ export const createBasicQueueItem = (
     queueId: QUEUE_TEST_CONSTANTS.QUEUE_DEFINITION_ID,
     processingException: null,
     content: QUEUE_TEST_CONSTANTS.CONTENT,
-    output: null,
+    specificData: QUEUE_TEST_CONSTANTS.SPECIFIC_DATA,
+    output: QUEUE_TEST_CONSTANTS.OUTPUT,
+    outputData: QUEUE_TEST_CONSTANTS.OUTPUT_DATA,
     progress: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_PROGRESS,
     reference: QUEUE_TEST_CONSTANTS.QUEUE_ITEM_REFERENCE,
     createdTime: QUEUE_TEST_CONSTANTS.CREATED_TIME,
-    folderId: TEST_CONSTANTS.FOLDER_ID
+    folderId: TEST_CONSTANTS.FOLDER_ID,
+    folderName: TEST_CONSTANTS.FOLDER_NAME
   }, overrides);
 };
 

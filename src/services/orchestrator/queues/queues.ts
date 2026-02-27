@@ -5,11 +5,12 @@ import {
   QueueGetByIdOptions,
   QueueItemResponse,
   QueueItemRequest,
-  QueueItemQueryOptions,
-  QueueItemInsertOptions,
+  QueueGetAllItemsOptions,
+  QueueInsertItemOptions,
   TransactionItemResponse,
   TransactionRequest,
-  TransactionResult
+  TransactionCompletionOptions,
+  TransactionCompletionResponse
 } from '../../../models/orchestrator/queues.types';
 import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
@@ -27,60 +28,68 @@ import { track } from '../../../core/telemetry';
  * Service for interacting with UiPath Orchestrator Queues API
  */
 export class QueueService extends FolderScopedService implements QueueServiceModel {
+  private escapeODataValue(value: string): string {
+    return value.replace(/'/g, "''");
+  }
+
+  private async resolveQueueIdByName(queueName: string, folderId: number): Promise<number> {
+    const safeQueueName = this.escapeODataValue(queueName);
+    const result = await this.getAll({
+      folderId,
+      filter: `name eq '${safeQueueName}'`
+    });
+
+    const queue = result.items.find((item) => item.name === queueName) ?? result.items[0];
+    if (!queue) {
+      throw new Error(`Queue '${queueName}' was not found in folder '${folderId}'.`);
+    }
+
+    return queue.id;
+  }
+
+  private async resolveQueueNameById(queueId: number, folderId: number): Promise<string> {
+    const queue = await this.getById(queueId, folderId);
+    if (!queue?.name) {
+      throw new Error(`Queue name was not found for queue ID '${queueId}' in folder '${folderId}'.`);
+    }
+
+    return queue.name;
+  }
+
+  private async ensureQueueItemBelongsToQueueName(
+    queueName: string,
+    itemId: number,
+    folderId: number
+  ): Promise<void> {
+    const queueId = await this.resolveQueueIdByName(queueName, folderId);
+    const result = await this.getAllItems(queueId, folderId, {
+      filter: `id eq ${itemId}`
+    });
+
+    if (result.items.length === 0) {
+      throw new Error(`Queue item '${itemId}' was not found in queue '${queueName}' for folder '${folderId}'.`);
+    }
+  }
+
   /**
    * Gets all queues across folders with optional filtering and folder scoping
-   * 
+   *
    * The method returns either:
    * - An array of queues (when no pagination parameters are provided)
    * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
-   * @param options - Query options including optional folderId
+   *
+   * @param options Query options including optional folderId
    * @returns Promise resolving to an array of queues or paginated result
-   * 
-   * @example
-   * ```typescript
-   * import { Queues } from '@uipath/uipath-typescript/queues';
-   *
-   * const queues = new Queues(sdk);
-   *
-   * // Standard array return
-   * const allQueues = await queues.getAll();
-   *
-   * // Get queues within a specific folder
-   * const folderQueues = await queues.getAll({
-   *   folderId: 123
-   * });
-   *
-   * // Get queues with filtering
-   * const filteredQueues = await queues.getAll({
-   *   filter: "name eq 'MyQueue'"
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await queues.getAll({ pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await queues.getAll({ cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page5 = await queues.getAll({
-   *   jumpToPage: 5,
-   *   pageSize: 10
-   * });
-   * ```
    */
   @track('Queues.GetAll')
   async getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-    ? PaginatedResponse<QueueGetResponse>
-    : NonPaginatedResponse<QueueGetResponse>
+      ? PaginatedResponse<QueueGetResponse>
+      : NonPaginatedResponse<QueueGetResponse>
   > {
-    // Transformation function for queues
-    const transformQueueResponse = (queue: any) =>
+    const transformQueueResponse = (queue: Record<string, unknown>) =>
       transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
 
     return PaginationHelpers.getAll({
@@ -103,25 +112,15 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
 
   /**
    * Gets a single queue by ID
-   * 
-   * @param id - Queue ID
-   * @param folderId - Required folder ID
+   *
+   * @param id Queue ID
+   * @param folderId Required folder ID
+   * @param options Query options
    * @returns Promise resolving to a queue definition
-   * 
-   * @example
-   * ```typescript
-   * import { Queues } from '@uipath/uipath-typescript/queues';
-   *
-   * const queues = new Queues(sdk);
-   *
-   * // Get queue by ID
-   * const queue = await queues.getById(123, 456);
-   * ```
    */
   @track('Queues.GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
 
@@ -137,22 +136,15 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   }
 
   /**
-   * Gets queue items for a specific queue in a folder.
+   * Gets queue items for a specific queue in a folder by queue ID.
    *
-   * @param queueId - Required queue ID
-   * @param folderId - Required folder ID
-   * @param options - Query options including filtering and pagination
-   * @returns Promise resolving to an array of queue items or paginated result
-   * @example
-   * ```typescript
-   * const queueItems = await queues.getQueueItems(456, 12345, {
-   *   pageSize: 10,
-   *   filter: "status eq 'New'"
-   * });
-   * ```
+   * @param queueId Required queue ID
+   * @param folderId Required folder ID
+   * @param options Query options including filtering and pagination
+   * @returns Promise resolving to an array of queue items or a paginated result
    */
-  @track('Queues.GetQueueItems')
-  async getQueueItems<T extends QueueItemQueryOptions = QueueItemQueryOptions>(
+  @track('Queues.GetAllItems')
+  async getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(
     queueId: number,
     folderId: number,
     options?: T
@@ -161,7 +153,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
       ? PaginatedResponse<QueueItemResponse>
       : NonPaginatedResponse<QueueItemResponse>
   > {
-    const transformQueueItemResponse = (queueItem: any) =>
+    const transformQueueItemResponse = (queueItem: Record<string, unknown>) =>
       transformData(pascalToCamelCaseKeys(queueItem) as QueueItemResponse, QueueItemMap);
 
     const filter = options?.filter
@@ -191,29 +183,62 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   }
 
   /**
-   * Inserts a new item into a queue
+   * Gets queue items for a specific queue in a folder by queue name.
    *
-   * @param queueName - The name of the queue
-   * @param folderId - Required folder ID
-   * @param content - The queue item content payload
-   * @param options - Optional queue item options
-   * @returns Promise resolving to the created Queue Item
-   * @example
-   * ```typescript
-   * const queueItem = await queues.insertQueueItem(
-   *   'InvoiceQueue',
-   *   12345,
-   *   { invoiceNumber: 'INV-1001', amount: 1500 },
-   *   { priority: 'Normal', reference: 'INV-1001' }
-   * );
-   * ```
+   * @param queueName Required queue name
+   * @param folderId Required folder ID
+   * @param options Query options including filtering and pagination
+   * @returns Promise resolving to an array of queue items or a paginated result
    */
-  @track('Queues.InsertQueueItem')
-  async insertQueueItem(
+  @track('Queues.GetAllItemsByName')
+  async getAllItemsByName<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(
     queueName: string,
     folderId: number,
-    content: Record<string, any>,
-    options: QueueItemInsertOptions = {}
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<QueueItemResponse>
+      : NonPaginatedResponse<QueueItemResponse>
+  > {
+    const queueId = await this.resolveQueueIdByName(queueName, folderId);
+    return this.getAllItems(queueId, folderId, options) as any;
+  }
+
+  /**
+   * Inserts a new item into a queue by queue ID.
+   *
+   * @param queueId Required queue ID
+   * @param folderId Required folder ID
+   * @param content Queue item content payload
+   * @param options Optional queue item options
+   * @returns Promise resolving to the created queue item
+   */
+  @track('Queues.InsertItem')
+  async insertItem(
+    queueId: number,
+    folderId: number,
+    content: Record<string, unknown>,
+    options: QueueInsertItemOptions = {}
+  ): Promise<QueueItemResponse> {
+    const queueName = await this.resolveQueueNameById(queueId, folderId);
+    return this.insertItemByName(queueName, folderId, content, options);
+  }
+
+  /**
+   * Inserts a new item into a queue by queue name.
+   *
+   * @param queueName Required queue name
+   * @param folderId Required folder ID
+   * @param content Queue item content payload
+   * @param options Optional queue item options
+   * @returns Promise resolving to the created queue item
+   */
+  @track('Queues.InsertItemByName')
+  async insertItemByName(
+    queueName: string,
+    folderId: number,
+    content: Record<string, unknown>,
+    options: QueueInsertItemOptions = {}
   ): Promise<QueueItemResponse> {
     const queueItemRequest: QueueItemRequest = {
       name: queueName,
@@ -251,18 +276,30 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   }
 
   /**
-   * Starts a transaction by getting the next item from the queue.
+   * Starts a transaction by queue ID.
    *
-   * @param queueName - Queue name
-   * @param folderId - Required folder ID
+   * @param queueId Required queue ID
+   * @param folderId Required folder ID
    * @returns Promise resolving to the acquired transaction item
-   * @example
-   * ```typescript
-   * const transaction = await queues.startTransaction('InvoiceQueue', 12345);
-   * ```
    */
   @track('Queues.StartTransaction')
   async startTransaction(
+    queueId: number,
+    folderId: number
+  ): Promise<TransactionItemResponse> {
+    const queueName = await this.resolveQueueNameById(queueId, folderId);
+    return this.startTransactionByName(queueName, folderId);
+  }
+
+  /**
+   * Starts a transaction by queue name.
+   *
+   * @param queueName Required queue name
+   * @param folderId Required folder ID
+   * @returns Promise resolving to the acquired transaction item
+   */
+  @track('Queues.StartTransactionByName')
+  async startTransactionByName(
     queueName: string,
     folderId: number
   ): Promise<TransactionItemResponse> {
@@ -294,50 +331,66 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   }
 
   /**
-   * Sets the result of a transaction.
+   * Completes a transaction.
    *
-   * @param folderId - Required folder ID
-   * @param queueItemId - Queue item ID
-   * @param transactionResult - Transaction result payload
-   * @example
-   * ```typescript
-   * await queues.setTransactionResult(12345, 654, {
-   *   isSuccessful: true,
-   *   output: { completed: true }
-   * });
-   * ```
+   * @param itemId Queue item ID
+   * @param folderId Required folder ID
+   * @param options Transaction completion options
+   * @returns Promise resolving to completion response metadata
    */
-  @track('Queues.SetTransactionResult')
-  async setTransactionResult(
+  @track('Queues.CompleteTransaction')
+  async completeTransaction(
+    itemId: number,
     folderId: number,
-    queueItemId: number,
-    transactionResult: TransactionResult
-  ): Promise<void> {
-    const apiTransactionResult = {
-      IsSuccessful: transactionResult.isSuccessful,
-      ProcessingException: transactionResult.processingException
+    options: TransactionCompletionOptions
+  ): Promise<TransactionCompletionResponse> {
+    const completionOptions = {
+      IsSuccessful: options.isSuccessful,
+      ProcessingException: options.processingException
         ? {
-          Reason: transactionResult.processingException.reason,
-          Details: transactionResult.processingException.details,
-          Type: transactionResult.processingException.type,
-          AssociatedImageFilePath: transactionResult.processingException.associatedImageFilePath,
-          CreationTime: transactionResult.processingException.creationTime
+          Reason: options.processingException.reason,
+          Details: options.processingException.details,
+          Type: options.processingException.type,
+          AssociatedImageFilePath: options.processingException.associatedImageFilePath,
+          CreationTime: options.processingException.creationTime
         }
         : undefined,
-      DeferDate: transactionResult.deferDate,
-      DueDate: transactionResult.dueDate,
-      Output: transactionResult.output,
-      Analytics: transactionResult.analytics,
-      Progress: transactionResult.progress,
-      OperationId: transactionResult.operationId
+      DeferDate: options.deferDate,
+      DueDate: options.dueDate,
+      Output: options.output,
+      Analytics: options.analytics,
+      Progress: options.progress,
+      OperationId: options.operationId
     };
 
     await this.post(
-      QUEUE_ENDPOINTS.SET_TRANSACTION_RESULT(queueItemId),
-      { transactionResult: apiTransactionResult },
+      QUEUE_ENDPOINTS.SET_TRANSACTION_RESULT(itemId),
+      { transactionResult: completionOptions },
       {
         headers: createHeaders({ [FOLDER_ID]: folderId })
       }
     );
+
+    return { success: true };
+  }
+
+  /**
+   * Completes a transaction by queue name and item ID.
+   *
+   * @param queueName Queue name
+   * @param itemId Queue item ID
+   * @param folderId Required folder ID
+   * @param options Transaction completion options
+   * @returns Promise resolving to completion response metadata
+   */
+  @track('Queues.CompleteTransactionByName')
+  async completeTransactionByName(
+    queueName: string,
+    itemId: number,
+    folderId: number,
+    options: TransactionCompletionOptions
+  ): Promise<TransactionCompletionResponse> {
+    await this.ensureQueueItemBelongsToQueueName(queueName, itemId, folderId);
+    return this.completeTransaction(itemId, folderId, options);
   }
 }

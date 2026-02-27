@@ -22,6 +22,11 @@ export const QUEUE_TEST_CONSTANTS = {
     invoiceNumber: 'INV-1001',
     amount: 1500
   },
+  SPECIFIC_DATA: '{"invoiceNumber":"INV-1001","amount":1500}',
+  OUTPUT: {
+    completed: true
+  },
+  OUTPUT_DATA: '{"completed":true}',
 
   // Queue Configuration
   MAX_NUMBER_OF_RETRIES: 1,

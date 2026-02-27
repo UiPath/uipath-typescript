@@ -95,10 +95,14 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `OR.Queues` or `OR.Queues.Read` |
 | `getById()` | `OR.Queues` or `OR.Queues.Read` |
-| `getQueueItems()` | `OR.Queues` or `OR.Queues.Read` |
-| `insertQueueItem()` | `OR.Queues` or `OR.Queues.Write` |
+| `getAllItems()` | `OR.Queues` or `OR.Queues.Read` |
+| `getAllItemsByName()` | `OR.Queues` or `OR.Queues.Read` |
+| `insertItem()` | `OR.Queues` or `OR.Queues.Write` |
+| `insertItemByName()` | `OR.Queues` or `OR.Queues.Write` |
 | `startTransaction()` | `OR.Queues` or `OR.Queues.Write` |
-| `setTransactionResult()` | `OR.Queues` or `OR.Queues.Write` |
+| `startTransactionByName()` | `OR.Queues` or `OR.Queues.Write` |
+| `completeTransaction()` | `OR.Queues` or `OR.Queues.Write` |
+| `completeTransactionByName()` | `OR.Queues` or `OR.Queues.Write` |
 
 ## Tasks
 

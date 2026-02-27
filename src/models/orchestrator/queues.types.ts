@@ -42,13 +42,18 @@ export type QueueGetAllOptions = RequestOptions & PaginationOptions & {
  * Query options for retrieving queue items.
  * Folder and queue scoping are passed as explicit method arguments.
  */
-export type QueueItemQueryOptions = RequestOptions & PaginationOptions;
+export type QueueGetAllItemsOptions = RequestOptions & PaginationOptions;
+
+/**
+ * Supported queue priority values.
+ */
+export type QueuePriority = 'High' | 'Normal' | 'Low';
 
 /**
  * Optional settings for inserting a queue item.
  */
-export type QueueItemInsertOptions = {
-  priority?: 'High' | 'Normal' | 'Low';
+export type QueueInsertItemOptions = {
+  priority?: QueuePriority;
   reference?: string;
   dueDate?: string;
   deferDate?: string;
@@ -60,14 +65,22 @@ export type QueueItemInsertOptions = {
  * Queue item request shape (SDK surface).
  */
 export interface QueueItemRequest {
-  priority?: 'High' | 'Normal' | 'Low';
+  priority?: QueuePriority;
   name?: string;
-  content: Record<string, any>;
+  content: Record<string, unknown>;
   reference?: string;
   dueDate?: string;
   deferDate?: string;
   riskSlaDate?: string;
   progress?: string;
+}
+
+export interface QueueProcessingException {
+  reason: string;
+  details?: string;
+  type?: string;
+  associatedImageFilePath?: string;
+  creationTime?: string;
 }
 
 /**
@@ -77,15 +90,18 @@ export interface QueueItemResponse {
   id: number;
   key: string;
   status: string;
-  priority: string;
+  priority: QueuePriority;
   queueId: number;
-  processingException: any;
-  content: Record<string, any>;
-  output: any;
-  progress: string;
-  reference: string;
+  processingException: QueueProcessingException | null;
+  content: Record<string, unknown>;
+  specificData: string | null;
+  output: Record<string, unknown> | null;
+  outputData: string | null;
+  progress: string | null;
+  reference: string | null;
   createdTime: string;
   folderId?: number;
+  folderName?: string;
 }
 
 export type QueueGetByIdOptions = BaseOptions;
@@ -102,7 +118,7 @@ export interface TransactionItemResponse extends QueueItemResponse {
  */
 export interface TransactionRequest {
   name: string;
-  content?: Record<string, any>;
+  content?: Record<string, unknown>;
   deferDate?: string;
   dueDate?: string;
   reference?: string;
@@ -111,21 +127,22 @@ export interface TransactionRequest {
 }
 
 /**
- * Transaction result payload shape (SDK surface).
+ * Transaction completion payload shape (SDK surface).
  */
-export interface TransactionResult {
+export interface TransactionCompletionOptions {
   isSuccessful?: boolean;
-  processingException?: {
-    reason: string;
-    details?: string;
-    type?: string;
-    associatedImageFilePath?: string;
-    creationTime?: string;
-  };
+  processingException?: QueueProcessingException;
   deferDate?: string;
   dueDate?: string;
-  output?: Record<string, any>;
-  analytics?: Record<string, any>;
+  output?: Record<string, unknown>;
+  analytics?: Record<string, unknown>;
   progress?: string;
   operationId?: string;
+}
+
+/**
+ * Transaction completion response shape.
+ */
+export interface TransactionCompletionResponse {
+  success: boolean;
 }

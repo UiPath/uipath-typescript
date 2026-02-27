@@ -2,11 +2,12 @@ import {
   QueueGetAllOptions,
   QueueGetByIdOptions,
   QueueGetResponse,
-  QueueItemQueryOptions,
-  QueueItemInsertOptions,
+  QueueGetAllItemsOptions,
+  QueueInsertItemOptions,
   QueueItemResponse,
   TransactionItemResponse,
-  TransactionResult
+  TransactionCompletionOptions,
+  TransactionCompletionResponse
 } from './queues.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
@@ -72,33 +73,33 @@ export interface QueueServiceModel {
   /**
    * Gets a single queue by ID
    *
-   * @param id - Queue ID
-   * @param folderId - Required folder ID
+   * @param id Queue ID
+   * @param folderId Required folder ID
+   * @param options Query options
    * @returns Promise resolving to a queue definition
    * @example
    * ```typescript
-   * // Get queue by ID
    * const queue = await queues.getById(<queueId>, <folderId>);
    * ```
    */
   getById(id: number, folderId: number, options?: QueueGetByIdOptions): Promise<QueueGetResponse>;
 
   /**
-   * Gets queue items for a specific queue in a folder.
+   * Gets all items for a queue by queue ID.
    *
    * @param queueId Required queue ID
-   * @param folderId - Required folder ID
+   * @param folderId Required folder ID
    * @param options Query options including filtering and pagination
-   * @returns Promise resolving to either an array of queue items NonPaginatedResponse<QueueItemResponse> or a PaginatedResponse<QueueItemResponse> when pagination options are used.
+   * @returns Promise resolving to queue items
    * @example
    * ```typescript
-   * const queueItems = await queues.getQueueItems(<queueId>, <folderId>, {
+   * const queueItems = await queues.getAllItems(<queueId>, <folderId>, {
    *   pageSize: 10,
    *   filter: "status eq 'New'"
    * });
    * ```
    */
-  getQueueItems<T extends QueueItemQueryOptions = QueueItemQueryOptions>(
+  getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(
     queueId: number,
     folderId: number,
     options?: T
@@ -109,60 +110,113 @@ export interface QueueServiceModel {
   >;
 
   /**
-   * Inserts a new item into a queue.
+   * Gets all items for a queue by queue name.
    *
-   * @param queueName The queue name
+   * @param queueName Required queue name
    * @param folderId Required folder ID
-   * @param content The work item payload to persist in queue item content
-   * @param options Optional queue item metadata (priority, reference, due/defer/progress)
-   * @returns Promise resolving to the created Queue Item
+   * @param options Query options including filtering and pagination
+   * @returns Promise resolving to queue items
    * @example
    * ```typescript
-   * const queueItem = await queues.insertQueueItem(
-   *   'InvoiceQueue',
-   *   12345,
-   *   { invoiceNumber: 'INV-1001', amount: 1500 },
-   *   { priority: 'High', reference: 'INV-1001' }
-   * );
+   * const queueItems = await queues.getAllItemsByName('InvoiceQueue', <folderId>, {
+   *   pageSize: 10
+   * });
    * ```
    */
-  insertQueueItem(
+  getAllItemsByName<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(
     queueName: string,
     folderId: number,
-    content: Record<string, any>,
-    options?: QueueItemInsertOptions
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<QueueItemResponse>
+      : NonPaginatedResponse<QueueItemResponse>
+  >;
+
+  /**
+   * Inserts a new item into a queue by queue ID.
+   *
+   * @param queueId Required queue ID
+   * @param folderId Required folder ID
+   * @param content Work item payload persisted in queue item content
+   * @param options Optional queue item metadata (priority, reference, due/defer/progress)
+   * @returns Promise resolving to the created queue item
+   */
+  insertItem(
+    queueId: number,
+    folderId: number,
+    content: Record<string, unknown>,
+    options?: QueueInsertItemOptions
   ): Promise<QueueItemResponse>;
 
   /**
-   * Starts processing by acquiring the next transaction item from a queue.
+   * Inserts a new item into a queue by queue name.
    *
-   * @param queueName Queue name
+   * @param queueName Required queue name
    * @param folderId Required folder ID
-   * @returns Promise resolving to the acquired transaction item
-   * @example
-   * ```typescript
-   * const transaction = await queues.startTransaction('InvoiceQueue', <folderId>);
-   * ```
+   * @param content Work item payload persisted in queue item content
+   * @param options Optional queue item metadata (priority, reference, due/defer/progress)
+   * @returns Promise resolving to the created queue item
    */
-  startTransaction(queueName: string, folderId: number): Promise<TransactionItemResponse>;
+  insertItemByName(
+    queueName: string,
+    folderId: number,
+    content: Record<string, unknown>,
+    options?: QueueInsertItemOptions
+  ): Promise<QueueItemResponse>;
 
   /**
-   * Sets the processing result for a queue transaction item.
+   * Starts processing by acquiring the next transaction item by queue ID.
    *
+   * @param queueId Required queue ID
    * @param folderId Required folder ID
-   * @param queueItemId Queue item ID
-   * @param transactionResult Transaction result payload
+   * @returns Promise resolving to the acquired transaction item
+   */
+  startTransaction(queueId: number, folderId: number): Promise<TransactionItemResponse>;
+
+  /**
+   * Starts processing by acquiring the next transaction item by queue name.
+   *
+   * @param queueName Required queue name
+   * @param folderId Required folder ID
+   * @returns Promise resolving to the acquired transaction item
+   */
+  startTransactionByName(queueName: string, folderId: number): Promise<TransactionItemResponse>;
+
+  /**
+   * Completes a transaction item by item ID.
+   *
+   * @param itemId Queue item ID
+   * @param folderId Required folder ID
+   * @param options Completion options
+   * @returns Promise resolving to a completion response object
    * @example
    * ```typescript
-   * await queues.setTransactionResult(<folderId>, <queueItemId>, {
+   * await queues.completeTransaction(<itemId>, <folderId>, {
    *   isSuccessful: true,
    *   output: { completed: true }
    * });
    * ```
    */
-  setTransactionResult(
+  completeTransaction(
+    itemId: number,
     folderId: number,
-    queueItemId: number,
-    transactionResult: TransactionResult
-  ): Promise<void>;
+    options: TransactionCompletionOptions
+  ): Promise<TransactionCompletionResponse>;
+
+  /**
+   * Completes a transaction item by queue name and item ID.
+   *
+   * @param queueName Queue name
+   * @param itemId Queue item ID
+   * @param folderId Required folder ID
+   * @param options Completion options
+   * @returns Promise resolving to a completion response object
+   */
+  completeTransactionByName(
+    queueName: string,
+    itemId: number,
+    folderId: number,
+    options: TransactionCompletionOptions
+  ): Promise<TransactionCompletionResponse>;
 }
