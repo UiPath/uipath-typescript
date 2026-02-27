@@ -7,9 +7,27 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Task, mcp__
 
 ## 1. Project Initialization
 
-### Step 1: Ask for environment, org, tenant, and whether they have a client ID
+### Step 1: Determine required scopes first
 
-Use a **single** `AskUserQuestion` call with exactly these 4 questions:
+**Before asking the user any setup questions**, figure out what the app needs:
+
+1. From the user's request, identify which UiPath services the app will use (e.g., Entities, Tasks, Processes, Maestro, Conversational Agent, etc.).
+2. **Read [oauth-scopes.md](references/oauth-scopes.md)** and collect the exact scopes required for the methods the app will call.
+3. Compose the full scopes string (space-separated, deduplicated).
+
+You need these scopes determined **before** Step 2 so you can tell the user what their client ID needs when asking for it.
+
+### Step 2: Ask for environment, org, tenant, and whether they have a client ID
+
+**Before showing the questions**, present the user with the required scopes and redirect URI information:
+
+> **Your app will need these OAuth scopes:** `<scopes list>`
+>
+> **Redirect URI:** `http://localhost:5173` (for local development — this is computed automatically at runtime, so it will also work in production after deployment)
+>
+> If you already have a client ID, make sure the External Application in UiPath has these scopes enabled and the redirect URI added. If not, I can create one for you.
+
+Then use a **single** `AskUserQuestion` call with exactly these 4 questions:
 
 ```
 Question 1:
@@ -38,15 +56,15 @@ Question 3:
   multiSelect: false
 
 Question 4:
-  question: "Do you have an existing OAuth client ID for this app?"
+  question: "Do you have an existing OAuth client ID for this app? (It must have these scopes: <scopes list>, and redirect URI: http://localhost:5173)"
   header: "Client ID"
   options:
-    - label: "Yes, I'll provide it"   description: "I already have a client ID — select Other and paste it"
+    - label: "Yes, I'll provide it"   description: "I already have a client ID with the required scopes — select Other and paste it"
     - label: "No, create one for me"  description: "Use browser automation to create one in UiPath admin"
   multiSelect: false
 ```
 
-### Step 1.5: Ensure Playwright MCP Availability
+### Step 2.5: Ensure Playwright MCP Availability
 
 **IMPORTANT: This skill uses Playwright MCP (`mcp__playwright__*`) for all browser automation. Do NOT use `mcp__claude-in-chrome__*` tools.**
 
@@ -81,19 +99,19 @@ Before any browser automation step (org name from browser, client ID creation), 
 
 5. **Only skip browser automation** if the `.mcp.json` already had the playwright server configured AND the tools still aren't available. In that case, ask the user to provide the values manually.
 
-### Step 2: Resolve the org name
+### Step 3: Resolve the org name
 
 **If user typed their org name or selected "Other":** Use the value they provided.
 
 **If user selected "Find from browser":** Use `mcp__playwright__browser_navigate` to go to the UiPath cloud host for the chosen environment (e.g., `https://staging.uipath.com`). Take a `mcp__playwright__browser_snapshot` — if the user is logged in, the URL or page content will contain the org name. Extract it from the URL path (it's the first segment after the domain: `https://staging.uipath.com/{orgName}/...`).
 
-### Step 3: Get or create the client ID
+### Step 4: Get or create the client ID
 
 **If the user provided a client ID** (selected "Other" and pasted it): Use it directly.
 
-**If the user chose "No, create one for me":** First determine which OAuth scopes are needed based on the services the app will use (read `references/oauth-scopes.md`). Then **read [oauth-client-setup.md](references/oauth-client-setup.md) and follow it exactly** to create an External Application via Playwright MCP browser automation. That reference has all the step-by-step browser interaction details.
+**If the user chose "No, create one for me":** You already determined the required scopes in Step 1. **Read [oauth-client-setup.md](references/oauth-client-setup.md) and follow it exactly** to create an External Application via Playwright MCP browser automation using those scopes and redirect URI `http://localhost:5173`. That reference has all the step-by-step browser interaction details.
 
-### Step 4: Run setup script
+### Step 5: Run setup script
 
 Once you have all values (org, tenant, client ID, environment, scopes), run the setup script.
 
@@ -109,10 +127,27 @@ All 4 required values are passed as positional arguments — the script has no i
 
 It creates the full project:
 - Vite project with React + TypeScript template
+- `uipath.json` at the project root with `scope` and `clientId` (required for deployment via UiPath CLI — see `uipath.json` structure below)
 - `.env` with UiPath OAuth configuration (see `.env` structure below)
 - `src/hooks/useAuth.tsx` — auth hook handling OAuth callback detection (`sdk.isInOAuthCallback()` / `sdk.completeOAuth()`) and login (`sdk.initialize()`)
 - `src/App.tsx` — wraps app with `<AuthProvider config={authConfig}>`, builds `UiPathSDKConfig` from env vars
 - Tailwind CSS configured with directives in `src/index.css`
+
+### `uipath.json` structure
+
+The `uipath.json` file is created at the project root and is required by the UiPath CLI for deployment (`uipath pack`, `uipath publish`, `uipath deploy`). The coded-apps Vite plugin also reads it for local dev meta tag injection.
+
+```json
+{
+  "scope": "<scopes>",
+  "clientId": "<client-id>"
+}
+```
+
+- **`scope`** — The OAuth scopes the app needs (same value as `VITE_UIPATH_SCOPES` in `.env`). Required for OAuth client creation during deployment.
+- **`clientId`** — The OAuth client ID for this app. Used by the deployment pipeline to configure the app's authentication.
+
+**IMPORTANT:** This file must stay in sync with `.env`. If the client ID or scopes change, update both `uipath.json` and `.env`.
 
 ### `.env` structure
 
@@ -120,36 +155,40 @@ The `.env` file uses this structure:
 
 ```env
 UIPATH_BASE_URL=https://api.uipath.com
-UIPATH_REDIRECT_URI=http://localhost:5173
+UIPATH_CLIENT_ID=<client-id>
 UIPATH_ORG_NAME=<org-name>
 UIPATH_TENANT_NAME=<tenant-name>
+UIPATH_SCOPES=<scopes>
 
 VITE_UIPATH_BASE_URL=${UIPATH_BASE_URL}
-VITE_UIPATH_REDIRECT_URI=${UIPATH_REDIRECT_URI}
 VITE_UIPATH_CLIENT_ID=<client-id>
 VITE_UIPATH_ORG_NAME=<org-name>
 VITE_UIPATH_TENANT_NAME=<tenant-name>
 VITE_UIPATH_SCOPES=<scopes>
 ```
 
-**Why `${}` for BASE_URL and REDIRECT_URI only:** When the app is deployed via the UiPath CLI, the CLI overwrites `UIPATH_BASE_URL` and `UIPATH_REDIRECT_URI` with production values. The `VITE_` versions reference them via `${}` so they automatically pick up the new values. The other variables (client ID, org, tenant, scopes) are set directly.
+**Why `${}` for BASE_URL only:** When the app is deployed via the UiPath CLI, the CLI overwrites `UIPATH_BASE_URL` with the production value. The `VITE_` version references it via `${}` so it automatically picks up the new value. The other variables (client ID, org, tenant, scopes) are set directly.
 
-**Port availability:** Before writing `http://localhost:5173` as the redirect URI, check that port 5173 is free (e.g., `lsof -i :5173`). If it's in use, pick the port which you get on doing npm run dev and put that in `UIPATH_REDIRECT_URI`. and then stop npm run dev server
+**Redirect URI — always use `window.location.origin + window.location.pathname`:** The redirect URI is NOT stored in `.env`. Instead, it is always computed at runtime as `window.location.origin + window.location.pathname` in the `authConfig` object in `App.tsx`. This works correctly in both local dev (`http://localhost:5173/`) and production (the deployed app URL) without any manual configuration or port matching. **Do NOT add `UIPATH_REDIRECT_URI` or `VITE_UIPATH_REDIRECT_URI` to `.env`.**
 
 ### Build workflow — start writing immediately after setup
 
 **Do NOT run the validate script.** The setup script is deterministic — proceed directly to building.
 
+**CRITICAL — act immediately, do not deliberate.** After the setup script finishes, start reading reference files and writing code in your very next response. Do NOT spend time planning, summarizing what was done, or thinking about architecture before taking action. Every response after setup MUST include at least one tool call (Read, Write, or Edit).
+
 **Execute these steps in order immediately after setup completes:**
 
-1. **Read the reference files** for the services you already chose scopes for (you decided the services when picking scopes — use the same list). Do NOT read scaffolded files (`useAuth.tsx`, `App.tsx`, `vite.config.ts`, `.env`) — this skill documents their contents.
-2. **Write `src/App.tsx`** — replace the generated one with the actual layout (sidebar, main content area, routing). Define component imports and shared state here.
-3. **Write components one by one** — simplest first (list views), then complex (detail panels). Each component you write can reference previous ones, keeping exports consistent.
+1. **Read the reference files NOW** — in your very first response after setup, use parallel Read tool calls to read all the reference files for the services the app needs. You already know which services from Step 1 (scope determination). Do NOT read scaffolded files (`useAuth.tsx`, `App.tsx`, `vite.config.ts`, `.env`) — this skill documents their contents.
+2. **Write `src/App.tsx`** — in the same response or the next, replace the generated one with the actual layout (sidebar, main content area, routing). Define component imports and shared state here. Do NOT deliberate on the "best" structure — pick a simple layout and write it.
+3. **Write components one by one** — simplest first (list views), then complex (detail panels). Each component you write can reference previous ones, keeping exports consistent. Write each component using the Write tool — do NOT batch-plan all components before writing any.
 4. **Run `npm run build`** — fix all TypeScript errors before proceeding (see "Build verification" below).
 5. **Run the dev server** — verify the app starts (see "Local smoke test" below).
 
 **Do NOT:**
+- Pause to plan or summarize after setup — go straight to reading references
 - Re-read files you just wrote to "review quality"
+- Think about all components before writing the first one — write iteratively
 
 ### Build verification — MANDATORY before starting dev server
 
@@ -178,7 +217,7 @@ Run this in the background. Wait a few seconds for Vite to start, then check the
 - **Success**: `Local: http://localhost:<port>` — the app is running. Report the URL to the user.
 - **Failure**: runtime errors or missing dependencies — fix them before considering the task done.
 
-**IMPORTANT — verify the port matches the redirect URI:** Vite may start on a different port than 5173 if that port is busy (e.g., 5174, 5175). Check the actual port in Vite's output. If it differs from `UIPATH_REDIRECT_URI` in `.env`, update `.env` to match (e.g., `UIPATH_REDIRECT_URI=http://localhost:5174`). OAuth will fail silently if the redirect URI doesn't match the running port.
+**Note:** Vite may start on a different port than 5173 if that port is busy (e.g., 5174, 5175). This is fine — the redirect URI is computed at runtime via `window.location.origin + window.location.pathname`, so it always matches the actual running port automatically.
 
 If there are errors, fix the issues, re-run `npm run build` to verify, then re-run `npm run dev`. Do not mark the task as complete until both the build succeeds and the dev server starts.
 
@@ -230,7 +269,8 @@ When using any SDK service method, follow these rules strictly:
 - **NEVER import service classes from the root package** (`import { Entities } from '@uipath/uipath-typescript'`). Service classes are only available via subpath imports: `@uipath/uipath-typescript/entities`, `/tasks`, `/processes`, etc. The root export only has the deprecated legacy `UiPath` class and type interfaces.
 - **NEVER use deprecated dot-chain access** like `sdk.entities.getAll()` or `sdk.maestro.processes.instances.getVariables(...)`. The legacy `UiPath` class from `@uipath/uipath-typescript` supports this but it is **deprecated**. Always use constructor-based DI: `import { UiPath } from '@uipath/uipath-typescript/core'` and `const entities = new Entities(sdk)`.
 - **NEVER guess field names** on response objects. Import the response type and read its interface. Fields differ across services and don't follow a single pattern.
-- **NEVER hardcode `VITE_UIPATH_BASE_URL` or `VITE_UIPATH_REDIRECT_URI`.** These two must reference their `UIPATH_` counterparts via `${}` (e.g., `VITE_UIPATH_BASE_URL=${UIPATH_BASE_URL}`) so the CLI can overwrite them during deployment. Other `VITE_` vars (`CLIENT_ID`, `ORG_NAME`, `TENANT_NAME`, `SCOPES`) are set directly.
+- **NEVER hardcode `VITE_UIPATH_BASE_URL`.** It must reference its `UIPATH_` counterpart via `${}` (e.g., `VITE_UIPATH_BASE_URL=${UIPATH_BASE_URL}`) so the CLI can overwrite it during deployment. Other `VITE_` vars (`CLIENT_ID`, `ORG_NAME`, `TENANT_NAME`, `SCOPES`) are set directly.
+- **NEVER use env variables for the redirect URI.** Do NOT add `UIPATH_REDIRECT_URI` or `VITE_UIPATH_REDIRECT_URI` to `.env`. The redirect URI must always be computed at runtime as `window.location.origin + window.location.pathname` in the `authConfig`. This ensures it works in both local dev and production without manual configuration.
 - **NEVER add `offline_access` to the scopes string.** It is not a valid scope for this SDK. Only use scopes from `references/oauth-scopes.md`.
 - **NEVER pass `expand: 'TaskSource'` to `tasks.getAll()`.** The `taskSource` field is a direct property on the task response — NOT an OData navigation property. Passing it as an expand value causes a backend error ("Could not find a property named 'TaskSource'"). The SDK already expands `AssignedToUser`, `CreatorUser`, and `LastModifierUser` by default. Only pass `expand` for valid OData navigation properties (e.g., `'TaskAssignments'`).
 - **NEVER use `taskSource`, `taskSourceMetadata`, `tags`, or `parentOperationId` to correlate tasks with process instances.** These fields are unreliable for instance-to-task mapping. The correct approach is to filter tasks by `CreatorJobKey`: `tasks.getAll({ filter: "CreatorJobKey eq ${instanceId}" })` where `instanceId` is the Maestro process instance ID.
