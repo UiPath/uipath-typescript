@@ -1,0 +1,38 @@
+{
+  "name": "@uipath/coded-action-apps",
+  "version": "1.0.0-beta.0",
+  "description": "UiPath package to be used for viewing coded action apps in Action Center",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "prebuild": "npm run clean",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint"
+  },
+  "devDependencies": {
+    "oxlint": "^1.43.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UiPath/uipath-typescript.git",
+    "directory": "packages/coded-action-apps"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}
