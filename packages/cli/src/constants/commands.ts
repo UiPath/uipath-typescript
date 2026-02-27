@@ -10,3 +10,6 @@ export const VALID_NAME_REGEX = /^[a-zA-Z0-9_-]+$/
 export const ACTION_SCHEMA_CONSTANTS = {
   ACTION_SCHEMA_FILENAME: 'action-schema.json'
 } as const;
+
+export const DEFAULT_APP_VERSION = '1.0.0'
+

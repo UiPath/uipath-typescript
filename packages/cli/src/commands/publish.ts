@@ -1,29 +1,54 @@
 import { Command, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import ora from 'ora';
+import ora, { Ora } from 'ora';
 import * as fs from 'fs';
 import * as path from 'path';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
-import { EnvironmentConfig } from '../types/index.js';
-import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
+import { EnvironmentConfig, AppConfig, AppType } from '../types/index.js';
+import { ACTION_SCHEMA_CONSTANTS, API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
-import { getEnvironmentConfig } from '../utils/env-config.js';
+import { getEnvironmentConfig, atomicWriteFileSync } from '../utils/env-config.js';
+import { createHeaders } from '../utils/api.js';
 import { handleHttpError } from '../utils/error-handler.js';
 import { track } from '../telemetry/index.js';
+import { readAndParseActionSchema } from '../utils/action-schema.js';
+
+interface RegisterResponse {
+  definition: {
+    systemName: string;
+  };
+  deployVersion?: number;
+}
+
+interface PackageMetadata {
+  packageName: string;
+  packageVersion: string;
+}
 
 export default class Publish extends Command {
   static override description = 'Publish NuGet packages to UiPath Orchestrator';
 
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
+    '<%= config.bin %> <%= command.id %> --name MyApp',
+    '<%= config.bin %> <%= command.id %> --name MyApp --version 2.0.0',
     '<%= config.bin %> <%= command.id %> --uipathDir ./packages',
-    "<%= config.bin %> <%= command.id %> --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --accessToken 'your_token'",
+    '<%= config.bin %> <%= command.id %> --name MyApp --type Action',
+    "<%= config.bin %> <%= command.id %> --name MyApp --version 2.0.0 --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --accessToken 'your_token'",
   ];
 
   static override flags = {
     help: Flags.help({ char: 'h' }),
+    name: Flags.string({
+      char: 'n',
+      description: 'Package name to publish (makes command non-interactive)',
+    }),
+    version: Flags.string({
+      char: 'v',
+      description: 'Package version to publish (requires --name flag)',
+    }),
     uipathDir: Flags.string({
       description: 'UiPath directory containing packages',
       default: './.uipath',
@@ -38,10 +63,16 @@ export default class Publish extends Command {
       description: 'UiPath tenant ID',
     }),
     tenantName: Flags.string({
-      description: 'UiPath tenant name',
+      description: 'UiPath tenant name (required for coded app registration)',
     }),
     accessToken: Flags.string({
       description: 'UiPath authentication token',
+    }),
+    type: Flags.string({
+      char: 't',
+      description: 'App type',
+      default: AppType.Web,
+      options: [AppType.Web, AppType.Action],
     }),
   };
 
@@ -57,10 +88,17 @@ export default class Publish extends Command {
       process.exit(1);
     }
 
-    await this.publishPackage(flags.uipathDir, envConfig);
+    const isActionApp = (flags.type as AppType) === AppType.Action;
+
+    if (isActionApp && !fs.existsSync(path.join(process.cwd(), ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME))) {
+      this.log(chalk.red(`${MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED}`));
+      process.exit(1);
+    }
+
+    await this.publishPackage(flags.uipathDir, envConfig, isActionApp, flags.name, flags.version);
   }
 
-  private async publishPackage(uipathDir: string, envConfig: EnvironmentConfig): Promise<void> {
+  private async publishPackage(uipathDir: string, envConfig: EnvironmentConfig, isActionApp: boolean, packageName?: string, packageVersion?: string): Promise<void> {
     const spinner = ora(MESSAGES.INFO.PUBLISHING_PACKAGE).start();
 
     try {
@@ -86,10 +124,45 @@ export default class Publish extends Command {
 
       let selectedPackage: string;
 
-      if (nupkgFiles.length === 1) {
+      // If name flag is provided, find matching package
+      if (packageName) {
+        let matchingPackage: string | undefined;
+
+        if (packageVersion) {
+          // Match by exact name and version
+          const expectedFilename = `${packageName}.${packageVersion}.nupkg`;
+          matchingPackage = nupkgFiles.find(file => path.basename(file) === expectedFilename);
+
+          if (!matchingPackage) {
+            spinner.fail(chalk.red(`No package found matching name: ${packageName} and version: ${packageVersion}`));
+            this.log('');
+            this.log(chalk.yellow('Available packages:'));
+            nupkgFiles.forEach(file => this.log(chalk.dim(`  - ${path.basename(file)}`)));
+            process.exit(1);
+          }
+        } else {
+          // Match by package name only (any version)
+          matchingPackage = nupkgFiles.find(file => {
+            const basename = path.basename(file);
+            // Match by package name (basename starts with packageName followed by . and version)
+            return basename.startsWith(`${packageName}.`) || basename === `${packageName}.nupkg`;
+          });
+
+          if (!matchingPackage) {
+            spinner.fail(chalk.red(`No package found matching name: ${packageName}`));
+            this.log('');
+            this.log(chalk.yellow('Available packages:'));
+            nupkgFiles.forEach(file => this.log(chalk.dim(`  - ${path.basename(file)}`)));
+            process.exit(1);
+          }
+        }
+
+        selectedPackage = matchingPackage;
+      } else if (nupkgFiles.length === 1) {
+        // Auto-select if only one package
         selectedPackage = nupkgFiles[0];
-        spinner.text = `Publishing ${path.basename(selectedPackage)}...`;
       } else {
+        // Prompt user to select
         spinner.stop();
         const response = await inquirer.prompt([
           {
@@ -103,16 +176,43 @@ export default class Publish extends Command {
           },
         ]);
         selectedPackage = response.package;
-        spinner.start(`Publishing ${path.basename(selectedPackage)}...`);
+        spinner.start();
       }
 
-      // Upload package using multipart form data
-      await this.uploadPackage(selectedPackage, envConfig);
-      
-      spinner.succeed(chalk.green(MESSAGES.SUCCESS.PACKAGE_PUBLISHED_SUCCESS));
+      // Extract package metadata from filename
+      const metadata = this.extractPackageMetadata(selectedPackage);
+
+      // Step 1: Upload package to Orchestrator
+      spinner.text = MESSAGES.INFO.UPLOADING_PACKAGE;
+      await this.uploadPackage(selectedPackage, envConfig, spinner);
+      spinner.succeed(chalk.green(MESSAGES.SUCCESS.PACKAGE_UPLOADED_SUCCESS));
+
+      // Step 2: Register coded app
+      spinner.start(MESSAGES.INFO.REGISTERING_CODED_APP);
+      const registerResponse = await this.registerCodedApp(metadata, envConfig, isActionApp);
+      spinner.succeed(chalk.green(MESSAGES.SUCCESS.CODED_APP_REGISTERED_SUCCESS));
+
+      // Step 3: Save app configuration
+      await this.saveAppConfig({
+        appName: metadata.packageName,
+        appVersion: metadata.packageVersion,
+        systemName: registerResponse.definition.systemName,
+        appUrl: null, // App URL is now injected at deployment time
+        registeredAt: new Date().toISOString(),
+        appType: isActionApp ? AppType.Action : AppType.Web,
+      });
+
+      this.log('');
+      this.log(chalk.bold('Published App Details:'));
+      this.log(`  ${chalk.cyan('Name:')} ${metadata.packageName}`);
+      this.log(`  ${chalk.cyan('Version:')} ${metadata.packageVersion}`);
+      this.log(`  ${chalk.cyan('System Name:')} ${registerResponse.definition.systemName}`);
+      if (registerResponse.deployVersion) {
+        this.log(`  ${chalk.cyan('Deploy Version:')} ${registerResponse.deployVersion}`);
+      }
       this.log('');
       this.log(chalk.blue(MESSAGES.INFO.PACKAGE_AVAILABLE));
-      
+
     } catch (error) {
       spinner.fail(chalk.red(`${MESSAGES.ERRORS.PACKAGE_PUBLISHING_FAILED}`));
       this.log(chalk.red(`${MESSAGES.ERRORS.PUBLISHING_ERROR_PREFIX} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
@@ -120,8 +220,42 @@ export default class Publish extends Command {
     }
   }
 
+  /**
+   * Extract package name and version from .nupkg filename
+   * Filename format: {packageName}.{version}.nupkg
+   * Example: MyApp.1.0.0.nupkg -> { packageName: 'MyApp', packageVersion: '1.0.0' }
+   */
+  private extractPackageMetadata(packagePath: string): PackageMetadata {
+    const filename = path.basename(packagePath, '.nupkg');
 
-  private async uploadPackage(packagePath: string, envConfig: EnvironmentConfig): Promise<void> {
+    // NuGet package naming convention: {id}.{version}
+    // Version typically follows semantic versioning: major.minor.patch[-prerelease]
+    // We need to find where the version starts (first numeric segment after a dot)
+    const parts = filename.split('.');
+
+    // Find the index where the version starts
+    // Version starts when we see a numeric part
+    let versionStartIndex = -1;
+    for (let i = 0; i < parts.length; i++) {
+      if (/^\d+$/.test(parts[i])) {
+        versionStartIndex = i;
+        break;
+      }
+    }
+
+    if (versionStartIndex <= 0) {
+      // Fallback: assume last 3 parts are version (x.y.z)
+      versionStartIndex = parts.length - 3;
+    }
+
+    const packageName = parts.slice(0, versionStartIndex).join('.');
+    const packageVersion = parts.slice(versionStartIndex).join('.');
+
+    return { packageName, packageVersion };
+  }
+
+
+  private async uploadPackage(packagePath: string, envConfig: EnvironmentConfig, spinner: Ora): Promise<void> {
     const form = new FormData();
     form.append('uploads[]', fs.createReadStream(packagePath));
 
@@ -135,6 +269,22 @@ export default class Publish extends Command {
       },
       body: form,
     });
+
+    // Handle 409 Conflict with errorCode 1004 (Package already exists)
+    if (response.status === AUTH_CONSTANTS.HTTP_STATUS.CONFLICT) {
+      try {
+        const errorBody = await response.json() as { errorCode?: number; message?: string };
+        if (errorBody.errorCode === AUTH_CONSTANTS.ERROR_CODES.PACKAGE_ALREADY_EXISTS) {
+          // Package already exists - this is OK for retry scenario
+          spinner.info(chalk.yellow(MESSAGES.INFO.PACKAGE_ALREADY_EXISTS));
+          spinner.start();
+          return;
+        }
+      } catch {
+        // If we can't parse the error body, fall through to the generic error handler
+      }
+    }
+
     if (!response.ok) {
       await handleHttpError(response, MESSAGES.ERROR_CONTEXT.PACKAGE_PUBLISHING);
     }
@@ -145,6 +295,68 @@ export default class Publish extends Command {
       // We got HTML instead of JSON - this means the endpoint doesn't exist or auth failed
       const responseText = await response.text();
       throw new Error(`${MESSAGES.ERRORS.PACKAGE_UPLOAD_FAILED} ${responseText}`);
+    }
+  }
+
+  /**
+   * Register the coded app with UiPath by calling the codedapp/publish API
+   */
+  private async registerCodedApp(metadata: PackageMetadata, envConfig: EnvironmentConfig, isActionApp: boolean): Promise<RegisterResponse> {
+    const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.PUBLISH_CODED_APP}`;
+
+    let actionSchema = {};
+    if (isActionApp) {
+      try {
+        actionSchema = readAndParseActionSchema();
+      } catch (error) {
+        this.log('');
+        this.log(chalk.red(`${MESSAGES.ERRORS.FAILED_TO_PARSE_ACTION_SCHEMA} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+        process.exit(1);
+      }
+    }
+
+    const payload = {
+      tenantName: envConfig.tenantName,
+      packageName: metadata.packageName,
+      packageVersion: metadata.packageVersion,
+      title: metadata.packageName,
+      schema: actionSchema,
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: createHeaders({
+        bearerToken: envConfig.accessToken,
+        tenantId: envConfig.tenantId,
+      }),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      await handleHttpError(response, MESSAGES.ERROR_CONTEXT.CODED_APP_REGISTRATION);
+    }
+
+    return await response.json() as RegisterResponse;
+  }
+
+  /**
+   * Save app configuration to .uipath/app.config.json
+   */
+  private async saveAppConfig(config: AppConfig): Promise<void> {
+    const configDir = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR);
+    const configPath = path.join(configDir, AUTH_CONSTANTS.FILES.APP_CONFIG);
+
+    try {
+      // Ensure directory exists
+      if (!fs.existsSync(configDir)) {
+        fs.mkdirSync(configDir, { recursive: true });
+      }
+
+      // Write atomically to avoid race conditions
+      atomicWriteFileSync(configPath, config);
+
+    } catch (error) {
+      this.warn(`${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`);
     }
   }
 

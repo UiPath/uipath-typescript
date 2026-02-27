@@ -5,7 +5,7 @@ import ora from 'ora';
 import * as fs from 'fs';
 import * as path from 'path';
 import fetch from 'node-fetch';
-import { EnvironmentConfig, AppConfig } from '../types/index.js';
+import { EnvironmentConfig, AppConfig, AppType } from '../types/index.js';
 import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
 import { MESSAGES } from '../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../utils/api.js';
@@ -44,7 +44,7 @@ export default class Deploy extends Command {
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> --name MyApp',
-    "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
+    "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --orgName 'YourOrgName' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
   ];
 
   static override flags = {
@@ -58,6 +58,9 @@ export default class Deploy extends Command {
     }),
     orgId: Flags.string({
       description: 'UiPath organization ID',
+    }),
+    orgName: Flags.string({
+      description: 'UiPath organization name',
     }),
     tenantId: Flags.string({
       description: 'UiPath tenant ID',
@@ -145,7 +148,6 @@ export default class Deploy extends Command {
     try {
       // Check if app is already deployed
       const deployedApp = await this.getDeployedApp(appName, envConfig);
-      let systemName: string;
       let version: string;
 
       if (deployedApp) {
@@ -153,7 +155,6 @@ export default class Deploy extends Command {
         spinner.text = MESSAGES.INFO.UPGRADING_APP;
         await this.upgradeApp(deployedApp.id, envConfig);
         spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_UPGRADED_SUCCESS));
-        systemName = deployedApp.systemName;
         // Get version from app config (has the new version being deployed)
         const appConfig = this.loadAppConfig();
         version = appConfig?.appVersion || deployedApp.semVersion;
@@ -176,7 +177,6 @@ export default class Deploy extends Command {
         // Save deployment ID to config
         await this.updateAppConfig(deploymentId);
 
-        systemName = publishedSystemName;
         // Get version from app config
         const appConfig = this.loadAppConfig();
         version = appConfig?.appVersion || '1.0.0';
@@ -184,14 +184,16 @@ export default class Deploy extends Command {
         cliTelemetryClient.track('Cli.Deploy', { operation: 'fresh_deploy' });
       }
 
-      // Build and display app URL
-      const folderKey = envConfig.folderKey!;
-      const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgId, envConfig.tenantId, folderKey, systemName);
-
       this.log('');
       this.log(`  ${chalk.cyan('App Name:')} ${appName}`);
       this.log(`  ${chalk.cyan('Version:')} ${version}`);
-      this.log(`  ${chalk.cyan('App URL:')} ${chalk.green(appUrl)}`);
+
+      // Only show app URL for non-action apps
+      const appConfig = this.loadAppConfig();
+      if (appConfig?.appType !== AppType.Action) {
+        const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgName, appName);
+        this.log(`  ${chalk.cyan('App URL:')} ${chalk.green(appUrl)}`);
+      }
 
     } catch (error) {
       spinner.fail(chalk.red(MESSAGES.ERRORS.APP_DEPLOYMENT_FAILED));
@@ -251,7 +253,8 @@ export default class Deploy extends Command {
     const url = `${envConfig.baseUrl}/${envConfig.orgId}${endpoint}`;
 
     const payload = {
-      title: appName
+      title: appName,
+      routingName: appName
     };
 
     const response = await fetch(url, {
