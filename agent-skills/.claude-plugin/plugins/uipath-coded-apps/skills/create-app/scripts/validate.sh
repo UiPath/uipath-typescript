@@ -70,7 +70,6 @@ if [ -f "$PROJECT_DIR/.env" ]; then
   check_content ".env" "VITE_UIPATH_CLIENT_ID" "VITE_UIPATH_CLIENT_ID"
   check_content ".env" "VITE_UIPATH_ORG_NAME" "VITE_UIPATH_ORG_NAME"
   check_content ".env" "VITE_UIPATH_TENANT_NAME" "VITE_UIPATH_TENANT_NAME"
-  check_content ".env" "VITE_UIPATH_REDIRECT_URI" "VITE_UIPATH_REDIRECT_URI"
   check_content ".env" "VITE_UIPATH_SCOPES" "VITE_UIPATH_SCOPES"
 fi
 echo ""

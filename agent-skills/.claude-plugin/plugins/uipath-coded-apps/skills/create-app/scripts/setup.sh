@@ -81,17 +81,23 @@ export default defineConfig({
 })
 VITEEOF
 
+echo "==> Writing uipath.json"
+cat > uipath.json << EOF
+{
+  "scope": "${SCOPES}",
+  "clientId": "${CLIENT_ID}"
+}
+EOF
+
 echo "==> Writing .env"
 cat > .env << EOF
 UIPATH_BASE_URL=${BASE_URL}
-UIPATH_REDIRECT_URI=http://localhost:5173
 UIPATH_CLIENT_ID=${CLIENT_ID}
 UIPATH_ORG_NAME=${ORG_NAME}
 UIPATH_TENANT_NAME=${TENANT_NAME}
 UIPATH_SCOPES=${SCOPES}
 
 VITE_UIPATH_BASE_URL=\${UIPATH_BASE_URL}
-VITE_UIPATH_REDIRECT_URI=\${UIPATH_REDIRECT_URI}
 VITE_UIPATH_CLIENT_ID=${CLIENT_ID}
 VITE_UIPATH_ORG_NAME=${ORG_NAME}
 VITE_UIPATH_TENANT_NAME=${TENANT_NAME}
@@ -195,7 +201,7 @@ const authConfig: UiPathSDKConfig = {
   orgName: import.meta.env.VITE_UIPATH_ORG_NAME,
   tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME,
   baseUrl: import.meta.env.VITE_UIPATH_BASE_URL,
-  redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI || window.location.origin,
+  redirectUri: window.location.origin + window.location.pathname,
   scope: import.meta.env.VITE_UIPATH_SCOPES,
 };
 
