@@ -148,7 +148,6 @@ export default class Deploy extends Command {
     try {
       // Check if app is already deployed
       const deployedApp = await this.getDeployedApp(appName, envConfig);
-      let systemName: string;
       let version: string;
 
       if (deployedApp) {
@@ -156,7 +155,6 @@ export default class Deploy extends Command {
         spinner.text = MESSAGES.INFO.UPGRADING_APP;
         await this.upgradeApp(deployedApp.id, envConfig);
         spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_UPGRADED_SUCCESS));
-        systemName = deployedApp.systemName;
         // Get version from app config (has the new version being deployed)
         const appConfig = this.loadAppConfig();
         version = appConfig?.appVersion || deployedApp.semVersion;
@@ -179,7 +177,6 @@ export default class Deploy extends Command {
         // Save deployment ID to config
         await this.updateAppConfig(deploymentId);
 
-        systemName = publishedSystemName;
         // Get version from app config
         const appConfig = this.loadAppConfig();
         version = appConfig?.appVersion || '1.0.0';

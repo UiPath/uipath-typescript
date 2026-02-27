@@ -7,7 +7,7 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import fetch from 'node-fetch';
-import { MESSAGES, CONFIG_FILE_NAME } from '../constants/messages.js';
+import { MESSAGES } from '../constants/messages.js';
 import { AppConfig, SdkConfig, EnvironmentConfig } from '../types/index.js';
 import { AUTH_CONSTANTS, DEFAULT_APP_VERSION, API_ENDPOINTS } from '../constants/index.js';
 import { isValidAppName, getEnvironmentConfig } from '../utils/env-config.js';
