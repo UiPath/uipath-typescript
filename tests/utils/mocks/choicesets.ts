@@ -1,0 +1,105 @@
+/**
+ * ChoiceSets service mock utilities - ChoiceSet-specific mocks only
+ * Uses generic utilities from core.ts for base functionality
+ */
+
+import { createMockBaseResponse, createMockCollection } from './core';
+import { CHOICESET_TEST_CONSTANTS } from '../constants/choicesets';
+import { TEST_CONSTANTS } from '../constants/common';
+
+/**
+ * Creates a mock ChoiceSet response with RAW API format (before transformation)
+ * Uses raw field names: createTime, updateTime (not createdTime, updatedTime)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock ChoiceSet response object as it comes from the API (before transformation)
+ */
+export const createMockChoiceSetResponse = (overrides: Partial<any> = {}): any => {
+  return createMockBaseResponse({
+    name: CHOICESET_TEST_CONSTANTS.CHOICESET_NAME,
+    displayName: CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME,
+    entityTypeId: 1,
+    entityType: 'ChoiceSet',
+    description: CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION,
+    folderId: String(TEST_CONSTANTS.FOLDER_ID),
+    storageSizeInMB: 0.210937,
+    usedStorageSizeInMB: 0.046875,
+    isRbacEnabled: false,
+    invalidIdentifiers: [],
+    isModelReserved: false,
+    id: CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
+    createdBy: String(TEST_CONSTANTS.USER_ID),
+    // RAW API field names: createTime/updateTime (will be transformed to createdTime/updatedTime)
+    createTime: CHOICESET_TEST_CONSTANTS.CREATED_TIME,
+    updateTime: CHOICESET_TEST_CONSTANTS.UPDATED_TIME,
+    updatedBy: String(TEST_CONSTANTS.USER_ID),
+  }, overrides);
+};
+
+/**
+ * Creates multiple mock ChoiceSet responses
+ * @param count - Number of choice sets to create
+ * @returns Array of mock ChoiceSet responses
+ */
+export const createMockChoiceSets = (count: number): any[] => {
+  return createMockCollection(count, (i) =>
+    createMockChoiceSetResponse({
+      id: `${CHOICESET_TEST_CONSTANTS.CHOICESET_ID.slice(0, -1)}${i}`,
+      name: `${CHOICESET_TEST_CONSTANTS.CHOICESET_NAME}${i > 0 ? i : ''}`,
+      displayName: `${CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME}${i > 0 ? ` ${i}` : ''}`,
+    })
+  );
+};
+
+/**
+ * Creates a mock ChoiceSet Value response with RAW API format (PascalCase)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock ChoiceSet Value response object as it comes from the API (before transformation)
+ */
+export const createMockChoiceSetValueResponse = (overrides: Partial<any> = {}): any => {
+  return {
+    Id: CHOICESET_TEST_CONSTANTS.VALUE_ID,
+    Name: CHOICESET_TEST_CONSTANTS.VALUE_NAME,
+    DisplayName: CHOICESET_TEST_CONSTANTS.VALUE_DISPLAY_NAME,
+    NumberId: CHOICESET_TEST_CONSTANTS.VALUE_NUMBER_ID,
+    CreateTime: CHOICESET_TEST_CONSTANTS.CREATED_TIME,
+    UpdateTime: CHOICESET_TEST_CONSTANTS.UPDATED_TIME,
+    CreatedBy: String(TEST_CONSTANTS.USER_ID),
+    UpdatedBy: String(TEST_CONSTANTS.USER_ID),
+    RecordOwner: String(TEST_CONSTANTS.USER_ID),
+    ...overrides
+  };
+};
+
+/**
+ * Creates multiple mock ChoiceSet Value responses
+ * @param count - Number of choice set values to create
+ * @returns Array of mock ChoiceSet Value responses
+ */
+export const createMockChoiceSetValues = (count: number): any[] => {
+  const valueNames = ['User', 'Group', 'Robot', 'Application'];
+  return createMockCollection(count, (i) =>
+    createMockChoiceSetValueResponse({
+      Id: `${CHOICESET_TEST_CONSTANTS.VALUE_ID.slice(0, -1)}${i}`,
+      Name: valueNames[i % valueNames.length],
+      DisplayName: valueNames[i % valueNames.length],
+      NumberId: i,
+    })
+  );
+};
+
+/**
+ * Creates a mock paginated response for choice set values
+ * @param values - Array of choice set values
+ * @param totalCount - Total count of items
+ * @returns Mock paginated response
+ */
+export const createMockChoiceSetValuePaginatedResponse = (
+  values: any[],
+  totalCount: number
+): any => {
+  return {
+    value: values,
+    totalCount
+  };
+};
+

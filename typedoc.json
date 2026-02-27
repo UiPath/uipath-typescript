@@ -15,8 +15,8 @@
     "private": false,
     "inherited": false
   },
-  "excludeTags": ["@internal", "@ignore"],
-  "sort": ["source-order"],
+  "excludeTags": ["@ignore"],
+  "sort": ["alphabetical"],
   "kindSortOrder": [
     "Document",
     "Project", 
@@ -64,7 +64,7 @@
   "useHTMLEncodedBrackets": true,
   "sanitizeComments": false,
   "formatWithPrettier": false,
-  "useCodeBlocks": true,
+  "useCodeBlocks": false,
   "expandObjects": true,
   "expandParameters": true,
   "hideBreadcrumbs": true,

@@ -170,7 +170,7 @@ export interface BucketUploadFileOptions {
   /**
    * File content to upload 
    */
-  content: Blob | Buffer | File;
+  content: Blob | Uint8Array<ArrayBuffer> | File;
 }
 
 /**

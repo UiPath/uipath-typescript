@@ -136,7 +136,7 @@ export interface FolderProperties {
 /**
  * Base interface for process start request
  */
-interface BaseProcessStartRequest extends ProcessProperties {
+export interface BaseProcessStartRequest extends ProcessProperties {
   strategy?: StartStrategy;
   robotIds?: number[];
   machineSessionIds?: number[];
@@ -162,7 +162,7 @@ interface BaseProcessStartRequest extends ProcessProperties {
 /**
  * Interface for start process request with processKey
  */
-interface ProcessStartRequestWithKey extends BaseProcessStartRequest {
+export interface ProcessStartRequestWithKey extends BaseProcessStartRequest {
   processKey: string;
   processName?: string;
 }
@@ -170,7 +170,7 @@ interface ProcessStartRequestWithKey extends BaseProcessStartRequest {
 /**
  * Interface for start process request with processName
  */
-interface ProcessStartRequestWithName extends BaseProcessStartRequest {
+export interface ProcessStartRequestWithName extends BaseProcessStartRequest {
   processKey?: string;
   processName: string;
 }

@@ -1,5 +1,11 @@
 import { PaginationOptions, PaginatedResponse, PaginationMethodUnion } from './types';
 import { RequestSpec } from '../../models/common/request-spec';
+import { HTTP_METHODS } from '../constants/common';
+
+/**
+ * Type for HTTP methods derived from HTTP_METHODS constant
+ */
+export type HttpMethodType = typeof HTTP_METHODS[keyof typeof HTTP_METHODS];
 
 /**
  * Cursor data structure for tracking pagination state
@@ -48,6 +54,7 @@ export enum PaginationType {
  */
 export interface PaginationServiceAccess {
   get<T>(path: string, options?: any): Promise<{ data: T }>;
+  post<T>(path: string, body?: any, options?: any): Promise<{ data: T }>;
   requestWithPagination<T>(
     method: string,
     path: string,
@@ -62,13 +69,15 @@ export interface PaginationServiceAccess {
 export interface GetAllPaginatedParams<T, R = T> {
   serviceAccess: PaginationServiceAccess;
   getEndpoint: (folderId?: number) => string;
-  folderId?: number; 
+  folderId?: number;
   paginationParams: PaginationOptions;
   additionalParams: Record<string, any>;
-  /** 
+  /**
    * Optional function to transform API response items.
    */
   transformFn?: (item: T) => R;
+  /** HTTP method to use for the request (default: 'GET') */
+  method?: HttpMethodType;
   options?: {
     paginationType?: PaginationType;
     itemsField?: string;
@@ -90,12 +99,14 @@ export interface GetAllNonPaginatedParams<T, R = T> {
   serviceAccess: PaginationServiceAccess;
   getAllEndpoint: string;
   getByFolderEndpoint: string;
-  folderId?: number; 
+  folderId?: number;
   additionalParams: Record<string, any>;
-  /** 
+  /**
    * Optional function to transform API response items.
    */
   transformFn?: (item: T) => R;
+  /** HTTP method to use for the request (default: 'GET') */
+  method?: HttpMethodType;
   options?: {
     itemsField?: string;
     totalCountField?: string;
@@ -189,24 +200,27 @@ export interface PaginationConfig {
 export interface GetAllConfig<TRaw, TTransformed = TRaw> {
   /** Service access for making API calls */
   serviceAccess: PaginationServiceAccess;
-  
+
   /** Endpoint function for getting all items (takes optional folderId) */
   getEndpoint: (folderId?: number) => string;
-  
+
   /** Alternative endpoint for folder-specific queries (optional) */
   getByFolderEndpoint?: string;
-  
-  /** 
+
+  /**
    * Optional function to transform raw API items to client format.
    */
   transformFn?: (item: TRaw) => TTransformed;
-  
+
   /** Pagination configuration */
   pagination?: PaginationConfig;
-  
+
   /** Custom parameter processing function */
   processParametersFn?: (options: Record<string, any>, folderId?: number) => Record<string, any>;
-  
+
   /** Keys to exclude from ODATA prefix transformation */
   excludeFromPrefix?: string[];
+
+  /** HTTP method to use for the request (default: 'GET') */
+  method?: HttpMethodType;
 } 

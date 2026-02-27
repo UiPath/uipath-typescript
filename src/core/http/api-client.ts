@@ -2,8 +2,6 @@ import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
-import { TokenInfo } from '../auth/types';
-import { AuthenticationError, HttpStatus } from '../errors';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
 import { CONTENT_TYPES, RESPONSE_TYPES } from '../../utils/constants/headers';
@@ -35,37 +33,14 @@ export class ApiClient {
   }
 
   /**
-   * Checks if the current token needs refresh and refreshes it if necessary
+   * Gets a valid authentication token, refreshing if necessary.
+   * Used internally for API requests and exposed for services that need manual auth headers.
+   *
    * @returns The valid token
-   * @throws Error if token refresh fails
+   * @throws AuthenticationError if no token available or refresh fails
    */
-  private async ensureValidToken(): Promise<string> {
-    // Try to get token info from context
-    const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
-    
-    if (!tokenInfo) {
-      throw new AuthenticationError({ message: 'No authentication token available. Make sure to initialize the SDK first.' });
-    }
-
-    // For secret-based tokens, they never expire
-    if (tokenInfo.type === 'secret') {
-      return tokenInfo.token;
-    }
-
-    // If token is not expired, return it
-    if (!this.tokenManager.isTokenExpired(tokenInfo)) {
-      return tokenInfo.token;
-    }
-
-    try {
-      const newToken = await this.tokenManager.refreshAccessToken();
-      return newToken.access_token;
-    } catch (error: any) {
-      throw new AuthenticationError({
-        message: `Token refresh failed: ${error.message}. Please re-authenticate.`,
-        statusCode: HttpStatus.UNAUTHORIZED
-      });
-    }
+  public async getValidToken(): Promise<string> {
+    return this.tokenManager.getValidToken();
   }
 
   private async getDefaultHeaders(): Promise<Record<string, string>> {
@@ -82,7 +57,7 @@ export class ApiClient {
       };
     }
 
-    const token = await this.ensureValidToken();
+    const token = await this.getValidToken();
 
     return {
       ...contextHeaders,

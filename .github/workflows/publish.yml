@@ -6,6 +6,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 jobs:
   publish-sdk:
@@ -20,12 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          node-version: '24'
 
       - name: Install Dependencies
         run: npm ci
@@ -54,40 +50,38 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Pack
-        run: npm pack
-
-      - name: publish to github packages
-        run: npm publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Override npmrc for npm publish
-        run: |
-          echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
+      - name: Setup registry for npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to npm
-        run: npm publish --access public
+        run: |
+          echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
+          npm publish --provenance --access public
+
+      - name: Publish to GitHub Packages
+        run: |
+          echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          npm publish
         env:
-          GITHUB_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Summary
         run: |
+          SDK_VERSION=$(node -p "require('./package.json').version")
           echo "## SDK Published Successfully" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Version: $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "### Version: $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Completed Steps:" >> $GITHUB_STEP_SUMMARY
-          echo "-Auto-incremented beta version from $CURRENT_VERSION to $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "-Updated telemetry constants" >> $GITHUB_STEP_SUMMARY
-          echo "-Built TypeScript package" >> $GITHUB_STEP_SUMMARY
-          echo "-Created package tarball" >> $GITHUB_STEP_SUMMARY
-          echo "-Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
-          echo "-Published to npm registry (public access)" >> $GITHUB_STEP_SUMMARY
+          echo "- Updated telemetry constants" >> $GITHUB_STEP_SUMMARY
+          echo "- Built TypeScript package" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-         
+          echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY

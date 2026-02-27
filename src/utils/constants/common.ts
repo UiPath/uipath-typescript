@@ -12,6 +12,17 @@ export const UNKNOWN = 'Unknown';
 export const NO_INSTANCE = 'no-instance';
 
 /**
+ * HTTP methods
+ */
+export const HTTP_METHODS = {
+  GET: 'GET',
+  POST: 'POST',
+  PUT: 'PUT',
+  PATCH: 'PATCH',
+  DELETE: 'DELETE'
+} as const;
+
+/**
  * OData pagination constants
  */
 export const ODATA_PAGINATION = {
@@ -28,8 +39,20 @@ export const ODATA_PAGINATION = {
 export const ENTITY_PAGINATION = {
   /** Field name for items in entity response */
   ITEMS_FIELD: 'value',
-  
+
   /** Field name for total count in entity response */
+  TOTAL_COUNT_FIELD: 'totalRecordCount'
+};
+
+/**
+ * Choice Set values endpoint pagination constants
+ * Note: The API returns items as a JSON string in 'jsonValue' field
+ */
+export const CHOICESET_VALUES_PAGINATION = {
+  /** Field name for items in choice set values response (contains JSON string) */
+  ITEMS_FIELD: 'jsonValue',
+
+  /** Field name for total count in choice set values response */
   TOTAL_COUNT_FIELD: 'totalRecordCount'
 };
 
@@ -100,7 +123,29 @@ export const BUCKET_TOKEN_PARAMS = {
 export const PROCESS_INSTANCE_TOKEN_PARAMS = {
   /** Process instance page size parameter name */
   PAGE_SIZE_PARAM: 'pageSize',
-  
+
   /** Process instance token parameter name */
   TOKEN_PARAM: 'nextPage'
+};
+
+/**
+ * Conversational Agent pagination constants for cursor-based pagination
+ */
+export const CONVERSATIONAL_PAGINATION = {
+  /** Field name for items in conversational agent response */
+  ITEMS_FIELD: 'data',
+
+  /** Field name for cursor in conversational agent response */
+  CONTINUATION_TOKEN_FIELD: 'cursor'
+};
+
+/**
+ * Conversational Agent TOKEN pagination parameter names
+ */
+export const CONVERSATIONAL_TOKEN_PARAMS = {
+  /** Conversational agent page size parameter name */
+  PAGE_SIZE_PARAM: 'limit',
+
+  /** Conversational agent cursor parameter name */
+  TOKEN_PARAM: 'cursor'
 };

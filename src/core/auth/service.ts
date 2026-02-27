@@ -1,24 +1,37 @@
-import { BaseService } from '../../services/base';
 import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { TokenManager } from './token-manager';
 import { AuthToken, TokenInfo, OAuthContext } from './types';
+import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
-export class AuthService extends BaseService {
+export class AuthService {
+  private config: Config;
   private tokenManager: TokenManager;
 
   constructor(config: Config, executionContext: ExecutionContext) {
-    // Check if we should use stored OAuth context instead of provided config
-    const storedContext = AuthService.getStoredOAuthContext();
+    // Only use stored OAuth context when completing an active callback (URL has ?code=).
+    // If stored context exists but we're NOT in a callback, it's stale from a
+    // failed/abandoned flow (e.g. scope mismatch, invalid redirect URI) and must
+    // be cleared so the fresh config takes effect.
+    const isCallback = AuthService.isInOAuthCallback();
+    const storedContext = isCallback ? AuthService.getStoredOAuthContext() : null;
+
+    if (!isCallback) {
+      AuthService._clearStoredOAuthContext();
+    }
+
     const effectiveConfig = storedContext ? AuthService._mergeConfigWithContext(config, storedContext) : config;
-    
+
+    this.config = effectiveConfig;
     const isOAuth = hasOAuthConfig(effectiveConfig);
-    const tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
-    super(effectiveConfig, executionContext, tokenManager);
-    this.tokenManager = tokenManager;
+    this.tokenManager = new TokenManager(executionContext, effectiveConfig, isOAuth);
+
+    // Auto-load token from storage on initialization
+    // This ensures isAuthenticated() returns true after page refresh if a valid token exists
+    this.tokenManager.loadFromStorage();
   }
 
   /**
@@ -29,7 +42,7 @@ export class AuthService extends BaseService {
     
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    const hasCodeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    const hasCodeVerifier = sessionStorage.getItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
     
     return !!(code && hasCodeVerifier);
   }
@@ -43,7 +56,7 @@ export class AuthService extends BaseService {
     }
     
     try {
-      const stored = sessionStorage.getItem('uipath_sdk_oauth_context');
+      const stored = sessionStorage.getItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
       if (!stored) {
         return null;
       }
@@ -53,15 +66,30 @@ export class AuthService extends BaseService {
       // Validate required fields
       if (!context.codeVerifier || !context.clientId || !context.redirectUri || 
           !context.baseUrl || !context.orgName) {
-        sessionStorage.removeItem('uipath_sdk_oauth_context');
+        sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
         return null;
       }
       
       return context;
     } catch (error) {
-      sessionStorage.removeItem('uipath_sdk_oauth_context');
+      sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
       console.warn('Failed to parse stored OAuth context from session storage', error);
       return null;
+    }
+  }
+
+  /**
+   * Clear stale OAuth context from session storage.
+   * Called when there is no active OAuth callback, meaning any stored context
+   * is left over from a failed or abandoned flow.
+   */
+  private static _clearStoredOAuthContext(): void {
+    if (!isBrowser) return;
+    try {
+      sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+      sessionStorage.removeItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+    } catch {
+      // Ignore storage errors
     }
   }
 
@@ -148,7 +176,7 @@ export class AuthService extends BaseService {
     }
 
     // Check if we have a stored code verifier indicating we're in an OAuth flow
-    const codeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    const codeVerifier = sessionStorage.getItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
     const isInOAuthFlow = codeVerifier !== null;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -159,7 +187,7 @@ export class AuthService extends BaseService {
       // We're expecting a callback - validate parameters
       if (!code) {
         // Clear stored state on error
-        sessionStorage.removeItem('uipath_sdk_code_verifier');
+        sessionStorage.removeItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
         throw new Error('Authorization code missing in OAuth callback');
       }
       
@@ -168,7 +196,7 @@ export class AuthService extends BaseService {
       const codePattern = /^[A-Za-z0-9\-._~+/]+=*$/;
       if (!codePattern.test(code)) {
         // Clear stored state on error
-        sessionStorage.removeItem('uipath_sdk_code_verifier');
+        sessionStorage.removeItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
         throw new Error('Invalid authorization code format');
       }
       
@@ -213,6 +241,26 @@ export class AuthService extends BaseService {
   }
 
   /**
+   * Clears all authentication state including tokens and stored OAuth context.
+   */
+  public logout(): void {
+    this.tokenManager.clearToken();
+
+    // Clear OAuth context from session storage. These are normally cleaned up in _handleOAuthCallback after a successful
+    // token exchange, but if a user calls logout() while an OAuth flow is
+    // mid-redirect (before callback completes), they'd be left behind.
+
+    if (isBrowser) {
+      try {
+        sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+        sessionStorage.removeItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
+      } catch (error) {
+        console.warn('Failed to clear OAuth context from session storage', error);
+      }
+    }
+  }
+
+  /**
    * Get the current token
    */
   public getToken(): string | undefined {
@@ -239,7 +287,7 @@ export class AuthService extends BaseService {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
-      } catch(e) {
+      } catch {
         throw new Error("crypto not available in browser")
       }
     }
@@ -264,7 +312,7 @@ export class AuthService extends BaseService {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=/g, '');
-      } catch (e) {
+      } catch {
         throw new Error("crypto not available in browser")
       }
     }
@@ -365,8 +413,8 @@ export class AuthService extends BaseService {
       scope
     };
     
-    sessionStorage.setItem('uipath_sdk_oauth_context', JSON.stringify(oauthContext));
-    sessionStorage.setItem('uipath_sdk_code_verifier', codeVerifier);
+    sessionStorage.setItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, JSON.stringify(oauthContext));
+    sessionStorage.setItem(AUTH_STORAGE_KEYS.CODE_VERIFIER, codeVerifier);
 
     const authUrl = this.getAuthorizationUrl({
       clientId,
@@ -379,7 +427,7 @@ export class AuthService extends BaseService {
   }
 
   private async _handleOAuthCallback(code: string, clientId: string, redirectUri: string): Promise<void> {
-    const codeVerifier = sessionStorage.getItem('uipath_sdk_code_verifier');
+    const codeVerifier = sessionStorage.getItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
     if (!codeVerifier) {
       throw new Error('Code verifier not found in session storage. Authentication may have been interrupted.');
     }
@@ -392,8 +440,8 @@ export class AuthService extends BaseService {
     });
 
     // Clear OAuth context and code verifier after successful token exchange
-    sessionStorage.removeItem('uipath_sdk_oauth_context');
-    sessionStorage.removeItem('uipath_sdk_code_verifier');
+    sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
+    sessionStorage.removeItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
 
     const url = new URL(window.location.href);
     url.searchParams.delete('code');

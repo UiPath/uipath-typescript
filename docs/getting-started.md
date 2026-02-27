@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node.js** 18.x or higher
+- **Node.js** 20.x or higher
 - **npm** 8.x or higher (or yarn/pnpm)
 - **TypeScript** 4.5+ (for TypeScript projects)
 
@@ -72,34 +72,60 @@
 
 
 
-## **Quick Examples**
+## **Import & Initialize**
 
-### Working with Tasks
-```typescript
-// Get all tasks
-const tasks = await sdk.tasks.getAll();
+The SDK supports two import patterns. Choose based on your SDK version.
 
-// Assign task to user
-await tasks[0].assign({ 
-  userNameOrEmail: 'john@example.com' 
-});
+=== ">=1.0.0"
 
-```
+    ```typescript
+    // Import core SDK and only the services you need
+    import { UiPath } from '@uipath/uipath-typescript/core';
+    import { Entities } from '@uipath/uipath-typescript/entities';
 
+    // Configure and initialize the SDK
+    const sdk = new UiPath({
+      baseUrl: 'https://cloud.uipath.com',
+      orgName: 'your-org',
+      tenantName: 'your-tenant',
+      clientId: 'your-client-id',
+      redirectUri: 'http://localhost:3000/callback',
+      scope: 'OR.Tasks OR.DataService'
+    });
 
-### Working with Entities
-```typescript
-// Get entity metadata
-const entity = await sdk.entities.getById('entity-id');
+    await sdk.initialize();
 
-// Fetch records 
-const customers = await entity.getRecords({ pageSize: 10 });
+    // Create service instances
+    const entities = new Entities(sdk);
 
-// Insert new data
-await entity.insert([
-  { name: 'John Doe', email: 'john@example.com', status: 'Active' }
-]);
-```
+    // Use the services
+    const allEntities = await entities.getAll();
+    ```
+
+=== "Beta versions"
+
+    ```typescript
+    // Import everything from the main package
+    import { UiPath } from '@uipath/uipath-typescript';
+
+    // Configure and initialize the SDK
+    const sdk = new UiPath({
+      baseUrl: 'https://cloud.uipath.com',
+      orgName: 'your-org',
+      tenantName: 'your-tenant',
+      clientId: 'your-client-id',
+      redirectUri: 'http://localhost:3000/callback',
+      scope: 'OR.Tasks OR.DataService'
+    });
+
+    await sdk.initialize();
+
+    // Access services directly from sdk instance
+    const allTasks = await sdk.tasks.getAll();
+    const allEntities = await sdk.entities.getAll();
+    ```
+
+    **Note:** This pattern still works in newer versions but it includes all services in your bundle regardless of usage.
 
 ## **Telemetry**
 
