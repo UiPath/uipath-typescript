@@ -1,41 +1,45 @@
 # UiPath TypeScript SDK
 
-TypeScript SDK for UiPath platform APIs. Provides typed clients for Data Fabric, Maestro, Orchestrator, and Action Center services.
+TypeScript SDK for UiPath platform APIs. Provides typed clients for Action Center, Conversational Agent, Data Fabric, Maestro, and Orchestrator services.
 
 ## Quick reference
 
 ```bash
-npm install          # install deps (npm workspaces: root + packages/cli, packages/plugins)
-npm run build        # rollup build → dist/ (ESM, CJS, UMD, .d.ts)
-npm test             # vitest (run once)
-npm run test:unit    # unit tests only (tests/unit/)
-npm run test:watch   # watch mode
-npm run test:coverage # with v8 coverage
-npm run lint         # oxlint
-npm run typecheck    # tsc --noEmit
-npm run docs:api     # typedoc + post-process
+npm install              # install deps (npm workspaces: root + packages/cli)
+npm run build            # rollup build → dist/ (ESM, CJS, UMD, .d.ts)
+npm test                 # vitest
+npm run test:unit        # unit tests only (tests/unit/)
+npm run test:integration # integration tests (vitest.integration.config.ts)
+npm run test:all         # unit + integration tests
+npm run test:coverage    # with v8 coverage
+npm run lint             # oxlint
+npm run typecheck        # tsc --noEmit
+npm run docs:api         # typedoc + post-process
 ```
 
 ## Repo layout
 
 ```
 src/
-  core/          # UiPath client, auth, config, errors, HTTP client, telemetry
-  services/      # Service implementations grouped by platform area
-    data-fabric/ # Entities, ChoiceSets
-    maestro/     # Processes, ProcessInstances, ProcessIncidents, Cases, CaseInstances
-    orchestrator/# Assets, Buckets, Processes, Queues
-    action-center/ # Tasks
-  models/        # TypeScript interfaces/types per service domain
-  utils/         # Constants, pagination, encoding, HTTP helpers
+  core/                  # UiPath client, auth, config, errors, HTTP client, telemetry
+  services/              # Service implementations grouped by platform area
+    action-center/       # Tasks
+    conversational-agent/# Conversations
+    data-fabric/         # Entities, ChoiceSets
+    maestro/             # Processes, ProcessInstances, ProcessIncidents, Cases, CaseInstances
+    orchestrator/        # Assets, Buckets, Processes, Queues
+  models/                # TypeScript interfaces/types per service domain
+  utils/                 # Constants, pagination, encoding, HTTP helpers
+    constants/
+      endpoints/         # Endpoint constants per domain (data-fabric.ts, maestro.ts, etc.)
 tests/
-  unit/          # Mirrors src/ structure
-  utils/         # Shared mocks, constants, test setup helpers
+  unit/                  # Mirrors src/ structure
+  integration/           # Integration tests (real API calls)
+  utils/                 # Shared mocks, constants, test setup helpers
 packages/
-  cli/           # Separate CLI package (has its own CLAUDE.md)
-  plugins/       # Plugin system (WIP)
-samples/         # Sample apps (process-app, process-app-v0, process-app-v1)
-docs/            # MkDocs source; API docs generated via typedoc
+  cli/                   # Separate CLI package (has its own CLAUDE.md)
+samples/                 # Sample apps (process-app, conversational-agent-app, etc.)
+docs/                    # MkDocs source; API docs generated via typedoc
 ```
 
 ## Architecture
@@ -52,7 +56,7 @@ docs/            # MkDocs source; API docs generated via typedoc
 - **camelCase**: variables, functions, methods (`getUserById`, `pageSize`)
 - **PascalCase**: classes, interfaces, types, enums (`TaskService`, `TaskType`)
 - **UPPER_SNAKE_CASE**: constants (`DEFAULT_PAGE_SIZE`, `TASK_ENDPOINTS`)
-- **File names**: kebab-case (`api-client.ts`) or dot-separated (`tasks.types.ts`)
+- **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
 - Prefer `private` keyword over underscore prefix for private methods
 - No `any` type — use `unknown` if truly unknown, then validate
 - Mark optional fields as optional in type interfaces
@@ -61,9 +65,8 @@ docs/            # MkDocs source; API docs generated via typedoc
 
 - Services follow the pattern: extend `BaseService`, call `super(uiPath)`, use `this.get()` / `this.post()` etc. Folder-scoped Orchestrator services extend `FolderScopedService` instead.
 - Types live in `src/models/{domain}/{domain}.types.ts`. Internal-only types go in `*.internal-types.ts`.
-- Constants (endpoints, params) live in `src/utils/constants/`.
+- Constants live in `src/utils/constants/`. Endpoints are split per domain in `src/utils/constants/endpoints/` (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`).
 - Subpath exports: when adding a new service module, add entries to `package.json` `exports` and `rollup.config.js`.
-- Tests use `vitest` with `vi.mock()` and `vi.hoisted()`. Shared mocks live in `tests/utils/mocks/`. Use `createMockApiClient()` and `createServiceTestDependencies()` from `tests/utils/setup.ts`.
 - Every public service method must be decorated with `@track('ServiceName.MethodName')` for telemetry.
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
 
@@ -124,7 +127,7 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 ### Endpoint constants
 
-Defined in `src/utils/constants/endpoints.ts`, grouped by service:
+Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`):
 
 - Static endpoints: string constants — `GET_ALL: '${BASE}/api/v1/processes/summary'`
 - Parameterized endpoints: arrow functions — `GET_BY_ID: (id: string) => '${BASE}/api/v1/instances/${id}'`
@@ -206,41 +209,21 @@ interface OperationResponse<TData> { success: boolean; data: TData; }
 
 **Use for:** Lifecycle operations (cancel, pause, resume), bulk operations with error checking via `processODataArrayResponse()`.
 
-**Don't use for:** `getAll()`, `getById()`, `create()`, methods returning entity data directly.
+**DO NOT use for:** `getAll()`, `getById()`, `create()`, methods returning entity data directly.
 
 ## Anti-patterns
 
-- **Don't bypass base service classes** — never directly instantiate HTTP clients; use `this.get()`, `this.post()` from BaseService.
-- **Don't use `any` type** — use `unknown` then validate.
-- **Don't skip transformations** — never return raw API responses; apply applicable pipeline steps.
-- **Don't implement pagination manually** — always use `PaginationHelpers.getAll()`.
-- **Don't export internal types** — `*.internal-types.ts` must never be re-exported through barrel exports.
-- **Don't forget OData prefixes** — `{ filter: "..." }` must become `{ "$filter": "..." }`.
-- **Don't leave unused code** — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
-- **Don't add redundant constructors** — if the constructor only calls `super()`, delete it entirely.
-- **Don't commit sensitive files** — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
-- **Don't use misleading fallbacks** — if a parameter is required, don't write `param || {}`.
-- **Don't use `as unknown as`** type casts — refactor to make types flow naturally.
-
-## Security
-
-**Files that must NEVER be committed:**
-- `.env`, `.env.local`, `.env.*.local`
-- `credentials.json`, `secrets.json`
-- `*.key`, `*.pem`, `*.p12`
-- `.aws/credentials`
-- Any file containing API keys, tokens, passwords, or connection strings
-
-**Rules:**
-- Never hardcode secrets — use `process.env.VARIABLE_NAME`
-- Never log sensitive information
-- Error messages must not expose internal details
-
-**If secrets are accidentally committed:**
-1. Do NOT merge the PR
-2. Rotate all exposed secrets immediately
-3. Remove from commit history (force push to branch only, never to main/master)
-4. Contact team lead, document for security review
+- **DO NOT bypass base service classes** — never directly instantiate HTTP clients; use `this.get()`, `this.post()` from BaseService.
+- **DO NOT use `any` type** — use `unknown` then validate.
+- **DO NOT skip transformations** — never return raw API responses; apply applicable pipeline steps.
+- **DO NOT implement pagination manually** — always use `PaginationHelpers.getAll()`.
+- **DO NOT export internal types** — `*.internal-types.ts` must never be re-exported through barrel exports.
+- **DO NOT forget OData prefixes** — `{ filter: "..." }` must become `{ "$filter": "..." }`.
+- **DO NOT leave unused code** — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
+- **DO NOT add redundant constructors** — if the constructor only calls `super()`, delete it entirely.
+- **DO NOT commit sensitive files** — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
+- **DO NOT use misleading fallbacks** — if a parameter is required, DO NOT write `param || {}`.
+- **DO NOT use `as unknown as`** type casts — refactor to make types flow naturally.
 
 ## Testing guidelines
 
