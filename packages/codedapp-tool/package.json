@@ -1,0 +1,44 @@
+{
+  "name": "@uipath/codedapp-tool",
+  "version": "0.0.3",
+  "description": "uipcli plugin for coded web applications",
+  "keywords": ["uipcli-tool"],
+  "type": "module",
+  "main": "./dist/tool.js",
+  "exports": {
+    ".": "./dist/tool.js"
+  },
+  "bin": {
+    "codedapp-tool": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "bun build ./src/tool.ts --outdir dist --format esm --target node --external commander --external signal-exit && bun build ./src/index.ts --outdir dist --format esm --target node --external commander --external signal-exit",
+    "build:full": "cd ../cli && npm run build && cd ../codedapp-tool && npm run build",
+    "prepublishOnly": "npm run clean && npm run build:full",
+    "dev": "bash scripts/dev.sh",
+    "dev:link": "bash scripts/link-to-uipcli.sh",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "commander": "^14.0.3",
+    "signal-exit": "^4.1.0"
+  },
+  "devDependencies": {
+    "@uipath/uipath-ts-cli": "*",
+    "@types/node": "^20.11.19",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UiPath/uipath-typescript.git",
+    "directory": "packages/codedapp-tool"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

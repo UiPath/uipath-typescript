@@ -5,6 +5,10 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./actions": "./dist/actions/index.js"
+  },
   "bin": {
     "uipath": "./dist/cli.js"
   },
