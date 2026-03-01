@@ -43,6 +43,10 @@ jobs:
       - name: Generate API Documentation
         run: npm run docs:api
 
+      - name: Generate Documentation for coded action apps sdk
+        working-directory: packages/coded-action-apps
+        run: npm run docs
+
       - name: Build MkDocs Documentation
         run: |
           source docs-env/bin/activate
