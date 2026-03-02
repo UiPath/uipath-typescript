@@ -44,8 +44,12 @@ interface PaginatedResponse<T> {
 ### Basic Pagination
 
 ```typescript
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const assets = new Assets(sdk);
+
 // Get first page with 10 items
-const firstPage = await sdk.assets.getAll({ pageSize: 10 });
+const firstPage = await assets.getAll({ pageSize: 10 });
 
 console.log(`Got ${firstPage.items.length} items`);
 console.log(`Total items: ${firstPage.totalCount}`);
@@ -55,16 +59,21 @@ console.log(`Has next page: ${firstPage.hasNextPage}`);
 ### Cursor-based Navigation
 
 ```typescript
+import { Assets, AssetGetResponse } from '@uipath/uipath-typescript/assets';
+import { PaginatedResponse } from '@uipath/uipath-typescript/core';
+
+const assets = new Assets(sdk);
+
 // Navigate through pages using cursors
-let currentPage = await sdk.assets.getAll({ pageSize: 10 }) as PaginatedResponse<AssetGetResponse>;
+let currentPage = await assets.getAll({ pageSize: 10 }) as PaginatedResponse<AssetGetResponse>;
 
 while (currentPage.hasNextPage) {
   // Process current page items
   currentPage.items.forEach(item => console.log(item.name));
-  
+
   // Get next page using cursor
-    currentPage = await sdk.assets.getAll({ 
-    cursor: currentPage.nextCursor 
+  currentPage = await assets.getAll({
+    cursor: currentPage.nextCursor
   }) as PaginatedResponse<AssetGetResponse>;
 }
 ```
@@ -72,8 +81,12 @@ while (currentPage.hasNextPage) {
 ### Page Jumping
 
 ```typescript
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const assets = new Assets(sdk);
+
 // Jump directly to page 5 (when supported)
-const page5 = await sdk.assets.getAll({
+const page5 = await assets.getAll({
   jumpToPage: 5,
   pageSize: 20
 });
@@ -87,8 +100,12 @@ if (page5.supportsPageJump) {
 ### Non-paginated Requests
 
 ```typescript
+import { Assets } from '@uipath/uipath-typescript/assets';
+
+const assets = new Assets(sdk);
+
 // Get all items without pagination
-const allAssets = await sdk.assets.getAll();
+const allAssets = await assets.getAll();
 
 console.log(`Retrieved ${allAssets.items.length} assets`);
 console.log(`Total count: ${allAssets.totalCount}`);
@@ -97,13 +114,18 @@ console.log(`Total count: ${allAssets.totalCount}`);
 ## Quick Reference Table
 
 | Service | Method | Supports `jumpToPage`? |
-|---------|---------|----------------------|
-| `sdk.assets` | `getAll()` | ✅ Yes |
-| `sdk.buckets` | `getAll()` | ✅ Yes | 
-| `sdk.buckets` | `getFiles()` | ❌ No | 
-| `sdk.entities` | `getAll()` | ✅ Yes | 
-| `sdk.processes` | `getAll()` | ✅ Yes | 
-| `sdk.processInstances` | `getAll()` | ❌ No | 
-| `sdk.queues` | `getAll()` | ✅ Yes | 
-| `sdk.tasks` | `getAll()` | ✅ Yes | 
-| `sdk.tasks` | `getUsers()` | ✅ Yes |
+|---------|--------|------------------------|
+| Assets | `getAll()` | ✅ Yes |
+| Buckets | `getAll()` | ✅ Yes |
+| Buckets | `getFiles()` | ❌ No |
+| Entities | `getAll()` | ✅ Yes |
+| Entities | `getAllRecords()` | ✅ Yes |
+| Processes | `getAll()` | ✅ Yes |
+| ProcessInstances | `getAll()` | ❌ No |
+| CaseInstances | `getAll()` | ❌ No |
+| CaseInstances | `getActionTasks()` | ✅ Yes |
+| Queues | `getAll()` | ✅ Yes |
+| Tasks | `getAll()` | ✅ Yes |
+| Tasks | `getUsers()` | ✅ Yes |
+| ConversationalAgent.conversations | `getAll()` | ❌ No |
+| ConversationalAgent.exchanges | `getAll()` | ❌ No |

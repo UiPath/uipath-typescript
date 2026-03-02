@@ -1,35 +1,86 @@
 import { ApiClient } from '../core/http/api-client';
-import { Config } from '../core/config/config';
-import { ExecutionContext } from '../core/context/execution';
 import { RequestSpec } from '../models/common/request-spec';
-import { TokenManager } from '../core/auth/token-manager';
 import { PaginatedResponse, PaginationOptions } from '../utils/pagination/types';
-import { 
-  InternalPaginationOptions, 
-  PaginationType, 
+import {
+  InternalPaginationOptions,
+  PaginationType,
   PaginationServiceAccess,
   PaginationFieldNames,
   PaginationDetectionInfo,
-  RequestWithPaginationOptions 
+  RequestWithPaginationOptions
 } from '../utils/pagination/internal-types';
 import { PaginationManager } from '../utils/pagination/pagination-manager';
 import { PaginationHelpers } from '../utils/pagination/helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/constants';
 import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
+import type { IUiPath } from '../core/types';
+import { SDKInternalsRegistry } from '../core/internals';
 
 export interface ApiResponse<T> {
   data: T;
 }
 
+/**
+ * Base class for all UiPath SDK services.
+ *
+ * Provides common functionality for authentication, configuration, and API communication.
+ * All service classes extend this base to inherit dependency injection and HTTP client access.
+ *
+ * This class implements the dependency injection pattern where services receive a configured
+ * UiPath instance. The ApiClient is created internally and handles all HTTP operations
+ * including authentication token management.
+ *
+ * @remarks
+ * Service classes should extend this base and call `super(uiPath)` in their constructor.
+ * Protected HTTP methods (get, post, put, patch, delete) are available to all subclasses.
+ *
+ */
 export class BaseService {
-  protected readonly config: Config;
-  protected readonly executionContext: ExecutionContext;
-  protected readonly apiClient: ApiClient;
+  // Private field - not visible via Object.keys() or any reflection
+  #apiClient: ApiClient;
 
-  constructor(config: Config, executionContext: ExecutionContext, tokenManager: TokenManager) {
-    this.config = config;
-    this.executionContext = executionContext;
-    this.apiClient = new ApiClient(config, executionContext, tokenManager);
+  /**
+   * Creates a base service instance with dependency injection.
+   *
+   * Extracts configuration, execution context, and token manager from the UiPath instance
+   * to initialize an authenticated API client. The ApiClient handles all HTTP operations
+   * and token management internally.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration.
+   *                    Services receive this via dependency injection in the modular pattern.
+   *
+   * @example
+   * ```typescript
+   * // Services automatically call this via super()
+   * export class EntityService extends BaseService {
+   *   constructor(instance: IUiPath) {
+   *     super(instance); // Initializes the internal ApiClient
+   *   }
+   * }
+   *
+   * // Usage in modular pattern
+   * import { UiPath } from '@uipath/uipath-typescript/core';
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const sdk = new UiPath(config);
+   * await sdk.initialize();
+   * const entities = new Entities(sdk);
+   * ```
+   */
+  constructor(instance: IUiPath) {
+    const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
+    this.#apiClient = new ApiClient(config, context, tokenManager);
+  }
+
+  /**
+   * Gets a valid authentication token, refreshing if necessary.
+   * Use this when you need to manually add Authorization headers (e.g., direct uploads).
+   *
+   * @returns Promise resolving to a valid access token string
+   * @throws AuthenticationError if no token is available or refresh fails
+   */
+  protected async getValidAuthToken(): Promise<string> {
+    return this.#apiClient.getValidToken();
   }
 
   /**
@@ -70,27 +121,27 @@ export class BaseService {
   }
 
   protected async get<T>(path: string, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.get<T>(path, options);
+    const response = await this.#apiClient.get<T>(path, options);
     return { data: response };
   }
 
   protected async post<T>(path: string, data?: unknown, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.post<T>(path, data, options);
+    const response = await this.#apiClient.post<T>(path, data, options);
     return { data: response };
   }
 
   protected async put<T>(path: string, data?: unknown, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.put<T>(path, data, options);
+    const response = await this.#apiClient.put<T>(path, data, options);
     return { data: response };
   }
 
   protected async patch<T>(path: string, data?: unknown, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.patch<T>(path, data, options);
+    const response = await this.#apiClient.patch<T>(path, data, options);
     return { data: response };
   }
 
   protected async delete<T>(path: string, options: RequestSpec = {}): Promise<ApiResponse<T>> {
-    const response = await this.apiClient.delete<T>(path, options);
+    const response = await this.#apiClient.delete<T>(path, options);
     return { data: response };
   }
 

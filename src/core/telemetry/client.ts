@@ -213,7 +213,6 @@ class TelemetryClient {
      */
     private getEnrichedAttributes(extraAttributes: TelemetryAttributes, eventName: string): TelemetryAttributes {
         const attributes: TelemetryAttributes = {
-            ...extraAttributes,
             [APP_NAME]: SDK_SERVICE_NAME,
             [VERSION]: SDK_VERSION || UNKNOWN,
             [SERVICE]: eventName,
@@ -222,6 +221,7 @@ class TelemetryClient {
             [CLOUD_TENANT_NAME]: this.telemetryContext?.tenantName || UNKNOWN,
             [CLOUD_REDIRECT_URI]: this.telemetryContext?.redirectUri || UNKNOWN,
             [CLOUD_CLIENT_ID]: this.telemetryContext?.clientId || UNKNOWN,
+            ...extraAttributes,
         };
 
         return attributes;

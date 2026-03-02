@@ -160,7 +160,7 @@ export class ErrorResponseParser {
       
       // GenericErrorParser always returns true, so this will never be null
       return strategy!.parse(errorBody, response);
-    } catch (error) {
+    } catch {
       // Handle non-JSON responses
       const responseText = await response.text().catch(() => '');
       return {

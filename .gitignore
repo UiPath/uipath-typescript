@@ -20,6 +20,7 @@ lib/
 .env
 .env.local
 .env.*.local
+.env.integration
 
 # Test coverage
 coverage/
@@ -58,3 +59,6 @@ npm-debug.log*
 dist/
 docs/api/
 site/
+.uipath/
+
+.claude

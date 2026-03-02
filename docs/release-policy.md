@@ -95,7 +95,7 @@ Breaking changes are introduced in minor releases (X.Y.0) and follow these guide
 
 The SDK maintains compatibility with:
 
-- Node.js 18+
+- Node.js 20+
 - Key dependencies as specified in `package.json`
 - Regular updates to dependencies are performed in minor releases
 

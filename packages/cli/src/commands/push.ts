@@ -1,7 +1,7 @@
 import { Command, Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import * as path from 'path';
-import { STUDIO_METADATA_RELATIVE_PATH } from '../constants/api.js';
+import { PUSH_METADATA_RELATIVE_PATH } from '../constants/api.js';
 import { AUTH_CONSTANTS, MESSAGES } from '../constants/index.js';
 import { getEnvironmentConfig } from '../utils/env-config.js';
 import { WebAppFileHandler } from '../core/webapp-file-handler/index.js';
@@ -14,8 +14,8 @@ export default class Push extends Command {
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> <project-id>',
-    '<%= config.bin %> <%= command.id %> <project-id> --ignore-resources',
-    '<%= config.bin %> <%= command.id %> <project-id> --build-dir build',
+    '<%= config.bin %> <%= command.id %> <project-id> --ignoreResources',
+    '<%= config.bin %> <%= command.id %> <project-id> --buildDir build',
     '<%= config.bin %> <%= command.id %> <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <token>',
   ];
 
@@ -28,11 +28,12 @@ export default class Push extends Command {
 
   static override flags = {
     help: Flags.help({ char: 'h' }),
-    'build-dir': Flags.string({
-      description: 'Relative path to the build output directory (e.g. dist, build, out). Default: dist',
+    buildDir: Flags.string({
+      description:
+        'Relative path to the build output directory; should be the root of the build output (e.g. dist, build, out). Default: dist',
       default: 'dist',
     }),
-    'ignore-resources': Flags.boolean({
+    ignoreResources: Flags.boolean({
       description: 'Skip importing the referenced resources to Studio Web solution',
       default: false,
     }),
@@ -44,9 +45,6 @@ export default class Push extends Command {
     }),
     tenantId: Flags.string({
       description: 'UiPath tenant ID',
-    }),
-    tenantName: Flags.string({
-      description: 'UiPath tenant name',
     }),
     accessToken: Flags.string({
       description: 'UiPath bearer token for authentication',
@@ -70,7 +68,7 @@ export default class Push extends Command {
     }
 
     const rootDir = process.cwd();
-    const bundlePath = path.normalize(flags['build-dir']).replace(/\\/g, '/');
+    const bundlePath = path.normalize(flags.buildDir).replace(/\\/g, '/');
 
     try {
       Preconditions.validate(rootDir, bundlePath);
@@ -83,15 +81,16 @@ export default class Push extends Command {
       projectId,
       rootDir,
       bundlePath,
-      manifestFile: STUDIO_METADATA_RELATIVE_PATH,
+      manifestFile: PUSH_METADATA_RELATIVE_PATH,
       envConfig,
       logger: this,
     });
 
     try {
       await handler.push();
-      await handler.importReferencedResources(flags['ignore-resources']);
+      await handler.importReferencedResources(flags.ignoreResources);
       this.log(chalk.green(MESSAGES.SUCCESS.PUSH_COMPLETED));
+      process.exit(0);
     } catch (error) {
       const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
       this.log(chalk.red(`${MESSAGES.ERRORS.PUSH_FAILED_PREFIX}${msg}`));

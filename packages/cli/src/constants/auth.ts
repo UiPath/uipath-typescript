@@ -138,6 +138,13 @@ export const AUTH_CONSTANTS = {
       'UIPATH_TENANT_ID',
       'UIPATH_ACCESS_TOKEN'
     ],
+    // Required for pull command (Studio Web) — same as PUSH
+    PULL: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_ACCESS_TOKEN'
+    ],
   },
   API_ENDPOINTS: {
     FOLDERS_NAVIGATION: '/Folders/GetAllForCurrentUser',
