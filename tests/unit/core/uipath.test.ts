@@ -63,16 +63,14 @@ describe('UiPath Core', () => {
       expect(sdk.isInitialized()).toBe(false); // OAuth requires initialize()
     });
 
-    it('should validate required config fields', () => {
-      expect(() => {
-        // oxlint-disable-next-line no-new
-        new UiPath({
-          baseUrl: '',
-          orgName: '',
-          tenantName: '',
-          secret: ''
-        } as any);
-      }).toThrow();
+    it('should validate required config fields', async () => {
+      const sdk = new UiPath({
+        baseUrl: '',
+        orgName: '',
+        tenantName: '',
+        secret: ''
+      } as any);
+      await expect(sdk.initialize()).rejects.toThrow();
     });
 
     it('should normalize baseUrl', () => {
