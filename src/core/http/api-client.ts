@@ -44,12 +44,9 @@ export class ApiClient {
   }
 
   private async getDefaultHeaders(): Promise<Record<string, string>> {
-    // Get headers from execution context first
-    const contextHeaders = this.executionContext.getHeaders();
     const token = await this.getValidToken();
 
     return {
-      ...contextHeaders,
       'Authorization': `Bearer ${token}`,
       'Content-Type': CONTENT_TYPES.JSON,
       ...this.defaultHeaders,

@@ -1,5 +1,3 @@
-import { RequestSpec } from '../../models/common/request-spec';
-
 /**
  * ExecutionContext manages the state and context of API operations.
  * It provides a way to share context across service calls and maintain
@@ -7,8 +5,7 @@ import { RequestSpec } from '../../models/common/request-spec';
  */
 export class ExecutionContext {
   private context: Map<string, any> = new Map();
-  private headers: Record<string, string> = {};
-  
+
   /**
    * Set a context value that will be available throughout the execution
    */
@@ -24,37 +21,9 @@ export class ExecutionContext {
   }
 
   /**
-   * Set custom headers that will be included in all API requests
-   */
-  setHeaders(headers: Record<string, string>): void {
-    this.headers = { ...this.headers, ...headers };
-  }
-
-  /**
-   * Get all custom headers
-   */
-  getHeaders(): Record<string, string> {
-    return { ...this.headers };
-  }
-
-  /**
-   * Clear all context and headers
+   * Clear all context
    */
   clear(): void {
     this.context.clear();
-    this.headers = {};
-  }
-
-  /**
-   * Create a request spec for an API call
-   */
-  createRequestSpec(spec: Partial<RequestSpec> = {}): RequestSpec {
-    return {
-      ...spec,
-      headers: {
-        ...this.getHeaders(),
-        ...spec.headers
-      }
-    };
   }
 }
