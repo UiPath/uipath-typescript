@@ -1,6 +1,4 @@
 import type { IUiPath } from '../../core/types';
-import { SDKInternalsRegistry } from '../../core/internals';
-import { NetworkError } from '../../core/errors';
 import { BaseService } from '../base';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
@@ -41,16 +39,8 @@ import { track } from '../../core/telemetry';
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
-  private readonly baseUrl: string;
-  private readonly orgName: string;
-  private readonly tenantName: string;
-
   constructor(instance: IUiPath) {
     super(instance);
-    const { config } = SDKInternalsRegistry.get(instance);
-    this.baseUrl = config.baseUrl;
-    this.orgName = config.orgName;
-    this.tenantName = config.tenantName;
   }
   /**
    * Gets entity metadata by entity ID with attached operation methods
@@ -476,41 +466,24 @@ export class EntityService extends BaseService implements EntityServiceModel {
   async uploadAttachment(options: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
     const { entityName, recordId, fieldName, file, expansionLevel } = options;
 
-    const endpoint = DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityName, recordId, fieldName);
-    const normalizedPath = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-    const url = new URL(
-      `${this.orgName}/${this.tenantName}/${normalizedPath}`,
-      this.baseUrl
-    );
-
-    if (expansionLevel !== undefined) {
-      url.searchParams.set('expansionLevel', expansionLevel.toString());
-    }
-
     const formData = new FormData();
     if (file instanceof Uint8Array) {
-      formData.append('file', new Blob([file.buffer]));
+      formData.append('file', new Blob([file.buffer as ArrayBuffer]));
     } else {
       formData.append('file', file);
     }
 
-    const token = await this.getValidAuthToken();
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
+    const params = createParams({ expansionLevel });
 
-    if (!response.ok) {
-      throw new NetworkError({
-        message: `Failed to upload attachment: ${response.status} ${response.statusText}`,
-        statusCode: response.status
-      });
-    }
+    const response = await this.post<EntityUploadAttachmentResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityName, recordId, fieldName),
+      formData,
+      { params }
+    );
 
-    return response.json();
+    // Convert PascalCase response to camelCase
+    const camelResponse = pascalToCamelCaseKeys(response.data);
+    return camelResponse;
   }
 
     /**
