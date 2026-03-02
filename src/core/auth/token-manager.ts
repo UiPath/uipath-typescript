@@ -183,10 +183,7 @@ export class TokenManager {
   clearToken(): void {
     this.currentToken = undefined;
     this.executionContext.set('tokenInfo', undefined);
-    const headers = this.executionContext.getHeaders();
-    delete headers['Authorization'];
-    this.executionContext.setHeaders(headers);
-    
+
     // Remove from session storage if this is an OAuth token
     if (isBrowser && this.isOAuth) {
       try {
@@ -202,11 +199,6 @@ export class TokenManager {
    */
   private _updateExecutionContext(tokenInfo: TokenInfo): void {
     this.executionContext.set('tokenInfo', tokenInfo);
-    
-    // Update authorization header
-    this.executionContext.setHeaders({
-      'Authorization': `Bearer ${tokenInfo.token}`
-    });
   }
 
   /**
