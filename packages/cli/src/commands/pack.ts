@@ -209,7 +209,7 @@ export default class Pack extends Command {
       {
         type: 'input',
         name: 'name',
-        message: MESSAGES.PROMPTS.ENTER_PACKAGE_NAME,
+        message: MESSAGES.PROMPTS.ENTER_APP_NAME,
         validate: (input: string) => {
           if (!input.trim()) {
             return MESSAGES.VALIDATIONS.PACKAGE_NAME_REQUIRED;

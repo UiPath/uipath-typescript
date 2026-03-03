@@ -190,7 +190,9 @@ export default class Deploy extends Command {
 
       // Only show app URL for non-action apps
       const appConfig = this.loadAppConfig();
-      if (appConfig?.appType !== AppType.Action) {
+      if (appConfig?.appType === AppType.Action) {
+        this.log(`  ${chalk.yellow(MESSAGES.INFO.ACTION_APP_RUN_IN_ACTION_CENTER)}`);
+      } else {
         const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgName, appName);
         this.log(`  ${chalk.cyan('App URL:')} ${chalk.green(appUrl)}`);
       }
