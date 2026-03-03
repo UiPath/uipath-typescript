@@ -1,85 +1,72 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { UiPath } from '../../../../src/core';
-import { Entities } from '../../../../src/services/data-fabric';
+import { describe, it, expect } from 'vitest';
+import { setupUnifiedTests, getServices, InitMode } from '../../config/unified-setup';
 
 /**
  * Integration test for uploadAttachment
  *
+ * Required environment variables:
+ *   DATA_FABRIC_TEST_ENTITY_ID   - UUID of an entity that has a File-type field
+ *   DATA_FABRIC_TEST_RECORD_ID   - UUID of a record in that entity
+ *   DATA_FABRIC_TEST_ATTACHMENT_FIELD - Name of the File-type field
+ *
  * Run with:
  *   npx vitest run tests/integration/shared/data-fabric/upload-attachment.integration.test.ts --config vitest.integration.config.ts
  */
-describe('Entity uploadAttachment - Integration Test', () => {
-  let sdk: UiPath;
-  let entities: Entities;
 
-  const TEST_CONFIG = {
-    baseUrl: 'https://alpha.uipath.com',
-    orgName: 'entity',
-    tenantName: 'a4e',
-    secret: 'rt_EFB9EC17CA732C09AFB34875984D500FA7FA5BF42230EB5F66EA183927FD82E0-1',
-  };
+const ATTACHMENT_CONFIG = {
+  entityId: process.env.DATA_FABRIC_TEST_ENTITY_ID || '',
+  recordId: process.env.DATA_FABRIC_TEST_RECORD_ID || '',
+  fieldName: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || '',
+};
 
-  const ATTACHMENT_CONFIG = {
-    entityId: 'f4d722f7-abd5-f011-8d4d-6045bd024ab4',
-    recordId: '046427D1-3F16-F111-832E-000D3A58D4AA',
-    fieldName: 'SarathReddy',
-  };
+const hasAttachmentConfig = !!(
+  ATTACHMENT_CONFIG.entityId &&
+  ATTACHMENT_CONFIG.recordId &&
+  ATTACHMENT_CONFIG.fieldName
+);
 
-  beforeAll(() => {
-    sdk = new UiPath({
-      baseUrl: TEST_CONFIG.baseUrl,
-      orgName: TEST_CONFIG.orgName,
-      tenantName: TEST_CONFIG.tenantName,
-      secret: TEST_CONFIG.secret,
-    });
-    entities = new Entities(sdk);
-  });
+const modes: InitMode[] = ['v1'];
 
-  it('should get entity metadata to find entity name', async () => {
-    const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
+describe.each(modes).skipIf(!hasAttachmentConfig)(
+  'Entity uploadAttachment - Integration Tests [%s]',
+  (mode) => {
+    setupUnifiedTests(mode);
 
-    expect(entity).toBeDefined();
-    expect(entity.id).toBe(ATTACHMENT_CONFIG.entityId);
-    expect(entity.name).toBeDefined();
+    it('should upload an attachment via service method', async () => {
+      const { entities } = getServices();
 
-    console.log(`Entity name: ${entity.name}`);
-    console.log(`Entity fields: ${entity.fields.map(f => `${f.name} (${f.fieldDisplayType})`).join(', ')}`);
-  });
+      const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
+      const entityName = entity.name;
 
-  it('should upload an attachment via service method', async () => {
-    // First get entity name
-    const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
-    const entityName = entity.name;
+      const fileContent = 'Hello from UiPath TypeScript SDK integration test!';
+      const file = new Blob([fileContent], { type: 'text/plain' });
 
-    // Create a small test file
-    const fileContent = 'Hello from UiPath TypeScript SDK integration test!';
-    const file = new Blob([fileContent], { type: 'text/plain' });
+      const result = await entities.uploadAttachment({
+        entityName,
+        recordId: ATTACHMENT_CONFIG.recordId,
+        fieldName: ATTACHMENT_CONFIG.fieldName,
+        file,
+      });
 
-    const result = await entities.uploadAttachment({
-      entityName,
-      recordId: ATTACHMENT_CONFIG.recordId,
-      fieldName: ATTACHMENT_CONFIG.fieldName,
-      file,
+      expect(result).toBeDefined();
     });
 
-    console.log('Upload result:', JSON.stringify(result, null, 2));
-    expect(result).toBeDefined();
-  });
+    it('should upload an attachment via entity method', async () => {
+      const { entities } = getServices();
 
-  it('should upload an attachment via entity method', async () => {
-    const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
+      const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
 
-    // Create a small test file
-    const fileContent = 'Hello from entity method upload test!';
-    const file = new Blob([fileContent], { type: 'text/plain' });
+      const fileContent = 'Hello from entity method upload test!';
+      const file = new Blob([fileContent], { type: 'text/plain' });
 
-    const result = await entity.uploadAttachment(
-      ATTACHMENT_CONFIG.recordId,
-      ATTACHMENT_CONFIG.fieldName,
-      file,
-    );
+      const result = await entity.uploadAttachment(
+        ATTACHMENT_CONFIG.recordId,
+        ATTACHMENT_CONFIG.fieldName,
+        file,
+      );
 
-    console.log('Entity method upload result:', JSON.stringify(result, null, 2));
-    expect(result).toBeDefined();
-  });
-}, { timeout: 30000 });
+      expect(result).toBeDefined();
+    });
+  },
+  { timeout: 30000 }
+);
