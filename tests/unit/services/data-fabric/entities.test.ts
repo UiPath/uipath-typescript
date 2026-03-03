@@ -879,22 +879,9 @@ describe('EntityService Unit Tests', () => {
   });
 
   describe('uploadAttachment', () => {
-    const mockFetch = vi.fn<typeof fetch>();
-
-    beforeEach(() => {
-      vi.stubGlobal('fetch', mockFetch);
-    });
-
-    afterEach(() => {
-      vi.unstubAllGlobals();
-    });
-
     it('should upload attachment successfully with Blob', async () => {
       const mockUploadResponse = { id: ENTITY_TEST_CONSTANTS.RECORD_ID, status: 'uploaded' };
-      mockFetch.mockResolvedValue(new Response(JSON.stringify(mockUploadResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }));
+      mockApiClient.post.mockResolvedValue(mockUploadResponse);
 
       const file = new Blob(['test file content'], { type: 'application/pdf' });
       const options: EntityUploadAttachmentOptions = {
@@ -907,29 +894,20 @@ describe('EntityService Unit Tests', () => {
       const result = await entityService.uploadAttachment(options);
 
       expect(result).toEqual(mockUploadResponse);
-      expect(mockFetch).toHaveBeenCalledOnce();
-
-      const [url, fetchOptions] = mockFetch.mock.calls[0];
-      expect(String(url)).toContain(DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
-        ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
-      ));
-      expect((fetchOptions as RequestInit).method).toBe('POST');
-      expect((fetchOptions as RequestInit).headers).toEqual(
-        expect.objectContaining({
-          'Authorization': `Bearer ${TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN}`
-        })
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        expect.any(FormData),
+        { params: {} }
       );
-      expect((fetchOptions as RequestInit).body).toBeInstanceOf(FormData);
     });
 
     it('should upload attachment with Uint8Array', async () => {
       const mockUploadResponse = { id: ENTITY_TEST_CONSTANTS.RECORD_ID };
-      mockFetch.mockResolvedValue(new Response(JSON.stringify(mockUploadResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }));
+      mockApiClient.post.mockResolvedValue(mockUploadResponse);
 
       const file = new Uint8Array([72, 101, 108, 108, 111]);
       const options: EntityUploadAttachmentOptions = {
@@ -942,18 +920,20 @@ describe('EntityService Unit Tests', () => {
       const result = await entityService.uploadAttachment(options);
 
       expect(result).toEqual(mockUploadResponse);
-      expect(mockFetch).toHaveBeenCalledOnce();
-
-      const [, fetchOptions] = mockFetch.mock.calls[0];
-      expect((fetchOptions as RequestInit).body).toBeInstanceOf(FormData);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        expect.any(FormData),
+        { params: {} }
+      );
     });
 
     it('should include expansionLevel query parameter when provided', async () => {
       const mockUploadResponse = { id: ENTITY_TEST_CONSTANTS.RECORD_ID };
-      mockFetch.mockResolvedValue(new Response(JSON.stringify(mockUploadResponse), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }));
+      mockApiClient.post.mockResolvedValue(mockUploadResponse);
 
       const file = new Blob(['test']);
       const options: EntityUploadAttachmentOptions = {
@@ -966,15 +946,20 @@ describe('EntityService Unit Tests', () => {
 
       await entityService.uploadAttachment(options);
 
-      const [url] = mockFetch.mock.calls[0];
-      expect(String(url)).toContain(`expansionLevel=${ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL}`);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        expect.any(FormData),
+        { params: { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL } }
+      );
     });
 
-    it('should throw NetworkError on non-ok response', async () => {
-      mockFetch.mockResolvedValue(new Response('Internal Server Error', {
-        status: 500,
-        statusText: 'Internal Server Error'
-      }));
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
 
       const file = new Blob(['test']);
       const options: EntityUploadAttachmentOptions = {
@@ -985,7 +970,7 @@ describe('EntityService Unit Tests', () => {
       };
 
       await expect(entityService.uploadAttachment(options)).rejects.toThrow(
-        'Failed to upload attachment: 500 Internal Server Error'
+        TEST_CONSTANTS.ERROR_MESSAGE
       );
     });
   });

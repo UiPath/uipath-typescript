@@ -390,10 +390,6 @@ export interface EntityServiceModel {
    *   fieldName: 'Documents',
    *   file: blob
    * });
-   *
-   * // Or upload using entity method
-   * const entity = await entities.getById('<entityId>');
-   * const response = await entity.uploadAttachment('<recordId>', 'Documents', file);
    * ```
    */
   uploadAttachment(options: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
