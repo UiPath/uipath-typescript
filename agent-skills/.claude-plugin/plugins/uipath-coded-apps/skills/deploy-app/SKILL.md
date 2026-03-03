@@ -8,7 +8,7 @@ description: Use when the user asks to deploy uipath coded app. this will deploy
 
 The CLI package `@uipath/uipath-ts-cli` is a **private** GitHub Package as of today. It requires `~/.npmrc` to be configured with a GitHub token before installation.
 
-**Required version: `1.0.0-beta.7`**
+**Required version: `1.0.0-beta.10`**
 
 Follow these sub-steps in order:
 
@@ -19,12 +19,12 @@ command -v uipath && uipath -v
 ```
 
 - **If `uipath` is not found** → go to step 0b
-- **If `uipath` is found** → check the version output. It should contain `1.0.0-beta.7`. If the version is different, uninstall and reinstall:
+- **If `uipath` is found** → check the version output. It should contain `1.0.0-beta.10`. If the version is different, uninstall and reinstall:
   ```bash
   npm uninstall -g @uipath/uipath-ts-cli
   ```
   Then go to step 0b.
-- **If version matches `1.0.0-beta.7`** → skip to Step 1.
+- **If version matches `1.0.0-beta.10`** → skip to Step 1.
 
 ### 0b: Ensure `~/.npmrc` is configured
 
@@ -70,7 +70,7 @@ Once the user provides the token, write `~/.npmrc`:
 ### 0c: Install the CLI
 
 ```bash
-npm install -g @uipath/uipath-ts-cli@1.0.0-beta.7
+npm install -g @uipath/uipath-ts-cli@1.0.0-beta.10
 ```
 
 Verify installation:
