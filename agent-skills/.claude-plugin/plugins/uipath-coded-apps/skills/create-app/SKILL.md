@@ -19,15 +19,17 @@ You need these scopes determined **before** Step 2 so you can tell the user what
 
 ### Step 2: Ask for environment, org, tenant, and whether they have a client ID
 
+**CRITICAL — DO NOT SKIP THIS STEP.** You MUST ask the user all 4 questions below using `AskUserQuestion` before proceeding. Do NOT assume defaults, do NOT proceed to create the app, do NOT start browser automation, and do NOT say "I have all the information I need" until the user has answered these questions. The app CANNOT be set up without these answers.
+
 **Before showing the questions**, present the user with the required scopes and redirect URI information:
 
 > **Your app will need these OAuth scopes:** `<scopes list>`
 >
-> **Redirect URI:** `http://localhost:5173` (for local development — this is computed automatically at runtime, so it will also work in production after deployment)
+> **Redirect URI:** `http://localhost:5173` (computed automatically at runtime, works in both local dev and production)
 >
 > If you already have a client ID, make sure the External Application in UiPath has these scopes enabled and the redirect URI added. If not, I can create one for you.
 
-Then use a **single** `AskUserQuestion` call with exactly these 4 questions:
+Then **IMMEDIATELY** use a **single** `AskUserQuestion` call with **ALL 4 questions below** in the same call. Do NOT output any other text or tool calls between the scopes info above and this AskUserQuestion call:
 
 ```
 Question 1:
@@ -63,6 +65,8 @@ Question 4:
     - label: "No, create one for me"  description: "Use browser automation to create one in UiPath admin"
   multiSelect: false
 ```
+
+**STOP HERE and wait for the user's answers.** Do NOT proceed to Step 2.5 or any later step until the user has responded to all 4 questions above. The answers determine everything: which environment URL to use, whether to launch a browser, and whether to create an OAuth client.
 
 ### Step 2.5: Ensure Playwright MCP Availability
 
