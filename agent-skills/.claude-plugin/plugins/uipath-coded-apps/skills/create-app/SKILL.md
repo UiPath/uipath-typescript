@@ -19,54 +19,65 @@ You need these scopes determined **before** Step 2 so you can tell the user what
 
 ### Step 2: Ask for environment, org, tenant, and whether they have a client ID
 
-**CRITICAL — DO NOT SKIP THIS STEP.** You MUST ask the user all 4 questions below using `AskUserQuestion` before proceeding. Do NOT assume defaults, do NOT proceed to create the app, do NOT start browser automation, and do NOT say "I have all the information I need" until the user has answered these questions. The app CANNOT be set up without these answers.
+**CRITICAL — DO NOT SKIP THIS STEP.** You MUST call `AskUserQuestion` with all 4 questions below before doing anything else. Do NOT assume defaults, do NOT start creating the app, do NOT start browser automation. The app CANNOT be set up without the user's answers.
 
-**Before showing the questions**, present the user with the required scopes and redirect URI information:
+This step has two parts — output text first, then call AskUserQuestion:
 
-> **Your app will need these OAuth scopes:** `<scopes list>`
->
-> **Redirect URI:** `http://localhost:5173` (computed automatically at runtime, works in both local dev and production)
->
-> If you already have a client ID, make sure the External Application in UiPath has these scopes enabled and the redirect URI added. If not, I can create one for you.
-
-Then **IMMEDIATELY** use a **single** `AskUserQuestion` call with **ALL 4 questions below** in the same call. Do NOT output any other text or tool calls between the scopes info above and this AskUserQuestion call:
+**Part A — Output this text** (replace `<scopes list>` with the actual scopes from Step 1):
 
 ```
-Question 1:
-  question: "Which UiPath environment?"
-  header: "Environment"
-  options:
-    - label: "cloud (Recommended)"   description: "Production — cloud.uipath.com"
-    - label: "staging"               description: "Staging — staging.uipath.com"
-    - label: "alpha"                 description: "Alpha — alpha.uipath.com"
-  multiSelect: false
+Your app will need these OAuth scopes: <scopes list>
 
-Question 2:
-  question: "What is your UiPath organization name?"
-  header: "Org name"
-  options:
-    - label: "I'll type it"   description: "Select Other and type your org name"
-    - label: "Find from browser"   description: "I'm logged into UiPath — read org from URL"
-  multiSelect: false
+Redirect URI: http://localhost:5173 (computed automatically at runtime, works in both local dev and production)
 
-Question 3:
-  question: "What is your UiPath tenant name?"
-  header: "Tenant"
-  options:
-    - label: "DefaultTenant"   description: "Most common default tenant name"
-    - label: "I'll type it"   description: "Select Other and type your tenant name"
-  multiSelect: false
-
-Question 4:
-  question: "Do you have an existing OAuth client ID for this app? (It must have these scopes: <scopes list>, and redirect URI: http://localhost:5173)"
-  header: "Client ID"
-  options:
-    - label: "Yes, I'll provide it"   description: "I already have a client ID with the required scopes — select Other and paste it"
-    - label: "No, create one for me"  description: "Use browser automation to create one in UiPath admin"
-  multiSelect: false
+If you already have a client ID, make sure the External Application in UiPath has these scopes enabled and the redirect URI added. If not, I can create one for you.
 ```
 
-**STOP HERE and wait for the user's answers.** Do NOT proceed to Step 2.5 or any later step until the user has responded to all 4 questions above. The answers determine everything: which environment URL to use, whether to launch a browser, and whether to create an OAuth client.
+**Part B — In the SAME response, call `AskUserQuestion`** with this EXACT JSON structure for the `questions` parameter (replace `<scopes list>` with actual scopes):
+
+```json
+[
+  {
+    "question": "Which UiPath environment?",
+    "header": "Environment",
+    "options": [
+      {"label": "cloud (Recommended)", "description": "Production — cloud.uipath.com"},
+      {"label": "staging", "description": "Staging — staging.uipath.com"},
+      {"label": "alpha", "description": "Alpha — alpha.uipath.com"}
+    ],
+    "multiSelect": false
+  },
+  {
+    "question": "What is your UiPath organization name?",
+    "header": "Org name",
+    "options": [
+      {"label": "I'll type it", "description": "Select Other and type your org name"},
+      {"label": "Find from browser", "description": "I'm logged into UiPath — read org from URL"}
+    ],
+    "multiSelect": false
+  },
+  {
+    "question": "What is your UiPath tenant name?",
+    "header": "Tenant",
+    "options": [
+      {"label": "DefaultTenant", "description": "Most common default tenant name"},
+      {"label": "I'll type it", "description": "Select Other and type your tenant name"}
+    ],
+    "multiSelect": false
+  },
+  {
+    "question": "Do you have an existing OAuth client ID for this app? (It must have these scopes: <scopes list>, and redirect URI: http://localhost:5173)",
+    "header": "Client ID",
+    "options": [
+      {"label": "Yes, I'll provide it", "description": "I already have a client ID with the required scopes — select Other and paste it"},
+      {"label": "No, create one for me", "description": "Use browser automation to create one in UiPath admin"}
+    ],
+    "multiSelect": false
+  }
+]
+```
+
+**STOP — Do NOT proceed past this point until the user has answered all 4 questions above.** The answers determine everything: which environment URL to use, whether to launch a browser, and whether to create an OAuth client. Do NOT proceed to Step 2.5 or any later step until you have received the user's responses.
 
 ### Step 2.5: Ensure Playwright MCP Availability
 
