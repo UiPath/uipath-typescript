@@ -1,6 +1,6 @@
 ---
 description: Use when the user asks to create a new UiPath web app, build a React dashboard with UiPath data, add UiPath SDK services (@uipath/uipath-typescript) to an existing React project, or deploy a coded app to UiPath Cloud. Covers project scaffolding, OAuth authentication, SDK service integration (Entities, Tasks, Processes, Assets, Queues, Buckets, Maestro, Conversational Agent), pagination, polling, BPMN rendering, real-time chat with AI agents, and deployment via UiPath CLI.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Task, mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_evaluate, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_press_key, mcp__playwright__browser_select_option, mcp__playwright__browser_close, mcp__playwright__browser_tabs
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_evaluate, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_press_key, mcp__playwright__browser_select_option, mcp__playwright__browser_close, mcp__playwright__browser_tabs
 ---
 
 # Creating UiPath Coded Apps
@@ -17,67 +17,44 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Task, mcp__
 
 You need these scopes determined **before** Step 2 so you can tell the user what their client ID needs when asking for it.
 
-### Step 2: Ask for environment, org, tenant, and whether they have a client ID
+### Step 2: Ask the user for environment, org, tenant, and client ID
 
-**CRITICAL — DO NOT SKIP THIS STEP.** You MUST call `AskUserQuestion` with all 4 questions below before doing anything else. Do NOT assume defaults, do NOT start creating the app, do NOT start browser automation. The app CANNOT be set up without the user's answers.
+**CRITICAL:** You do NOT know these values. You CANNOT infer or assume them. You MUST ask the user and wait for their reply before proceeding.
 
-This step has two parts — output text first, then call AskUserQuestion:
+Output the following text directly (replace `<scopes list>` with the actual scopes from Step 1). Output this EXACTLY as plain text, do NOT call any tools, do NOT proceed to Step 2.5 — just output this text and stop:
 
-**Part A — Output this text** (replace `<scopes list>` with the actual scopes from Step 1):
+---
 
-```
-Your app will need these OAuth scopes: <scopes list>
+Here's what your app needs:
 
-Redirect URI: http://localhost:5173 (computed automatically at runtime, works in both local dev and production)
+**OAuth scopes:** `<scopes list>`
+
+**Redirect URI:** `http://localhost:5173` (computed automatically at runtime, works in both local dev and production)
 
 If you already have a client ID, make sure the External Application in UiPath has these scopes enabled and the redirect URI added. If not, I can create one for you.
-```
 
-**Part B — In the SAME response, call `AskUserQuestion`** with this EXACT JSON structure for the `questions` parameter (replace `<scopes list>` with actual scopes):
+**Please answer these 4 questions to continue:**
 
-```json
-[
-  {
-    "question": "Which UiPath environment?",
-    "header": "Environment",
-    "options": [
-      {"label": "cloud (Recommended)", "description": "Production — cloud.uipath.com"},
-      {"label": "staging", "description": "Staging — staging.uipath.com"},
-      {"label": "alpha", "description": "Alpha — alpha.uipath.com"}
-    ],
-    "multiSelect": false
-  },
-  {
-    "question": "What is your UiPath organization name?",
-    "header": "Org name",
-    "options": [
-      {"label": "I'll type it", "description": "Select Other and type your org name"},
-      {"label": "Find from browser", "description": "I'm logged into UiPath — read org from URL"}
-    ],
-    "multiSelect": false
-  },
-  {
-    "question": "What is your UiPath tenant name?",
-    "header": "Tenant",
-    "options": [
-      {"label": "DefaultTenant", "description": "Most common default tenant name"},
-      {"label": "I'll type it", "description": "Select Other and type your tenant name"}
-    ],
-    "multiSelect": false
-  },
-  {
-    "question": "Do you have an existing OAuth client ID for this app? (It must have these scopes: <scopes list>, and redirect URI: http://localhost:5173)",
-    "header": "Client ID",
-    "options": [
-      {"label": "Yes, I'll provide it", "description": "I already have a client ID with the required scopes — select Other and paste it"},
-      {"label": "No, create one for me", "description": "Use browser automation to create one in UiPath admin"}
-    ],
-    "multiSelect": false
-  }
-]
-```
+**1. Environment** — Which UiPath environment?
+   - `cloud` — Production (cloud.uipath.com) *(most common)*
+   - `staging` — Staging (staging.uipath.com)
+   - `alpha` — Alpha (alpha.uipath.com)
 
-**STOP — Do NOT proceed past this point until the user has answered all 4 questions above.** The answers determine everything: which environment URL to use, whether to launch a browser, and whether to create an OAuth client. Do NOT proceed to Step 2.5 or any later step until you have received the user's responses.
+**2. Org name** — What is your UiPath organization name?
+   - Type your org name, OR
+   - Say "find from browser" if you're logged into UiPath and want me to read it from the URL
+
+**3. Tenant** — What is your UiPath tenant name?
+   - Most common is `DefaultTenant`
+   - Type a different name if yours is different
+
+**4. Client ID** — Do you have an existing OAuth client ID with the scopes above?
+   - If yes, paste it
+   - If no, say "create one" and I'll set it up via browser automation
+
+---
+
+**After outputting this text, STOP. Do NOT call any tools. Do NOT proceed to Step 2.5.** Wait for the user to type their answers. Only continue once the user has replied with their choices for all 4 questions.
 
 ### Step 2.5: Ensure Playwright MCP Availability
 
@@ -116,15 +93,15 @@ Before any browser automation step (org name from browser, client ID creation), 
 
 ### Step 3: Resolve the org name
 
-**If user typed their org name or selected "Other":** Use the value they provided.
+**If the user typed their org name:** Use the value they provided.
 
-**If user selected "Find from browser":** Use `mcp__playwright__browser_navigate` to go to the UiPath cloud host for the chosen environment (e.g., `https://staging.uipath.com`). Take a `mcp__playwright__browser_snapshot` — if the user is logged in, the URL or page content will contain the org name. Extract it from the URL path (it's the first segment after the domain: `https://staging.uipath.com/{orgName}/...`).
+**If the user said "find from browser":** Use `mcp__playwright__browser_navigate` to go to the UiPath cloud host for the chosen environment (e.g., `https://staging.uipath.com`). Take a `mcp__playwright__browser_snapshot` — if the user is logged in, the URL or page content will contain the org name. Extract it from the URL path (it's the first segment after the domain: `https://staging.uipath.com/{orgName}/...`).
 
 ### Step 4: Get or create the client ID
 
-**If the user provided a client ID** (selected "Other" and pasted it): Use it directly.
+**If the user pasted a client ID:** Use it directly.
 
-**If the user chose "No, create one for me":** You already determined the required scopes in Step 1. **Read [oauth-client-setup.md](references/oauth-client-setup.md) and follow it exactly** to create an External Application via Playwright MCP browser automation using those scopes and redirect URI `http://localhost:5173`. That reference has all the step-by-step browser interaction details.
+**If the user said "create one" (or similar):** You already determined the required scopes in Step 1. **Read [oauth-client-setup.md](references/oauth-client-setup.md) and follow it exactly** to create an External Application via Playwright MCP browser automation using those scopes and redirect URI `http://localhost:5173`. That reference has all the step-by-step browser interaction details.
 
 ### Step 5: Run setup script
 
