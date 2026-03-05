@@ -1,4 +1,3 @@
-import type { IUiPath } from '../../core/types';
 import { BaseService } from '../base';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
@@ -39,9 +38,6 @@ import { track } from '../../core/telemetry';
  * Service for interacting with the Data Fabric Entity API
  */
 export class EntityService extends BaseService implements EntityServiceModel {
-  constructor(instance: IUiPath) {
-    super(instance);
-  }
   /**
    * Gets entity metadata by entity ID with attached operation methods
    *

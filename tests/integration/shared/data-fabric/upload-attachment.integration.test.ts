@@ -27,7 +27,7 @@ const hasAttachmentConfig = !!(
 
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes).skipIf(!hasAttachmentConfig)(
+describe.skipIf(!hasAttachmentConfig).each(modes)(
   'Entity uploadAttachment - Integration Tests [%s]',
   (mode) => {
     setupUnifiedTests(mode);
