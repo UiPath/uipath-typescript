@@ -72,6 +72,12 @@ plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - llmstxt:
+      full_output: "coded-action-apps/llms.txt"
+      sections:
+        Coded Action Apps:
+          - coded-action-apps/getting-started.md: Getting started with Coded Action Apps SDK
+          - coded-action-apps/interfaces/CodedActionAppsServiceModel.md: Coded Action Apps service methods
+  - llmstxt:
       full_output: "llms-full-content.txt"
       sections:
         Getting Started:
@@ -188,6 +194,9 @@ nav:
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
+  - Coded Action Apps SDK:
+      - Getting Started: coded-action-apps/getting-started.md
+      - Coded Action Apps: coded-action-apps/interfaces/CodedActionAppsServiceModel.md
   - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md

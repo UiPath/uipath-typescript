@@ -13,7 +13,7 @@ import {
   QueueService,
   AssetService
 } from './services';
-import { UiPathSDKConfig } from './core/config/sdk-config';
+import { PartialUiPathConfig } from './core/config/sdk-config';
 
 type ServiceConstructor<T> = new (uiPath: UiPathCore) => T;
 
@@ -122,7 +122,7 @@ export class UiPath extends UiPathCore {
   get buckets(): BucketService {
     return this.getService(BucketService);
   }
-  
+
   /**
    * Access to Orchestrator Queues service
    */
@@ -139,6 +139,6 @@ export class UiPath extends UiPathCore {
 }
 
 // Factory function for creating UiPath instance
-export default function uipath(config: UiPathSDKConfig): UiPath {
+export default function uipath(config?: PartialUiPathConfig): UiPath {
   return new UiPath(config);
 }
