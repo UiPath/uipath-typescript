@@ -7,7 +7,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { generateRandomString } from '../../utils/helpers';
+import { generateRandomString, generateRandomInt, generateRandomFloat } from '../../utils/helpers';
 import {
   EntityFieldDataType,
   EntityRecord,
@@ -48,24 +48,24 @@ function generateFieldValue(field: FieldMetaData): any {
     case EntityFieldDataType.INTEGER: {
       const max = fieldDataType.maxValue ?? 10000;
       const min = fieldDataType.minValue ?? 0;
-      return Math.floor(Math.random() * (max - min)) + min;
+      return generateRandomInt(min, max);
     }
     case EntityFieldDataType.BIG_INTEGER: {
       const max = fieldDataType.maxValue ?? 100000;
       const min = fieldDataType.minValue ?? 0;
-      return Math.floor(Math.random() * (max - min)) + min;
+      return generateRandomInt(min, max);
     }
     case EntityFieldDataType.FLOAT:
     case EntityFieldDataType.DOUBLE: {
       const max = fieldDataType.maxValue ?? 1000;
       const min = fieldDataType.minValue ?? 0;
-      return parseFloat((Math.random() * (max - min) + min).toFixed(2));
+      return generateRandomFloat(min, max);
     }
     case EntityFieldDataType.DECIMAL: {
       const precision = fieldDataType.decimalPrecision ?? 2;
       const max = fieldDataType.maxValue ?? 1000;
       const min = fieldDataType.minValue ?? 0;
-      return parseFloat((Math.random() * (max - min) + min).toFixed(precision));
+      return generateRandomFloat(min, max, precision);
     }
     case EntityFieldDataType.BOOLEAN:
       return true;
