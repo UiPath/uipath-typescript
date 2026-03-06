@@ -1,3 +1,10 @@
+import { AUTH_CONSTANTS } from './auth.js';
+
+/**
+ * Config file name constant
+ */
+export const CONFIG_FILE_NAME = 'uipath.json';
+
 /**
  * Common CLI error and success messages
  */
@@ -24,7 +31,6 @@ export const MESSAGES = {
     NO_ERROR_DETAILS: 'No additional error details provided',
     
     // Detailed log messages (used after spinner.fail)
-    REGISTRATION_ERROR_PREFIX: 'Registration error:',
     PACKAGING_ERROR_PREFIX: 'Packaging error:',
     PUBLISHING_ERROR_PREFIX: 'Publishing error:',
     DEPLOYMENT_ERROR_PREFIX: 'Deployment error:',
@@ -33,7 +39,6 @@ export const MESSAGES = {
     FAILED_TO_LOAD_APP_CONFIG: 'Failed to load app config:',
     
     // Operation-specific
-    APP_REGISTRATION_FAILED: '❌ App registration failed',
     PACKAGE_CREATION_FAILED: '❌ Package creation failed',
     PACKAGE_PUBLISHING_FAILED: '❌ Package publishing failed',
     AUTHENTICATION_PROCESS_FAILED: '❌ Authentication failed',
@@ -42,6 +47,7 @@ export const MESSAGES = {
     APP_DEPLOYMENT_FAILED: '❌ App deployment failed',
     APP_UPGRADE_FAILED: '❌ App upgrade failed',
     APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath register app" first',
+    APP_NAME_ALREADY_EXISTS: '❌ This app name is already deployed in this folder. Please choose a different name.',
     DEPLOYMENT_ID_NOT_FOUND: '❌ Could not find deployment ID for the app',
     
     // Ports
@@ -55,6 +61,11 @@ export const MESSAGES = {
     UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
     PACKAGE_TOO_LARGE: '❌ Package file is too large for upload',
     PACKAGE_UPLOAD_FAILED: 'Package upload failed: An error occured',
+    CONFIG_FILE_NOT_FOUND: `❌ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} not found in project root`,
+    CONFIG_FILE_INVALID_JSON: `❌ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} is not valid JSON`,
+    CONFIG_FILE_MISSING_SCOPE: `❌ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} is missing required "scope" field`,
+    CONFIG_FILE_SCOPE_REQUIRED_HINT: 'The scope field is required for OAuth client creation during deployment.',
+    SCOPE_VALIDATION_ERROR: 'Scope is required for OAuth client creation during deployment.',
     
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
@@ -142,16 +153,18 @@ export const MESSAGES = {
     AUTHENTICATION_SUCCESS: '✓ Successfully authenticated',
     LOGOUT_SUCCESS: 'Successfully logged out',
     
-    // Registration
-    APP_REGISTERED_SUCCESS: '✅ App registered successfully!',
-    USING_REGISTERED_APP: '✅ Using registered app',
-    
     // Packaging
-    PACKAGE_CREATED_SUCCESS: '✅ NuGet package created successfully!',
+    PACKAGE_CREATED_SUCCESS: 'NuGet package created successfully!',
     PACKAGE_CONFIG_VALIDATED: '✅ Package configuration validated',
+    CONFIG_FILE_INCLUDED: `✅ Included ${AUTH_CONSTANTS.FILES.SDK_CONFIG} in package`,
+    CONFIG_FILE_CREATED: `✅ Created ${AUTH_CONSTANTS.FILES.SDK_CONFIG}`,
+    CLIENT_ID_CLEARED: '✅ ClientId cleared - UiPath will create a new OAuth client during deployment',
+    CLIENT_ID_REUSED: '✅ Existing clientId will be reused in production',
     
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
+    PACKAGE_UPLOADED_SUCCESS: '✅ Package uploaded to Orchestrator',
+    CODED_APP_REGISTERED_SUCCESS: '✅ Coded app registered successfully!',
 
     // Deployment
     APP_DEPLOYED_SUCCESS: '✅ App deployed successfully!',
@@ -166,7 +179,7 @@ export const MESSAGES = {
 
   INFO: {
     // Spinners/Progress
-    REGISTERING_APP: 'Registering app with UiPath...',
+    CHECKING_APP_NAME_UNIQUENESS: 'Checking app name availability...',
     DEPLOYING_APP: 'Deploying app...',
     UPGRADING_APP: 'Upgrading app to latest version...',
     CHECKING_DEPLOYMENT_STATUS: 'Checking deployment status...',
@@ -174,6 +187,9 @@ export const MESSAGES = {
     CREATING_METADATA_FILES: 'Creating metadata files...',
     CREATING_NUPKG_PACKAGE: 'Creating .nupkg package...',
     PUBLISHING_PACKAGE: 'Publishing package to UiPath Orchestrator...',
+    UPLOADING_PACKAGE: 'Uploading package to Orchestrator...',
+    REGISTERING_CODED_APP: 'Registering coded app...',
+    PACKAGE_ALREADY_EXISTS: 'ℹ Package already exists in Orchestrator, proceeding to registration...',
     FINDING_PORT: 'Finding available port...',
     STARTING_AUTH_PROCESS: 'Starting authentication process...',
     STARTING_AUTH_SERVER: 'Starting local authentication server...',
@@ -185,19 +201,15 @@ export const MESSAGES = {
     
     // Tips
     RUN_PACK_FIRST: '💡 Run "uipath pack" first to create a package',
-    USE_REGISTERED_VALUES: '💡 Use the registered values by running: uipath pack ./dist',
     RUN_WITHOUT_DRY_RUN: '💡 Run without --dry-run to create the package',
     USE_PUBLISH_TO_UPLOAD: '💡 Use "uipath publish" to upload to UiPath Orchestrator',
-    APP_URL_SAVED_TO_ENV: '💡 The app URL has been saved to your .env file as UIPATH_APP_URL and UIPATH_APP_REDIRECT_URI',
-    NO_APP_URL_FOR_ACTION_APP: '💡 Action apps do not have an App URL. Action apps will render only inside Action Center',
-    APP_CONFIG_SAVED: '💡 App configuration has been saved and will be used by pack command',
-    URL_FOR_OAUTH_CONFIG: '💡 You can use this URL as the redirect URI for OAuth configuration in your SDK',
     CREDENTIALS_SAVED: 'Credentials have been saved to .env file',
     CREDENTIALS_REMOVED: 'Credentials have been removed',
-    CREATE_ACTION_SCHEMA_FIRST: '💡 Please create an action-schema.json file in the current directory before registering an Action app',
-    
+
     // Directory/File operations
     CREATED_OUTPUT_DIRECTORY: 'Created output directory:',
+    CONFIG_FILE_NOT_FOUND_WARNING: `⚠️ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} not found in project root.`,
+    SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES: 'ℹ️ Scope not provided. By default, all scopes registered with this clientId will be used.',
     
     // Next steps instructions
     NEXT_STEPS: 'Next steps:',
@@ -225,22 +237,22 @@ export const MESSAGES = {
     
     // Success messages
     PACKAGE_READY: '🎉 Package is ready for publishing!',
-    APP_REGISTERED: '🎉 Your app has been registered with UiPath!',
     PACKAGE_AVAILABLE: '🎉 Package is now available in UiPath Orchestrator',
     APP_DEPLOYED: '🎉 Your app is now live!',
+    ACTION_APP_RUN_IN_ACTION_CENTER: 'This action app should be run inside Action Center.',
   },
   
   PROMPTS: {
     PULL_OVERWRITE_CONFIRM: 'This pull will overwrite one or more local files. Do you want to continue? (Y/n)',
     PULL_CONTINUE_NOT_PROJECT_ROOT: 'Continue anyway? (y/N)',
     ENTER_APP_NAME: 'Enter app name:',
-    ENTER_PACKAGE_NAME: 'Enter package name:',
     ENTER_PACKAGE_DESCRIPTION: 'Enter package description:',
     SELECT_PACKAGE_TO_PUBLISH: 'Select package to publish:',
     REAUTH_QUESTION: 'Do you want to re-authenticate?',
-    CONTINUE_WITH_DIFFERENT_VALUES: 'Do you want to continue with these different values?',
     COMPLETE_AUTH_IN_BROWSER: 'Please complete the authentication in your browser',
     BROWSER_FALLBACK_INSTRUCTION: 'If the browser didn\'t open automatically, visit:',
+    REUSE_CLIENT_ID: 'Do you want UiPath to create a new OAuth client during deployment or reuse existing from uipath.json? (Y = create new, N = reuse existing clientId)',
+    ENTER_SCOPES: 'Enter the required scopes for your app (e.g., OR.Execution OR.Folders), please refer https://uipath.github.io/uipath-typescript/oauth-scopes/ for details',
   },
   
   HELP: {
@@ -251,7 +263,7 @@ export const MESSAGES = {
   
   VALIDATIONS: {
     APP_NAME_REQUIRED: 'App name is required',
-    APP_NAME_INVALID_CHARS: 'App name can only contain letters, numbers, underscores (_), and hyphens (-). Please remove invalid special characters and try again.',
+    APP_NAME_INVALID_CHARS: 'App name can only contain lowercase letters, numbers, and hyphens (-). Please remove invalid special characters and try again.',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
     MISSING_REQUIRED_CONFIG: '❌ Missing required configuration:',
     PROVIDE_VIA_ENV_OR_FLAGS: '💡 Provide these via environment variables or CLI flags:',
@@ -261,11 +273,11 @@ export const MESSAGES = {
 
   // Error context strings for handleHttpError
   ERROR_CONTEXT: {
-    APP_REGISTRATION: 'app registration',
     PACKAGE_PUBLISHING: 'package publishing',
     CLIENT_CREDENTIALS_AUTH: 'client credentials authentication',
     APP_DEPLOYMENT: 'app deployment',
     APP_UPGRADE: 'app upgrade',
+    CODED_APP_REGISTRATION: 'coded app registration',
     PUSH_ACQUIRE_LOCK: 'acquire lock',
     PUSH_RELEASE_LOCK: 'release lock',
     PUSH_PULL_OPERATION: 'push/pull operation',

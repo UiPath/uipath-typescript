@@ -28,7 +28,7 @@ const ENV_VAR_TO_FLAG = Object.fromEntries(
 
 /**
  * Validates app/package name to ensure it only contains allowed characters.
- * Allowed: letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-)
+ * Allowed: lowercase letters (a-z), numbers (0-9), and hyphens (-)
  */
 export function isValidAppName(name: string): boolean {
   return VALID_NAME_REGEX.test(name);
@@ -117,6 +117,7 @@ function buildConfig(
   return {
     baseUrl: normalizeBaseUrl(mergedValues[ENV_CONFIG.BASE_URL.envVar]),
     orgId: mergedValues[ENV_CONFIG.ORG_ID.envVar]!,
+    orgName: mergedValues[ENV_CONFIG.ORG_NAME.envVar]!,
     tenantId: mergedValues[ENV_CONFIG.TENANT_ID.envVar]!,
     tenantName: mergedValues[ENV_CONFIG.TENANT_NAME.envVar],
     folderKey: mergedValues[ENV_CONFIG.FOLDER_KEY.envVar],

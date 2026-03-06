@@ -65,8 +65,13 @@ export class ApiClient {
       this.config.baseUrl
     ).toString();
 
+    const isFormData = options.body instanceof FormData;
+    const defaultHeaders = await this.getDefaultHeaders();
+    if (isFormData) {
+      delete defaultHeaders['Content-Type'];
+    }
     const headers = {
-      ...await this.getDefaultHeaders(),
+      ...defaultHeaders,
       ...options.headers
     };
 
@@ -79,11 +84,17 @@ export class ApiClient {
     }
     const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
 
+    let body = undefined;
+    
+    if(options.body) {
+      body = isFormData ? (options.body as FormData) : JSON.stringify(options.body)
+    }
+
     try {
       const response = await fetch(fullUrl, {
         method,
         headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
+        body,
         signal: options.signal
       });
 
