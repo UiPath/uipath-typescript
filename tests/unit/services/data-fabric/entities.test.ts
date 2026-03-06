@@ -26,6 +26,7 @@ import type {
   EntityRecord,
   EntityDownloadAttachmentOptions,
   EntityUploadAttachmentOptions,
+  EntityRemoveAttachmentOptions,
   EntityGetAllRecordsOptions
 } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
@@ -945,6 +946,44 @@ describe('EntityService Unit Tests', () => {
       };
 
       await expect(entityService.uploadAttachment(options)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE
+      );
+    });
+  });
+
+  describe('removeAttachment', () => {
+    it('should remove attachment successfully', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      const options: EntityRemoveAttachmentOptions = {
+        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      };
+
+      await entityService.removeAttachment(options);
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.REMOVE_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      const options: EntityRemoveAttachmentOptions = {
+        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      };
+
+      await expect(entityService.removeAttachment(options)).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE
       );
     });

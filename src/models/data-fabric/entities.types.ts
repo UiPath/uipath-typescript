@@ -150,6 +150,18 @@ export interface EntityUploadAttachmentOptions {
 }
 
 /**
+ * Options for removing an attachment from an entity record
+ */
+export interface EntityRemoveAttachmentOptions {
+  /** Entity name */
+  entityName: string;
+  /** Record ID (UUID) */
+  recordId: string;
+  /** Field name of the File-type field containing the attachment */
+  fieldName: string;
+}
+
+/**
  * Response from uploading an attachment to an entity record
  */
 export type EntityUploadAttachmentResponse = Record<string, unknown>;
