@@ -21,7 +21,8 @@ import {
   EntityFieldDataType,
   EntityDownloadAttachmentOptions,
   EntityUploadAttachmentOptions,
-  EntityUploadAttachmentResponse
+  EntityUploadAttachmentResponse,
+  EntityRemoveAttachmentOptions
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -480,6 +481,35 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // Convert PascalCase response to camelCase
     const camelResponse = pascalToCamelCaseKeys(response.data);
     return camelResponse;
+  }
+
+  /**
+   * Removes an attachment from a File-type field of an entity record
+   *
+   * @param options - Options containing entityName, recordId, and fieldName
+   * @returns Promise resolving when the attachment is removed
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Remove attachment for a specific record and field
+   * await entities.removeAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: '<record-uuid>',
+   *   fieldName: 'Documents'
+   * });
+   * ```
+   */
+  @track('Entities.RemoveAttachment')
+  async removeAttachment(options: EntityRemoveAttachmentOptions): Promise<void> {
+    const { entityName, recordId, fieldName } = options;
+
+    await this.delete(
+      DATA_FABRIC_ENDPOINTS.ENTITY.REMOVE_ATTACHMENT(entityName, recordId, fieldName)
+    );
   }
 
     /**

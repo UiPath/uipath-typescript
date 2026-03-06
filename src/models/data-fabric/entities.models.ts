@@ -14,6 +14,7 @@ import {
   EntityDownloadAttachmentOptions,
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
+  EntityRemoveAttachmentOptions,
   EntityInsertRecordsOptions,
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
@@ -393,6 +394,31 @@ export interface EntityServiceModel {
    * ```
    */
   uploadAttachment(options: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
+
+  /**
+   * Removes an attachment from a File-type field of an entity record.
+   *
+   * @param options - Options containing entityName, recordId, and fieldName
+   * @returns Promise resolving when the attachment is removed
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Remove attachment for a specific record and field
+   * await entities.removeAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: '<recordId>',
+   *   fieldName: 'Documents'
+   * });
+   *
+   * // Or remove using entity method
+   * const entity = await entities.getById("<entityId>");
+   * await entity.removeAttachment(recordId, 'Documents');
+   * ```
+   */
+  removeAttachment(options: EntityRemoveAttachmentOptions): Promise<void>;
 }
 
 /**
@@ -482,6 +508,15 @@ export interface EntityMethods {
    * @returns Promise resolving to the upload response
    */
   uploadAttachment(recordId: string, fieldName: string, file: Blob | File | Uint8Array, expansionLevel?: number): Promise<EntityUploadAttachmentResponse>;
+
+  /**
+   * Removes an attachment from a File-type field of an entity record
+   *
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
+   * @returns Promise resolving when the attachment is removed
+   */
+  removeAttachment(recordId: string, fieldName: string): Promise<void>;
 
   /**
    * @deprecated Use {@link insertRecord} instead.
@@ -592,6 +627,16 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
         fieldName,
         file,
         expansionLevel
+      });
+    },
+
+    async removeAttachment(recordId: string, fieldName: string): Promise<void> {
+      if (!entityData.name) throw new Error('Entity name is undefined');
+
+      return service.removeAttachment({
+        entityName: entityData.name,
+        recordId,
+        fieldName
       });
     },
 
