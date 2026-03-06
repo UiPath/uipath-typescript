@@ -128,6 +128,33 @@ export interface EntityDownloadAttachmentOptions {
 }
 
 /**
+ * Options for uploading an attachment to an entity record
+ */
+export interface EntityUploadAttachmentOptions {
+  /** Entity name */
+  entityName: string;
+  /** Record ID (UUID) */
+  recordId: string;
+  /** Field name of the File-type field */
+  fieldName: string;
+  /**
+   * File to upload. Accepts the native types supported by FormData:
+   * - `Blob` / `File`: standard browser and Node.js ≥ 18 types accepted directly by FormData.
+   *   `File` is a subclass of `Blob` and is typically obtained from a browser file input.
+   * - `Uint8Array`: raw binary buffer (e.g. from `fs.readFileSync` or a Node.js Buffer).
+   *   Converted to a `Blob` internally before appending to FormData.
+   */
+  file: Blob | File | Uint8Array;
+  /** Optional expansion level (default: 0) */
+  expansionLevel?: number;
+}
+
+/**
+ * Response from uploading an attachment to an entity record
+ */
+export type EntityUploadAttachmentResponse = Record<string, unknown>;
+
+/**
  * Represents a failure record in an entity operation
  */
 export interface FailureRecord {
