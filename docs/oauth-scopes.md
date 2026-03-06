@@ -125,6 +125,13 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 | `getContentPartById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 
+## Machines
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Machines` or `OR.Machines.Read` |
+| `getById()` | `OR.Machines` or `OR.Machines.Read` |
+
 ## Processes
 
 | Method | OAuth Scope |

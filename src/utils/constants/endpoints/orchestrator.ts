@@ -53,6 +53,14 @@ export const QUEUE_ENDPOINTS = {
 } as const;
 
 /**
+ * Orchestrator Machine Service Endpoints
+ */
+export const MACHINE_ENDPOINTS = {
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Machines`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Machines(${id})`,
+} as const;
+
+/**
  * Orchestrator Asset Service Endpoints
  */
 export const ASSET_ENDPOINTS = {
