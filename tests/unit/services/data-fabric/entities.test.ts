@@ -949,5 +949,39 @@ describe('EntityService Unit Tests', () => {
       );
     });
   });
+
+  describe('deleteAttachment', () => {
+    it('should delete attachment successfully', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await entityService.deleteAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      await expect(entityService.deleteAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      )).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE
+      );
+    });
+  });
 });
 
