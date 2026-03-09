@@ -10,7 +10,8 @@ import {
   TEST_CONSTANTS,
   createMockProcessInstance,
   createMockBpmnWithVariables,
-  createMockExecutionHistory,
+  createMockElementExecutionsResponse,
+  createMockTraceSpan,
   createMockProcessVariables,
   createMockMaestroApiOperationResponse
 } from '../../../utils/mocks';
@@ -208,32 +209,54 @@ describe('ProcessInstancesService', () => {
 
   describe('getExecutionHistory', () => {
     it('should return execution history for process instance', async () => {
-      
       const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
-      const mockApiResponse: ProcessInstanceExecutionHistoryResponse[] = [createMockExecutionHistory()];
 
-      mockApiClient.get.mockResolvedValue(mockApiResponse);
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockElementExecutionsResponse())
+        .mockResolvedValueOnce([createMockTraceSpan()]);
 
-      
       const result = await service.getExecutionHistory(instanceId);
 
-      
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId),
+        MAESTRO_ENDPOINTS.INSTANCES.GET_ELEMENT_EXECUTIONS(instanceId),
+        {}
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.TRACES.GET_SPANS(instanceId),
         {}
       );
 
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('id', MAESTRO_TEST_CONSTANTS.SPAN_ID);
       expect(result[0]).toHaveProperty('traceId', MAESTRO_TEST_CONSTANTS.TRACE_ID);
+      expect(result[0]).toHaveProperty('name', MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME);
+    });
+
+    it('should only include spans matched to elementRuns', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
+      const unmatchedSpan = createMockTraceSpan({
+        Id: 'nested-agent-span-1',
+        ParentId: MAESTRO_TEST_CONSTANTS.SPAN_ID,
+        Name: 'LangGraph',
+        Attributes: null
+      });
+
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockElementExecutionsResponse())
+        .mockResolvedValueOnce([createMockTraceSpan(), unmatchedSpan]);
+
+      const result = await service.getExecutionHistory(instanceId);
+
+      // Only the matched elementRun span should be included
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('id', MAESTRO_TEST_CONSTANTS.SPAN_ID);
     });
 
     it('should handle API errors', async () => {
-      
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      
       await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
