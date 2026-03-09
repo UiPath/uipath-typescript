@@ -5,6 +5,21 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, mcp__playwright__brows
 
 # Creating UiPath Coded Apps
 
+## 0. Action App or Regular App?
+
+**Before anything else**, ask the user:
+
+> "Are you building a **UiPath Action App** (a form embedded inside UiPath Action Center for human-in-the-loop tasks) or a **regular web app** (a standalone dashboard or UI that users log into)?
+>
+> - Reply **action** for an Action App
+> - Reply **web** for a regular web app"
+
+**If the user replies "action" (or anything indicating an Action App):** Use the `Skill` tool to invoke `uipath-coded-apps:create-action-app` immediately. Do NOT continue with the steps below.
+
+**If the user replies "web" (or anything indicating a regular web app):** Continue with the steps below.
+
+---
+
 ## 1. Project Initialization
 
 ### Step 1: Determine required scopes first

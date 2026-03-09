@@ -7,8 +7,10 @@ AI-powered skills for creating, debugging, and deploying UiPath coded apps. Work
 | Skill | Description |
 |-------|-------------|
 | **create-app** | Scaffold a full UiPath web app (Vite + React + TypeScript, OAuth, SDK services, Tailwind) |
+| **create-action-app** | Scaffold a UiPath coded action app wired to Action Center (React + TypeScript, optional SDK services, action-schema.json) |
 | **debug-app** | Diagnose auth & config issues (redirect URIs, scopes, CORS, tokens, External App setup) |
 | **deploy-app** | Deploy your coded app to UiPath Cloud via the `@uipath/uipath-ts-cli` |
+| **update-action-app-new-package** | Migrate a coded action app from the old monolithic SDK to the new split SDK (`@uipath/uipath-typescript` + `@uipath/uipath-ts-coded-action-apps`) |
 
 ## Installation
 
@@ -34,7 +36,7 @@ claude plugin marketplace add ./
 claude plugin install uipath-coded-apps@uipath-marketplace
 ```
 
-Skills are available as namespaced slash commands: `/uipath-coded-apps:create-app`, `/uipath-coded-apps:debug-app`, `/uipath-coded-apps:deploy-app`.
+Skills are available as namespaced slash commands: `/uipath-coded-apps:create-app`, `/uipath-coded-apps:create-action-app`, `/uipath-coded-apps:debug-app`, `/uipath-coded-apps:deploy-app`, `/uipath-coded-apps:update-action-app-new-package`.
 
 **Option B — Copy skills directly:**
 
@@ -43,7 +45,7 @@ mkdir -p /path/to/your-project/.claude/skills
 cp -r skills/* /path/to/your-project/.claude/skills/
 ```
 
-Skills are auto-discovered and available as `/create-app`, `/debug-app`, `/deploy-app`. You can also install them globally at `~/.claude/skills/`.
+Skills are auto-discovered and available as `/create-app`, `/create-action-app`, `/debug-app`, `/deploy-app`, `/update-action-app-new-package`. You can also install them globally at `~/.claude/skills/`.
 
 [Claude Code Skills Docs](https://code.claude.com/docs/en/skills) · [Claude Code Plugins Docs](https://code.claude.com/docs/en/plugins)
 
@@ -126,6 +128,18 @@ Scaffolds a full UiPath web application from scratch:
 
 **When to use:** You want to create a new UiPath web app, build a React dashboard with UiPath data, or add UiPath SDK services to an existing React project.
 
+### `/uipath-coded-apps:create-action-app` — Create a Coded Action App
+
+Scaffolds a production-ready UiPath coded action app wired to the UiPath Action Center:
+
+- Project setup with React + TypeScript
+- Action Center integration via `@uipath/uipath-ts-coded-action-apps`
+- Optional UiPath SDK service integration (Data Fabric Entities, Storage Buckets, etc.)
+- `action-schema.json` authoring for defining action input/output fields
+- Step-by-step guided setup (app name, routing name, SDK services)
+
+**When to use:** You want to create a new UiPath Action Center task form app that human reviewers interact with as part of an automation workflow.
+
 ### `/uipath-coded-apps:debug-app` — Debug Authentication & Configuration Issues
 
 Diagnoses and fixes authentication and configuration issues in coded apps:
@@ -146,6 +160,16 @@ Uses Playwright for automated browser-based debugging.
 Guides you through deploying your coded app to the UiPath platform using the `@uipath/uipath-ts-cli`.
 
 **When to use:** Your app is ready and you want to publish it to UiPath Cloud.
+
+### `/uipath-coded-apps:update-action-app-new-package` — Migrate to the New Split SDK
+
+Migrates an existing coded action app from the old monolithic SDK build to the new published split SDK:
+
+- Replaces local/dev `@uipath/uipath-typescript` build with the published npm package
+- Adds `@uipath/uipath-ts-coded-action-apps` for Action Center integration
+- Updates imports, `package.json`, and `vite.config.ts` base path
+
+**When to use:** You have an existing action app built against the old SDK and want to update it to use the current published packages.
 
 ## Updating
 
@@ -173,19 +197,19 @@ claude plugin marketplace remove uipath-marketplace
 
 ```bash
 # Cursor
-rm -rf /path/to/your-project/.cursor/skills/{create-app,debug-app,deploy-app}
+rm -rf /path/to/your-project/.cursor/skills/{create-app,create-action-app,debug-app,deploy-app,update-action-app-new-package}
 
 # Windsurf
-rm -rf /path/to/your-project/.windsurf/skills/{create-app,debug-app,deploy-app}
+rm -rf /path/to/your-project/.windsurf/skills/{create-app,create-action-app,debug-app,deploy-app,update-action-app-new-package}
 
 # Codex
-rm -rf /path/to/your-project/.agents/skills/{create-app,debug-app,deploy-app}
+rm -rf /path/to/your-project/.agents/skills/{create-app,create-action-app,debug-app,deploy-app,update-action-app-new-package}
 
 # Antigravity
-rm -rf /path/to/your-project/.agent/skills/{create-app,debug-app,deploy-app}
+rm -rf /path/to/your-project/.agent/skills/{create-app,create-action-app,debug-app,deploy-app,update-action-app-new-package}
 
 # Claude Code (if using Option B)
-rm -rf /path/to/your-project/.claude/skills/{create-app,debug-app,deploy-app}
+rm -rf /path/to/your-project/.claude/skills/{create-app,create-action-app,debug-app,deploy-app,update-action-app-new-package}
 ```
 
 ## Directory Structure
@@ -204,11 +228,16 @@ agent-skills/
 │               │   ├── SKILL.md
 │               │   ├── references/
 │               │   └── scripts/
+│               ├── create-action-app/
+│               │   ├── SKILL.md
+│               │   └── scripts/
 │               ├── debug-app/
 │               │   ├── SKILL.md
 │               │   └── references/
-│               └── deploy-app/
-│                   ├── SKILL.md
-│                   └── scripts/
+│               ├── deploy-app/
+│               │   ├── SKILL.md
+│               │   └── scripts/
+│               └── update-action-app-new-package/
+│                   └── SKILL.md
 └── README.md
 ```
