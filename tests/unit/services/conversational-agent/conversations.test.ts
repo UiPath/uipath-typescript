@@ -540,6 +540,66 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
     });
   });
 
+  describe('getAttachmentUploadUri', () => {
+    it('should return uri, name and fileUploadAccess on success', async () => {
+      const mockResponse = createMockAttachmentCreateResponse();
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await conversationalAgent.conversations.getAttachmentUploadUri(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+        'document.pdf'
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        ATTACHMENT_ENDPOINTS.CREATE(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
+        { name: 'document.pdf' },
+        expect.any(Object)
+      );
+
+      expect(result).toEqual({
+        uri: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ATTACHMENT_URI,
+        name: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ATTACHMENT_NAME,
+        fileUploadAccess: {
+          url: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ATTACHMENT_UPLOAD_URL,
+          verb: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ATTACHMENT_UPLOAD_VERB,
+          requiresAuth: true,
+          headers: {
+            keys: ['x-ms-blob-type'],
+            values: ['BlockBlob']
+          }
+        }
+      });
+    });
+
+    it('should pass the correct fileName in the request body', async () => {
+      const mockResponse = createMockAttachmentCreateResponse({ name: 'report.xlsx' });
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      await conversationalAgent.conversations.getAttachmentUploadUri(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+        'report.xlsx'
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        { name: 'report.xlsx' },
+        expect.any(Object)
+      );
+    });
+
+    it('should propagate API errors', async () => {
+      const mockError = createMockError('Internal Server Error');
+      mockApiClient.post.mockRejectedValue(mockError);
+
+      await expect(
+        conversationalAgent.conversations.getAttachmentUploadUri(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+          'document.pdf'
+        )
+      ).rejects.toThrow();
+    });
+  });
+
   describe('connection properties', () => {
     it('should expose connectionStatus', () => {
       expect(conversationalAgent.conversations.connectionStatus).toBeDefined();

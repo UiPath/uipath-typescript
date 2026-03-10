@@ -1,6 +1,7 @@
 import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
+import { TokenInfo } from './auth/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
@@ -248,6 +249,16 @@ export class UiPath implements IUiPath {
     }
     this.#authService?.logout();
     this.#initialized = false;
+  }
+
+  /**
+   * Updates the access token used for API requests.
+   * Use this to inject or refresh a token externally.
+   *
+   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh token
+   */
+  public updateToken(tokenInfo: TokenInfo): void {
+    this.#authService?.updateToken(tokenInfo);
   }
 
 }

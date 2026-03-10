@@ -270,11 +270,12 @@ export class ConversationService extends BaseService implements ConversationServ
     file: File
   ): Promise<ConversationAttachmentUploadResponse> {
     // Step 1: Create attachment entry and get upload URL
-    const { fileUploadAccess, uri, name } = await this.createAttachment(id, file.name);
+    const { fileUploadAccess, uri, name } = await this.getAttachmentUploadUri(id, file.name);
 
     // Step 2: Upload file to blob storage
     const uploadHeaders: Record<string, string> = {
       'Content-Type': file.type,
+      'x-ms-blob-type': 'BlockBlob',
       ...arrayDictionaryToRecord(fileUploadAccess.headers)
     };
 
@@ -302,6 +303,48 @@ export class ConversationService extends BaseService implements ConversationServ
       name,
       mimeType: file.type
     };
+  }
+
+  /**
+   * Registers a file attachment for a conversation and returns a URI along with
+   * pre-signed upload access details. Use the returned `fileUploadAccess` to upload
+   * the file content to blob storage, then reference `uri` in subsequent messages.
+   *
+   * @param conversationId - The ID of the conversation to attach the file to
+   * @param fileName - The name of the file to attach
+   * @returns Promise resolving to {@link ConversationAttachmentCreateResponse} containing
+   * the attachment `uri` and `fileUploadAccess` details needed to upload the file content
+   *
+   * @example <caption>Step 1 — Get the attachment URI and upload access</caption>
+   * ```typescript
+   * const { uri, fileUploadAccess } = await conversationalAgent.conversations.getAttachmentUploadUri(conversationId, 'report.pdf');
+   * console.log(`Attachment URI: ${uri}`);
+   * ```
+   *
+   * @example <caption>Step 2 — Upload the file content to the returned URL</caption>
+   * ```typescript
+   * const { uri, fileUploadAccess } = await conversationalAgent.conversations.getAttachmentUploadUri(conversationId, file.name);
+   *
+   * await fetch(fileUploadAccess.url, {
+   *   method: fileUploadAccess.verb,
+   *   body: file,
+   *   headers: { 'Content-Type': file.type },
+   * });
+   *
+   * // Reference the URI in a message after upload
+   * console.log(`File ready at: ${uri}`);
+   * ```
+   */
+  @track('ConversationalAgent.Conversations.CreateAttachment')
+  public async getAttachmentUploadUri(
+    conversationId: string,
+    fileName: string
+  ): Promise<ConversationAttachmentCreateResponse> {
+    const response = await this.post<ConversationAttachmentCreateResponse>(
+      ATTACHMENT_ENDPOINTS.CREATE(conversationId),
+      { name: fileName }
+    );
+    return response.data;
   }
 
   // ==================== Real-time Event Handling ====================
@@ -440,15 +483,4 @@ export class ConversationService extends BaseService implements ConversationServ
     return this._eventHelper;
   }
 
-  @track('ConversationalAgent.Conversations.CreateAttachment')
-  private async createAttachment(
-    conversationId: string,
-    fileName: string
-  ): Promise<ConversationAttachmentCreateResponse> {
-    const response = await this.post<ConversationAttachmentCreateResponse>(
-      ATTACHMENT_ENDPOINTS.CREATE(conversationId),
-      { name: fileName }
-    );
-    return response.data;
-  }
 }
