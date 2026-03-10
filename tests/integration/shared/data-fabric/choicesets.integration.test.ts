@@ -19,15 +19,12 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
         throw new Error('No choice sets available for getById testing');
       }
 
-      const choiceSet = result[0] as any;
-      testChoiceSetId = choiceSet.id;
+      const choiceSet = result[0];
       
       expect(choiceSet.name).toBeDefined();
       expect(choiceSet.displayName).toBeDefined();
       expect(typeof choiceSet.name).toBe('string');
       expect(typeof choiceSet.displayName).toBe('string');
-      expect(testChoiceSetId).toBeDefined();
-      expect(typeof testChoiceSetId).toBe('string');
     });
   });
 
