@@ -115,36 +115,16 @@ export interface EntityDeleteOptions {
  */
 export type EntityDeleteRecordsOptions = EntityDeleteOptions;
 
-/**
- * Options for downloading an attachment from an entity record
- */
-export interface EntityDownloadAttachmentOptions {
-  /** Entity name */
-  entityName: string;
-  /** Record ID */
-  recordId: string;
-  /** Field name containing the attachment */
-  fieldName: string;
-}
 
 /**
- * Options for uploading an attachment to an entity record
+ * Supported file types for attachment upload
+ */
+export type EntityFileType = Blob | File | Uint8Array;
+
+/**
+ * Optional options for uploading an attachment to an entity record
  */
 export interface EntityUploadAttachmentOptions {
-  /** Entity name */
-  entityName: string;
-  /** Record ID (UUID) */
-  recordId: string;
-  /** Field name of the File-type field */
-  fieldName: string;
-  /**
-   * File to upload. Accepts the native types supported by FormData:
-   * - `Blob` / `File`: standard browser and Node.js ≥ 18 types accepted directly by FormData.
-   *   `File` is a subclass of `Blob` and is typically obtained from a browser file input.
-   * - `Uint8Array`: raw binary buffer (e.g. from `fs.readFileSync` or a Node.js Buffer).
-   *   Converted to a `Blob` internally before appending to FormData.
-   */
-  file: Blob | File | Uint8Array;
   /** Optional expansion level (default: 0) */
   expansionLevel?: number;
 }

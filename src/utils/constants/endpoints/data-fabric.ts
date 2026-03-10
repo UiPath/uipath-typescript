@@ -18,10 +18,10 @@ export const DATA_FABRIC_ENDPOINTS = {
     BATCH_INSERT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/insert-batch`,
     UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update-batch`,
     DELETE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/delete-batch`,
-    DOWNLOAD_ATTACHMENT: (entityName: string, recordId: string, fieldName: string) =>
-      `${DATAFABRIC_BASE}/api/Attachment/${entityName}/${recordId}/${fieldName}`,
-    UPLOAD_ATTACHMENT: (entityName: string, recordId: string, fieldName: string) =>
-      `${DATAFABRIC_BASE}/api/Attachment/${entityName}/${recordId}/${fieldName}`,
+    DOWNLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
+      `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
+    UPLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
+      `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
     DELETE_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
   },

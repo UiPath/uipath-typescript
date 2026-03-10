@@ -36,18 +36,15 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       it('should upload an attachment via service method', async () => {
         const { entities } = getServices();
 
-        const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
-        const entityName = entity.name;
-
         const fileContent = 'Hello from UiPath TypeScript SDK integration test!';
         const file = new Blob([fileContent], { type: 'text/plain' });
 
-        const result = await entities.uploadAttachment({
-          entityName,
-          recordId: ATTACHMENT_CONFIG.recordId,
-          fieldName: ATTACHMENT_CONFIG.fieldName,
+        const result = await entities.uploadAttachment(
+          ATTACHMENT_CONFIG.entityId,
+          ATTACHMENT_CONFIG.recordId,
+          ATTACHMENT_CONFIG.fieldName,
           file,
-        });
+        );
 
         expect(result).toBeDefined();
       });
@@ -74,19 +71,16 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       it('should upload and then delete an attachment via service method', async () => {
         const { entities } = getServices();
 
-        const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
-        const entityName = entity.name;
-
         // First upload an attachment so there's something to delete
         const fileContent = 'Temporary file for delete attachment test';
         const file = new Blob([fileContent], { type: 'text/plain' });
 
-        await entities.uploadAttachment({
-          entityName,
-          recordId: ATTACHMENT_CONFIG.recordId,
-          fieldName: ATTACHMENT_CONFIG.fieldName,
+        await entities.uploadAttachment(
+          ATTACHMENT_CONFIG.entityId,
+          ATTACHMENT_CONFIG.recordId,
+          ATTACHMENT_CONFIG.fieldName,
           file,
-        });
+        );
 
         // Now delete the attachment
         await expect(
@@ -98,13 +92,13 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         ).resolves.toBeUndefined();
       });
 
-      it('should upload and then remove an attachment via entity method', async () => {
+      it('should upload and then delete an attachment via entity method', async () => {
         const { entities } = getServices();
 
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
 
-        // First upload an attachment so there's something to remove
-        const fileContent = 'Temporary file for entity method remove test';
+        // First upload an attachment so there's something to delete
+        const fileContent = 'Temporary file for entity method delete test';
         const file = new Blob([fileContent], { type: 'text/plain' });
 
         await entity.uploadAttachment(
@@ -113,7 +107,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
           file,
         );
 
-        // Now remove the attachment
+        // Now delete the attachment
         await expect(
           entity.deleteAttachment(
             ATTACHMENT_CONFIG.recordId,

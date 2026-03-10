@@ -475,7 +475,7 @@ describe('Entity Models', () => {
     });
 
     describe('entity.downloadAttachment()', () => {
-      it('should call downloadAttachment with entity name, recordId, and fieldName', async () => {
+      it('should call downloadAttachment with entity id, recordId, and fieldName', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -487,11 +487,11 @@ describe('Entity Models', () => {
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
         );
 
-        expect(mockService.downloadAttachment).toHaveBeenCalledWith({
-          entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-          recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
-          fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
-        });
+        expect(mockService.downloadAttachment).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        );
         expect(result).toBe(mockBlob);
       });
 
@@ -511,13 +511,13 @@ describe('Entity Models', () => {
         expect(result.type).toBe('image/png');
       });
 
-      it('should throw error if entity name is undefined', async () => {
-        const entityData = createBasicEntity({ name: undefined as any });
+      it('should throw error if entity id is undefined', async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
         await expect(
           entity.downloadAttachment(ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME)
-        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_NAME_UNDEFINED);
+        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
     });
   });
