@@ -8,7 +8,7 @@ import {
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { generateTestResourceName } from '../../utils/helpers';
-import { TaskType } from '../../../../src/models/action-center/tasks.types';
+import { TaskPriority, TaskType } from '../../../../src/models/action-center/tasks.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -71,7 +71,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
       const taskData = {
         title: testTaskTitle,
-        priority: 'Medium' as const,
+        priority: TaskPriority.Medium,
         type: TaskType.External,
         data: {
           description: 'Integration test task - will be automatically cleaned up',
@@ -111,7 +111,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       try {
-        const result = await tasks.getById(createdTaskId, folderId!);
+        const result = await tasks.getById(createdTaskId, {} ,folderId!);
 
         expect(result).toBeDefined();
         expect(result.id).toBe(createdTaskId);
@@ -173,7 +173,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
 
-        const task = await tasks.getById(createdTaskId, folderId!);
+        const task = await tasks.getById(createdTaskId, {} ,folderId!);
         expect(task.assignedToUser).toBeDefined();
       } catch (error: any) {
         throw new Error(`Task assignment failed: ${error.message}`);
@@ -191,7 +191,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       try {
-        let task = await tasks.getById(createdTaskId, folderId!);
+        let task = await tasks.getById(createdTaskId, {} ,folderId!);
 
         if (task.assignedToUser === null || task.assignedToUser === undefined) {
           const users = await tasks.getUsers(folderId!);
@@ -213,7 +213,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
 
-        task = await tasks.getById(createdTaskId, folderId!);
+        task = await tasks.getById(createdTaskId, {}, folderId!);
         expect(task.assignedToUser === null || task.assignedToUser === undefined).toBe(true);
       } catch (error: any) {
         throw new Error(`Task unassignment failed: ${error.message}`);
@@ -254,7 +254,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
 
-        const task = await tasks.getById(createdTaskId, folderId!);
+        const task = await tasks.getById(createdTaskId, {} ,folderId!);
         expect(task.status).toMatch(/Completed/i);
 
         createdTaskId = null;

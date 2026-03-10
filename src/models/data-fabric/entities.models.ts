@@ -256,7 +256,7 @@ export interface EntityServiceModel {
    * Updates data in an entity by entity ID
    *
    * @param id - UUID of the entity
-   * @param data - Array of records to update. Each record MUST contain the record Id.
+   * @param data - Array of records to update. Each record MUST contain the record id.
    * @param options - Update options
    * @returns Promise resolving to update response
    * {@link EntityUpdateResponse}
@@ -264,14 +264,14 @@ export interface EntityServiceModel {
    * ```typescript
    * // Basic usage
    * const result = await entities.updateRecordsById(<entityId>, [
-   *   { Id: "123", name: "John Updated", age: 31 },
-   *   { Id: "456", name: "Jane Updated", age: 26 }
+   *   { id: "123", name: "John Updated", age: 31 },
+   *   { id: "456", name: "Jane Updated", age: 26 }
    * ]);
    *
    * // With options
    * const result = await entities.updateRecordsById(<entityId>, [
-   *   { Id: "123", name: "John Updated", age: 31 },
-   *   { Id: "456", name: "Jane Updated", age: 26 }
+   *   { id: "123", name: "John Updated", age: 31 },
+   *   { id: "456", name: "Jane Updated", age: 26 }
    * ], {
    *   expansionLevel: 1,
    *   failOnFirst: true

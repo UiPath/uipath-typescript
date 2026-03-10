@@ -113,7 +113,7 @@ export function generateRandomFloat(min: number, max: number, precision: number 
   const range = max - min;
   // Use 4 random bytes to get a uniform value in [0, 1)
   const randomValue = randomBytes(4).readUInt32BE(0) / 0x100000000;
-  return parseFloat((randomValue * range + min).toFixed(precision));
+  return Number.parseFloat((randomValue * range + min).toFixed(precision));
 }
 
 /**

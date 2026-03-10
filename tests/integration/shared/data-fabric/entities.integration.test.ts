@@ -165,8 +165,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const result = await entities.getAll();
 
       if (result.length === 0) {
-        console.log('No entities available to validate structure');
-        return;
+        throw new Error('No entities available to validate structure');
       }
 
       const entity = result[0];
@@ -182,8 +181,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const result = await entities.getAll();
 
       if (result.length === 0) {
-        console.log('No entities available to validate methods');
-        return;
+        throw new Error('No entities available to validate methods');
       }
 
       const entity = result[0];
@@ -205,8 +203,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const result = await entities.getById(entityId);
@@ -226,8 +223,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const result = await entities.getById(entityId);
@@ -253,8 +249,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const result = await entities.getById(entityId);
@@ -277,8 +272,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const result = await entities.getAllRecords(entityId);
@@ -295,8 +289,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const result = await entities.getAllRecords(entityId, {
@@ -315,8 +308,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const firstPage = await entities.getAllRecords(entityId, {
@@ -347,15 +339,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const records = await entities.getAllRecords(entityId, { pageSize: 1 });
 
       if (records.items.length === 0) {
-        console.log('No records available to test getRecordById');
-        return;
+        throw new Error('No records available to test getRecordById');
       }
 
       const recordId = records.items[0].Id;
@@ -376,8 +366,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
-        return;
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
       }
 
       // Fetch schema dynamically if not already loaded
@@ -407,8 +396,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId || serviceLevelRecordIds.length === 0) {
-        console.log('No inserted record available to verify');
-        return;
+        throw new Error('No inserted record available to verify');
       }
 
       const recordId = serviceLevelRecordIds[0];
@@ -425,8 +413,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       if (!entityMetadata || entityMetadata.id !== entityId) {
@@ -459,8 +446,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId || serviceLevelRecordIds.length === 0) {
-        console.log('No records available to update');
-        return;
+        throw new Error('No records available to update');
       }
 
       if (!entityMetadata || entityMetadata.id !== entityId) {
@@ -470,7 +456,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       // Build update payloads: each must include `Id` plus at least one updated field
       const writableFields = getWritableFields(entityMetadata.fields);
       const updateData: EntityRecord[] = serviceLevelRecordIds.map((id) => {
-        const updates: EntityRecord = { id, Id: id };
+        const updates = { id: id } as EntityRecord;
         // Update the first writable field with a new value
         if (writableFields.length > 0) {
           const field = writableFields[0];
@@ -493,8 +479,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId || serviceLevelRecordIds.length === 0) {
-        console.log('No records available to delete');
-        return;
+        throw new Error('No records available to delete');
       }
 
       const result = await entities.deleteRecordsById(entityId, serviceLevelRecordIds);
@@ -523,8 +508,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const entity = await entities.getById(entityId);
@@ -551,8 +535,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const entity = await entities.getById(entityId);
@@ -583,8 +566,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const entity = await entities.getById(entityId);
@@ -603,8 +585,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId || entityMethodRecordIds.length === 0) {
-        console.log('No records available to test getRecord');
-        return;
+        throw new Error('No records available to test getRecord');
       }
 
       const entity = await entities.getById(entityId);
@@ -622,8 +603,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId || entityMethodRecordIds.length === 0) {
-        console.log('No records available to update');
-        return;
+        throw new Error('No records available to update');
       }
 
       const entity = await entities.getById(entityId);
@@ -631,7 +611,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const writableFields = getWritableFields(entity.fields);
       const updateData: EntityRecord[] = entityMethodRecordIds.map((id) => {
-        const updates: EntityRecord = { id, Id: id };
+        const updates = { id: id } as EntityRecord;
         if (writableFields.length > 0) {
           const field = writableFields[0];
           updates[field.name] = generateFieldValue(field);
@@ -653,8 +633,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId || entityMethodRecordIds.length === 0) {
-        console.log('No records available to delete');
-        return;
+        throw new Error('No records available to delete');
       }
 
       const entity = await entities.getById(entityId);
@@ -681,8 +660,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const records = await entities.getAllRecords(entityId, {
@@ -699,11 +677,10 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       });
 
       if (!recordWithAttachment) {
-        console.log('No records with attachments found to test download');
-        return;
+        throw new Error('No records with attachments found to test download');
       }
 
-      console.log('Attachment download test requires specific entity configuration');
+      throw new Error('Attachment download test requires specific entity configuration');
     });
   });
 
