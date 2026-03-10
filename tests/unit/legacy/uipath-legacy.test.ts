@@ -13,7 +13,8 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService
+  AssetService,
+  MachineService
 } from '../../../src/services';
 import { ApiClient } from '../../../src/core/http/api-client';
 import { createMockApiClient, getPrivateSDK, getConfig } from '../../utils/setup';
@@ -178,6 +179,15 @@ describe('UiPath Legacy Pattern', () => {
       expect(assets).toBeDefined();
       expect(assets).toBeInstanceOf(AssetService);
       expect(assets.getAll).toBeDefined();
+    });
+
+    it('should provide machines property getter', () => {
+      const machines = uiPath.machines;
+
+      expect(machines).toBeDefined();
+      expect(machines).toBeInstanceOf(MachineService);
+      expect(machines.getAll).toBeDefined();
+      expect(machines.getById).toBeDefined();
     });
   });
 

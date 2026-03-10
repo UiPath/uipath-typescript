@@ -124,6 +124,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | ProcessInstances | `getAll()` | ❌ No |
 | CaseInstances | `getAll()` | ❌ No |
 | CaseInstances | `getActionTasks()` | ✅ Yes |
+| Machines | `getAll()` | ✅ Yes |
 | Queues | `getAll()` | ✅ Yes |
 | Tasks | `getAll()` | ✅ Yes |
 | Tasks | `getUsers()` | ✅ Yes |
