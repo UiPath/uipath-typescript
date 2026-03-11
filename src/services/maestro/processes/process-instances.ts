@@ -119,20 +119,27 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
   /**
    * Get execution history (spans) for a process instance
    * @param instanceId The ID of the instance to get history for
+   * @param folderKey The folder key for authorization
    * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
    */
   @track('ProcessInstances.GetExecutionHistory')
-  async getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+  async getExecutionHistory(instanceId: string, folderKey: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
     // Call element-executions API to get structural BPMN data and traceId
     const elementExecResponse = await this.get<ElementExecutionsApiResponse>(
-      MAESTRO_ENDPOINTS.INSTANCES.GET_ELEMENT_EXECUTIONS(instanceId)
+      MAESTRO_ENDPOINTS.INSTANCES.GET_ELEMENT_EXECUTIONS(instanceId),
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey })
+      }
     );
 
     const traceId = elementExecResponse.data.instanceId;
 
     // Call spans API with traceId to get trace/span details
     const spansResponse = await this.get<TraceSpan[]>(
-      MAESTRO_ENDPOINTS.TRACES.GET_SPANS(traceId)
+      MAESTRO_ENDPOINTS.TRACES.GET_SPANS(traceId),
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey })
+      }
     );
 
     // Create span lookup by Id for merging
