@@ -210,21 +210,30 @@ describe('ProcessInstancesService', () => {
   describe('getExecutionHistory', () => {
     it('should return execution history for process instance', async () => {
       const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
 
       mockApiClient.get
         .mockResolvedValueOnce(createMockElementExecutionsResponse())
         .mockResolvedValueOnce([createMockTraceSpan()]);
 
-      const result = await service.getExecutionHistory(instanceId);
+      const result = await service.getExecutionHistory(instanceId, folderKey);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSTANCES.GET_ELEMENT_EXECUTIONS(instanceId),
-        {}
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
       );
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.TRACES.GET_SPANS(instanceId),
-        {}
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
       );
 
       expect(result).toHaveLength(1);
@@ -235,6 +244,7 @@ describe('ProcessInstancesService', () => {
 
     it('should only include spans matched to elementRuns', async () => {
       const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
       const unmatchedSpan = createMockTraceSpan({
         Id: 'nested-agent-span-1',
         ParentId: MAESTRO_TEST_CONSTANTS.SPAN_ID,
@@ -246,7 +256,7 @@ describe('ProcessInstancesService', () => {
         .mockResolvedValueOnce(createMockElementExecutionsResponse())
         .mockResolvedValueOnce([createMockTraceSpan(), unmatchedSpan]);
 
-      const result = await service.getExecutionHistory(instanceId);
+      const result = await service.getExecutionHistory(instanceId, folderKey);
 
       // Only the matched elementRun span should be included
       expect(result).toHaveLength(1);
@@ -257,7 +267,7 @@ describe('ProcessInstancesService', () => {
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

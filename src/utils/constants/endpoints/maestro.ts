@@ -28,7 +28,7 @@ export const MAESTRO_ENDPOINTS = {
     GET_BY_INSTANCE: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}/incidents`,
   },
   TRACES: {
-    GET_SPANS: (traceId: string) => `${LLMOPS_BASE}api/Traces/spans?traceId=${traceId}`,
+    GET_SPANS: (traceId: string) => `${LLMOPS_BASE}/api/Traces/spans?traceId=${traceId}`,
   },
   CASES: {
     GET_CASE_JSON: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/case-json`,
