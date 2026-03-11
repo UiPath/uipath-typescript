@@ -19,7 +19,10 @@ import {
   EntityRecord,
   RawEntityGetResponse,
   EntityFieldDataType,
-  EntityDownloadAttachmentOptions
+  EntityDownloadAttachmentOptions,
+  EntityUploadAttachmentOptions,
+  EntityUploadAttachmentResponse,
+  EntityDeleteAttachmentResponse
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -430,6 +433,86 @@ export class EntityService extends BaseService implements EntityServiceModel {
       {
         responseType: RESPONSE_TYPES.BLOB
       }
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Uploads an attachment to a File-type field of an entity record
+   *
+   * @param options - Options containing entityName, recordId, fieldName, file, and optional expansionLevel
+   * @returns Promise resolving to the upload response
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Upload a file attachment
+   * const response = await entities.uploadAttachment({
+   *   entityName: 'Invoice',
+   *   recordId: '<record-uuid>',
+   *   fieldName: 'Documents',
+   *   file: file
+   * });
+   * ```
+   */
+  @track('Entities.UploadAttachment')
+  async uploadAttachment(options: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
+    const { entityName, recordId, fieldName, file, expansionLevel } = options;
+
+    const formData = new FormData();
+    if (file instanceof Uint8Array) {
+      formData.append('file', new Blob([file.buffer as ArrayBuffer]));
+    } else {
+      formData.append('file', file);
+    }
+
+    const params = createParams({ expansionLevel });
+
+    const response = await this.post<EntityUploadAttachmentResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityName, recordId, fieldName),
+      formData,
+      { params }
+    );
+
+    // Convert PascalCase response to camelCase
+    const camelResponse = pascalToCamelCaseKeys(response.data);
+    return camelResponse;
+  }
+
+  /**
+   * Removes an attachment from a File-type field of an entity record
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
+   * @returns Promise resolving when the attachment is deleted
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Get the entityId from getAll()
+   * const allEntities = await entities.getAll();
+   * const entityId = allEntities[0].id;
+   *
+   * // Get the recordId from getAllRecords()
+   * const records = await entities.getAllRecords(entityId);
+   * const recordId = records[0].id;
+   *
+   * // Delete attachment for a specific record and field
+   * await entities.deleteAttachment(entityId, recordId, 'Documents');
+   * ```
+   */
+  @track('Entities.DeleteAttachment')
+  async deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse> {
+    const response = await this.delete<EntityDeleteAttachmentResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(entityId, recordId, fieldName)
     );
 
     return response.data;

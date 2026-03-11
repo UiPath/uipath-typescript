@@ -44,13 +44,9 @@ export class ApiClient {
   }
 
   private async getDefaultHeaders(): Promise<Record<string, string>> {
-    // Get headers from execution context first
-    const contextHeaders = this.executionContext.getHeaders();
-
     const token = await this.getValidToken();
 
     return {
-      ...contextHeaders,
       'Authorization': `Bearer ${token}`,
       'Content-Type': CONTENT_TYPES.JSON,
       ...this.defaultHeaders,
@@ -69,8 +65,13 @@ export class ApiClient {
       this.config.baseUrl
     ).toString();
 
+    const isFormData = options.body instanceof FormData;
+    const defaultHeaders = await this.getDefaultHeaders();
+    if (isFormData) {
+      delete defaultHeaders['Content-Type'];
+    }
     const headers = {
-      ...await this.getDefaultHeaders(),
+      ...defaultHeaders,
       ...options.headers
     };
 
@@ -83,11 +84,17 @@ export class ApiClient {
     }
     const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
 
+    let body = undefined;
+    
+    if(options.body) {
+      body = isFormData ? (options.body as FormData) : JSON.stringify(options.body)
+    }
+
     try {
       const response = await fetch(fullUrl, {
         method,
         headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
+        body,
         signal: options.signal
       });
 

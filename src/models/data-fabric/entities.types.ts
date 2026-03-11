@@ -1,32 +1,32 @@
-import { PaginationOptions } from '../../utils/pagination/types';
+import { PaginationOptions } from "../../utils/pagination/types";
 
 /**
  * Entity field type names
  */
 export enum EntityFieldDataType {
-  UUID = 'UUID',
-  STRING = 'STRING',
-  INTEGER = 'INTEGER',
-  DATETIME = 'DATETIME',
-  DATETIME_WITH_TZ = 'DATETIME_WITH_TZ',
-  DECIMAL = 'DECIMAL',
-  FLOAT = 'FLOAT',
-  DOUBLE = 'DOUBLE',
-  DATE = 'DATE',
-  BOOLEAN = 'BOOLEAN',
-  BIG_INTEGER = 'BIG_INTEGER',
-  MULTILINE_TEXT = 'MULTILINE_TEXT'
+  UUID = "UUID",
+  STRING = "STRING",
+  INTEGER = "INTEGER",
+  DATETIME = "DATETIME",
+  DATETIME_WITH_TZ = "DATETIME_WITH_TZ",
+  DECIMAL = "DECIMAL",
+  FLOAT = "FLOAT",
+  DOUBLE = "DOUBLE",
+  DATE = "DATE",
+  BOOLEAN = "BOOLEAN",
+  BIG_INTEGER = "BIG_INTEGER",
+  MULTILINE_TEXT = "MULTILINE_TEXT",
 }
 
 /**
- * Represents a single entity record 
+ * Represents a single entity record
  */
 export interface EntityRecord {
   /**
    * Unique identifier for the record
    */
   id: string;
-  
+
   /**
    * Additional dynamic fields for the entity
    */
@@ -128,6 +128,38 @@ export interface EntityDownloadAttachmentOptions {
 }
 
 /**
+ * Options for uploading an attachment to an entity record
+ */
+export interface EntityUploadAttachmentOptions {
+  /** Entity name */
+  entityName: string;
+  /** Record ID (UUID) */
+  recordId: string;
+  /** Field name of the File-type field */
+  fieldName: string;
+  /**
+   * File to upload. Accepts the native types supported by FormData:
+   * - `Blob` / `File`: standard browser and Node.js ≥ 18 types accepted directly by FormData.
+   *   `File` is a subclass of `Blob` and is typically obtained from a browser file input.
+   * - `Uint8Array`: raw binary buffer (e.g. from `fs.readFileSync` or a Node.js Buffer).
+   *   Converted to a `Blob` internally before appending to FormData.
+   */
+  file: Blob | File | Uint8Array;
+  /** Optional expansion level (default: 0) */
+  expansionLevel?: number;
+}
+
+/**
+ * Response from uploading an attachment to an entity record
+ */
+export type EntityUploadAttachmentResponse = Record<string, unknown>;
+
+/**
+ * Response from deleting an attachment from an entity record
+ */
+export type EntityDeleteAttachmentResponse = Record<string, unknown>;
+
+/**
  * Represents a failure record in an entity operation
  */
 export interface FailureRecord {
@@ -172,10 +204,10 @@ export type EntityDeleteResponse = EntityOperationResponse;
  * Entity type enum
  */
 export enum EntityType {
-  Entity = 'Entity',
-  ChoiceSet = 'ChoiceSet',
-  InternalEntity = 'InternalEntity',
-  SystemEntity = 'SystemEntity'
+  Entity = "Entity",
+  ChoiceSet = "ChoiceSet",
+  InternalEntity = "InternalEntity",
+  SystemEntity = "SystemEntity",
 }
 
 /**
@@ -193,34 +225,34 @@ export interface FieldDataType {
  * Reference types for fields
  */
 export enum ReferenceType {
-  ManyToOne = 'ManyToOne'
+  ManyToOne = "ManyToOne",
 }
 
 /**
  * Field display types
  */
 export enum FieldDisplayType {
-  Basic = 'Basic',
-  Relationship = 'Relationship',
-  File = 'File',
-  ChoiceSetSingle = 'ChoiceSetSingle',
-  ChoiceSetMultiple = 'ChoiceSetMultiple',
-  AutoNumber = 'AutoNumber'
+  Basic = "Basic",
+  Relationship = "Relationship",
+  File = "File",
+  ChoiceSetSingle = "ChoiceSetSingle",
+  ChoiceSetMultiple = "ChoiceSetMultiple",
+  AutoNumber = "AutoNumber",
 }
 
 /**
  * Data direction type for external fields
  */
 export enum DataDirectionType {
-  ReadOnly = 'ReadOnly',
-  ReadAndWrite = 'ReadAndWrite'
+  ReadOnly = "ReadOnly",
+  ReadAndWrite = "ReadAndWrite",
 }
 
 /**
  * Join type for source join criteria
  */
 export enum JoinType {
-  LeftJoin = 'LeftJoin'
+  LeftJoin = "LeftJoin",
 }
 
 /**
