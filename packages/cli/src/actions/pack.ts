@@ -6,7 +6,7 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import fetch from 'node-fetch';
-import type { AppConfig, SdkConfig, EnvironmentConfig } from '../types/index.js';
+import type { SdkConfig, EnvironmentConfig } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
 import { AUTH_CONSTANTS, DEFAULT_APP_VERSION, API_ENDPOINTS } from '../constants/index.js';
 import { isValidAppName, getEnvironmentConfig } from '../utils/env-config.js';
@@ -46,17 +46,6 @@ interface PackageConfig {
   sdkConfig: SdkConfig | null;
 }
 
-function loadAppConfig(logger: { log: (message: string) => void }): AppConfig | null {
-  const configPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR, AUTH_CONSTANTS.FILES.APP_CONFIG);
-  try {
-    if (fs.existsSync(configPath)) {
-      return JSON.parse(fs.readFileSync(configPath, 'utf-8')) as AppConfig;
-    }
-  } catch (error) {
-    logger.log(chalk.dim(`${MESSAGES.ERRORS.FAILED_TO_LOAD_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
-  }
-  return null;
-}
 
 function validateDistDirectory(distDir: string): boolean {
   if (!fs.existsSync(distDir) || !fs.statSync(distDir).isDirectory()) return false;
@@ -119,7 +108,6 @@ function copyConfigToDistDirectory(
 async function checkAppNameUniqueness(
   appName: string,
   envConfig: EnvironmentConfig,
-  logger: { log: (message: string) => void },
 ): Promise<void> {
   const folderKey = envConfig.folderKey || process.env.UIPATH_FOLDER_KEY || '';
   const spinner = ora(MESSAGES.INFO.CHECKING_APP_NAME_UNIQUENESS).start();
@@ -312,7 +300,7 @@ export async function executePack(options: PackOptions): Promise<void> {
       },
     );
     if (!envConfig) throw new Error('Missing required configuration for app name uniqueness check');
-    await checkAppNameUniqueness(packageName, envConfig, logger);
+    await checkAppNameUniqueness(packageName, envConfig);
   }
 
   // Load or create SDK config (uipath.json)
