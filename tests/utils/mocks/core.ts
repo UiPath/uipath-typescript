@@ -52,10 +52,7 @@ export const mockExecutionContext = {
       return undefined;
     }),
     set: vi.fn(),
-    setHeaders: vi.fn(),
-    getHeaders: vi.fn().mockReturnValue({}),
-    clear: vi.fn(),
-    createRequestSpec: vi.fn().mockReturnValue({})
+    clear: vi.fn()
   }))
 };
 
