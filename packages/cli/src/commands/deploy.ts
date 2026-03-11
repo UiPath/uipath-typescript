@@ -7,9 +7,9 @@ import * as path from 'path';
 import fetch from 'node-fetch';
 import { EnvironmentConfig, AppConfig, AppType } from '../types/index.js';
 import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
-import { MESSAGES } from '../constants/messages.js';
+import { MESSAGES, MESSAGE_BUILDERS } from '../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../utils/api.js';
-import { getEnvironmentConfig, isValidAppName, atomicWriteFileSync } from '../utils/env-config.js';
+import { getEnvironmentConfig, sanitizeAppName, atomicWriteFileSync } from '../utils/env-config.js';
 import { handleHttpError } from '../utils/error-handler.js';
 import { cliTelemetryClient } from '../telemetry/index.js';
 
@@ -28,6 +28,7 @@ interface DeployedAppResponse {
 interface PublishedApp {
   systemName: string;
   title: string;
+  deployVersion?: number;
 }
 
 interface PublishedAppResponse {
@@ -84,10 +85,13 @@ export default class Deploy extends Command {
       process.exit(1);
     }
 
-    // Validate name flag if provided
-    if (flags.name && !isValidAppName(flags.name)) {
-      this.log(chalk.red(MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS));
-      process.exit(1);
+    // Sanitize name flag if provided (warn instead of blocking)
+    if (flags.name) {
+      const { sanitized, wasModified } = sanitizeAppName(flags.name);
+      if (wasModified) {
+        this.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(flags.name, sanitized)));
+        flags.name = sanitized;
+      }
     }
 
     // Get app name from flags, config, or prompt
@@ -118,15 +122,16 @@ export default class Deploy extends Command {
           if (!input.trim()) {
             return MESSAGES.VALIDATIONS.APP_NAME_REQUIRED;
           }
-          if (!isValidAppName(input)) {
-            return MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS;
-          }
           return true;
         },
       },
     ]);
 
-    return response.name;
+    const { sanitized, wasModified } = sanitizeAppName(response.name);
+    if (wasModified) {
+      console.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(response.name, sanitized)));
+    }
+    return sanitized;
   }
 
   private loadAppConfig(): AppConfig | null {
@@ -151,11 +156,19 @@ export default class Deploy extends Command {
       let version: string;
 
       if (deployedApp) {
-        // App is deployed, upgrade it
+        // App is deployed, upgrade it to the latest published version
         spinner.text = MESSAGES.INFO.UPGRADING_APP;
-        await this.upgradeApp(deployedApp.id, envConfig);
+        const publishedApp = await this.getPublishedApp(appName, envConfig);
+        if (!publishedApp) {
+          spinner.fail(chalk.red(MESSAGES.ERRORS.APP_NOT_PUBLISHED));
+          process.exit(1);
+        }
+        if (!publishedApp.deployVersion) {
+          spinner.fail(chalk.red(MESSAGES.ERRORS.DEPLOY_VERSION_NOT_FOUND));
+          process.exit(1);
+        }
+        await this.editDeployedApp(deployedApp.id, appName, publishedApp.deployVersion, envConfig);
         spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_UPGRADED_SUCCESS));
-        // Get version from app config (has the new version being deployed)
         const appConfig = this.loadAppConfig();
         version = appConfig?.appVersion || deployedApp.semVersion;
         // Track upgrade operation
@@ -165,13 +178,13 @@ export default class Deploy extends Command {
         spinner.text = MESSAGES.INFO.DEPLOYING_APP;
 
         // Get systemName from published app
-        const publishedSystemName = await this.getPublishedAppSystemName(appName, envConfig);
-        if (!publishedSystemName) {
+        const publishedApp = await this.getPublishedApp(appName, envConfig);
+        if (!publishedApp) {
           spinner.fail(chalk.red(MESSAGES.ERRORS.APP_NOT_PUBLISHED));
           process.exit(1);
         }
 
-        const deploymentId = await this.deployNewApp(appName, publishedSystemName, envConfig);
+        const deploymentId = await this.deployNewApp(appName, publishedApp.systemName, envConfig);
         spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_DEPLOYED_SUCCESS));
 
         // Save deployment ID to config
@@ -226,7 +239,7 @@ export default class Deploy extends Command {
     return data.value.find(app => app.title === appName) || null;
   }
 
-  private async getPublishedAppSystemName(appName: string, envConfig: EnvironmentConfig): Promise<string | null> {
+  private async getPublishedApp(appName: string, envConfig: EnvironmentConfig): Promise<PublishedApp | null> {
     const endpoint = API_ENDPOINTS.PUBLISHED_APPS.replace('{tenantId}', envConfig.tenantId);
     const url = `${envConfig.baseUrl}/${envConfig.orgId}${endpoint}?searchText=${encodeURIComponent(appName)}&folderFeedType=tenant`;
 
@@ -244,10 +257,7 @@ export default class Deploy extends Command {
     }
 
     const data = await response.json() as PublishedAppResponse;
-
-    // Find exact match by title
-    const publishedApp = data.value.find(app => app.title === appName);
-    return publishedApp?.systemName || null;
+    return data.value.find(app => app.title === appName) || null;
   }
 
   private async deployNewApp(appName: string, systemName: string, envConfig: EnvironmentConfig): Promise<string> {
@@ -277,21 +287,17 @@ export default class Deploy extends Command {
     return data.id;
   }
 
-  private async upgradeApp(deploymentId: string, envConfig: EnvironmentConfig): Promise<void> {
-    const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.UPGRADE_APP}`;
-
-    const payload = {
-      deploymentIds: [deploymentId],
-    };
+  private async editDeployedApp(appId: string, title: string, version: number, envConfig: EnvironmentConfig): Promise<void> {
+    const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.EDIT_DEPLOYED_APP.replace('{appId}', appId)}`;
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'PATCH',
       headers: createHeaders({
         bearerToken: envConfig.accessToken,
         tenantId: envConfig.tenantId,
         folderKey: envConfig.folderKey,
       }),
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ title, version }),
     });
 
     if (!response.ok) {

@@ -7,10 +7,10 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import fetch from 'node-fetch';
-import { MESSAGES } from '../constants/messages.js';
-import { AppConfig, SdkConfig, EnvironmentConfig } from '../types/index.js';
+import { MESSAGES, MESSAGE_BUILDERS } from '../constants/messages.js';
+import { AppConfig, SdkConfig, EnvironmentConfig, AppType } from '../types/index.js';
 import { AUTH_CONSTANTS, DEFAULT_APP_VERSION, API_ENDPOINTS } from '../constants/index.js';
-import { isValidAppName, getEnvironmentConfig } from '../utils/env-config.js';
+import { sanitizeAppName, getEnvironmentConfig } from '../utils/env-config.js';
 import { track } from '../telemetry/index.js';
 import { createHeaders } from '../utils/api.js';
 import { handleHttpError } from '../utils/error-handler.js';
@@ -22,9 +22,11 @@ export default class Pack extends Command {
     '<%= config.bin %> <%= command.id %> ./dist',
     '<%= config.bin %> <%= command.id %> ./dist --name MyApp',
     '<%= config.bin %> <%= command.id %> ./dist --name MyApp --version 1.0.0',
+    '<%= config.bin %> <%= command.id %> ./dist --name MyApp --type Action',
     '<%= config.bin %> <%= command.id %> ./dist --output ./.uipath',
     '<%= config.bin %> <%= command.id %> ./dist --dry-run',
     '<%= config.bin %> <%= command.id %> ./dist --name MyApp --orgId \'xxxx\' --tenantId \'xxxx\' --folderKey \'xxxx\' --accessToken \'your_token\'',
+    '<%= config.bin %> <%= command.id %> ./dist --name MyActionApp --type Action --orgId \'xxxx\' --tenantId \'xxxx\' --folderKey \'xxxx\' --accessToken \'your_token\'',
   ];
 
   static override args = {
@@ -68,12 +70,14 @@ export default class Pack extends Command {
       default: 'webapp',
       options: ['webapp', 'library', 'process'],
     }),
+    type: Flags.string({
+      char: 't',
+      description: 'App type (Web or Action)',
+      default: AppType.Web,
+      options: [AppType.Web, AppType.Action],
+    }),
     'dry-run': Flags.boolean({
       description: 'Show what would be packaged without creating the package',
-      default: false,
-    }),
-    'reuse-client': Flags.boolean({
-      description: 'Reuse existing clientId from uipath.json instead of letting UiPath create a new one',
       default: false,
     }),
     baseUrl: Flags.string({
@@ -122,37 +126,56 @@ export default class Pack extends Command {
       process.exit(1);
     }
 
-    // Validate package name characters
-    if (!isValidAppName(packageName)) {
-      this.log(chalk.red(MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS));
+    // Sanitize package name (warn instead of blocking)
+    const { sanitized: sanitizedInput, wasModified } = sanitizeAppName(packageName);
+    if (wasModified) {
+      this.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(packageName, sanitizedInput)));
+      packageName = sanitizedInput;
+    }
+    if (!packageName) {
+      this.log(chalk.red(MESSAGES.ERRORS.PACKAGE_NAME_REQUIRED));
       process.exit(1);
     }
 
     // Get package version
     let version = flags.version;
 
-    // Only check app name uniqueness for new apps (version 1.0.0)
-    // Skip for version upgrades (non-default versions)
-    const isVersionUpgrade = version !== DEFAULT_APP_VERSION;
-
-    if (!isVersionUpgrade) {
-      // Validate environment variables or flags for uniqueness check
-      const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY, this, flags);
-      if (!envConfig) {
-        process.exit(1);
-      }
-
-      // Check if app name is unique (only for new apps)
-      await this.checkAppNameUniqueness(packageName, envConfig);
+    // Always need env config — for clientId validation (all cases) and name uniqueness (new apps)
+    const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY, this, flags);
+    if (!envConfig) {
+      process.exit(1);
     }
 
-    // Load or create uipath.json config (asks for scopes if needed)
+    // Load or create uipath.json config
     const sdkConfig = await this.loadOrCreateSdkConfig();
     if (!sdkConfig) {
       process.exit(1);
     }
 
-    // Show info message about scope only for new apps (not version upgrades)
+    const isActionApp = (flags.type as AppType) === AppType.Action;
+
+    if (!isActionApp) {
+      // clientId is mandatory for web apps
+      if (!sdkConfig.clientId?.trim()) {
+        this.log(chalk.red(MESSAGES.ERRORS.CLIENT_ID_REQUIRED));
+        process.exit(1);
+      }
+      await this.validateClientId(sdkConfig.clientId, envConfig);
+    } else if (sdkConfig.clientId?.trim()) {
+      // clientId is optional for action apps, but validate it if provided
+      await this.validateClientId(sdkConfig.clientId, envConfig);
+    }
+
+    // Only check app name uniqueness for new apps (version 1.0.0)
+    // Skip for version upgrades (non-default versions)
+    const isVersionUpgrade = version !== DEFAULT_APP_VERSION;
+
+    if (!isVersionUpgrade) {
+      // Check if app name is unique (only for new apps)
+      await this.checkAppNameUniqueness(packageName, envConfig);
+    }
+
+    // Show info message about scope only when clientId is provided but scope is not
     if (!isVersionUpgrade && sdkConfig.clientId?.trim() && !sdkConfig.scope?.trim()) {
       this.log(chalk.blue(MESSAGES.INFO.SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES));
     }
@@ -161,26 +184,6 @@ export default class Pack extends Command {
 
     // Get package description (use package name as default if not provided)
     const description = flags.description || packageName;
-
-    // Determine if we should reuse the existing clientId
-    let reuseClient = flags['reuse-client'];
-
-    if (!reuseClient && sdkConfig.clientId?.trim()) {
-      if (isVersionUpgrade) {
-        // For version upgrades, always reuse existing clientId - publish API handles it
-        reuseClient = true;
-      } else {
-        // For new apps, ask user if they want to create new or reuse existing
-        const response = await inquirer.prompt([{
-          type: 'confirm',
-          name: 'createNew',
-          message: MESSAGES.PROMPTS.REUSE_CLIENT_ID,
-          default: false,
-        }]);
-        // Y = create new (don't reuse), N = reuse existing
-        reuseClient = !response.createNew;
-      }
-    }
 
     const packageConfig = {
       distDir,
@@ -192,7 +195,6 @@ export default class Pack extends Command {
       mainFile: flags['main-file'],
       contentType: flags['content-type'],
       outputDir: flags.output,
-      reuseClient,
       sdkConfig,
     };
     
@@ -213,9 +215,6 @@ export default class Pack extends Command {
         validate: (input: string) => {
           if (!input.trim()) {
             return MESSAGES.VALIDATIONS.PACKAGE_NAME_REQUIRED;
-          }
-          if (!isValidAppName(input)) {
-            return MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS;
           }
           return true;
         },
@@ -262,8 +261,6 @@ export default class Pack extends Command {
   }
 
   private async createSdkConfig(configPath: string): Promise<SdkConfig | null> {
-    this.log(chalk.yellow(MESSAGES.INFO.CONFIG_FILE_NOT_FOUND_WARNING));
-
     const config: SdkConfig = {
       scope: '',
       clientId: '',
@@ -274,30 +271,23 @@ export default class Pack extends Command {
     };
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-    this.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_CREATED));
+
+    this.log(chalk.yellow(MESSAGE_BUILDERS.SDK_CONFIG_CREATED(configPath)));
+    this.log(chalk.yellow(`   ${MESSAGES.INFO.SDK_CONFIG_FILL_REQUIRED}`));
 
     return config;
   }
 
-  private copyConfigToDistDirectory(config: { distDir: string; reuseClient: boolean; sdkConfig: SdkConfig }): void {
+  private copyConfigToDistDirectory(config: { distDir: string; sdkConfig: SdkConfig }): void {
     const configDest = path.join(config.distDir, AUTH_CONSTANTS.FILES.SDK_CONFIG);
-    const configToWrite: SdkConfig = { ...config.sdkConfig };
-
-    if (!config.reuseClient) {
-      // Clear clientId so UiPath creates a new OAuth client during deployment
-      configToWrite.clientId = '';
-      this.log(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_CLEARED));
-    } else if (config.sdkConfig.clientId) {
-      this.log(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_REUSED));
-    }
-
-    fs.writeFileSync(configDest, JSON.stringify(configToWrite, null, 2));
+    // Always overwrite dist/uipath.json with the current project-root config
+    fs.writeFileSync(configDest, JSON.stringify(config.sdkConfig, null, 2));
     this.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_INCLUDED));
   }
 
   private sanitizePackageName(name: string): string {
-   // Remove whitespace only from the name
-   return name.replace(/\s+/g, '');
+    // name has already been sanitized via sanitizeAppName; just remove any residual whitespace
+    return name.replace(/\s+/g, '');
   }
 
 
@@ -553,6 +543,46 @@ export default class Pack extends Command {
     }
 
     return null;
+  }
+
+  private async validateClientId(clientId: string, envConfig: EnvironmentConfig): Promise<void> {
+    const spinner = ora(MESSAGES.INFO.VALIDATING_CLIENT_ID).start();
+
+    try {
+      const url = `${envConfig.baseUrl}${API_ENDPOINTS.VALIDATE_CLIENT
+        .replace('{orgId}', envConfig.orgId)
+        .replace('{clientId}', encodeURIComponent(clientId))}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: createHeaders({
+          bearerToken: envConfig.accessToken,
+          additionalHeaders: { 'Accept': 'application/json' },
+        }),
+      });
+
+      if (response.status === 404) {
+        spinner.fail(chalk.red(MESSAGE_BUILDERS.CLIENT_ID_NOT_FOUND(clientId, envConfig.orgName)));
+        process.exit(1);
+      }
+
+      if (!response.ok) {
+        await handleHttpError(response, MESSAGES.ERROR_CONTEXT.CLIENT_ID_VALIDATION);
+      }
+
+      const data = await response.json() as { isConfidential?: boolean };
+
+      if (data.isConfidential !== false) {
+        spinner.fail(chalk.red(MESSAGE_BUILDERS.CLIENT_ID_CONFIDENTIAL(clientId, envConfig.orgName)));
+        process.exit(1);
+      }
+
+      spinner.succeed(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_VALID));
+    } catch (error) {
+      spinner.fail(chalk.red(MESSAGES.ERRORS.CLIENT_ID_VALIDATION_FAILED));
+      this.log(chalk.red(`Error: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      process.exit(1);
+    }
   }
 
   private async checkAppNameUniqueness(appName: string, envConfig: EnvironmentConfig): Promise<void> {
