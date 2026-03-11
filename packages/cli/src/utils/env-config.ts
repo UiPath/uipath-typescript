@@ -26,6 +26,13 @@ const ENV_VAR_TO_FLAG = Object.fromEntries(
   Object.values(ENV_CONFIG).map(cfg => [cfg.envVar, `${cfg.flag} ${cfg.example}`])
 ) as Record<string, string>;
 
+// Maps primary env var name to auth package's canonical name (e.g. UIPATH_BASE_URL → UIPATH_URL)
+const ENV_VAR_ALT = Object.fromEntries(
+  Object.values(ENV_CONFIG)
+    .filter((cfg): cfg is typeof cfg & { altEnvVar: string } => 'altEnvVar' in cfg)
+    .map(cfg => [cfg.envVar, cfg.altEnvVar])
+) as Record<string, string>;
+
 /**
  * Validates app/package name to ensure it only contains allowed characters.
  * Allowed: lowercase letters (a-z), numbers (0-9), and hyphens (-)
@@ -46,7 +53,7 @@ function mergeConfigValues(
   for (const envVar of requiredVars) {
     const configKey = ENV_VAR_TO_CONFIG_KEY[envVar];
     const flagValue = configKey && flagConfig?.[configKey];
-    merged[envVar] = flagValue || process.env[envVar];
+    merged[envVar] = flagValue || process.env[envVar] || process.env[ENV_VAR_ALT[envVar]];
   }
 
   return merged;

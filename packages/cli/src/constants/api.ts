@@ -24,7 +24,9 @@ export const API_ENDPOINTS = {
   // Published apps endpoints (for version lookup)
   PUBLISHED_APPS: '/apps_/default/api/v1/default/models/tenants/{tenantId}/publish/apps',
   // Check app name uniqueness
-  CHECK_APP_NAME_UNIQUE: '/apps_/default/api/v1/default/models/deployed/apps/uniquename/check/{appName}'
+  CHECK_APP_NAME_UNIQUE: '/apps_/default/api/v1/default/models/deployed/apps/uniquename/check/{appName}',
+  // List all projects owned by or shared with the user
+  STUDIO_WEB_LIST_PROJECTS: '/studio_/backend/api/Project'
 } as const;
 
 /** Studio Web API request headers */
