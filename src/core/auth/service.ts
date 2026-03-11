@@ -229,7 +229,7 @@ export class AuthService {
    * Updates the access token used for API requests
    * @param tokenInfo The token information containing the access token, type, expiration, and refresh token
    */
-  updateToken(tokenInfo: TokenInfo): void {
+  public updateToken(tokenInfo: TokenInfo): void {
     this.tokenManager.setToken(tokenInfo);
   }
 
