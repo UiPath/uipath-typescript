@@ -21,7 +21,6 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@uipath/auth": "0.1.1",
     "commander": "^14.0.3",
     "signal-exit": "^4.1.0"
   },
