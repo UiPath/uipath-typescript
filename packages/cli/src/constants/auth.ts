@@ -71,12 +71,14 @@ export const AUTH_CONSTANTS = {
   ENV_CONFIG: {
     BASE_URL: {
       envVar: 'UIPATH_BASE_URL',
+      altEnvVar: 'UIPATH_URL',
       configKey: 'baseUrl' as const,
       flag: '--baseUrl',
       example: "'https://cloud.uipath.com'",
     },
     ORG_ID: {
       envVar: 'UIPATH_ORG_ID',
+      altEnvVar: 'UIPATH_ORGANIZATION_ID',
       configKey: 'orgId' as const,
       flag: '--orgId',
       example: "'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'",
@@ -128,6 +130,13 @@ export const AUTH_CONSTANTS = {
       'UIPATH_ORG_NAME',
       'UIPATH_TENANT_ID',
       'UIPATH_FOLDER_KEY',
+      'UIPATH_ACCESS_TOKEN'
+    ],
+    // Required for pack command (app name uniqueness check)
+    PACK: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
       'UIPATH_ACCESS_TOKEN'
     ],
     // Required for push command (Studio Web)

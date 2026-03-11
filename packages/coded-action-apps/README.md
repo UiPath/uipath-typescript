@@ -1,16 +1,16 @@
-# @uipath/coded-action-apps
+# @uipath/uipath-ts-coded-action-apps
 
 An SDK enabling coded apps to be the UI for tasks within UiPath Action Center. SDK handles bi-directional communication between the coded app and UiPath Action Center host using window.postMessage events.
 
 ## Installation
 
 ```bash
-npm install @uipath/coded-action-apps
+npm install @uipath/uipath-ts-coded-action-apps
 ```
 
 ## Overview
 
-Action Center renders a coded action app within an iframe. @uipath/coded-action-apps provides service CodedActionAppsService which offers below capabilities:
+Action Center renders a coded action app within an iframe. `@uipath/uipath-ts-coded-action-apps` provides service CodedActionAppsService which offers below capabilities:
 
 - **Receive** - `getTask()` - On app load, UiPath Action Center provides the task details.
 - **Notify** - `setTaskData()` - Notify Action Center when task data changes (e.g. to enable the Save button).
@@ -22,7 +22,7 @@ Action Center renders a coded action app within an iframe. @uipath/coded-action-
 ### Initialise the service
 
 ```ts
-import { CodedActionAppsService } from '@uipath/coded-action-apps';
+import { CodedActionAppsService } from '@uipath/uipath-ts-coded-action-apps';
 
 const service = new CodedActionAppsService();
 ```
@@ -30,7 +30,7 @@ const service = new CodedActionAppsService();
 The class is also exported under the alias `CodedActionApps` for convenience:
 
 ```ts
-import { CodedActionApps } from '@uipath/coded-action-apps';
+import { CodedActionApps } from '@uipath/uipath-ts-coded-action-apps';
 
 const service = new CodedActionApps();
 ```
@@ -60,7 +60,7 @@ console.log(taskData.theme);      // Theme enum — the UI theme Action Center i
 
 ### Notify Action Center of data changes
 
-Call this whenever the user modifies the task form data. Action Center uses this signal to enable its Save button.
+Call this whenever the user modifies the task form data. Action Center uses this signal to enable its Save button. Make sure to pass the full current task data.
 
 ```ts
 service.setTaskData({ field: 'updatedValue' });
@@ -89,7 +89,7 @@ if (!result.success) {
 Show a toast notification inside Action Center using one of the four severity levels.
 
 ```ts
-import { MessageSeverity } from '@uipath/coded-action-apps';
+import { MessageSeverity } from '@uipath/uipath-ts-coded-action-apps';
 
 service.showMessage('Validation successful', MessageSeverity.Success);
 service.showMessage('Validation failed', MessageSeverity.Error);

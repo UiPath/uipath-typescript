@@ -72,6 +72,22 @@ function trackApiFailure(apiMethod: string, errorMessage: string, statusCode?: n
   });
 }
 
+/**
+ * Throws a descriptive error for 404/403 responses that reference the project ID,
+ * so callers don't have to repeat this pattern.
+ */
+function throwProjectAccessError(
+  projectId: string,
+  apiMethod: string,
+  statusCode: number,
+): never {
+  const errMsg = statusCode === 404
+    ? `Project '${projectId}' not found. Verify the project ID is correct and the project exists.`
+    : `Access denied to project '${projectId}'. You don't have permission to access this project.`;
+  trackApiFailure(apiMethod, errMsg, statusCode);
+  throw new Error(errMsg);
+}
+
 export function buildApiUrl(config: WebAppProjectConfig, endpoint: string, tenantScoped = false): string {
   const { baseUrl, orgId, tenantId } = config.envConfig;
   if (tenantScoped) {
@@ -95,8 +111,8 @@ export async function fetchRemoteStructure(
     }),
   });
   if (!response.ok) {
-    if (response.status === 404) {
-      return { name: '', files: [], folders: [] };
+    if (response.status === 404 || response.status === 403) {
+      throwProjectAccessError(config.projectId, 'fetchRemoteStructure', response.status);
     }
     const errText = await response.text().catch(() => '');
     trackApiFailure('fetchRemoteStructure', errText || response.statusText, response.status);
@@ -168,10 +184,17 @@ export async function retrieveLock(config: WebAppProjectConfig): Promise<LockInf
       return lockInfo;
     }
     await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_ACQUIRE_LOCK);
-    return null;
+    if (response.status === 404 || response.status === 403) {
+      throwProjectAccessError(config.projectId, 'retrieveLock', response.status);
+    }
+    const errText = await response.text().catch(() => '');
+    const fallbackMsg = `Failed to access project (${response.status} ${response.statusText})${errText ? `: ${errText.slice(0, 120)}` : ''}`;
+    trackApiFailure('retrieveLock', fallbackMsg, response.status);
+    throw new Error(fallbackMsg);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.startsWith('Lock was acquired but retrieving') || msg.startsWith('Acquire lock failed')) throw err;
+    if (msg.startsWith('Project \'') || msg.startsWith('Access denied') || msg.startsWith('Failed to access project')) throw err;
     trackApiFailure('retrieveLock', msg);
     config.logger.log(chalk.gray(`[retrieveLock] Error: ${msg}`));
     return null;
@@ -192,6 +215,9 @@ export async function putLock(config: WebAppProjectConfig): Promise<void> {
   });
   if (!response.ok) {
     await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_ACQUIRE_LOCK);
+    if (response.status === 404 || response.status === 403) {
+      throwProjectAccessError(config.projectId, 'putLock', response.status);
+    }
     const errText = await response.text().catch(() => '');
     const errMsg = `Acquire lock failed: ${response.status} ${response.statusText}${errText ? ` — ${errText.slice(0, 80)}` : ''}`;
     trackApiFailure('putLock', errMsg, response.status);

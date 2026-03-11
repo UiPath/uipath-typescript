@@ -239,13 +239,13 @@ export const MESSAGES = {
     PACKAGE_READY: '🎉 Package is ready for publishing!',
     PACKAGE_AVAILABLE: '🎉 Package is now available in UiPath Orchestrator',
     APP_DEPLOYED: '🎉 Your app is now live!',
+    ACTION_APP_RUN_IN_ACTION_CENTER: 'This action app should be run inside Action Center.',
   },
   
   PROMPTS: {
     PULL_OVERWRITE_CONFIRM: 'This pull will overwrite one or more local files. Do you want to continue? (Y/n)',
     PULL_CONTINUE_NOT_PROJECT_ROOT: 'Continue anyway? (y/N)',
     ENTER_APP_NAME: 'Enter app name:',
-    ENTER_PACKAGE_NAME: 'Enter package name:',
     ENTER_PACKAGE_DESCRIPTION: 'Enter package description:',
     SELECT_PACKAGE_TO_PUBLISH: 'Select package to publish:',
     REAUTH_QUESTION: 'Do you want to re-authenticate?',
@@ -263,7 +263,7 @@ export const MESSAGES = {
   
   VALIDATIONS: {
     APP_NAME_REQUIRED: 'App name is required',
-    APP_NAME_INVALID_CHARS: 'App name can only contain letters, numbers, underscores (_), and hyphens (-). Please remove invalid special characters and try again.',
+    APP_NAME_INVALID_CHARS: 'App name can only contain lowercase letters, numbers, and hyphens (-). Please remove invalid special characters and try again.',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
     MISSING_REQUIRED_CONFIG: '❌ Missing required configuration:',
     PROVIDE_VIA_ENV_OR_FLAGS: '💡 Provide these via environment variables or CLI flags:',
