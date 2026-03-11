@@ -24,8 +24,6 @@ import type {
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
   EntityRecord,
-  EntityDownloadAttachmentOptions,
-  EntityUploadAttachmentOptions,
   EntityGetAllRecordsOptions
 } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
@@ -840,13 +838,11 @@ describe('EntityService Unit Tests', () => {
       const mockBlob = new Blob(['test content'], { type: 'application/pdf' });
       mockApiClient.get.mockResolvedValue(mockBlob);
 
-      const options: EntityDownloadAttachmentOptions = {
-        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
-      };
-
-      const result = await entityService.downloadAttachment(options);
+      const result = await entityService.downloadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      );
 
       // Verify the result is a Blob
       expect(result).toBeDefined();
@@ -856,7 +852,7 @@ describe('EntityService Unit Tests', () => {
       // Verify the API call has correct endpoint and responseType
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
         ),
@@ -868,13 +864,11 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      const options: EntityDownloadAttachmentOptions = {
-        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
-      };
-
-      await expect(entityService.downloadAttachment(options)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(entityService.downloadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -885,19 +879,17 @@ describe('EntityService Unit Tests', () => {
     ])('should upload attachment successfully with $type', async ({ file, response }) => {
       mockApiClient.post.mockResolvedValue(response);
 
-      const options: EntityUploadAttachmentOptions = {
-        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+      const result = await entityService.uploadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         file
-      };
-
-      const result = await entityService.uploadAttachment(options);
+      );
 
       expect(result).toEqual(response);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
         ),
@@ -911,19 +903,18 @@ describe('EntityService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue(mockUploadResponse);
 
       const file = new Blob(['test']);
-      const options: EntityUploadAttachmentOptions = {
-        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        file,
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-      };
 
-      await entityService.uploadAttachment(options);
+      await entityService.uploadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file,
+        { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL }
+      );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
         ),
@@ -937,14 +928,13 @@ describe('EntityService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(error);
 
       const file = new Blob(['test']);
-      const options: EntityUploadAttachmentOptions = {
-        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        file
-      };
 
-      await expect(entityService.uploadAttachment(options)).rejects.toThrow(
+      await expect(entityService.uploadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file
+      )).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE
       );
     });

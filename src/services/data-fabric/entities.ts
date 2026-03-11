@@ -19,7 +19,7 @@ import {
   EntityRecord,
   RawEntityGetResponse,
   EntityFieldDataType,
-  EntityDownloadAttachmentOptions,
+  EntityFileType,
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
   EntityDeleteAttachmentResponse
@@ -408,7 +408,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Downloads an attachment from an entity record field
    *
-   * @param options - Options containing entityName, recordId, and fieldName
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
    * @returns Promise resolving to Blob containing the file content
    *
    * @example
@@ -417,19 +419,22 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * const entities = new Entities(sdk);
    *
+   * // Get the entityId from getAll()
+   * const allEntities = await entities.getAll();
+   * const entityId = allEntities[0].id;
+   *
+   * // Get the recordId from getAllRecords()
+   * const records = await entities.getAllRecords(entityId);
+   * const recordId = records[0].id;
+   *
    * // Download attachment for a specific record and field
-   * const blob = await entities.downloadAttachment({
-   *   entityName: 'Invoice',
-   *   recordId: '<record-uuid>',
-   *   fieldName: 'Documents'
-   * });
+   * const blob = await entities.downloadAttachment(entityId, recordId, 'Documents');
+   * ```
    */
   @track('Entities.DownloadAttachment')
-  async downloadAttachment(options: EntityDownloadAttachmentOptions): Promise<Blob> {
-    const { entityName, recordId, fieldName } = options;
-
+  async downloadAttachment(entityId: string, recordId: string, fieldName: string): Promise<Blob> {
     const response = await this.get<Blob>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(entityName, recordId, fieldName),
+      DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(entityId, recordId, fieldName),
       {
         responseType: RESPONSE_TYPES.BLOB
       }
@@ -441,8 +446,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Uploads an attachment to a File-type field of an entity record
    *
-   * @param options - Options containing entityName, recordId, fieldName, file, and optional expansionLevel
-   * @returns Promise resolving to the upload response
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to upload the attachment to
+   * @param fieldName - Name of the File-type field
+   * @param file - File to upload (Blob, File, or Uint8Array)
+   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. expansionLevel)
+   * @returns Promise resolving to {@link EntityUploadAttachmentResponse}
    *
    * @example
    * ```typescript
@@ -450,19 +459,20 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * const entities = new Entities(sdk);
    *
+   * // Get the entityId from getAll()
+   * const allEntities = await entities.getAll();
+   * const entityId = allEntities[0].id;
+   *
+   * // Get the recordId from getAllRecords()
+   * const records = await entities.getAllRecords(entityId);
+   * const recordId = records[0].id;
+   *
    * // Upload a file attachment
-   * const response = await entities.uploadAttachment({
-   *   entityName: 'Invoice',
-   *   recordId: '<record-uuid>',
-   *   fieldName: 'Documents',
-   *   file: file
-   * });
+   * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
    * ```
    */
   @track('Entities.UploadAttachment')
-  async uploadAttachment(options: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
-    const { entityName, recordId, fieldName, file, expansionLevel } = options;
-
+  async uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
     const formData = new FormData();
     if (file instanceof Uint8Array) {
       formData.append('file', new Blob([file.buffer as ArrayBuffer]));
@@ -470,10 +480,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
       formData.append('file', file);
     }
 
-    const params = createParams({ expansionLevel });
+    const params = createParams({ expansionLevel: options?.expansionLevel });
 
     const response = await this.post<EntityUploadAttachmentResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityName, recordId, fieldName),
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityId, recordId, fieldName),
       formData,
       { params }
     );
@@ -489,7 +499,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
-   * @returns Promise resolving when the attachment is deleted
+   * @returns Promise resolving to {@link EntityDeleteAttachmentResponse}
    *
    * @example
    * ```typescript
