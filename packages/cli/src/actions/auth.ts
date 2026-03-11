@@ -133,7 +133,7 @@ async function executePkceAuth(domain: string, logger: { log: (message: string) 
   try {
     const { authServer: server, authPromise } = await startAuthenticationFlow(domain, availablePort, spinner, logger);
     authServer = server;
-    const tokens = await waitForBrowserAuth(authPromise, logger);
+    const tokens = await waitForBrowserAuth(authPromise);
     const selectedTenant = await configureTenantAndFolder(tokens, domain, logger);
     await saveCredentialsAndFinish(tokens, domain, selectedTenant, logger);
   } catch (error) {
@@ -170,7 +170,6 @@ async function startAuthenticationFlow(
 
 async function waitForBrowserAuth(
   authPromise: Promise<TokenResponse>,
-  _logger: { log: (message: string) => void }
 ): Promise<TokenResponse> {
   const spinner = ora(MESSAGES.INFO.WAITING_FOR_AUTH).start();
   try {

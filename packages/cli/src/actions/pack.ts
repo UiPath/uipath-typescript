@@ -108,7 +108,6 @@ function copyConfigToDistDirectory(
 async function checkAppNameUniqueness(
   appName: string,
   envConfig: EnvironmentConfig,
-  _logger: { log: (message: string) => void },
 ): Promise<void> {
   const folderKey = envConfig.folderKey || process.env.UIPATH_FOLDER_KEY || '';
   const spinner = ora(MESSAGES.INFO.CHECKING_APP_NAME_UNIQUENESS).start();
@@ -301,7 +300,7 @@ export async function executePack(options: PackOptions): Promise<void> {
       },
     );
     if (!envConfig) throw new Error('Missing required configuration for app name uniqueness check');
-    await checkAppNameUniqueness(packageName, envConfig, logger);
+    await checkAppNameUniqueness(packageName, envConfig);
   }
 
   // Load or create SDK config (uipath.json)
