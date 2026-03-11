@@ -170,7 +170,7 @@ async function startAuthenticationFlow(
 
 async function waitForBrowserAuth(
   authPromise: Promise<TokenResponse>,
-  logger: { log: (message: string) => void }
+  _logger: { log: (message: string) => void }
 ): Promise<TokenResponse> {
   const spinner = ora(MESSAGES.INFO.WAITING_FOR_AUTH).start();
   try {

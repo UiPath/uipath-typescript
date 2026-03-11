@@ -46,17 +46,6 @@ interface PackageConfig {
   sdkConfig: SdkConfig | null;
 }
 
-function loadAppConfig(logger: { log: (message: string) => void }): AppConfig | null {
-  const configPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR, AUTH_CONSTANTS.FILES.APP_CONFIG);
-  try {
-    if (fs.existsSync(configPath)) {
-      return JSON.parse(fs.readFileSync(configPath, 'utf-8')) as AppConfig;
-    }
-  } catch (error) {
-    logger.log(chalk.dim(`${MESSAGES.ERRORS.FAILED_TO_LOAD_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
-  }
-  return null;
-}
 
 function validateDistDirectory(distDir: string): boolean {
   if (!fs.existsSync(distDir) || !fs.statSync(distDir).isDirectory()) return false;
@@ -119,7 +108,7 @@ function copyConfigToDistDirectory(
 async function checkAppNameUniqueness(
   appName: string,
   envConfig: EnvironmentConfig,
-  logger: { log: (message: string) => void },
+  _logger: { log: (message: string) => void },
 ): Promise<void> {
   const folderKey = envConfig.folderKey || process.env.UIPATH_FOLDER_KEY || '';
   const spinner = ora(MESSAGES.INFO.CHECKING_APP_NAME_UNIQUENESS).start();
