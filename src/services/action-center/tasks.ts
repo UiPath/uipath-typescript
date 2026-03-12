@@ -131,7 +131,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: (folderId) => TASK_ENDPOINTS.GET_TASK_USERS(folderId!), // Use folderId from centralized helper
+      getEndpoint: (helperFolderId) => TASK_ENDPOINTS.GET_TASK_USERS(helperFolderId!), // Use folderId from centralized helper
       getByFolderEndpoint: TASK_ENDPOINTS.GET_TASK_USERS(folderId), // Use the passed folderId
       transformFn: transformUserResponse,
       pagination: {

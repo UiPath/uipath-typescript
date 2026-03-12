@@ -230,7 +230,7 @@ export async function createFolder(
   name: string,
   lockKey: string | null,
   parentId?: string | null,
-  path?: string | null
+  resourcePath?: string | null
 ): Promise<string | null> {
   const url = buildApiUrl(
     config,
@@ -244,7 +244,7 @@ export async function createFolder(
   if (lockKey) headers[STUDIO_WEB_HEADERS.LOCK_KEY] = lockKey;
   const body: { name: string; parentId?: string; path?: string } = { name };
   if (parentId) body.parentId = parentId;
-  if (path) body.path = path;
+  if (resourcePath) body.path = resourcePath;
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -425,14 +425,14 @@ export async function getSolutionId(config: WebAppProjectConfig): Promise<string
 function catalogItemToResource(
   item: Record<string, unknown>,
   itemFolders: Array<Record<string, unknown>>,
-  mapFolder: (f: Record<string, unknown>) => ResourceFolder
+  mapFolderFn: (f: Record<string, unknown>) => ResourceFolder
 ): Resource {
   return {
     resourceKey: (item.entityKey || item.resource_key) as string,
     name: item.name as string,
     resourceType: (item.entityType || item.resource_type) as string,
     resourceSubType: (item.entitySubType || item.resource_sub_type || null) as string | null,
-    folders: itemFolders.map(mapFolder),
+    folders: itemFolders.map(mapFolderFn),
   };
 }
 
@@ -440,14 +440,14 @@ function findMatchingResourceInItems(
   items: Array<Record<string, unknown>>,
   name: string,
   folderPath: string,
-  mapFolder: (f: Record<string, unknown>) => ResourceFolder
+  mapFolderFn: (f: Record<string, unknown>) => ResourceFolder
 ): Resource | null {
   for (const item of items) {
     if (item.name !== name) continue;
     const itemFolders = (item.folders || []) as Array<Record<string, unknown>>;
-    if (!folderPath && itemFolders.length > 0) return catalogItemToResource(item, itemFolders, mapFolder);
+    if (!folderPath && itemFolders.length > 0) return catalogItemToResource(item, itemFolders, mapFolderFn);
     for (const folder of itemFolders) {
-      if (folder.path === folderPath) return catalogItemToResource(item, itemFolders, mapFolder);
+      if (folder.path === folderPath) return catalogItemToResource(item, itemFolders, mapFolderFn);
     }
   }
   return null;
@@ -479,7 +479,7 @@ export async function findResourceInCatalog(
   resourceType: string,
   name: string,
   folderPath: string,
-  mapFolder: (f: Record<string, unknown>) => ResourceFolder
+  mapFolderFn: (f: Record<string, unknown>) => ResourceFolder
 ): Promise<Resource> {
   const apiResourceType = RESOURCE_CATALOG_TYPE_MAP[resourceType.toLowerCase()];
   if (!apiResourceType) throw new Error(`Unknown resource type: ${resourceType}`);
@@ -508,7 +508,7 @@ export async function findResourceInCatalog(
   }
   const data = parseCatalogResponse(responseText, contentType, response, config);
   const items = (data.value || data.items || []) as Array<Record<string, unknown>>;
-  const match = findMatchingResourceInItems(items, name, folderPath, mapFolder);
+  const match = findMatchingResourceInItems(items, name, folderPath, mapFolderFn);
   if (match) return match;
 
   const folderInfo = folderPath ? ` at folder path '${folderPath}'` : ' (tenant-scoped)';

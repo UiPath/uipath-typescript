@@ -425,8 +425,8 @@ export const ProcessInstances = () => {
                     console.log('Instance cancelled successfully');
                     fetchData(); // Refresh the data
                   }
-                } catch (error) {
-                  console.error('Failed to cancel instance:', error);
+                } catch (err) {
+                  console.error('Failed to cancel instance:', err);
                 }
               }
             }}
