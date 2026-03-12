@@ -633,7 +633,6 @@ try {
 | [orchestrator.md](references/orchestrator.md) | Assets, Queues, Buckets, Processes | App uses Orchestrator resources or starts processes |
 | [action-center.md](references/action-center.md) | Tasks | App creates, assigns, or completes Action Center tasks |
 | [patterns.md](references/patterns.md) | usePolling hook, BPMN viewer, HITL detection, embedded action tasks, process data rendering | App needs auto-refreshing data, process diagram rendering, HITL detection via BPMN, embedded HITL tasks, or displays process instance variables/element data |
-| [deployment.md](references/deployment.md) | UiPath CLI | User asks to deploy the app to UiPath Cloud |
 | [oauth-scopes.md](references/oauth-scopes.md) | All | **Always** — read before setting scopes in setup |
 | [conversational-agent.md](references/conversational-agent.md) | ConversationalAgent, Exchanges, Messages | App uses real-time chat with UiPath AI agents |
 | [oauth-client-setup.md](references/oauth-client-setup.md) | Playwright browser automation | User doesn't have a client ID and needs one created via UiPath admin portal |
