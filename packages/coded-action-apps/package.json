@@ -21,6 +21,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "docs": "typedoc",
+    "test": "echo \"No tests found\" && exit 0",
+    "test:coverage": "echo \"No tests found\" && exit 0",
     "lint": "oxlint"
   },
   "devDependencies": {

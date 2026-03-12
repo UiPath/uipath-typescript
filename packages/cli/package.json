@@ -22,8 +22,10 @@
     "prebuild": "npm run clean",
     "build": "tsc && npm run copy-assets",
     "copy-assets": "cp -r src/assets dist/",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage --passWithNoTests --",
+    "typecheck": "tsc --noEmit",
     "lint": "oxlint"
   },
   "dependencies": {
