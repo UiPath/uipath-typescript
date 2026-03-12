@@ -1,6 +1,6 @@
 ---
 description: Debug authentication and configuration issues in UiPath TypeScript SDK frontend apps - handles redirect URI mismatches, scope errors, stale token problems, CORS issues, base URL misconfiguration, and External Application setup
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_evaluate, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_tab_list, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_press_key, mcp__playwright__browser_select_option, mcp__playwright__browser_close
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_evaluate, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_tab_list, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_press_key, mcp__playwright__browser_select_option, mcp__playwright__browser_close
 ---
 
 # UiPath Coded App - Debug Authentication Issues
@@ -218,10 +218,10 @@ While you're checking config, verify the base URL uses the correct API subdomain
 
 | `.env` Value | Issue | Fix |
 |---|---|---|
-| `https://cloud.uipath.com` | Will cause CORS errors | Change to `https://cloud.api.uipath.com` |
+| `https://cloud.uipath.com` | Will cause CORS errors | Change to `https://api.uipath.com` |
 | `https://staging.uipath.com` | Will cause CORS errors | Change to `https://staging.api.uipath.com` |
 | `https://alpha.uipath.com` | Will cause CORS errors | Change to `https://alpha.api.uipath.com` |
-| `https://cloud.api.uipath.com` | Correct | No change needed |
+| `https://api.uipath.com` | Correct | No change needed |
 | `https://staging.api.uipath.com` | Correct | No change needed |
 | `https://alpha.api.uipath.com` | Correct | No change needed |
 
@@ -251,11 +251,10 @@ If the base URL is wrong, fix it now in the `.env` file.
      localStorage.clear();
      sessionStorage.clear();
 
-     // Clear specific UiPath SDK keys if storage clearing fails
-     const sdkKeys = ['uipath_sdk_code_verifier', 'uipath_sdk_oauth_context', 'uipath_sdk_token'];
-     sdkKeys.forEach(key => {
-       localStorage.removeItem(key);
-       sessionStorage.removeItem(key);
+     // Uses prefix matching to catch uipath_sdk_user_token-{clientId} and all other SDK keys
+     ['localStorage', 'sessionStorage'].forEach(store => {
+       const s = window[store];
+       Object.keys(s).filter(k => k.startsWith('uipath_sdk_')).forEach(k => s.removeItem(k));
      });
 
      // Clear cookies
@@ -569,7 +568,7 @@ If the error doesn't match the above patterns:
 
 | Environment | Wrong Base URL | Correct Base URL |
 |---|---|---|
-| Production | `https://cloud.uipath.com` | `https://cloud.api.uipath.com` |
+| Production | `https://cloud.uipath.com` | `https://api.uipath.com` |
 | Staging | `https://staging.uipath.com` | `https://staging.api.uipath.com` |
 | Alpha | `https://alpha.uipath.com` | `https://alpha.api.uipath.com` |
 
@@ -709,11 +708,15 @@ If the diagnosis requires updating scopes, you need to add the correct **resourc
    | `OR.Assets`, `OR.Administration`, `OR.Execution`, `OR.Jobs`, `OR.Queues`, `OR.Tasks` (any OR.* scopes) | **UiPath.Orchestrator** |
    | `DataFabric.Schema.Read`, `DataFabric.Data.Read`, `DataFabric.Data.Write` | **Data Fabric API** |
    | `PIMS` | **PIMS** |
+   | `ConversationalAgents` | **ConversationalAgents** |
+   | `Traces.Api` | **Traces.Api** |
 
    The full dropdown list includes many categories. The ones relevant to this SDK are:
    - **UiPath.Orchestrator** - For all Orchestrator scopes (Assets, Administration, Execution, Jobs, Queues, Tasks)
    - **Data Fabric API** - For all Data Fabric/Entities scopes (Schema.Read, Data.Read, Data.Write)
    - **PIMS** - For Maestro/Process Intelligence scopes
+   - **ConversationalAgents** - For Conversational Agent session scopes (startSession)
+   - **Traces.Api** - For Exchanges feedback scopes (createFeedback)
 
 4. Click the desired resource category from the dropdown:
    ```

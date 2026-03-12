@@ -49,15 +49,11 @@ echo ""
 
 # --- Prerequisite checks ---
 
-REQUIRED_VERSION="1.0.0-beta.7"
+REQUIRED_VERSION="1.0.0-beta.10"
 
 if ! command -v uipath &> /dev/null; then
   echo "ERROR: 'uipath' CLI not found. Install it with:"
   echo "  npm install -g @uipath/uipath-ts-cli@${REQUIRED_VERSION}"
-  echo ""
-  echo "  If that fails, ensure ~/.npmrc has:"
-  echo "    //npm.pkg.github.com/:_authToken=<YOUR_GITHUB_TOKEN>"
-  echo "    @uipath:registry=https://npm.pkg.github.com"
   exit 1
 fi
 

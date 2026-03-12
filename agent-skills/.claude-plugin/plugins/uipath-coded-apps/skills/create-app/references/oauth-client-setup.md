@@ -6,7 +6,7 @@ This reference describes how to create a UiPath External Application (OAuth clie
 
 ## Prerequisites
 
-- Playwright MCP must be available (see Step 1.5 in the main skill)
+- Playwright MCP must be available (see Step 2.5 in the main skill)
 - You need: `orgName`, `environment` (cloud/staging/alpha), app name, redirect URI, and required OAuth scopes
 - The user must be logged into UiPath Cloud (or be ready to log in)
 

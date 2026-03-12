@@ -93,7 +93,7 @@ Returns `NonPaginatedResponse<AssetGetResponse>` or `PaginatedResponse<AssetGetR
 
 Returns `Promise<AssetGetResponse>`. The `folderId` is required.
 
-`AssetGetResponse` fields: `key`, `name`, `id`, `canBeDeleted`, `valueScope`, `valueType`, `value`, `credentialStoreId`, `keyValueList`, `hasDefaultValue`, `description`, `foldersCount`, `lastModifiedTime`, `createdTime`, `creatorUserId`.
+`AssetGetResponse` fields: `key`, `name`, `id`, `canBeDeleted`, `valueScope`, `valueType`, `value`, `credentialStoreId`, `keyValueList`, `hasDefaultValue`, `description`, `foldersCount`, `lastModifiedTime`, `createdTime`, `creatorUserId`. **Note:** Additional fields may be available. Check the TypeScript types for the complete list.
 
 ## Queues Service (Scopes: `OR.Queues` or `OR.Queues.Read`)
 
@@ -125,7 +125,7 @@ Returns `NonPaginatedResponse<BlobItem>` or `PaginatedResponse<BlobItem>`. Optio
 
 ### uploadFile(options: BucketUploadFileOptions)
 
-Returns `Promise<BucketUploadResponse>` with `{ success, statusCode }`. Options: `{ bucketId, folderId, path, content: Blob | Buffer | File }`.
+Returns `Promise<BucketUploadResponse>` with `{ success, statusCode }`. Options: `{ bucketId, folderId, path, content: Blob | Uint8Array<ArrayBuffer> | File }`.
 
 ### getReadUri(options: BucketGetReadUriOptions)
 

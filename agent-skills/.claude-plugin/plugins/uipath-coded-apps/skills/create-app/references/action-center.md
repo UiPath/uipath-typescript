@@ -58,6 +58,8 @@ import {
 
 Returns `Promise<TaskCreateResponse>` (task data with attached methods). Options: `{ title: string, data?: Record<string, unknown>, priority?: TaskPriority }`. The `folderId` is required.
 
+**Note:** `create()` only supports creating External tasks (`TaskType.External`). Form tasks and App tasks are created by the system through workflows.
+
 ### getAll(options?: TaskGetAllOptions)
 
 Returns `NonPaginatedResponse<TaskGetResponse>` or `PaginatedResponse<TaskGetResponse>`. Options extend `RequestOptions & PaginationOptions & { folderId?: number, asTaskAdmin?: boolean }`. Supports `filter`, `orderby`, `expand`, `select`, pagination.
@@ -66,7 +68,7 @@ Returns `NonPaginatedResponse<TaskGetResponse>` or `PaginatedResponse<TaskGetRes
 
 Returns `Promise<TaskGetResponse>` with attached methods. For form tasks, `folderId` is required.
 
-`TaskGetResponse` key fields: `id`, `title`, `status`, `type`, `priority`, `folderId`, `key`, `isDeleted`, `isCompleted`, `createdTime`, `assignedToUser`, `formLayout` (for form tasks), `taskAssignments`, `activities`, `tags`, `taskSource`, `parentOperationId`, `externalTag`.
+`TaskGetResponse` key fields: `id`, `title`, `status`, `type`, `priority`, `folderId`, `key`, `data`, `isDeleted`, `isCompleted`, `createdTime`, `assignedToUser`, `formLayout` (for form tasks), `taskAssignments`, `activities`, `tags`, `taskSource`, `parentOperationId`, `externalTag`.
 
 **OData filtering:** `TaskGetAllOptions` supports `filter` (OData `$filter` string) and `orderby` for server-side filtering and sorting. Examples:
 - Pending tasks only: `filter: "Status ne 'Completed'"`

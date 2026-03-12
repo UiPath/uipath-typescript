@@ -237,7 +237,7 @@ Returns `Promise<FeedbackCreateResponse>`. Options: `{ rating: FeedbackRating, c
 Extends `ContentPart` with helper methods:
 - `isDataInline: boolean` — whether data is inline (string)
 - `isDataExternal: boolean` — whether data is an external URL
-- `getData(): Promise<string>` — resolves inline data or fetches external data
+- `getData(): Promise<string | Response>` — resolves inline data (string) or fetches external data (Response)
 
 `ContentPart` fields: `id`, `contentPartId`, `mimeType`, `data` (inline string or external URL), `citations: Citation[]`, `isTranscript?: boolean`, `isIncomplete?: boolean`, `name?: string`, `createdTime`, `updatedTime`.
 
@@ -292,15 +292,11 @@ The session object (`SessionStream`) provides:
 - `session.onSessionEnd(handler)` — session ended
 - `session.onExchangeStart(handler)` — new exchange started (agent responding)
 - `session.onLabelUpdated(handler)` — conversation label changed
-- `session.onInputStreamStart(handler)` — async input stream started
-- `session.onAsyncToolCallStart(handler)` — async tool call started
-- `session.onAnyErrorStart(handler)` / `session.onAnyErrorEnd(handler)` — error events from any nested helper
 
 **State:**
 - `session.exchanges` — iterator over active exchanges
 - `session.getExchange(exchangeId)` — get specific exchange
 - `session.conversationId` — the conversation ID
-- `session.isEmitPaused` / `session.pauseEmits()` / `session.resumeEmits()` — control emit buffering
 
 All `on*` handlers return a cleanup function: `const cleanup = session.onExchangeStart(handler); cleanup();`
 

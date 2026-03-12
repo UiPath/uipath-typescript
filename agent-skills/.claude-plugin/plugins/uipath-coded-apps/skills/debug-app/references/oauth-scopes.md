@@ -87,7 +87,7 @@ import { Processes } from '@uipath/uipath-typescript/processes';
 ### ProcessInstances Service (Maestro)
 
 ```typescript
-import { ProcessInstances } from '@uipath/uipath-typescript/maestro';
+import { ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
 ```
 
 | Method | Required Scope |
@@ -105,7 +105,7 @@ import { ProcessInstances } from '@uipath/uipath-typescript/maestro';
 ### MaestroProcesses Service
 
 ```typescript
-import { MaestroProcesses } from '@uipath/uipath-typescript/maestro';
+import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
 ```
 
 | Method | Required Scope |
@@ -163,7 +163,6 @@ import { Tasks } from '@uipath/uipath-typescript/tasks';
 | `getAll()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getById()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getUsers()` | `OR.Tasks` or `OR.Tasks.Read` |
-| `getFormTaskById()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `create()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `assign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |

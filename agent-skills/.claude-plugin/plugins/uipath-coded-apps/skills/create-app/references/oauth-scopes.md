@@ -71,14 +71,14 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `PIMS OR.Execution.Read` |
-| `getById()` | `PIMS OR.Execution.Read` |
+| `getAll()` | `PIMS` and `OR.Execution.Read` |
+| `getById()` | `PIMS` and `OR.Execution.Read` |
 | `close()` | `PIMS` |
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
 | `reopen()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` |
-| `getStages()` | `PIMS OR.Execution.Read` |
+| `getStages()` | `PIMS` and `OR.Execution.Read` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 
 ## Processes
@@ -103,7 +103,6 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getAll()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getById()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getUsers()` | `OR.Tasks` or `OR.Tasks.Read` |
-| `getFormTaskById()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `create()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `assign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |

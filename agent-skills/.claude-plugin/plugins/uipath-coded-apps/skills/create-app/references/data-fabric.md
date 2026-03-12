@@ -87,6 +87,8 @@ Returns `Promise<EntityDeleteResponse>` with `{ successRecords, failureRecords }
 
 Returns `Promise<Blob>`. Options: `{ entityName: string, recordId: string, fieldName: string }`.
 
+**Note:** `uploadAttachment()` is not yet available in the SDK.
+
 ## Entity-Attached Methods (EntityMethods)
 
 Returned by `getAll()` and `getById()` on each `EntityGetResponse`:

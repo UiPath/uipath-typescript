@@ -15,7 +15,7 @@ AI-powered skills for creating, debugging, and deploying UiPath coded apps. Work
 ### 1. Clone the repo
 
 ```bash
-git clone -b feat/codedapps-skill https://github.com/UiPath/uipath-typescript.git
+git clone https://github.com/UiPath/uipath-typescript.git
 cd uipath-typescript/agent-skills
 ```
 
@@ -153,7 +153,7 @@ Pull the latest changes and reinstall:
 
 ```bash
 cd uipath-typescript
-git pull origin feat/codedapps-skill
+git pull origin main
 ```
 
 **Claude Code (marketplace):** `claude plugin install uipath-coded-apps@uipath-marketplace`

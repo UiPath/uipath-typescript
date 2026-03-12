@@ -6,12 +6,14 @@ Import pagination types from `@uipath/uipath-typescript/core`:
 
 ```typescript
 import type {
+  PaginationCursor,
   PaginationOptions,
   PaginatedResponse,
   NonPaginatedResponse,
 } from '@uipath/uipath-typescript/core';
 ```
 
+- `PaginationCursor`: `{ value: string }` — an opaque cursor object. Pass it to `cursor` in pagination options.
 - `PaginationOptions`: `{ pageSize?, cursor?, jumpToPage? }` (cursor and jumpToPage are mutually exclusive)
 - `PaginatedResponse<T>`: `{ items, hasNextPage, nextCursor?, previousCursor?, totalCount?, currentPage?, totalPages?, supportsPageJump }`
 - `NonPaginatedResponse<T>`: `{ items, totalCount? }`

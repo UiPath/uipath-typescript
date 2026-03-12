@@ -145,7 +145,7 @@ Decoded structure:
 
 | Environment | Wrong Base URL | Correct Base URL |
 |---|---|---|
-| Production | `https://cloud.uipath.com` | `https://cloud.api.uipath.com` |
+| Production | `https://cloud.uipath.com` | `https://api.uipath.com` |
 | Staging | `https://staging.uipath.com` | `https://staging.api.uipath.com` |
 | Alpha | `https://alpha.uipath.com` | `https://alpha.api.uipath.com` |
 
@@ -178,7 +178,6 @@ Update the `.env` file (e.g., `VITE_UIPATH_BASE_URL`) to use the correct API sub
 **Fix:**
 1. Clear browser storage to remove the stale token
 2. Re-authenticate
-3. Ensure `offline_access` is in the requested scopes (the SDK adds this automatically)
 
 ---
 
@@ -217,5 +216,5 @@ When any OAuth error occurs, verify these in order:
 4. **Redirect URI matches exactly** - Same in `.env` AND External Application
 5. **Scopes are configured** - All needed scopes in `.env` AND External Application
 6. **Org/Tenant names are correct** - Match the UiPath Cloud URL
-7. **Base URL uses API subdomain** - `cloud.api.uipath.com` not `cloud.uipath.com` (prevents CORS errors)
+7. **Base URL uses API subdomain** - `api.uipath.com` not `cloud.uipath.com` (prevents CORS errors)
 8. **Dev server URL matches redirect URI** - Port and protocol match

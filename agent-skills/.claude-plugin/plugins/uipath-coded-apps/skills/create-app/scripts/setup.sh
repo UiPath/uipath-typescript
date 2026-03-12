@@ -19,7 +19,7 @@ APP_NAME="${1:?Usage: setup.sh <app-name> <org-name> <tenant-name> <client-id> [
 ORG_NAME="${2:?ERROR: Organization name is required.}"
 TENANT_NAME="${3:?ERROR: Tenant name is required.}"
 CLIENT_ID="${4:?ERROR: Client ID is required.}"
-SCOPES="${5:-offline_access}"
+SCOPES="${5:?ERROR: Scopes are required. Provide as a space-separated string (e.g. \"OR.Assets PIMS\").}"
 ENV_INPUT="${6:-cloud}"
 
 # Resolve environment to base URL
@@ -165,11 +165,7 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
   };
 
   const logout = () => {
-    // Clear OAuth tokens from sessionStorage before creating new instance
-    // (new UiPath auto-loads tokens from storage on construction)
-    sessionStorage.removeItem(`uipath_sdk_user_token-${config.clientId}`);
-    sessionStorage.removeItem('uipath_sdk_oauth_context');
-    sessionStorage.removeItem('uipath_sdk_code_verifier');
+    sdk.logout();
     setIsAuthenticated(false);
     setError(null);
     setSdk(new UiPath(config));

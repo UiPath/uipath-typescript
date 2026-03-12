@@ -231,7 +231,7 @@ Understand what each service area represents before using its SDK module:
 
 | Subpath | Classes |
 |---------|---------|
-| `@uipath/uipath-typescript/core` | `UiPath`, `UiPathError`, `UiPathSDKConfig`, pagination types |
+| `@uipath/uipath-typescript/core` | `UiPath`, `UiPathError`, `UiPathSDKConfig`, `PaginationCursor`, `PaginationOptions`, `PaginatedResponse`, `NonPaginatedResponse` |
 | `@uipath/uipath-typescript/entities` | `Entities`, `ChoiceSets` |
 | `@uipath/uipath-typescript/tasks` | `Tasks` |
 | `@uipath/uipath-typescript/maestro-processes` | `MaestroProcesses`, `ProcessInstances`, `ProcessIncidents` |
@@ -272,7 +272,6 @@ When using any SDK service method, follow these rules strictly:
 - **NEVER mix `folderId` (number) with `folderKey` (string), and NEVER use `parseInt(folderKey)` to convert between them.** They are completely different identifiers — `folderKey` is a GUID string (e.g., `"a1b2c3d4-..."`), `folderId` is a numeric ID (e.g., `14518163`). `parseInt` on a GUID returns `NaN`. Orchestrator services (Assets, Queues, Buckets, Processes) use numeric `folderId`. Maestro services (ProcessInstances, CaseInstances) use string `folderKey`. When you have a `folderKey` from Maestro but need a `folderId` for Orchestrator (e.g., to call `Processes.start()`), use the bridging pattern: call `Processes.getAll()` without a folderId filter, find the process whose `folderKey` matches, and use its `folderId`. See "Bridging folderKey ↔ folderId" in [orchestrator.md](references/orchestrator.md).
 - **NEVER use a process name as a `processKey`.** The human-readable name (e.g., `"Loan.Origination.and.Review"`) is the `name` field, NOT the `processKey`. When the user provides a process name, first call `MaestroProcesses.getAll()`, find the matching process by `name`, then use its `processKey` and `folderKey` for all subsequent calls (`ProcessInstances.getAll({ processKey })`, `getById()`, etc.). Hardcoding the process name as the key will return empty results.
 - **NEVER use `packageId` as a `processKey` when calling `Processes.start()`.** `MaestroProcessGetAllResponse` has both `processKey` and `packageId` — they are different fields. `processKey` is the Orchestrator release key needed by `ProcessStartRequest`. `packageId` is the NuGet package identifier. Writing `{ processKey: process.packageId }` will fail. The correct mapping is `{ processKey: process.processKey }`.
-- **NEVER explore `node_modules` or SDK source code when the skill's `references/` files already contain the information.** The reference files have all method signatures, types, enums, and fields. Exploring `node_modules` wastes tokens and time. Only use `node_modules` as a last resort for information not covered in any reference file.
 - **NEVER render `getVariables()` arrays directly in polled components.** The API returns different variable subsets and in non-deterministic order across polls — rows will appear, disappear, and shuffle. Instead: (1) accumulate variables into a `Map<id, variable>` ref (latest value wins), (2) sort by name for stable row order, (3) use `lastDataRef` to preserve raw data so the table DOM is never torn down, (4) reset everything when switching instances. See [patterns.md](references/patterns.md) "Flicker-free updates" Rules 2 and 3 for the complete pattern with code.
 - **NEVER render a detail component without `key={selectedId}` in a master-detail layout.** When a list on the left drives a detail panel on the right, the detail component MUST have `key={selectedItem.id}` so React fully remounts it when the selection changes. Without `key`, hooks keep stale state from the previous item, the loading spinner never shows, and old data stays visible. Also pass `deps: [itemId]` to every `usePolling` call in the detail component.
 - **NEVER call `usePolling` without `deps` when the polled target can change.** If the component receives an ID prop that determines what gets fetched (e.g., `instanceId`, `conversationId`), always pass `deps: [thatId]` to `usePolling`. Without it, switching items shows stale data with no loading state because `hasLoadedRef` stays `true` and `data` keeps the old value.
@@ -306,13 +305,10 @@ const { isAuthenticated, isLoading, sdk, login, logout, error } = useAuth();
 1. **On mount**, `AuthProvider` checks `sdk.isInOAuthCallback()`. If the user is returning from the OAuth redirect, it calls `sdk.completeOAuth()` to exchange the auth code for tokens.
 2. **Login** calls `sdk.initialize()`, which redirects the user to UiPath's OAuth consent page.
 3. **After consent**, UiPath redirects back to the app. Step 1 detects the callback and completes the flow.
-4. **Logout** must clear the token from `sessionStorage` **before** creating a new `UiPath` instance. The SDK stores OAuth tokens in `sessionStorage` under the key `uipath_sdk_user_token-{clientId}`, and a new UiPath instance auto-loads tokens from storage on construction. If you don't clear storage first, the new instance immediately reloads the old token and the user stays logged in. The correct logout pattern:
+4. **Logout** calls `sdk.logout()`. The correct logout pattern:
    ```typescript
    const logout = () => {
-     // Clear OAuth tokens from sessionStorage FIRST
-     sessionStorage.removeItem(`uipath_sdk_user_token-${clientId}`);
-     sessionStorage.removeItem('uipath_sdk_oauth_context');
-     sessionStorage.removeItem('uipath_sdk_code_verifier');
+     sdk.logout();
      setIsAuthenticated(false);
      setError(null);
      setSdk(new UiPath(config));
@@ -629,8 +625,6 @@ try {
 **MANDATORY — read the reference file for each service your component uses** before writing any service code. These contain exact method signatures, types, enums, and bound methods.
 
 **When determining OAuth scopes:** MANDATORY — read [oauth-scopes.md](references/oauth-scopes.md) first. Do NOT guess scopes.
-
-**Do NOT load** `deployment.md` unless the user asks about deploying. Do NOT load reference files for services the app doesn't use.
 
 | Reference | Services | When to load |
 |-----------|----------|--------------|
