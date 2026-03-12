@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createEntityWithMethods } from '../../../../src/models/data-fabric/entities.models';
 import type { EntityServiceModel } from '../../../../src/models/data-fabric/entities.models';
-import { createBasicEntity, createMockEntityRecord, createMockEntityRecords, createMockSingleInsertResponse, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
+import { createBasicEntity, createMockEntityRecord, createMockEntityRecords, createMockSingleInsertResponse, createMockInsertResponse, createMockSingleUpdateResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 
 // ===== TEST SUITE =====
@@ -18,6 +18,7 @@ describe('Entity Models', () => {
       getRecordById: vi.fn(),
       insertRecordById: vi.fn(),
       insertRecordsById: vi.fn(),
+      updateRecordById: vi.fn(),
       updateRecordsById: vi.fn(),
       deleteRecordsById: vi.fn(),
       downloadAttachment: vi.fn(),
@@ -161,6 +162,65 @@ describe('Entity Models', () => {
         expect(result.failureRecords[0]).toHaveProperty('record');
         expect(result.failureRecords[0].record).toEqual(testData[1]);
         expect(typeof result.failureRecords[0].error).toBe('string');
+      });
+    });
+
+    describe('entity.updateRecord()', () => {
+      it('should call entity.updateRecord with entity id, record id, and data', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const testData = { name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE };
+        const mockResponse = createMockSingleUpdateResponse({ id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData });
+        mockService.updateRecordById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.updateRecord(ENTITY_TEST_CONSTANTS.RECORD_ID, testData);
+
+        expect(mockService.updateRecordById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          testData,
+          undefined
+        );
+        expect(result).toEqual(mockResponse);
+        expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      });
+
+      it('should call entity.updateRecord with options', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const testData = {
+          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+          age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE
+        };
+        const options = {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        };
+        const mockResponse = createMockSingleUpdateResponse({ id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData }, {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        });
+        mockService.updateRecordById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.updateRecord(ENTITY_TEST_CONSTANTS.RECORD_ID, testData, options);
+
+        expect(mockService.updateRecordById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          testData,
+          options
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('should throw error if entity id is undefined', async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.updateRecord(
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          { name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
+        )).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
     });
 
@@ -541,6 +601,7 @@ describe('Entity Models', () => {
 
       expect(typeof entity.insertRecord).toBe('function');
       expect(typeof entity.insertRecords).toBe('function');
+      expect(typeof entity.updateRecord).toBe('function');
       expect(typeof entity.updateRecords).toBe('function');
       expect(typeof entity.deleteRecords).toBe('function');
       expect(typeof entity.getAllRecords).toBe('function');

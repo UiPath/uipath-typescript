@@ -69,10 +69,7 @@ export interface EntityOperationOptions {
  * Options for inserting a single record into an entity
  * @deprecated Use {@link EntityInsertRecordOptions} instead for better clarity on inserting a single record into an entity. This type will be removed in future versions.
  */
-export interface EntityInsertOptions {
-  /** Level of entity expansion (default: 0) */
-  expansionLevel?: number;
-}
+export type EntityInsertOptions = EntityGetRecordByIdOptions;
 
 /**
  * Options for inserting a single record into an entity
@@ -91,8 +88,13 @@ export type EntityBatchInsertOptions = EntityOperationOptions;
 export type EntityInsertRecordsOptions = EntityOperationOptions;
 
 /**
+ * Options for updating a single record in an entity
+ */
+export type EntityUpdateRecordOptions = EntityGetRecordByIdOptions;
+
+/**
  * Options for updating data in an entity
- * @deprecated Use {@link EntityUpdateRecordOptions} instead for better clarity on updating records in an entity. This type will be removed in future versions.
+ * @deprecated Use {@link EntityUpdateRecordsOptions} instead for better clarity on updating records in an entity. This type will be removed in future versions.
  */
 export type EntityUpdateOptions = EntityOperationOptions;
 
@@ -164,6 +166,12 @@ export interface EntityOperationResponse {
  * Returns the inserted record with its generated record ID and other fields
  */
 export type EntityInsertResponse = EntityRecord;
+
+/**
+ * Response from updating a single record in an entity
+ * Returns the updated record
+ */
+export type EntityUpdateRecordResponse = EntityRecord;
 
 /**
  * Response from batch inserting data into an entity

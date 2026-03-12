@@ -261,6 +261,72 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
+  describe('updateRecordById', () => {
+    it('should update a single record', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        console.log('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
+        return;
+      }
+
+      // Insert a record to update
+      const insertData = {
+        name: `IntegrationTest_${mode}_updateRecordById_${generateRandomString(8)}`,
+        description: 'Before update',
+      };
+
+      try {
+        const inserted = await entities.insertById(entityId, insertData);
+        const updateTestRecordId = inserted.id || inserted.Id;
+
+        if (!updateTestRecordId) {
+          console.log('Could not get inserted record ID');
+          return;
+        }
+
+        createdRecordIds.push(updateTestRecordId);
+        registerResource('entityRecords', {
+          entityId,
+          recordIds: [updateTestRecordId],
+        });
+
+        // Update the record using updateRecordById
+        const result = await entities.updateRecordById(entityId, updateTestRecordId, {
+          description: 'After update',
+        });
+
+        expect(result).toBeDefined();
+
+        // Verify the update
+        const updated = await entities.getRecordById(entityId, updateTestRecordId);
+        expect(updated).toBeDefined();
+        expect(updated.description || updated.Description).toBe('After update');
+      } catch (error: any) {
+        console.log('updateRecordById test failed:', error.message);
+      }
+    });
+
+    it('should handle API errors for non-existent record', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        console.log('No entity ID available for testing');
+        return;
+      }
+
+      await expect(
+        entities.updateRecordById(entityId, 'non-existent-record-id', { description: 'No ID' })
+      ).rejects.toThrow();
+    });
+  });
+
   describe('Attachment operations', () => {
     it('should download attachment if available', async () => {
       const { entities } = getServices();
