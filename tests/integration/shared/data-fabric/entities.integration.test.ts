@@ -280,7 +280,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       };
 
       try {
-        const inserted = await entities.insertById(entityId, insertData);
+        const inserted = await entities.insertRecordById(entityId, insertData);
         const updateTestRecordId = inserted.id || inserted.Id;
 
         if (!updateTestRecordId) {
