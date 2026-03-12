@@ -5,6 +5,63 @@ import type { EntityServiceModel } from '../../../../src/models/data-fabric/enti
 import { createBasicEntity, createMockEntityRecord, createMockEntityRecords, createMockSingleInsertResponse, createMockInsertResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 
+// ===== TEST HELPERS =====
+interface EntityMethodTestConfig {
+  operation: 'single' | 'batch';
+  methodName: string;
+  serviceMethod: string;
+  testData: any;
+  options?: any;
+  mockResponse: any;
+  entity: any;
+  mockService: any;
+}
+
+/**
+ * Helper to test entity bound methods (single or batch operations)
+ */
+const testEntityMethod = async (config: EntityMethodTestConfig) => {
+  const { operation, methodName, serviceMethod, testData, options, mockResponse, entity, mockService } = config;
+
+  mockService[serviceMethod] = vi.fn().mockResolvedValue(mockResponse);
+
+  const result = await entity[methodName](testData, options);
+
+  // Verify the service method was called with correct parameters
+  expect(mockService[serviceMethod]).toHaveBeenCalledWith(
+    ENTITY_TEST_CONSTANTS.ENTITY_ID,
+    testData,
+    options
+  );
+
+  expect(result).toEqual(mockResponse);
+
+  // Verify response structure based on operation type
+  if (operation === 'single') {
+    expect(result.id).toBeDefined();
+  } else {
+    expect(result.successRecords).toBeDefined();
+    expect(result.failureRecords).toBeDefined();
+  }
+
+  return result;
+};
+
+interface EntityMethodErrorTestConfig {
+  methodName: string;
+  testData: any;
+  entity: any;
+  expectedErrorMessage?: string;
+}
+
+/**
+ * Helper to test entity method error handling for undefined entity ID
+ */
+const testEntityMethodUndefinedIdError = async (config: EntityMethodErrorTestConfig) => {
+  const { methodName, testData, entity, expectedErrorMessage = 'Entity ID is undefined' } = config;
+  await expect(entity[methodName](testData)).rejects.toThrow(expectedErrorMessage);
+};
+
 // ===== TEST SUITE =====
 describe('Entity Models', () => {
   let mockService: EntityServiceModel;
@@ -18,6 +75,7 @@ describe('Entity Models', () => {
       getRecordById: vi.fn(),
       insertRecordById: vi.fn(),
       insertRecordsById: vi.fn(),
+      updateRecordById: vi.fn(),
       updateRecordsById: vi.fn(),
       deleteRecordsById: vi.fn(),
       downloadAttachment: vi.fn(),
@@ -164,6 +222,87 @@ describe('Entity Models', () => {
       });
     });
 
+    describe('entity.updateRecord()', () => {
+      it('should call entity.updateRecord with entity id and data', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const testData = {
+          id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+          age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE
+        };
+        const mockResponse = createMockEntityRecord(testData);
+
+        const result = await testEntityMethod({
+          operation: 'single',
+          methodName: 'updateRecord',
+          serviceMethod: 'updateRecordById',
+          testData,
+          options: undefined,
+          mockResponse,
+          entity,
+          mockService
+        });
+
+        expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      });
+
+      it('should call entity.updateRecord with options', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const testData = {
+          id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+          age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE
+        };
+        const options = {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        };
+        const mockResponse = createMockEntityRecord(testData);
+        // Expand reference fields when expansionLevel is provided
+        if (mockResponse.updatedBy) {
+          mockResponse.updatedBy = { id: mockResponse.updatedBy };
+        }
+
+        const result = await testEntityMethod({
+          operation: 'single',
+          methodName: 'updateRecord',
+          serviceMethod: 'updateRecordById',
+          testData,
+          options,
+          mockResponse,
+          entity,
+          mockService
+        });
+
+        expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+
+        // Check that reference fields are expanded when expansionLevel is provided
+        if (result.updatedBy) {
+          expect(typeof result.updatedBy).toBe('object');
+          expect(result.updatedBy).toHaveProperty('id');
+        }
+      });
+
+      it('should handle entity with undefined id', async () => {
+        const entityData = { ...createBasicEntity(), id: undefined as any };
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const testData = {
+          id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+          name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME
+        };
+
+        await testEntityMethodUndefinedIdError({
+          methodName: 'updateRecord',
+          testData,
+          entity
+        });
+      });
+    });
+
     describe('entity.updateRecords()', () => {
       it('should call entity.updateRecords with entity id and data', async () => {
         const entityData = createBasicEntity();
@@ -174,16 +313,18 @@ describe('Entity Models', () => {
           { id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_AGE }
         ];
         const mockResponse = createMockUpdateResponse(testData);
-        mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.updateRecords(testData);
-
-        expect(mockService.updateRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        const result = await testEntityMethod({
+          operation: 'batch',
+          methodName: 'updateRecords',
+          serviceMethod: 'updateRecordsById',
           testData,
-          undefined
-        );
-        expect(result).toEqual(mockResponse);
+          options: undefined,
+          mockResponse,
+          entity,
+          mockService
+        });
+
         expect(result.successRecords).toHaveLength(2);
         expect(result.failureRecords).toHaveLength(0);
       });
@@ -199,27 +340,28 @@ describe('Entity Models', () => {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
           failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
         };
-        const mockResponse = createMockUpdateResponse(testData, { 
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
+        const mockResponse = createMockUpdateResponse(testData, {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
         });
-        mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.updateRecords(testData, options);
-
-        expect(mockService.updateRecordsById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        const result = await testEntityMethod({
+          operation: 'batch',
+          methodName: 'updateRecords',
+          serviceMethod: 'updateRecordsById',
           testData,
-          options
-        );
-        expect(result).toEqual(mockResponse);
-        
+          options,
+          mockResponse,
+          entity,
+          mockService
+        });
+
         // Validate response structure and data
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(0);
         expect(result.successRecords[0].id).toBe(testData[0].id);
         expect(result.successRecords[0].name).toBe(testData[0].name);
         expect(result.successRecords[0].age).toBe(testData[0].age);
-        
+
         // Verify expansion level affected the data (reference fields should be objects)
         if (result.successRecords[0].updatedBy) {
           expect(typeof result.successRecords[0].updatedBy).toBe('object');
@@ -231,9 +373,12 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
-        await expect(entity.updateRecords([
-          { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
-        ])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+        await testEntityMethodUndefinedIdError({
+          methodName: 'updateRecords',
+          testData: [{ id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }],
+          entity,
+          expectedErrorMessage: ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED
+        });
       });
 
       it('should handle partial failures in update', async () => {

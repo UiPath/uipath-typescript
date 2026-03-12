@@ -11,6 +11,7 @@ import {
   EntityInsertResponse,
   EntityBatchInsertResponse,
   EntityUpdateOptions,
+  EntityUpdateRecordOptions,
   EntityUpdateRecordsOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
@@ -278,7 +279,45 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
+   * Updates a single record in an entity by entity ID
+   *
+   * Note: Data Fabric supports trigger events only on individual updates, not on batch updates.
+   * Use this method if you need trigger events to fire for the updated record.
+   *
+   * @param entityId - UUID of the entity
+   * @param data - Record to update. MUST contain the record Id, otherwise the update will fail.
+   * @param options - Update options
+   * @returns Promise resolving to the updated record
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Basic usage
+   * const result = await entities.updateRecordById("<entityId>", { Id: "123", name: "John Updated", age: 31 });
+   *
+   * // With options
+   * const result = await entities.updateRecordById("<entityId>", { Id: "123", name: "John Updated", age: 31 }, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  @track('Entities.UpdateRecordById')
+  async updateRecordById(id: string, data: EntityRecord, options: EntityUpdateRecordOptions = {}): Promise<EntityRecord> {
+    return this.performUpdateOperation<EntityRecord>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(id),
+      data,
+      options
+    );
+  }
+
+  /**
    * Updates data in an entity by entity ID
+   *
+   * Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use {@link updateRecordById} if you need
+   * trigger events to fire for the updated record.
    *
    * @param entityId - UUID of the entity
    * @param data - Array of records to update. Each record MUST contain the record Id,
@@ -310,23 +349,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.UpdateRecordsById')
   async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
-    const params = createParams({
-      expansionLevel: options.expansionLevel,
-      failOnFirst: options.failOnFirst
-    });
-
-    const response = await this.post<EntityUpdateResponse>(
+    return this.performUpdateOperation<EntityUpdateResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(id),
       data,
-      {
-        params,
-        ...options
-      }
+      options
     );
-
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
   }
 
   /**
@@ -576,8 +603,37 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
+   * Performs an update operation for both single and batch updates
+   *
+   * @param endpoint - The API endpoint to call
+   * @param data - The data to update
+   * @param options - Update options
+   * @returns Promise resolving to the update response
+   * @private
+   */
+  private async performUpdateOperation<T extends object>(
+    endpoint: string,
+    data: EntityRecord | EntityRecord[],
+    options: EntityUpdateRecordOptions | EntityUpdateRecordsOptions
+  ): Promise<T> {
+    const params = createParams({
+      expansionLevel: options.expansionLevel,
+      ...(('failOnFirst' in options) && { failOnFirst: options.failOnFirst })
+    });
+
+    const response = await this.post<T>(endpoint, data, {
+      params,
+      ...options
+    });
+
+    // Convert PascalCase response to camelCase
+    const camelResponse = pascalToCamelCaseKeys(response.data);
+    return camelResponse;
+  }
+
+  /**
    * Orchestrates all field mapping transformations
-   * 
+   *
    * @param metadata - Entity metadata to transform
    * @private
    */

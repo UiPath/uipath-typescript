@@ -97,6 +97,14 @@ export type EntityInsertRecordsOptions = EntityOperationOptions;
 export type EntityUpdateOptions = EntityOperationOptions;
 
 /**
+ * Options for updating a single record in an entity
+ */
+export interface EntityUpdateRecordOptions {
+  /** Level of entity expansion (default: 0) */
+  expansionLevel?: number;
+}
+
+/**
  * Options for updating data in an entity
  */
 export type EntityUpdateRecordsOptions = EntityOperationOptions;
