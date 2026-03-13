@@ -17,7 +17,6 @@ export interface DeployOptions {
   name?: string;
   baseUrl?: string;
   orgId?: string;
-  orgName?: string;
   tenantId?: string;
   folderKey?: string;
   accessToken?: string;
@@ -47,6 +46,12 @@ interface PublishedAppResponse {
 
 interface DeployResponse {
   id: string;
+}
+
+interface UserOrgInfoResponse {
+  accountUserDto: {
+    accountLogicalName: string;
+  };
 }
 
 function loadAppConfig(logger: { log: (message: string) => void }): AppConfig | null {
@@ -125,6 +130,17 @@ async function upgradeApp(deploymentId: string, envConfig: EnvironmentConfig): P
   if (!response.ok) await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_UPGRADE);
 }
 
+async function fetchOrgName(envConfig: EnvironmentConfig): Promise<string> {
+  const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.USER_ORG_INFO}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: createHeaders({ bearerToken: envConfig.accessToken }),
+  });
+  if (!response.ok) await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_DEPLOYMENT);
+  const data = (await response.json()) as UserOrgInfoResponse;
+  return data.accountUserDto.accountLogicalName;
+}
+
 function updateAppConfig(deploymentId: string, logger: { log: (message: string) => void }): void {
   const configDir = path.join(process.cwd(), AUTH_CONSTANTS.FILES.UIPATH_DIR);
   const configPath = path.join(configDir, AUTH_CONSTANTS.FILES.APP_CONFIG);
@@ -150,7 +166,6 @@ export async function executeDeploy(options: DeployOptions): Promise<void> {
     {
       baseUrl: options.baseUrl,
       orgId: options.orgId,
-      orgName: options.orgName,
       tenantId: options.tenantId,
       folderKey: options.folderKey,
       accessToken: options.accessToken,
@@ -201,7 +216,8 @@ export async function executeDeploy(options: DeployOptions): Promise<void> {
     if (appConfig?.appType === AppType.Action) {
       logger.log(`  ${chalk.yellow(MESSAGES.INFO.ACTION_APP_RUN_IN_ACTION_CENTER)}`);
     } else {
-      const appUrl = buildAppUrl(envConfig.baseUrl, envConfig.orgName, appName);
+      const orgName = envConfig.orgName ?? await fetchOrgName(envConfig);
+      const appUrl = buildAppUrl(envConfig.baseUrl, orgName, appName);
       logger.log(`  ${chalk.cyan('App URL:')} ${chalk.green(appUrl)}`);
     }
   } catch (error) {
