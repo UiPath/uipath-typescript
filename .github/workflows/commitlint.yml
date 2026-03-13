@@ -3,14 +3,36 @@ name: Commitlint
 on:
   pull_request:
     branches: [main, feat/*]
-
-permissions:
-  contents: read
-  packages: read
+    types:
+      - opened           # a PR is opened
+      - edited           # PR title or description is edited
+      - synchronize      # new commits are pushed to PR branch
+      - reopened         # a previously closed PR is reopened
+      - ready_for_review # a draft PR is marked ready for review
 
 jobs:
+  pr-description:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: |
+      github.event.pull_request.draft == false
+    steps:
+      - name: Check PR description is not empty
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [ -z "$(echo "$PR_BODY" | tr -d '[:space:]')" ]; then
+            echo "❌ PR description is empty. Please provide relevant description for your pull request."
+            exit 1
+          fi
+          echo "PR description is present."
+
   commitlint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
