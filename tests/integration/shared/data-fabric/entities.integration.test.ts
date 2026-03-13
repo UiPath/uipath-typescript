@@ -269,8 +269,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
-        return;
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
       }
 
       // Insert a record to update
@@ -279,35 +278,30 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         description: 'Before update',
       };
 
-      try {
-        const inserted = await entities.insertRecordById(entityId, insertData);
-        const updateTestRecordId = inserted.id || inserted.Id;
+      const inserted = await entities.insertRecordById(entityId, insertData);
+      const updateTestRecordId = inserted.id || inserted.Id;
 
-        if (!updateTestRecordId) {
-          console.log('Could not get inserted record ID');
-          return;
-        }
-
-        createdRecordIds.push(updateTestRecordId);
-        registerResource('entityRecords', {
-          entityId,
-          recordIds: [updateTestRecordId],
-        });
-
-        // Update the record using updateRecordById
-        const result = await entities.updateRecordById(entityId, updateTestRecordId, {
-          description: 'After update',
-        });
-
-        expect(result).toBeDefined();
-
-        // Verify the update
-        const updated = await entities.getRecordById(entityId, updateTestRecordId);
-        expect(updated).toBeDefined();
-        expect(updated.description || updated.Description).toBe('After update');
-      } catch (error: any) {
-        console.log('updateRecordById test failed:', error.message);
+      if (!updateTestRecordId) {
+        throw new Error('Could not get inserted record ID');
       }
+
+      createdRecordIds.push(updateTestRecordId);
+      registerResource('entityRecords', {
+        entityId,
+        recordIds: [updateTestRecordId],
+      });
+
+      // Update the record using updateRecordById
+      const result = await entities.updateRecordById(entityId, updateTestRecordId, {
+        description: 'After update',
+      });
+
+      expect(result).toBeDefined();
+
+      // Verify the update
+      const updated = await entities.getRecordById(entityId, updateTestRecordId);
+      expect(updated).toBeDefined();
+      expect(updated.description || updated.Description).toBe('After update');
     });
 
     it('should handle API errors for non-existent record', async () => {
@@ -317,8 +311,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       await expect(
