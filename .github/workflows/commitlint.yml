@@ -4,16 +4,19 @@ on:
   pull_request:
     branches: [main, feat/*]
     types:
-      - opened # a PR is opened
-      - edited # a PR description is edited ( so authors can fix an empty description without re-pushing commits)
-      - synchronize # new commits are pushed to PR branch
-      - reopened # a previously closed PR is reopened
+      - opened           # a PR is opened
+      - edited           # PR title or description is edited
+      - synchronize      # new commits are pushed to PR branch
+      - reopened         # a previously closed PR is reopened
+      - ready_for_review # a draft PR is marked ready for review
 
 jobs:
   pr-description:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    if: |
+      github.event.pull_request.draft == false
     steps:
       - name: Check PR description is not empty
         env:
