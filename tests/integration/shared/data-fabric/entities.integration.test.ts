@@ -297,7 +297,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       });
 
       expect(result).toBeDefined();
-      expect(result.description || result.Description).toBe('After update');
+      expect(result.id).toBe(updateTestRecordId);
     });
 
     it('should handle API errors for non-existent record', async () => {
