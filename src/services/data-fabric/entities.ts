@@ -11,6 +11,8 @@ import {
   EntityInsertResponse,
   EntityBatchInsertResponse,
   EntityUpdateOptions,
+  EntityUpdateRecordOptions,
+  EntityUpdateRecordResponse,
   EntityUpdateRecordsOptions,
   EntityUpdateResponse,
   EntityDeleteOptions,
@@ -265,6 +267,50 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
     const response = await this.post<EntityBatchInsertResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(id),
+      data,
+      {
+        params,
+        ...options
+      }
+    );
+
+    // Convert PascalCase response to camelCase
+    const camelResponse = pascalToCamelCaseKeys(response.data);
+    return camelResponse;
+  }
+
+  /**
+   * Updates a single record in an entity by entity ID
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to update
+   * @param data - Key-value pairs of fields to update
+   * @param options - Update options
+   * @returns Promise resolving to the updated record
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Basic usage
+   * const result = await entities.updateRecordById("<entityId>", "<recordId>", { name: "John Updated", age: 31 });
+   *
+   * // With options
+   * const result = await entities.updateRecordById("<entityId>", "<recordId>", { name: "John Updated", age: 31 }, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  @track('Entities.UpdateRecordById')
+  async updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options: EntityUpdateRecordOptions = {}): Promise<EntityUpdateRecordResponse> {
+    const params = createParams({
+      expansionLevel: options.expansionLevel
+    });
+
+    const response = await this.post<EntityUpdateRecordResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(entityId, recordId),
       data,
       {
         params,

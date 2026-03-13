@@ -261,6 +261,61 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
+  describe('updateRecordById', () => {
+    it('should update a single record', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
+      }
+
+      // Insert a record to update
+      const insertData = {
+        name: `IntegrationTest_${mode}_updateRecordById_${generateRandomString(8)}`,
+        description: 'Before update',
+      };
+
+      const inserted = await entities.insertRecordById(entityId, insertData);
+      const updateTestRecordId = inserted.id || inserted.Id;
+
+      if (!updateTestRecordId) {
+        throw new Error('Could not get inserted record ID');
+      }
+
+      createdRecordIds.push(updateTestRecordId);
+      registerResource('entityRecords', {
+        entityId,
+        recordIds: [updateTestRecordId],
+      });
+
+      // Update the record using updateRecordById
+      const result = await entities.updateRecordById(entityId, updateTestRecordId, {
+        Description: 'After update',
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(updateTestRecordId);
+    });
+
+    it('should handle API errors for non-existent record', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      await expect(
+        entities.updateRecordById(entityId, 'non-existent-record-id', { description: 'No ID' })
+      ).rejects.toThrow();
+    });
+  });
+
   describe('Attachment operations', () => {
     it('should download attachment if available', async () => {
       const { entities } = getServices();
