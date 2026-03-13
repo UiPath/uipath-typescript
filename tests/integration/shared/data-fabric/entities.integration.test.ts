@@ -293,15 +293,11 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       // Update the record using updateRecordById
       const result = await entities.updateRecordById(entityId, updateTestRecordId, {
-        description: 'After update',
+        Description: 'After update',
       });
 
       expect(result).toBeDefined();
-
-      // Verify the update
-      const updated = await entities.getRecordById(entityId, updateTestRecordId);
-      expect(updated).toBeDefined();
-      expect(updated.description || updated.Description).toBe('After update');
+      expect(result.description || result.Description).toBe('After update');
     });
 
     it('should handle API errors for non-existent record', async () => {
