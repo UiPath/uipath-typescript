@@ -1,4 +1,4 @@
-import { Task, TaskCompleteResponse } from "./types";
+import { Task, TaskCompleteResponse } from './types';
 
 export enum ActionCenterEventNames {
   INIT = 'AC.init',

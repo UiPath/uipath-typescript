@@ -285,11 +285,17 @@ export class ConversationService extends BaseService implements ConversationServ
       uploadHeaders['Authorization'] = `Bearer ${token}`;
     }
 
-    const uploadResponse = await fetch(fileUploadAccess.url, {
+    const fetchOptions: RequestInit = {
       method: fileUploadAccess.verb,
-      body: file,
       headers: uploadHeaders
-    });
+    };
+
+    // Add body only for methods that support it (not GET, HEAD, etc.)
+    if (fileUploadAccess.verb.toUpperCase() !== 'GET' && fileUploadAccess.verb.toUpperCase() !== 'HEAD') {
+      fetchOptions.body = file;
+    }
+
+    const uploadResponse = await fetch(fileUploadAccess.url, fetchOptions);
 
     if (!uploadResponse.ok) {
       throw new NetworkError({

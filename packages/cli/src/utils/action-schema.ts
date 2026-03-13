@@ -1,4 +1,4 @@
-import path from "path";
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import { z } from 'zod';
@@ -28,8 +28,8 @@ function validateActionSchema(schema: any): JsonActionSchema {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors = error.issues.map(err => {
-        const path = err.path.length > 0 ? `${err.path.join('.')}` : 'root';
-        return `  - ${path}: ${err.message}`;
+        const errorPath = err.path.length > 0 ? `${err.path.join('.')}` : 'root';
+        return `  - ${errorPath}: ${err.message}`;
       });
       throw new Error(`${MESSAGES.ERRORS.INVALID_ACTION_SCHEMA}\n${errors.join('\n')}`);
     }

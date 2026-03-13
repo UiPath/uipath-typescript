@@ -163,8 +163,8 @@ export class SessionManager {
           const affectedConversations = this._socketToConversations.get(capturedSocket);
           if (affectedConversations) {
             // Copy: user error handlers may call endSession → releaseSocket → set.delete
-            const conversationIds = Array.from(affectedConversations);
-            for (const convId of conversationIds) {
+            const affectedConversationIds = Array.from(affectedConversations);
+            for (const convId of affectedConversationIds) {
               this._eventDispatcher?.dispatch({
                 conversationId: convId,
                 conversationError: {

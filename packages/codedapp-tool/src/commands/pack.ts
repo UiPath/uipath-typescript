@@ -1,27 +1,27 @@
-import type { Command } from "commander";
-import { executePack } from "@uipath/uipath-ts-cli/actions";
-import { withErrorHandling } from "../utils/error-handler.js";
+import type { Command } from 'commander';
+import { executePack } from '@uipath/uipath-ts-cli/actions';
+import { withErrorHandling } from '../utils/error-handler.js';
 
 export const registerPackCommand = (program: Command): void => {
   program
-    .command("pack")
-    .argument("<dist>", "Path to the dist folder containing the built application")
+    .command('pack')
+    .argument('<dist>', 'Path to the dist folder containing the built application')
     .allowUnknownOption(false)
     .allowExcessArguments(false)
-    .description("Package app into .nupkg")
-    .option("-n, --name <name>", "Package name")
-    .option("-v, --version <version>", "Package version", "1.0.0")
-    .option("-o, --output <dir>", "Output directory", "./.uipath")
-    .option("-a, --author <author>", "Package author", "UiPath Developer")
-    .option("--description <desc>", "Package description")
-    .option("--main-file <file>", "Main entry file", "index.html")
-    .option("--content-type <type>", "Content type (webapp, library, process)", "webapp")
-    .option("--dry-run", "Show what would be packaged without creating the package")
-    .option("--reuse-client", "Reuse existing clientId from uipath.json")
-    .option("--baseUrl <url>", "UiPath base URL")
-    .option("--orgId <id>", "Organization ID")
-    .option("--tenantId <id>", "Tenant ID")
-    .option("--accessToken <token>", "Access token")
+    .description('Package app into .nupkg')
+    .option('-n, --name <name>', 'Package name')
+    .option('-v, --version <version>', 'Package version', '1.0.0')
+    .option('-o, --output <dir>', 'Output directory', './.uipath')
+    .option('-a, --author <author>', 'Package author', 'UiPath Developer')
+    .option('--description <desc>', 'Package description')
+    .option('--main-file <file>', 'Main entry file', 'index.html')
+    .option('--content-type <type>', 'Content type (webapp, library, process)', 'webapp')
+    .option('--dry-run', 'Show what would be packaged without creating the package')
+    .option('--reuse-client', 'Reuse existing clientId from uipath.json')
+    .option('--baseUrl <url>', 'UiPath base URL')
+    .option('--orgId <id>', 'Organization ID')
+    .option('--tenantId <id>', 'Tenant ID')
+    .option('--accessToken <token>', 'Access token')
     .action(withErrorHandling(async (dist: string, options: Record<string, unknown>) => {
       await executePack({
         dist,

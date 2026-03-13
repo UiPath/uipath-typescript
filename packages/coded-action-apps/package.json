@@ -21,10 +21,12 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "docs": "typedoc",
+    "test": "echo \"No tests found\" && exit 0",
+    "test:coverage": "echo \"No tests found\" && exit 0",
     "lint": "oxlint"
   },
   "devDependencies": {
-    "oxlint": "^1.43.0",
+    "oxlint": "^0.18.0",
     "rimraf": "^6.0.1",
     "typedoc": "^0.28.13",
     "typedoc-plugin-markdown": "^4.8.1",

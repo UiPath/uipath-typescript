@@ -1,5 +1,5 @@
-import { BaseOptions, RequestOptions } from "../common/types";
-import { PaginationOptions } from "../../utils/pagination";
+import { BaseOptions, RequestOptions } from '../common/types';
+import { PaginationOptions } from '../../utils/pagination';
 
 export enum BucketOptions {
   None = 'None',

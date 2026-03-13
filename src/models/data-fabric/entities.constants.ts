@@ -1,4 +1,4 @@
-import { EntityFieldDataType } from "./entities.types";
+import { EntityFieldDataType } from './entities.types';
 
 /**
  * Entity field data types (SQL types from API)

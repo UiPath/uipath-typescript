@@ -46,7 +46,7 @@ export const ProcessList = () => {
       console.log('Instances response:', instancesResponse);
 
       // processesResponse is already MaestroProcessGetAllResponse[] from the SDK
-      const processes: MaestroProcessGetAllResponse[] = processesResponse;
+      const fetchedProcesses: MaestroProcessGetAllResponse[] = processesResponse;
       
       // instancesResponse can be either PaginatedResponse or NonPaginatedResponse
       let instances: ProcessInstanceGetResponse[];
@@ -64,7 +64,7 @@ export const ProcessList = () => {
       );
 
       setStats({
-        totalProcesses: processes.length,
+        totalProcesses: fetchedProcesses.length,
         runningInstances: instances.filter((i: any) => 
           (i.latestRunStatus || '').toLowerCase() === 'running' || 
           (i.latestRunStatus || '').toLowerCase() === 'in progress'
@@ -79,7 +79,7 @@ export const ProcessList = () => {
         ).length,
       });
       
-      setProcesses(processes);
+      setProcesses(fetchedProcesses);
     } catch (err) {
       console.error('Failed to fetch processes:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch processes');

@@ -138,6 +138,7 @@
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
         "docs:api": "typedoc && npm run docs:post-process",
         "docs:post-process": "node scripts/docs-post-process.mjs",
+        "commitlint": "commitlint --from=origin/main --to=HEAD --verbose",
         "lint": "oxlint",
         "typecheck": "tsc --noEmit",
         "test": "vitest",
@@ -160,6 +161,8 @@
         "zod": "^4.2.1"
     },
     "devDependencies": {
+        "@commitlint/cli": "^20.4.4",
+        "@commitlint/config-conventional": "^20.4.4",
         "@rollup/plugin-alias": "^6.0.0",
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-json": "^6.0.0",
@@ -171,7 +174,7 @@
         "@vitest/ui": "^3.2.4",
         "builtin-modules": "^3.3.0",
         "dotenv": "^17.2.0",
-        "oxlint": "^1.43.0",
+        "oxlint": "^0.18.0",
         "rimraf": "^6.0.1",
         "rollup": "^4.59.0",
         "rollup-plugin-dts": "^6.1.0",

@@ -7,6 +7,7 @@ import {
   createMockEntityResponse,
   createMockEntities,
   createMockEntityRecords,
+  createMockEntityRecord,
   createMockSingleInsertResponse,
   createMockInsertResponse,
   createMockUpdateResponse,
@@ -43,6 +44,82 @@ const mocks = vi.hoisted(() => {
 // Setup mocks at module level
 // NOTE: We do NOT mock transformData - we want to test the actual transformation logic!
 vi.mock('../../../../src/utils/pagination/helpers', async () => (await mocks).mockPaginationHelpers);
+
+// ===== TEST HELPERS =====
+interface UpdateOperationTestConfig {
+  operation: 'single' | 'batch';
+  method: 'updateRecordById' | 'updateRecordsById';
+  testData: EntityRecord | EntityRecord[];
+  expectedEndpoint: string;
+  expectedResponse: any;
+  entityService: EntityService;
+  mockApiClient: any;
+  options?: any;
+}
+
+/**
+ * Helper to test update operations (single or batch)
+ */
+const testUpdateOperation = async (config: UpdateOperationTestConfig) => {
+  const { operation, method, testData, expectedEndpoint, expectedResponse, entityService, mockApiClient, options } = config;
+
+  mockApiClient.post.mockResolvedValue(expectedResponse);
+
+  const result = options
+    ? await entityService[method](ENTITY_TEST_CONSTANTS.ENTITY_ID, testData as any, options)
+    : await entityService[method](ENTITY_TEST_CONSTANTS.ENTITY_ID, testData as any);
+
+  // Verify the result structure
+  expect(result).toBeDefined();
+  if (operation === 'single') {
+    expect((result as EntityRecord).id).toBeDefined();
+  } else {
+    expect((result as any).successRecords).toBeDefined();
+  }
+
+  // Verify the API call
+  const expectedParams = options
+    ? expect.objectContaining({
+        params: expect.objectContaining({
+          expansionLevel: options.expansionLevel,
+          ...(options.failOnFirst !== undefined && { failOnFirst: options.failOnFirst })
+        })
+      })
+    : expect.objectContaining({
+        params: expect.any(Object)
+      });
+
+  expect(mockApiClient.post).toHaveBeenCalledWith(expectedEndpoint, testData, expectedParams);
+
+  return result;
+};
+
+interface UpdateOperationErrorTestConfig {
+  method: 'updateRecordById' | 'updateRecordsById';
+  testData: EntityRecord | EntityRecord[];
+  expectedEndpoint: string;
+  entityService: EntityService;
+  mockApiClient: any;
+}
+
+/**
+ * Helper to test update operation error handling
+ */
+const testUpdateOperationError = async (config: UpdateOperationErrorTestConfig) => {
+  const { method, testData, expectedEndpoint, entityService, mockApiClient } = config;
+
+  mockApiClient.post.mockRejectedValue(new Error('API Error'));
+
+  await expect(entityService[method](ENTITY_TEST_CONSTANTS.ENTITY_ID, testData as any)).rejects.toThrow('API Error');
+
+  expect(mockApiClient.post).toHaveBeenCalledWith(
+    expectedEndpoint,
+    testData,
+    expect.objectContaining({
+      params: expect.any(Object)
+    })
+  );
+};
 
 // ===== TEST SUITE =====
 describe('EntityService Unit Tests', () => {
@@ -647,6 +724,89 @@ describe('EntityService Unit Tests', () => {
     });
   });
 
+  describe('updateRecordById', () => {
+    it('should update a single record successfully', async () => {
+      const testData: EntityRecord = {
+        id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+        age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE
+      };
+
+      const mockResponse = createMockEntityRecord(testData);
+      const result = await testUpdateOperation({
+        operation: 'single',
+        method: 'updateRecordById',
+        testData,
+        expectedEndpoint: DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expectedResponse: mockResponse,
+        entityService,
+        mockApiClient
+      });
+
+      // Verify specific single record update results
+      expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME);
+    });
+
+    it('should update a single record with options', async () => {
+      const testData: EntityRecord = {
+        id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+        age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
+        recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+        updatedBy: ENTITY_TEST_CONSTANTS.USER_ID
+      };
+
+      const options = {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      };
+
+      // With expansionLevel, reference fields should be expanded in the response
+      const mockResponse = createMockEntityRecord(testData);
+      if (testData.recordOwner) {
+        mockResponse.recordOwner = { id: testData.recordOwner };
+      }
+      if (testData.updatedBy) {
+        mockResponse.updatedBy = { id: testData.updatedBy };
+      }
+
+      const result = await testUpdateOperation({
+        operation: 'single',
+        method: 'updateRecordById',
+        testData,
+        expectedEndpoint: DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expectedResponse: mockResponse,
+        entityService,
+        mockApiClient,
+        options
+      });
+
+      // Check that reference fields are expanded when expansionLevel is provided
+      if (result.recordOwner) {
+        expect(typeof result.recordOwner).toBe('object');
+        expect(result.recordOwner).toHaveProperty('id');
+      }
+      if (result.updatedBy) {
+        expect(typeof result.updatedBy).toBe('object');
+        expect(result.updatedBy).toHaveProperty('id');
+      }
+    });
+
+    it('should handle API errors', async () => {
+      const testData: EntityRecord = {
+        id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME
+      };
+
+      await testUpdateOperationError({
+        method: 'updateRecordById',
+        testData,
+        expectedEndpoint: DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        entityService,
+        mockApiClient
+      });
+    });
+  });
+
   describe('updateRecordsById', () => {
     it('should update records successfully', async () => {
       const testData: EntityRecord[] = [
@@ -655,32 +815,27 @@ describe('EntityService Unit Tests', () => {
       ];
 
       const mockResponse = createMockUpdateResponse(testData);
-      mockApiClient.post.mockResolvedValue(mockResponse);
+      const result = await testUpdateOperation({
+        operation: 'batch',
+        method: 'updateRecordsById',
+        testData,
+        expectedEndpoint: DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expectedResponse: mockResponse,
+        entityService,
+        mockApiClient
+      });
 
-      const result = await entityService.updateRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData);
-
-      // Verify the result
-      expect(result).toBeDefined();
+      // Verify specific batch update results
       expect(result.successRecords).toHaveLength(2);
       expect(result.failureRecords).toHaveLength(0);
-      // Verify the response contains the data we sent
       expect(result.successRecords).toEqual(testData);
-
-      // Verify the API call has correct endpoint and body
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
-        testData,
-        expect.objectContaining({
-          params: expect.any(Object)
-        })
-      );
     });
 
     it('should update records with options', async () => {
       const testData: EntityRecord[] = [
-        { 
-          id: ENTITY_TEST_CONSTANTS.RECORD_ID, 
-          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, 
+        {
+          id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
           age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
           recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
           updatedBy: ENTITY_TEST_CONSTANTS.USER_ID
@@ -695,21 +850,17 @@ describe('EntityService Unit Tests', () => {
       const mockResponse = createMockUpdateResponse(testData, {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
       });
-      mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.updateRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, testData, options);
-
-      // Verify options are passed in params
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(Array),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-            failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
-          })
-        })
-      );
+      const result = await testUpdateOperation({
+        operation: 'batch',
+        method: 'updateRecordsById',
+        testData,
+        expectedEndpoint: DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expectedResponse: mockResponse,
+        entityService,
+        mockApiClient,
+        options
+      });
 
       // Verify reference fields are expanded in the response
       expect(result.successRecords[0].recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
@@ -738,13 +889,22 @@ describe('EntityService Unit Tests', () => {
     });
 
     it('should handle API errors', async () => {
-      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.post.mockRejectedValue(error);
+      const testData = [{ id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }];
 
-      await expect(entityService.updateRecordsById(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        [{ id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }]
-      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await testUpdateOperationError({
+        method: 'updateRecordsById',
+        testData,
+        expectedEndpoint: DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        entityService,
+        mockApiClient
+      });
+
+      // Additional check for the error content
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        testData,
+        expect.any(Object)
+      );
     });
   });
 
