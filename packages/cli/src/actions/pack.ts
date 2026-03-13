@@ -149,6 +149,7 @@ async function createOperateJson(config: PackageConfig): Promise<void> {
     main: config.mainFile,
     contentType: config.contentType,
     targetFramework: 'Portable',
+    targetRuntime: 'Coded',
     runtimeOptions: { requiresUserInteraction: false, isAttended: false },
     designOptions: { projectProfile: 'Development', outputType: config.contentType },
   };
