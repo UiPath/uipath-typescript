@@ -69,7 +69,10 @@ export interface EntityOperationOptions {
  * Options for inserting a single record into an entity
  * @deprecated Use {@link EntityInsertRecordOptions} instead for better clarity on inserting a single record into an entity. This type will be removed in future versions.
  */
-export type EntityInsertOptions = EntityGetRecordByIdOptions;
+export interface EntityInsertOptions {
+  /** Level of entity expansion (default: 0) */
+  expansionLevel?: number;
+}
 
 /**
  * Options for inserting a single record into an entity
