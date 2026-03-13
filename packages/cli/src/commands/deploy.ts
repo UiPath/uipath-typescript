@@ -10,7 +10,7 @@ export default class Deploy extends Command {
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> --name MyApp',
-    "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --orgName 'YourOrgName' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
+    "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
   ];
 
   static override flags = {
@@ -24,9 +24,6 @@ export default class Deploy extends Command {
     }),
     orgId: Flags.string({
       description: 'UiPath organization ID',
-    }),
-    orgName: Flags.string({
-      description: 'UiPath organization name',
     }),
     tenantId: Flags.string({
       description: 'UiPath tenant ID',
@@ -47,7 +44,6 @@ export default class Deploy extends Command {
         name: flags.name,
         baseUrl: flags.baseUrl,
         orgId: flags.orgId,
-        orgName: flags.orgName,
         tenantId: flags.tenantId,
         folderKey: flags.folderKey,
         accessToken: flags.accessToken,
