@@ -55,6 +55,16 @@ export const QUEUE_ENDPOINTS = {
 /**
  * Orchestrator Asset Service Endpoints
  */
+/**
+ * Orchestrator Job Service Endpoints
+ */
+export const JOB_ENDPOINTS = {
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs`,
+} as const;
+
+/**
+ * Orchestrator Asset Service Endpoints
+ */
 export const ASSET_ENDPOINTS = {
   GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered`,
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders`,
