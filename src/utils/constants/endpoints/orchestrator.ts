@@ -60,3 +60,11 @@ export const ASSET_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Assets(${id})`,
 } as const;
+
+/**
+ * Orchestrator Job Service Endpoints
+ */
+export const JOB_ENDPOINTS = {
+  GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/Jobs`,
+  GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.GetJobsAcrossFolders`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Jobs(${id})`,
