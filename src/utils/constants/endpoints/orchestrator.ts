@@ -68,3 +68,4 @@ export const JOB_ENDPOINTS = {
   GET_BY_FOLDER: `${ORCHESTRATOR_BASE}/odata/Jobs`,
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.GetJobsAcrossFolders`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Jobs(${id})`,
+} as const;
