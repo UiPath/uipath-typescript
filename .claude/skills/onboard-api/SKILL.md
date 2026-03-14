@@ -42,7 +42,9 @@ Use `AskUserQuestion` in **3 rounds**:
 | Is this a lifecycle/state-change operation (cancel, pause, resume, close, reopen)? | Op Type | Yes — lifecycle, No — data read/write |
 | What OAuth scope is required? | OAuth Scope | Free text |
 
-**Gate:** Do NOT proceed to Phase 2 without the **raw JSON response**. The transform pipeline cannot be derived without it.
+**Gate:** Do NOT proceed to Phase 2 without a **response shape**. This can be either:
+- A **real raw JSON response** from calling the endpoint (preferred — ground truth for casing, fields, enums)
+- A **schema-derived sample response** from `onboard-from-swagger` (acceptable — but flag casing/field assumptions as ⚠️ UNCERTAIN in transform decisions, and proceed with best-effort derivation)
 
 ---
 
@@ -81,7 +83,7 @@ For each item, the authoritative source is `sdk-service-dev`:
 - **"Did I check the existing types file for reusable shapes?"** — Creating a duplicate interface when an alias exists is the #1 review comment.
 - **"Does my OperationResponse decision match the operation type?"** — This is where lifecycle vs CRUD confusion causes the most rework.
 
-**Present a summary of all derived decisions to the user. Wait for confirmation before implementing.**
+**Log a compact summary of all derived decisions.** If invoked from `onboard-from-swagger` (unattended mode), proceed directly to Phase 3 without waiting. If invoked standalone, wait for user confirmation before implementing.
 
 ---
 
@@ -142,8 +144,8 @@ Only when onboarding an entirely new service. Follow `sdk-service-dev → e2e-te
 
 ## NEVER Do
 
-- **NEVER proceed to Phase 2 without the raw JSON response** — you cannot derive transforms from docs or schemas alone. The raw response is the single source of truth for casing, field names, and enum values. Guessing leads to wrong transforms that cascade through types, tests, and models.
-- **NEVER implement before confirming derived decisions with the user** — Phase 2 decisions compound into Phase 3 code. A wrong decision in 2a (transforms) or 2h (binding) means rewriting Steps 2-5. The confirmation step costs 30 seconds; the rework costs 30 minutes.
+- **NEVER proceed to Phase 2 without a response shape** — either a real raw JSON response (preferred) or a schema-derived sample from `onboard-from-swagger`. Real responses are the single source of truth for casing, field names, and enum values. Schema-derived samples are acceptable but flag casing assumptions as uncertain — proceed with best-effort derivation rather than blocking.
+- **NEVER implement before logging derived decisions** — Phase 2 decisions compound into Phase 3 code. Always print the derivation summary. When invoked standalone, wait for user confirmation. When invoked from `onboard-from-swagger` (unattended mode), proceed directly — the upstream skill already validated inputs against the spec.
 - **NEVER derive the transform pipeline once for the whole service** — each endpoint can return different shapes. A service's `getAll` may return PascalCase with `value` array while `getById` returns camelCase with flat object. Inspect each raw response independently.
 - **NEVER create new type interfaces without checking existing types first** — the #1 review feedback is "this should be a type alias." Always read `{domain}.types.ts` before creating anything new.
 - **NEVER skip Steps 8-10 (tests + docs)** — untested code and undocumented methods are incomplete implementations. Phase 4 verification will catch missing tests, but catching it earlier saves a rework cycle.
