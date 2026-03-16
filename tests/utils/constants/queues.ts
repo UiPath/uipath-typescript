@@ -18,15 +18,19 @@ export const QUEUE_TEST_CONSTANTS = {
   QUEUE_ITEM_PRIORITY: 'Normal',
   QUEUE_ITEM_REFERENCE: 'INV-1001',
   QUEUE_ITEM_PROGRESS: 'Queued',
-  CONTENT: {
+  // Parsed object payload surfaced by the SDK as `specificData`.
+  SPECIFIC_DATA_OBJECT: {
     invoiceNumber: 'INV-1001',
     amount: 1500
   },
-  SPECIFIC_DATA: '{"invoiceNumber":"INV-1001","amount":1500}',
-  OUTPUT: {
+  // Raw JSON-string payload returned separately as `specificDataJson`.
+  SPECIFIC_DATA_JSON: '{"invoiceNumber":"INV-1001","amount":1500}',
+  // Parsed object payload surfaced by the SDK as `outputData`.
+  OUTPUT_DATA_OBJECT: {
     completed: true
   },
-  OUTPUT_DATA: '{"completed":true}',
+  // Raw JSON-string payload returned separately as `outputDataJson`.
+  OUTPUT_DATA_JSON: '{"completed":true}',
 
   // Queue Configuration
   MAX_NUMBER_OF_RETRIES: 1,
