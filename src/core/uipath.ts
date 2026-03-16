@@ -1,11 +1,14 @@
 import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
-import { UiPathSDKConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
-import { validateConfig, normalizeBaseUrl } from './config/config-utils';
+import { TokenInfo } from './auth/types';
+import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
+import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
 import { SDKInternalsRegistry } from './internals';
+import { loadFromMetaTags } from './config/runtime';
 import type { IUiPath } from './types';
+import { isInActionCenter } from '../utils/platform';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -13,12 +16,13 @@ import type { IUiPath } from './types';
  * Handles authentication, configuration, and provides access to SDK internals
  * for service instantiation in the modular pattern.
  *
+ * Supports two usage patterns:
+ * 1. Full config in constructor — for server-side or explicit configuration
+ * 2. No config / partial config — loads from meta tags injected by @uipath/coded-apps plugin
+ *
  * @example
  * ```typescript
- * // Modular pattern
- * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Entities } from '@uipath/uipath-typescript/entities';
- *
+ * // Explicit config
  * const sdk = new UiPath({
  *   baseUrl: 'https://cloud.uipath.com',
  *   orgName: 'myorg',
@@ -27,23 +31,41 @@ import type { IUiPath } from './types';
  *   redirectUri: 'http://localhost:3000/callback',
  *   scope: 'OR.Users OR.Robots'
  * });
- *
  * await sdk.initialize();
+ * ```
  *
- * const entitiesService = new Entities(sdk);
- * const allEntities = await entitiesService.getAll();
+ * @example
+ * ```typescript
+ * // Auto-load from meta tags (coded apps)
+ * const sdk = new UiPath();
+ * await sdk.initialize();
  * ```
  */
 export class UiPath implements IUiPath {
   // Private fields - true runtime privacy, not visible via Object.keys()
-  #config: UiPathConfig;
-  #authService: AuthService;
+  #config?: UiPathConfig;
+  #authService?: AuthService;
   #initialized: boolean = false;
+  #partialConfig?: PartialUiPathConfig;
 
   /** Read-only config for user convenience */
-  public readonly config: Readonly<BaseConfig>;
+  public readonly config!: Readonly<BaseConfig>;
 
-  constructor(config: UiPathSDKConfig) {
+  constructor(config?: PartialUiPathConfig) {
+    // Load configuration from meta tags
+    const configFromMetaTags = loadFromMetaTags();
+
+    // Merge configuration: constructor config overrides meta tags
+    const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
+
+    if (mergedConfig && isCompleteConfig(mergedConfig)) {
+      this.#initializeWithConfig(mergedConfig);
+    } else if (config) {
+      this.#partialConfig = config;
+    }
+  }
+
+  #initializeWithConfig(config: UiPathSDKConfig): void {
     // Validate and normalize the configuration
     validateConfig(config);
 
@@ -73,7 +95,7 @@ export class UiPath implements IUiPath {
     });
 
     // Expose read-only config for user convenience
-    this.config = {
+    (this as any).config = {
       baseUrl: internalConfig.baseUrl,
       orgName: internalConfig.orgName,
       tenantName: internalConfig.tenantName
@@ -91,21 +113,47 @@ export class UiPath implements IUiPath {
     // Track SDK initialization
     trackEvent('Sdk.Auth');
 
-    // Auto-initialize for secret-based auth
-    if (hasSecretAuth) {
-      this.#authService.authenticateWithSecret(config.secret);
+    /** Auto-initialize for secret-based auth
+     * When viewed in Action Center, initialize tokenInfo with empty token. When an sdk call is made Action Center passes the token to sdk.
+     */
+    if (hasSecretAuth || isInActionCenter) {
+      this.#authService.authenticateWithSecret(config.secret ?? '');
       this.#initialized = true;
     }
+  }
+
+  #loadConfig(): UiPathSDKConfig {
+    // Load from meta tags
+    const metaConfig = loadFromMetaTags();
+
+    // Merge with any partial config from constructor (constructor overrides meta tags)
+    const merged = { ...metaConfig, ...this.#partialConfig };
+
+    if (!isCompleteConfig(merged)) {
+      throw new Error(
+        'UiPath SDK configuration not found. ' +
+        'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.'
+      );
+    }
+
+    return merged;
   }
 
   /**
    * Initialize the SDK based on the provided configuration.
    * This method handles both OAuth flow initiation and completion automatically.
    * For secret-based authentication, initialization is automatic and this returns immediately.
+   * If no config was provided in constructor, loads from meta tags.
    */
   public async initialize(): Promise<void> {
+    // Load config from meta tags if not provided in constructor
+    if (!this.#config) {
+      const loadedConfig = this.#loadConfig();
+      this.#initializeWithConfig(loadedConfig);
+    }
+
     // For secret-based auth, it's already initialized in constructor
-    if (hasSecretConfig(this.#config)) {
+    if (hasSecretConfig(this.#config!)) {
       return;
     }
 
@@ -124,7 +172,7 @@ export class UiPath implements IUiPath {
       }
 
       // Start new OAuth flow
-      await this.#authService.authenticate(this.#config);
+      await this.#authService!.authenticate(this.#config!);
 
       if (this.isAuthenticated()) {
         this.#initialized = true;
@@ -157,8 +205,14 @@ export class UiPath implements IUiPath {
       throw new Error('Not in OAuth callback state. Call initialize() first to start OAuth flow.');
     }
 
+    // Load config if not yet initialized
+    if (!this.#config) {
+      const loadedConfig = this.#loadConfig();
+      this.#initializeWithConfig(loadedConfig);
+    }
+
     try {
-      const success = await this.#authService.authenticate(this.#config);
+      const success = await this.#authService!.authenticate(this.#config!);
       if (success && this.isAuthenticated()) {
         this.#initialized = true;
         return true;
@@ -174,14 +228,37 @@ export class UiPath implements IUiPath {
    * Check if the user is authenticated (has valid token)
    */
   public isAuthenticated(): boolean {
-    return this.#authService.hasValidToken();
+    return this.#authService?.hasValidToken() ?? false;
   }
 
   /**
    * Get the current authentication token
    */
   public getToken(): string | undefined {
-    return this.#authService.getToken();
+    return this.#authService?.getToken();
+  }
+
+  /**
+   * Logout from the SDK, clearing all authentication state.
+   * After calling this method, the user will need to re-initialize to authenticate again.
+   */
+  public logout(): void {
+    // Secret-based auth has no session to end — skip silently
+    if (this.#config && hasSecretConfig(this.#config)) {
+      return;
+    }
+    this.#authService?.logout();
+    this.#initialized = false;
+  }
+
+  /**
+   * Updates the access token used for API requests.
+   * Use this to inject or refresh a token externally.
+   *
+   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh token
+   */
+  public updateToken(tokenInfo: TokenInfo): void {
+    this.#authService?.updateToken(tokenInfo);
   }
 
 }

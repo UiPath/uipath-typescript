@@ -26,9 +26,16 @@ const ENV_VAR_TO_FLAG = Object.fromEntries(
   Object.values(ENV_CONFIG).map(cfg => [cfg.envVar, `${cfg.flag} ${cfg.example}`])
 ) as Record<string, string>;
 
+// Maps primary env var name to auth package's canonical name (e.g. UIPATH_BASE_URL → UIPATH_URL)
+const ENV_VAR_ALT = Object.fromEntries(
+  Object.values(ENV_CONFIG)
+    .filter((cfg): cfg is typeof cfg & { altEnvVar: string } => 'altEnvVar' in cfg)
+    .map(cfg => [cfg.envVar, cfg.altEnvVar])
+) as Record<string, string>;
+
 /**
  * Validates app/package name to ensure it only contains allowed characters.
- * Allowed: letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-)
+ * Allowed: lowercase letters (a-z), numbers (0-9), and hyphens (-)
  */
 export function isValidAppName(name: string): boolean {
   return VALID_NAME_REGEX.test(name);
@@ -46,7 +53,7 @@ function mergeConfigValues(
   for (const envVar of requiredVars) {
     const configKey = ENV_VAR_TO_CONFIG_KEY[envVar];
     const flagValue = configKey && flagConfig?.[configKey];
-    merged[envVar] = flagValue || process.env[envVar];
+    merged[envVar] = flagValue || process.env[envVar] || process.env[ENV_VAR_ALT[envVar]];
   }
 
   return merged;
@@ -117,6 +124,7 @@ function buildConfig(
   return {
     baseUrl: normalizeBaseUrl(mergedValues[ENV_CONFIG.BASE_URL.envVar]),
     orgId: mergedValues[ENV_CONFIG.ORG_ID.envVar]!,
+    orgName: mergedValues[ENV_CONFIG.ORG_NAME.envVar]!,
     tenantId: mergedValues[ENV_CONFIG.TENANT_ID.envVar]!,
     tenantName: mergedValues[ENV_CONFIG.TENANT_NAME.envVar],
     folderKey: mergedValues[ENV_CONFIG.FOLDER_KEY.envVar],

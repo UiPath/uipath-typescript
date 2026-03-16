@@ -7,11 +7,16 @@ import {
   EntityBatchInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
+  EntityUpdateRecordOptions,
+  EntityUpdateRecordResponse,
   EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  EntityDownloadAttachmentOptions,
+  EntityFileType,
+  EntityUploadAttachmentOptions,
+  EntityUploadAttachmentResponse,
+  EntityDeleteAttachmentResponse,
   EntityInsertRecordsOptions,
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
@@ -250,7 +255,34 @@ export interface EntityServiceModel {
   batchInsertById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
+   * Updates a single record in an entity by entity ID
+   *
+   * Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
+   * Use this method if you need trigger events to fire for the updated record.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to update
+   * @param data - Key-value pairs of fields to update
+   * @param options - Update options
+   * @returns Promise resolving to the updated record
+   * {@link EntityUpdateRecordResponse}
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const result = await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated", age: 31 });
+   *
+   * // With options
+   * const result = await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated", age: 31 }, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse>;
+
+  /**
    * Updates data in an entity by entity ID
+   *
+   * Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use {@link updateRecordById} if you need trigger events to fire for each updated record.
    *
    * @param id - UUID of the entity
    * @param data - Array of records to update. Each record MUST contain the record Id.
@@ -310,7 +342,9 @@ export interface EntityServiceModel {
   /**
    * Downloads an attachment stored in a File-type field of an entity record.
    *
-   * @param options - Options containing entityName, recordId, and fieldName
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
    * @returns Promise resolving to Blob containing the file content
    * @example
    * ```typescript
@@ -323,15 +357,19 @@ export interface EntityServiceModel {
    * // Get the recordId for the record that contains the attachment
    * const recordId = records.items[0].id;
    *
-   * // Download attachment using service method
-   * const response = await entities.downloadAttachment({
-   *   entityName: 'Invoice',
-   *   recordId: recordId,
-   *   fieldName: 'Documents'
-   * });
+   * // Get the entityId from getAll()
+   * const allEntities = await entities.getAll();
+   * const entityId = allEntities[0].id;
    *
-   * // Or download using entity method
-   * const entity = await entities.getById("<entityId>");
+   * // Get the recordId from getAllRecords()
+   * const records = await entities.getAllRecords(entityId);
+   * const recordId = records[0].id;
+   *
+   * // Download attachment using service method
+   * const response = await entities.downloadAttachment(entityId, recordId, 'Documents');
+   *
+   * // Or download using entity method (entityId is already known)
+   * const entity = await entities.getById(entityId);
    * const blob = await entity.downloadAttachment(recordId, 'Documents');
    *
    * // Browser: Display Image
@@ -353,7 +391,76 @@ export interface EntityServiceModel {
    * fs.writeFileSync('attachment.pdf', buffer);
    * ```
    */
-  downloadAttachment(options: EntityDownloadAttachmentOptions): Promise<Blob>;
+  downloadAttachment(entityId: string, recordId: string, fieldName: string): Promise<Blob>;
+
+  /**
+   * Uploads an attachment to a File-type field of an entity record.
+   *
+   * Uses multipart/form-data to upload the file content to the specified field.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to upload the attachment to
+   * @param fieldName - Name of the File-type field
+   * @param file - File to upload (Blob, File, or Uint8Array)
+   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. expansionLevel)
+   * @returns Promise resolving to {@link EntityUploadAttachmentResponse}
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Get the entityId from getAll()
+   * const allEntities = await entities.getAll();
+   * const entityId = allEntities[0].id;
+   *
+   * // Get the recordId from getAllRecords()
+   * const records = await entities.getAllRecords(entityId);
+   * const recordId = records[0].id;
+   *
+   * // Browser: Upload a file from an input element
+   * const fileInput = document.getElementById('file-input') as HTMLInputElement;
+   * const file = fileInput.files[0];
+   * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
+   *
+   * // Node.js: Upload a file from disk
+   * const fileBuffer = fs.readFileSync('document.pdf');
+   * const blob = new Blob([fileBuffer], { type: 'application/pdf' });
+   * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', blob);
+   * ```
+   */
+  uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
+
+  /**
+   * Removes an attachment from a File-type field of an entity record.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
+   * @returns Promise resolving to {@link EntityDeleteAttachmentResponse}
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Get the entityId from getAll()
+   * const allEntities = await entities.getAll();
+   * const entityId = allEntities[0].id;
+   *
+   * // Get the recordId from getAllRecords()
+   * const records = await entities.getAllRecords(entityId);
+   * const recordId = records[0].id;
+   *
+   * // Delete attachment for a specific record and field
+   * await entities.deleteAttachment(entityId, recordId, 'Documents');
+   *
+   * // Or delete using entity method (entityId is already known)
+   * const entity = await entities.getById(entityId);
+   * await entity.deleteAttachment(recordId, 'Documents');
+   * ```
+   */
+  deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
 }
 
 /**
@@ -385,8 +492,24 @@ export interface EntityMethods {
   insertRecords(data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse>;
 
   /**
+   * Update a single record in this entity
+   *
+   * Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
+   * Use this method if you need trigger events to fire for the updated record.
+   *
+   * @param recordId - UUID of the record to update
+   * @param data - Key-value pairs of fields to update
+   * @param options - Update options
+   * @returns Promise resolving to the updated record
+   */
+  updateRecord(recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse>;
+
+  /**
    * Update data in this entity
-   * 
+   *
+   * Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use {@link updateRecord} if you need
+   * trigger events to fire for each updated record.
+   *
    * @param data - Array of records to update. Each record MUST contain the record Id,
    *               otherwise the update will fail.
    * @param options - Update options
@@ -432,6 +555,26 @@ export interface EntityMethods {
    * @returns Promise resolving to Blob containing the file content
    */
   downloadAttachment(recordId: string, fieldName: string): Promise<Blob>;
+
+  /**
+   * Uploads an attachment to a File-type field of an entity record
+   *
+   * @param recordId - UUID of the record to upload the attachment to
+   * @param fieldName - Name of the File-type field
+   * @param file - File to upload (Blob, File, or Uint8Array)
+   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. expansionLevel)
+   * @returns Promise resolving to {@link EntityUploadAttachmentResponse}
+   */
+  uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
+
+  /**
+   * Deletes an attachment from a File-type field of an entity record
+   *
+   * @param recordId - UUID of the record containing the attachment
+   * @param fieldName - Name of the File-type field containing the attachment
+   * @returns Promise resolving to {@link EntityDeleteAttachmentResponse}
+   */
+  deleteAttachment(recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
 
   /**
    * @deprecated Use {@link insertRecord} instead.
@@ -494,6 +637,13 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.insertRecordsById(entityData.id, data, options);
     },
 
+    async updateRecord(recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      if (!recordId) throw new Error('Record ID is undefined');
+
+      return service.updateRecordById(entityData.id, recordId, data, options);
+    },
+
     async updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
@@ -524,13 +674,21 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     },
 
     async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
-      if (!entityData.name) throw new Error('Entity name is undefined');
+      if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.downloadAttachment({
-        entityName: entityData.name,
-        recordId,
-        fieldName
-      });
+      return service.downloadAttachment(entityData.id, recordId, fieldName);
+    },
+
+    async uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+
+      return service.uploadAttachment(entityData.id, recordId, fieldName, file, options);
+    },
+
+    async deleteAttachment(recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+
+      return service.deleteAttachment(entityData.id, recordId, fieldName);
     },
 
     async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {

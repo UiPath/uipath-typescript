@@ -39,6 +39,7 @@ vi.mock('../../../src/core/auth/service', () => {
   AuthService.isInOAuthCallback = vi.fn(() => false);
   AuthService.getStoredOAuthContext = vi.fn(() => null);
   AuthService._mergeConfigWithContext = vi.fn((config: any) => config);
+  AuthService._clearStoredOAuthContext = vi.fn();
 
   return { AuthService };
 });
@@ -301,16 +302,14 @@ describe('UiPath Legacy Pattern', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle config validation errors', () => {
-      expect(() => {
-        // oxlint-disable-next-line no-new
-        new UiPath({
-          baseUrl: '',
-          orgName: '',
-          tenantName: '',
-          secret: ''
-        } as any);
-      }).toThrow();
+    it('should handle config validation errors', async () => {
+      const sdk = new UiPath({
+        baseUrl: '',
+        orgName: '',
+        tenantName: '',
+        secret: ''
+      } as any);
+      await expect(sdk.initialize()).rejects.toThrow();
     });
   });
 });

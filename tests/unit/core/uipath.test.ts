@@ -12,18 +12,22 @@ const mockTokenManager = {
   hasValidToken: () => true
 };
 
+const mockLogout = vi.fn();
+
 vi.mock('../../../src/core/auth/service', () => {
   const AuthService: any = vi.fn().mockImplementation(() => ({
     getTokenManager: () => mockTokenManager,
     hasValidToken: () => true,
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
-    authenticate: vi.fn().mockResolvedValue(true)
+    authenticate: vi.fn().mockResolvedValue(true),
+    logout: mockLogout
   }));
 
   AuthService.isInOAuthCallback = vi.fn(() => false);
   AuthService.getStoredOAuthContext = vi.fn(() => null);
   AuthService._mergeConfigWithContext = vi.fn((config: any) => config);
+  AuthService._clearStoredOAuthContext = vi.fn();
 
   return { AuthService };
 });
@@ -59,16 +63,14 @@ describe('UiPath Core', () => {
       expect(sdk.isInitialized()).toBe(false); // OAuth requires initialize()
     });
 
-    it('should validate required config fields', () => {
-      expect(() => {
-        // oxlint-disable-next-line no-new
-        new UiPath({
-          baseUrl: '',
-          orgName: '',
-          tenantName: '',
-          secret: ''
-        } as any);
-      }).toThrow();
+    it('should validate required config fields', async () => {
+      const sdk = new UiPath({
+        baseUrl: '',
+        orgName: '',
+        tenantName: '',
+        secret: ''
+      } as any);
+      await expect(sdk.initialize()).rejects.toThrow();
     });
 
     it('should normalize baseUrl', () => {
@@ -309,6 +311,44 @@ describe('UiPath Core', () => {
 
       expect(secretSdk.isInitialized()).toBe(true);
       expect(oauthSdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('Logout', () => {
+    beforeEach(() => {
+      mockLogout.mockClear();
+    });
+
+    it('should skip silently for secret-based auth', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      expect(sdk.isInitialized()).toBe(true);
+
+      sdk.logout();
+
+      expect(mockLogout).not.toHaveBeenCalled();
+      expect(sdk.isInitialized()).toBe(true);
+    });
+
+    it('should work for OAuth-configured instances', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        clientId: TEST_CONSTANTS.CLIENT_ID,
+        redirectUri: 'http://localhost:3000/callback',
+        scope: 'offline_access'
+      });
+
+      sdk.logout();
+
+      expect(mockLogout).toHaveBeenCalledOnce();
+      expect(sdk.isInitialized()).toBe(false);
     });
   });
 

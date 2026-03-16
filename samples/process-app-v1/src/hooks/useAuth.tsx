@@ -17,7 +17,7 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sdk, setSdk] = useState<UiPath>(() => new UiPath(config));
+  const [sdk] = useState<UiPath>(() => new UiPath(config));
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -60,11 +60,9 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
   };
 
   const logout = () => {
+    sdk.logout();
     setIsAuthenticated(false);
     setError(null);
-    // Create new SDK instance for next login
-    const sdk = new UiPath(config);
-    setSdk(sdk);
   };
 
   return (

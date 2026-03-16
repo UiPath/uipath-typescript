@@ -30,8 +30,11 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `insertRecordById()` / `insertRecord()` | `DataFabric.Data.Write` |
 | `insertRecordsById()` / `insertRecords()` | `DataFabric.Data.Write` |
 | `deleteRecordsById()` / `deleteRecords()` | `DataFabric.Data.Write` |
+| `updateRecordById()` / `updateRecord()` | `DataFabric.Data.Write` |
 | `updateRecordsById()` / `updateRecords()` | `DataFabric.Data.Write` |
 | `downloadAttachment()` | `DataFabric.Data.Read` |
+| `uploadAttachment()` | `DataFabric.Data.Write` |
+| `deleteAttachment()` | `DataFabric.Data.Write` |
 
 ## ChoiceSets
 
@@ -71,15 +74,59 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `PIMS` |
-| `getById()` | `PIMS` |
+| `getAll()` | `PIMS OR.Execution.Read` |
+| `getById()` | `PIMS OR.Execution.Read` |
 | `close()` | `PIMS` |
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
 | `reopen()` | `PIMS` |
 | `getExecutionHistory()` | `PIMS` |
-| `getStages()` | `PIMS` |
+| `getStages()` | `PIMS OR.Execution.Read` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
+
+## Conversational Agent
+
+To use the full Conversational Agent functionality (discover agents, manage conversations, stream real-time responses via WebSocket sessions, and retrieve history), your external app needs the following combined scopes:
+
+`OR.Execution` · `OR.Folders` · `OR.Jobs` · `ConversationalAgents` · `Traces.Api`
+
+/// note
+The `ConversationalAgents` scope is required for real-time WebSocket sessions (`startSession()`). Without it, REST API calls for agents and conversations will work, but the socket connection will fail.
+///
+
+### Agents
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Execution` or `OR.Execution.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read` |
+
+### Conversations
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `create()` | `OR.Execution`, `OR.Folders`, `OR.Jobs` |
+| `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `updateById()` | `OR.Execution`, `OR.Jobs` |
+| `deleteById()` | `OR.Execution`, `OR.Jobs` |
+| `startSession()` | `OR.Execution`, `OR.Jobs`, `ConversationalAgents` |
+| `uploadAttachment()` | `OR.Execution`, `OR.Jobs` |
+
+### Exchanges
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `createFeedback()` | `OR.Execution`, `OR.Jobs`, `Traces.Api` |
+
+### Messages
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
+| `getContentPartById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 
 ## Processes
 

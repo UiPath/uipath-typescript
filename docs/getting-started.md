@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node.js** 18.x or higher
+- **Node.js** 20.x or higher
 - **npm** 8.x or higher (or yarn/pnpm)
 - **TypeScript** 4.5+ (for TypeScript projects)
 

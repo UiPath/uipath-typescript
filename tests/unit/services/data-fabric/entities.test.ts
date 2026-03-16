@@ -9,6 +9,7 @@ import {
   createMockEntityRecords,
   createMockSingleInsertResponse,
   createMockInsertResponse,
+  createMockSingleUpdateResponse,
   createMockUpdateResponse,
   createMockDeleteResponse,
   createMockEntityWithExternalFields,
@@ -21,10 +22,10 @@ import type {
   EntityGetRecordByIdOptions,
   EntityInsertRecordOptions,
   EntityInsertRecordsOptions,
+  EntityUpdateRecordOptions,
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
   EntityRecord,
-  EntityDownloadAttachmentOptions,
   EntityGetAllRecordsOptions
 } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
@@ -92,6 +93,7 @@ describe('EntityService Unit Tests', () => {
       // Verify entity has methods attached
       expect(typeof result.insertRecord).toBe('function');
       expect(typeof result.insertRecords).toBe('function');
+      expect(typeof result.updateRecord).toBe('function');
       expect(typeof result.updateRecords).toBe('function');
       expect(typeof result.deleteRecords).toBe('function');
       expect(typeof result.getAllRecords).toBe('function');
@@ -648,6 +650,81 @@ describe('EntityService Unit Tests', () => {
     });
   });
 
+  describe('updateRecordById', () => {
+    it('should update a single record successfully', async () => {
+      const testData = {
+        name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+        age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE
+      };
+
+      const mockResponse = createMockSingleUpdateResponse({ id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData });
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await entityService.updateRecordById(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID, testData);
+
+      // Verify the result is the updated record
+      expect(result).toBeDefined();
+      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME);
+      expect(result.age).toBe(ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE);
+
+      // Verify the API call has correct endpoint and body without record ID
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID),
+        { name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE },
+        expect.objectContaining({
+          params: expect.any(Object)
+        })
+      );
+    });
+
+    it('should update a record with options', async () => {
+      const testData = {
+        name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+        age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
+        recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+        updatedBy: ENTITY_TEST_CONSTANTS.USER_ID
+      };
+      const options: EntityUpdateRecordOptions = {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      };
+
+      // With expansionLevel, reference fields should be expanded in the response
+      const mockResponse = createMockSingleUpdateResponse({ id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData }, {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+      });
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await entityService.updateRecordById(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID, testData, options);
+
+      // Verify options are passed in params
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        testData,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          })
+        })
+      );
+
+      // Verify reference fields are expanded in the response
+      expect(result.recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.updatedBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(entityService.updateRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        { name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
   describe('updateRecordsById', () => {
     it('should update records successfully', async () => {
       const testData: EntityRecord[] = [
@@ -839,13 +916,11 @@ describe('EntityService Unit Tests', () => {
       const mockBlob = new Blob(['test content'], { type: 'application/pdf' });
       mockApiClient.get.mockResolvedValue(mockBlob);
 
-      const options: EntityDownloadAttachmentOptions = {
-        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
-      };
-
-      const result = await entityService.downloadAttachment(options);
+      const result = await entityService.downloadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      );
 
       // Verify the result is a Blob
       expect(result).toBeDefined();
@@ -855,7 +930,7 @@ describe('EntityService Unit Tests', () => {
       // Verify the API call has correct endpoint and responseType
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
         ),
@@ -867,13 +942,113 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      const options: EntityDownloadAttachmentOptions = {
-        entityName: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-        recordId: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        fieldName: ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
-      };
+      await expect(entityService.downloadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
 
-      await expect(entityService.downloadAttachment(options)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+  describe('uploadAttachment', () => {
+    it.each([
+      { type: 'Blob', file: new Blob(['test file content'], { type: 'application/pdf' }), response: { id: ENTITY_TEST_CONSTANTS.RECORD_ID, status: 'uploaded' } },
+      { type: 'Uint8Array', file: new Uint8Array([72, 101, 108, 108, 111]), response: { id: ENTITY_TEST_CONSTANTS.RECORD_ID } },
+    ])('should upload attachment successfully with $type', async ({ file, response }) => {
+      mockApiClient.post.mockResolvedValue(response);
+
+      const result = await entityService.uploadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file
+      );
+
+      expect(result).toEqual(response);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        expect.any(FormData),
+        { params: {} }
+      );
+    });
+
+    it('should include expansionLevel query parameter when provided', async () => {
+      const mockUploadResponse = { id: ENTITY_TEST_CONSTANTS.RECORD_ID };
+      mockApiClient.post.mockResolvedValue(mockUploadResponse);
+
+      const file = new Blob(['test']);
+
+      await entityService.uploadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file,
+        { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        expect.any(FormData),
+        { params: { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL } }
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      const file = new Blob(['test']);
+
+      await expect(entityService.uploadAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file
+      )).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE
+      );
+    });
+  });
+
+  describe('deleteAttachment', () => {
+    it('should delete attachment successfully', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await entityService.deleteAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      await expect(entityService.deleteAttachment(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      )).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE
+      );
     });
   });
 });

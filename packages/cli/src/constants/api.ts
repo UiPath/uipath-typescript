@@ -11,7 +11,6 @@ export const API_ENDPOINTS = {
   STUDIO_WEB_CREATE_FILE: '/studio_/backend/api/Project/{projectId}/FileOperations/File',
   STUDIO_WEB_UPDATE_FILE: '/studio_/backend/api/Project/{projectId}/FileOperations/File/{fileId}',
   STUDIO_WEB_CREATE_FOLDER: '/studio_/backend/api/Project/{projectId}/FileOperations/Folder',
-  STUDIO_WEB_MOVE_FOLDER: '/studio_/backend/api/Project/{projectId}/FileOperations/Folder/Move',
   // Resource Catalog endpoints
   RESOURCE_CATALOG_ENTITIES: '/resourcecatalog_/Entities/{resourceType}',
   // Connections endpoint
@@ -23,7 +22,11 @@ export const API_ENDPOINTS = {
   DEPLOY_APP: '/apps_/default/api/v1/default/models/{systemName}/publish/versions/1/deploy',
   UPGRADE_APP: '/apps_/default/api/v1/default/models/deployed/apps/updateToLatestAppVersionBulk',
   // Published apps endpoints (for version lookup)
-  PUBLISHED_APPS: '/apps_/default/api/v1/default/models/tenants/{tenantId}/publish/apps'
+  PUBLISHED_APPS: '/apps_/default/api/v1/default/models/tenants/{tenantId}/publish/apps',
+  // Check app name uniqueness
+  CHECK_APP_NAME_UNIQUE: '/apps_/default/api/v1/default/models/deployed/apps/uniquename/check/{appName}',
+  // List all projects owned by or shared with the user
+  STUDIO_WEB_LIST_PROJECTS: '/studio_/backend/api/Project'
 } as const;
 
 /** Studio Web API request headers */
@@ -45,6 +48,9 @@ export const STUDIO_WEB_REFERENCED_RESOURCE_FORCE_UPDATE = 'true';
 /** Resource catalog search: first page, up to 100 matches by name (sufficient for bindings lookup). */
 export const RESOURCE_CATALOG_SKIP = '0';
 export const RESOURCE_CATALOG_TAKE = '100';
+
+/** Max length of error message sent to telemetry (truncate with "..." to avoid oversized payloads). */
+export const MAX_TELEMETRY_ERROR_LENGTH = 500;
 
 /** Push metadata: local path under project root; uploaded to source/push_metadata.json on remote. */
 export const PUSH_METADATA_RELATIVE_PATH = '.uipath/push_metadata.json';

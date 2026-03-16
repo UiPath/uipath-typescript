@@ -6,6 +6,7 @@ export const AUTH_CONSTANTS = {
     AUTH_FILE: '.auth.json',
     ENV_FILE: '.env',
     METADATA_FILE: 'metadata.json',
+    SDK_CONFIG: 'uipath.json',
   },
   DOMAINS: {
     CLOUD: 'cloud',
@@ -24,6 +25,11 @@ export const AUTH_CONSTANTS = {
     NO_CONTENT: 204,
     BAD_REQUEST: 400,
     UNAUTHORIZED: 401,
+    CONFLICT: 409,
+  },
+  // Orchestrator error codes
+  ERROR_CODES: {
+    PACKAGE_ALREADY_EXISTS: 1004,
   },
   CONTENT_TYPES: {
     JSON: 'application/json',
@@ -65,12 +71,14 @@ export const AUTH_CONSTANTS = {
   ENV_CONFIG: {
     BASE_URL: {
       envVar: 'UIPATH_BASE_URL',
+      altEnvVar: 'UIPATH_URL',
       configKey: 'baseUrl' as const,
       flag: '--baseUrl',
       example: "'https://cloud.uipath.com'",
     },
     ORG_ID: {
       envVar: 'UIPATH_ORG_ID',
+      altEnvVar: 'UIPATH_ORGANIZATION_ID',
       configKey: 'orgId' as const,
       flag: '--orgId',
       example: "'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'",
@@ -107,32 +115,39 @@ export const AUTH_CONSTANTS = {
     },
   },
   REQUIRED_ENV_VARS: {
-    // Required for register app command
-    REGISTER_APP: [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID',
-      'UIPATH_TENANT_ID',
-      'UIPATH_TENANT_NAME',
-      'UIPATH_FOLDER_KEY',
-      'UIPATH_ACCESS_TOKEN'
-    ],
-    // Required for publish command (no folder key or tenant name needed)
+    // Required for publish command (includes tenant name for coded app registration)
     PUBLISH: [
       'UIPATH_BASE_URL',
       'UIPATH_ORG_ID',
       'UIPATH_TENANT_ID',
+      'UIPATH_TENANT_NAME',
       'UIPATH_ACCESS_TOKEN'
     ],
     // Required for deploy command
     DEPLOY: [
       'UIPATH_BASE_URL',
       'UIPATH_ORG_ID',
+      'UIPATH_ORG_NAME',
       'UIPATH_TENANT_ID',
       'UIPATH_FOLDER_KEY',
       'UIPATH_ACCESS_TOKEN'
     ],
+    // Required for pack command (app name uniqueness check)
+    PACK: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_ACCESS_TOKEN'
+    ],
     // Required for push command (Studio Web)
     PUSH: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_ACCESS_TOKEN'
+    ],
+    // Required for pull command (Studio Web) — same as PUSH
+    PULL: [
       'UIPATH_BASE_URL',
       'UIPATH_ORG_ID',
       'UIPATH_TENANT_ID',

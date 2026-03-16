@@ -20,6 +20,7 @@ lib/
 .env
 .env.local
 .env.*.local
+.env.integration
 
 # Test coverage
 coverage/
@@ -59,3 +60,5 @@ dist/
 docs/api/
 site/
 .uipath/
+
+.claude

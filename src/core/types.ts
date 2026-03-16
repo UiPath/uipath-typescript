@@ -9,6 +9,7 @@
  */
 
 import type { BaseConfig } from './config/sdk-config';
+import type { TokenInfo } from './auth/types';
 
 export interface IUiPath {
   /** Read-only configuration for the SDK instance */
@@ -45,4 +46,18 @@ export interface IUiPath {
    * Get the current authentication token
    */
   getToken(): string | undefined;
+
+  /**
+   * Logout from the SDK, clearing all authentication state.
+   * After calling this method, the user will need to re-initialize to authenticate again.
+   */
+  logout(): void;
+
+  /**
+   * Updates the access token used for API requests.
+   * Use this to inject or refresh a token externally.
+   *
+   * @param tokenInfo - The token information containing the access token, type, expiration, and optional refresh token
+   */
+  updateToken(tokenInfo: TokenInfo): void;
 }

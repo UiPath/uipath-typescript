@@ -2,8 +2,6 @@ import { Config } from '../config/config';
 import { ExecutionContext } from '../context/execution';
 import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
-import { TokenInfo } from '../auth/types';
-import { AuthenticationError, HttpStatus } from '../errors';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
 import { CONTENT_TYPES, RESPONSE_TYPES } from '../../utils/constants/headers';
@@ -42,52 +40,13 @@ export class ApiClient {
    * @throws AuthenticationError if no token available or refresh fails
    */
   public async getValidToken(): Promise<string> {
-    // Try to get token info from context
-    const tokenInfo = this.executionContext.get('tokenInfo') as TokenInfo | undefined;
-    
-    if (!tokenInfo) {
-      throw new AuthenticationError({ message: 'No authentication token available. Make sure to initialize the SDK first.' });
-    }
-
-    // For secret-based tokens, they never expire
-    if (tokenInfo.type === 'secret') {
-      return tokenInfo.token;
-    }
-
-    // If token is not expired, return it
-    if (!this.tokenManager.isTokenExpired(tokenInfo)) {
-      return tokenInfo.token;
-    }
-
-    try {
-      const newToken = await this.tokenManager.refreshAccessToken();
-      return newToken.access_token;
-    } catch (error: any) {
-      throw new AuthenticationError({
-        message: `Token refresh failed: ${error.message}. Please re-authenticate.`,
-        statusCode: HttpStatus.UNAUTHORIZED
-      });
-    }
+    return this.tokenManager.getValidToken();
   }
 
   private async getDefaultHeaders(): Promise<Record<string, string>> {
-    // Get headers from execution context first
-    const contextHeaders = this.executionContext.getHeaders();
-    
-    // If Authorization header is already set in context, use that
-    if (contextHeaders['Authorization']) {
-      return {
-        ...contextHeaders,
-        'Content-Type': CONTENT_TYPES.JSON,
-        ...this.defaultHeaders,
-        ...this.clientConfig.headers
-      };
-    }
-
     const token = await this.getValidToken();
 
     return {
-      ...contextHeaders,
       'Authorization': `Bearer ${token}`,
       'Content-Type': CONTENT_TYPES.JSON,
       ...this.defaultHeaders,
@@ -106,8 +65,13 @@ export class ApiClient {
       this.config.baseUrl
     ).toString();
 
+    const isFormData = options.body instanceof FormData;
+    const defaultHeaders = await this.getDefaultHeaders();
+    if (isFormData) {
+      delete defaultHeaders['Content-Type'];
+    }
     const headers = {
-      ...await this.getDefaultHeaders(),
+      ...defaultHeaders,
       ...options.headers
     };
 
@@ -120,11 +84,17 @@ export class ApiClient {
     }
     const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
 
+    let body = undefined;
+    
+    if(options.body) {
+      body = isFormData ? (options.body as FormData) : JSON.stringify(options.body)
+    }
+
     try {
       const response = await fetch(fullUrl, {
         method,
         headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
+        body,
         signal: options.signal
       });
 

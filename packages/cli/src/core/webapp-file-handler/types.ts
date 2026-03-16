@@ -1,6 +1,10 @@
 import type { EnvironmentConfig } from '../../types/index.js';
 
-export interface WebAppPushConfig {
+/**
+ * Shared config for Studio Web push and pull. Push uses all fields (rootDir = project root, bundlePath/manifestFile for build and metadata).
+ * Pull uses projectId, rootDir (target dir), envConfig, logger; bundlePath and manifestFile are placeholders so the API layer accepts the same type.
+ */
+export interface WebAppProjectConfig {
   projectId: string;
   rootDir: string;
   bundlePath: string;
@@ -18,6 +22,8 @@ export interface PushMetadata {
   description: string;
   lastPushDate: string;
   lastPushAuthor: string;
+  /** Build folder name from --buildDir (e.g. "dist", "build"). Default: "dist". */
+  buildDir?: string;
 }
 
 export interface LocalFile {
@@ -25,6 +31,12 @@ export interface LocalFile {
   absPath: string;
   hash: string;
   content: Buffer;
+}
+
+/** Local file plus its remote path (source/... or source/<buildDir>/...). Used for unified push plan. */
+export interface LocalFileWithRemote {
+  localFile: LocalFile;
+  remotePath: string;
 }
 
 export interface ProjectFile {

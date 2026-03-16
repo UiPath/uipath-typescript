@@ -1,6 +1,7 @@
 export interface EnvironmentConfig {
   baseUrl: string;
   orgId: string;
+  orgName: string;
   tenantId: string;
   tenantName?: string;
   folderKey?: string;
@@ -29,4 +30,18 @@ export interface AppConfig {
   registeredAt: string;
   deploymentId?: string;
   deployedAt?: string;
+  appType?: string;
+}
+
+/**
+ * SDK configuration type for uipath.json
+ * Note: scope is optional when clientId is provided (uses client's registered scopes)
+ */
+export interface SdkConfig {
+  scope?: string;
+  clientId: string;
+  orgName: string;
+  tenantName: string;
+  baseUrl: string;
+  redirectUri: string;
 }

@@ -26,3 +26,12 @@ export const RESPONSE_TYPES = {
   BLOB: 'blob',
   ARRAYBUFFER: 'arraybuffer'
 } as const;
+
+/**
+ * Query parameter keys sent during WebSocket connection
+ */
+export const WEBSOCKET_QUERY_PARAMS = {
+  ORGANIZATION_ID: 'x-uipath-internal-accountid',
+  TENANT_ID: 'x-uipath-internal-tenantid',
+  EXTERNAL_USER_ID: 'x-uipath-external-user-id'
+} as const;

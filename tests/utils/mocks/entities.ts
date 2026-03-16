@@ -13,6 +13,7 @@ import {
   EntityRecord,
   EntityInsertResponse,
   EntityBatchInsertResponse,
+  EntityUpdateRecordResponse,
   EntityUpdateResponse,
   EntityDeleteResponse
 } from '../../../src/models/data-fabric/entities.types';
@@ -383,6 +384,39 @@ export const createMockInsertResponse = (
   }));
 
   return { successRecords, failureRecords };
+};
+
+/**
+ * Creates a mock single update response that echoes back the request data
+ * This is for the /update endpoint which updates a single record
+ * @param requestData - Single record being updated
+ * @param options - Optional: expansionLevel to expand reference fields
+ * @returns Mock EntityUpdateRecordResponse (the updated record)
+ *
+ * @example
+ * // Basic update
+ * const response = createMockSingleUpdateResponse({ id: '123', name: 'John Updated', age: 31 });
+ * // Returns: { id: '123', name: 'John Updated', age: 31 }
+ *
+ * // With expansion level - reference fields are expanded
+ * const response = createMockSingleUpdateResponse(
+ *   { id: '123', name: 'John', recordOwner: 'user-id-123' },
+ *   { expansionLevel: 1 }
+ * );
+ * // Returns: { id: '123', name: 'John', recordOwner: { id: 'user-id-123' } }
+ */
+export const createMockSingleUpdateResponse = (
+  requestData: EntityRecord,
+  options?: { expansionLevel?: number }
+): EntityUpdateRecordResponse => {
+  let result: EntityUpdateRecordResponse = { ...requestData };
+
+  // If expansionLevel is specified, expand reference fields in the response
+  if (options?.expansionLevel && options.expansionLevel > 0) {
+    result = expandRecordReferenceFields(result);
+  }
+
+  return result;
 };
 
 /**

@@ -1,29 +1,32 @@
 import { Command, Flags } from '@oclif/core';
 import chalk from 'chalk';
-import inquirer from 'inquirer';
-import ora from 'ora';
-import * as fs from 'fs';
-import * as path from 'path';
-import FormData from 'form-data';
-import fetch from 'node-fetch';
-import { EnvironmentConfig } from '../types/index.js';
-import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
+import { AppType } from '../types/action-app.js';
 import { MESSAGES } from '../constants/messages.js';
-import { getEnvironmentConfig } from '../utils/env-config.js';
-import { handleHttpError } from '../utils/error-handler.js';
 import { track } from '../telemetry/index.js';
+import { executePublish } from '../actions/publish.js';
 
 export default class Publish extends Command {
   static override description = 'Publish NuGet packages to UiPath Orchestrator';
 
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
+    '<%= config.bin %> <%= command.id %> --name MyApp',
+    '<%= config.bin %> <%= command.id %> --name MyApp --version 2.0.0',
     '<%= config.bin %> <%= command.id %> --uipathDir ./packages',
-    "<%= config.bin %> <%= command.id %> --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --accessToken 'your_token'",
+    '<%= config.bin %> <%= command.id %> --name MyApp --type Action',
+    "<%= config.bin %> <%= command.id %> --name MyApp --version 2.0.0 --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --tenantName 'MyTenant' --accessToken 'your_token'",
   ];
 
   static override flags = {
     help: Flags.help({ char: 'h' }),
+    name: Flags.string({
+      char: 'n',
+      description: 'Package name to publish (makes command non-interactive)',
+    }),
+    version: Flags.string({
+      char: 'v',
+      description: 'Package version to publish (requires --name flag)',
+    }),
     uipathDir: Flags.string({
       description: 'UiPath directory containing packages',
       default: './.uipath',
@@ -38,114 +41,40 @@ export default class Publish extends Command {
       description: 'UiPath tenant ID',
     }),
     tenantName: Flags.string({
-      description: 'UiPath tenant name',
+      description: 'UiPath tenant name (required for coded app registration)',
     }),
     accessToken: Flags.string({
       description: 'UiPath authentication token',
+    }),
+    type: Flags.string({
+      char: 't',
+      description: 'App type',
+      default: AppType.Web,
+      options: [AppType.Web, AppType.Action],
     }),
   };
 
   @track('Publish')
   public async run(): Promise<void> {
     const { flags } = await this.parse(Publish);
-
-    this.log(chalk.blue(MESSAGES.INFO.PUBLISHER));
-
-    // Validate environment variables or flags
-    const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.PUBLISH, this, flags);
-    if (!envConfig) {
-      process.exit(1);
-    }
-
-    await this.publishPackage(flags.uipathDir, envConfig);
-  }
-
-  private async publishPackage(uipathDir: string, envConfig: EnvironmentConfig): Promise<void> {
-    const spinner = ora(MESSAGES.INFO.PUBLISHING_PACKAGE).start();
-
     try {
-      // Check if .uipath directory exists
-      if (!fs.existsSync(uipathDir)) {
-        spinner.fail(chalk.red(`${MESSAGES.ERRORS.UIPATH_DIR_NOT_FOUND}`));
-        this.log('');
-        this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
-        process.exit(1);
-      }
-
-      // Find .nupkg files
-      const nupkgFiles = fs.readdirSync(uipathDir)
-        .filter(file => file.endsWith('.nupkg'))
-        .map(file => path.join(uipathDir, file));
-
-      if (nupkgFiles.length === 0) {
-        spinner.fail(chalk.red(`${MESSAGES.ERRORS.NO_NUPKG_FILES_FOUND}`));
-        this.log('');
-        this.log(chalk.yellow(MESSAGES.INFO.RUN_PACK_FIRST));
-        process.exit(1);
-      }
-
-      let selectedPackage: string;
-
-      if (nupkgFiles.length === 1) {
-        selectedPackage = nupkgFiles[0];
-        spinner.text = `Publishing ${path.basename(selectedPackage)}...`;
-      } else {
-        spinner.stop();
-        const response = await inquirer.prompt([
-          {
-            type: 'list',
-            name: 'package',
-            message: MESSAGES.PROMPTS.SELECT_PACKAGE_TO_PUBLISH,
-            choices: nupkgFiles.map(file => ({
-              name: path.basename(file),
-              value: file,
-            })),
-          },
-        ]);
-        selectedPackage = response.package;
-        spinner.start(`Publishing ${path.basename(selectedPackage)}...`);
-      }
-
-      // Upload package using multipart form data
-      await this.uploadPackage(selectedPackage, envConfig);
-      
-      spinner.succeed(chalk.green(MESSAGES.SUCCESS.PACKAGE_PUBLISHED_SUCCESS));
-      this.log('');
-      this.log(chalk.blue(MESSAGES.INFO.PACKAGE_AVAILABLE));
-      
+      await executePublish({
+        uipathDir: flags.uipathDir,
+        name: flags.name,
+        version: flags.version,
+        type: flags.type,
+        baseUrl: flags.baseUrl,
+        orgId: flags.orgId,
+        tenantId: flags.tenantId,
+        tenantName: flags.tenantName,
+        accessToken: flags.accessToken,
+        logger: this,
+      });
+      process.exit(0);
     } catch (error) {
-      spinner.fail(chalk.red(`${MESSAGES.ERRORS.PACKAGE_PUBLISHING_FAILED}`));
-      this.log(chalk.red(`${MESSAGES.ERRORS.PUBLISHING_ERROR_PREFIX} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
+      this.log(chalk.red(`${MESSAGES.ERRORS.PUBLISHING_ERROR_PREFIX} ${msg}`));
       process.exit(1);
     }
   }
-
-
-  private async uploadPackage(packagePath: string, envConfig: EnvironmentConfig): Promise<void> {
-    const form = new FormData();
-    form.append('uploads[]', fs.createReadStream(packagePath));
-
-    const url = `${envConfig.baseUrl}/${envConfig.orgId}/${envConfig.tenantId}${API_ENDPOINTS.UPLOAD_PACKAGE}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'authorization': `Bearer ${envConfig.accessToken}`,
-        ...form.getHeaders(),
-      },
-      body: form,
-    });
-    if (!response.ok) {
-      await handleHttpError(response, MESSAGES.ERROR_CONTEXT.PACKAGE_PUBLISHING);
-    }
-
-    // Validate that we got a proper API response, not HTML
-    const contentType = response.headers.get(AUTH_CONSTANTS.CORS.VALUES.HEADERS);
-    if (contentType && contentType.includes(AUTH_CONSTANTS.CONTENT_TYPES.TEXT_HTML)) {
-      // We got HTML instead of JSON - this means the endpoint doesn't exist or auth failed
-      const responseText = await response.text();
-      throw new Error(`${MESSAGES.ERRORS.PACKAGE_UPLOAD_FAILED} ${responseText}`);
-    }
-  }
-
 }
