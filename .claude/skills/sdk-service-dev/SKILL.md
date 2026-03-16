@@ -48,6 +48,12 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER write test descriptions that don't match the code** — `'should call entity.insert'` is wrong if testing `insertRecord()`. Mismatched descriptions make failures misleading.
 - **NEVER hardcode test values** — use existing constants from `tests/utils/constants/`. Hardcoded values drift and hide which test is using which fixture.
 - **NEVER leave unused mock methods in mock objects** — dead mocks obscure what the test actually exercises and accumulate as the API evolves.
+- **NEVER use `console.log` + `return` in integration test guards** — use `throw new Error()`. Silent skips hide missing test configuration and make CI green when tests aren't actually running. (ref: [PR #249](https://github.com/UiPath/uipath-typescript/pull/249), [PR #276](https://github.com/UiPath/uipath-typescript/pull/276))
+- **NEVER wrap integration test API calls in try/catch** — let errors propagate naturally. Silent catches mask real failures and make tests pass when they should fail.
+- **NEVER create a separate `afterAll` per describe block** if the file already has one — reuse the existing cleanup block by pushing to the shared `createdRecordIds` array.
+
+### Endpoints
+- **NEVER copy-paste JSDoc comments between endpoint groups** — each constant needs its own comment. A "Asset Service Endpoints" comment on `JOB_ENDPOINTS` is a review rejection.
 
 ### Docs
 - **NEVER skip `docs/oauth-scopes.md` when adding a method** — every public method needs its scope listed in the same PR. Missing scopes break the OAuth integration guide.
@@ -285,26 +291,18 @@ it('should <operation> successfully', async () => {
   const entityId = config.testEntityId || fallbackId;
 
   if (!entityId) {
-    console.log('No entity ID available for testing');
-    return;
+    throw new Error('No entity ID available for testing. Set TEST_ENTITY_ID.');
   }
 
-  try {
-    const result = await serviceName.newMethod(entityId, data);
-    expect(result).toBeDefined();
-    // Assert on key fields
-  } catch (error: any) {
-    console.log('Test failed:', error.message);
-  }
+  const result = await serviceName.newMethod(entityId, data);
+  expect(result).toBeDefined();
+  // Assert on key fields
 });
 ```
 
-**Rules:**
-- Guard with `if (!entityId)` — tests are environment-dependent
-- Wrap in try/catch — don't hard-fail on API errors (schema constraints, missing data)
+**Rules:** See [NEVER Do → Tests](#tests) for guard clause, error handling, and afterAll rules.
 - Use `generateRandomString()` for test data to avoid collisions
 - Register created resources with `registerResource()` for cleanup
-- Clean up in `afterAll`
 
 ## E2E Validation
 

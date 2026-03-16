@@ -36,9 +36,10 @@ Every new method must also have an integration test. These run against a live Ui
 
 | Rule | Detail |
 |------|--------|
-| Guard clauses | Always check `if (!entityId)` and skip gracefully — tests are environment-dependent |
-| Error handling | Wrap API calls in try/catch — don't hard-fail on API errors (schema constraints, missing data, permissions) |
+| Guard clauses | Always check `if (!entityId)` and `throw new Error()` — **never use `console.log` + `return`**, it silently passes tests that should fail |
+| Error handling | **Don't wrap API calls in try/catch** — let errors propagate so test failures are visible. Silent catches hide real bugs. |
 | Test data | Use `generateRandomString()` for names to avoid collisions across test runs |
-| Cleanup | Register created resources with `registerResource()` and clean up in `afterAll` |
+| Cleanup | Register created resources with `registerResource()` and clean up in `afterAll`. Reuse the existing `afterAll` block — don't create a new one per describe block |
 | Test ordering | Place new method tests logically — create before update, update before delete |
 | Assertions | At minimum verify `result` is defined and key identifying fields match (e.g., `result.id === recordId`) |
+| Endpoint comments | Each endpoint group constant must have its own JSDoc — don't copy-paste from another group (e.g., "Asset Service" on a Jobs constant) |
