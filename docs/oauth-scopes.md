@@ -13,7 +13,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `OR.Monitoring` or `OR.Monitoring.Read` |
+| `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
 
 ## Buckets
 
