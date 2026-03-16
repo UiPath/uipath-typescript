@@ -279,7 +279,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       };
 
       const inserted = await entities.insertRecordById(entityId, insertData);
-      const updateTestRecordId = inserted.id || inserted.Id;
+      const updateTestRecordId = inserted.id;
 
       if (!updateTestRecordId) {
         throw new Error('Could not get inserted record ID');

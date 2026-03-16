@@ -222,6 +222,16 @@ describe('Entity Models', () => {
           { name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
         )).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
+
+      it('should throw error if record id is undefined', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.updateRecord(
+          undefined as any,
+          { name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
+        )).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED);
+      });
     });
 
     describe('entity.updateRecords()', () => {
