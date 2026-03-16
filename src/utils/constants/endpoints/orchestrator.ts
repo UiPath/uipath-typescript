@@ -53,9 +53,6 @@ export const QUEUE_ENDPOINTS = {
 } as const;
 
 /**
- * Orchestrator Asset Service Endpoints
- */
-/**
  * Orchestrator Job Service Endpoints
  */
 export const JOB_ENDPOINTS = {
