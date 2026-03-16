@@ -2,34 +2,15 @@
 
 ## CORS Issues
 
-**Problem**: When developing locally and making requests to UiPath APIs, you may encounter CORS (Cross-Origin Resource Sharing) errors. This happens because browsers block requests from your local development server (e.g., `http://localhost:3000`) to external APIs due to same-origin policy restrictions.
+**Problem**: Requests to UiPath APIs may be blocked by CORS — both during local development and from deployed app domains.
 
-**Solution**: Configure a proxy in your development server to forward API requests and avoid CORS issues.
+**Solution**: Use `https://api.uipath.com` as the `baseUrl` in your `uipath.json`. This endpoint has CORS configured to allow requests from all origins.
 
-For example, if you are using Vite, you could add the following proxy configuration to your `vite.config.ts`:
-
-```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    proxy: {
-      // Replace '/your-org' with your actual organization/tenant path
-      '/your-org': {
-        target: 'https://cloud.uipath.com',
-        changeOrigin: true,
-        secure: true,
-      },
-    },
-  },
-})
+```json
+{
+  "baseUrl": "https://api.uipath.com"
+}
 ```
-
-**Usage**: 
-- Use `window.location.origin` as your base URL in your application
-- Replace `/your-org` with your actual UiPath organization/tenant path
 
 ---
 
