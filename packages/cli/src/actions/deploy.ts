@@ -15,6 +15,7 @@ import { cliTelemetryClient } from '../telemetry/index.js';
 
 export interface DeployOptions {
   name?: string;
+  version?: string;
   baseUrl?: string;
   orgId?: string;
   orgName?: string;
@@ -39,6 +40,7 @@ interface DeployedAppResponse {
 interface PublishedApp {
   systemName: string;
   title: string;
+  appVersion?: string;
   deployVersion?: number;
 }
 
@@ -78,7 +80,7 @@ async function getDeployedApp(appName: string, envConfig: EnvironmentConfig): Pr
   return data.value.find((app) => app.title === appName) ?? null;
 }
 
-async function getPublishedApp(appName: string, envConfig: EnvironmentConfig): Promise<PublishedApp | null> {
+async function getPublishedApp(appName: string, envConfig: EnvironmentConfig, version?: string): Promise<PublishedApp | null> {
   const endpoint = API_ENDPOINTS.PUBLISHED_APPS.replace('{tenantId}', envConfig.tenantId);
   const url = `${envConfig.baseUrl}/${envConfig.orgId}${endpoint}?searchText=${encodeURIComponent(appName)}&folderFeedType=tenant`;
   const response = await fetch(url, {
@@ -91,7 +93,7 @@ async function getPublishedApp(appName: string, envConfig: EnvironmentConfig): P
   });
   if (!response.ok) await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_DEPLOYMENT);
   const data = (await response.json()) as PublishedAppResponse;
-  return data.value.find((app) => app.title === appName) ?? null;
+  return data.value.find((app) => app.title === appName && (!version || app.appVersion === version)) ?? null;
 }
 
 async function deployNewApp(appName: string, systemName: string, envConfig: EnvironmentConfig): Promise<string> {
@@ -177,10 +179,13 @@ export async function executeDeploy(options: DeployOptions): Promise<void> {
 
     if (deployedApp) {
       spinner.text = MESSAGES.INFO.UPGRADING_APP;
-      const publishedApp = await getPublishedApp(appName, envConfig);
+      const publishedApp = await getPublishedApp(appName, envConfig, options.version);
       if (!publishedApp) {
-        spinner.fail(chalk.red(MESSAGES.ERRORS.APP_NOT_PUBLISHED));
-        throw new Error(MESSAGES.ERRORS.APP_NOT_PUBLISHED);
+        const notFoundMsg = options.version
+          ? `${MESSAGES.ERRORS.APP_NOT_PUBLISHED} (version ${options.version})`
+          : MESSAGES.ERRORS.APP_NOT_PUBLISHED;
+        spinner.fail(chalk.red(notFoundMsg));
+        throw new Error(notFoundMsg);
       }
       if (!publishedApp.deployVersion) {
         spinner.fail(chalk.red(MESSAGES.ERRORS.DEPLOY_VERSION_NOT_FOUND));
@@ -189,14 +194,17 @@ export async function executeDeploy(options: DeployOptions): Promise<void> {
       await upgradeApp(deployedApp.id, appName, publishedApp.deployVersion, envConfig);
       spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_UPGRADED_SUCCESS));
       const appConfig = loadAppConfig(logger);
-      version = appConfig?.appVersion ?? deployedApp.semVersion;
+      version = publishedApp.appVersion ?? appConfig?.appVersion ?? deployedApp.semVersion;
       cliTelemetryClient.track('Cli.Deploy', { operation: 'upgrade' });
     } else {
       spinner.text = MESSAGES.INFO.DEPLOYING_APP;
-      const publishedApp = await getPublishedApp(appName, envConfig);
+      const publishedApp = await getPublishedApp(appName, envConfig, options.version);
       if (!publishedApp) {
-        spinner.fail(chalk.red(MESSAGES.ERRORS.APP_NOT_PUBLISHED));
-        throw new Error(MESSAGES.ERRORS.APP_NOT_PUBLISHED);
+        const notFoundMsg = options.version
+          ? `${MESSAGES.ERRORS.APP_NOT_PUBLISHED} (version ${options.version})`
+          : MESSAGES.ERRORS.APP_NOT_PUBLISHED;
+        spinner.fail(chalk.red(notFoundMsg));
+        throw new Error(notFoundMsg);
       }
       const deploymentId = await deployNewApp(appName, publishedApp.systemName, envConfig);
       spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_DEPLOYED_SUCCESS));

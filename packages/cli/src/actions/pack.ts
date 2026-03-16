@@ -102,7 +102,6 @@ function copyConfigToDistDirectory(
 async function validateClientId(
   clientId: string,
   envConfig: EnvironmentConfig,
-  logger: { log: (message: string) => void },
 ): Promise<void> {
   const spinner = ora(MESSAGES.INFO.VALIDATING_CLIENT_ID).start();
   try {
@@ -136,15 +135,14 @@ async function validateClientIdForAppType(
   isActionApp: boolean,
   sdkConfig: SdkConfig,
   envConfig: EnvironmentConfig,
-  logger: { log: (message: string) => void },
 ): Promise<void> {
   if (!isActionApp) {
     if (!sdkConfig.clientId?.trim()) {
       throw new Error(MESSAGES.ERRORS.CLIENT_ID_REQUIRED);
     }
-    await validateClientId(sdkConfig.clientId, envConfig, logger);
+    await validateClientId(sdkConfig.clientId, envConfig);
   } else if (sdkConfig.clientId?.trim()) {
-    await validateClientId(sdkConfig.clientId, envConfig, logger);
+    await validateClientId(sdkConfig.clientId, envConfig);
   }
 }
 
@@ -356,7 +354,7 @@ export async function executePack(options: PackOptions): Promise<void> {
   const sdkConfig = loadOrCreateSdkConfig(logger);
 
   const isActionApp = (options.type as AppType) === AppType.Action;
-  await validateClientIdForAppType(isActionApp, sdkConfig, envConfig, logger);
+  await validateClientIdForAppType(isActionApp, sdkConfig, envConfig);
 
   // Only check app name uniqueness for new apps (version 1.0.0)
   if (!isVersionUpgrade) {

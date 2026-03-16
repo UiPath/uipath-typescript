@@ -5,6 +5,7 @@ import { MESSAGES } from '../constants/messages.js';
 import { DEFAULT_APP_VERSION } from '../constants/index.js';
 import { track } from '../telemetry/index.js';
 import { executePack } from '../actions/pack.js';
+import { COMMON_FLAGS } from '../utils/flags.js';
 
 export default class Pack extends Command {
   static override description = 'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
@@ -71,24 +72,7 @@ export default class Pack extends Command {
       description: 'Show what would be packaged without creating the package',
       default: false,
     }),
-    baseUrl: Flags.string({
-      description: 'UiPath base URL (default: https://cloud.uipath.com)',
-    }),
-    orgId: Flags.string({
-      description: 'UiPath organization ID',
-    }),
-    orgName: Flags.string({
-      description: 'UiPath organization name',
-    }),
-    tenantId: Flags.string({
-      description: 'UiPath tenant ID',
-    }),
-    folderKey: Flags.string({
-      description: 'UiPath folder key',
-    }),
-    accessToken: Flags.string({
-      description: 'UiPath bearer token for authentication',
-    }),
+    ...COMMON_FLAGS,
   };
 
   @track('Pack')
