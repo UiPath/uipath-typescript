@@ -5,6 +5,7 @@ import {
   QueueGetByIdOptions,
   QueueItemResponse,
   QueueGetAllItemsOptions,
+  QueuePriority,
   QueueInsertItemOptions,
   TransactionItemResponse,
   TransactionCompletionOptions,
@@ -63,7 +64,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
     options: QueueInsertItemOptions = {}
   ): Promise<QueueItemResponse> {
     const itemData = camelToPascalCaseKeys({
-      priority: 'Normal',
+      priority: QueuePriority.Normal,
       ...options,
       name: queueName
     });

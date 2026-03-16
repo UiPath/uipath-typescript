@@ -47,7 +47,11 @@ export type QueueGetAllItemsOptions = RequestOptions & PaginationOptions;
 /**
  * Supported queue priority values.
  */
-export type QueuePriority = 'High' | 'Normal' | 'Low';
+export enum QueuePriority {
+  High = 'High',
+  Normal = 'Normal',
+  Low = 'Low'
+}
 
 /**
  * Optional settings for inserting a queue item.

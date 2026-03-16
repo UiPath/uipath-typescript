@@ -94,6 +94,7 @@ export interface QueueServiceModel {
    * @param folderId Required folder ID
    * @param options Query options
    * @returns Promise resolving to a queue definition with bound queue methods
+   * {@link QueueWithMethods}
    * @example
    * ```typescript
    * const queue = await queues.getById(<queueId>, <folderId>);
@@ -109,6 +110,7 @@ export interface QueueServiceModel {
    * @param folderId Required folder ID
    * @param options Query options including filtering and pagination
    * @returns Promise resolving to queue items
+   * {@link QueueItemResponse}
    * @example
    * ```typescript
    * const queueItems = await queues.getAllItems(<queueId>, <folderId>, {
@@ -138,6 +140,7 @@ export interface QueueMethods {
    *
    * @param options Query options including filtering and pagination
    * @returns Promise resolving to queue items
+   * {@link QueueItemResponse}
    */
   getAllItems<T extends QueueGetAllItemsOptions = QueueGetAllItemsOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
@@ -152,6 +155,7 @@ export interface QueueMethods {
    * `SpecificContent` field and exposed by the SDK as `specificData`
    * @param options Optional queue item metadata
    * @returns Promise resolving to the created queue item
+   * {@link QueueItemResponse}
    * @example
    * ```typescript
    * const queue = await queues.getById(<queueId>, <folderId>);
@@ -175,6 +179,7 @@ export interface QueueMethods {
    * Starts processing by acquiring the next transaction item from this queue.
    *
    * @returns Promise resolving to the acquired transaction item
+   * {@link TransactionItemResponse}
    * @example
    * ```typescript
    * const queue = await queues.getById(<queueId>, <folderId>);
@@ -191,6 +196,7 @@ export interface QueueMethods {
    * @param itemId Queue item ID
    * @param options Completion options
    * @returns Promise resolving to a completion response object
+   * {@link TransactionCompletionResponse}
    * @example
    * ```typescript
    * const queue = await queues.getById(<queueId>, <folderId>);
