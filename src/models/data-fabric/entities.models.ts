@@ -7,6 +7,8 @@ import {
   EntityBatchInsertResponse,
   EntityUpdateOptions,
   EntityUpdateResponse,
+  EntityUpdateRecordOptions,
+  EntityUpdateRecordResponse,
   EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
@@ -253,7 +255,34 @@ export interface EntityServiceModel {
   batchInsertById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
+   * Updates a single record in an entity by entity ID
+   *
+   * Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
+   * Use this method if you need trigger events to fire for the updated record.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to update
+   * @param data - Key-value pairs of fields to update
+   * @param options - Update options
+   * @returns Promise resolving to the updated record
+   * {@link EntityUpdateRecordResponse}
+   * @example
+   * ```typescript
+   * // Basic usage
+   * const result = await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated", age: 31 });
+   *
+   * // With options
+   * const result = await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated", age: 31 }, {
+   *   expansionLevel: 1
+   * });
+   * ```
+   */
+  updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse>;
+
+  /**
    * Updates data in an entity by entity ID
+   *
+   * Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use {@link updateRecordById} if you need trigger events to fire for each updated record.
    *
    * @param id - UUID of the entity
    * @param data - Array of records to update. Each record MUST contain the record Id.
@@ -463,8 +492,24 @@ export interface EntityMethods {
   insertRecords(data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse>;
 
   /**
+   * Update a single record in this entity
+   *
+   * Note: Data Fabric supports trigger events only on individual updates, not on updating multiple records.
+   * Use this method if you need trigger events to fire for the updated record.
+   *
+   * @param recordId - UUID of the record to update
+   * @param data - Key-value pairs of fields to update
+   * @param options - Update options
+   * @returns Promise resolving to the updated record
+   */
+  updateRecord(recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse>;
+
+  /**
    * Update data in this entity
-   * 
+   *
+   * Note: Records updated using updateRecords will not trigger Data Fabric trigger events. Use {@link updateRecord} if you need
+   * trigger events to fire for each updated record.
+   *
    * @param data - Array of records to update. Each record MUST contain the record Id,
    *               otherwise the update will fail.
    * @param options - Update options
@@ -590,6 +635,13 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.insertRecordsById(entityData.id, data, options);
+    },
+
+    async updateRecord(recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      if (!recordId) throw new Error('Record ID is undefined');
+
+      return service.updateRecordById(entityData.id, recordId, data, options);
     },
 
     async updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse> {
