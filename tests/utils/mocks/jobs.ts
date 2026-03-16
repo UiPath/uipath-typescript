@@ -38,7 +38,7 @@ export const createMockRawJob = (overrides: Partial<any> = {}): any => {
     OrganizationUnitId: TEST_CONSTANTS.FOLDER_ID,
     OrganizationUnitFullyQualifiedName: TEST_CONSTANTS.FOLDER_NAME,
     Machine: { Id: 1, Name: 'ROBOT-01' },
-    Robot: { Id: 1, Name: 'Robot1', Username: 'domain\\robot1' },
+    Robot: { Id: 1, Name: 'Robot1', Username: String.raw`domain\robot1` },
     JobError: null,
   }, overrides);
 };
@@ -70,9 +70,9 @@ export const createBasicJob = (overrides: Partial<JobGetResponse> = {}): JobGetR
     folderId: TEST_CONSTANTS.FOLDER_ID,
     folderName: TEST_CONSTANTS.FOLDER_NAME,
     machine: { id: 1, name: 'ROBOT-01' },
-    robot: { id: 1, name: 'Robot1', username: 'domain\\robot1' },
+    robot: { id: 1, name: 'Robot1', username: String.raw`domain\robot1` },
     jobError: null,
-  }, overrides) as JobGetResponse;
+  }, overrides);
 };
 
 /**
