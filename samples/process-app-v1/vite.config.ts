@@ -24,5 +24,6 @@ export default defineConfig({
         secure: true,
       },
     },
-  }
+  },
+  base: './',
 })
