@@ -25,6 +25,9 @@ export const API_ENDPOINTS = {
   PUBLISHED_APPS: '/apps_/default/api/v1/default/models/tenants/{tenantId}/publish/apps',
   // Check app name uniqueness
   CHECK_APP_NAME_UNIQUE: '/apps_/default/api/v1/default/models/deployed/apps/uniquename/check/{appName}',
+
+  // Org info by orgId
+  USER_ORG_INFO: '/portal_/api/organization/UserOrganizationInfo',
   // List all projects owned by or shared with the user
   STUDIO_WEB_LIST_PROJECTS: '/studio_/backend/api/Project'
 } as const;

@@ -12,7 +12,6 @@ export const registerDeployCommand = (program: Command): void => {
     .option("-n, --name <name>", "App name")
     .option("--baseUrl <url>", "UiPath base URL")
     .option("--orgId <id>", "Organization ID")
-    .option("--orgName <name>", "Organization name")
     .option("--tenantId <id>", "Tenant ID")
     .option("--folderKey <key>", "Folder key")
     .option("--accessToken <token>", "Access token")
@@ -25,7 +24,6 @@ export const registerDeployCommand = (program: Command): void => {
         name: options.name as string | undefined,
         baseUrl: options.baseUrl as string | undefined,
         orgId: options.orgId as string | undefined,
-        orgName: options.orgName as string | undefined,
         tenantId: options.tenantId as string | undefined,
         folderKey: (options.folderKey as string | undefined) ?? process.env.UIPATH_FOLDER_KEY,
         accessToken: options.accessToken as string | undefined,
