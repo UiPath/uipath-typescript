@@ -1,6 +1,6 @@
 import { Command, Flags } from '@oclif/core';
 import chalk from 'chalk';
-import { MESSAGES } from '../constants/index.js';
+import { MESSAGES } from '../constants/messages.js';
 import { track } from '../telemetry/index.js';
 import { executeDeploy } from '../actions/deploy.js';
 
@@ -56,7 +56,7 @@ export default class Deploy extends Command {
       process.exit(0);
     } catch (error) {
       const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
-      this.log(chalk.red(`${MESSAGES.ERRORS.DEPLOYMENT_ERROR_PREFIX} ${msg}`));
+      this.log(chalk.red(MESSAGES.ERRORS.DEPLOYMENT_ERROR_PREFIX + msg));
       process.exit(1);
     }
   }
