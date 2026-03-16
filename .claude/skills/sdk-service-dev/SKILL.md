@@ -57,6 +57,8 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 
 ### Docs
 - **NEVER skip `docs/oauth-scopes.md` when adding a method** — every public method needs its scope listed in the same PR. Missing scopes break the OAuth integration guide.
+- **NEVER skip `docs/pagination.md` when adding a paginated method** — update the quick reference table with the new method and `jumpToPage` support. Users rely on this table to know which methods support pagination.
+- **NEVER skip `mkdocs.yml` when adding a new service** — the new service page won't appear in the docs site navigation without a nav entry. Existing services adding methods don't need this.
 - **NEVER skip `@track()` decorator** on public service methods — telemetry gaps are invisible until production debugging, when they're expensive.
 - **NEVER use PascalCase in JSDoc examples** — write `id` not `Id`. Examples must match the SDK's post-transform response format or users will write broken code.
 
@@ -303,6 +305,33 @@ it('should <operation> successfully', async () => {
 **Rules:** See [NEVER Do → Tests](#tests) for guard clause, error handling, and afterAll rules.
 - Use `generateRandomString()` for test data to avoid collisions
 - Register created resources with `registerResource()` for cleanup
+
+## Post-Implementation Verification Checklist
+
+**Run this checklist after every implementation, before committing.** Do not skip items — each has caused rejected PRs.
+
+### Code verification
+```bash
+npm run typecheck     # TypeScript compilation — must be clean
+npm run lint          # oxlint — 0 errors
+npm run test:unit     # All unit tests pass
+npm run build         # Rollup build produces dist/{service}/ output
+```
+
+### Manual verification
+- [ ] No `any` types, unused imports, or redundant constructors
+- [ ] Transform pipeline matches actual raw API response (not assumptions)
+- [ ] Types reuse existing shapes where possible (aliases, not duplicates)
+- [ ] All `@track('ServiceName.MethodName')` decorators present on public methods
+- [ ] JSDoc complete on `{Entity}ServiceModel` interface with `@example`, `@param`, `@returns`
+- [ ] Unit tests cover success + error paths for every public method
+- [ ] Integration test written in `tests/integration/shared/{domain}/`
+
+### Documentation — the most commonly missed step
+- [ ] **`docs/oauth-scopes.md`** — new method's OAuth scope added
+- [ ] **`docs/pagination.md`** — quick reference table updated (if paginated method)
+- [ ] **`mkdocs.yml`** — nav entry added (if new service, not needed for methods on existing services)
+- [ ] **`package.json` exports + `rollup.config.js`** — subpath export added (if new service)
 
 ## E2E Validation
 
