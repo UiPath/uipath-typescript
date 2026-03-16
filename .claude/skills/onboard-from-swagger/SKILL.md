@@ -121,7 +121,21 @@ Format:
 
 Keep it compact — this is a log, not a conversation.
 
-### Step 5: Hand Off to onboard-api
+### Step 5: Create Feature Branch
+
+Before handing off to `onboard-api`, create a feature branch so all implementation work is isolated.
+
+**Branch naming:**
+
+- **Path A (Jira):** `feat/sdk-<ticket-key-lowered>` (e.g., Jira ticket `SDK-123` → `feat/sdk-sdk-123`)
+- **Path B (Direct):** `feat/<service>-<method-name>` (e.g., orchestrator + getJobs → `feat/orchestrator-get-jobs`)
+
+**Steps:**
+
+1. Check the current branch — if already on a non-main feature branch, skip branch creation and note it.
+2. Otherwise, run `git checkout -b <branch>` from current HEAD.
+
+### Step 6: Hand Off to onboard-api
 
 Immediately invoke `onboard-api` skill with this prefix:
 
@@ -132,6 +146,35 @@ The following questionnaire answers have been derived from the Swagger spec. Ski
 ```
 
 Continue through Phase 2 → 3 → 4 (→ 5 if new service) as normal. Do not pause between phases unless implementation is actually blocked.
+
+**After `onboard-api` completes all phases** (including verification), control returns to this skill for Step 7.
+
+### Step 7: Commit & Raise PR
+
+After `onboard-api` finishes (all phases including verify), finalize the work:
+
+1. **Stage & commit** all changed files:
+   - Message: `feat(<service>): onboard <method-name>`
+   - If from Path A (Jira), include the ticket key in the commit body (e.g., `Refs SDK-123`)
+2. **Push branch** to remote with `-u` flag.
+3. **Create PR** using `gh pr create`:
+   - **Title:** `feat(<service>): onboard <method-name>`
+   - **Body:**
+     ```
+     ## Summary
+     - Onboarded `<METHOD> <endpoint-path>` to `<ServiceName>`
+     - <additional context: new types, pagination setup, etc.>
+     - <if Path A: Refs <TICKET-KEY> — link to Jira ticket>
+
+     ## Test plan
+     - [ ] Unit tests pass (`npm run test:unit`)
+     - [ ] Typecheck passes (`npm run typecheck`)
+     - [ ] Lint passes (`npm run lint`)
+     - [ ] Build succeeds (`npm run build`)
+
+     🤖 Generated with [Claude Code](https://claude.com/claude-code)
+     ```
+   - If from Path A (Jira), link the PR back to the ticket in the summary.
 
 ## Multi-Endpoint Support
 
@@ -148,3 +191,4 @@ Parse all requested endpoints together. Log derivations grouped by endpoint. Onb
 - **NEVER expand scope beyond what the ticket/user asked for** — if the ticket says "onboard Jobs_Get", onboard Jobs_Get only. Do not suggest also onboarding GetById, lifecycle operations, or related endpoints. The user will create separate tickets for those.
 - **NEVER ask the user to confirm information that the spec clearly provides** — OAuth scopes, parameter types, response shapes, header requirements — if the spec states it, use it. Only ask when the spec is genuinely ambiguous or contradicts conventions.
 - **NEVER ask about implementation decisions that belong to downstream skills** — typing strategies, transform pipelines, and code patterns are handled by `onboard-api` and `sdk-service-dev`. This skill only derives Phase 1 questionnaire answers from the spec.
+- **NEVER push to main/master directly** — always create a feature branch first (Step 5). All implementation work must go through a PR.
