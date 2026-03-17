@@ -15,6 +15,7 @@ import { cliTelemetryClient } from '../telemetry/index.js';
 
 export interface DeployOptions {
   name?: string;
+  /** User-provided semver (--version flag, e.g. "1.2.0") to target a specific published version. Defaults to latest. */
   version?: string;
   baseUrl?: string;
   orgId?: string;
@@ -40,7 +41,9 @@ interface DeployedAppResponse {
 interface PublishedApp {
   systemName: string;
   title: string;
+  /** Semver returned by the published apps API (e.g. "1.2.0"). Matched against the user-provided --version flag. */
   appVersion?: string;
+  /** Internal integer counter from the published apps API regarding the deployment. */
   deployVersion?: number;
 }
 
