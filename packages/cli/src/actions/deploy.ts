@@ -7,14 +7,16 @@ import fetch from 'node-fetch';
 import type { EnvironmentConfig, AppConfig } from '../types/index.js';
 import { AppType } from '../types/action-app.js';
 import { API_ENDPOINTS, AUTH_CONSTANTS } from '../constants/index.js';
-import { MESSAGES } from '../constants/messages.js';
+import { MESSAGES, MESSAGE_BUILDERS } from '../constants/messages.js';
 import { createHeaders, buildAppUrl } from '../utils/api.js';
-import { getEnvironmentConfig, isValidAppName, atomicWriteFileSync } from '../utils/env-config.js';
+import { getEnvironmentConfig, sanitizeAppName, atomicWriteFileSync } from '../utils/env-config.js';
 import { handleHttpError } from '../utils/error-handler.js';
 import { cliTelemetryClient } from '../telemetry/index.js';
 
 export interface DeployOptions {
   name?: string;
+  /** User-provided semver (--version flag, e.g. "1.2.0") to target a specific published version. Defaults to latest. */
+  version?: string;
   baseUrl?: string;
   orgId?: string;
   orgName?: string;
@@ -39,6 +41,10 @@ interface DeployedAppResponse {
 interface PublishedApp {
   systemName: string;
   title: string;
+  /** Semver returned by the published apps API (e.g. "1.2.0"). Matched against the user-provided --version flag. */
+  appVersion?: string;
+  /** Internal integer counter from the published apps API regarding the deployment. */
+  deployVersion?: number;
 }
 
 interface PublishedAppResponse {
@@ -77,7 +83,7 @@ async function getDeployedApp(appName: string, envConfig: EnvironmentConfig): Pr
   return data.value.find((app) => app.title === appName) ?? null;
 }
 
-async function getPublishedAppSystemName(appName: string, envConfig: EnvironmentConfig): Promise<string | null> {
+async function getPublishedApp(appName: string, envConfig: EnvironmentConfig, version?: string): Promise<PublishedApp | null> {
   const endpoint = API_ENDPOINTS.PUBLISHED_APPS.replace('{tenantId}', envConfig.tenantId);
   const url = `${envConfig.baseUrl}/${envConfig.orgId}${endpoint}?searchText=${encodeURIComponent(appName)}&folderFeedType=tenant`;
   const response = await fetch(url, {
@@ -90,8 +96,7 @@ async function getPublishedAppSystemName(appName: string, envConfig: Environment
   });
   if (!response.ok) await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_DEPLOYMENT);
   const data = (await response.json()) as PublishedAppResponse;
-  const publishedApp = data.value.find((app) => app.title === appName);
-  return publishedApp?.systemName ?? null;
+  return data.value.find((app) => app.title === appName && (!version || app.appVersion === version)) ?? null;
 }
 
 async function deployNewApp(appName: string, systemName: string, envConfig: EnvironmentConfig): Promise<string> {
@@ -111,16 +116,16 @@ async function deployNewApp(appName: string, systemName: string, envConfig: Envi
   return data.id;
 }
 
-async function upgradeApp(deploymentId: string, envConfig: EnvironmentConfig): Promise<void> {
-  const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.UPGRADE_APP}`;
+async function upgradeApp(appId: string, title: string, version: number, envConfig: EnvironmentConfig): Promise<void> {
+  const url = `${envConfig.baseUrl}/${envConfig.orgId}${API_ENDPOINTS.EDIT_DEPLOYED_APP.replace('{appId}', appId)}`;
   const response = await fetch(url, {
-    method: 'POST',
+    method: 'PATCH',
     headers: createHeaders({
       bearerToken: envConfig.accessToken,
       tenantId: envConfig.tenantId,
       folderKey: envConfig.folderKey,
     }),
-    body: JSON.stringify({ deploymentIds: [deploymentId] }),
+    body: JSON.stringify({ title, version }),
   });
   if (!response.ok) await handleHttpError(response, MESSAGES.ERROR_CONTEXT.APP_UPGRADE);
 }
@@ -158,8 +163,12 @@ export async function executeDeploy(options: DeployOptions): Promise<void> {
   );
   if (!envConfig) throw new Error('Missing required configuration');
 
-  if (options.name && !isValidAppName(options.name)) {
-    throw new Error(MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS);
+  if (options.name) {
+    const { sanitized, isModifiedd } = sanitizeAppName(options.name);
+    if (isModifiedd) {
+      logger.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(options.name, sanitized)));
+      options.name = sanitized;
+    }
   }
 
   const appName = options.name ?? (await getAppName(logger));
@@ -173,19 +182,34 @@ export async function executeDeploy(options: DeployOptions): Promise<void> {
 
     if (deployedApp) {
       spinner.text = MESSAGES.INFO.UPGRADING_APP;
-      await upgradeApp(deployedApp.id, envConfig);
+      const publishedApp = await getPublishedApp(appName, envConfig, options.version);
+      if (!publishedApp) {
+        const notFoundMsg = options.version
+          ? `${MESSAGES.ERRORS.APP_NOT_PUBLISHED} (version ${options.version})`
+          : MESSAGES.ERRORS.APP_NOT_PUBLISHED;
+        spinner.fail(chalk.red(notFoundMsg));
+        throw new Error(notFoundMsg);
+      }
+      if (!publishedApp.deployVersion) {
+        spinner.fail(chalk.red(MESSAGES.ERRORS.DEPLOY_VERSION_NOT_FOUND));
+        throw new Error(MESSAGES.ERRORS.DEPLOY_VERSION_NOT_FOUND);
+      }
+      await upgradeApp(deployedApp.id, appName, publishedApp.deployVersion, envConfig);
       spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_UPGRADED_SUCCESS));
       const appConfig = loadAppConfig(logger);
-      version = appConfig?.appVersion ?? deployedApp.semVersion;
+      version = publishedApp.appVersion ?? appConfig?.appVersion ?? deployedApp.semVersion;
       cliTelemetryClient.track('Cli.Deploy', { operation: 'upgrade' });
     } else {
       spinner.text = MESSAGES.INFO.DEPLOYING_APP;
-      const publishedSystemName = await getPublishedAppSystemName(appName, envConfig);
-      if (!publishedSystemName) {
-        spinner.fail(chalk.red(MESSAGES.ERRORS.APP_NOT_PUBLISHED));
-        throw new Error(MESSAGES.ERRORS.APP_NOT_PUBLISHED);
+      const publishedApp = await getPublishedApp(appName, envConfig, options.version);
+      if (!publishedApp) {
+        const notFoundMsg = options.version
+          ? `${MESSAGES.ERRORS.APP_NOT_PUBLISHED} (version ${options.version})`
+          : MESSAGES.ERRORS.APP_NOT_PUBLISHED;
+        spinner.fail(chalk.red(notFoundMsg));
+        throw new Error(notFoundMsg);
       }
-      const deploymentId = await deployNewApp(appName, publishedSystemName, envConfig);
+      const deploymentId = await deployNewApp(appName, publishedApp.systemName, envConfig);
       spinner.succeed(chalk.green(MESSAGES.SUCCESS.APP_DEPLOYED_SUCCESS));
       updateAppConfig(deploymentId, logger);
       const appConfig = loadAppConfig(logger);
@@ -220,10 +244,13 @@ async function getAppName(logger: { log: (message: string) => void }): Promise<s
       message: MESSAGES.PROMPTS.ENTER_APP_NAME,
       validate: (input: string) => {
         if (!input.trim()) return MESSAGES.VALIDATIONS.APP_NAME_REQUIRED;
-        if (!isValidAppName(input)) return MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS;
         return true;
       },
     },
   ]);
-  return response.name;
+  const { sanitized, isModifiedd } = sanitizeAppName(response.name);
+  if (isModifiedd) {
+    logger.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(response.name, sanitized)));
+  }
+  return sanitized;
 }

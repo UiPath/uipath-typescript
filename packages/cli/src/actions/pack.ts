@@ -7,9 +7,10 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import fetch from 'node-fetch';
 import type { SdkConfig, EnvironmentConfig } from '../types/index.js';
-import { MESSAGES } from '../constants/messages.js';
+import { AppType } from '../types/index.js';
+import { MESSAGES, MESSAGE_BUILDERS } from '../constants/messages.js';
 import { AUTH_CONSTANTS, DEFAULT_APP_VERSION, API_ENDPOINTS } from '../constants/index.js';
-import { isValidAppName, getEnvironmentConfig } from '../utils/env-config.js';
+import { sanitizeAppName, getEnvironmentConfig } from '../utils/env-config.js';
 import { createHeaders } from '../utils/api.js';
 import { handleHttpError } from '../utils/error-handler.js';
 import { cliTelemetryClient } from '../telemetry/index.js';
@@ -23,11 +24,13 @@ export interface PackOptions {
   description?: string;
   mainFile?: string;
   contentType?: string;
+  type?: string;
   dryRun?: boolean;
-  reuseClient?: boolean;
   baseUrl?: string;
   orgId?: string;
+  orgName?: string;
   tenantId?: string;
+  folderKey?: string;
   accessToken?: string;
   logger?: { log: (message: string) => void };
 }
@@ -42,7 +45,6 @@ interface PackageConfig {
   mainFile: string;
   contentType: string;
   outputDir: string;
-  reuseClient: boolean;
   sdkConfig: SdkConfig | null;
 }
 
@@ -68,11 +70,10 @@ function loadSdkConfig(logger: { log: (message: string) => void }): SdkConfig | 
   }
 }
 
-function loadOrCreateSdkConfig(logger: { log: (message: string) => void }): SdkConfig | null {
+function loadOrCreateSdkConfig(logger: { log: (message: string) => void }): SdkConfig {
   const existing = loadSdkConfig(logger);
   if (existing) return existing;
 
-  logger.log(chalk.yellow(MESSAGES.INFO.CONFIG_FILE_NOT_FOUND_WARNING));
   const config: SdkConfig = {
     scope: '',
     clientId: '',
@@ -83,26 +84,66 @@ function loadOrCreateSdkConfig(logger: { log: (message: string) => void }): SdkC
   };
   const configPath = path.join(process.cwd(), AUTH_CONSTANTS.FILES.SDK_CONFIG);
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-  logger.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_CREATED));
+  logger.log(chalk.yellow(MESSAGE_BUILDERS.SDK_CONFIG_CREATED(configPath)));
+  logger.log(chalk.yellow(MESSAGES.INFO.SDK_CONFIG_FILL_REQUIRED));
   return config;
 }
 
 function copyConfigToDistDirectory(
-  config: { distDir: string; reuseClient: boolean; sdkConfig: SdkConfig },
+  distDir: string,
+  sdkConfig: SdkConfig,
   logger: { log: (message: string) => void },
 ): void {
-  const configDest = path.join(config.distDir, AUTH_CONSTANTS.FILES.SDK_CONFIG);
-  const configToWrite: SdkConfig = { ...config.sdkConfig };
-
-  if (!config.reuseClient) {
-    configToWrite.clientId = '';
-    logger.log(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_CLEARED));
-  } else if (config.sdkConfig.clientId) {
-    logger.log(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_REUSED));
-  }
-
-  fs.writeFileSync(configDest, JSON.stringify(configToWrite, null, 2));
+  const configDest = path.join(distDir, AUTH_CONSTANTS.FILES.SDK_CONFIG);
+  fs.writeFileSync(configDest, JSON.stringify(sdkConfig, null, 2));
   logger.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_INCLUDED));
+}
+
+async function validateClientId(
+  clientId: string,
+  envConfig: EnvironmentConfig,
+): Promise<void> {
+  const spinner = ora(MESSAGES.INFO.VALIDATING_CLIENT_ID).start();
+  try {
+    const url = `${envConfig.baseUrl}${API_ENDPOINTS.VALIDATE_CLIENT
+      .replace('{orgId}', envConfig.orgId)
+      .replace('{clientId}', encodeURIComponent(clientId))}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: createHeaders({ bearerToken: envConfig.accessToken, additionalHeaders: { 'Accept': 'application/json' } }),
+    });
+    if (response.status === 404) {
+      spinner.fail(chalk.red(MESSAGE_BUILDERS.CLIENT_ID_NOT_FOUND(clientId, envConfig.orgName)));
+      throw new Error(MESSAGE_BUILDERS.CLIENT_ID_NOT_FOUND(clientId, envConfig.orgName));
+    }
+    if (!response.ok) {
+      await handleHttpError(response, MESSAGES.ERROR_CONTEXT.CLIENT_ID_VALIDATION);
+    }
+    const data = await response.json() as { isConfidential?: boolean };
+    if (data.isConfidential !== false) {
+      spinner.fail(chalk.red(MESSAGE_BUILDERS.CLIENT_ID_CONFIDENTIAL(clientId, envConfig.orgName)));
+      throw new Error(MESSAGE_BUILDERS.CLIENT_ID_CONFIDENTIAL(clientId, envConfig.orgName));
+    }
+    spinner.succeed(chalk.green(MESSAGES.SUCCESS.CLIENT_ID_VALID));
+  } catch (error) {
+    if (spinner.isSpinning) spinner.fail();
+    throw error;
+  }
+}
+
+async function validateClientIdForAppType(
+  isActionApp: boolean,
+  sdkConfig: SdkConfig,
+  envConfig: EnvironmentConfig,
+): Promise<void> {
+  if (!isActionApp) {
+    if (!sdkConfig.clientId?.trim()) {
+      throw new Error(MESSAGES.ERRORS.CLIENT_ID_REQUIRED);
+    }
+    await validateClientId(sdkConfig.clientId, envConfig);
+  } else if (sdkConfig.clientId?.trim()) {
+    await validateClientId(sdkConfig.clientId, envConfig);
+  }
 }
 
 async function checkAppNameUniqueness(
@@ -275,7 +316,6 @@ export async function executePack(options: PackOptions): Promise<void> {
       message: MESSAGES.PROMPTS.ENTER_APP_NAME,
       validate: (input: string) => {
         if (!input.trim()) return MESSAGES.VALIDATIONS.PACKAGE_NAME_REQUIRED;
-        if (!isValidAppName(input)) return MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS;
         return true;
       },
     }]);
@@ -283,47 +323,46 @@ export async function executePack(options: PackOptions): Promise<void> {
   }
 
   if (!packageName) throw new Error(MESSAGES.ERRORS.PACKAGE_NAME_REQUIRED);
-  if (!isValidAppName(packageName)) throw new Error(MESSAGES.VALIDATIONS.APP_NAME_INVALID_CHARS);
+
+  // Sanitize package name (warn instead of blocking)
+  const { sanitized: sanitizedInput, isModifiedd } = sanitizeAppName(packageName);
+  if (isModifiedd) {
+    logger.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(packageName, sanitizedInput)));
+    packageName = sanitizedInput;
+  }
+  if (!packageName) throw new Error(MESSAGES.ERRORS.PACKAGE_NAME_REQUIRED);
 
   const version = options.version ?? DEFAULT_APP_VERSION;
   const isVersionUpgrade = version !== DEFAULT_APP_VERSION;
 
-  // App name uniqueness check is mandatory for new apps (non-version-upgrade)
-  if (!isVersionUpgrade) {
-    const envConfig = getEnvironmentConfig(
-      AUTH_CONSTANTS.REQUIRED_ENV_VARS.PACK,
-      logger,
-      {
-        baseUrl: options.baseUrl,
-        orgId: options.orgId,
-        tenantId: options.tenantId,
-        accessToken: options.accessToken,
-      },
-    );
-    if (!envConfig) throw new Error('Missing required configuration for app name uniqueness check');
-    await checkAppNameUniqueness(packageName, envConfig);
-  }
+  // Always get envConfig — needed for clientId validation and (for new apps) name uniqueness
+  const envConfig = getEnvironmentConfig(
+    AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY,
+    logger,
+    {
+      baseUrl: options.baseUrl,
+      orgId: options.orgId,
+      orgName: options.orgName,
+      tenantId: options.tenantId,
+      folderKey: options.folderKey,
+      accessToken: options.accessToken,
+    },
+  );
+  if (!envConfig) throw new Error('Missing required configuration');
 
   // Load or create SDK config (uipath.json)
   const sdkConfig = loadOrCreateSdkConfig(logger);
 
-  // Handle reuse-client logic
-  let reuseClient = options.reuseClient ?? false;
-  if (!reuseClient && sdkConfig?.clientId?.trim()) {
-    if (isVersionUpgrade) {
-      reuseClient = true;
-    } else {
-      const response = await inquirer.prompt<{ createNew: boolean }>([{
-        type: 'confirm',
-        name: 'createNew',
-        message: MESSAGES.PROMPTS.REUSE_CLIENT_ID,
-        default: false,
-      }]);
-      reuseClient = !response.createNew;
-    }
+  const isActionApp = (options.type as AppType) === AppType.Action;
+  await validateClientIdForAppType(isActionApp, sdkConfig, envConfig);
+
+  // Only check app name uniqueness for new apps (version 1.0.0)
+  if (!isVersionUpgrade) {
+    await checkAppNameUniqueness(packageName, envConfig);
   }
 
-  if (!isVersionUpgrade && sdkConfig?.clientId?.trim() && !sdkConfig?.scope?.trim()) {
+  // Show info message about scope only when clientId is provided but scope is not AND not version upgrade
+  if (!isVersionUpgrade && sdkConfig.clientId?.trim() && !sdkConfig.scope?.trim()) {
     logger.log(chalk.blue(MESSAGES.INFO.SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES));
   }
 
@@ -340,7 +379,6 @@ export async function executePack(options: PackOptions): Promise<void> {
     mainFile: options.mainFile ?? 'index.html',
     contentType: options.contentType ?? 'webapp',
     outputDir: options.output ?? './.uipath',
-    reuseClient,
     sdkConfig,
   };
 
@@ -377,13 +415,8 @@ export async function executePack(options: PackOptions): Promise<void> {
       logger.log(chalk.dim(`${MESSAGES.INFO.CREATED_OUTPUT_DIRECTORY} ${packageConfig.outputDir}`));
     }
 
-    // Copy uipath.json to dist directory (with clientId handling)
-    if (packageConfig.sdkConfig) {
-      copyConfigToDistDirectory(
-        { distDir: packageConfig.distDir, reuseClient: packageConfig.reuseClient, sdkConfig: packageConfig.sdkConfig },
-        logger,
-      );
-    }
+    // Copy uipath.json to dist directory
+    copyConfigToDistDirectory(packageConfig.distDir, sdkConfig, logger);
 
     spinner.text = MESSAGES.INFO.CREATING_METADATA_FILES;
     await createMetadataFiles(packageConfig);

@@ -1,9 +1,11 @@
 import { Command, Flags, Args } from '@oclif/core';
 import chalk from 'chalk';
+import { AppType } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
 import { DEFAULT_APP_VERSION } from '../constants/index.js';
 import { track } from '../telemetry/index.js';
 import { executePack } from '../actions/pack.js';
+import { COMMON_FLAGS } from '../utils/flags.js';
 
 export default class Pack extends Command {
   static override description = 'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
@@ -12,9 +14,11 @@ export default class Pack extends Command {
     '<%= config.bin %> <%= command.id %> ./dist',
     '<%= config.bin %> <%= command.id %> ./dist --name MyApp',
     '<%= config.bin %> <%= command.id %> ./dist --name MyApp --version 1.0.0',
+    '<%= config.bin %> <%= command.id %> ./dist --name MyApp --type Action',
     '<%= config.bin %> <%= command.id %> ./dist --output ./.uipath',
     '<%= config.bin %> <%= command.id %> ./dist --dry-run',
-    '<%= config.bin %> <%= command.id %> ./dist --name MyApp --orgId \'xxxx\' --tenantId \'xxxx\' --accessToken \'your_token\'',
+    '<%= config.bin %> <%= command.id %> ./dist --name MyApp --orgId \'xxxx\' --tenantId \'xxxx\' --folderKey \'xxxx\' --accessToken \'your_token\'',
+    '<%= config.bin %> <%= command.id %> ./dist --name MyActionApp --type Action --orgId \'xxxx\' --tenantId \'xxxx\' --folderKey \'xxxx\' --accessToken \'your_token\'',
   ];
 
   static override args = {
@@ -58,26 +62,17 @@ export default class Pack extends Command {
       default: 'webapp',
       options: ['webapp', 'library', 'process'],
     }),
+    type: Flags.string({
+      char: 't',
+      description: 'App type (Web or Action)',
+      default: AppType.Web,
+      options: [AppType.Web, AppType.Action],
+    }),
     'dry-run': Flags.boolean({
       description: 'Show what would be packaged without creating the package',
       default: false,
     }),
-    'reuse-client': Flags.boolean({
-      description: 'Reuse existing clientId from uipath.json instead of letting UiPath create a new one',
-      default: false,
-    }),
-    baseUrl: Flags.string({
-      description: 'UiPath base URL (default: https://cloud.uipath.com)',
-    }),
-    orgId: Flags.string({
-      description: 'UiPath organization ID',
-    }),
-    tenantId: Flags.string({
-      description: 'UiPath tenant ID',
-    }),
-    accessToken: Flags.string({
-      description: 'UiPath bearer token for authentication',
-    }),
+    ...COMMON_FLAGS,
   };
 
   @track('Pack')
@@ -93,18 +88,20 @@ export default class Pack extends Command {
         description: flags.description,
         mainFile: flags['main-file'],
         contentType: flags['content-type'],
+        type: flags.type,
         dryRun: flags['dry-run'],
-        reuseClient: flags['reuse-client'],
         baseUrl: flags.baseUrl,
         orgId: flags.orgId,
+        orgName: flags.orgName,
         tenantId: flags.tenantId,
+        folderKey: flags.folderKey,
         accessToken: flags.accessToken,
         logger: this,
       });
       process.exit(0);
     } catch (error) {
       const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
-      this.log(chalk.red(`${MESSAGES.ERRORS.PACKAGING_ERROR_PREFIX} ${msg}`));
+      this.log(chalk.red(MESSAGES.ERRORS.PACKAGING_ERROR_PREFIX + msg));
       process.exit(1);
     }
   }

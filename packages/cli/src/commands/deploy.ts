@@ -1,8 +1,9 @@
 import { Command, Flags } from '@oclif/core';
 import chalk from 'chalk';
-import { MESSAGES } from '../constants/index.js';
+import { MESSAGES } from '../constants/messages.js';
 import { track } from '../telemetry/index.js';
 import { executeDeploy } from '../actions/deploy.js';
+import { COMMON_FLAGS } from '../utils/flags.js';
 
 export default class Deploy extends Command {
   static override description = 'Deploy or upgrade a UiPath app';
@@ -10,6 +11,7 @@ export default class Deploy extends Command {
   static override examples = [
     '<%= config.bin %> <%= command.id %>',
     '<%= config.bin %> <%= command.id %> --name MyApp',
+    '<%= config.bin %> <%= command.id %> --name MyApp --version 1.2.0',
     "<%= config.bin %> <%= command.id %> --name 'MyApp' --orgId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --orgName 'YourOrgName' --tenantId 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --folderKey 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' --accessToken 'your_token'",
   ];
 
@@ -19,24 +21,11 @@ export default class Deploy extends Command {
       char: 'n',
       description: 'App name',
     }),
-    baseUrl: Flags.string({
-      description: 'UiPath base URL (default: https://cloud.uipath.com)',
+    version: Flags.string({
+      char: 'v',
+      description: 'Published app version to deploy (e.g. 1.2.0). Defaults to the latest published version.',
     }),
-    orgId: Flags.string({
-      description: 'UiPath organization ID',
-    }),
-    orgName: Flags.string({
-      description: 'UiPath organization name',
-    }),
-    tenantId: Flags.string({
-      description: 'UiPath tenant ID',
-    }),
-    folderKey: Flags.string({
-      description: 'UiPath folder key',
-    }),
-    accessToken: Flags.string({
-      description: 'UiPath bearer token for authentication',
-    }),
+    ...COMMON_FLAGS,
   };
 
   @track('Deploy')
@@ -45,6 +34,7 @@ export default class Deploy extends Command {
     try {
       await executeDeploy({
         name: flags.name,
+        version: flags.version,
         baseUrl: flags.baseUrl,
         orgId: flags.orgId,
         orgName: flags.orgName,
@@ -56,7 +46,7 @@ export default class Deploy extends Command {
       process.exit(0);
     } catch (error) {
       const msg = error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR;
-      this.log(chalk.red(`${MESSAGES.ERRORS.DEPLOYMENT_ERROR_PREFIX} ${msg}`));
+      this.log(chalk.red(MESSAGES.ERRORS.DEPLOYMENT_ERROR_PREFIX + msg));
       process.exit(1);
     }
   }

@@ -48,6 +48,9 @@ export const MESSAGES = {
     APP_UPGRADE_FAILED: '❌ App upgrade failed',
     APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath register app" first',
     APP_NAME_ALREADY_EXISTS: '❌ This app name is already deployed in this folder. Please choose a different name.',
+    CLIENT_ID_REQUIRED: '❌ A non-confidential clientId is required. Please add your clientId to uipath.json and try again.',
+    CLIENT_ID_VALIDATION_FAILED: 'Failed to validate clientId',
+    DEPLOY_VERSION_NOT_FOUND: '❌ Could not determine deploy version from the server. Please re-run publish first.',
     DEPLOYMENT_ID_NOT_FOUND: '❌ Could not find deployment ID for the app',
     
     // Ports
@@ -160,6 +163,7 @@ export const MESSAGES = {
     CONFIG_FILE_CREATED: `✅ Created ${AUTH_CONSTANTS.FILES.SDK_CONFIG}`,
     CLIENT_ID_CLEARED: '✅ ClientId cleared - UiPath will create a new OAuth client during deployment',
     CLIENT_ID_REUSED: '✅ Existing clientId will be reused in production',
+    CLIENT_ID_VALID: 'clientId is valid',
     
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
@@ -179,6 +183,7 @@ export const MESSAGES = {
 
   INFO: {
     // Spinners/Progress
+    VALIDATING_CLIENT_ID: 'Validating clientId...',
     CHECKING_APP_NAME_UNIQUENESS: 'Checking app name availability...',
     DEPLOYING_APP: 'Deploying app...',
     UPGRADING_APP: 'Upgrading app to latest version...',
@@ -209,6 +214,7 @@ export const MESSAGES = {
     // Directory/File operations
     CREATED_OUTPUT_DIRECTORY: 'Created output directory:',
     CONFIG_FILE_NOT_FOUND_WARNING: `⚠️ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} not found in project root.`,
+    SDK_CONFIG_FILL_REQUIRED: 'Please fill in the required fields (clientId) before deploying.',
     SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES: 'ℹ️ Scope not provided. By default, all scopes registered with this clientId will be used.',
     
     // Next steps instructions
@@ -278,11 +284,27 @@ export const MESSAGES = {
     APP_DEPLOYMENT: 'app deployment',
     APP_UPGRADE: 'app upgrade',
     CODED_APP_REGISTRATION: 'coded app registration',
+    CLIENT_ID_VALIDATION: 'clientId validation',
     PUSH_ACQUIRE_LOCK: 'acquire lock',
     PUSH_RELEASE_LOCK: 'release lock',
     PUSH_PULL_OPERATION: 'push/pull operation',
   },
 } as const;
+
+/**
+ * Dynamic message builders for messages that require runtime interpolation.
+ * These cannot live inside the `as const` MESSAGES object.
+ */
+export const MESSAGE_BUILDERS = {
+  APP_NAME_SANITIZED: (original: string, sanitized: string) =>
+    `⚠️  App name "${original}" contains invalid characters. Using sanitized name: "${sanitized}"`,
+  SDK_CONFIG_CREATED: (configPath: string) =>
+    `⚠️  uipath.json not found — created at ${configPath} with empty values.`,
+  CLIENT_ID_NOT_FOUND: (clientId: string, orgName: string) =>
+    `❌ clientId "${clientId}" in org "${orgName}" does not exist. Please check your uipath.json and try again.`,
+  CLIENT_ID_CONFIDENTIAL: (clientId: string, orgName: string) =>
+    `❌ clientId "${clientId}" in org "${orgName}" is confidential. Coded app deployment requires a non-confidential client.`,
+};
 
 /**
  * Helper function to get HTTP status-specific error messages with context

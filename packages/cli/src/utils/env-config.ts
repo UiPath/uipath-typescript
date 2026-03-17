@@ -42,6 +42,33 @@ export function isValidAppName(name: string): boolean {
 }
 
 /**
+ * Trims leading and trailing hyphens from a string without using regex.
+ * Avoids super-linear backtracking that regex quantifiers can cause.
+ */
+function trimHyphens(s: string): string {
+  let start = 0;
+  let end = s.length;
+  while (start < end && s[start] === '-') start++;
+  while (end > start && s[end - 1] === '-') end--;
+  return s.slice(start, end);
+}
+
+/**
+ * Sanitizes an app name to only contain allowed characters.
+ * Converts uppercase to lowercase, underscores to hyphens, removes other invalid chars.
+ * Returns the sanitized name and whether it was modified.
+ */
+export function sanitizeAppName(name: string): { sanitized: string; isModifiedd: boolean } {
+  const collapsed = name
+    .toLowerCase()
+    .replace(/_/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-');
+  const sanitized = trimHyphens(collapsed);
+  return { sanitized, isModifiedd: sanitized !== name };
+}
+
+/**
  * Merges flag config with environment variables, flags take precedence
  */
 function mergeConfigValues(
