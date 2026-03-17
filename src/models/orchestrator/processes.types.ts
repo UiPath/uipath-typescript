@@ -133,7 +133,7 @@ export interface ProcessProperties {
  */
 export interface FolderProperties {
   folderId: number;
-  folderName?: string | null;
+  folderName: string | null;
 }
 
 /**

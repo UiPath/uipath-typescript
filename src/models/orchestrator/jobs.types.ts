@@ -104,87 +104,87 @@ export interface JobGetResponse extends FolderProperties {
   /** The date and time when the job was created */
   createdTime: string;
   /** The date and time when the job execution started, or null if the job hasn't started yet */
-  startTime?: string | null;
+  startTime: string | null;
   /** The date and time when the job execution ended, or null if the job hasn't ended yet */
-  endTime?: string | null;
+  endTime: string | null;
   /** The date and time when the job was last modified */
-  lastModifiedTime?: string | null;
+  lastModifiedTime: string | null;
   /** The date and time when the job was resumed */
-  resumeTime?: string | null;
+  resumeTime: string | null;
   /** The name of the process associated with the job */
-  processName?: string | null;
+  processName: string | null;
   /** Path to the entry point workflow (XAML) that will be executed by the robot */
-  entryPointPath?: string | null;
+  entryPointPath: string | null;
   /** The name of the machine where the robot ran the job */
-  hostMachineName?: string | null;
+  hostMachineName: string | null;
   /** Input parameters in JSON format passed to job execution */
-  inputArguments?: string | null;
+  inputArguments: string | null;
   /** Output parameters in JSON format resulted from job execution */
-  outputArguments?: string | null;
+  outputArguments: string | null;
   /** Environment variables of the job */
-  environmentVariables?: string | null;
+  environmentVariables: string | null;
   /** Additional information about the current job */
-  info?: string | null;
+  info: string | null;
   /** The source name of the job */
-  source?: string | null;
+  source: string | null;
   /** Reference identifier for the job */
-  reference?: string | null;
+  reference: string | null;
   /** Execution priority */
-  jobPriority?: JobPriority | null;
+  jobPriority: JobPriority | null;
   /** Value for more granular control over execution priority (1-100) */
-  specificPriorityValue?: number | null;
+  specificPriorityValue: number | null;
   /** The type of the job - Attended if started via the robot, Unattended otherwise */
   type: JobType;
   /** The package type of the job */
   packageType: JobPackageType;
   /** The runtime type of the robot which can pick up the job */
-  runtimeType?: JobRuntimeType | null;
+  runtimeType: JobRuntimeType | null;
   /** The source type of the job */
   sourceType: PackageSourceType;
   /** The type of the serverless job */
-  serverlessJobType?: ServerlessJobType | null;
+  serverlessJobType: ServerlessJobType | null;
   /** The stop strategy for the job */
-  stopStrategy?: StopStrategy | null;
+  stopStrategy: StopStrategy | null;
   /** The remote control access level for the job */
   remoteControlAccess: RemoteControlAccess;
   /** The folder key (GUID) of the folder this job is part of */
-  folderKey?: string | null;
+  folderKey: string | null;
   /** The unique identifier grouping multiple jobs, usually generated when started by a schedule */
   batchExecutionKey: string;
   /** The parent job key (GUID) */
-  parentJobKey?: string | null;
+  parentJobKey: string | null;
   /** The ID of the schedule that started the job, or null if started by the user */
-  startingScheduleId?: number | null;
+  startingScheduleId: number | null;
   /** The starting trigger ID, can be ApiTriggerId or HttpTriggerId */
-  startingTriggerId?: string | null;
+  startingTriggerId: string | null;
   /** The process version ID */
-  processVersionId?: number | null;
+  processVersionId: number | null;
   /** Expected running time in seconds */
-  maxExpectedRunningTimeSeconds?: number | null;
+  maxExpectedRunningTimeSeconds: number | null;
   /** Whether the job requires user interaction */
   requiresUserInteraction: boolean;
   /** If set, the job will resume on the same robot-machine pair on which it initially ran */
   resumeOnSameContext: boolean;
   /** Distinguishes between multiple job suspend/resume cycles */
-  resumeVersion?: number | null;
+  resumeVersion: number | null;
   /** The persistence instance ID for a suspended job */
-  persistenceId?: string | null;
+  persistenceId: string | null;
   /** The sub-state in which the job is */
-  subState?: string | null;
+  subState: string | null;
   /** The target runtime */
-  targetRuntime?: string | null;
+  targetRuntime: string | null;
   /** The orchestrator identity used to make API calls */
-  orchestratorUserIdentity?: string | null;
+  orchestratorUserIdentity: string | null;
   /** The account under which the robot executor will run the job */
-  localSystemAccount?: string | null;
+  localSystemAccount: string | null;
   /** The trace ID */
-  traceId?: string | null;
+  traceId: string | null;
   /** The root span ID */
-  rootSpanId?: string | null;
+  rootSpanId: string | null;
   /** The parent span ID */
-  parentSpanId?: string | null;
+  parentSpanId: string | null;
   /** The error code */
-  errorCode?: string | null;
+  errorCode: string | null;
   /** The machine associated with the job (requires $expand=Machine) */
   machine?: Machine;
   /** The robot associated with the job (requires $expand=Robot) */
@@ -192,7 +192,7 @@ export interface JobGetResponse extends FolderProperties {
   /** The process associated with the job (requires $expand=Release) */
   process?: SimpleProcess | null;
   /** Error details for the job */
-  jobError?: JobError | null;
+  jobError: JobError | null;
 }
 
 /**
