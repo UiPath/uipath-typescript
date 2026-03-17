@@ -325,8 +325,8 @@ export async function executePack(options: PackOptions): Promise<void> {
   if (!packageName) throw new Error(MESSAGES.ERRORS.PACKAGE_NAME_REQUIRED);
 
   // Sanitize package name (warn instead of blocking)
-  const { sanitized: sanitizedInput, wasModified } = sanitizeAppName(packageName);
-  if (wasModified) {
+  const { sanitized: sanitizedInput, isModifiedd } = sanitizeAppName(packageName);
+  if (isModifiedd) {
     logger.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(packageName, sanitizedInput)));
     packageName = sanitizedInput;
   }

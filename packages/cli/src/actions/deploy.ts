@@ -164,8 +164,8 @@ export async function executeDeploy(options: DeployOptions): Promise<void> {
   if (!envConfig) throw new Error('Missing required configuration');
 
   if (options.name) {
-    const { sanitized, wasModified } = sanitizeAppName(options.name);
-    if (wasModified) {
+    const { sanitized, isModifiedd } = sanitizeAppName(options.name);
+    if (isModifiedd) {
       logger.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(options.name, sanitized)));
       options.name = sanitized;
     }
@@ -248,8 +248,8 @@ async function getAppName(logger: { log: (message: string) => void }): Promise<s
       },
     },
   ]);
-  const { sanitized, wasModified } = sanitizeAppName(response.name);
-  if (wasModified) {
+  const { sanitized, isModifiedd } = sanitizeAppName(response.name);
+  if (isModifiedd) {
     logger.log(chalk.yellow(MESSAGE_BUILDERS.APP_NAME_SANITIZED(response.name, sanitized)));
   }
   return sanitized;
