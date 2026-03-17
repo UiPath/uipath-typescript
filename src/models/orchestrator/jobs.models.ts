@@ -14,18 +14,21 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  * import { Jobs } from '@uipath/uipath-typescript/jobs';
  *
  * const jobs = new Jobs(sdk);
- * const allJobs = await jobs.getAll({ folderId: <folderId> });
+ * const allJobs = await jobs.getAll();
  * ```
  */
 export interface JobServiceModel {
   /**
-   * Gets all jobs with optional filtering and folder scoping
+   * Gets all jobs across folders with optional filtering
    *
    * @param options - Query options including optional folderId and pagination options
    * @returns Promise resolving to either an array of jobs {@link NonPaginatedResponse}<{@link JobGetResponse}> or a {@link PaginatedResponse}<{@link JobGetResponse}> when pagination options are used.
    * {@link JobGetResponse}
    * @example
    * ```typescript
+   * // Get all jobs
+   * const allJobs = await jobs.getAll();
+   *
    * // Get all jobs in a folder
    * const folderJobs = await jobs.getAll({ folderId: <folderId> });
    *
