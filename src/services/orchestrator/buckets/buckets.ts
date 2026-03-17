@@ -25,6 +25,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { ResourceReference, ResourceType } from '../../../core/resource-metadata';
 
 export class BucketService extends FolderScopedService implements BucketServiceModel {
   /**
@@ -44,6 +45,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * const bucket = await buckets.getById(123, 456);
    * ```
    */
+  @ResourceReference({ resource: ResourceType.Bucket, idParam: 'id', idParamIndex: 0, folderIdParam: 'folderId', folderIdParamIndex: 1 })
   @track('Buckets.GetById')
   async getById(id: number, folderId: number, options: BucketGetByIdOptions = {}): Promise<BucketGetResponse> {
     if (!id) {
@@ -181,6 +183,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * }
    * ```
    */
+  @ResourceReference({ resource: ResourceType.Bucket, idParam: 'bucketId', idParamIndex: 0, folderIdParam: 'folderId', folderIdParamIndex: 1 })
   @track('Buckets.GetFileMetaData')
   async getFileMetaData<T extends BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataWithPaginationOptions>(
     bucketId: number, 
@@ -251,6 +254,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
+  @ResourceReference({ resource: ResourceType.Bucket, idParam: 'bucketId', idParamIndex: 0, folderIdParam: 'folderId', folderIdParamIndex: 0 })
   @track('Buckets.UploadFile')
   async uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse> {
     const { bucketId, folderId, path, content } = options;
@@ -306,6 +310,7 @@ export class BucketService extends FolderScopedService implements BucketServiceM
    * });
    * ```
    */
+  @ResourceReference({ resource: ResourceType.Bucket, idParam: 'bucketId', idParamIndex: 0, folderIdParam: 'folderId', folderIdParamIndex: 0 })
   @track('Buckets.GetReadUri')
   async getReadUri(options: BucketGetReadUriOptions): Promise<BucketGetUriResponse> {
     const { bucketId, folderId, path, expiryInMinutes, ...restOptions } = options;

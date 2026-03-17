@@ -53,3 +53,6 @@ export * from '../utils/pagination';
 
 // Export telemetry
 export * from './telemetry';
+
+// Resource metadata (for CLI/tooling to detect resource usage)
+export * from './resource-metadata';

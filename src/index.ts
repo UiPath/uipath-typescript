@@ -26,4 +26,5 @@ export * from './utils/runtime';
 // Export telemetry
 export * from './core/telemetry';
 
-
+// Resource metadata (for CLI/tooling to detect resource usage)
+export * from './core/resource-metadata';
