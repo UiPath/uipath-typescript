@@ -77,34 +77,34 @@ export interface EntityInsertOptions {
 /**
  * Options for inserting a single record into an entity
  */
-export type EntityInsertRecordOptions = EntityInsertOptions;
+export interface EntityInsertRecordOptions extends EntityInsertOptions {}
 
 /**
  * Options for batch inserting data into an entity
  * @deprecated Use {@link EntityInsertRecordsOptions} instead for better clarity on inserting multiple records into an entity. This type will be removed in future versions.
  */
-export type EntityBatchInsertOptions = EntityOperationOptions;
+export interface EntityBatchInsertOptions extends EntityOperationOptions {}
 
 /**
  * Options for inserting multiple records into an entity
  */
-export type EntityInsertRecordsOptions = EntityOperationOptions;
+export interface EntityInsertRecordsOptions extends EntityOperationOptions {}
 
 /**
  * Options for updating a single record in an entity
  */
-export type EntityUpdateRecordOptions = EntityGetRecordByIdOptions;
+export interface EntityUpdateRecordOptions extends EntityGetRecordByIdOptions {}
 
 /**
  * Options for updating data in an entity
  * @deprecated Use {@link EntityUpdateRecordsOptions} instead for better clarity on updating records in an entity. This type will be removed in future versions.
  */
-export type EntityUpdateOptions = EntityOperationOptions;
+export interface EntityUpdateOptions extends EntityOperationOptions {}
 
 /**
  * Options for updating data in an entity
  */
-export type EntityUpdateRecordsOptions = EntityOperationOptions;
+export interface EntityUpdateRecordsOptions extends EntityOperationOptions {}
 
 /**
  * Options for deleting data from an entity
@@ -118,7 +118,7 @@ export interface EntityDeleteOptions {
 /**
  * Options for deleting records in an entity
  */
-export type EntityDeleteRecordsOptions = EntityDeleteOptions;
+export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
 
 
 /**
@@ -165,31 +165,31 @@ export interface EntityOperationResponse {
 }
 
 /**
- * Response from inserting a single record into an entity
- * Returns the inserted record with its generated record ID and other fields
+ * Response from inserting a single record into an entity.
+ * Returns the inserted record with its generated record ID and other fields.
  */
-export type EntityInsertResponse = EntityRecord;
+export interface EntityInsertResponse extends EntityRecord {}
 
 /**
- * Response from updating a single record in an entity
- * Returns the updated record
+ * Response from updating a single record in an entity.
+ * Returns the updated record.
  */
-export type EntityUpdateRecordResponse = EntityRecord;
+export interface EntityUpdateRecordResponse extends EntityRecord {}
 
 /**
  * Response from batch inserting data into an entity
  */
-export type EntityBatchInsertResponse = EntityOperationResponse;
+export interface EntityBatchInsertResponse extends EntityOperationResponse {}
 
 /**
  * Response from updating data in an entity
  */
-export type EntityUpdateResponse = EntityOperationResponse;
+export interface EntityUpdateResponse extends EntityOperationResponse {}
 
 /**
  * Response from deleting data from an entity
  */
-export type EntityDeleteResponse = EntityOperationResponse;
+export interface EntityDeleteResponse extends EntityOperationResponse {}
 
 /**
  * Entity type enum

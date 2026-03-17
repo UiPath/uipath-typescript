@@ -38,13 +38,13 @@ export interface ConversationSessionOptions {
 // ==================== Conversation Response Types ====================
 
 /** Response for creating a conversation (includes methods) */
-export type ConversationCreateResponse = ConversationGetResponse;
+export interface ConversationCreateResponse extends ConversationGetResponse {}
 
 /** Response for updating a conversation (includes methods) */
-export type ConversationUpdateResponse = ConversationGetResponse;
+export interface ConversationUpdateResponse extends ConversationGetResponse {}
 
 /** Response for deleting a conversation (raw data, no methods needed) */
-export type ConversationDeleteResponse = RawConversationGetResponse;
+export interface ConversationDeleteResponse extends RawConversationGetResponse {}
 
 // ==================== Conversation Request Types ====================
 

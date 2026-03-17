@@ -91,7 +91,7 @@ export interface BucketGetUriOptions extends BaseOptions {
 /**
  * Request options for getting a read URI for a file in a bucket
  */
-export type BucketGetReadUriOptions = BucketGetUriOptions;
+export interface BucketGetReadUriOptions extends BucketGetUriOptions {}
 
 /**
  * Request options for getting files in a bucket
