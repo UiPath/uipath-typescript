@@ -9,7 +9,7 @@ export const JOB_TEST_CONSTANTS = {
 
   // Job Metadata
   JOB_KEY: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
-  RELEASE_NAME: 'MyProcess_Production',
+  PROCESS_NAME: 'MyProcess_Production',
   HOST_MACHINE_NAME: 'ROBOT-01',
   ENTRY_POINT_PATH: 'Main.xaml',
 

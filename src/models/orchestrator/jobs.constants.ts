@@ -7,4 +7,8 @@ export const JobMap: { [key: string]: string } = {
   lastModificationTime: 'lastModifiedTime',
   organizationUnitId: 'folderId',
   organizationUnitFullyQualifiedName: 'folderName',
+  releaseName: 'processName',
+  releaseVersionId: 'processVersionId',
+  processType: 'packageType',
+  release: 'process',
 };

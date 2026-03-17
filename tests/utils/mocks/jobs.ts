@@ -3,8 +3,8 @@
  * Uses generic utilities from core.ts for base functionality
  */
 import { JobState } from '../../../src/models/common/types';
-import { JobPriority, JobType } from '../../../src/models/orchestrator/processes.types';
-import { JobGetResponse } from '../../../src/models/orchestrator/jobs.types';
+import { JobPriority, JobType, PackageSourceType, RemoteControlAccess } from '../../../src/models/orchestrator/processes.types';
+import { JobGetResponse, JobPackageType } from '../../../src/models/orchestrator/jobs.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { JOB_TEST_CONSTANTS } from '../constants/jobs';
 import { TEST_CONSTANTS } from '../constants/common';
@@ -21,7 +21,7 @@ export const createMockRawJob = (overrides: Partial<any> = {}): any => {
     Id: JOB_TEST_CONSTANTS.JOB_ID,
     Key: JOB_TEST_CONSTANTS.JOB_KEY,
     State: JobState.Successful,
-    ReleaseName: JOB_TEST_CONSTANTS.RELEASE_NAME,
+    ReleaseName: JOB_TEST_CONSTANTS.PROCESS_NAME,
     HostMachineName: JOB_TEST_CONSTANTS.HOST_MACHINE_NAME,
     EntryPointPath: JOB_TEST_CONSTANTS.ENTRY_POINT_PATH,
     JobPriority: JobPriority.Normal,
@@ -54,11 +54,17 @@ export const createBasicJob = (overrides: Partial<JobGetResponse> = {}): JobGetR
     id: JOB_TEST_CONSTANTS.JOB_ID,
     key: JOB_TEST_CONSTANTS.JOB_KEY,
     state: JobState.Successful,
-    releaseName: JOB_TEST_CONSTANTS.RELEASE_NAME,
+    processName: JOB_TEST_CONSTANTS.PROCESS_NAME,
     hostMachineName: JOB_TEST_CONSTANTS.HOST_MACHINE_NAME,
     entryPointPath: JOB_TEST_CONSTANTS.ENTRY_POINT_PATH,
     jobPriority: JobPriority.Normal,
     type: JobType.Unattended,
+    packageType: JobPackageType.Process,
+    sourceType: PackageSourceType.Manual,
+    remoteControlAccess: RemoteControlAccess.None,
+    batchExecutionKey: '00000000-0000-0000-0000-000000000000',
+    requiresUserInteraction: false,
+    resumeOnSameContext: false,
     source: 'Manual',
     info: null,
     inputArguments: null,
