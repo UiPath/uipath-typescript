@@ -373,7 +373,7 @@ const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
 **Outcome handlers** — one `async` function per outcome:
 ```typescript
 const handle<OutcomeName> = async () => {
-  await <service>.completeTask('<OutcomeName>', formData);
+  await <service>.completeTask('<OutcomeName>', { ...formData, action: '<OutcomeName>' });
 };
 ```
 
@@ -701,7 +701,13 @@ After all files are written, print a file tree of `<app-name>/` and confirm:
 - [ ] `uipath.json` — fill in `scopes`, `clientId` and repack before deploying (if typescript SDK is being used)
 - [ ] `npm run build` passes with zero TypeScript errors
 - [ ] `npm run dev` starts the local dev server
-- [ ] Run `uipath pack` then `uipath publish` to deploy to UiPath Cloud
+- [ ] Deploy using the UiPath TS CLI with `--type Action` on publish:
+  ```bash
+  uipath pack ./dist --name "<app-name>" --version "1.0.0" --reuse-client ...
+  uipath publish --name "<app-name>" --type Action ...
+  uipath deploy --name "<app-name>" ...
+  ```
+  **IMPORTANT:** You MUST use `--type Action` on `uipath publish`. Without it, the app registers as a regular web app and will NOT appear as a task app in Action Center.
 
 ---
 
