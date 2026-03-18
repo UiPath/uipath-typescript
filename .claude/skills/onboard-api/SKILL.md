@@ -76,10 +76,10 @@ Onboard the following endpoint(s) to the SDK:
 **OAuth Scope:** <scope>
 <any additional context from Jira/user>
 
-Follow the onboarding checklist in sdk-service-dev. Use the Swagger URL for schema reference, but curl the real API with PAT token for ground truth response shapes.
+Follow the onboarding checklist in sdk-service-dev, including Step 0 (PAT token + curl).
 ```
 
-Wait for `sdk-service-dev` to complete all steps (implementation, testing, verification).
+`sdk-service-dev` owns PAT token reading and live API curling — do not duplicate that here. Wait for it to complete all steps (implementation, testing, verification).
 
 ---
 

@@ -68,11 +68,37 @@ See [references/onboarding.md](references/onboarding.md) for full placement patt
 
 **What the user provides:** (1) Swagger/OpenAPI spec or API docs URL, (2) which endpoints to onboard. The agent handles everything else — token extraction, calling live endpoints, inspecting responses, making design decisions, writing code.
 
-**Step 0:** Use browser to get a bearer token from `alpha.uipath.com` via the "Bearer Token Extractor" Chrome extension, then curl each endpoint to capture raw JSON responses. Don't design from docs alone — real responses are the ground truth.
+### Step 0: Read PAT Token & Curl Live API (BLOCKING)
+
+**This step is mandatory. Do NOT proceed to implementation without a real API response.**
+
+#### Token source
+
+Read the PAT (Personal Access Token) from `.env.skills` in the repo root. Expected format:
+
+```
+PAT_TOKEN=rt_...
+BASE_URL=https://alpha.uipath.com
+ORG_NAME=popoc
+TENANT_NAME=adetenant
+```
+
+1. **Read `.env.skills`** and parse `PAT_TOKEN`. If the file is missing or `PAT_TOKEN` is empty, stop and ask the user to populate it before continuing.
+2. **Also read `BASE_URL`, `ORG_NAME`, `TENANT_NAME`** for constructing curl URLs. Fall back to defaults (`https://alpha.uipath.com`, `popoc`, `adetenant`) if not set.
+3. **Use the PAT as a Bearer token** in curl requests: `Authorization: Bearer <PAT_TOKEN>`.
+
+#### Curl live endpoints
+
+4. **Curl each endpoint** being onboarded using the token. Capture the full raw JSON response.
+5. **If the curl fails with 401** (token expired or invalid), stop and tell the user to refresh the PAT in `.env.skills`.
+6. **If the curl fails** (403, 404, network error), stop and report the error. Do not guess the response shape from the Swagger spec alone.
+7. **If the user explicitly opts out** of the entire step (e.g., "skip curl, use spec only"), warn them that type decisions may be wrong and note it as a risk — but allow it.
+
+Without a real response, you cannot reliably decide: which fields are optional, what casing the API uses, whether enum values come as strings or numbers, or which fields are actually null in practice. The Swagger spec is often incomplete or wrong on these details.
 
 ### SDK Response Design
 
-Before anything else, inspect the raw API response and decide what the SDK type should look like.
+**Only after you have a real API response**, inspect it and decide what the SDK type should look like.
 
 ```
 For each field in the raw API response:
