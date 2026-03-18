@@ -254,6 +254,19 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - Use camelCase in examples, matching SDK response format.
 - Keep JSDoc in sync with method names.
 
+## Skills for SDK development
+
+**Always invoke the `onboard-api` skill** for any SDK service work — whether onboarding a new API or modifying an existing service. This includes:
+- Adding a new service from a Swagger/OpenAPI spec URL
+- Onboarding an endpoint described in a Jira ticket (provide the ticket key/URL)
+- Adding a new method or service from a direct endpoint description
+- Adding methods to an existing service
+- Modifying types, models, constants, or response transforms for an existing service
+
+The `onboard-api` skill orchestrates the full workflow and will invoke `sdk-service-dev` internally when needed.
+
+For any changes **other than** onboarding a service/method (e.g., bug fixes, refactoring, reviewing code, updating tests, or general repo modifications), invoke the `sdk-service-dev` skill to understand detailed context about repo rules and conventions.
+
 ## Build details
 
 - **Rollup** builds ESM (`.mjs`), CJS (`.cjs`), UMD (`.umd.js`), and `.d.ts` per module.
