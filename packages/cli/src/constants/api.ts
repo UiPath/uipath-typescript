@@ -1,4 +1,8 @@
 export const API_ENDPOINTS = {
+  // AI Trust Layer Policy endpoints
+  POLICY_SAVE: 'roboticsops_/api/Policy',
+  TENANT_GET: 'roboticsops_/api/Tenant/{tenantId}',
+  TENANT_SAVE: 'roboticsops_/api/Tenant',
   PUBLISH_CODED_APP: '/apps_/default/api/v1/default/models/apps/codedapp/publish',
   UPLOAD_PACKAGE: '/orchestrator_/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage()',
   // Base: /studio_/backend/api/Project/{project_id}/FileOperations

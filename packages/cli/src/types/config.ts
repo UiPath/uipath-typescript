@@ -33,6 +33,14 @@ export interface AppConfig {
   appType?: string;
 }
 
+export interface PolicyConfig {
+  policyId: string;
+  policyName: string;
+  publishedAt: string;
+  deployedAt?: string;
+  tenantId?: string;
+}
+
 /**
  * SDK configuration type for uipath.json
  * Note: scope is optional when clientId is provided (uses client's registered scopes)

@@ -5,6 +5,7 @@ import { TokenManager } from '../auth/token-manager';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
 import { CONTENT_TYPES, RESPONSE_TYPES } from '../../utils/constants/headers';
+import { AOPS_BASE } from '../../utils/constants/endpoints/base';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -58,12 +59,15 @@ export class ApiClient {
   private async request<T>(method: string, path: string, options: RequestSpec = {}): Promise<T> {
     // Ensure path starts with a forward slash
     const normalizedPath = path.startsWith('/') ? path.substring(1) : path;
-    
-    // Construct URL with org and tenant names
-    const url = new URL(
-      `${this.config.orgName}/${this.config.tenantName}/${normalizedPath}`,
-      this.config.baseUrl
-    ).toString();
+
+    // Aops endpoints don't require tenant in the URL
+    const isAopsPath = normalizedPath.startsWith(AOPS_BASE);
+
+    // Construct URL with org and tenant names (skip tenant for Aops)
+    const basePath = isAopsPath
+      ? `${this.config.orgName}/${normalizedPath}`
+      : `${this.config.orgName}/${this.config.tenantName}/${normalizedPath}`;
+    const url = new URL(basePath, this.config.baseUrl).toString();
 
     const isFormData = options.body instanceof FormData;
     const defaultHeaders = await this.getDefaultHeaders();
