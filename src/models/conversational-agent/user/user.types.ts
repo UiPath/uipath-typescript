@@ -40,7 +40,7 @@ export interface UserSettingsGetResponse {
 }
 
 /** Response for updating user settings */
-export type UserSettingsUpdateResponse = UserSettingsGetResponse;
+export interface UserSettingsUpdateResponse extends UserSettingsGetResponse {}
 
 /**
  * Options for updating user settings

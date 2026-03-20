@@ -313,4 +313,4 @@ export type ProcessGetAllOptions = RequestOptions & PaginationOptions & {
 /**
  * Options for getting a single process by ID
  */
-export type ProcessGetByIdOptions = BaseOptions;
+export interface ProcessGetByIdOptions extends BaseOptions {}
