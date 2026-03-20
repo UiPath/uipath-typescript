@@ -96,13 +96,15 @@ export interface ProcessInstancesServiceModel {
   /**
    * Get execution history (spans) for a process instance
    * @param instanceId The ID of the instance to get history for
+   * @param folderKey The folder key for authorization
    * @returns Promise resolving to execution history
    * {@link ProcessInstanceExecutionHistoryResponse}
    * @example
    * ```typescript
    * // Get execution history for a process instance
    * const history = await processInstances.getExecutionHistory(
-   *   <instanceId>
+   *   <instanceId>,
+   *   <folderKey>
    * );
    *
    * // Analyze execution timeline
@@ -113,7 +115,7 @@ export interface ProcessInstancesServiceModel {
    * });
    * ```
    */
-  getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+  getExecutionHistory(instanceId: string, folderKey: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
 
   /**
    * Get BPMN XML file for a process instance
@@ -355,8 +357,9 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
 
     async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
 
-      return service.getExecutionHistory(instanceData.instanceId);
+      return service.getExecutionHistory(instanceData.instanceId, instanceData.folderKey);
     },
 
     async getBpmn(): Promise<BpmnXmlString> {
