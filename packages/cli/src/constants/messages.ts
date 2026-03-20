@@ -48,7 +48,6 @@ export const MESSAGES = {
     APP_UPGRADE_FAILED: '❌ App upgrade failed',
     APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath register app" first',
     APP_NAME_ALREADY_EXISTS: '❌ This app name is already deployed in this folder. Please choose a different name.',
-    CLIENT_ID_REQUIRED: '❌ A non-confidential clientId is required. Please add your clientId to uipath.json and try again.',
     CLIENT_ID_VALIDATION_FAILED: 'Failed to validate clientId',
     DEPLOY_VERSION_NOT_FOUND: '❌ Could not determine deploy version from the server. Please re-run publish first.',
     DEPLOYMENT_ID_NOT_FOUND: '❌ Could not find deployment ID for the app',
