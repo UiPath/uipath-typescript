@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { randomBytes, randomInt } from 'crypto';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -88,6 +88,32 @@ export function hasValidPagination(response: any): boolean {
      typeof response.nextCursor === 'object' ||
      typeof response.nextCursor === 'string')
   );
+}
+
+/**
+ * Generates a cryptographically secure random integer in the range [min, max).
+ *
+ * @param min - Inclusive lower bound
+ * @param max - Exclusive upper bound
+ * @returns {number} Random integer
+ */
+export function generateRandomInt(min: number, max: number): number {
+  return randomInt(min, max);
+}
+
+/**
+ * Generates a cryptographically secure random float in the range [min, max).
+ *
+ * @param min - Inclusive lower bound
+ * @param max - Exclusive upper bound
+ * @param precision - Number of decimal places
+ * @returns {number} Random float
+ */
+export function generateRandomFloat(min: number, max: number, precision: number = 2): number {
+  const range = max - min;
+  // Use 4 random bytes to get a uniform value in [0, 1)
+  const randomValue = randomBytes(4).readUInt32BE(0) / 0x100000000;
+  return Number.parseFloat((randomValue * range + min).toFixed(precision));
 }
 
 /**
