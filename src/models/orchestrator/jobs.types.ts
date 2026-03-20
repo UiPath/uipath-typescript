@@ -3,6 +3,7 @@ import { PaginationOptions } from '../../utils/pagination';
 import {
   JobPriority,
   JobType,
+  PackageType,
   StopStrategy,
   RemoteControlAccess,
   PackageSourceType,
@@ -11,24 +12,6 @@ import {
   JobError,
   FolderProperties,
 } from './processes.types';
-
-/**
- * Enum for job package type
- */
-export enum JobPackageType {
-  Undefined = 'Undefined',
-  Process = 'Process',
-  ProcessOrchestration = 'ProcessOrchestration',
-  WebApp = 'WebApp',
-  Agent = 'Agent',
-  TestAutomationProcess = 'TestAutomationProcess',
-  Api = 'Api',
-  MCPServer = 'MCPServer',
-  BusinessRules = 'BusinessRules',
-  CaseManagement = 'CaseManagement',
-  Flow = 'Flow',
-  Function = 'Function',
-}
 
 /**
  * Enum for job runtime type
@@ -80,14 +63,22 @@ export enum ServerlessJobType {
 }
 
 /**
- * Interface for process metadata on a job
+ * Interface for process metadata associated with a job.
+ * Represents a lightweight summary of the process (release) linked to a job.
+ * Available when using `expand=Release` in the query.
  */
-export interface SimpleProcess {
+export interface ProcessMetadata {
+  /** The unique key of the release */
   key?: string;
+  /** The process key identifying the package */
   processKey?: string;
+  /** The version of the process package */
   processVersion?: string;
+  /** Whether this is the latest version of the process */
   isLatestVersion?: boolean;
+  /** The display name of the process */
   name?: string;
+  /** The numeric ID of the release */
   id?: number;
 }
 
@@ -95,11 +86,11 @@ export interface SimpleProcess {
  * Interface for job response from GET /odata/Jobs
  */
 export interface JobGetResponse extends FolderProperties {
-  /** The job ID */
+  /** The unique numeric identifier of the job */
   id: number;
-  /** The unique job identifier */
+  /** The unique job identifier (GUID) */
   key: string;
-  /** The state in which the job is */
+  /** The current execution state of the job */
   state: JobState;
   /** The date and time when the job was created */
   createdTime: string;
@@ -109,39 +100,39 @@ export interface JobGetResponse extends FolderProperties {
   endTime: string | null;
   /** The date and time when the job was last modified */
   lastModifiedTime: string | null;
-  /** The date and time when the job was resumed */
+  /** The date and time when the job was resumed after suspension */
   resumeTime: string | null;
-  /** The name of the process associated with the job */
+  /** The name of the process (release) associated with the job */
   processName: string | null;
   /** Path to the entry point workflow (XAML) that will be executed by the robot */
   entryPointPath: string | null;
   /** The name of the machine where the robot ran the job */
   hostMachineName: string | null;
-  /** Input parameters in JSON format passed to job execution */
+  /** Input parameters as a JSON string passed to job execution */
   inputArguments: string | null;
-  /** Output parameters in JSON format resulted from job execution */
+  /** Output parameters as a JSON string resulted from job execution */
   outputArguments: string | null;
-  /** Environment variables of the job */
+  /** Environment variables as a JSON string passed to the job execution */
   environmentVariables: string | null;
   /** Additional information about the current job */
   info: string | null;
-  /** The source name of the job */
+  /** The source name of the job, describing how the job was triggered */
   source: string | null;
-  /** Reference identifier for the job */
+  /** Reference identifier for the job, used for external correlation */
   reference: string | null;
-  /** Execution priority */
+  /** The execution priority of the job */
   jobPriority: JobPriority | null;
   /** Value for more granular control over execution priority (1-100) */
   specificPriorityValue: number | null;
   /** The type of the job - Attended if started via the robot, Unattended otherwise */
   type: JobType;
-  /** The package type of the job */
-  packageType: JobPackageType;
+  /** The package type of the process associated with the job */
+  packageType: PackageType;
   /** The runtime type of the robot which can pick up the job */
   runtimeType: JobRuntimeType | null;
-  /** The source type of the job */
+  /** The source type indicating how the job was triggered */
   sourceType: PackageSourceType;
-  /** The type of the serverless job */
+  /** The type of the serverless job, or null for non-serverless jobs */
   serverlessJobType: ServerlessJobType | null;
   /** The stop strategy for the job */
   stopStrategy: StopStrategy | null;
@@ -151,7 +142,7 @@ export interface JobGetResponse extends FolderProperties {
   folderKey: string | null;
   /** The unique identifier grouping multiple jobs, usually generated when started by a schedule */
   batchExecutionKey: string;
-  /** The parent job key (GUID) */
+  /** The parent job key (GUID), set when the job was started by another job */
   parentJobKey: string | null;
   /** The ID of the schedule that started the job, or null if started by the user */
   startingScheduleId: number | null;
@@ -159,7 +150,7 @@ export interface JobGetResponse extends FolderProperties {
   startingTriggerId: string | null;
   /** The process version ID */
   processVersionId: number | null;
-  /** Expected running time in seconds */
+  /** Expected maximum running time in seconds before the job is flagged */
   maxExpectedRunningTimeSeconds: number | null;
   /** Whether the job requires user interaction */
   requiresUserInteraction: boolean;
@@ -169,29 +160,29 @@ export interface JobGetResponse extends FolderProperties {
   resumeVersion: number | null;
   /** The persistence instance ID for a suspended job */
   persistenceId: string | null;
-  /** The sub-state in which the job is */
+  /** The sub-state in which the job is, providing more granular status information */
   subState: string | null;
-  /** The target runtime */
+  /** The target runtime for the job */
   targetRuntime: string | null;
-  /** The orchestrator identity used to make API calls */
+  /** The orchestrator identity used to make API calls on behalf of the job */
   orchestratorUserIdentity: string | null;
-  /** The account under which the robot executor will run the job */
+  /** The local system account under which the robot executor will run the job */
   localSystemAccount: string | null;
-  /** The trace ID */
+  /** The trace ID for distributed tracing */
   traceId: string | null;
-  /** The root span ID */
+  /** The root span ID for distributed tracing */
   rootSpanId: string | null;
-  /** The parent span ID */
+  /** The parent span ID for distributed tracing */
   parentSpanId: string | null;
-  /** The error code */
+  /** The error code associated with a failed job */
   errorCode: string | null;
-  /** The machine associated with the job (requires $expand=Machine) */
+  /** The machine associated with the job (available when using expand=Machine) */
   machine?: Machine;
-  /** The robot associated with the job (requires $expand=Robot) */
+  /** The robot associated with the job (available when using expand=Robot) */
   robot?: RobotMetadata;
-  /** The process associated with the job (requires $expand=Release) */
-  process?: SimpleProcess | null;
-  /** Error details for the job */
+  /** The process metadata associated with the job (available when using expand=Release) */
+  process?: ProcessMetadata | null;
+  /** Error details for the job, or null if the job has no errors */
   jobError: JobError | null;
 }
 

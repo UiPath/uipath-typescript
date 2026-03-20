@@ -29,26 +29,24 @@ export interface JobServiceModel {
    * // Get all jobs
    * const allJobs = await jobs.getAll();
    *
-   * // Get all jobs in a folder
+   * // Get all jobs in a specific folder
    * const folderJobs = await jobs.getAll({ folderId: <folderId> });
    *
    * // With filtering
    * const runningJobs = await jobs.getAll({
-   *   folderId: <folderId>,
-   *   filter: "State eq 'Running'"
+   *   filter: "state eq 'Running'"
    * });
    *
    * // First page with pagination
-   * const page1 = await jobs.getAll({ folderId: <folderId>, pageSize: 10 });
+   * const page1 = await jobs.getAll({ pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await jobs.getAll({ folderId: <folderId>, cursor: page1.nextCursor });
+   *   const page2 = await jobs.getAll({ cursor: page1.nextCursor });
    * }
    *
    * // Jump to specific page
    * const page5 = await jobs.getAll({
-   *   folderId: <folderId>,
    *   jumpToPage: 5,
    *   pageSize: 10
    * });

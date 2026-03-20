@@ -15,7 +15,7 @@ import { track } from '../../../core/telemetry';
  */
 export class JobService extends FolderScopedService implements JobServiceModel {
   /**
-   * Gets all jobs with optional filtering and folder scoping
+   * Gets all jobs across folders with optional filtering
    *
    * @param options - Query options including optional folderId and pagination options
    * @returns Promise resolving to array of jobs or paginated response
@@ -26,21 +26,23 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    *
    * const jobs = new Jobs(sdk);
    *
-   * // Get all jobs in a folder
+   * // Get all jobs
+   * const allJobs = await jobs.getAll();
+   *
+   * // Get all jobs in a specific folder
    * const folderJobs = await jobs.getAll({ folderId: 123 });
    *
    * // With filtering
    * const runningJobs = await jobs.getAll({
-   *   folderId: 123,
-   *   filter: "State eq 'Running'"
+   *   filter: "state eq 'Running'"
    * });
    *
    * // First page with pagination
-   * const page1 = await jobs.getAll({ folderId: 123, pageSize: 10 });
+   * const page1 = await jobs.getAll({ pageSize: 10 });
    *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
-   *   const page2 = await jobs.getAll({ folderId: 123, cursor: page1.nextCursor });
+   *   const page2 = await jobs.getAll({ cursor: page1.nextCursor });
    * }
    * ```
    */

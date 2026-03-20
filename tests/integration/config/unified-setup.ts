@@ -34,7 +34,7 @@ export interface TestServices {
   assets: Assets;
   buckets: Buckets;
   queues: Queues;
-  jobs: Jobs;
+  jobs?: Jobs;
   processes: Processes;
   maestroProcesses: MaestroProcessesService;
   processInstances: ProcessInstancesService;
@@ -79,7 +79,6 @@ function createV0Services(config: IntegrationConfig): TestServices {
     assets: sdk.assets as unknown as Assets,
     buckets: sdk.buckets as unknown as Buckets,
     queues: sdk.queues as unknown as Queues,
-    jobs: new Jobs(sdk as unknown as UiPath),
     processes: sdk.processes as unknown as Processes,
     maestroProcesses: sdk.maestro.processes as unknown as MaestroProcessesService,
     processInstances: sdk.maestro.processes.instances as unknown as ProcessInstancesService,

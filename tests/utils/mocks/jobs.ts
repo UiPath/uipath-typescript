@@ -3,8 +3,8 @@
  * Uses generic utilities from core.ts for base functionality
  */
 import { JobState } from '../../../src/models/common/types';
-import { JobPriority, JobType, PackageSourceType, RemoteControlAccess } from '../../../src/models/orchestrator/processes.types';
-import { JobGetResponse, JobPackageType } from '../../../src/models/orchestrator/jobs.types';
+import { JobPriority, JobType, PackageType, PackageSourceType, RemoteControlAccess } from '../../../src/models/orchestrator/processes.types';
+import { JobGetResponse } from '../../../src/models/orchestrator/jobs.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { JOB_TEST_CONSTANTS } from '../constants/jobs';
 import { TEST_CONSTANTS } from '../constants/common';
@@ -58,17 +58,40 @@ export const createBasicJob = (overrides: Partial<JobGetResponse> = {}): JobGetR
     hostMachineName: JOB_TEST_CONSTANTS.HOST_MACHINE_NAME,
     entryPointPath: JOB_TEST_CONSTANTS.ENTRY_POINT_PATH,
     jobPriority: JobPriority.Normal,
+    specificPriorityValue: 45,
     type: JobType.Unattended,
-    packageType: JobPackageType.Process,
+    packageType: PackageType.Process,
+    runtimeType: null,
     sourceType: PackageSourceType.Manual,
+    serverlessJobType: null,
+    stopStrategy: null,
     remoteControlAccess: RemoteControlAccess.None,
+    folderKey: null,
     batchExecutionKey: '00000000-0000-0000-0000-000000000000',
+    parentJobKey: null,
+    startingScheduleId: null,
+    startingTriggerId: null,
+    processVersionId: null,
+    maxExpectedRunningTimeSeconds: null,
     requiresUserInteraction: false,
     resumeOnSameContext: false,
+    resumeVersion: null,
+    persistenceId: null,
+    subState: null,
+    targetRuntime: null,
+    orchestratorUserIdentity: null,
+    localSystemAccount: null,
+    traceId: null,
+    rootSpanId: null,
+    parentSpanId: null,
+    errorCode: null,
     source: 'Manual',
+    reference: '',
     info: null,
     inputArguments: null,
     outputArguments: null,
+    environmentVariables: null,
+    resumeTime: null,
     createdTime: JOB_TEST_CONSTANTS.CREATED_TIME,
     startTime: JOB_TEST_CONSTANTS.START_TIME,
     endTime: JOB_TEST_CONSTANTS.END_TIME,

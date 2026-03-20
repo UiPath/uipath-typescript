@@ -18,7 +18,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       if (!folderId) {
-        throw new Error('Skipping jobs test: INTEGRATION_TEST_FOLDER_ID not configured.');
+        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
       }
 
       const result = await jobs.getAll({
@@ -42,7 +42,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       if (!folderId) {
-        throw new Error('Skipping jobs test: INTEGRATION_TEST_FOLDER_ID not configured.');
+        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
       }
 
       const result = await jobs.getAll({
@@ -67,7 +67,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       if (!folderId) {
-        throw new Error('Skipping jobs test: INTEGRATION_TEST_FOLDER_ID not configured.');
+        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
       }
 
       const result = await jobs.getAll({
@@ -94,7 +94,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       if (!folderId) {
-        throw new Error('Skipping jobs test: INTEGRATION_TEST_FOLDER_ID not configured.');
+        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
       }
 
       const result = await jobs.getAll({
