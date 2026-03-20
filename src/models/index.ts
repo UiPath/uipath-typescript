@@ -12,3 +12,6 @@ export * from './orchestrator';
 
 // Task models
 export * from './action-center';
+
+// AoPS (Autonomous Operations) models
+export * from './aops';

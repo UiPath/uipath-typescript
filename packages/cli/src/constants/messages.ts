@@ -145,7 +145,23 @@ export const MESSAGES = {
     INVALID_PROPERTIES_OBJECT: 'Properties must be a valid object',
     MISSING_ACTION_SCHEMA_SECTION: 'Action schema must have inputs, outputs, inOuts, and outcomes sections',
     INVALID_ACTION_SCHEMA: 'Action schema validation failed:',
-    UNSUPPORTED_JSON_DATA_TYPE: 'Unsupported JSON data type:'
+    UNSUPPORTED_JSON_DATA_TYPE: 'Unsupported JSON data type:',
+
+    // Policy publishing
+    POLICY_PUBLISHING_ERROR_PREFIX: 'Policy publishing error: ',
+    POLICY_PUBLISHING_FAILED: '❌ Policy publishing failed',
+    POLICY_FILE_NOT_FOUND: '❌ Policy file not found',
+    POLICY_FILE_INVALID_JSON: '❌ Policy file is not valid JSON',
+    POLICY_NAME_REQUIRED: '❌ Policy file must contain a "policy-name" field',
+    POLICY_DATA_REQUIRED: '❌ Policy file must contain a "data" field',
+    FAILED_TO_SAVE_POLICY_CONFIG: 'Failed to save policy configuration:',
+
+    // Policy deployment
+    POLICY_DEPLOY_ERROR_PREFIX: 'Policy deployment error: ',
+    POLICY_DEPLOY_FAILED: '❌ Policy deployment failed',
+    AI_TRUST_LAYER_POLICY_NOT_FOUND: '❌ AITrustLayer policy not found in tenant policies',
+    POLICY_ID_REQUIRED: '❌ Policy ID is required. Provide --policyId flag or run "uipath publish-policy" first',
+    FAILED_TO_LOAD_POLICY_CONFIG: 'Failed to load policy config:'
 
   },
   
@@ -172,6 +188,12 @@ export const MESSAGES = {
     // Deployment
     APP_DEPLOYED_SUCCESS: '✅ App deployed successfully!',
     APP_UPGRADED_SUCCESS: '✅ App upgraded successfully!',
+
+    // Policy publishing
+    POLICY_PUBLISHED_SUCCESS: '✅ Policy published successfully!',
+
+    // Policy deployment
+    POLICY_DEPLOYED_SUCCESS: '✅ Policy deployed to tenant successfully!',
 
     // Push
     PUSH_COMPLETED: 'Push completed successfully.',
@@ -235,6 +257,12 @@ export const MESSAGES = {
     PUSH_RESOURCE_UPDATED_PREFIX: '[resources] Updated: ',
     APP_REGISTRATION: '🚀 UiPath App Registration',
     APP_DEPLOYMENT: '🚀 UiPath App Deployment',
+    POLICY_PUBLISHING: '🚀 UiPath Policy Publishing',
+    READING_POLICY_FILE: 'Reading policy file...',
+    PUBLISHING_POLICY: 'Publishing policy to AI Trust Layer...',
+    POLICY_DEPLOYING: '🚀 UiPath Policy Deployment',
+    FETCHING_TENANT_POLICIES: 'Fetching tenant policies...',
+    DEPLOYING_POLICY_TO_TENANT: 'Deploying policy to tenant...',
     PACKAGE_CREATOR: '📦 UiPath NuGet Package Creator',
     PUBLISHER: '🚀 UiPath Publisher',
     PACKAGE_PREVIEW: '🔍 Package Preview',
@@ -287,6 +315,8 @@ export const MESSAGES = {
     PUSH_ACQUIRE_LOCK: 'acquire lock',
     PUSH_RELEASE_LOCK: 'release lock',
     PUSH_PULL_OPERATION: 'push/pull operation',
+    POLICY_PUBLISHING: 'policy publishing',
+    POLICY_DEPLOY: 'policy deployment',
   },
 } as const;
 
