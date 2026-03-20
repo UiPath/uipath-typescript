@@ -83,6 +83,14 @@ Follow the onboarding checklist in sdk-service-dev, including Step 0 (PAT token 
 
 ---
 
+## Step 3.5: Whitelist Endpoint in Cloudflare Workers
+
+Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browser-based E2E tests can reach the API via `alpha.api.uipath.com`. This step is **non-blocking** — if it fails, continue with Step 4.
+
+**Follow the full procedure in [`references/cloudflare-whitelist.md`](references/cloudflare-whitelist.md).**
+
+---
+
 ## Step 4: Commit & Raise PR
 
 After `sdk-service-dev` finishes:
