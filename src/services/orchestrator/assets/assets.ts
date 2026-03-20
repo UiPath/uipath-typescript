@@ -12,6 +12,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { ResourceReference, ResourceType } from '../../../core/resource-metadata';
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
@@ -99,6 +100,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    * const asset = await assets.getById(123, 456);
    * ```
    */
+  @ResourceReference({ resource: ResourceType.Asset, idParam: 'id', idParamIndex: 0, folderIdParam: 'folderId', folderIdParamIndex: 1 })
   @track('Assets.GetById')
   async getById(id: number, folderId: number, options: AssetGetByIdOptions = {}): Promise<AssetGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });

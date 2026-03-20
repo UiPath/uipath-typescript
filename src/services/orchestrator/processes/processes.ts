@@ -18,6 +18,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { ResourceReference, ResourceType } from '../../../core/resource-metadata';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -122,6 +123,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * }, 123); // folderId is required
    * ```
    */
+  @ResourceReference({ resource: ResourceType.Process, nameParam: 'processKey', nameParamIndex: 0, folderIdParam: 'folderId', folderIdParamIndex: 1 })
   @track('Processes.Start')
   async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -172,6 +174,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * const process = await processes.getById(123, 456);
    * ```
    */
+  @ResourceReference({ resource: ResourceType.Process, idParam: 'id', idParamIndex: 0, folderIdParam: 'folderId', folderIdParamIndex: 1 })
   @track('Processes.GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });

@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
 import fetch from 'node-fetch';
@@ -9,6 +10,8 @@ import { getEnvironmentConfig } from '../utils/env-config.js';
 import { WebAppFileHandler } from '../core/webapp-file-handler/index.js';
 import { Preconditions } from '../core/preconditions.js';
 import { cliTelemetryClient } from '../telemetry/index.js';
+import { scanProject, formatBindings, loadSDKResourceMethods } from '../core/resource-scanner/index.js';
+import { logDetectedBindings } from './scan.js';
 import type { EnvironmentConfig } from '../types/index.js';
 
 export interface PushOptions {
@@ -132,6 +135,31 @@ export async function executePush(options: PushOptions): Promise<void> {
     throw new Error(
       error instanceof Error ? error.message : MESSAGES.ERRORS.PUSH_VALIDATION_FAILED
     );
+  }
+
+  const tsconfigPath = path.join(rootDir, 'tsconfig.json');
+  if (fs.existsSync(tsconfigPath)) {
+    try {
+      const registry = await loadSDKResourceMethods(rootDir);
+      // Silently skip scan if SDK is not installed — push should not be blocked
+      if (registry.size > 0) {
+        logger.log(chalk.gray('[scan] Scanning for UiPath resource references...'));
+        const scanResult = await scanProject(tsconfigPath, registry);
+        for (const warning of scanResult.warnings) {
+          const relPath = path.relative(rootDir, warning.sourceFile);
+          logger.log(chalk.yellow(`[scan] ${warning.message} (${relPath}:${warning.line})`));
+        }
+        if (scanResult.resources.length > 0) {
+          const bindings = formatBindings(scanResult.resources);
+          if (bindings.resources.length > 0) {
+            logDetectedBindings(bindings, logger);
+          }
+        }
+      }
+    } catch (scanError) {
+      const msg = scanError instanceof Error ? scanError.message : 'Unknown scan error';
+      logger.log(chalk.yellow(`[scan] Resource scanning skipped: ${msg}`));
+    }
   }
 
   const handler = new WebAppFileHandler({
