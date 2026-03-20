@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import JSZip from 'jszip';
 import fetch from 'node-fetch';
 import type { SdkConfig, EnvironmentConfig } from '../types/index.js';
-import { AppType } from '../types/index.js';
 import { MESSAGES, MESSAGE_BUILDERS } from '../constants/messages.js';
 import { AUTH_CONSTANTS, DEFAULT_APP_VERSION, API_ENDPOINTS } from '../constants/index.js';
 import { sanitizeAppName, getEnvironmentConfig } from '../utils/env-config.js';
@@ -131,17 +130,11 @@ async function validateClientId(
   }
 }
 
-async function validateClientIdForAppType(
-  isActionApp: boolean,
+async function validateClientIdIfProvided(
   sdkConfig: SdkConfig,
   envConfig: EnvironmentConfig,
 ): Promise<void> {
-  if (!isActionApp) {
-    if (!sdkConfig.clientId?.trim()) {
-      throw new Error(MESSAGES.ERRORS.CLIENT_ID_REQUIRED);
-    }
-    await validateClientId(sdkConfig.clientId, envConfig);
-  } else if (sdkConfig.clientId?.trim()) {
+  if (sdkConfig.clientId?.trim()) {
     await validateClientId(sdkConfig.clientId, envConfig);
   }
 }
@@ -353,8 +346,7 @@ export async function executePack(options: PackOptions): Promise<void> {
   // Load or create SDK config (uipath.json)
   const sdkConfig = loadOrCreateSdkConfig(logger);
 
-  const isActionApp = (options.type as AppType) === AppType.Action;
-  await validateClientIdForAppType(isActionApp, sdkConfig, envConfig);
+  await validateClientIdIfProvided(sdkConfig, envConfig);
 
   // Only check app name uniqueness for new apps (version 1.0.0)
   if (!isVersionUpgrade) {
