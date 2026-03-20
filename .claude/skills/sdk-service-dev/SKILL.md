@@ -363,16 +363,16 @@ npm run build         # Rollup build produces dist/{service}/ output
 
 See [references/e2e-testing.md](references/e2e-testing.md) for the full workflow.
 
-After implementing a new service, validate it end-to-end in `samples/process-app-v1`:
+After implementing a new service, validate it end-to-end by scaffolding a **temporary** React app at `samples/e2e-test/`. The app uses PAT auth (from `.env.skills`) — no OAuth, no Playwright, no login flow. The entire app is deleted after validation.
 
 ```
 1. npm run build && npm version 1.0.0-test.1 --no-git-tag-version && npm pack
-2. Update sample app package.json → install new tarball
-3. Add temporary test component — import new service, call every method, console.log responses
-4. npm run dev → use Playwright to navigate, trigger tests, read console output
+2. Scaffold temp app at samples/e2e-test/ (React + Vite + Tailwind, PAT auth)
+3. Generate test component tailored to onboarded methods — UI matches method types
+4. npm install && npm run dev → open browser, interact with test UI
 5. Verify: imports resolve, fields are camelCase, dropped fields absent,
    bound methods exist, pagination shape correct
-6. Clean up — remove test component, revert versions, delete tarball, don't commit
+6. Delete entire app — rm -rf samples/e2e-test, delete tarball, revert version
 ```
 
 ## Key Source Files

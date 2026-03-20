@@ -364,4 +364,4 @@ Once you've made the four decisions (response shape, placement, exports, binding
 7. **Write unit tests** — mirror src structure in `tests/unit/`
 8. **Write JSDoc** — on `{Entity}ServiceModel` in `models.ts`
 9. **Update docs** — `docs/oauth-scopes.md`, `docs/pagination.md` (if paginated)
-10. **E2E validate in sample app** — build, pack, install in `samples/process-app-v1`, add temp test component, run dev server, validate with Playwright, clean up. See [e2e-testing.md](e2e-testing.md) for full workflow.
+10. **E2E validate** — build, pack, scaffold temp app at `samples/e2e-test/` (React + Vite + Tailwind, PAT auth from `.env.skills`), generate test component matching onboarded methods, `npm run dev`, validate in browser, then `rm -rf samples/e2e-test`. See [e2e-testing.md](e2e-testing.md) for full workflow.

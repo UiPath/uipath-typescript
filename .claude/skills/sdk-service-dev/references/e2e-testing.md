@@ -1,204 +1,357 @@
-# E2E Testing with Sample App
+# E2E Testing — On-the-Fly App
 
-After implementing a new service, validate it end-to-end by building a test package and exercising the new methods in `samples/process-app-v1`. This catches issues that unit tests miss — import path problems, build output errors, type declaration bugs, and runtime transform failures.
+After implementing a new service, validate it end-to-end by scaffolding a temporary React app, exercising the new methods, and deleting the app when done. This catches issues unit tests miss — import path problems, build output errors, type declaration bugs, and runtime transform failures.
+
+**No permanent boilerplate lives in the repo.** The skill creates the entire app from scratch each time and removes it after validation.
 
 ## Overview
 
 ```
-Build SDK → Pack tarball → Install in sample app → Add test code → Run dev server →
-Validate with Playwright → Clean up test code
+Build SDK → Pack tarball → Scaffold temp app → Generate test component →
+npm install → npm run dev → Validate in browser → Delete entire app
 ```
-
-The sample app uses **OAuth frontend auth** and **Vite dev server** at `http://localhost:5173`.
 
 ## Step 1: Build and Pack
 
 From the repo root:
 
 ```bash
-# Build all modules (ESM, CJS, UMD, .d.ts)
 npm run build
-
-# Create test tarball with a unique name to avoid caching issues
-# Bump the patch version or add a prerelease tag to force npm to reinstall
 npm version 1.0.0-test.1 --no-git-tag-version
 npm pack
 # → uipath-uipath-typescript-1.0.0-test.1.tgz
 ```
 
-**Why change the version?** npm caches tarballs by version. If you rebuild and repack at `1.0.0`, `npm install` may use the cached copy instead of the new one. A unique version forces a fresh install.
+**Why change the version?** npm caches tarballs by version. A unique version forces a fresh install.
 
-## Step 2: Install in Sample App
+## Step 2: Scaffold the App
 
-```bash
-cd samples/process-app-v1
+Create a temporary app at `samples/e2e-test/`. The entire directory is ephemeral — deleted after validation.
 
-# Update package.json to point to the new tarball
-# Change: "file:../../uipath-uipath-typescript-1.0.0.tgz"
-# To:     "file:../../uipath-uipath-typescript-1.0.0-test.1.tgz"
-npm install
-```
+### Files to generate
 
-Verify the new service's types are available:
-```bash
-# Quick check — does the new import path resolve?
-node -e "require('@uipath/uipath-typescript/<new-service>')"
-```
-
-## Step 3: Add Test Code to Sample App
-
-Add a temporary test component or modify an existing one to exercise the new service methods. The goal is to call every new method and log the responses.
-
-### What to test
-
-For each new method:
-1. **Import works** — the modular import path resolves (`import { NewService } from '@uipath/uipath-typescript/<path>'`)
-2. **Instantiation works** — `new NewService(sdk)` doesn't throw
-3. **Method calls work** — actual API calls return data with correct types
-4. **Response shape is correct** — fields are camelCase, renames applied, dropped fields absent
-5. **Bound methods work** (if applicable) — `entity.methodName()` exists and calls succeed
-6. **Pagination works** (if applicable) — `getAll({ top: 5 })` returns paginated response with navigation
-
-### Example test pattern
-
-Always import the SDK response interfaces and type your variables explicitly. This catches type mismatches at compile time — if a field was renamed, dropped, or has the wrong type, TypeScript will flag it before you even run the app.
-
-Add a temporary file like `src/components/TestNewService.tsx`:
-
-```typescript
-import { NewService } from '@uipath/uipath-typescript/<import-path>';
-import type {
-  NewEntityGetResponse,
-  NewEntityGetAllResponse,
-  NewEntityGetAllOptions,
-} from '@uipath/uipath-typescript/<import-path>';
-import { useAuth } from '../hooks/useAuth';
-
-export function TestNewService() {
-  const { sdk } = useAuth();
-
-  const runTests = async () => {
-    const service = new NewService(sdk);
-
-    // Test getAll — type the response to catch shape mismatches
-    console.log('[TEST] getAll:');
-    const all: NewEntityGetAllResponse[] = await service.getAll();
-    console.log('[TEST] getAll response:', JSON.stringify(all, null, 2));
-
-    // Test getById — type the response to verify field names and bound methods
-    console.log('[TEST] getById:');
-    const item: NewEntityGetResponse = await service.getById('<testId>');
-    console.log('[TEST] getById response:', JSON.stringify(item, null, 2));
-    console.log('[TEST] response fields:', Object.keys(item));
-
-    // Access typed fields — TS will error if these don't exist on the response type
-    console.log('[TEST] typed field access:', item.id, item.createdTime);
-
-    // Test bound methods (if applicable) — TS verifies these exist on the type
-    if (typeof item.someMethod === 'function') {
-      console.log('[TEST] bound method someMethod exists');
-      const result = await item.someMethod(testData);
-      console.log('[TEST] someMethod result:', JSON.stringify(result, null, 2));
-    }
-
-    // Test pagination (if applicable) — type the options to verify option names
-    console.log('[TEST] pagination:');
-    const options: NewEntityGetAllOptions = { top: 2 };
-    const paginated = await service.getAll(options);
-    console.log('[TEST] paginated response:', JSON.stringify(paginated, null, 2));
-    console.log('[TEST] has nextPage:', 'nextPage' in paginated);
-  };
-
-  return <button onClick={runTests}>Run New Service Tests</button>;
+**`package.json`**
+```json
+{
+  "name": "e2e-test-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build"
+  },
+  "dependencies": {
+    "@uipath/uipath-typescript": "file:../../uipath-uipath-typescript-1.0.0-test.1.tgz",
+    "path-browserify": "^1.0.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.3",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.7"
+  }
 }
 ```
 
-**Why explicit types matter:** If the SDK response type says `createdTime: string` but the transform pipeline forgot to rename `createTime`, TypeScript will show an error on `item.createdTime` — you catch it before runtime. Similarly, if a bound method is missing from the type, `item.someMethod` will be a TS error. This is a compile-time safety net for the entire transform + binding pipeline.
+**`vite.config.ts`**
 
-Wire it into `App.tsx` temporarily (behind the auth check).
+The browser may hit CORS errors when calling the UiPath API directly (e.g., `alpha.uipath.com` does not send CORS headers). Use a Vite proxy to route API calls through the dev server. Replace `__ORG_NAME__` and `__BASE_URL__` with actual values from `.env.skills`.
 
-## Step 4: Run and Validate
+```typescript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
-Before starting the dev server, ensure the redirect URI port is free. The OAuth flow requires the app to run on the exact port configured in `VITE_UIPATH_REDIRECT_URI` (default `http://localhost:5173`).
+export default defineConfig({
+  plugins: [react()],
+  define: { global: 'globalThis' },
+  resolve: { alias: { path: 'path-browserify' } },
+  optimizeDeps: { include: ['@uipath/uipath-typescript'] },
+  server: {
+    proxy: {
+      '/__ORG_NAME__': {
+        target: '__BASE_URL__',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
+})
+```
+
+**`tsconfig.json`**
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true
+  },
+  "include": ["src"]
+}
+```
+
+**`tailwind.config.js`**
+```javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: { extend: {} },
+  plugins: [],
+}
+```
+
+**`postcss.config.js`**
+```javascript
+export default {
+  plugins: { tailwindcss: {}, autoprefixer: {} },
+}
+```
+
+**`index.html`**
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UiPath SDK — E2E Test</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+**`src/index.css`**
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+```
+
+**`src/main.tsx`**
+```typescript
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(<App />)
+```
+
+### SDK initialization — PAT auth
+
+The app uses **PAT (secret-based) auth**, not OAuth. The SDK is ready immediately on construction — no `sdk.initialize()`, no redirect flow, no login screen.
+
+**`src/hooks/useSdk.tsx`**
+
+Read PAT and config from `.env.skills` in the repo root. Parse it and pass values as Vite-compatible env vars in a `.env` file, OR read them at scaffold time and inline them into the hook.
+
+The simplest approach — inline the values read from `.env.skills` directly:
+
+```typescript
+import { createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+interface SdkContextType {
+  sdk: UiPath;
+  config: {
+    baseUrl: string;
+    orgName: string;
+    tenantName: string;
+  };
+}
+
+const SdkContext = createContext<SdkContextType | undefined>(undefined);
+
+export const SdkProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Values inlined from .env.skills at scaffold time
+  // Use window.location.origin so requests route through the Vite proxy (avoids CORS)
+  const baseUrl = window.location.origin;
+  const orgName = '__ORG_NAME__';
+  const tenantName = '__TENANT_NAME__';
+  const secret = '__PAT_TOKEN__';
+
+  const [sdk] = useState<UiPath>(() => new UiPath({
+    baseUrl,
+    orgName,
+    tenantName,
+    secret,
+  }));
+
+  const config = { baseUrl, orgName, tenantName };
+
+  return (
+    <SdkContext.Provider value={{ sdk, config }}>
+      {children}
+    </SdkContext.Provider>
+  );
+};
+
+export const useSdk = () => {
+  const context = useContext(SdkContext);
+  if (!context) throw new Error('useSdk must be used within SdkProvider');
+  return context;
+};
+```
+
+When scaffolding, replace `__PAT_TOKEN__`, `__BASE_URL__`, `__ORG_NAME__`, `__TENANT_NAME__` with actual values from `.env.skills`. This avoids needing a separate `.env` file in the temp app.
+
+**`src/App.tsx`** — generated per service (see Step 3).
+
+## Step 3: Generate Test Component
+
+Create `src/App.tsx` with a test UI tailored to the onboarded methods. There is **no fixed template** — design the component to match what's being tested.
+
+### SDK access pattern
+
+Every component accesses the SDK via the `useSdk` hook:
+
+```typescript
+import { useSdk } from './hooks/useSdk';
+
+function TestContent() {
+  const { sdk, config } = useSdk();
+  // sdk is ready immediately — PAT auth, no initialize() needed
+}
+```
+
+### Design the component based on method types
+
+| Method type | Component pattern |
+|-------------|-------------------|
+| `getAll` | Fetch on button click, render as table/list |
+| `getById` | Input for ID, fetch on submit, render detail view |
+| `create` / `insert` | Form with fields, submit button, show response |
+| `update` | Fetch existing, pre-fill form, submit changes |
+| `delete` | List with delete buttons, confirm + show result |
+| `cancel` / `pause` / `resume` | Action buttons on fetched entities |
+| Paginated methods | Show page controls, next/prev buttons |
+| Bound methods | Fetch entity, then show buttons for each bound method |
+
+### Key rules for the generated component
+
+1. **Import SDK response types explicitly** — type your variables so TypeScript catches shape mismatches at compile time
+2. **Display raw JSON responses** — use `<pre>{JSON.stringify(result, null, 2)}</pre>` so you can inspect field names, casing, and structure
+3. **Show errors in the UI** — catch errors and display them, don't just console.log
+4. **Test bound methods visually** — render a button for each bound method on retrieved entities
+5. **Use Tailwind for layout** — keep it functional, not pretty
+
+### App.tsx structure
+
+```typescript
+import { SdkProvider } from './hooks/useSdk';
+// Import the test content component (inline or separate file)
+
+function App() {
+  return (
+    <SdkProvider>
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <h1 className="text-xl font-semibold text-gray-900">
+              E2E Test — {ServiceName}
+            </h1>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <TestContent />
+        </main>
+      </div>
+    </SdkProvider>
+  );
+}
+
+export default App;
+```
+
+## Step 4: Install and Run
 
 ```bash
-# Make sure .env exists with valid OAuth credentials
-# (copy from .env.example if needed, fill in real values)
-
-# Read the port from .env (defaults to 5173)
-REDIRECT_PORT=$(grep VITE_UIPATH_REDIRECT_URI .env | grep -oE '[0-9]+$' || echo 5173)
-
-# Kill any process already using that port
-lsof -ti:$REDIRECT_PORT | xargs kill -9 2>/dev/null || true
-
+cd samples/e2e-test
+npm install
 npm run dev
-# → Vite dev server must start on the REDIRECT_URI port for OAuth to work
+# → Vite dev server at http://localhost:5173
 ```
 
-If Vite starts on a different port (e.g., 5174 because 5173 was busy), OAuth will fail with a redirect mismatch. Always clear the port first.
+Open the browser (or use Playwright `browser_navigate` if available) and interact with the test component.
 
-### Validate with Playwright
+## Step 5: Validate
 
-Use the Playwright browser automation tools to:
-
-1. Navigate to `http://localhost:5173`
-2. Complete OAuth login (if not already authenticated)
-3. Click the test button / trigger the test component
-4. Read console logs to verify responses
-
-### Handling OAuth login failures or signin failed on clicking signin with uipath
-
-If the OAuth login fails or the page is stuck (redirect loop, blank screen, stale session, or sign in / login failed) follow below steps:
-
-1. **Clear session storage first** — run in the browser console:
-   ```javascript
-   sessionStorage.clear();
-   localStorage.clear();
-   ```
-2. **Re-click the sign-in button** — navigate back to `http://localhost:5173` and trigger login again
-3. If it still fails, check the `.env` values (client ID, redirect URI, scopes) match the OAuth app registration
-
-```
-Check console output for:
-  ✓ [TEST] getAll response — has expected fields, no dropped fields
-  ✓ [TEST] getById response — correct field names (camelCase, renamed)
-  ✓ [TEST] bound methods exist — typeof check passes
-  ✓ [TEST] bound method results — operations succeed
-  ✓ [TEST] pagination — correct structure (PaginatedResponse or NonPaginatedResponse)
-```
-
-### What to look for
+### What to verify
 
 | Check | Pass | Fail |
 |-------|------|------|
-| Import resolves | No module-not-found error | `Cannot find module '@uipath/uipath-typescript/<path>'` |
+| Import resolves | App loads without errors | `Cannot find module '@uipath/uipath-typescript/<path>'` |
+| SDK initializes | No auth errors in console | 401/403 errors |
 | Fields are camelCase | `createdTime`, `folderId` | `CreatedTime`, `organizationUnitId` |
-| Dropped fields absent | Internal fields not in response | `entityTypeId`, `isRbacEnabled` showing up |
-| Bound methods exist | `typeof entity.method === 'function'` | `entity.method is undefined` |
-| Pagination shape | `{ data: [...], nextPage }` or `{ data: [...], totalCount }` | Raw API shape leaking through |
-| Types match runtime | No TypeScript errors in IDE | Type says `string` but runtime is `number` |
+| Dropped fields absent | Internal fields not in JSON output | `entityTypeId`, `isRbacEnabled` showing up |
+| Bound methods exist | Method buttons render, calls succeed | `TypeError: entity.method is not a function` |
+| Pagination shape | Page controls work, next/prev load data | Raw API shape leaking through |
+| Types match runtime | No TypeScript errors during build | Type says `string` but runtime is `number` |
+| Error cases | Errors display in the UI | White screen, console errors only |
 
-## Step 5: Clean Up
+Also check the browser console for import/module errors and unexpected PascalCase keys.
 
-After validation, revert all test changes:
+## Step 6: Clean Up
 
-1. **Remove test component** — delete `src/components/TestNewService.tsx`
-2. **Revert App.tsx** — remove the test component import/usage
-3. **Revert root package.json version** — restore to `1.0.0` (or whatever it was)
-4. **Revert sample app package.json** — restore tarball reference to original
-5. **Delete test tarball** — `rm uipath-uipath-typescript-1.0.0-test.1.tgz`
-6. **Don't commit any of these test changes**
+Delete everything:
+
+```bash
+# From repo root
+rm -rf samples/e2e-test
+rm uipath-uipath-typescript-1.0.0-test.1.tgz
+
+# Revert root package.json version
+git checkout package.json
+```
+
+**Nothing from the E2E test gets committed.** The entire `samples/e2e-test/` directory is ephemeral.
+
+## Gotchas
+
+These caused failures during real E2E runs:
+
+| Gotcha | Fix |
+|--------|-----|
+| **Tarball packed from wrong branch** — `Missing "./jobs" specifier` error on import | Build and pack from the worktree/branch that has the new service, not the main working tree |
+| **CORS error** — `Access to fetch blocked by CORS policy` | Vite proxy is configured by default (see vite.config.ts above). Ensure `baseUrl` is `window.location.origin` so requests go through the proxy |
+| **npm uses cached tarball** — old version of SDK loads despite rebuilding | Change the version before packing (`npm version 1.0.0-test.N`) to bust npm cache |
+| **Port 5173 in use** — Vite starts on 5174, proxy doesn't match | `lsof -ti:5173 \| xargs kill -9` before starting dev server |
 
 ## Quick Reference
 
-| Item | Path / Command |
-|------|---------------|
-| Build SDK | `npm run build` (from repo root) |
-| Pack SDK | `npm pack` (from repo root) |
-| Tarball output | `uipath-uipath-typescript-{version}.tgz` (repo root) |
-| Sample app | `samples/process-app-v1/` |
-| App dev server | `npm run dev` → `http://localhost:5173` |
-| SDK dependency in app | `"file:../../uipath-uipath-typescript-{version}.tgz"` in package.json |
-| Auth config | `samples/process-app-v1/.env` (copy from `.env.example`) |
-| Auth type | OAuth 2.0 frontend flow |
-| Existing services in app | MaestroProcesses, ProcessInstances, Entities |
+| Item | Detail |
+|------|--------|
+| App location | `samples/e2e-test/` (temporary, deleted after) |
+| Auth type | PAT / secret-based (auto-initializes, no login flow) |
+| PAT source | `.env.skills` in repo root (same token as Step 0 curl) |
+| baseUrl | `window.location.origin` (routes through Vite proxy) |
+| Vite proxy | `/{orgName}` → `{BASE_URL}` with `changeOrigin: true` |
+| SDK dependency | `"file:../../uipath-uipath-typescript-{version}.tgz"` |
+| Dev server | `npm run dev` → `http://localhost:5173` |
+| Stack | React + Vite + Tailwind (same as other sample apps) |
+| Cleanup | `rm -rf samples/e2e-test` + delete tarball + revert version |
