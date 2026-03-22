@@ -348,7 +348,7 @@ These caused failures during real E2E runs:
 |------|--------|
 | App location | `samples/e2e-test/` (temporary, deleted after) |
 | Auth type | PAT / secret-based (auto-initializes, no login flow) |
-| PAT source | `.env.skills` in repo root (same token as Step 0 curl) |
+| PAT source | `.env.skills` in repo root (same token used for live API curl) |
 | baseUrl | `window.location.origin` (routes through Vite proxy) |
 | Vite proxy | `/{orgName}` → `{BASE_URL}` with `changeOrigin: true` |
 | SDK dependency | `"file:../../uipath-uipath-typescript-{version}.tgz"` |

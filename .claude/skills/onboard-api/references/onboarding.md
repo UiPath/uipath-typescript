@@ -1,27 +1,39 @@
-# Onboarding a New Service API
+# Onboarding Reference — Design Decisions
 
-Before writing any code, you need to make four architecture decisions: **what the SDK response looks like**, **where the service lives**, **what it exports**, and **what gets bound to response objects**. Each decision affects the developer experience.
+All design decision trees, examples, and patterns for onboarding SDK endpoints. Read this before implementing.
 
-## What the user provides
+## SDK Response Design
 
-The user provides **two things**:
-1. **API spec** — a Swagger URL, OpenAPI JSON, or API documentation link for the endpoints being onboarded
-2. **Which endpoints** — which specific endpoints from the spec to onboard into the SDK
+For each field in the raw API response, decide: DROP, RENAME, KEEP, RESHAPE, or ENRICH.
 
-Everything else — inspecting raw responses, making design decisions, writing code — is the agent's job.
+```
+For each field:
+  │
+  Is it internal metadata, storage metrics, config flags, or validation artifacts?
+  YES → DROP it. Don't include in SDK type. (Raw shape goes in internal-types.ts)
+  │
+  NO → Does the field name break SDK conventions?
+       (wrong case, UTC suffix, platform jargon like organizationUnitId)
+       YES → RENAME it via {Entity}Map in constants.ts
+       NO  → KEEP as-is
+```
 
-## Step 1: Understand the API
+```
+For the response structure as a whole:
+  │
+  Is the shape untyped/flat where it should be structured?
+  YES → RESHAPE in the service method. Build the new structure manually.
+  │
+  Is context missing that would require the developer to make extra API calls?
+  YES → ENRICH by fetching additional context (e.g., BPMN XML).
+        Always degrade gracefully if enrichment source fails.
+```
 
-With the raw responses and spec in hand, answer these questions:
+Different endpoints for the same service may need different transform pipelines — inspect each independently.
 
-1. **What domain does it belong to?** — Data Fabric, Orchestrator, Maestro, Action Center, or a new domain?
-2. **What is it a resource of?** — Is it a standalone top-level resource, or a sub-resource/related concept of an existing entity?
-3. **What operations does it support?** — CRUD only (read-only)? Lifecycle state changes? Bulk operations?
-4. **Does it have its own identity?** — Does the API return entities with their own IDs, or does it always operate in the context of a parent entity?
+### Transform Pipeline
 
-## Step 2: Design the SDK Response
-
-This is the most important design step. The raw API response is rarely what developers should see. Compare the raw response to what would make sense as a typed SDK interface, then decide what to keep, drop, rename, reshape, or enrich.
+During design, decide which of the 4 transform steps this endpoint actually needs based on the real response — don't apply steps the response doesn't justify.
 
 ### Field filtering — what to drop
 
@@ -40,17 +52,9 @@ Not every API field belongs in the SDK. Drop fields that are:
 
 ### Field renaming — what to rename
 
-Rename fields for SDK-wide consistency, not API-specific naming:
+Add entries to `{Entity}Map` in `{domain}.constants.ts` and apply via `transformData(data, {Entity}Map)`.
 
-| Pattern | API returns | SDK exposes | Why |
-|---------|-------------|-------------|-----|
-| Time fields: past participle | `createTime`, `updateTime` | `createdTime`, `updatedTime` | SDK convention: all timestamps use past participle |
-| Time fields: strip UTC suffix | `errorTimeUtc`, `startedTimeUtc` | `errorTime`, `startedTime` | All SDK times are UTC — suffix is redundant noise |
-| Folder fields: clearer names | `organizationUnitId` | `folderId` | Platform jargon → domain term |
-
-**How to implement:** Add entries to `{Entity}Map` in `{domain}.constants.ts`. Apply via `transformData(data, {Entity}Map)` in the service.
-
-**Decision rule:** If the API name is unclear, uses platform jargon, or breaks the SDK's naming conventions for time/folder/ID fields — rename it. If the API name is already clear and consistent — leave it.
+**Decision rule:** If the API name is unclear, uses platform jargon, or breaks SDK naming conventions — rename it. If already clear and consistent — leave it.
 
 ### Structural transformation — when to reshape
 
@@ -112,37 +116,31 @@ try {
 
 **When to enrich:** The API response is technically complete but missing context that would require the developer to make their own additional API calls. If you find yourself thinking "the developer would need to call another API to make sense of this field" — that's a signal to enrich.
 
-### Per-endpoint transform pipelines
+### Per-endpoint transform pipelines — real example
 
-Different endpoints for the same service may need different transform pipelines. Don't assume one pipeline fits all methods.
+**ChoiceSets:** `getAll()` returns camelCase natively → only needs `transformData(data, EntityMap)`. But `getById()` returns PascalCase → needs `pascalToCamelCaseKeys()` first. Each endpoint gets only the transforms its actual response justifies.
 
-**Real example (ChoiceSets):**
-
-| Method | API response format | Pipeline |
-|--------|-------------------|----------|
-| `getAll()` | Already camelCase | `transformData(data, EntityMap)` only (rename `createTime` → `createdTime`) |
-| `getById()` | PascalCase (`Id`, `Name`, `CreateTime`) | `pascalToCamelCaseKeys()` → then `transformData(data, EntityMap)` |
-
-**Why they differ:** The `getAll()` endpoint returns camelCase natively. The `getById()` endpoint returns PascalCase in its `jsonValue` array. Each endpoint gets only the transforms it actually needs.
-
-**Decision rule:** Inspect each endpoint's raw response independently. Apply only the transform steps justified by what that specific endpoint returns.
-
-### Design checklist
-
-Before writing any code, document these decisions for the new API:
+## Service Placement
 
 ```
-For each endpoint:
-  □ Raw API response shape (call it, capture the JSON)
-  □ Which fields to DROP (with category: metadata / metrics / config / validation)
-  □ Which fields to RENAME (with the standard rename table)
-  □ Whether structural RESHAPING is needed (what shape and why)
-  □ Whether ENRICHMENT is needed (what extra context, from where)
-  □ Which transform steps apply (case conversion? field map? enum map? method binding?)
-  □ Put raw shape in internal-types.ts, public shape in types.ts
+Is this API a sub-resource of an existing entity?
+(instances, incidents, history, attachments OF a parent)
+  │
+  YES → Hierarchical Sub-Service (Pattern C)
+  │     File inside parent's folder. Shares parent's import path.
+  │
+  NO → Is it related to an existing service? (same domain, same audience)
+       │
+       YES → Would a developer commonly use one without the other?
+       │     │
+       │     OFTEN YES → Independent Root Service (Pattern A)
+       │     │            Own import path + rollup entry.
+       │     │
+       │     OFTEN NO  → Domain-Grouped Service (Pattern B)
+       │                  Sibling file, shared import path. No runtime dependency.
+       │
+       NO → Independent Root Service (Pattern A)
 ```
-
-## Step 3: Decide Service Placement
 
 The SDK has three placement patterns. Pick the one that fits.
 
@@ -194,33 +192,6 @@ Rollup:  shares entry point with parent
 
 **When to choose this:** The sub-resource has a clear parent-child relationship. You can't meaningfully use the sub-resource without the parent context. "Get all incidents" doesn't make sense without "for which process?"
 
-### Decision Tree
-
-```
-Is this API a sub-resource of an existing entity?
-(instances, incidents, history, attachments OF a parent)
-  │
-  YES → Pattern C: Hierarchical Sub-Service
-  │     File inside parent's folder. Shares parent's import path.
-  │     Ex: ProcessInstances inside maestro/processes/
-  │
-  NO → Is it conceptually related to an existing service?
-       (same domain, same audience, natural co-discovery)
-       │
-       YES → Would a developer use one without the other?
-       │     │
-       │     OFTEN YES → Pattern A: Independent Root Service
-       │     │            Own import path, own rollup entry.
-       │     │            Ex: Assets, Queues (both Orchestrator but independent)
-       │     │
-       │     OFTEN NO  → Pattern B: Domain-Grouped Service
-       │                  Sibling file, shared import path.
-       │                  Ex: ChoiceSets with Entities (both Data Fabric)
-       │
-       NO → Pattern A: Independent Root Service
-            Own import path, own rollup entry.
-```
-
 ### Build System Checklist
 
 After choosing a pattern, wire it up:
@@ -234,9 +205,23 @@ After choosing a pattern, wire it up:
 | `package.json` exports | New `"./{name}"` export entry | No change (shares existing export) | No change (shares existing export) |
 | `src/index.ts` | Add re-export | Add re-export | Add re-export |
 
-## Step 4: Design Method Binding
+## Method Binding
 
-Method binding is the core DX feature. When a user calls `getById()`, the returned object should let them do things with that entity directly — without re-passing the ID.
+```
+For each method in the new API:
+  │
+  Does it operate ON a specific entity already retrieved?
+  │
+  YES → BIND IT
+  │     Capture all context (id, folderId, folderKey) from response object.
+  │     Remove captured params from signature. Keep data/options params.
+  │     Service-level: insertRecordById(id, data) → Bound: insertRecord(data)
+  │
+  NO → DON'T BIND — keep as service-level method
+       Entry points (getAll, getById, create), cross-entity queries
+```
+
+Method binding is the core DX feature — a developer should never extract an ID from a response just to pass it back to another method.
 
 ### The DX principle
 
@@ -259,25 +244,6 @@ The bound version is better because:
 - Method calls read like natural language: "this entity, insert a record"
 - Autocomplete shows exactly what you can do with this entity
 - No need to juggle IDs across multiple calls
-
-### What to bind — decision per method
-
-For each method in the API, ask:
-
-```
-Does this method operate ON a specific entity that was already retrieved?
-  │
-  YES → Does it need the entity's ID (or other context like folderId/folderKey)?
-  │     │
-  │     YES → BIND IT. Capture all required context from the response object.
-  │     │     Remove captured params from the bound method's signature.
-  │     │     Keep non-context params (data payloads, options) in the signature.
-  │     │
-  │     NO  → Unusual case. Probably still bind for discoverability.
-  │
-  NO → DON'T BIND. Keep as service-level method.
-       Entry points (getAll, getById, create) and cross-entity queries (getUsers).
-```
 
 ### What context to capture
 
@@ -324,17 +290,3 @@ If the API only supports read operations (getAll, getById, with expand/select/fi
 
 Current read-only services: Assets, Buckets, Queues, Processes, ChoiceSets, Cases, ProcessIncidents.
 
-## Step 5: Onboarding Checklist
-
-Once you've made the four decisions (response shape, placement, exports, binding), execute in this order:
-
-1. **Understand the API response** — call it, inspect raw JSON. Note: PascalCase keys? Raw enum codes? Pagination style?
-2. **Create model files** — `types.ts`, `constants.ts`, `models.ts` (and `internal-types.ts` if needed)
-3. **Define endpoint constants** in `src/utils/constants/endpoints.ts`
-4. **Define pagination constants** in `src/utils/constants/common.ts` (if paginated)
-5. **Implement service class** — extend BaseService or FolderScopedService
-6. **Wire up exports** — area `index.ts`, `src/index.ts`, `package.json`, `rollup.config.js`
-7. **Write unit tests** — mirror src structure in `tests/unit/`
-8. **Write JSDoc** — on `{Entity}ServiceModel` in `models.ts`
-9. **Update docs** — `docs/oauth-scopes.md`, `docs/pagination.md` (if paginated)
-10. **E2E validate** — build, pack, scaffold temp app at `samples/e2e-test/` (React + Vite + Tailwind, PAT auth from `.env.skills`), generate test component matching onboarded methods, `npm run dev`, validate in browser, then `rm -rf samples/e2e-test`. See [e2e-testing.md](e2e-testing.md) for full workflow.

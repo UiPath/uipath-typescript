@@ -1,68 +1,33 @@
 ---
 name: onboard-api
-description: Use when onboarding a new API endpoint to the UiPath TypeScript SDK — whether a new service or adding methods to an existing one. Accepts a Swagger/OpenAPI spec URL, a Jira ticket key/URL containing spec details, or a direct endpoint description. Handles the full lifecycle: input collection, live API inspection, implementation, testing, E2E validation, and PR creation.
+description: Use when adding API endpoints to the UiPath TypeScript SDK — new services or methods on existing ones. Triggers on Swagger/OpenAPI spec URLs, Jira ticket keys (e.g., PLT-99452) with onboarding intent, or direct endpoint descriptions (e.g., "onboard GET /odata/Jobs"). Also use when user says "add method", "new endpoint", "new service", or "API integration".
 ---
 
 # Onboard API
 
-Single skill that handles the full onboarding lifecycle for new SDK endpoints. All coding conventions and rules are in CLAUDE.md (always loaded). This skill provides the procedural workflow and design decision trees.
+Single skill that handles the full onboarding lifecycle for new SDK endpoints. This skill provides the procedural workflow; coding conventions are always in context via CLAUDE.md.
+
+**Output:** A PR in `uipath-typescript` containing: service implementation, types, constants, models, endpoint constants, unit tests, integration tests, JSDoc, and doc updates. Optionally a second PR in `apps-dev-tools` for Cloudflare Workers endpoint whitelisting.
 
 ---
 
-## Step 1: Collect Input
+## Step 1: Collect Input & Create Branch
 
-Accepts input from two paths:
+**Input detection:**
+- Jira key (`[A-Z]+-\d+`) or Atlassian URL → fetch ticket using `getJiraIssue` with `responseContentFormat: "markdown"`, extract Swagger URL + endpoints + OAuth scope
+- Swagger/OpenAPI URL + endpoint paths → use directly
+- Missing either → stop and ask
 
-### Path A: Jira Ticket
+**If Jira ticket:** Parse description for URLs ending in `.json`/`.yaml`/`swagger.json`/`openapi.json`, HTTP method + path patterns, scope strings (e.g., `OR.Jobs`). If Swagger URL or endpoints missing, stop and report.
 
-If the user provides a Jira key (`[A-Z]+-\d+`) or Atlassian URL:
-
-1. **Fetch the ticket** using `getJiraIssue` with `responseContentFormat: "markdown"`.
-2. **Parse the description** to extract:
-   - **Swagger/OpenAPI spec URL** — URLs ending in `.json`, `.yaml`, `/swagger.json`, `/openapi.json`, or containing `swagger`, `openapi`, `api-docs`
-   - **Endpoint(s)** — HTTP method + path patterns (e.g., `GET /odata/Jobs`, `POST /api/v1/...`), bullet lists, or table rows
-   - **OAuth scope** — scope strings (e.g., `OR.Jobs`, `OR.Tasks`)
-   - **Additional context** — acceptance criteria, notes about headers, pagination, etc.
-3. **If Swagger URL or endpoint names are missing**, stop and report what's missing.
-
-### Path B: Direct Input
-
-The user provides:
-- **Swagger URL** — spec URL or local file path
-- **Endpoint(s)** — which path(s) + method(s) to onboard
-
-If either is missing, stop and ask.
-
-### Input Detection
-
-- Jira key pattern (`[A-Z]+-\d+`) or Atlassian URL → **Path A**
-- Swagger/OpenAPI URL, file path, or endpoint description → **Path B**
-- Cannot determine → stop and ask
+**Log summary**, then create feature branch:
+- Jira: `feat/sdk-<ticket-key-lowered>`
+- Direct: `feat/<service>-<method-name>`
+- Already on feature branch → skip, note it
 
 ---
 
-## Step 2: Log Summary & Create Feature Branch
-
-Print a compact summary of what will be onboarded:
-
-```
-### Onboarding Summary
-**Source:** <Jira ticket key or "Direct input">
-**Swagger:** <spec URL>
-**Endpoint(s):** <METHOD> <path> [, ...]
-**OAuth Scope:** <scope or "from spec">
-**Context:** <any extra notes from ticket/user>
-```
-
-**Create feature branch:**
-- **Path A (Jira):** `feat/sdk-<ticket-key-lowered>` (e.g., `SDK-123` → `feat/sdk-sdk-123`)
-- **Path B (Direct):** `feat/<service>-<method-name>` (e.g., `feat/orchestrator-get-jobs`)
-
-If already on a non-main feature branch, skip branch creation and note it.
-
----
-
-## Step 3: Read PAT Token & Curl Live API (BLOCKING)
+## Step 2: Read PAT Token & Curl Live API (BLOCKING)
 
 **This step is mandatory. Do NOT proceed to implementation without a real API response.**
 
@@ -90,41 +55,36 @@ TENANT_NAME=adetenant
 
 Without a real response, you cannot reliably decide: which fields are optional, what casing the API uses, whether enum values come as strings or numbers, or which fields are actually null in practice. The Swagger spec is often incomplete or wrong on these details.
 
----
+### When response contradicts the spec
 
-## Step 4: Design SDK Response & Architecture
-
-**Only after you have a real API response**, make the design decisions. See [`references/onboarding.md`](references/onboarding.md) for detailed decision trees.
-
-This step covers four decisions:
-
-1. **SDK Response Design** — For each field in the raw response: DROP internal metadata? RENAME for SDK conventions? RESHAPE the structure? ENRICH with additional context?
-2. **Service Placement** — Independent root service (Pattern A), domain-grouped (Pattern B), or hierarchical sub-service (Pattern C)?
-3. **Method Binding** — Which methods should be bound to response objects? (Only state-changing ops, never getAll/getById/create)
-4. **Transform Pipeline** — Which of the 4 transform steps does this endpoint need? (Only steps justified by the actual response)
+**Always trust the live response over the spec.** If the spec says a field is required but the response omits it → mark it optional. If the spec says PascalCase but the response is camelCase → skip `pascalToCamelCaseKeys()`. If the spec says string enum but the response returns numeric codes → use numeric enum mapping.
 
 ---
 
-## Step 5: Implement
+## Step 3: Design SDK Response & Architecture
 
-Follow the onboarding checklist in [`references/onboarding.md`](references/onboarding.md). All coding conventions (type naming, transforms, pagination, endpoints, headers, etc.) are defined in CLAUDE.md.
+**Only after you have a real API response**, make the four design decisions: response shape (DROP/RENAME/RESHAPE/ENRICH), service placement (Pattern A/B/C), method binding, and transform pipeline.
+
+**MANDATORY — Read** [`references/onboarding.md`](references/onboarding.md) before proceeding. It has all decision trees, field filtering examples, enrichment rules, service placement patterns with build system wiring, and method binding DX examples. **Do NOT load** `e2e-testing.md` or `cloudflare-whitelist.md` yet — those are for Steps 6-7.
+
+---
+
+## Step 4: Implement
 
 Implementation order:
-1. Create model files (`types.ts`, `constants.ts`, `models.ts`, optionally `internal-types.ts`)
-2. Define endpoint constants
-3. Define pagination constants (if paginated)
-4. Implement service class
+1. Create model files (`types.ts`, `constants.ts`, `models.ts`, optionally `internal-types.ts`) — follow type naming conventions, use "Options" never "Request"
+2. Define endpoint constants — `as const`, consistent param names, no redundancy
+3. Define pagination constants (if paginated) — check BaseService vs FolderScopedService decision rule
+4. Implement service class — apply only justified transform pipeline steps, use `@track()` on all public methods
 5. Wire up exports (area `index.ts`, `src/index.ts`, `package.json`, `rollup.config.js`)
-6. Write unit tests
-7. Write integration tests
-8. Write JSDoc on `{Entity}ServiceModel` interface
-9. Update docs (`oauth-scopes.md`, `pagination.md`, `mkdocs.yml`)
+6. Write unit tests — use shared mocks, test constants, success + error paths
+7. Write integration tests — `throw` in guards (never `console.log` + `return`), no try/catch around API calls
+8. Write JSDoc on `{Entity}ServiceModel` interface — `@example`, `{@link}`, camelCase in examples
+9. Update docs (`oauth-scopes.md`, `pagination.md`, `mkdocs.yml`) — check NEVER Do § Docs
 
 ---
 
-## Step 6: Verify
-
-Run the post-implementation verification checklist defined in CLAUDE.md:
+## Step 5: Verify
 
 ```bash
 npm run typecheck
@@ -133,15 +93,15 @@ npm run test:unit
 npm run build
 ```
 
-Do not proceed until all four pass.
+Do not proceed until all four pass. Then run through the manual checks and documentation checklist from the post-implementation verification checklist.
 
 ---
 
-## Step 7: E2E Validate
+## Step 6: E2E Validate
 
 After implementation passes verification, validate end-to-end by scaffolding a temporary React app. This catches issues unit tests miss — import path problems, build output errors, type declaration bugs, runtime transform failures.
 
-**Follow the full workflow in [`references/e2e-testing.md`](references/e2e-testing.md).**
+**MANDATORY — Read** [`references/e2e-testing.md`](references/e2e-testing.md) for the full scaffold workflow, Vite proxy config, PAT auth setup, and gotchas from real runs.
 
 Quick summary:
 1. `npm run build && npm version 1.0.0-test.1 --no-git-tag-version && npm pack`
@@ -151,9 +111,14 @@ Quick summary:
 5. Verify: imports resolve, fields are camelCase, dropped fields absent, bound methods exist, pagination shape correct
 6. Delete entire app — `rm -rf samples/e2e-test`, delete tarball, revert version
 
+**Common E2E failures:**
+- `Cannot find module` → check `rollup.config.js` entry and `package.json` exports
+- Fields still PascalCase → `pascalToCamelCaseKeys()` missing in transform pipeline
+- `entity.method is not a function` → `create{Entity}WithMethods()` not applied in service method
+
 ---
 
-## Step 8: Whitelist Endpoint in Cloudflare Workers
+## Step 7: Whitelist Endpoint in Cloudflare Workers
 
 Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browser-based E2E tests can reach the API via `alpha.api.uipath.com`. This step is **non-blocking** — if it fails, continue with Step 9.
 
@@ -161,7 +126,7 @@ Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browse
 
 ---
 
-## Step 9: Commit & Raise PR
+## Step 8: Commit & Raise PR
 
 1. **Stage & commit** all changed files:
    - Message: `feat(<service>): onboard <method-name>`
@@ -198,7 +163,7 @@ If multiple endpoints are requested, onboard **one at a time**, simplest first (
 - **NEVER expand scope beyond what the ticket/user asked** — if the ticket says "onboard Jobs_Get", onboard Jobs_Get only. Do not suggest also onboarding GetById, lifecycle operations, or related endpoints.
 - **NEVER assume the Jira description is complete** — Jira tickets may have outdated Swagger URLs or missing details. Always validate extracted info against the actual spec.
 - **NEVER skip fetching the Swagger spec when using Jira input** — the ticket is a shortcut to collect input; the spec is the source of truth.
-- **NEVER skip Step 3 (PAT + curl)** unless the user explicitly opts out — real API responses are required for design decisions.
+- **NEVER skip Step 2 (PAT + curl)** unless the user explicitly opts out — real API responses are required for design decisions.
 - **NEVER push to main/master directly** — always create a feature branch. All work goes through a PR.
 - **NEVER onboard batch endpoints before their single-record counterpart** — batch operations reuse single-record types.
 - **NEVER ask the user to confirm information the spec clearly provides** — OAuth scopes, parameter types, headers. Only ask when genuinely ambiguous.

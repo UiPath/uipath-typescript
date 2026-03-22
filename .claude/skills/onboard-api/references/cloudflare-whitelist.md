@@ -49,7 +49,7 @@ The E2E testing browser app calls the API via `alpha.api.uipath.com` (a Cloudfla
    - Branch: `feat/whitelist-<service>-<method>` (e.g., `feat/whitelist-jobs-getall`)
    - Commit message: `feat(api-cors-worker): whitelist <Service> <method> endpoint`
    - PR title: `feat(api-cors-worker): whitelist <Service> <method> endpoint`
-   - PR body: mention this is for the SDK onboarding PR being raised in Step 9
+   - PR body: mention this is for the SDK onboarding PR being raised next
    - Use `gh pr create` targeting the `apps-dev-tools` repo
    - Log the PR URL so the user can track it
 
@@ -59,5 +59,5 @@ The E2E testing browser app calls the API via `alpha.api.uipath.com` (a Cloudfla
 
 - **If the pattern already exists** in `ALLOWED_API_PATTERNS`, skip entirely and note it.
 - **If `apps-dev-tools` is not available or `gh` auth fails**, warn the user and continue with the SDK PR — do not block the onboarding flow.
-- **If tests fail**, stop this step and show the error but continue with Step 9 for the SDK PR.
+- **If tests fail**, stop this step and show the error but continue with the SDK commit & PR step.
 - **Match existing regex style exactly** — use template literal syntax with the base constant, double-escaped backslashes, and `as const`-compatible patterns.
