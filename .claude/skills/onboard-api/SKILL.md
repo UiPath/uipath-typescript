@@ -20,6 +20,11 @@ Single skill that handles the full onboarding lifecycle for new SDK endpoints. T
 
 **If Jira ticket:** Parse description for URLs ending in `.json`/`.yaml`/`swagger.json`/`openapi.json`, HTTP method + path patterns, scope strings (e.g., `OR.Jobs`). If Swagger URL or endpoints missing, stop and report.
 
+**Scope check — MANDATORY before proceeding:**
+1. Map the ticket's API name to the **exact Swagger operation ID(s)** it covers. For example, `Jobs_Get` = the list endpoint only, NOT `Jobs_GetById`. Do not infer additional endpoints.
+2. Check if the requested endpoint(s) are **already implemented** — search for existing service files, methods, and branches. If the work is already done (even on a feature branch), **stop and tell the user** instead of adding unrequested endpoints.
+3. If the endpoint is already implemented and the ticket is effectively complete, ask the user what they'd like done instead of inventing new work.
+
 **Log summary**, then create feature branch:
 - Jira: `feat/sdk-<ticket-key-lowered>`
 - Direct: `feat/<service>-<method-name>`
@@ -160,7 +165,7 @@ If multiple endpoints are requested, onboard **one at a time**, simplest first (
 
 ## NEVER Do
 
-- **NEVER expand scope beyond what the ticket/user asked** — if the ticket says "onboard Jobs_Get", onboard Jobs_Get only. Do not suggest also onboarding GetById, lifecycle operations, or related endpoints.
+- **NEVER expand scope beyond what the ticket/user asked** — if the ticket says "onboard Jobs_Get", onboard `Jobs_Get` (the list endpoint) ONLY. Do not also onboard `Jobs_GetById`, lifecycle operations, or related endpoints. Match the **exact Swagger operation ID** — `Jobs_Get` ≠ `Jobs_GetById`. If the requested endpoint is already implemented, stop and report — do not invent additional work to fill the gap.
 - **NEVER assume the Jira description is complete** — Jira tickets may have outdated Swagger URLs or missing details. Always validate extracted info against the actual spec.
 - **NEVER skip fetching the Swagger spec when using Jira input** — the ticket is a shortcut to collect input; the spec is the source of truth.
 - **NEVER skip Step 2 (PAT + curl)** unless the user explicitly opts out — real API responses are required for design decisions.
