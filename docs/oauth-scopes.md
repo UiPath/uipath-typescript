@@ -9,6 +9,12 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getAll()` | `OR.Assets` or `OR.Assets.Read` |
 | `getById()` | `OR.Assets` or `OR.Assets.Read` |
 
+## Jobs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
+
 ## Buckets
 
 | Method | OAuth Scope |

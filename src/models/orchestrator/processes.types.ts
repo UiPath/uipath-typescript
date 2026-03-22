@@ -13,7 +13,10 @@ export enum PackageType {
   TestAutomationProcess = 'TestAutomationProcess',
   Api = 'Api',
   MCPServer = 'MCPServer',
-  BusinessRules = 'BusinessRules'
+  BusinessRules = 'BusinessRules',
+  CaseManagement = 'CaseManagement',
+  Flow = 'Flow',
+  Function = 'Function',
 }
 
 /**
@@ -129,8 +132,8 @@ export interface ProcessProperties {
  * Interface for common folder properties
  */
 export interface FolderProperties {
-  folderId?: number;
-  folderName?: string;
+  folderId: number;
+  folderName: string | null;
 }
 
 /**
