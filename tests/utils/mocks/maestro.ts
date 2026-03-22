@@ -83,16 +83,39 @@ export const createMockProcessesApiResponse = (processes: any[] = []) => {
  */
 export const createMockExecutionHistory = (overrides: Partial<any> = {}) => {
   return createMockBaseResponse({
-    id: MAESTRO_TEST_CONSTANTS.SPAN_ID,
-    traceId: MAESTRO_TEST_CONSTANTS.TRACE_ID,
-    parentId: null,
-    name: MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME,
+    instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+    packageKey: MAESTRO_TEST_CONSTANTS.PACKAGE_KEY,
+    packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+    packageVersion: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+    folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+    instanceDisplayName: MAESTRO_TEST_CONSTANTS.INSTANCE_DISPLAY_NAME,
+    source: MAESTRO_TEST_CONSTANTS.MANUAL_SOURCE,
+    status: MAESTRO_TEST_CONSTANTS.TASK_STATUS_COMPLETED,
+    creationUserKey: MAESTRO_TEST_CONSTANTS.CREATOR_USER_KEY,
     startedTime: new Date().toISOString(),
-    endTime: new Date().toISOString(),
-    attributes: MAESTRO_TEST_CONSTANTS.ATTRIBUTES,
-    createdTime: new Date().toISOString(),
-    updatedTime: new Date().toISOString(),
-    expiredTime: null
+    completedTime: new Date().toISOString(),
+    elementExecutions: [
+      {
+        elementId: MAESTRO_TEST_CONSTANTS.CASE_ELEMENT_ID,
+        elementName: MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME,
+        parentElementId: null,
+        status: MAESTRO_TEST_CONSTANTS.TASK_STATUS_COMPLETED,
+        startedTime: new Date().toISOString(),
+        completedTime: new Date().toISOString(),
+        processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+        externalLink: MAESTRO_TEST_CONSTANTS.EXTERNAL_LINK,
+        elementRuns: [
+          {
+            status: MAESTRO_TEST_CONSTANTS.TASK_STATUS_COMPLETED,
+            startedTime: new Date().toISOString(),
+            completedTime: new Date().toISOString(),
+            elementRunId: MAESTRO_TEST_CONSTANTS.ELEMENT_RUN_ID,
+            parentElementRunId: null
+          }
+        ]
+      }
+    ]
   }, overrides);
 };
 

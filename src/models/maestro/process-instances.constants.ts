@@ -13,5 +13,6 @@ export const ProcessInstanceMap: { [key: string]: string } = {
  * Maps fields for Process Instance Execution History to ensure consistent naming
  */
 export const ProcessInstanceExecutionHistoryMap: { [key: string]: string } = {
-  startTime: 'startedTime'
+  startedTimeUtc: 'startedTime',
+  completedTimeUtc: 'completedTime',
 };
