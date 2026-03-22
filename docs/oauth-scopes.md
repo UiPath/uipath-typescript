@@ -19,6 +19,12 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getReadUri()` | `OR.Administration` or `OR.Administration.Read` |
 | `uploadFile()` | `OR.Administration` or `OR.Administration.Read` |
 
+## Jobs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
+
 ## Entities
 
 | Method | OAuth Scope |

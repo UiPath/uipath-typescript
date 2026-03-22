@@ -86,6 +86,16 @@
                 "default": "./dist/buckets/index.cjs"
             }
         },
+        "./jobs": {
+            "import": {
+                "types": "./dist/jobs/index.d.ts",
+                "default": "./dist/jobs/index.mjs"
+            },
+            "require": {
+                "types": "./dist/jobs/index.d.ts",
+                "default": "./dist/jobs/index.cjs"
+            }
+        },
         "./processes": {
             "import": {
                 "types": "./dist/processes/index.d.ts",

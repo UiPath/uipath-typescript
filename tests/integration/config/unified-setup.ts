@@ -1,7 +1,7 @@
 import { UiPath } from '../../../src/core';
 import { Entities, ChoiceSets } from '../../../src/services/data-fabric';
 import { Tasks } from '../../../src/services/action-center';
-import { Assets, Buckets, Queues, Processes } from '../../../src/services/orchestrator';
+import { Assets, Buckets, Jobs, Queues, Processes } from '../../../src/services/orchestrator';
 import {
   MaestroProcessesService,
   ProcessInstancesService,
@@ -33,6 +33,7 @@ export interface TestServices {
   tasks: Tasks;
   assets: Assets;
   buckets: Buckets;
+  jobs: Jobs;
   queues: Queues;
   processes: Processes;
   maestroProcesses: MaestroProcessesService;
@@ -77,6 +78,7 @@ function createV0Services(config: IntegrationConfig): TestServices {
     tasks: sdk.tasks as unknown as Tasks,
     assets: sdk.assets as unknown as Assets,
     buckets: sdk.buckets as unknown as Buckets,
+    jobs: new Jobs(sdk as unknown as UiPath),
     queues: sdk.queues as unknown as Queues,
     processes: sdk.processes as unknown as Processes,
     maestroProcesses: sdk.maestro.processes as unknown as MaestroProcessesService,
@@ -110,6 +112,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     tasks: new Tasks(sdk),
     assets: new Assets(sdk),
     buckets: new Buckets(sdk),
+    jobs: new Jobs(sdk),
     queues: new Queues(sdk),
     processes: new Processes(sdk),
     maestroProcesses: new MaestroProcessesService(sdk),
