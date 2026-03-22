@@ -77,14 +77,14 @@ Without a real response, you cannot reliably decide: which fields are optional, 
 ## Step 4: Implement
 
 Implementation order:
-1. Create model files (`types.ts`, `constants.ts`, `models.ts`, optionally `internal-types.ts`) — follow type naming conventions, use "Options" never "Request"
+1. Create model files (`types.ts`, `constants.ts`, `models.ts`, optionally `internal-types.ts`) — follow type naming conventions, use "Options" never "Request". **Before creating any enum or interface, search `src/models/` for existing types to reuse.**
 2. Define endpoint constants — `as const`, consistent param names, no redundancy
 3. Define pagination constants (if paginated) — check BaseService vs FolderScopedService decision rule
 4. Implement service class — apply only justified transform pipeline steps, use `@track()` on all public methods
 5. Wire up exports (area `index.ts`, `src/index.ts`, `package.json`, `rollup.config.js`)
 6. Write unit tests — use shared mocks, test constants, success + error paths
-7. Write integration tests — `throw` in guards (never `console.log` + `return`), no try/catch around API calls
-8. Write JSDoc on `{Entity}ServiceModel` interface — `@example`, `{@link}`, camelCase in examples
+7. Write integration tests — `throw` in test body guards (never `console.log` + `return`), `console.warn()` + skip for `beforeAll` setup preconditions, no try/catch around API calls. New services use v1 setup only.
+8. Write JSDoc on `{Entity}ServiceModel` interface — `@example`, `{@link}`, camelCase in examples. Show the bare minimum call in the first `@example` (no optional params), then a second example with filtering. Never use `$` prefix on OData params in examples (`expand` not `$expand`). Use PascalCase for field names in `$filter` examples (e.g., `filter: "State eq 'Running'"`). Add JSDoc to non-obvious enum values.
 9. Update docs (`oauth-scopes.md`, `pagination.md`, `mkdocs.yml`) — check NEVER Do § Docs
 
 ---

@@ -48,13 +48,26 @@ Not every API field belongs in the SDK. Drop fields that are:
 
 **How to implement:** Define `Raw{Entity}Response` in `internal-types.ts` with ALL API fields. Define the public type in `types.ts` with only the fields developers need. The transform step in the service maps from raw → public, and dropped fields simply aren't assigned.
 
-**Decision rule:** For each raw API field, ask: "Would a developer building an application need this field?" If the answer is "only someone debugging the platform internals" — drop it.
+**Decision rule:** For each raw API field, ask: "Would a developer building an application need this field?" If the answer is "only someone debugging the platform internals" — drop it. Be prepared to justify each field kept to reviewers.
+
+**Before creating any enum or interface**, search `src/models/` for existing types with the same values. Reuse via import or type alias rather than creating duplicates (e.g., if `PackageType` already exists in `processes.types.ts`, don't create `JobPackageType` with the same values). Only extend an existing interface if field nullability matches — if it doesn't, document why you didn't extend.
 
 ### Field renaming — what to rename
 
 Add entries to `{Entity}Map` in `{domain}.constants.ts` and apply via `transformData(data, {Entity}Map)`.
 
 **Decision rule:** If the API name is unclear, uses platform jargon, or breaks SDK naming conventions — rename it. If already clear and consistent — leave it.
+
+**Domain term renames:** Rename platform jargon to SDK consumer terms. Check existing `*.constants.ts` files for established renames (e.g., in Orchestrator, "release" = "process" from the SDK consumer's perspective, so `releaseName` → `processName`). Consistency with existing renames takes priority.
+
+**OData filters and renamed fields:** Renamed fields do NOT work in OData `$filter` — filters are passed directly to the API and use the original API field names. If the SDK renames `processType` → `packageType`, users must still write `filter: "processType eq 'Process'"`. Document this mismatch in the method's JSDoc when a filtered field has been renamed.
+
+### Type design — enums and JSDoc
+
+- **Reuse existing enums** — search `src/models/` before creating a new enum. If the same values exist (e.g., `PackageType` in `processes.types.ts`), import and reuse it.
+- **Add JSDoc descriptions to enum values** when the meaning isn't obvious from the name (e.g., `/** Includes Maestro orchestration */ ProcessOrchestration`).
+- **Mark JSON string fields** with "JSON string" in JSDoc so users know to `JSON.parse()` (e.g., `/** JSON string — parse with \`JSON.parse()\` */ inputArguments?: string`).
+- **String fields with known values** should be enums. If uncertain whether a field is a real enum or a server-side string conversion, check the backend source or ask the reviewer. Document when keeping as string intentionally.
 
 ### Structural transformation — when to reshape
 
