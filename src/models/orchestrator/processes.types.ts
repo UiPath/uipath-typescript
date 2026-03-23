@@ -97,6 +97,36 @@ export enum PackageSourceType {
 }
 
 /**
+ * Enum for job source type used in API responses
+ */
+export enum JobSourceType {
+  Manual = 'Manual',
+  Schedule = 'Schedule',
+  Agent = 'Agent',
+  Queue = 'Queue',
+  StudioWeb = 'StudioWeb',
+  IntegrationTrigger = 'IntegrationTrigger',
+  StudioDesktop = 'StudioDesktop',
+  AutomationOpsPipelines = 'AutomationOpsPipelines',
+  Apps = 'Apps',
+  SAP = 'SAP',
+  HttpTrigger = 'HttpTrigger',
+  HttpTriggerCallback = 'HttpTriggerCallback',
+  RobotAPI = 'RobotAPI',
+  CommandLine = 'CommandLine',
+  RobotNetAPI = 'RobotNetAPI',
+  Autopilot = 'Autopilot',
+  TestManager = 'TestManager',
+  AgentService = 'AgentService',
+  ProcessOrchestration = 'ProcessOrchestration',
+  PluginEcosystem = 'PluginEcosystem',
+  PerformanceTesting = 'PerformanceTesting',
+  AgentHub = 'AgentHub',
+  ApiWorkflow = 'ApiWorkflow',
+  CaseManagement = 'CaseManagement',
+}
+
+/**
  * Enum for stop strategy
  */
 export enum StopStrategy {
@@ -272,7 +302,7 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   endTime: string | null;
   state: JobState;
   source: string;
-  sourceType: string;
+  sourceType: JobSourceType;
   batchExecutionKey: string;
   info: string | null;
   createdTime: string; 

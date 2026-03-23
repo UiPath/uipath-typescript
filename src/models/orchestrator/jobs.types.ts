@@ -7,7 +7,7 @@ import {
   StopStrategy,
   RemoteControlAccess,
   RuntimeType,
-  PackageSourceType,
+  JobSourceType,
   Machine,
   RobotMetadata,
   JobError,
@@ -107,7 +107,7 @@ export interface JobGetResponse extends FolderProperties {
   /** The runtime type of the robot which can pick up the job */
   runtimeType: RuntimeType | null;
   /** The source type indicating how the job was triggered */
-  sourceType: PackageSourceType;
+  sourceType: JobSourceType;
   /** The type of the serverless job, or null for non-serverless jobs */
   serverlessJobType: ServerlessJobType | null;
   /** The stop strategy for the job */
