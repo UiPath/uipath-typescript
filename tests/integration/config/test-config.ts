@@ -15,6 +15,7 @@ export interface IntegrationConfig {
   maestroTestProcessKey?: string;
   orchestratorTestProcessKey?: string;
   dataFabricTestEntityId?: string;
+  dataFabricTestChoiceSetId?: string;
   dataFabricTestRecordId?: string;
   dataFabricTestAttachmentField?: string;
 }
@@ -63,6 +64,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     maestroTestProcessKey: typeof rawConfig.maestroTestProcessKey === 'string' ? rawConfig.maestroTestProcessKey : undefined,
     orchestratorTestProcessKey: typeof rawConfig.orchestratorTestProcessKey === 'string' ? rawConfig.orchestratorTestProcessKey : undefined,
     dataFabricTestEntityId: typeof rawConfig.dataFabricTestEntityId === 'string' ? rawConfig.dataFabricTestEntityId : undefined,
+    dataFabricTestChoiceSetId: typeof rawConfig.dataFabricTestChoiceSetId === 'string' ? rawConfig.dataFabricTestChoiceSetId : undefined,
     dataFabricTestRecordId: typeof rawConfig.dataFabricTestRecordId === 'string' ? rawConfig.dataFabricTestRecordId : undefined,
     dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
   };
@@ -95,6 +97,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     maestroTestProcessKey: process.env.MAESTRO_TEST_PROCESS_KEY || undefined,
     orchestratorTestProcessKey: process.env.ORCHESTRATOR_TEST_PROCESS_KEY || undefined,
     dataFabricTestEntityId: process.env.DATA_FABRIC_TEST_ENTITY_ID || undefined,
+    dataFabricTestChoiceSetId: process.env.DATA_FABRIC_TEST_CHOICESET_ID || undefined,
     dataFabricTestRecordId: process.env.DATA_FABRIC_TEST_RECORD_ID || undefined,
     dataFabricTestAttachmentField: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || undefined,
   };
