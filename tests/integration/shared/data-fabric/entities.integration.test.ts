@@ -370,7 +370,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       }
 
       // Fetch schema dynamically if not already loaded
-      if (!entityMetadata || entityMetadata.id !== entityId) {
+      if (entityMetadata?.id !== entityId) {
         entityMetadata = await entities.getById(entityId);
       }
 
@@ -416,7 +416,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         throw new Error('No entity ID available for testing');
       }
 
-      if (!entityMetadata || entityMetadata.id !== entityId) {
+      if (entityMetadata?.id !== entityId) {
         entityMetadata = await entities.getById(entityId);
       }
 
@@ -449,7 +449,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         throw new Error('No records available to update');
       }
 
-      if (!entityMetadata || entityMetadata.id !== entityId) {
+      if (entityMetadata?.id !== entityId) {
         entityMetadata = await entities.getById(entityId);
       }
 
@@ -704,29 +704,6 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       await expect(
         entities.updateRecordById(entityId, 'non-existent-record-id', { description: 'No ID' })
       ).rejects.toThrow();
-    });
-  });
-
-  describe('Attachment operations', () => {
-    it('should download attachment if available', async () => {
-      const { entities } = getServices();
-      const config = getTestConfig();
-
-      const entityId = config.dataFabricTestEntityId || testEntityId;
-      const recordId = config.dataFabricTestRecordId || createdRecordIds[0];
-
-      if (!entityId) {
-        throw new Error('No entity ID available for testing');
-      }
-
-      const record = await entities.getRecordById(entityId, recordId, {});
-
-      if (!config.dataFabricTestAttachmentField) {
-        throw new Error('No attachment field specified for testing');
-      }
-
-      const downloadedFile = await entities.downloadAttachment(entityId, recordId, config.dataFabricTestAttachmentField);
-      expect(downloadedFile).toBeDefined();
     });
   });
 

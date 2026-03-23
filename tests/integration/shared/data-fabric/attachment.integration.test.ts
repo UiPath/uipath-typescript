@@ -116,6 +116,56 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         ).resolves.toBeUndefined();
       });
     });
+
+    describe('downloadAttachment', () => {
+      it('should upload and then download an attachment via service method', async () => {
+        const { entities } = getServices();
+
+        // First upload an attachment so there's something to download
+        const fileContent = 'Temporary file for download attachment test';
+        const file = new Blob([fileContent], { type: 'text/plain' });
+
+        await entities.uploadAttachment(
+          ATTACHMENT_CONFIG.entityId,
+          ATTACHMENT_CONFIG.recordId,
+          ATTACHMENT_CONFIG.fieldName,
+          file,
+        );
+
+        // Now download the attachment
+        const downloadedFile = await entities.downloadAttachment(
+          ATTACHMENT_CONFIG.entityId,
+          ATTACHMENT_CONFIG.recordId,
+          ATTACHMENT_CONFIG.fieldName,
+        );
+
+        expect(downloadedFile).toBeDefined();
+      });
+
+      it('should upload and then download an attachment via entity method', async () => {
+        const { entities } = getServices();
+
+        const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
+
+        // First upload an attachment so there's something to download
+        const fileContent = 'Temporary file for entity method download test';
+        const file = new Blob([fileContent], { type: 'text/plain' });
+
+        await entity.uploadAttachment(
+          ATTACHMENT_CONFIG.recordId,
+          ATTACHMENT_CONFIG.fieldName,
+          file,
+        );
+
+        // Now download the attachment
+        const downloadedFile = await entity.downloadAttachment(
+          ATTACHMENT_CONFIG.recordId,
+          ATTACHMENT_CONFIG.fieldName,
+        );
+
+        expect(downloadedFile).toBeDefined();
+      });
+    });
   },
   { timeout: 30000 }
 );
