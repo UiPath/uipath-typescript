@@ -104,6 +104,39 @@ export enum StopStrategy {
   Kill = 'Kill'
 }
 
+/**
+ * Enum for runtime type
+ */
+export enum RuntimeType {
+  NonProduction = 'NonProduction',
+  Attended = 'Attended',
+  Unattended = 'Unattended',
+  Development = 'Development',
+  Studio = 'Studio',
+  RpaDeveloper = 'RpaDeveloper',
+  StudioX = 'StudioX',
+  CitizenDeveloper = 'CitizenDeveloper',
+  Headless = 'Headless',
+  StudioPro = 'StudioPro',
+  RpaDeveloperPro = 'RpaDeveloperPro',
+  TestAutomation = 'TestAutomation',
+  AutomationCloud = 'AutomationCloud',
+  Serverless = 'Serverless',
+  AutomationKit = 'AutomationKit',
+  ServerlessTestAutomation = 'ServerlessTestAutomation',
+  AutomationCloudTestAutomation = 'AutomationCloudTestAutomation',
+  AttendedStudioWeb = 'AttendedStudioWeb',
+  Hosting = 'Hosting',
+  AssistantWeb = 'AssistantWeb',
+  ProcessOrchestration = 'ProcessOrchestration',
+  AgentService = 'AgentService',
+  AppTest = 'AppTest',
+  PerformanceTest = 'PerformanceTest',
+  BusinessRule = 'BusinessRule',
+  CaseManagement = 'CaseManagement',
+  Flow = 'Flow',
+}
+
 
 /**
  * Interface for Job Attachment
@@ -119,13 +152,13 @@ export interface JobAttachment {
  * Interface for common process properties shared across multiple interfaces
  */
 export interface ProcessProperties {
-  jobPriority?: JobPriority;
-  specificPriorityValue?: number;
-  inputArguments?: string;
-  environmentVariables?: string;
-  entryPointPath?: string;
-  remoteControlAccess?: RemoteControlAccess;
-  requiresUserInteraction?: boolean;
+  jobPriority?: JobPriority | null;
+  specificPriorityValue?: number | null;
+  inputArguments?: string| null;
+  environmentVariables?: string | null;
+  entryPointPath?: string | null;
+  remoteControlAccess?: RemoteControlAccess | null;
+  requiresUserInteraction?: boolean | null;
 }
 
 /**
@@ -146,7 +179,7 @@ export interface BaseProcessStartRequest extends ProcessProperties {
   noOfRobots?: number;
   jobsCount?: number;
   source?: PackageSourceType;
-  runtimeType?: string;
+  runtimeType?: RuntimeType;
   inputFile?: string;
   reference?: string;
   attachments?: JobAttachment[];
@@ -253,7 +286,7 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   persistenceId: string | null;
   resumeVersion: number | null;
   stopStrategy: StopStrategy | null;
-  runtimeType: string;
+  runtimeType: RuntimeType;
   processVersionId: number | null;
   reference: string;
   packageType: PackageType;

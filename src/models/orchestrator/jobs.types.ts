@@ -6,6 +6,7 @@ import {
   PackageType,
   StopStrategy,
   RemoteControlAccess,
+  RuntimeType,
   PackageSourceType,
   Machine,
   RobotMetadata,
@@ -14,36 +15,11 @@ import {
 } from './processes.types';
 
 /**
- * Enum for job runtime type
+ * Enum for job sub-state
  */
-export enum JobRuntimeType {
-  NonProduction = 'NonProduction',
-  Attended = 'Attended',
-  Unattended = 'Unattended',
-  Development = 'Development',
-  Studio = 'Studio',
-  RpaDeveloper = 'RpaDeveloper',
-  StudioX = 'StudioX',
-  CitizenDeveloper = 'CitizenDeveloper',
-  Headless = 'Headless',
-  StudioPro = 'StudioPro',
-  RpaDeveloperPro = 'RpaDeveloperPro',
-  TestAutomation = 'TestAutomation',
-  AutomationCloud = 'AutomationCloud',
-  Serverless = 'Serverless',
-  AutomationKit = 'AutomationKit',
-  ServerlessTestAutomation = 'ServerlessTestAutomation',
-  AutomationCloudTestAutomation = 'AutomationCloudTestAutomation',
-  AttendedStudioWeb = 'AttendedStudioWeb',
-  Hosting = 'Hosting',
-  AssistantWeb = 'AssistantWeb',
-  ProcessOrchestration = 'ProcessOrchestration',
-  AgentService = 'AgentService',
-  AppTest = 'AppTest',
-  PerformanceTest = 'PerformanceTest',
-  BusinessRule = 'BusinessRule',
-  CaseManagement = 'CaseManagement',
-  Flow = 'Flow',
+export enum JobSubState {
+  WithFaults = 'WITH_FAULTS',
+  Manually = 'MANUALLY',
 }
 
 /**
@@ -129,7 +105,7 @@ export interface JobGetResponse extends FolderProperties {
   /** The package type of the process associated with the job */
   packageType: PackageType;
   /** The runtime type of the robot which can pick up the job */
-  runtimeType: JobRuntimeType | null;
+  runtimeType: RuntimeType | null;
   /** The source type indicating how the job was triggered */
   sourceType: PackageSourceType;
   /** The type of the serverless job, or null for non-serverless jobs */
@@ -158,20 +134,12 @@ export interface JobGetResponse extends FolderProperties {
   resumeOnSameContext: boolean;
   /** Distinguishes between multiple job suspend/resume cycles */
   resumeVersion: number | null;
-  /** The persistence instance ID for a suspended job */
-  persistenceId: string | null;
   /** The sub-state in which the job is, providing more granular status information */
-  subState: string | null;
+  subState: JobSubState | null;
   /** The target runtime for the job */
   targetRuntime: string | null;
-  /** The orchestrator identity used to make API calls on behalf of the job */
-  orchestratorUserIdentity: string | null;
-  /** The local system account under which the robot executor will run the job */
-  localSystemAccount: string | null;
   /** The trace ID for distributed tracing */
   traceId: string | null;
-  /** The root span ID for distributed tracing */
-  rootSpanId: string | null;
   /** The parent span ID for distributed tracing */
   parentSpanId: string | null;
   /** The error code associated with a failed job */
