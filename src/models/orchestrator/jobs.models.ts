@@ -1,4 +1,4 @@
-import { JobGetAllOptions, JobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, JobGetResponse } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -15,6 +15,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  *
  * const jobs = new Jobs(sdk);
  * const allJobs = await jobs.getAll();
+ * const job = await jobs.getById(12345);
  * ```
  */
 export interface JobServiceModel {
@@ -57,4 +58,27 @@ export interface JobServiceModel {
     ? PaginatedResponse<JobGetResponse>
     : NonPaginatedResponse<JobGetResponse>
   >;
+
+  /**
+   * Gets a single job by its numeric ID
+   *
+   * @param id - The numeric ID of the job
+   * @param options - Optional query parameters including expand, select, and folderId
+   * @returns Promise resolving to a single {@link JobGetResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get a job by ID
+   * const job = await jobs.getById(12345);
+   *
+   * // Get a job with expanded relations
+   * const job = await jobs.getById(12345, {
+   *   expand: 'Release,Robot,Machine'
+   * });
+   *
+   * // Get a job scoped to a specific folder
+   * const job = await jobs.getById(12345, { folderId: 456 });
+   * ```
+   */
+  getById(id: number, options?: JobGetByIdOptions): Promise<JobGetResponse>;
 }

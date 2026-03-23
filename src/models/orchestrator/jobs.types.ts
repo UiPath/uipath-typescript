@@ -1,4 +1,4 @@
-import { JobState, RequestOptions } from '../common/types';
+import { BaseOptions, JobState, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 import {
   JobPriority,
@@ -160,6 +160,16 @@ export interface JobGetResponse extends FolderProperties {
 export type JobGetAllOptions = RequestOptions & PaginationOptions & {
   /**
    * Optional folder ID to filter jobs by folder
+   */
+  folderId?: number;
+}
+
+/**
+ * Options for getting a job by ID
+ */
+export type JobGetByIdOptions = BaseOptions & {
+  /**
+   * Optional folder ID to scope the request to a specific folder
    */
   folderId?: number;
 }
