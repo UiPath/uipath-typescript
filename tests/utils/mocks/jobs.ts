@@ -3,7 +3,7 @@
  * Uses generic utilities from core.ts for base functionality
  */
 import { JobState } from '../../../src/models/common/types';
-import { JobPriority, JobType, PackageType, PackageSourceType, RemoteControlAccess } from '../../../src/models/orchestrator/processes.types';
+import { JobPriority, JobType, PackageType, PackageSourceType, RemoteControlAccess, JobSourceType } from '../../../src/models/orchestrator/processes.types';
 import { JobGetResponse } from '../../../src/models/orchestrator/jobs.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { JOB_TEST_CONSTANTS } from '../constants/jobs';
@@ -62,7 +62,7 @@ export const createBasicJob = (overrides: Partial<JobGetResponse> = {}): JobGetR
     type: JobType.Unattended,
     packageType: PackageType.Process,
     runtimeType: null,
-    sourceType: PackageSourceType.Manual,
+    sourceType: JobSourceType.Manual,
     serverlessJobType: null,
     stopStrategy: null,
     remoteControlAccess: RemoteControlAccess.None,
@@ -76,13 +76,9 @@ export const createBasicJob = (overrides: Partial<JobGetResponse> = {}): JobGetR
     requiresUserInteraction: false,
     resumeOnSameContext: false,
     resumeVersion: null,
-    persistenceId: null,
     subState: null,
     targetRuntime: null,
-    orchestratorUserIdentity: null,
-    localSystemAccount: null,
     traceId: null,
-    rootSpanId: null,
     parentSpanId: null,
     errorCode: null,
     source: 'Manual',
