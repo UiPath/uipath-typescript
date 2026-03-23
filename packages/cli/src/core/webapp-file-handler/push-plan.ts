@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import chalk from 'chalk';
 import { PUSH_METADATA_FILENAME, PUSH_METADATA_RELATIVE_PATH } from '../../constants/api.js';
 import { MESSAGES } from '../../constants/index.js';

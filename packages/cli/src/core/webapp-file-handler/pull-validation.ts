@@ -1,6 +1,6 @@
 /**
  * Pull command: project type validation. Ensures remote is a supported Studio Web project
- * (webAppManifest.json with type "App_ProCode").
+ * (webAppManifest.json with type "Coded").
  */
 import { MESSAGES } from '../../constants/index.js';
 import { PULL_WEB_APP_MANIFEST, PULL_WEB_APP_MANIFEST_TYPE } from '../../constants/pull.js';
@@ -34,7 +34,7 @@ async function downloadAndParseRemoteJson(
 }
 
 /**
- * Validates project type by checking webAppManifest.json has "type": "App_ProCode".
+ * Validates project type by checking webAppManifest.json has "type": "Coded".
  * Throws Error if no manifest, parse failure, or key mismatch.
  * Assumes filesMap keys are remote paths as returned by getRemoteFilesMap.
  */

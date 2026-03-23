@@ -6,7 +6,7 @@
 export const PULL_WEB_APP_MANIFEST = 'webAppManifest.json';
 
 /** Required value in webAppManifest.json "type" field for pull to be allowed. */
-export const PULL_WEB_APP_MANIFEST_TYPE = 'App_ProCode';
+export const PULL_WEB_APP_MANIFEST_TYPE = 'Coded';
 
 /** Filename used as a project-root marker (e.g. for isProjectRootDirectory). */
 export const PACKAGE_JSON_FILENAME = 'package.json';

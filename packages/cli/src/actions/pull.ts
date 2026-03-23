@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import * as path from 'path';
+import * as path from 'node:path';
 import { PUSH_METADATA_RELATIVE_PATH } from '../constants/api.js';
 import { AUTH_CONSTANTS, MESSAGES } from '../constants/index.js';
 import { PULL_OVERWRITE_LIST_MAX_DISPLAY } from '../constants/pull.js';

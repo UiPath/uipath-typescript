@@ -6,8 +6,8 @@ import { AzureMonitorLogExporter } from '@azure/monitor-opentelemetry-exporter';
 import { LoggerProvider, SimpleLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import {
     CONNECTION_STRING,
     ENV_TELEMETRY_ENABLED,
