@@ -5,16 +5,20 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   createMockTransformedJobCollection,
+  createMockRawJob,
 } from '../../../utils/mocks/jobs';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
 import {
   JobGetAllOptions,
+  JobGetByIdOptions,
   JobGetResponse,
 } from '../../../../src/models/orchestrator/jobs.types';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
+import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { FOLDER_ID } from '../../../../src/utils/constants/headers';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -149,6 +153,89 @@ describe('JobService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(jobService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getById', () => {
+    it('should get job by ID successfully with all fields mapped correctly', async () => {
+      const mockJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValue(mockJob);
+
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_ID);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(JOB_TEST_CONSTANTS.JOB_ID);
+      expect(result.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+      expect(result.processName).toBe(JOB_TEST_CONSTANTS.PROCESS_NAME);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.JOB_ID),
+        expect.objectContaining({
+          params: {},
+        })
+      );
+
+      // Verify field transformations
+      expect(result.createdTime).toBe(JOB_TEST_CONSTANTS.CREATED_TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.lastModifiedTime).toBe(JOB_TEST_CONSTANTS.LAST_MODIFIED_TIME);
+      expect((result as any).LastModificationTime).toBeUndefined();
+      expect(result.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+    });
+
+    it('should get job by ID with expand options', async () => {
+      const mockJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValue(mockJob);
+
+      const options: JobGetByIdOptions = {
+        expand: 'Robot,Machine,Release',
+      };
+
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_ID, options);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(JOB_TEST_CONSTANTS.JOB_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.JOB_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$expand': 'Robot,Machine,Release',
+          }),
+        })
+      );
+    });
+
+    it('should get job by ID with folder ID header', async () => {
+      const mockJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValue(mockJob);
+
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_ID, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(JOB_TEST_CONSTANTS.JOB_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.JOB_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+          params: {},
+        })
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        jobService.getById(JOB_TEST_CONSTANTS.JOB_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
     });
   });
 });

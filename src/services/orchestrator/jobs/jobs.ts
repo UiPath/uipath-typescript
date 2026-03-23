@@ -1,9 +1,11 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { JobGetResponse, JobGetAllOptions } from '../../../models/orchestrator/jobs.types';
+import { JobGetResponse, JobGetAllOptions, JobGetByIdOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel } from '../../../models/orchestrator/jobs.models';
-import { pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
 import { JobMap } from '../../../models/orchestrator/jobs.constants';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
@@ -73,5 +75,25 @@ export class JobService extends FolderScopedService implements JobServiceModel {
         },
       },
     }, options) as any;
+  }
+
+  @track('Jobs.GetById')
+  async getById(id: number, options: JobGetByIdOptions = {}): Promise<JobGetResponse> {
+    const { folderId, ...queryOptions } = options;
+
+    const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : undefined;
+
+    const keysToPrefix = Object.keys(queryOptions);
+    const apiOptions = addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix);
+
+    const response = await this.get<JobGetResponse>(
+      JOB_ENDPOINTS.GET_BY_ID(id),
+      {
+        headers,
+        params: apiOptions,
+      }
+    );
+
+    return transformData(pascalToCamelCaseKeys(response.data) as JobGetResponse, JobMap);
   }
 }

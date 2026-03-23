@@ -1,4 +1,4 @@
-import { JobGetAllOptions, JobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, JobGetResponse } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -57,4 +57,30 @@ export interface JobServiceModel {
     ? PaginatedResponse<JobGetResponse>
     : NonPaginatedResponse<JobGetResponse>
   >;
+
+  /**
+   * Gets a single job by its numeric ID
+   *
+   * Returns the full job details including state, timing, input/output arguments, and associated resources.
+   * Use the `expand` option to include related entities like `Robot`, `Machine`, or `Release` (process metadata).
+   *
+   * @param id - The numeric ID of the job
+   * @param options - Optional query parameters including {@link JobGetByIdOptions} for expand, select, and folderId
+   * @returns Promise resolving to a single {@link JobGetResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get a job by ID
+   * const job = await jobs.getById(<jobId>);
+   *
+   * // With expand to include related entities
+   * const job = await jobs.getById(<jobId>, {
+   *   expand: 'Robot,Machine,Release'
+   * });
+   *
+   * // With folder scoping
+   * const job = await jobs.getById(<jobId>, { folderId: <folderId> });
+   * ```
+   */
+  getById(id: number, options?: JobGetByIdOptions): Promise<JobGetResponse>;
 }
