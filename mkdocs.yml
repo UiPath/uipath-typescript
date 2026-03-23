@@ -86,6 +86,7 @@ plugins:
           - pagination.md: Pagination guide
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
+          - api/interfaces/MachineServiceModel.md: Machine service methods
           - api/interfaces/ProcessServiceModel.md: Process service methods
           - api/interfaces/QueueServiceModel.md: Queue service methods
           - api/interfaces/BucketServiceModel.md: Bucket service methods
@@ -183,6 +184,7 @@ nav:
               - Messages: api/interfaces/MessageServiceModel.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
+          - Machines: api/interfaces/MachineServiceModel.md
           - Entities:
             - api/interfaces/entity/index.md
             - Choice Sets: api/interfaces/ChoiceSetServiceModel.md

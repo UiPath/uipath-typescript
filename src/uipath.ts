@@ -11,7 +11,8 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService
+  AssetService,
+  MachineService
 } from './services';
 import { PartialUiPathConfig } from './core/config/sdk-config';
 
@@ -135,6 +136,13 @@ export class UiPath extends UiPathCore {
    */
   get assets(): AssetService {
     return this.getService(AssetService);
+  }
+
+  /**
+   * Access to Orchestrator Machines service
+   */
+  get machines(): MachineService {
+    return this.getService(MachineService);
   }
 }
 
