@@ -97,7 +97,7 @@ export enum PackageSourceType {
 }
 
 /**
- * Enum for job source type used in API responses
+ * Enum for job source type
  */
 export enum JobSourceType {
   Manual = 'Manual',

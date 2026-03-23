@@ -41,7 +41,7 @@ export enum ServerlessJobType {
 /**
  * Interface for process metadata associated with a job.
  * Represents a lightweight summary of the process (release) linked to a job.
- * Available when using `expand=Release` in the query.
+ * Available when using 'expand: "Release"' in the query.
  */
 export interface ProcessMetadata {
   /** The unique key of the release */
@@ -59,7 +59,7 @@ export interface ProcessMetadata {
 }
 
 /**
- * Interface for job response from GET /odata/Jobs
+ * Interface for job response
  */
 export interface JobGetResponse extends FolderProperties {
   /** The unique numeric identifier of the job */
