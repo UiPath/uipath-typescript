@@ -86,6 +86,7 @@ plugins:
           - pagination.md: Pagination guide
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
+          - api/interfaces/JobServiceModel.md: Job service methods
           - api/interfaces/ProcessServiceModel.md: Process service methods
           - api/interfaces/QueueServiceModel.md: Queue service methods
           - api/interfaces/BucketServiceModel.md: Bucket service methods
@@ -191,6 +192,7 @@ nav:
             - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
             - Cases: api/interfaces/CasesServiceModel.md
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
+          - Jobs: api/interfaces/JobServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
