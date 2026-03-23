@@ -136,6 +136,7 @@ export class UiPath extends UiPathCore {
   get assets(): AssetService {
     return this.getService(AssetService);
   }
+
 }
 
 // Factory function for creating UiPath instance
