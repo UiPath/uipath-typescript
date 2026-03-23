@@ -23,14 +23,8 @@ export interface ElementExecutionRun {
   status: string;
   startedTimeUtc: string;
   completedTimeUtc: string | null;
-  incomingFlowId: string | null;
-  incomingFlowIds: string[];
   elementRunId: string;
-  markerItemIndex: number | null;
   workflowId: string | null;
-  temporalExecutionId: string | null;
-  version: number;
-  parentElementRunId: string | null;
 }
 
 /**
