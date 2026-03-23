@@ -249,7 +249,7 @@ export const ProcessInstances = () => {
 
     try {
       // Use modular ProcessInstances service directly
-      executionHistory = await processInstances.getExecutionHistory(instance.instanceId, instance.folderKey);
+      executionHistory = await processInstances.getExecutionHistory(instance.instanceId);
     } catch (err) {
       console.error('Error fetching execution history:', err);
       // Continue without execution history
