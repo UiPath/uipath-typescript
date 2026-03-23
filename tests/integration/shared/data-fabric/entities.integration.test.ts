@@ -713,29 +713,20 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const config = getTestConfig();
 
       const entityId = config.dataFabricTestEntityId || testEntityId;
+      const recordId = config.dataFabricTestRecordId || createdRecordIds[0];
 
       if (!entityId) {
         throw new Error('No entity ID available for testing');
       }
 
-      const records = await entities.getAllRecords(entityId, {
-        pageSize: 10,
-      });
+      const record = await entities.getRecordById(entityId, recordId, {});
 
-      const recordWithAttachment = records.items.find((record: any) => {
-        return Object.values(record).some(
-          (value: any) =>
-            value &&
-            typeof value === 'object' &&
-            (value.fileId || value.attachmentId)
-        );
-      });
-
-      if (!recordWithAttachment) {
-        throw new Error('No records with attachments found to test download');
+      if (!config.dataFabricTestAttachmentField) {
+        throw new Error('No attachment field specified for testing');
       }
 
-      throw new Error('Attachment download test requires specific entity configuration');
+      const downloadedFile = await entities.downloadAttachment(entityId, recordId, config.dataFabricTestAttachmentField);
+      expect(downloadedFile).toBeDefined();
     });
   });
 
