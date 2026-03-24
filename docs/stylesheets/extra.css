@@ -79,9 +79,11 @@
     opacity: 1 !important;
 }
 
-.md-content a[href^="https://"]::after {
+.md-content a[href^="https://"]:not(.md-content__button)::after {
     content: "↗";
-    font-size: 1em;
+    font-size: 0.7em;
+    margin-left: 0.15em;
+    vertical-align: super;
 }
 
 @media screen and (min-width: 60em) {
