@@ -1,4 +1,4 @@
-import { JobGetAllOptions, JobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetOutputOptions, JobGetResponse } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -57,4 +57,44 @@ export interface JobServiceModel {
     ? PaginatedResponse<JobGetResponse>
     : NonPaginatedResponse<JobGetResponse>
   >;
+
+  /**
+   * Gets the output of a completed job.
+   *
+   * Retrieves the job's output arguments, handling both inline output (stored directly on the job
+   * as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for
+   * large outputs, referenced by `outputFile`). Returns the parsed JSON output or `null` if the
+   * job has no output.
+   *
+   * This method mirrors the Python SDK's `extract_output` — it abstracts away the two storage
+   * mechanisms so consumers don't need to check `outputArguments` vs `outputFile` themselves.
+   *
+   * @param options - {@link JobGetOutputOptions} containing the job ID and folder ID
+   * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
+   *
+   * @example
+   * ```typescript
+   * // Get output from a completed job
+   * const output = await jobs.getOutput({ jobId: <jobId>, folderId: <folderId> });
+   *
+   * if (output) {
+   *   console.log('Job output:', output);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get output after listing jobs
+   * const allJobs = await jobs.getAll({ folderId: <folderId> });
+   * const completedJob = allJobs.data.find(j => j.state === 'Successful');
+   *
+   * if (completedJob) {
+   *   const output = await jobs.getOutput({
+   *     jobId: completedJob.id,
+   *     folderId: completedJob.folderId,
+   *   });
+   * }
+   * ```
+   */
+  getOutput(options: JobGetOutputOptions): Promise<Record<string, unknown> | null>;
 }
