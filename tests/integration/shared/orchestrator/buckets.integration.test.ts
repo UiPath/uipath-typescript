@@ -14,9 +14,9 @@ function getFolderId(): number | undefined {
 
 /**
  * Helper to get a bucket for testing, handling the common validation logic
- * Returns the bucketId and folderId, or null if validation fails
+ * Returns the bucketId and folderId, or fails the test if preconditions aren't met
  */
-async function getBucketForTest(testName: string): Promise<{ bucketId: number; folderId: number } | null> {
+async function getBucketForTest(testName: string): Promise<{ bucketId: number; folderId: number }> {
   const { buckets } = getServices();
   const folderId = getFolderId();
 
@@ -25,19 +25,12 @@ async function getBucketForTest(testName: string): Promise<{ bucketId: number; f
     pageSize: 1,
   });
 
-  if (allBuckets.items.length === 0) {
-    console.log(`No buckets available for ${testName}`);
-    return null;
-  }
-
-  if (!folderId) {
-    console.log(`Skipping ${testName}: INTEGRATION_TEST_FOLDER_ID not configured.`);
-    return null;
-  }
+  expect(allBuckets.items.length, `No buckets available for ${testName}`).toBeGreaterThan(0);
+  expect(folderId, `INTEGRATION_TEST_FOLDER_ID must be configured for ${testName}`).toBeDefined();
 
   return {
     bucketId: allBuckets.items[0].id,
-    folderId,
+    folderId: folderId!,
   };
 }
 
@@ -78,10 +71,6 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
     it('should retrieve a specific bucket by ID', async () => {
       const { buckets } = getServices();
       const bucket = await getBucketForTest('getById');
-      
-      if (!bucket) {
-        return;
-      }
 
       const result = await buckets.getById(bucket.bucketId, bucket.folderId);
 
@@ -96,10 +85,6 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
     it('should get file metadata from a bucket', async () => {
       const { buckets } = getServices();
       const bucket = await getBucketForTest('file metadata test');
-
-      if (!bucket) {
-        return;
-      }
 
       const result = await buckets.getFileMetaData(bucket.bucketId, bucket.folderId);
 
@@ -119,10 +104,6 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
     it('should upload a file and retrieve its metadata', async () => {
       const { buckets } = getServices();
       const bucket = await getBucketForTest('file upload test');
-
-      if (!bucket) {
-        return;
-      }
 
       const fileName = `integration-test-${mode}-${Date.now()}.txt`;
       const fileContent = createTestFileContent(fileName);
@@ -156,16 +137,9 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
       const { buckets } = getServices();
       const bucket = await getBucketForTest('read URI test');
 
-      if (!bucket) {
-        return;
-      }
-
       const metadata = await buckets.getFileMetaData(bucket.bucketId, bucket.folderId);
 
-      if (metadata.items.length === 0) {
-        console.log('No files in bucket to get read URI for');
-        return;
-      }
+      expect(metadata.items.length, 'No files in bucket to get read URI for').toBeGreaterThan(0);
 
       const fileName = metadata.items[0].path;
 
@@ -192,10 +166,7 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
         pageSize: 1,
       });
 
-      if (result.items.length === 0) {
-        console.log('No buckets available to validate structure');
-        return;
-      }
+      expect(result.items.length, 'No buckets available to validate structure').toBeGreaterThan(0);
 
       const bucket = result.items[0];
 

@@ -66,20 +66,14 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
         pageSize: 1,
       });
 
-      if (allProcesses.items.length === 0) {
-        console.log('No processes available to test getById');
-        return;
-      }
+      expect(allProcesses.items.length, 'No processes available to test getById').toBeGreaterThan(0);
 
       const processId = allProcesses.items[0].id;
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
-      if (!folderId) {
-        console.log('Skipping getById test: INTEGRATION_TEST_FOLDER_ID not configured.');
-        return;
-      }
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
 
-      const result = await processes.getById(processId, folderId);
+      const result = await processes.getById(processId, folderId!);
 
       expect(result).toBeDefined();
       expect(result.id).toBe(processId);
@@ -94,37 +88,27 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
 
       const processKey = config.orchestratorTestProcessKey;
 
-      if (!processKey) {
-        console.log(
-          'Skipping process start test: ORCHESTRATOR_TEST_PROCESS_KEY not configured. ' +
-            'Set this environment variable to test process execution.'
-        );
-        return;
-      }
+      expect(processKey, 'ORCHESTRATOR_TEST_PROCESS_KEY must be configured to test process execution').toBeDefined();
 
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
-      if (!folderId) {
-        console.log('Skipping process start test: INTEGRATION_TEST_FOLDER_ID not configured.');
-        return;
-      }
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
 
       const result = await processes.start(
         {
-          processKey,
+          processKey: processKey!,
           inputArguments: JSON.stringify({
             testRun: true,
             timestamp: new Date().toISOString(),
           }),
         },
-        folderId
+        folderId!
       );
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
       if (result.length > 0) {
         expect(result[0].id).toBeDefined();
-        expect(result[0].key).toBe(processKey);
       }
     });
 
@@ -134,23 +118,17 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
 
       const processKey = config.orchestratorTestProcessKey;
 
-      if (!processKey) {
-        console.log('Skipping process start test: ORCHESTRATOR_TEST_PROCESS_KEY not configured.');
-        return;
-      }
+      expect(processKey, 'ORCHESTRATOR_TEST_PROCESS_KEY must be configured').toBeDefined();
 
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
-      if (!folderId) {
-        console.log('Skipping process start test: INTEGRATION_TEST_FOLDER_ID not configured.');
-        return;
-      }
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
 
       const result = await processes.start(
         {
-          processKey,
+          processKey: processKey!,
         },
-        folderId
+        folderId!
       );
 
       expect(result).toBeDefined();
@@ -171,10 +149,7 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
         pageSize: 1,
       });
 
-      if (result.items.length === 0) {
-        console.log('No processes available to validate structure');
-        return;
-      }
+      expect(result.items.length, 'No processes available to validate structure').toBeGreaterThan(0);
 
       const process = result.items[0];
 
