@@ -79,11 +79,14 @@
     opacity: 1 !important;
 }
 
-.md-content a[href^="https://"]:not(.md-content__button)::after {
+article.md-content__inner a[href^="https://"]:not(.md-content__button)::after,
+article.md-content__inner a[href^="http://"]:not(.md-content__button)::after {
     content: "↗";
     font-size: 0.7em;
     margin-left: 0.15em;
     vertical-align: super;
+    text-decoration: none;
+    display: inline-block;
 }
 
 @media screen and (min-width: 60em) {
