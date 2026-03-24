@@ -116,7 +116,7 @@ export async function fetchRemoteStructure(
     }
     const errText = await response.text().catch(() => '');
     trackApiFailure('fetchRemoteStructure', errText || response.statusText, response.status);
-    await handleHttpError(response, 'fetch remote structure');
+    throw new Error(`Failed to fetch remote structure: ${response.status} ${response.statusText}${errText ? `\n${errText}` : ''}`);
   }
   return (await response.json()) as ProjectStructure;
 }
