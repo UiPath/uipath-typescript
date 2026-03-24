@@ -46,7 +46,7 @@ export const MESSAGES = {
     FAILED_TO_FETCH_ORG_TENANT: '❌ Failed to fetch organization/tenant information',
     APP_DEPLOYMENT_FAILED: '❌ App deployment failed',
     APP_UPGRADE_FAILED: '❌ App upgrade failed',
-    APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath register app" first',
+    APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath publish" first to publish the app before deploying.',
     APP_NAME_ALREADY_EXISTS: '❌ This app name is already deployed in this folder. Please choose a different name.',
     CLIENT_ID_VALIDATION_FAILED: 'Failed to validate clientId',
     DEPLOY_VERSION_NOT_FOUND: '❌ Could not determine deploy version from the server. Please re-run publish first.',
