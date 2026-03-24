@@ -234,7 +234,7 @@ describe('Process Instance Models', () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
         
-        const mockHistory = createMockExecutionHistory();
+        const mockHistory = [createMockExecutionHistory()];
         mockService.getExecutionHistory = vi.fn().mockResolvedValue(mockHistory);
 
         

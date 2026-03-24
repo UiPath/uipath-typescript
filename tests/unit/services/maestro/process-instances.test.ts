@@ -208,34 +208,32 @@ describe('ProcessInstancesService', () => {
 
   describe('getExecutionHistory', () => {
     it('should return execution history for process instance', async () => {
-
+      
       const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
-      const mockApiResponse: ProcessInstanceExecutionHistoryResponse = createMockExecutionHistory();
+      const mockApiResponse: ProcessInstanceExecutionHistoryResponse[] = [createMockExecutionHistory()];
 
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-
+      
       const result = await service.getExecutionHistory(instanceId);
 
-
+      
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId),
         {}
       );
 
-      expect(result).toHaveProperty('instanceId', MAESTRO_TEST_CONSTANTS.INSTANCE_ID);
-      expect(result).toHaveProperty('processKey', MAESTRO_TEST_CONSTANTS.PROCESS_KEY);
-      expect(result.elementExecutions).toHaveLength(1);
-      expect(result.elementExecutions[0]).toHaveProperty('elementId', MAESTRO_TEST_CONSTANTS.CASE_ELEMENT_ID);
-      expect(result.elementExecutions[0]).toHaveProperty('elementName', MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('id', MAESTRO_TEST_CONSTANTS.SPAN_ID);
+      expect(result[0]).toHaveProperty('traceId', MAESTRO_TEST_CONSTANTS.TRACE_ID);
     });
 
     it('should handle API errors', async () => {
-
+      
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-
+      
       await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

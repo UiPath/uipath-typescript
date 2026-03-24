@@ -252,9 +252,12 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         const result = await processInstances.getExecutionHistory(testInstanceId);
 
         expect(result).toBeDefined();
-        expect(result).toHaveProperty('instanceId');
-        expect(result).toHaveProperty('elementExecutions');
-        expect(Array.isArray(result.elementExecutions)).toBe(true);
+        expect(Array.isArray(result)).toBe(true);
+
+        if (result.length > 0) {
+          const historyItem = result[0];
+          expect(historyItem).toBeDefined();
+        }
       } catch (error: any) {
         console.log('Get execution history test failed:', error.message);
       }
