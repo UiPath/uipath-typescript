@@ -85,6 +85,10 @@ export const MESSAGES = {
     PUSH_BUILD_DIR_STEPS:
       'Steps:\n  1. Build your project (e.g. npm run build or your framework\'s build command).\n  2. Run: uipath push <project-id> --buildDir <your-buildDir>\n  Example: uipath push my-project-id --buildDir dist',
     PUSH_FAILED_PREFIX: 'Push failed: ',
+
+    // Scan command
+    SCAN_FAILED_PREFIX: 'Scan failed: ',
+    SCAN_TSCONFIG_NOT_FOUND: 'tsconfig.json not found',
     PUSH_FILE_OPERATION_FAILED_PREFIX: 'Failed: ',
     /** When create returns 409; we skip so push does not fail. */
     PUSH_FILE_ALREADY_EXISTS_SKIP: '[push] Skipped (already exists): ',
@@ -224,6 +228,7 @@ export const MESSAGES = {
     STEP_PUBLISH_PACKAGE: '3. Publish the package: uipath publish',
     
     // Headers
+    SCAN_HEADER: '🔍 UiPath resource scan',
     PUSH_HEADER: '🚀 UiPath Push',
     PULL_HEADER: '⬇️ UiPath Pull',
     /** Progress line during file download (e.g. "Pulling files... 3/10 completed"). */

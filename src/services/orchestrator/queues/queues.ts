@@ -15,6 +15,7 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { QueueMap } from '../../../models/orchestrator/queues.constants';
 import { track } from '../../../core/telemetry';
+import { ResourceReference, ResourceType } from '../../../core/resource-metadata';
 
 /**
  * Service for interacting with UiPath Orchestrator Queues API
@@ -111,6 +112,7 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    * const queue = await queues.getById(123, 456);
    * ```
    */
+  @ResourceReference({ resource: ResourceType.Queue, idParam: 'id', idParamIndex: 0, folderIdParam: 'folderId', folderIdParamIndex: 1 })
   @track('Queues.GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });

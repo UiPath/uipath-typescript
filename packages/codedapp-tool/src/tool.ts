@@ -6,6 +6,7 @@ import { registerPackCommand } from "./commands/pack.js";
 import { registerPullCommand } from "./commands/pull.js";
 import { registerPushCommand } from "./commands/push.js";
 import { registerPublishCommand } from "./commands/publish.js";
+import { registerScanCommand } from "./commands/scan.js";
 import { loadAuthCredentials } from "./utils/resolve-credentials.js";
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version: string };
@@ -42,4 +43,5 @@ export const registerCommands = (program: Command): void => {
   registerPackCommand(program);
   registerPublishCommand(program);
   registerDeployCommand(program);
+  registerScanCommand(program);
 };
