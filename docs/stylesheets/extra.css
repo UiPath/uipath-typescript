@@ -79,8 +79,8 @@
     opacity: 1 !important;
 }
 
-.md-content a[href^="https://"]:not(.md-content__button)::after,
-.md-content a[href^="http://"]:not(.md-content__button)::after {
+.md-content article a[href^="https://"]:not(.md-content__button):not(.headerlink)::after,
+.md-content article a[href^="http://"]:not(.md-content__button):not(.headerlink)::after {
     content: "↗";
     font-size: 0.7em;
     margin-left: 0.15em;
@@ -89,9 +89,9 @@
     display: inline-block;
 }
 
-.md-content pre a::after,
-.md-content blockquote a::after,
-.md-content .md-content__button::after {
+.md-content article pre a::after,
+.md-content article blockquote a::after,
+.md-content article .md-content__button::after {
     content: none !important;
 }
 
