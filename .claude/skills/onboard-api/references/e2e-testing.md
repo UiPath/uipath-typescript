@@ -316,6 +316,29 @@ Open the browser (or use Playwright `browser_navigate` if available) and interac
 
 Also check the browser console for import/module errors and unexpected PascalCase keys.
 
+### When validation fails — fix loop
+
+E2E failures mean the implementation has a bug that unit tests missed. Do NOT skip or work around.
+
+| E2E Failure | Root cause location | Fix in |
+|-------------|---------------------|--------|
+| `Cannot find module` | Missing export or rollup entry | `package.json` exports + `rollup.config.js` |
+| Fields still PascalCase | Missing `pascalToCamelCaseKeys()` | Service method transform pipeline |
+| Dropped fields present | Field not excluded from public type | `{domain}.types.ts` (remove field) |
+| `entity.method is not a function` | `create{Entity}WithMethods()` not applied | Service method return statement |
+| Pagination shape wrong | `PaginationHelpers.getAll()` misconfigured | Pagination constants or helper call |
+| Type mismatch at runtime | Type definition doesn't match real API | `{domain}.types.ts` field types |
+
+**After fixing:**
+1. Re-run `npm run typecheck && npm run lint && npm run test:unit && npm run build` (Step 5)
+2. Bump version: `npm version 1.0.0-test.N --no-git-tag-version` (increment N to bust npm cache)
+3. Repack: `npm pack`
+4. Reinstall: `cd samples/e2e-test && npm install`
+5. Restart: `npm run dev`
+6. Revalidate the specific check that failed
+
+Do NOT clean up until ALL checks pass.
+
 ## Step 6: Clean Up
 
 Delete everything:
@@ -331,12 +354,59 @@ git checkout package.json
 
 **Nothing from the E2E test gets committed.** The entire `samples/e2e-test/` directory is ephemeral.
 
+## Critical: SDK Initialization in E2E Apps
+
+**These three rules are non-negotiable.** Breaking any of them causes `"Invalid SDK instance"` errors that look like import/bundling bugs but are actually initialization bugs.
+
+### 1. Use `secret` field, NOT `auth: { type: 'pat', token }`
+
+```typescript
+// CORRECT — triggers auto-initialize path, registers in SDKInternalsRegistry
+new UiPath({ baseUrl, orgName, tenantName, secret: 'rt_...' })
+
+// WRONG — does NOT register internals correctly for cross-subpath usage
+new UiPath({ baseUrl, auth: { type: 'pat', token: 'rt_...' } })
+```
+
+**Why:** The `secret` field triggers the secret-based auto-initialize path in the UiPath constructor, which calls `SDKInternalsRegistry.set(this, ...)`. The `auth` object format follows a different code path that may not register internals in the same way, causing `SDKInternalsRegistry.get()` to throw when a service from a different subpath bundle tries to look up the instance.
+
+### 2. Always instantiate inside `SdkProvider` + `useSdk()` hook
+
+```typescript
+// CORRECT — lazy init inside React lifecycle
+const [sdk] = useState(() => new UiPath({ ... }));
+
+// WRONG — module-level instantiation
+const sdk = new UiPath({ ... });  // at file top
+const jobs = new Jobs(sdk);       // at file top
+```
+
+**Why:** Module-level instantiation runs during Vite's dependency pre-bundling phase, before the module graph is fully resolved. This can cause the core and service bundles to load separate copies of shared code. The `useState` pattern defers instantiation to runtime when all modules are resolved.
+
+### 3. Keep `optimizeDeps: { include: ['@uipath/uipath-typescript'] }` in vite.config.ts
+
+```typescript
+// CORRECT
+optimizeDeps: { include: ['@uipath/uipath-typescript'] }
+
+// WRONG — creates duplicate bundles with separate WeakMaps
+optimizeDeps: { exclude: ['@uipath/uipath-typescript'] }
+
+// WRONG — pre-bundles each subpath separately
+optimizeDeps: { include: ['@uipath/uipath-typescript/core', '@uipath/uipath-typescript/jobs'] }
+```
+
+**Why:** The SDK uses subpath exports (`/core`, `/jobs`, etc.) that each bundle their own copy of `SDKInternalsRegistry` via rollup. Vite's `optimizeDeps.include` with the base package name tells Vite to treat the package as a single unit, deduplicating shared code. Listing subpaths separately or excluding the package defeats this.
+
+**Always copy the scaffold templates from Step 2 exactly.** Do not freestyle the auth config or initialization pattern.
+
 ## Gotchas
 
 These caused failures during real E2E runs:
 
 | Gotcha | Fix |
 |--------|-----|
+| **`Invalid SDK instance` error** — service constructor throws | You broke one of the 3 rules above. Check auth format (`secret` not `auth`), initialization location (`useState` not module-level), and Vite `optimizeDeps` config |
 | **Tarball packed from wrong branch** — `Missing "./jobs" specifier` error on import | Build and pack from the worktree/branch that has the new service, not the main working tree |
 | **CORS error** — `Access to fetch blocked by CORS policy` | Vite proxy is configured by default (see vite.config.ts above). Ensure `baseUrl` is `window.location.origin` so requests go through the proxy |
 | **npm uses cached tarball** — old version of SDK loads despite rebuilding | Change the version before packing (`npm version 1.0.0-test.N`) to bust npm cache |
