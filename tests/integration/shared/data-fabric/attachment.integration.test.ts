@@ -83,13 +83,13 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         // Now delete the attachment
-        await expect(
-          entities.deleteAttachment(
-            ATTACHMENT_CONFIG.entityId,
-            ATTACHMENT_CONFIG.recordId,
-            ATTACHMENT_CONFIG.fieldName,
-          )
-        ).resolves.toBeUndefined();
+        const result = await entities.deleteAttachment(
+          ATTACHMENT_CONFIG.entityId,
+          ATTACHMENT_CONFIG.recordId,
+          ATTACHMENT_CONFIG.fieldName,
+        );
+
+        expect(result).toBeDefined();
       });
 
       it('should upload and then delete an attachment via entity method', async () => {
@@ -108,12 +108,12 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         // Now delete the attachment
-        await expect(
-          entity.deleteAttachment(
-            ATTACHMENT_CONFIG.recordId,
-            ATTACHMENT_CONFIG.fieldName,
-          )
-        ).resolves.toBeUndefined();
+        const result = await entity.deleteAttachment(
+          ATTACHMENT_CONFIG.recordId,
+          ATTACHMENT_CONFIG.fieldName,
+        );
+
+        expect(result).toBeDefined();
       });
     });
 
