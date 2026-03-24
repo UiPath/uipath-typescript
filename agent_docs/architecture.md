@@ -1,0 +1,79 @@
+# Architecture & Project Structure
+
+## Repo layout
+
+```
+src/
+  core/                  # UiPath client, auth, config, errors, HTTP client, telemetry
+  services/              # Service implementations grouped by platform area
+    action-center/       # Tasks
+    conversational-agent/# Conversations
+    data-fabric/         # Entities, ChoiceSets
+    maestro/             # Processes, ProcessInstances, ProcessIncidents, Cases, CaseInstances
+    orchestrator/        # Assets, Buckets, Processes, Queues
+  models/                # TypeScript interfaces/types per service domain
+  utils/                 # Constants, pagination, encoding, HTTP helpers
+    constants/
+      endpoints/         # Endpoint constants per domain (data-fabric.ts, maestro.ts, etc.)
+tests/
+  unit/                  # Mirrors src/ structure
+  integration/           # Integration tests (real API calls)
+  utils/                 # Shared mocks, constants, test setup helpers
+packages/
+  cli/                   # Separate CLI package (has its own CLAUDE.md)
+samples/                 # Sample apps (process-app, conversational-agent-app, etc.)
+docs/                    # MkDocs source; API docs generated via typedoc
+```
+
+## Architecture
+
+- **BaseService** (`src/services/base.ts`) — all services extend this. Provides authenticated HTTP methods via ApiClient.
+- **SDKInternalsRegistry** (`src/core/internals.ts`) — WeakMap storing private config/context/tokenManager per UiPath instance. Services access internals through this registry, not public API.
+- **Modular imports** — each service is a separate subpath export (`@uipath/uipath-typescript/entities`, `/tasks`, `/processes`, etc.). Services take a `UiPath` instance via constructor DI.
+- **Dual auth** — OAuth (requires `sdk.initialize()`, for frontend applications) and secret-based (auto-initializes for backend services). See `src/core/index.ts:1-44` for examples.
+- **Pagination** — PaginationManager auto-detects OData vs cursor-based. See `src/utils/pagination/`.
+- **Errors** — typed hierarchy under `UiPathError`. ErrorFactory maps HTTP status codes to specific types (AuthenticationError, NotFoundError, etc.). See `src/core/errors/`. Type guard functions in `src/core/errors/guards.ts` (`isAuthenticationError()`, `isValidationError()`, `isNotFoundError()`, `isRateLimitError()`, `isServerError()`, `isNetworkError()`). All `UiPathError` instances expose `getDebugInfo()` for diagnostics.
+
+**Existing service map:**
+
+| Import path | Services | Pattern |
+|-------------|----------|---------|
+| `/entities` | Entities, ChoiceSets | Domain-grouped (Data Fabric peers) |
+| `/tasks` | Tasks | Independent root |
+| `/assets`, `/queues`, `/buckets`, `/processes` | Assets, Queues, Buckets, Processes | Independent root (Orchestrator) |
+| `/jobs` | Jobs | Independent root (Orchestrator) |
+| `/cases` | Cases, CaseInstances | Hierarchical (Cases → CaseInstances) |
+| `/maestro-processes` | MaestroProcesses, ProcessInstances, ProcessIncidents | Hierarchical (Process → Instance → Incident) |
+| `/conversations` | Conversations | Independent root (Conversational Agent) |
+
+## Code style
+
+- **camelCase**: variables, functions, methods (`getUserById`, `pageSize`)
+- **PascalCase**: classes, interfaces, types, enums (`TaskService`, `TaskType`)
+- **UPPER_SNAKE_CASE**: constants (`DEFAULT_PAGE_SIZE`, `TASK_ENDPOINTS`)
+- **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
+- Prefer `private` keyword over underscore prefix for private methods
+- No `any` type — use `unknown` if truly unknown, then validate
+- Mark optional fields as optional in type interfaces
+
+## Key source files
+
+| Pattern | File |
+|---------|------|
+| BaseService / FolderScopedService | `src/services/base.ts`, `src/services/folder-scoped.ts` |
+| Transform functions | `src/utils/transform.ts` |
+| Pagination helpers & types | `src/utils/pagination/helpers.ts`, `types.ts`, `internal-types.ts` |
+| Pagination & OData constants | `src/utils/constants/common.ts` |
+| Endpoint constants | `src/utils/constants/endpoints/` |
+| Headers utility | `src/utils/http/headers.ts` |
+| Common types | `src/models/common/types.ts` |
+| OData response utility | `src/utils/object.ts` |
+| Error types | `src/core/errors/` |
+| SDK internals | `src/core/internals/` |
+
+## Build details
+
+- **Rollup** builds ESM (`.mjs`), CJS (`.cjs`), UMD (`.umd.js`), and `.d.ts` per module.
+- Config: `rollup.config.js`. Custom `rewriteDtsImports` plugin normalizes core imports.
+- TypeScript target: ES2020, strict mode, `experimentalDecorators: true`.
+- Node.js requirement: 18.x or higher.
