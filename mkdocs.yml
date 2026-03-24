@@ -156,7 +156,6 @@ markdown_extensions:
   - pymdownx.magiclink
   - pymdownx.snippets
   - pymdownx.fancylists
-  - pymdownx.tilde
   - pymdownx.tabbed:
       alternate_style: true
   - toc:

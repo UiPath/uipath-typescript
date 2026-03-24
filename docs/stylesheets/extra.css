@@ -79,20 +79,9 @@
     opacity: 1 !important;
 }
 
-.md-content article a[href^="https://"]:not(.md-content__button):not(.headerlink)::after,
-.md-content article a[href^="http://"]:not(.md-content__button):not(.headerlink)::after {
+.md-content a[href^="https://"]::after {
     content: "↗";
-    font-size: 0.7em;
-    margin-left: 0.15em;
-    vertical-align: super;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.md-content article pre a::after,
-.md-content article blockquote a::after,
-.md-content article .md-content__button::after {
-    content: none !important;
+    font-size: 1em;
 }
 
 @media screen and (min-width: 60em) {
