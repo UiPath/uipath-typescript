@@ -238,7 +238,7 @@ export type TaskGetAllOptions = RequestOptions & PaginationOptions & {
 /**
  * Query options for getting a task by ID 
  */
-export type TaskGetByIdOptions = BaseOptions
+export interface TaskGetByIdOptions extends BaseOptions {}
 
 /**
  * Options for getting users with task permissions

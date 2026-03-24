@@ -67,4 +67,4 @@ export type AssetGetAllOptions = RequestOptions & PaginationOptions & {
 /**
  * Options for getting a single asset by ID
  */
-export type AssetGetByIdOptions = BaseOptions
+export interface AssetGetByIdOptions extends BaseOptions {}
