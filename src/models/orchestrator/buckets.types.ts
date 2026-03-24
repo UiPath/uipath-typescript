@@ -27,7 +27,7 @@ export type BucketGetAllOptions = RequestOptions & PaginationOptions & {
   folderId?: number;
 }
 
-export type BucketGetByIdOptions = BaseOptions
+export interface BucketGetByIdOptions extends BaseOptions {}
 
 /**
  * Maps header names to their values
