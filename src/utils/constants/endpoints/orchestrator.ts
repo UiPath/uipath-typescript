@@ -57,6 +57,14 @@ export const QUEUE_ENDPOINTS = {
  */
 export const JOB_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs`,
+  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Jobs(${id})`,
+} as const;
+
+/**
+ * Orchestrator Job Attachment Endpoints
+ */
+export const JOB_ATTACHMENT_ENDPOINTS = {
+  GET_BY_ID: (key: string) => `${ORCHESTRATOR_BASE}/odata/Attachments(${key})`,
 } as const;
 
 /**
