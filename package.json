@@ -66,6 +66,16 @@
                 "default": "./dist/assets/index.cjs"
             }
         },
+        "./jobs": {
+            "import": {
+                "types": "./dist/jobs/index.d.ts",
+                "default": "./dist/jobs/index.mjs"
+            },
+            "require": {
+                "types": "./dist/jobs/index.d.ts",
+                "default": "./dist/jobs/index.cjs"
+            }
+        },
         "./queues": {
             "import": {
                 "types": "./dist/queues/index.d.ts",
