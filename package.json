@@ -152,6 +152,7 @@
         "README.md"
     ],
     "scripts": {
+        "prepack": "rimraf *.tgz",
         "prebuild": "rimraf dist",
         "build": "rollup -c",
         "build:watch": "rollup -c -w",

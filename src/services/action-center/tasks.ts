@@ -255,10 +255,21 @@ export class TaskService extends BaseService implements TaskServiceModel {
    */
   @track('Tasks.GetById')
   async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<TaskGetResponse> {
+    const { taskType, ...restOptions } = options;
+
+    // If taskType is provided, skip the generic GET_BY_ID call and go directly to the type-specific endpoint
+    if (taskType === TaskType.Form) {
+      const formOptions: TaskGetFormOptions = { expandOnFormLayout: true };
+      return this.getFormTaskById(id, folderId!, formOptions);
+    }
+    if (taskType === TaskType.DocumentValidation) {
+      return this.getTaskDataById(id, folderId!);
+    }
+
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     
     // Add default expand parameters
-    const modifiedOptions = this.addDefaultExpand(options);
+    const modifiedOptions = this.addDefaultExpand(restOptions);
     
     // prefix all keys in options
     const keysToPrefix = Object.keys(modifiedOptions);
@@ -278,6 +289,9 @@ export class TaskService extends BaseService implements TaskServiceModel {
     if (transformedTask.type === TaskType.Form) {
       const formOptions: TaskGetFormOptions = { expandOnFormLayout: true };
       return this.getFormTaskById(id, folderId || transformedTask.folderId, formOptions);
+    }
+    if (transformedTask.type === TaskType.DocumentValidation) {
+      return this.getTaskDataById(id, folderId || transformedTask.folderId);
     }
     
     return createTaskWithMethods(
@@ -529,6 +543,32 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const transformedFormTask = transformData(response.data, TaskMap);
     return createTaskWithMethods(
       applyDataTransforms(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
+      this
+    ) as TaskGetResponse;
+  }
+
+  /**
+   * Gets a generic task by ID (private method)
+   *
+   * @param id - The ID of the generic task to retrieve
+   * @param folderId - Required folder ID
+   * @returns Promise resolving to the generic task
+   */
+  private async getTaskDataById(id: number, folderId: number): Promise<TaskGetResponse> {
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+
+    const response = await this.get<TaskGetResponse>(
+      TASK_ENDPOINTS.GET_TASK_DATA_BY_ID,
+      {
+        params: {
+          taskId: id,
+        },
+        headers
+      }
+    );
+    const transformedTask = transformData(response.data, TaskMap);
+    return createTaskWithMethods(
+      applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
       this
     ) as TaskGetResponse;
   }
