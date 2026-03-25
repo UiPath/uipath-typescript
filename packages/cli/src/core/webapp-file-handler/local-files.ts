@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as crypto from 'node:crypto';
+import * as crypto from 'crypto';
 import ignore, { type Ignore } from 'ignore';
 import type { LocalFile } from './types.js';
 import { isPathUnderBuildDir } from './pull-utils.js';
