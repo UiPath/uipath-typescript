@@ -18,7 +18,10 @@
     "prepublishOnly": "npm run clean && npm run build:full",
     "dev": "bash scripts/dev.sh",
     "dev:link": "bash scripts/link-to-uipcli.sh",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "commander": "^14.0.3",
@@ -28,7 +31,9 @@
     "@uipath/uipath-ts-cli": "*",
     "@types/node": "^20.11.19",
     "rimraf": "^6.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@vitest/coverage-v8": "^3.2.4",
+    "vitest": "^3.2.4"
   },
   "repository": {
     "type": "git",
