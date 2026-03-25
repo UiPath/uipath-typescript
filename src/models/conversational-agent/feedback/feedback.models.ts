@@ -25,18 +25,16 @@ import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } fr
  */
 export interface FeedbackServiceModel {
   /**
-   * Gets all feedback with optional filters.
+   * Gets all feedback across all agents in the tenant, with optional filters.
    *
-   * Retrieves a list of feedback entries, optionally filtered by agent, trace, span,
-   * status, or agent version.
+   * Retrieves a list of feedback entries, optionally filtered by agent, trace, span, status, or agent version.
    *
    * @param options - Optional query parameters for filtering and pagination
    * @returns Promise resolving to array of feedback or paginated response
-   * {@link FeedbackGetAllOptions}
    * {@link FeedbackResponse}
    * @example
    * ```typescript
-   * // Get all feedback
+   * // Get all feedback (default pagination: returns first 100 items)
    * const allFeedback = await feedback.getAll();
    *
    * // Get feedback for a specific agent

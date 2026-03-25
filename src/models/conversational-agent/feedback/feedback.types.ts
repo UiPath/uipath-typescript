@@ -2,7 +2,7 @@ import { PaginationOptions } from '../../../utils/pagination';
 
 /**
  * Represents a category that can be associated with feedback.
- * Default categories (Accuracy, Relevance, Helpfulness) are auto-created per tenant.
+ * Default categories (Output, Agent Error, Agent Plan Execution) are auto-created per tenant.
  */
 export interface FeedbackCategory {
   /** Unique identifier of the feedback category */
@@ -10,13 +10,13 @@ export interface FeedbackCategory {
   /** Category name (max 256 characters, unique per tenant) */
   category: string;
   /** Timestamp when the category was created */
-  createdAt?: string;
-  /** Whether this is a system default category (e.g., Accuracy, Relevance, Helpfulness) */
-  isDefault?: boolean;
+  createdAt: string;
+  /** Whether this is a system default category (e.g., Output, Agent Error, Agent Plan Execution) */
+  isDefault: boolean;
   /** Whether this category applies to positive feedback */
-  isPositive?: boolean;
+  isPositive: boolean;
   /** Whether this category applies to negative feedback */
-  isNegative?: boolean;
+  isNegative: boolean;
 }
 
 /**
@@ -42,7 +42,7 @@ export interface FeedbackResponse {
   /** OpenTelemetry span identifier (16-character hexadecimal string) representing a specific operation within the trace */
   spanId: string;
   /** Identifier of the agent that generated the response being reviewed */
-  agentId: string;
+  agentId: string | null;
   /** Version of the agent at the time the feedback was given (max 100 characters) */
   agentVersion?: string;
   /** Optional text comment provided by the user (max 4000 characters) */
@@ -52,7 +52,7 @@ export interface FeedbackResponse {
   /** Whether the feedback is positive (thumbs up) or negative (thumbs down) */
   isPositive: boolean;
   /** Categories associated with this feedback entry */
-  feedbackCategories?: FeedbackCategory[];
+  feedbackCategories: FeedbackCategory[];
   /** Email address of the user who submitted the feedback */
   userEmail?: string;
   /** Current status of the feedback in the review workflow */
@@ -77,5 +77,4 @@ export type FeedbackGetAllOptions = PaginationOptions & {
   traceId?: string;
   /** Filter by OpenTelemetry span identifier */
   spanId?: string;
-  [key: string]: string | number | boolean | undefined | { value: string };
 }

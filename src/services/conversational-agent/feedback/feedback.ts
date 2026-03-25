@@ -17,7 +17,7 @@ import { track } from '../../../core/telemetry';
  */
 export class FeedbackService extends BaseService implements FeedbackServiceModel {
   /**
-   * Gets all feedback with optional filters
+   * Gets all feedback across all agents in the tenant, with optional filters
    *
    * @param options - Optional query parameters for filtering and pagination
    * @returns Promise resolving to array of feedback or paginated response
