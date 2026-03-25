@@ -6,9 +6,9 @@ import { MESSAGES } from './constants/messages.js';
 import { VERSION_CONSTANTS } from './constants/commands.js';
 import { cliTelemetryClient } from './telemetry/index.js';
 import chalk from 'chalk';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

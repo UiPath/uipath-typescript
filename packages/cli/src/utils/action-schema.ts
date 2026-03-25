@@ -1,6 +1,6 @@
-import path from "path";
+import path from "node:path";
 import { v4 as uuidv4 } from 'uuid';
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import { z } from 'zod';
 import { JsonActionSchema, JsonActionSchemaValidator, JsonDataType, JsonFormatType, JsonSchemaProperty, ParsedActionPropertySchema, ParsedActionSchema, VbArgumentCollectionType, VbArgumentDataTypeNamespace, VBDataType } from "../types/index.js";
 import { ACTION_SCHEMA_CONSTANTS } from "../constants/index.js";

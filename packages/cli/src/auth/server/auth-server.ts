@@ -1,9 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
-import path from 'path';
+import path, { dirname } from 'node:path';
 import fs from 'fs-extra';
-import { Server } from 'http';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { Server } from 'node:http';
+import { fileURLToPath } from 'node:url';
 import { TokenResponse } from '../core/oidc.js';
 import { getTokenEndpointUrl, buildRedirectUri } from '../utils/url.js';
 import { validateTokenExchangeRequest, validateTokenResponse } from '../utils/validation.js';

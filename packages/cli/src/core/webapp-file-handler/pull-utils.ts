@@ -2,8 +2,8 @@
  * Pull command: path and folder helpers. Shared logic for mapping remote paths to local
  * and building the folder set. No I/O except fs for overwrite check and mkdir.
  */
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { PUSH_METADATA_RELATIVE_PATH, PUSH_METADATA_FILENAME } from '../../constants/api.js';
 import { AUTH_CONSTANTS } from '../../constants/index.js';
 import { PULL_WEB_APP_MANIFEST, PACKAGE_JSON_FILENAME } from '../../constants/pull.js';

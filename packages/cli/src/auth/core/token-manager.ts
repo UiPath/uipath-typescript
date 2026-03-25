@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import path from 'path';
+import path from 'node:path';
 import { TokenResponse } from './oidc.js';
 import { SelectedTenant } from '../services/portal.js';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
