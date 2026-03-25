@@ -74,6 +74,7 @@ jobs:
           DATA_FABRIC_TEST_CHOICESET_ID=${{ steps.config.outputs.data_fabric_test_choiceset_id }}
           DATA_FABRIC_TEST_RECORD_ID=${{ steps.config.outputs.data_fabric_test_record_id }}
           DATA_FABRIC_TEST_ATTACHMENT_FIELD=${{ steps.config.outputs.data_fabric_test_attachment_field }}
+          ORCHESTRATOR_TEST_PROCESS_KEY=${{ steps.config.outputs.orchestrator_test_process_key }}
           EOF
 
       - name: Run Integration Tests
