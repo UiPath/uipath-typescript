@@ -1,15 +1,20 @@
 import chalk from 'chalk';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import inquirer from 'inquirer';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 import { PUSH_METADATA_RELATIVE_PATH } from '../constants/api.js';
-import { AUTH_CONSTANTS, MESSAGES } from '../constants/index.js';
+import { ACTION_SCHEMA_CONSTANTS, AUTH_CONSTANTS, MESSAGES } from '../constants/index.js';
 import { getEnvironmentConfig } from '../utils/env-config.js';
 import { WebAppFileHandler } from '../core/webapp-file-handler/index.js';
+import { WEB_APP_MANIFEST_FILENAME, getRemoteFilesMap } from '../core/webapp-file-handler/structure.js';
+import * as api from '../core/webapp-file-handler/api.js';
 import { Preconditions } from '../core/preconditions.js';
+import { validatePushFiles } from '../utils/push-validation.js';
 import { cliTelemetryClient } from '../telemetry/index.js';
 import type { EnvironmentConfig } from '../types/index.js';
+import type { WebAppProjectConfig } from '../core/webapp-file-handler/index.js';
 
 export interface PushOptions {
   projectId?: string;
@@ -25,20 +30,31 @@ export interface PushOptions {
 async function createCodedAppProject(
   envConfig: EnvironmentConfig,
   appName: string,
+  isActionApp: boolean,
   logger: { log: (message: string) => void },
 ): Promise<string> {
   const url = `${envConfig.baseUrl}/${envConfig.orgId}/studio_/backend/api/Solution`;
 
+  const solutionResourceSubType = isActionApp ? 'CodedAction' : 'Coded';
+  const webAppManifest = JSON.stringify({
+    type: 'Coded',
+    solutionResourceSubType,
+    config: {
+      isCompiled: true,
+      isActionApp,
+    },
+  });
+
   const form = new FormData();
   form.append('createDefaultProjectCommand[expressionLanguage]', 'VisualBasic');
-  form.append('createDefaultProjectCommand[projectType]', 'WebApp');
+  form.append('createDefaultProjectCommand[projectType]', 'AppV2');
   form.append('createDefaultProjectCommand[triggerType]', 'Manual');
-  form.append('createDefaultProjectCommand[projectMode]', 'WebApp');
+  form.append('createDefaultProjectCommand[projectMode]', 'AppV2');
   form.append('createDefaultProjectCommand[isTenantLocked]', 'false');
   form.append('createDefaultProjectCommand[name]', appName);
   form.append('createDefaultProjectCommand[isApp]', 'false');
   form.append('createDefaultProjectCommand[context][expressionLanguage]', 'VB');
-  const webAppManifest = JSON.stringify({ type: 'App_ProCode', config: { isCompiled: true } });
+  form.append('createDefaultProjectCommand[context][projectSubType]', solutionResourceSubType);
   form.append(
     'createDefaultProjectCommand[context][serializedWebAppManifest]',
     webAppManifest,
@@ -120,11 +136,55 @@ export async function executePush(options: PushOptions): Promise<void> {
       message: 'Enter a name for the new Coded App:',
       default: 'App',
     }]);
-    projectId = await createCodedAppProject(envConfig, appName, logger);
+
+    const { appType } = await inquirer.prompt<{ appType: string }>([{
+      type: 'list',
+      name: 'appType',
+      message: 'Select app type:',
+      choices: ['Coded', 'CodedAction'],
+      default: 'Coded',
+    }]);
+
+    const isActionApp = appType === 'CodedAction';
+    if (isActionApp && !fs.existsSync(path.join(process.cwd(), ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME))) {
+      throw new Error(MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED);
+    }
+
+    projectId = await createCodedAppProject(envConfig, appName, isActionApp, logger);
   }
 
   const rootDir = process.cwd();
   const bundlePath = path.normalize(options.buildDir ?? 'dist').replace(/\\/g, '/');
+
+  // Check remote webAppManifest.json to determine if this is an Action app.
+  // If CodedAction, validate that action-schema.json exists locally.
+  const config: WebAppProjectConfig = {
+    projectId,
+    rootDir,
+    bundlePath,
+    manifestFile: PUSH_METADATA_RELATIVE_PATH,
+    envConfig,
+    logger,
+  };
+  const remoteStructure = await api.fetchRemoteStructure(config);
+  const remoteFiles = getRemoteFilesMap(remoteStructure);
+  const manifestFile = remoteFiles.get(WEB_APP_MANIFEST_FILENAME);
+  if (manifestFile) {
+    try {
+      const content = await api.downloadRemoteFile(config, manifestFile.id);
+      const manifest = JSON.parse(content.toString('utf8'));
+      if (manifest?.solutionResourceSubType === 'CodedAction') {
+        if (!fs.existsSync(path.join(rootDir, ACTION_SCHEMA_CONSTANTS.ACTION_SCHEMA_FILENAME))) {
+          throw new Error(MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED);
+        }
+      }
+    } catch (err) {
+      // Re-throw action-schema validation errors, ignore manifest parse errors
+      if (err instanceof Error && err.message === MESSAGES.ERRORS.ACTION_SCHEMA_REQUIRED) {
+        throw err;
+      }
+    }
+  }
 
   try {
     Preconditions.validate(rootDir, bundlePath);
@@ -134,14 +194,9 @@ export async function executePush(options: PushOptions): Promise<void> {
     );
   }
 
-  const handler = new WebAppFileHandler({
-    projectId,
-    rootDir,
-    bundlePath,
-    manifestFile: PUSH_METADATA_RELATIVE_PATH,
-    envConfig,
-    logger,
-  });
+  await validatePushFiles(rootDir, bundlePath, logger);
+
+  const handler = new WebAppFileHandler(config);
 
   await handler.push();
   await handler.importReferencedResources(options.ignoreResources ?? false);
