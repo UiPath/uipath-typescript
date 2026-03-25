@@ -2,8 +2,8 @@
  * Pull command: main orchestration. Validates target and project type, filters files
  * (source/ only, excludes buildDir), checks overwrite, recreates folders, downloads files with progress.
  */
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
 import { PUSH_METADATA_RELATIVE_PATH, MAX_TELEMETRY_ERROR_LENGTH } from '../../constants/api.js';

@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import fetch from 'node-fetch';
 import { AUTH_CONSTANTS } from '../../constants/auth.js';
 import { getAuthorizationBaseUrl, getTokenEndpointUrl, buildRedirectUri } from '../utils/url.js';

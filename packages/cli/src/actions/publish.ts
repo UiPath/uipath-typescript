@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import ora, { type Ora } from 'ora';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
 import type { EnvironmentConfig, AppConfig } from '../types/index.js';

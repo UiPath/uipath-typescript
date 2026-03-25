@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 import chalk from 'chalk';

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import * as path from 'path';
+import * as path from 'node:path';
 import inquirer from 'inquirer';
 import fetch from 'node-fetch';
 import FormData from 'form-data';

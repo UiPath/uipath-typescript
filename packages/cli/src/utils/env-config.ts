@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import fsExtra from 'fs-extra';
 import { EnvironmentConfig } from '../types/index.js';
 import { MESSAGES } from '../constants/messages.js';
