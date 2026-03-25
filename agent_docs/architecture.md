@@ -34,17 +34,19 @@ docs/                    # MkDocs source; API docs generated via typedoc
 - **Pagination** — PaginationManager supports offset-based and token-based pagination, abstracted to a cursor-based interface. See `src/utils/pagination/`.
 - **Errors** — typed hierarchy under `UiPathError`. ErrorFactory maps HTTP status codes to specific types (AuthenticationError, NotFoundError, etc.). See `src/core/errors/`. Type guard functions in `src/core/errors/guards.ts` (`isAuthenticationError()`, `isValidationError()`, `isNotFoundError()`, `isRateLimitError()`, `isServerError()`, `isNetworkError()`). All `UiPathError` instances expose `getDebugInfo()` for diagnostics.
 
-**Existing service map:**
+**Subpath imports:**
 
-| Import path | Services | Pattern |
-|-------------|----------|---------|
-| `/entities` | Entities, ChoiceSets | Multi-service module (Data Fabric) |
-| `/tasks` | Tasks | Single-service module |
-| `/assets`, `/queues`, `/buckets`, `/processes` | Assets, Queues, Buckets, Processes | Single-service module (Orchestrator) |
-| `/jobs` | Jobs | Single-service module (Orchestrator) |
-| `/cases` | Cases, CaseInstances | Multi-service module (Cases + CaseInstances) |
-| `/maestro-processes` | MaestroProcesses, ProcessInstances, ProcessIncidents | Multi-service module (Process + Instance + Incident) |
-| `/conversational-agent` | Conversations | Independent root (Conversational Agent) |
+| Import path | Services |
+|-------------|----------|
+| `@uipath/uipath-typescript/entities` | Entities, ChoiceSets |
+| `@uipath/uipath-typescript/tasks` | Tasks |
+| `@uipath/uipath-typescript/assets` | Assets |
+| `@uipath/uipath-typescript/queues` | Queues |
+| `@uipath/uipath-typescript/buckets` | Buckets |
+| `@uipath/uipath-typescript/processes` | Processes |
+| `@uipath/uipath-typescript/cases` | Cases, CaseInstances |
+| `@uipath/uipath-typescript/maestro-processes` | MaestroProcesses, ProcessInstances, ProcessIncidents |
+| `@uipath/uipath-typescript/conversational-agent` | ConversationalAgent, Exchanges, Messages |
 
 ## Key source files
 
