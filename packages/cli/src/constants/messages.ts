@@ -145,7 +145,12 @@ export const MESSAGES = {
     INVALID_PROPERTIES_OBJECT: 'Properties must be a valid object',
     MISSING_ACTION_SCHEMA_SECTION: 'Action schema must have inputs, outputs, inOuts, and outcomes sections',
     INVALID_ACTION_SCHEMA: 'Action schema validation failed:',
-    UNSUPPORTED_JSON_DATA_TYPE: 'Unsupported JSON data type:'
+    UNSUPPORTED_JSON_DATA_TYPE: 'Unsupported JSON data type:',
+
+    // Push file validation
+    PUSH_DISALLOWED_EXTENSIONS: 'Push blocked: files with disallowed extensions found. Only web-related file types are allowed.',
+    PUSH_FILE_TOO_LARGE: 'Push blocked: one or more files exceed the 10 MB size limit. Consider uploading large assets to cloud storage and referencing them in your code instead.',
+    PUSH_LARGE_FILES_DECLINED: 'Push cancelled by user.',
 
   },
   

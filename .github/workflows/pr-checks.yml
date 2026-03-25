@@ -40,6 +40,9 @@ jobs:
       - name: Run CLI Tests
         run: npm run test:coverage --workspace=packages/cli
 
+      - name: Run Codedapp-Tool Tests
+        run: npm run test:coverage --workspace=packages/codedapp-tool
+
       - name: Build Project
         run: npm run build
 
@@ -89,6 +92,7 @@ jobs:
           echo "- ✅ Typecheck passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ SDK tests passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ CLI tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Codedapp-Tool tests passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.base_ref }}" == "main" ]; then
             echo "- ✅ All integration tests passed" >> $GITHUB_STEP_SUMMARY
