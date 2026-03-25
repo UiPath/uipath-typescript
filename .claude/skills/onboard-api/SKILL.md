@@ -223,40 +223,99 @@ Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browse
 2. **Push branch** to remote with `-u` flag.
 3. **Create PR** using `gh pr create`:
    - **Title:** `feat(<service>): add <ServiceName> <method-name> service [<TICKET-KEY>]`
-   - **Body** — build dynamically from the work actually done. Use this structure:
+   - **Body** — build dynamically from the work actually done. Every section below is mandatory. Use this structure:
 
      ```
-     ## Summary
-     - Onboarded `<METHOD> <endpoint-path>` to `<ServiceName>`
-     - <service base class info, e.g., "extends FolderScopedService with OData pagination support">
-     - <key capabilities, e.g., "Supports $expand, $select, $filter, $orderby query parameters">
-     - <if composite: describe the composition, e.g., "Handles both inline output and file-based output">
-     - <if ticket: Refs <TICKET-KEY>>
+     ## Method Added
 
-     ## Methods Added
-
-     | Method | Signature | Description |
-     |--------|-----------|-------------|
-     | `<methodName>()` | `<methodName>(options?: <OptionsType>)` | <one-line description> |
+     | Layer | Method | Signature |
+     |-------|--------|-----------|
+     | Service | `<service>.<methodName>()` | `<methodName>(<full signature with return type>)` |
      <repeat for each method onboarded>
 
-     ## Test plan
-     - [x] Unit tests pass (`npm run test:unit`) — <N> tests covering <brief scope>
-     - [x] Typecheck passes (`npm run typecheck`)
-     - [x] Lint passes (`npm run lint`)
-     - [x] Build succeeds (`npm run build`)
-     - [x] E2E validated in browser (<list methods tested>)
-     - [x] OAuth scopes documented
-     - [<x or note>] Cloudflare Workers <whitelisted | already whitelisted | separate PR needed>
+     ## Endpoint Called
 
-     🤖 Generated with [Claude Code](https://claude.com/claude-code)
+     | Method | HTTP | Endpoint | OAuth Scope |
+     |--------|------|----------|-------------|
+     | `<methodName>()` | <GET/POST/etc.> | `<endpoint path>` | `<scope>` |
+     <repeat for each endpoint the method calls>
+
+     - <service base class info, e.g., "Extends FolderScopedService — sets X-UIPATH-OrganizationUnitId header">
+     - <key capabilities, e.g., "Supports OData pagination ($top, $skip, $count)">
+     - <if composite: describe composition, e.g., "Sequential: fetches job by ID, then resolves output via inline args or blob download">
+
+     ## Example Usage
+
+     ```typescript
+     import { UiPath } from '@uipath/uipath-typescript/core';
+     import { <Service> } from '@uipath/uipath-typescript/<service>';
+
+     const sdk = new UiPath(config);
+     await sdk.initialize();
+     const <service> = new <Service>(sdk);
+
+     // Basic usage
+     <minimal example — no optional params>
+
+     // With options
+     <example with filtering, pagination, or other options>
+     ```
+
+     ## API Response vs SDK Response
+
+     <For Direct API methods:>
+
+     ### Transform pipeline
+     `<step1>` → `<step2>` → ...
+
+     ### Field mapping
+     | API Response (PascalCase) | SDK Response (camelCase) | Change | Reason |
+     |---------------------------|--------------------------|--------|--------|
+     | `<ApiField>` | `<sdkField>` | <Case / Case + Rename> | <reason> |
+     <include all renamed fields + a summary row for case-only conversions>
+
+     <For Composite methods:>
+
+     ### Composition flow
+     ```
+     <ASCII flow diagram showing the sequential/conditional/parallel steps>
+     ```
+
+     ### Internal types (not exported)
+     | Type | Purpose |
+     |------|---------|
+     | `<TypeName>` | <what it represents> |
+
+     ## Files
+
+     | Area | Files |
+     |------|-------|
+     | Endpoint | `<path>` |
+     | Types | `<path>` |
+     | Constants | `<path>` |
+     | Models | `<path>` |
+     | Service | `<path>` |
+     | Build | `package.json`, `rollup.config.js` (if changed) |
+     | Barrel exports | `<paths>` (if changed) |
+     | Unit tests | `<path>` (<N> tests) |
+     | Integration tests | `<path>` (<N> tests) |
+     | Test utils | `<path>` |
+     | Docs | `<paths>` |
+
+     <if ticket: Refs <TICKET-KEY>>
+
+     *🤖 Auto-generated using [onboarding skills](https://github.com/UiPath/uipath-typescript/pull/302)*
      ```
 
    **PR body rules:**
-   - All test plan items that passed in Steps 5-6 MUST be checked (`[x]`). These were already verified before reaching Step 8 — do not leave them unchecked.
-   - The Methods Added table is mandatory. Include every public method onboarded.
-   - Summary bullets should describe what the service does and its key capabilities, not just "added types and constants".
-   - For composite methods, describe the behavior (e.g., "extracts output from a completed job") not just the implementation detail.
+   - **Every section is mandatory** — Method Added, Endpoint Called, Example Usage, API Response vs SDK Response, Files.
+   - All fields in the tables must be filled from the actual implementation — never use placeholder values.
+   - **Method Added** must include full return type in the signature (e.g., `Promise<PaginatedResponse<JobGetResponse>>`).
+   - **Endpoint Called** must list every HTTP endpoint the method hits, with OAuth scope per endpoint.
+   - **Example Usage** must be real, runnable TypeScript — copy from the JSDoc `@example` blocks.
+   - **API Response vs SDK Response** — for Direct API methods, show the transform pipeline and field mapping table with reasons. For Composite methods, show the composition flow diagram and internal types table.
+   - **Files** must list every file touched, grouped by area. Include test counts.
+   - Do NOT list implementation details (constant names, internal type names) in a summary section — that's what the Files table is for.
 
 ---
 
