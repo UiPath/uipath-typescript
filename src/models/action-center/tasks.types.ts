@@ -14,7 +14,8 @@ export interface UserLoginInfo {
 export enum TaskType {
   Form = 'FormTask',
   External = 'ExternalTask',
-  App = 'AppTask'
+  App = 'AppTask',
+  DocumentValidation = 'DocumentValidationTask'
 }
 
 export enum TaskPriority {
@@ -236,9 +237,16 @@ export type TaskGetAllOptions = RequestOptions & PaginationOptions & {
 }
 
 /**
- * Query options for getting a task by ID 
+ * Query options for getting a task by ID
  */
-export interface TaskGetByIdOptions extends BaseOptions {}
+export interface TaskGetByIdOptions extends BaseOptions {
+  /**
+   * Optional task type. When not provided, method will automatically identify the 
+   * task type and resolve accordingly, but it will be slower.
+   * When provided, it will skip the step to identify the task type, so it will be faster.
+   */
+  taskType?: TaskType;
+}
 
 /**
  * Options for getting users with task permissions
