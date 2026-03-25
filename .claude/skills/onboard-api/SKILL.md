@@ -218,26 +218,45 @@ Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browse
 ## Step 8: Commit & Raise PR
 
 1. **Stage & commit** all changed files:
-   - Message: `feat(<service>): onboard <method-name>`
-   - If Path A, include ticket key in body: `Refs SDK-123`
+   - Message: `feat(<service>): add <ServiceName> <method-name> service [<TICKET-KEY>]`
+   - If no ticket key, omit the `[<TICKET-KEY>]` suffix
 2. **Push branch** to remote with `-u` flag.
 3. **Create PR** using `gh pr create`:
-   - **Title:** `feat(<service>): onboard <method-name>`
-   - **Body:**
+   - **Title:** `feat(<service>): add <ServiceName> <method-name> service [<TICKET-KEY>]`
+   - **Body** — build dynamically from the work actually done. Use this structure:
+
      ```
      ## Summary
      - Onboarded `<METHOD> <endpoint-path>` to `<ServiceName>`
-     - <additional context: new types, pagination setup, etc.>
-     - <if Path A: Refs <TICKET-KEY>>
+     - <service base class info, e.g., "extends FolderScopedService with OData pagination support">
+     - <key capabilities, e.g., "Supports $expand, $select, $filter, $orderby query parameters">
+     - <if composite: describe the composition, e.g., "Handles both inline output and file-based output">
+     - <if ticket: Refs <TICKET-KEY>>
+
+     ## Methods Added
+
+     | Method | Signature | Description |
+     |--------|-----------|-------------|
+     | `<methodName>()` | `<methodName>(options?: <OptionsType>)` | <one-line description> |
+     <repeat for each method onboarded>
 
      ## Test plan
-     - [ ] Unit tests pass (`npm run test:unit`)
-     - [ ] Typecheck passes (`npm run typecheck`)
-     - [ ] Lint passes (`npm run lint`)
-     - [ ] Build succeeds (`npm run build`)
+     - [x] Unit tests pass (`npm run test:unit`) — <N> tests covering <brief scope>
+     - [x] Typecheck passes (`npm run typecheck`)
+     - [x] Lint passes (`npm run lint`)
+     - [x] Build succeeds (`npm run build`)
+     - [x] E2E validated in browser (<list methods tested>)
+     - [x] OAuth scopes documented
+     - [<x or note>] Cloudflare Workers <whitelisted | already whitelisted | separate PR needed>
 
      🤖 Generated with [Claude Code](https://claude.com/claude-code)
      ```
+
+   **PR body rules:**
+   - All test plan items that passed in Steps 5-6 MUST be checked (`[x]`). These were already verified before reaching Step 8 — do not leave them unchecked.
+   - The Methods Added table is mandatory. Include every public method onboarded.
+   - Summary bullets should describe what the service does and its key capabilities, not just "added types and constants".
+   - For composite methods, describe the behavior (e.g., "extracts output from a completed job") not just the implementation detail.
 
 ---
 
