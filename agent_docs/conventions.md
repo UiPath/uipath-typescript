@@ -125,7 +125,8 @@ Naming: `{SERVICE}_PAGINATION` for response shape, `{SERVICE}_OFFSET_PARAMS` or 
 
 - Internal class: `{Entity}Service` (e.g., `EntityService`, `TaskService`)
 - Public alias in `index.ts`: plural noun (e.g., `EntityService as Entities`, `TaskService as Tasks`)
-- Both names exported for backward compatibility
+- Legacy services export both names for backward compatibility
+- **New services must be modularized only** — export only via subpath (`@uipath/sdk/{domain}`), no top-level barrel export needed. Tests for new services must also follow the modular approach (import from subpath, not top-level barrel).
 
 ## Internal types (`*.internal-types.ts`)
 
