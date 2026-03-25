@@ -1,5 +1,15 @@
 # Service & Coding Conventions
 
+## Code style
+
+- **camelCase**: variables, functions, methods (`getUserById`, `pageSize`)
+- **PascalCase**: classes, interfaces, types, enums (`TaskService`, `TaskType`)
+- **UPPER_SNAKE_CASE**: constants (`DEFAULT_PAGE_SIZE`, `TASK_ENDPOINTS`)
+- **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
+- Prefer `private` keyword over underscore prefix for private methods
+- No `any` type — use `unknown` if truly unknown, then validate
+- Mark optional fields as optional in type interfaces
+
 ## General conventions
 
 - Services follow the pattern: extend `BaseService`, call `super(uiPath)`, use `this.get()` / `this.post()` etc. Folder-scoped Orchestrator services extend `FolderScopedService` instead.

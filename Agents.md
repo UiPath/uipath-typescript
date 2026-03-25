@@ -17,6 +17,6 @@ npm run typecheck        # tsc --noEmit
 npm run docs:api         # typedoc + post-process
 ```
 
-@import agent_docs/architecture.md
-@import agent_docs/conventions.md
-@import agent_docs/rules.md
+@agent_docs/architecture.md
+@agent_docs/conventions.md
+@agent_docs/rules.md
