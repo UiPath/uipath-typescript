@@ -1,6 +1,6 @@
 # Onboarding Reference — Design Decisions
 
-All design decision trees, examples, and patterns for onboarding SDK endpoints. Read this before implementing.
+Decision trees, examples, and patterns for onboarding SDK endpoints. Coding conventions and rules are always loaded via `agent_docs/` — this file covers only onboarding-specific decision guidance.
 
 ## SDK Response Design
 
@@ -31,9 +31,7 @@ For the response structure as a whole:
 
 Different endpoints for the same service may need different transform pipelines — inspect each independently.
 
-### Transform Pipeline
-
-During design, decide which of the 4 transform steps this endpoint actually needs based on the real response — don't apply steps the response doesn't justify.
+> **Convention reference:** The 4-step transform pipeline (pascalToCamelCaseKeys, transformData, applyDataTransforms, createWithMethods), how to decide which steps apply, and field map mechanics are in `agent_docs/conventions.md` § Response transformation pipeline. Type reuse rules and NEVER rules for transforms are in `agent_docs/rules.md` § Types and § Transforms.
 
 ### Field filtering — what to drop
 
@@ -50,24 +48,21 @@ Not every API field belongs in the SDK. Drop fields that are:
 
 **Decision rule:** For each raw API field, ask: "Would a developer building an application need this field?" If the answer is "only someone debugging the platform internals" — drop it. Be prepared to justify each field kept to reviewers.
 
-**Before creating any enum or interface**, search `src/models/` for existing types with the same values. Reuse via import or type alias rather than creating duplicates (e.g., if `PackageType` already exists in `processes.types.ts`, don't create `JobPackageType` with the same values). Only extend an existing interface if field nullability matches — if it doesn't, document why you didn't extend.
-
 ### Field renaming — what to rename
-
-Add entries to `{Entity}Map` in `{domain}.constants.ts` and apply via `transformData(data, {Entity}Map)`.
 
 **Decision rule:** If the API name is unclear, uses platform jargon, or breaks SDK naming conventions — rename it. If already clear and consistent — leave it.
 
 **Domain term renames:** Rename platform jargon to SDK consumer terms. Check existing `*.constants.ts` files for established renames (e.g., in Orchestrator, "release" = "process" from the SDK consumer's perspective, so `releaseName` → `processName`). Consistency with existing renames takes priority.
 
-**OData filters and renamed fields:** Renamed fields do NOT work in OData `$filter` — filters are passed directly to the API and use the original API field names. If the SDK renames `processType` → `packageType`, users must still write `filter: "processType eq 'Process'"`. Document this mismatch in the method's JSDoc when a filtered field has been renamed.
+> **Convention reference:** Field map mechanics (`{Entity}Map`, `transformData`, standard field renames) and OData filter caveats for renamed fields are in `agent_docs/conventions.md` § Response transformation pipeline and § OData prefix pattern.
 
 ### Type design — enums and JSDoc
 
-- **Reuse existing enums** — search `src/models/` before creating a new enum. If the same values exist (e.g., `PackageType` in `processes.types.ts`), import and reuse it.
 - **Add JSDoc descriptions to enum values** when the meaning isn't obvious from the name (e.g., `/** Includes Maestro orchestration */ ProcessOrchestration`).
 - **Mark JSON string fields** with "JSON string" in JSDoc so users know to `JSON.parse()` (e.g., `/** JSON string — parse with \`JSON.parse()\` */ inputArguments?: string`).
 - **String fields with known values** should be enums. If uncertain whether a field is a real enum or a server-side string conversion, check the backend source or ask the reviewer. Document when keeping as string intentionally.
+
+> **Convention reference:** Type naming patterns and reuse rules are in `agent_docs/conventions.md` § Type naming. NEVER rules for types are in `agent_docs/rules.md` § Types.
 
 ### Structural transformation — when to reshape
 
@@ -205,18 +200,7 @@ Rollup:  shares entry point with parent
 
 **When to choose this:** The sub-resource has a clear parent-child relationship. You can't meaningfully use the sub-resource without the parent context. "Get all incidents" doesn't make sense without "for which process?"
 
-### Build System Checklist
-
-After choosing a pattern, wire it up:
-
-| Step | Pattern A | Pattern B | Pattern C |
-|------|-----------|-----------|-----------|
-| Service file | New folder: `src/services/{area}/new-service/index.ts` | Sibling file: `src/services/{area}/new-service.ts` | File in parent folder: `src/services/{area}/parent/new-service.ts` |
-| Models | New folder: `src/models/{domain}/` (3 files) | New folder: `src/models/{domain}/` (3 files) | New files in existing `src/models/{domain}/` |
-| Area index.ts | New: `src/services/{area}/index.ts` | Add exports to existing area `index.ts` | Add exports to existing area `index.ts` |
-| `rollup.config.js` | New entry in `serviceEntries` | No change (shares existing entry) | No change (shares existing entry) |
-| `package.json` exports | New `"./{name}"` export entry | No change (shares existing export) | No change (shares existing export) |
-| `src/index.ts` | Add re-export | Add re-export | Add re-export |
+> **Convention reference:** Build wiring steps per pattern (package.json exports, rollup.config.js entries, barrel exports, area index.ts) are in `agent_docs/conventions.md` § General conventions. The post-implementation checklist in `agent_docs/rules.md` covers all required wiring verification.
 
 ## Method Binding
 
@@ -283,23 +267,4 @@ async getIncidents() {
 
 The goal: **the developer should never have to extract an ID from a response object just to pass it right back to another method.** If the response has the data, the bound method should use it.
 
-### Service-level vs bound method naming
-
-Both versions of a method exist — the service-level one (with ID) and the bound one (without). Convention:
-
-| Service-level (on ServiceModel) | Bound (on entity object) |
-|---------------------------------|--------------------------|
-| `insertRecordById(id, data)` | `insertRecord(data)` |
-| `getRecordsByEntityId(id, options)` | `getRecords(options)` |
-| `cancel(instanceId)` | `cancel()` |
-| `getIncidents(processKey, folderKey)` | `getIncidents()` |
-| `complete(options, folderId)` | `complete(options)` |
-
-Pattern: the bound name drops the "ById"/"ByEntityId" suffix and removes all ID parameters.
-
-### Read-only services: no binding needed
-
-If the API only supports read operations (getAll, getById, with expand/select/filter), there's nothing to bind. The entity response is just data — no operations to perform on it.
-
-Current read-only services: Assets, Buckets, Queues, Processes, ChoiceSets, Cases, ProcessIncidents.
-
+> **Convention reference:** Method naming conventions (service-level vs bound), the read-only services list, and NEVER rules for binding are in `agent_docs/conventions.md` § Method attachment and `agent_docs/rules.md` § Method binding.
