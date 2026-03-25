@@ -21,5 +21,5 @@ export * from './identity';
 // Conversational Agent endpoints
 export * from './conversational-agent';
 
-// LLMOps Feedback endpoints
+// Agent Feedback endpoints
 export * from './feedback';

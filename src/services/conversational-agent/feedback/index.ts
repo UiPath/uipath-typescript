@@ -1,7 +1,7 @@
 /**
  * Feedback Module
  *
- * Provides access to UiPath LLMOps for feedback management.
+ * Provides access to UiPath Agent Feedback management.
  *
  * @example
  * ```typescript

@@ -1,7 +1,7 @@
 import { LLMOPS_BASE } from './base';
 
 /**
- * LLMOps Feedback Service Endpoints
+ * Agent Feedback Service Endpoints
  */
 export const FEEDBACK_ENDPOINTS = {
   GET_ALL: `${LLMOPS_BASE}/api/Feedback`,

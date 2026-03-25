@@ -2,9 +2,10 @@ import type {
   FeedbackResponse,
   FeedbackGetAllOptions,
 } from './feedback.types';
+import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 
 /**
- * Service for managing UiPath LLMOps Feedback.
+ * Service for managing UiPath Agent Feedback.
  *
  * Feedback allows you to collect and manage user feedback on AI agent responses,
  * including positive/negative ratings, comments, and categorized feedback.
@@ -27,15 +28,15 @@ export interface FeedbackServiceModel {
    * Gets all feedback with optional filters.
    *
    * Retrieves a list of feedback entries, optionally filtered by agent, trace, span,
-   * status, or agent version. Supports pagination via `skip` and `take` parameters.
+   * status, or agent version.
    *
    * @param options - Optional query parameters for filtering and pagination
-   * @returns Promise resolving to array of feedback
+   * @returns Promise resolving to array of feedback or paginated response
    * {@link FeedbackGetAllOptions}
    * {@link FeedbackResponse}
    * @example
    * ```typescript
-   * // Get all feedback (default pagination)
+   * // Get all feedback
    * const allFeedback = await feedback.getAll();
    *
    * // Get feedback for a specific agent
@@ -43,21 +44,23 @@ export interface FeedbackServiceModel {
    *   agentId: 'c3d2f644-a1a4-4cb1-90db-d0df5491a8d3',
    * });
    *
-   * // Get feedback for a specific trace and span
-   * const traceFeedback = await feedback.getAll({
-   *   traceId: 'a4c50af53062e52571fbadebb9a3274a',
-   *   spanId: '86638bb028e36681',
-   * });
+   * // First page with pagination
+   * const page1 = await feedback.getAll({ pageSize: 10 });
    *
-   * // Paginate through feedback
-   * const page1 = await feedback.getAll({ skip: 0, take: 10 });
-   * const page2 = await feedback.getAll({ skip: 10, take: 10 });
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await feedback.getAll({ cursor: page1.nextCursor });
+   * }
    *
    * // Filter by status
    * const activeFeedback = await feedback.getAll({
-   *   status: 0,
+   *   status: FeedbackStatus.Pending,
    * });
    * ```
    */
-  getAll(options?: FeedbackGetAllOptions): Promise<FeedbackResponse[]>;
+  getAll<T extends FeedbackGetAllOptions = FeedbackGetAllOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<FeedbackResponse>
+      : NonPaginatedResponse<FeedbackResponse>
+  >;
 }

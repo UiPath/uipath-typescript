@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FeedbackService } from '../../../../src/services/conversational-agent/feedback/feedback';
 import {
   FeedbackResponse,
+  FeedbackStatus,
 } from '../../../../src/models/conversational-agent/feedback/feedback.types';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -38,7 +39,7 @@ describe('FeedbackService Unit Tests', () => {
           isPositive: true,
           comment: 'Great!',
           feedbackCategories: [],
-          status: 0,
+          status: FeedbackStatus.Pending,
           createdAt: '2024-01-01',
           updatedAt: '2024-01-01',
         },
@@ -49,11 +50,12 @@ describe('FeedbackService Unit Tests', () => {
       const result = await feedbackService.getAll();
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(1);
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBe(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: undefined }
+        { params: {} }
       );
     });
 
@@ -62,8 +64,6 @@ describe('FeedbackService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue(mockResponse);
 
       const options = {
-        skip: 0,
-        take: 10,
         agentId: 'agent-789',
       };
 
@@ -71,7 +71,34 @@ describe('FeedbackService Unit Tests', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: options }
+        { params: { agentId: 'agent-789' } }
+      );
+    });
+
+    it('should get paginated feedback', async () => {
+      const mockResponse: FeedbackResponse[] = [
+        {
+          id: 'feedback-1',
+          traceId: 'trace-123',
+          spanId: 'span-456',
+          agentId: 'agent-789',
+          isPositive: true,
+          feedbackCategories: [],
+          status: FeedbackStatus.Pending,
+          createdAt: '2024-01-01',
+          updatedAt: '2024-01-01',
+        },
+      ];
+
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      const result = await feedbackService.getAll({ pageSize: 10 });
+
+      expect(result.items).toBeDefined();
+      expect(result.items.length).toBe(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.GET_ALL,
+        { params: { skip: 0, take: 10 } }
       );
     });
   });
