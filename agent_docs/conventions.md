@@ -99,7 +99,7 @@ Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g.
 
 **Two pagination types:**
 
-- **`PaginationType.OFFSET`** — OData-style. Items in `value`, count in `@odata.count`. Params: `$top`, `$skip`, `$count`. Supports `jumpToPage`. Use `ODATA_PAGINATION` and `ODATA_OFFSET_PARAMS`.
+- **`PaginationType.OFFSET`** — Offset-based. Commonly OData-style (items in `value`, count in `@odata.count`, params: `$top`, `$skip`, `$count`) but can also use non-OData params like `limit` and `start`. Supports `jumpToPage`. Use `ODATA_PAGINATION` and `ODATA_OFFSET_PARAMS` for OData APIs, or define service-specific constants for non-OData offset APIs.
 - **`PaginationType.TOKEN`** — Continuation-token. Items in named array, next page via token. Does **not** support `jumpToPage`. Use service-specific constants.
 
 **Return type is conditional**: `NonPaginatedResponse<T>` without pagination options, `PaginatedResponse<T>` with. Uses `HasPaginationOptions<T>` from `src/utils/pagination/types.ts`.

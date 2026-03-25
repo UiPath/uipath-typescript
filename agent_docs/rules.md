@@ -13,8 +13,8 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER use `as unknown as` type casts** — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change.
 - **NEVER make all fields required** if the API sometimes omits them — mark optional fields as optional. Over-requiring causes runtime `undefined` access on fields the API didn't return.
 - **NEVER leave raw strings/numbers for fixed value sets** — use enums. Raw values lose type safety and autocomplete. If the API returns `1`, `2`, `3` for status, map them to a `Status` enum.
-- **NEVER duplicate fields across option types** — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use a type alias (`export type EntityUpdateRecordByIdOptions = EntityGetRecordByIdOptions`) instead of creating a new interface with the same fields.
-- **NEVER create a new response type when the shape matches an existing one** — use a type alias. If `updateRecordById` returns the same shape as `EntityRecord`, write `export type EntityUpdateRecordResponse = EntityRecord`.
+- **NEVER duplicate fields across option types** — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use `extends` (e.g., `export interface EntityUpdateRecordByIdOptions extends EntityGetRecordByIdOptions {}`) instead of a type alias, as type aliases break TypeDoc documentation generation.
+- **NEVER use type aliases for response types** — even when the shape matches an existing one, use an `extends` interface. Type aliases (e.g., `export type EntityUpdateRecordResponse = EntityRecord`) break TypeDoc docs generation by not rendering as standalone types. Use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
 - **NEVER write `param || {}` for required parameters** — this hides bugs by silently accepting missing required data at call sites.
 
 ### Transforms
