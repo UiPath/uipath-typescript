@@ -56,7 +56,11 @@ export function buildAppUrl(
   const match = urlWithoutProtocol.match(/^([^.]+)\.uipath\.com/);
   const environment = match ? match[1] : 'cloud';
 
-  // Construct the new app URL format: https://<orgName>.<environment>.uipath.host/<routingName>
-  // Note: baseUrl uses .uipath.com but app URLs use .uipath.host
+  // Construct the app URL:
+  // - cloud/prod: https://<orgName>.uipath.host/<routingName>
+  // - other envs (staging, alpha, etc.): https://<orgName>.<environment>.uipath.host/<routingName>
+  if (environment === 'cloud') {
+    return `https://${orgName}.uipath.host/${routingName}`;
+  }
   return `https://${orgName}.${environment}.uipath.host/${routingName}`;
 }
