@@ -52,7 +52,7 @@ docs/                    # MkDocs source; API docs generated via typedoc
 
 | Pattern | File |
 |---------|------|
-| BaseService / FolderScopedService | `src/services/base.ts`, `src/services/folder-scoped.ts` |
+| BaseService | `src/services/base.ts` |
 | Transform functions | `src/utils/transform.ts` |
 | Pagination helpers & types | `src/utils/pagination/helpers.ts`, `src/utils/pagination/types.ts`, `src/utils/pagination/internal-types.ts` |
 | Pagination manager | `src/utils/pagination/pagination-manager.ts` |

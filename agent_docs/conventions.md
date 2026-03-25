@@ -12,7 +12,7 @@
 
 ## General conventions
 
-- Services follow the pattern: extend `BaseService`, call `super(uiPath)`, use `this.get()` / `this.post()` etc. Folder-scoped Orchestrator services extend `FolderScopedService` instead.
+- Services follow the pattern: extend `BaseService`, call `super(uiPath)`, use `this.get()` / `this.post()` etc.
 - Types live in `src/models/{domain}/{domain}.types.ts`. Internal-only types go in `*.internal-types.ts`.
 - Constants live in `src/utils/constants/`. Endpoints are split per domain in `src/utils/constants/endpoints/` (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`).
 - Subpath exports: when adding a new service module, add entries to `package.json` `exports` and `rollup.config.js`.
@@ -139,7 +139,7 @@ Types in `{domain}.types.ts` are public (re-exported through barrel). Types in `
 
 OData APIs require `$` prefix on query params. The SDK accepts clean camelCase keys and adds the prefix via `addPrefixToKeys()` from `src/utils/transform.ts`.
 
-**Applied automatically by:** `PaginationHelpers.getAll()`, `FolderScopedService._getByFolder()`.
+**Applied automatically by:** `PaginationHelpers.getAll()`.
 
 **Apply manually in:** `getById()` methods accepting `BaseOptions` — `const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, Object.keys(options))`.
 
@@ -150,13 +150,16 @@ OData APIs require `$` prefix on query params. The SDK accepts clean camelCase k
 - **Orchestrator**: `createHeaders({ [FOLDER_ID]: folderId })` — numeric folder IDs
 - **Maestro**: `createHeaders({ [FOLDER_KEY]: folderKey })` — string folder keys
 
-## BaseService vs FolderScopedService
+## BaseService
 
-**`BaseService`** (`src/services/base.ts`): Authenticated HTTP methods, `createPaginationServiceAccess()`. Use for services where folder context is not needed or handled per-method.
+**`BaseService`** (`src/services/base.ts`): Authenticated HTTP methods, `createPaginationServiceAccess()`. All services extend this.
 
-**`FolderScopedService`** (`src/services/folder-scoped.ts`): Extends BaseService, adds `_getByFolder()` with folder ID header + OData prefix. Use for Orchestrator services requiring folder ID header for most operations.
+## Folder-scoped services
 
-**Decision rule**: API requires `X-UIPATH-OrganizationUnitId` header + OData `value` array pattern → `FolderScopedService`. Otherwise → `BaseService`.
+Some Orchestrator services (Assets, Queues, Buckets) require a `folderId` for operations. These services handle it inline:
+
+- **`getById(id, folderId, ...)`** — sets the `X-UIPATH-OrganizationUnitId` header via `createHeaders({ [FOLDER_ID]: folderId })`
+- **`getAll(options?)`** — passes `getByFolderEndpoint` to `PaginationHelpers.getAll()`, which switches endpoints based on whether `folderId` is in options
 
 ## OperationResponse pattern
 
