@@ -70,7 +70,9 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - Test descriptions must match what's being tested.
 - Type request objects in tests — don't leave as untyped objects.
 - Use existing test constants from `tests/utils/constants/` instead of hardcoding values.
+- **Use domain-specific error constants for entity-specific method tests** (e.g., `getById` → `JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND`, `ASSET_TEST_CONSTANTS.ERROR_ASSET_NOT_FOUND`). Generic `TEST_CONSTANTS.ERROR_MESSAGE` is acceptable for collection methods like `getAll`. Existing pattern: Assets, Queues, Jobs all follow this split.
 - Verify bound methods exist on response objects when `getById` returns entities with attached methods.
+- **Validate transform completeness** — for any method with a transform pipeline, verify both: (a) transformed fields have correct values (`result.createdTime`), AND (b) original PascalCase fields are absent (`(result as any).CreationTime` is `undefined`). This catches transform regressions that value-only assertions miss. Existing pattern: Assets (`assets.test.ts:94`), Queues (`queues.test.ts:88`), ChoiceSets (`choicesets.test.ts:243`).
 - **Coverage**: 80% minimum for new code, 100% for critical paths (auth, API calls).
 - Remove unused mock methods. Extract repeated logic into shared helpers.
 
@@ -82,6 +84,7 @@ Every new method must also have an integration test in `tests/integration/shared
 - Use `registerResource()` from `tests/integration/utils/cleanup.ts` for cleanup tracking
 - Use `generateRandomString()` from `tests/integration/utils/helpers.ts` for unique test data
 - Tests run in both `v0` and `v1` init modes via `describe.each(modes)`
+- **Include a transform validation test** for new methods with a transform pipeline. This test should verify: (a) transformed camelCase fields exist and have values (`job.createdTime`, `job.processName`), AND (b) original PascalCase API fields are absent (`(job as any).CreationTime` is `undefined`, `(job as any).ReleaseName` is `undefined`). This is a separate test from the basic "should retrieve by ID" test — it validates the SDK transform layer against the live API. Note: existing integration tests don't yet follow this pattern, but unit tests do (Assets, Queues, ChoiceSets). Extending it to integration tests catches mismatches between the Swagger spec assumptions and the live API response.
 
 ## Documentation
 
@@ -94,11 +97,13 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - Run `npm run docs:api` to regenerate.
 
 **JSDoc quality rules:**
-- Link response types with `{@link TypeName}` in every method's JSDoc.
+- Link response types with `{@link TypeName}` in every method's JSDoc `@returns`.
 - Show how to get prerequisite IDs (e.g., "First, get entities with `entities.getAll()`").
 - Use `<paramName>` placeholder convention for IDs in examples.
 - Use camelCase in examples, matching SDK response format.
 - Keep JSDoc in sync with method names.
+- **When a method supports `expand`**, show multiple expandable entities in the `@example` (e.g., `expand: 'Robot,Machine,Release'`) so users see the comma-separated pattern.
+- **Add a one-line description of what the response includes** beyond the method signature (e.g., "Returns the full job details including state, timing, and input/output arguments. Use `expand` to include related entities like Robot, Machine, or Release").
 
 ## Post-implementation verification checklist
 
