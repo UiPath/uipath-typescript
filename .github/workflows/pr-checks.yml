@@ -51,6 +51,7 @@ jobs:
           echo "tenant_name=${{ secrets.UIPATH_TENANT_NAME_DEV || secrets.UIPATH_TENANT_NAME }}" >> $GITHUB_OUTPUT
           echo "secret=${{ secrets.UIPATH_SECRET_DEV || secrets.UIPATH_SECRET }}" >> $GITHUB_OUTPUT
           echo "integration_test_folder_id=${{ secrets.UIPATH_INTEGRATION_TEST_FOLDER_DEV || secrets.UIPATH_INTEGRATION_TEST_FOLDER }}" >> $GITHUB_OUTPUT
+          echo "orchestrator_test_process_key=${{ secrets.UIPATH_INTEGRATION_TEST_PROCESS_KEY_DEV || secrets.UIPATH_INTEGRATION_TEST_PROCESS_KEY }}" >> $GITHUB_OUTPUT
           echo "data_fabric_test_entity_id=${{ secrets.UIPATH_DATA_FABRIC_TEST_ENTITY_ID_DEV || secrets.UIPATH_DATA_FABRIC_TEST_ENTITY_ID }}" >> $GITHUB_OUTPUT
           echo "data_fabric_test_choiceset_id=${{ secrets.UIPATH_DATA_FABRIC_TEST_CHOICESET_ID_DEV || secrets.UIPATH_DATA_FABRIC_TEST_CHOICESET_ID }}" >> $GITHUB_OUTPUT
           echo "data_fabric_test_record_id=${{ secrets.UIPATH_DATA_FABRIC_TEST_RECORD_ID_DEV || secrets.UIPATH_DATA_FABRIC_TEST_RECORD_ID }}" >> $GITHUB_OUTPUT
@@ -73,6 +74,7 @@ jobs:
           DATA_FABRIC_TEST_CHOICESET_ID=${{ steps.config.outputs.data_fabric_test_choiceset_id }}
           DATA_FABRIC_TEST_RECORD_ID=${{ steps.config.outputs.data_fabric_test_record_id }}
           DATA_FABRIC_TEST_ATTACHMENT_FIELD=${{ steps.config.outputs.data_fabric_test_attachment_field }}
+          ORCHESTRATOR_TEST_PROCESS_KEY=${{ steps.config.outputs.orchestrator_test_process_key }}
           EOF
 
       - name: Run Integration Tests

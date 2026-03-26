@@ -62,20 +62,14 @@ describe.each(modes)('Orchestrator Assets - Integration Tests [%s]', (mode) => {
         pageSize: 1,
       });
 
-      if (allAssets.items.length === 0) {
-        console.log('No assets available to test getById. Create an asset in the tenant first.');
-        return;
-      }
+      expect(allAssets.items.length, 'No assets available to test getById. Create an asset in the tenant first.').toBeGreaterThan(0);
 
       const assetId = allAssets.items[0].id;
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
-      if (!folderId) {
-        console.log('Skipping getById test: INTEGRATION_TEST_FOLDER_ID not configured.');
-        return;
-      }
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
 
-      const result = await assets.getById(assetId, folderId);
+      const result = await assets.getById(assetId, folderId!);
 
       expect(result).toBeDefined();
       expect(result.id).toBe(assetId);
@@ -95,10 +89,7 @@ describe.each(modes)('Orchestrator Assets - Integration Tests [%s]', (mode) => {
         pageSize: 1,
       });
 
-      if (result.items.length === 0) {
-        console.log('No assets available to validate structure');
-        return;
-      }
+      expect(result.items.length, 'No assets available to validate structure').toBeGreaterThan(0);
 
       const asset = result.items[0];
 
