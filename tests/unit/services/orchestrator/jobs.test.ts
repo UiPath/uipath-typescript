@@ -156,7 +156,7 @@ describe('JobService Unit Tests', () => {
 
   describe('getOutput', () => {
     const getOutputOptions = {
-      jobId: JOB_TEST_CONSTANTS.JOB_ID,
+      jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
       folderId: TEST_CONSTANTS.FOLDER_ID,
     };
 
@@ -166,17 +166,23 @@ describe('JobService Unit Tests', () => {
 
     it('should return parsed inline output when OutputArguments is set', async () => {
       mockApiClient.get.mockResolvedValueOnce({
-        OutputArguments: JOB_TEST_CONSTANTS.OUTPUT_ARGUMENTS,
-        OutputFile: null,
+        value: [{
+          OutputArguments: JOB_TEST_CONSTANTS.OUTPUT_ARGUMENTS,
+          OutputFile: null,
+        }],
       });
 
       const result = await jobService.getOutput(getOutputOptions);
 
       expect(result).toEqual(JOB_TEST_CONSTANTS.PARSED_OUTPUT);
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        JOB_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.JOB_ID),
+        JOB_ENDPOINTS.GET_ALL,
         expect.objectContaining({
-          params: { $select: 'OutputArguments,OutputFile' },
+          params: {
+            $filter: `Key eq ${JOB_TEST_CONSTANTS.JOB_KEY}`,
+            $select: 'OutputArguments,OutputFile',
+            $top: 1,
+          },
           headers: expectedHeaders,
         })
       );
@@ -184,8 +190,20 @@ describe('JobService Unit Tests', () => {
 
     it('should return null when job has no output', async () => {
       mockApiClient.get.mockResolvedValueOnce({
-        OutputArguments: null,
-        OutputFile: null,
+        value: [{
+          OutputArguments: null,
+          OutputFile: null,
+        }],
+      });
+
+      const result = await jobService.getOutput(getOutputOptions);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when no job is found for the given key', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [],
       });
 
       const result = await jobService.getOutput(getOutputOptions);
@@ -195,8 +213,10 @@ describe('JobService Unit Tests', () => {
 
     it('should prefer OutputArguments over OutputFile when both are set', async () => {
       mockApiClient.get.mockResolvedValueOnce({
-        OutputArguments: JOB_TEST_CONSTANTS.OUTPUT_ARGUMENTS,
-        OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        value: [{
+          OutputArguments: JOB_TEST_CONSTANTS.OUTPUT_ARGUMENTS,
+          OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        }],
       });
 
       const result = await jobService.getOutput(getOutputOptions);
@@ -207,10 +227,12 @@ describe('JobService Unit Tests', () => {
     });
 
     it('should download output from attachment when OutputFile is set', async () => {
-      // First call: fetch job
+      // First call: fetch job by key filter
       mockApiClient.get.mockResolvedValueOnce({
-        OutputArguments: null,
-        OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        value: [{
+          OutputArguments: null,
+          OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        }],
       });
 
       // Second call: fetch attachment blob access info
@@ -251,8 +273,10 @@ describe('JobService Unit Tests', () => {
 
     it('should add auth header when blob requires authentication', async () => {
       mockApiClient.get.mockResolvedValueOnce({
-        OutputArguments: null,
-        OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        value: [{
+          OutputArguments: null,
+          OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        }],
       });
 
       mockApiClient.get.mockResolvedValueOnce({
@@ -289,8 +313,10 @@ describe('JobService Unit Tests', () => {
 
     it('should return null when attachment has no blob URI', async () => {
       mockApiClient.get.mockResolvedValueOnce({
-        OutputArguments: null,
-        OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        value: [{
+          OutputArguments: null,
+          OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        }],
       });
 
       mockApiClient.get.mockResolvedValueOnce({
@@ -307,15 +333,15 @@ describe('JobService Unit Tests', () => {
       expect(result).toBeNull();
     });
 
-    it('should throw validation error when jobId is missing', async () => {
+    it('should throw validation error when jobKey is missing', async () => {
       await expect(
-        jobService.getOutput({ jobId: 0, folderId: TEST_CONSTANTS.FOLDER_ID })
-      ).rejects.toThrow('jobId is required for getOutput');
+        jobService.getOutput({ jobKey: '', folderId: TEST_CONSTANTS.FOLDER_ID })
+      ).rejects.toThrow('jobKey is required for getOutput');
     });
 
     it('should throw validation error when folderId is missing', async () => {
       await expect(
-        jobService.getOutput({ jobId: JOB_TEST_CONSTANTS.JOB_ID, folderId: 0 })
+        jobService.getOutput({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY, folderId: 0 })
       ).rejects.toThrow('folderId is required for getOutput');
     });
 
@@ -330,8 +356,10 @@ describe('JobService Unit Tests', () => {
 
     it('should propagate API errors from attachment fetch', async () => {
       mockApiClient.get.mockResolvedValueOnce({
-        OutputArguments: null,
-        OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        value: [{
+          OutputArguments: null,
+          OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        }],
       });
 
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
