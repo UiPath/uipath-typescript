@@ -34,8 +34,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Run Tests
+      - name: Run SDK Tests
         run: npm run test:coverage -- --run
+
+      - name: Run CLI Tests
+        run: npm run test:coverage --workspace=packages/cli
 
       - name: Build Project
         run: npm run build
@@ -92,7 +95,8 @@ jobs:
           echo "### Completed Checks:" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Dependencies installed successfully" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Typecheck passed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ SDK tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ CLI tests passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.base_ref }}" == "main" ]; then
             echo "- ✅ All integration tests passed" >> $GITHUB_STEP_SUMMARY
