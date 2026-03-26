@@ -162,6 +162,22 @@ Some Orchestrator services (Assets, Queues, Buckets) require a `folderId` for op
 - **`getById(id, folderId, ...)`** — sets the `X-UIPATH-OrganizationUnitId` header via `createHeaders({ [FOLDER_ID]: folderId })`
 - **`getAll(options?)`** — passes `getByFolderEndpoint` to `PaginationHelpers.getAll()`, which switches endpoints based on whether `folderId` is in options
 
+### Required vs optional folderId
+
+**Required folderId** (Assets, Queues, Buckets): `folderId` is a positional parameter — `getById(id, folderId, options?)`. The API requires folder scoping.
+
+**Optional folderId** (Jobs): `folderId` is in the options object — `getById(id, options?)`. The API works across folders without a header.
+
+**In both cases, use the same `createHeaders` call** — the utility filters `undefined` values automatically, so there's no need for conditional creation:
+
+```typescript
+// CORRECT — consistent with all services in the codebase. createHeaders filters undefined.
+const headers = createHeaders({ [FOLDER_ID]: folderId });
+
+// WRONG — unnecessary conditional. Breaks codebase consistency.
+const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : undefined;
+```
+
 ## OperationResponse pattern
 
 ```typescript
