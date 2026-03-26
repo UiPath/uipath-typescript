@@ -101,7 +101,7 @@ Log detected type in the summary.
 
 ### Token source
 
-Read the PAT (Personal Access Token) from `.env.skills` in the repo root. Expected format:
+Read the PAT (Personal Access Token) from `.env` in the repo root. Expected format:
 
 ```
 PAT_TOKEN=rt_...
@@ -110,14 +110,14 @@ ORG_NAME=popoc
 TENANT_NAME=adetenant
 ```
 
-1. **Read `.env.skills`** and parse `PAT_TOKEN`. If the file is missing or `PAT_TOKEN` is empty, stop and ask the user to populate it before continuing.
+1. **Read `.env`** and parse `PAT_TOKEN`. If the file is missing or `PAT_TOKEN` is empty, stop and ask the user to populate it before continuing.
 2. **Also read `BASE_URL`, `ORG_NAME`, `TENANT_NAME`** for constructing curl URLs. Fall back to defaults (`https://alpha.uipath.com`, `popoc`, `adetenant`) if not set.
 3. **Use the PAT as a Bearer token** in curl requests: `Authorization: Bearer <PAT_TOKEN>`.
 
 ### Curl live endpoints
 
 4. **Curl each endpoint** being onboarded using the token. Capture the full raw JSON response.
-5. **If the curl fails with 401** (token expired or invalid), stop and tell the user to refresh the PAT in `.env.skills`.
+5. **If the curl fails with 401** (token expired or invalid), stop and tell the user to refresh the PAT in `.env`.
 6. **If the curl fails** (403, 404, network error), stop and report the error. Do not guess the response shape from the Swagger spec alone.
 7. **If the user explicitly opts out** of the entire step (e.g., "skip curl, use spec only"), warn them that type decisions may be wrong and note it as a risk — but allow it.
 
@@ -207,7 +207,7 @@ Repeat until all checks pass. Only then proceed to cleanup and Step 7.
 
 ## Step 7: Whitelist Endpoint in Cloudflare Workers
 
-Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browser-based E2E tests can reach the API via `alpha.api.uipath.com`. This step is **non-blocking** — if it fails, continue with Step 9.
+Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browser-based E2E tests can reach the API via `alpha.api.uipath.com`. This step is **non-blocking** — if it fails, continue with Step 8.
 
 **Follow the full procedure in [`references/cloudflare-whitelist.md`](references/cloudflare-whitelist.md).**
 

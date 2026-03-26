@@ -60,6 +60,3 @@ dist/
 docs/api/
 site/
 .uipath/
-.worktrees/
-
-.env.skills

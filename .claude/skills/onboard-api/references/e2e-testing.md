@@ -62,7 +62,7 @@ Create a temporary app at `samples/e2e-test/`. The entire directory is ephemeral
 
 **`vite.config.ts`**
 
-The browser may hit CORS errors when calling the UiPath API directly (e.g., `alpha.uipath.com` does not send CORS headers). Use a Vite proxy to route API calls through the dev server. Replace `__ORG_NAME__` and `__BASE_URL__` with actual values from `.env.skills`.
+The browser may hit CORS errors when calling the UiPath API directly (e.g., `alpha.uipath.com` does not send CORS headers). Use a Vite proxy to route API calls through the dev server. Replace `__ORG_NAME__` and `__BASE_URL__` with actual values from `.env`.
 
 ```typescript
 import { defineConfig } from 'vite'
@@ -167,9 +167,9 @@ The app uses **PAT (secret-based) auth**, not OAuth. The SDK is ready immediatel
 
 **`src/hooks/useSdk.tsx`**
 
-Read PAT and config from `.env.skills` in the repo root. Parse it and pass values as Vite-compatible env vars in a `.env` file, OR read them at scaffold time and inline them into the hook.
+Read PAT and config from `.env` in the repo root. Parse it and pass values as Vite-compatible env vars in a `.env` file, OR read them at scaffold time and inline them into the hook.
 
-The simplest approach — inline the values read from `.env.skills` directly:
+The simplest approach — inline the values read from `.env` directly:
 
 ```typescript
 import { createContext, useContext, useState } from 'react';
@@ -218,7 +218,7 @@ export const useSdk = () => {
 };
 ```
 
-When scaffolding, replace `__PAT_TOKEN__`, `__BASE_URL__`, `__ORG_NAME__`, `__TENANT_NAME__` with actual values from `.env.skills`. This avoids needing a separate `.env` file in the temp app.
+When scaffolding, replace `__PAT_TOKEN__`, `__BASE_URL__`, `__ORG_NAME__`, `__TENANT_NAME__` with actual values from `.env`. This avoids needing a separate `.env` file in the temp app.
 
 **`src/App.tsx`** — generated per service (see Step 3).
 
@@ -418,7 +418,7 @@ These caused failures during real E2E runs:
 |------|--------|
 | App location | `samples/e2e-test/` (temporary, deleted after) |
 | Auth type | PAT / secret-based (auto-initializes, no login flow) |
-| PAT source | `.env.skills` in repo root (same token used for live API curl) |
+| PAT source | `.env` in repo root (same token used for live API curl) |
 | baseUrl | `window.location.origin` (routes through Vite proxy) |
 | Vite proxy | `/{orgName}` → `{BASE_URL}` with `changeOrigin: true` |
 | SDK dependency | `"file:../../uipath-uipath-typescript-{version}.tgz"` |
