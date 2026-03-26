@@ -158,164 +158,25 @@ Implementation order:
 
 ---
 
-## Step 5: Verify
+## Step 5-6: Verify & E2E Validate
 
-```bash
-npm run typecheck
-npm run lint
-npm run test:unit
-npm run build
-```
+Invoke the `sdk-verify` skill. It runs typecheck, lint, unit tests, build, and E2E browser validation, then returns a structured error summary.
 
-Do not proceed until all four pass. Then run through the manual checks and documentation checklist from the post-implementation verification checklist.
+### Fix loop
 
----
+If `sdk-verify` reports failures:
+1. Read the error summary
+2. Fix the implementation — go back to the relevant Step 4 sub-step (service class, types, exports, etc.)
+3. Re-invoke `sdk-verify`
+4. Repeat until all checks pass
 
-## Step 6: E2E Validate
-
-After implementation passes verification, validate end-to-end by scaffolding a temporary React app. This catches issues unit tests miss — import path problems, build output errors, type declaration bugs, runtime transform failures.
-
-**MANDATORY — Read** [`references/e2e-testing.md`](references/e2e-testing.md) for the full scaffold workflow, Vite proxy config, PAT auth setup, and gotchas from real runs.
-
-Quick summary:
-1. `npm run build && npm version 1.0.0-test.1 --no-git-tag-version && npm pack`
-2. Scaffold temp app at `samples/e2e-test/` (React + Vite + Tailwind, PAT auth)
-3. Generate test component tailored to onboarded methods
-4. `npm install && npm run dev` → open browser, interact with test UI
-5. Verify: imports resolve, fields are camelCase, dropped fields absent, bound methods exist, pagination shape correct
-6. Delete entire app — `rm -rf samples/e2e-test`, delete tarball, revert version
-
-**Common E2E failures:**
-- `Cannot find module` → check `rollup.config.js` entry and `package.json` exports
-- Fields still PascalCase → `pascalToCamelCaseKeys()` missing in transform pipeline
-- `entity.method is not a function` → `create{Entity}WithMethods()` not applied in service method
-
-### If E2E validation fails
-
-Do NOT clean up and move on. Fix the issue and revalidate:
-
-1. **Identify the root cause** from the failure table above or browser console
-2. **Fix the implementation** — go back to the relevant Step 4 sub-step (service class, types, exports, etc.)
-3. **Re-run Step 5** — `npm run typecheck && npm run lint && npm run test:unit && npm run build`
-4. **Rebuild tarball** — bump version (`npm version 1.0.0-test.N --no-git-tag-version`) and `npm pack`
-5. **Reinstall in E2E app** — `cd samples/e2e-test && npm install && npm run dev`
-6. **Revalidate** — check the same failure is resolved
-
-Repeat until all checks pass. Only then proceed to cleanup and Step 7.
+Do not proceed to Step 7-8 until verification passes.
 
 ---
 
-## Step 7: Whitelist Endpoint in Cloudflare Workers
+## Step 7-8: Ship (Cloudflare + Commit + PR)
 
-Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browser-based E2E tests can reach the API via `alpha.api.uipath.com`. This step is **non-blocking** — if it fails, continue with Step 8.
-
-**Follow the full procedure in [`references/cloudflare-whitelist.md`](references/cloudflare-whitelist.md).**
-
-**If Composite:** Whitelist every endpoint the composite method calls internally, not just one.
-
----
-
-## Step 8: Commit & Raise PR
-
-1. **Stage & commit** all changed files:
-   - Message: `feat(<service>): add <ServiceName> <method-name> service [<TICKET-KEY>]`
-   - If no ticket key, omit the `[<TICKET-KEY>]` suffix
-2. **Push branch** to remote with `-u` flag.
-3. **Create PR** using `gh pr create`:
-   - **Title:** `feat(<service>): add <ServiceName> <method-name> service [<TICKET-KEY>]`
-   - **Body** — build dynamically from the work actually done. Every section below is mandatory. Use this structure:
-
-     ```
-     ## Method Added
-
-     | Layer | Method | Signature |
-     |-------|--------|-----------|
-     | Service | `<service>.<methodName>()` | `<methodName>(<full signature with return type>)` |
-     <repeat for each method onboarded>
-
-     ## Endpoint Called
-
-     | Method | HTTP | Endpoint | OAuth Scope |
-     |--------|------|----------|-------------|
-     | `<methodName>()` | <GET/POST/etc.> | `<endpoint path>` | `<scope>` |
-     <repeat for each endpoint the method calls>
-
-     - <service base class info, e.g., "Extends FolderScopedService — sets X-UIPATH-OrganizationUnitId header">
-     - <key capabilities, e.g., "Supports OData pagination ($top, $skip, $count)">
-     - <if composite: describe composition, e.g., "Sequential: fetches job by ID, then resolves output via inline args or blob download">
-
-     ## Example Usage
-
-     ```typescript
-     import { UiPath } from '@uipath/uipath-typescript/core';
-     import { <Service> } from '@uipath/uipath-typescript/<service>';
-
-     const sdk = new UiPath(config);
-     await sdk.initialize();
-     const <service> = new <Service>(sdk);
-
-     // Basic usage
-     <minimal example — no optional params>
-
-     // With options
-     <example with filtering, pagination, or other options>
-     ```
-
-     ## API Response vs SDK Response
-
-     <For Direct API methods:>
-
-     ### Transform pipeline
-     `<step1>` → `<step2>` → ...
-
-     ### Field mapping
-     | API Response (PascalCase) | SDK Response (camelCase) | Change | Reason |
-     |---------------------------|--------------------------|--------|--------|
-     | `<ApiField>` | `<sdkField>` | <Case / Case + Rename> | <reason> |
-     <include all renamed fields + a summary row for case-only conversions>
-
-     <For Composite methods:>
-
-     ### Composition flow
-     ```
-     <ASCII flow diagram showing the sequential/conditional/parallel steps>
-     ```
-
-     ### Internal types (not exported)
-     | Type | Purpose |
-     |------|---------|
-     | `<TypeName>` | <what it represents> |
-
-     ## Files
-
-     | Area | Files |
-     |------|-------|
-     | Endpoint | `<path>` |
-     | Types | `<path>` |
-     | Constants | `<path>` |
-     | Models | `<path>` |
-     | Service | `<path>` |
-     | Build | `package.json`, `rollup.config.js` (if changed) |
-     | Barrel exports | `<paths>` (if changed) |
-     | Unit tests | `<path>` (<N> tests) |
-     | Integration tests | `<path>` (<N> tests) |
-     | Test utils | `<path>` |
-     | Docs | `<paths>` |
-
-     <if ticket: Refs <TICKET-KEY>>
-
-     *🤖 Auto-generated using [onboarding skills](https://github.com/UiPath/uipath-typescript/pull/302)*
-     ```
-
-   **PR body rules:**
-   - **Every section is mandatory** — Method Added, Endpoint Called, Example Usage, API Response vs SDK Response, Files.
-   - All fields in the tables must be filled from the actual implementation — never use placeholder values.
-   - **Method Added** must include full return type in the signature (e.g., `Promise<PaginatedResponse<JobGetResponse>>`).
-   - **Endpoint Called** must list every HTTP endpoint the method hits, with OAuth scope per endpoint.
-   - **Example Usage** must be real, runnable TypeScript — copy from the JSDoc `@example` blocks.
-   - **API Response vs SDK Response** — for Direct API methods, show the transform pipeline and field mapping table with reasons. For Composite methods, show the composition flow diagram and internal types table.
-   - **Files** must list every file touched, grouped by area. Include test counts.
-   - Do NOT list implementation details (constant names, internal type names) in a summary section — that's what the Files table is for.
+Invoke the `sdk-ship` skill. It handles Cloudflare whitelisting, committing, and PR creation.
 
 ---
 
