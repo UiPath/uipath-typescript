@@ -1,0 +1,120 @@
+name: Publish codedapp-tool
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/codedapp-tool/**'
+      - 'packages/cli/src/actions/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: packages/codedapp-tool
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+
+      - name: Check if version already published
+        id: version-check
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+          echo "version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+
+          # Check if this exact version exists on npm
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/${PACKAGE_NAME}/${PACKAGE_VERSION}")
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "already_published=true" >> $GITHUB_OUTPUT
+            echo "Version $PACKAGE_VERSION is already published — skipping."
+          else
+            echo "already_published=false" >> $GITHUB_OUTPUT
+            echo "Version $PACKAGE_VERSION not found on npm — will publish."
+          fi
+
+      - name: Install dependencies
+        if: steps.version-check.outputs.already_published == 'false'
+        run: npm ci
+        working-directory: .
+
+      # @uipath/auth is imported by codedapp-tool source code and bundled into dist/
+      # by bun build (not an external runtime dependency). It's not listed in
+      # package.json dependencies because the root .npmrc scopes all @uipath/*
+      # packages to GitHub Packages, which would require a GITHUB_TOKEN in every
+      # CI workflow. Instead, we fetch it here from public npm just for bundling.
+      - name: Install @uipath/auth for bundling
+        if: steps.version-check.outputs.already_published == 'false'
+        run: npm install --no-save @uipath/auth --registry=https://registry.npmjs.org
+
+      - name: Build CLI dependency
+        if: steps.version-check.outputs.already_published == 'false'
+        run: npm run build
+        working-directory: packages/cli
+
+      - name: Build codedapp-tool
+        if: steps.version-check.outputs.already_published == 'false'
+        run: npm run build
+
+      - name: Run tests
+        if: steps.version-check.outputs.already_published == 'false'
+        run: npm test
+
+      - name: Setup registry for npm
+        if: steps.version-check.outputs.already_published == 'false'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.already_published == 'false'
+        run: |
+          echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
+          npm publish --provenance --access public
+
+      - name: Publish to GitHub Packages
+        if: steps.version-check.outputs.already_published == 'false'
+        run: |
+          echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Summary
+        run: |
+          VERSION=${{ steps.version-check.outputs.version }}
+          PUBLISHED=${{ steps.version-check.outputs.already_published }}
+          echo "## codedapp-tool publish" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$PUBLISHED" = "true" ]; then
+            echo "**Version $VERSION** is already published — no action taken." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Version $VERSION** published successfully." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
+            echo "- **Package:** \`@uipath/codedapp-tool\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
+            echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+            echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
+          fi
