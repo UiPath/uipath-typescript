@@ -169,9 +169,9 @@ export type JobGetAllOptions = RequestOptions & PaginationOptions & {
  */
 export interface JobGetOutputOptions {
   /**
-   * The numeric ID of the job to retrieve output from
+   * The unique key (GUID) of the job to retrieve output from
    */
-  jobId: number;
+  jobKey: string;
 
   /**
    * Folder ID for organization unit context

@@ -111,7 +111,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      const output = await jobs.getOutput({ jobId: job.id, folderId });
+      const output = await jobs.getOutput({ jobKey: job.key, folderId });
 
       // Output can be null (if the job had no output) or a parsed object
       if (output !== null) {
@@ -146,7 +146,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      const output = await jobs.getOutput({ jobId: job.id, folderId });
+      const output = await jobs.getOutput({ jobKey: job.key, folderId });
 
       // Either null or a valid object — both are acceptable
       expect(output === null || typeof output === 'object').toBe(true);

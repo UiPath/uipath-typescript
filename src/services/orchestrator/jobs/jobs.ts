@@ -91,17 +91,21 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    */
   @track('Jobs.GetOutput')
   async getOutput(options: JobGetOutputOptions): Promise<Record<string, unknown> | null> {
-    const { jobId, folderId } = options;
+    const { jobKey, folderId } = options;
 
-    if (!jobId) {
-      throw new ValidationError({ message: 'jobId is required for getOutput' });
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
     if (!folderId) {
       throw new ValidationError({ message: 'folderId is required for getOutput' });
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    const job = await this.fetchJobById(jobId, headers);
+    const job = await this.fetchJobByKey(jobKey, headers);
+
+    if (!job) {
+      return null;
+    }
 
     if (job.OutputArguments) {
       return JSON.parse(job.OutputArguments) as Record<string, unknown>;
@@ -115,21 +119,27 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
-   * Fetches a job by numeric ID, returning the raw API response (PascalCase).
-   * Only selects fields needed for output extraction.
+   * Fetches a job by its Key (GUID), returning the raw API response (PascalCase).
+   * Uses the Jobs list endpoint with a Key filter. Only selects fields needed for output extraction.
    */
-  private async fetchJobById(
-    jobId: number,
+  private async fetchJobByKey(
+    jobKey: string,
     headers: Record<string, string>
-  ): Promise<{ OutputArguments: string | null; OutputFile: string | null }> {
-    const response = await this.get<{ OutputArguments: string | null; OutputFile: string | null }>(
-      JOB_ENDPOINTS.GET_BY_ID(jobId),
+  ): Promise<{ OutputArguments: string | null; OutputFile: string | null } | null> {
+    const response = await this.get<{
+      value: { OutputArguments: string | null; OutputFile: string | null }[];
+    }>(
+      JOB_ENDPOINTS.GET_ALL,
       {
-        params: { $select: 'OutputArguments,OutputFile' },
+        params: {
+          $filter: `Key eq ${jobKey}`,
+          $select: 'OutputArguments,OutputFile',
+          $top: 1,
+        },
         headers,
       }
     );
-    return response.data;
+    return response.data.value?.[0] ?? null;
   }
 
   /**

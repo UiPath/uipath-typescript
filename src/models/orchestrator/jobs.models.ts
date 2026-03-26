@@ -69,13 +69,13 @@ export interface JobServiceModel {
    * This method mirrors the Python SDK's `extract_output` — it abstracts away the two storage
    * mechanisms so consumers don't need to check `outputArguments` vs `outputFile` themselves.
    *
-   * @param options - {@link JobGetOutputOptions} containing the job ID and folder ID
+   * @param options - {@link JobGetOutputOptions} containing the job key (GUID) and folder ID
    * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
    *
    * @example
    * ```typescript
    * // Get output from a completed job
-   * const output = await jobs.getOutput({ jobId: <jobId>, folderId: <folderId> });
+   * const output = await jobs.getOutput({ jobKey: <jobKey>, folderId: <folderId> });
    *
    * if (output) {
    *   console.log('Job output:', output);
@@ -90,7 +90,7 @@ export interface JobServiceModel {
    *
    * if (completedJob) {
    *   const output = await jobs.getOutput({
-   *     jobId: completedJob.id,
+   *     jobKey: completedJob.key,
    *     folderId: completedJob.folderId,
    *   });
    * }
