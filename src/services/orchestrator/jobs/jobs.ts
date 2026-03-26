@@ -1,14 +1,16 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { JobGetResponse, JobGetAllOptions } from '../../../models/orchestrator/jobs.types';
+import { JobGetResponse, JobGetAllOptions, JobGetByIdOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel } from '../../../models/orchestrator/jobs.models';
-import { pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { pascalToCamelCaseKeys, transformData, addPrefixToKeys } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
 import { JobMap } from '../../../models/orchestrator/jobs.constants';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
 
 /**
  * Service for interacting with UiPath Orchestrator Jobs API
@@ -73,5 +75,44 @@ export class JobService extends FolderScopedService implements JobServiceModel {
         },
       },
     }, options) as any;
+  }
+
+  /**
+   * Gets a specific job by its numeric ID
+   *
+   * @param id - The numeric ID of the job to retrieve
+   * @param options - Optional query options including folderId, expand, and select
+   * @returns Promise resolving to the job details
+   *
+   * @example
+   * ```typescript
+   * import { Jobs } from '@uipath/uipath-typescript/jobs';
+   *
+   * const jobs = new Jobs(sdk);
+   *
+   * // Get a job by ID
+   * const job = await jobs.getById(12345);
+   *
+   * // Get a job with expanded release details
+   * const job = await jobs.getById(12345, { expand: 'Release' });
+   * ```
+   */
+  @track('Jobs.GetById')
+  async getById(id: number, options: JobGetByIdOptions = {}): Promise<JobGetResponse> {
+    const { folderId, ...queryOptions } = options;
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+
+    const keysToPrefix = Object.keys(queryOptions);
+    const apiOptions = addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix);
+
+    const response = await this.get<JobGetResponse>(
+      JOB_ENDPOINTS.GET_BY_ID(id),
+      {
+        headers,
+        params: apiOptions
+      }
+    );
+
+    return transformData(pascalToCamelCaseKeys(response.data) as JobGetResponse, JobMap);
   }
 }

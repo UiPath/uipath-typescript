@@ -82,6 +82,65 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('getById', () => {
+    it('should retrieve a job by ID', async () => {
+      const { jobs } = getServices();
+      const config = getTestConfig();
+
+      if (!jobs) {
+        throw new Error('Jobs service not available in test services');
+      }
+
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      // First get a job ID from getAll
+      const allJobs = await jobs.getAll({
+        folderId,
+        pageSize: 1,
+      });
+
+      if (allJobs.items.length === 0) {
+        throw new Error('No jobs available to test getById');
+      }
+
+      const jobId = allJobs.items[0].id;
+      const result = await jobs.getById(jobId);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(jobId);
+      expect(typeof result.key).toBe('string');
+      expect(typeof result.state).toBe('string');
+      expect(result.createdTime).toBeDefined();
+    });
+
+    it('should retrieve a job by ID with expand option', async () => {
+      const { jobs } = getServices();
+      const config = getTestConfig();
+
+      if (!jobs) {
+        throw new Error('Jobs service not available in test services');
+      }
+
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      // First get a job ID from getAll
+      const allJobs = await jobs.getAll({
+        folderId,
+        pageSize: 1,
+      });
+
+      if (allJobs.items.length === 0) {
+        throw new Error('No jobs available to test getById with expand');
+      }
+
+      const jobId = allJobs.items[0].id;
+      const result = await jobs.getById(jobId, { expand: 'Release' });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(jobId);
+    });
+  });
+
   describe('Job structure validation', () => {
     it('should have expected fields in job objects', async () => {
       const { jobs } = getServices();
