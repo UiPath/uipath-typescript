@@ -59,7 +59,10 @@ export interface JobServiceModel {
   >;
 
   /**
-   * Gets a single job by its numeric ID
+   * 
+   * @experimental This method is experimental and may change or be removed in future releases.
+   * 
+   * ⚠️ Preview: This method may subject to change. Gets a single job by its numeric ID
    *
    * Returns the full job details including state, timing, input/output arguments, and associated resources.
    * Use the `expand` option to include related entities like `Robot`, `Machine`, or `Release` (process metadata).
