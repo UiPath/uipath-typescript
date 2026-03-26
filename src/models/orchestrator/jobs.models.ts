@@ -59,6 +59,13 @@ export interface JobServiceModel {
   >;
 
   /**
+   * 
+   * @experimental 
+   * 
+   * /// warning
+    Preview: This method is experimental and may change or be removed in future releases.
+    ///
+   * 
    * Gets a single job by its numeric ID
    *
    * Returns the full job details including state, timing, input/output arguments, and associated resources.
