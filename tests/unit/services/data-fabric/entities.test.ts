@@ -400,14 +400,13 @@ describe('EntityService Unit Tests', () => {
 
   describe('getRecordById', () => {
     it('should get a single record by entity ID and record ID successfully', async () => {
-      // API returns PascalCase; service converts to camelCase
-      const mockRecordPascal = {
-        Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        Name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
-        Age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
-        Email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email
+      const mockRecord = {
+        id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
+        age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
+        email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email
       };
-      mockApiClient.get.mockResolvedValue(mockRecordPascal);
+      mockApiClient.get.mockResolvedValue(mockRecord);
 
       const result = await entityService.getRecordById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -430,11 +429,11 @@ describe('EntityService Unit Tests', () => {
     });
 
     it('should get a record with expansion level option', async () => {
-      const mockRecordPascal = {
-        Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        Name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name
+      const mockRecord = {
+        id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name
       };
-      mockApiClient.get.mockResolvedValue(mockRecordPascal);
+      mockApiClient.get.mockResolvedValue(mockRecord);
 
       const options: EntityGetRecordByIdOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
