@@ -1,4 +1,4 @@
-import { JobState, RequestOptions } from '../common/types';
+import { BaseOptions, JobState, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 import {
   JobPriority,
@@ -152,6 +152,16 @@ export interface JobGetResponse extends FolderProperties {
   process?: ProcessMetadata | null;
   /** Error details for the job, or null if the job has no errors */
   jobError: JobError | null;
+}
+
+/**
+ * Options for getting a job by ID
+ */
+export interface JobGetByIdOptions extends BaseOptions {
+  /**
+   * Optional folder ID to scope the request to a specific folder
+   */
+  folderId?: number;
 }
 
 /**
