@@ -135,6 +135,16 @@
                 "types": "./dist/conversational-agent/index.d.ts",
                 "default": "./dist/conversational-agent/index.cjs"
             }
+        },
+        "./policies": {
+            "import": {
+                "types": "./dist/policies/index.d.ts",
+                "default": "./dist/policies/index.mjs"
+            },
+            "require": {
+                "types": "./dist/policies/index.d.ts",
+                "default": "./dist/policies/index.cjs"
+            }
         }
     },
     "files": [
