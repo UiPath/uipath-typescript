@@ -15,7 +15,7 @@ export const MAESTRO_ENDPOINTS = {
   INSTANCES: {
     GET_ALL: `${PIMS_BASE}/api/v1/instances`,
     GET_BY_ID: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}`,
-    GET_EXECUTION_HISTORY: (instanceId: string) => `${PIMS_BASE}/api/v1/spans/${instanceId}`,
+    GET_EXECUTION_HISTORY: (instanceId: string) => `${PIMS_BASE}/api/v1/element-executions/process-instances/${instanceId}`,
     GET_BPMN: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}/bpmn`,
     GET_VARIABLES: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}/variables`,
     CANCEL: (instanceId: string) => `${PIMS_BASE}/api/v1/instances/${instanceId}/cancel`,

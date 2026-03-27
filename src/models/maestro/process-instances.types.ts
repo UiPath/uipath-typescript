@@ -62,17 +62,48 @@ export interface ProcessInstanceOperationResponse {
  * Response for process instance execution history
  */
 export interface ProcessInstanceExecutionHistoryResponse {
-  id: string;
-  traceId: string;
-  parentId: string | null;
-  name: string;
+  instanceId: string;
+  processKey: string;
+  packageKey: string;
+  packageId: string;
+  packageVersion: string;
+  folderKey: string;
+  instanceDisplayName: string;
+  source: string;
+  /** Instance status (e.g., "Completed", "Faulted", "Running", "Pausing", "Canceling") */
+  status: string;
+  creationUserKey: string | null;
   startedTime: string;
-  endTime: string | null;
-  attributes: string | null;
-  createdTime: string;
-  updatedTime?: string;
-  expiredTime: string | null;
-  // TO Do: Add status and attributes interface
+  completedTime: string | null;
+  elementExecutions: ProcessElementExecutionMetadata[];
+}
+
+/**
+ * Element execution metadata for process instances
+ */
+export interface ProcessElementExecutionMetadata {
+  elementId: string;
+  elementName: string;
+  parentElementId: string | null;
+  /** Element status (e.g., "Completed", "Faulted", "Running") */
+  status: string;
+  startedTime: string;
+  completedTime: string | null;
+  processKey: string;
+  /** External reference link, eg link to the HITL task in Action Center */
+  externalLink: string;
+  elementRuns: ProcessElementRunMetadata[];
+}
+
+/**
+ * Element run metadata for process instances
+ */
+export interface ProcessElementRunMetadata {
+  status: string;
+  startedTime: string;
+  completedTime: string | null;
+  elementRunId: string;
+  parentElementRunId: string | null;
 }
 
 /**

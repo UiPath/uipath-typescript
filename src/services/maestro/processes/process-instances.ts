@@ -117,16 +117,33 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
   }
 
   /**
-   * Get execution history (spans) for a process instance
+   * Get execution history for a process instance
    * @param instanceId The ID of the instance to get history for
-   * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
+   * @returns Promise<ProcessInstanceExecutionHistoryResponse>
    */
   @track('ProcessInstances.GetExecutionHistory')
-  async getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
-    const response = await this.get<ProcessInstanceExecutionHistoryResponse[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
-    return response.data.map(historyItem => 
-      transformData(historyItem, ProcessInstanceExecutionHistoryMap)
-    );
+  async getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse> {
+    const response = await this.get<any>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
+
+    // Transform the main response
+    const transformedResponse = transformData(response.data, ProcessInstanceExecutionHistoryMap);
+
+    // Transform each element execution and its nested element runs
+    if (transformedResponse.elementExecutions && Array.isArray(transformedResponse.elementExecutions)) {
+      transformedResponse.elementExecutions = transformedResponse.elementExecutions.map((execution: any) => {
+        const transformedExecution = transformData(execution, ProcessInstanceExecutionHistoryMap);
+
+        if (transformedExecution.elementRuns && Array.isArray(transformedExecution.elementRuns)) {
+          transformedExecution.elementRuns = transformedExecution.elementRuns.map((run: any) =>
+            transformData(run, ProcessInstanceExecutionHistoryMap)
+          );
+        }
+
+        return transformedExecution;
+      });
+    }
+
+    return transformedResponse as ProcessInstanceExecutionHistoryResponse;
   }
 
   /**
