@@ -58,5 +58,12 @@ npm-debug.log*
 
 dist/
 docs/api/
+docs/conversational-agent/
+docs/conversations/
+docs/coded-action-apps/classes/
+docs/coded-action-apps/enumerations/
+docs/coded-action-apps/interfaces/
+docs/coded-action-apps/type-aliases/
+docs/coded-action-apps/README.md
 site/
 .uipath/
