@@ -44,3 +44,6 @@ jobs:
 
       - name: Run SDK Tests
         run: npm run test:coverage -- --run
+
+      - name: Run CLI Tests
+        run: npm run test:coverage --workspace=packages/cli

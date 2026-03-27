@@ -58,14 +58,14 @@ function trimHyphens(s: string): string {
  * Converts uppercase to lowercase, underscores to hyphens, removes other invalid chars.
  * Returns the sanitized name and whether it was modified.
  */
-export function sanitizeAppName(name: string): { sanitized: string; isModifiedd: boolean } {
+export function sanitizeAppName(name: string): { sanitized: string; isModified: boolean } {
   const collapsed = name
     .toLowerCase()
     .replace(/_/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-');
   const sanitized = trimHyphens(collapsed);
-  return { sanitized, isModifiedd: sanitized !== name };
+  return { sanitized, isModified: sanitized !== name };
 }
 
 /**
