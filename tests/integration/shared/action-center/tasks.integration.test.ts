@@ -122,6 +122,28 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('getById with taskType', () => {
+    it('should retrieve the created task by ID with taskType skipping initial GET', async () => {
+      if (!createdTaskId) {
+        throw new Error('No task ID available for testing');
+      }
+
+      const { tasks } = getServices();
+      const config = getTestConfig();
+
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      try {
+        const result = await tasks.getById(createdTaskId, { taskType: TaskType.DocumentValidation }, folderId);
+
+        expect(result).toBeDefined();
+        expect(result.id).toBeDefined();
+      } catch (error: any) {
+        throw new Error(`Get task by ID with taskType failed (may require DocumentValidation task): ${error.message}`);
+      }
+    });
+  });
+
   describe('Assignment operations', () => {
     it('should get users with task permissions', async () => {
       const { tasks } = getServices();
@@ -202,7 +224,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
           const userId = users.items[0].id;
 
-          const _result = await tasks.assign({
+          await tasks.assign({
             taskId: createdTaskId,
             userId: userId,
           });

@@ -608,6 +608,111 @@ describe('TaskService Unit Tests', () => {
       );
     });
 
+    it('should skip GET_BY_ID and call getFormTaskById directly when taskType is Form', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockFormTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: TASK_TEST_CONSTANTS.TASK_TITLE_FORM,
+        type: TaskType.Form,
+        folderId: folderId,
+        formLayout: {},
+        actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT
+      });
+
+      mockApiClient.get.mockResolvedValueOnce(mockFormTaskResponse);
+
+      await taskService.getById(taskId, { taskType: TaskType.Form }, folderId);
+
+      // Should only call GET once (getFormTaskById), not GET_BY_ID first
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
+        expect.any(Object)
+      );
+    });
+
+    it('should skip GET_BY_ID and call getTaskDataById directly when taskType is DocumentValidation', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockDocValidationResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'Document Validation Task',
+        type: TaskType.DocumentValidation,
+        folderId: folderId
+      });
+
+      mockApiClient.get.mockResolvedValueOnce(mockDocValidationResponse);
+
+      await taskService.getById(taskId, { taskType: TaskType.DocumentValidation }, folderId);
+
+      // Should only call GET once (getTaskDataById), not GET_BY_ID first
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_TASK_DATA_BY_ID,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            taskId: taskId,
+          }),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: folderId.toString()
+          })
+        })
+      );
+    });
+
+    it('should auto-detect DocumentValidation type from GET_BY_ID response and call getTaskDataById', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'Document Validation Task',
+        type: TaskType.DocumentValidation,
+        folderId: folderId
+      });
+
+      const mockDocValidationResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'Document Validation Task',
+        type: TaskType.DocumentValidation,
+        folderId: folderId
+      });
+
+      mockApiClient.get
+        .mockResolvedValueOnce(mockTaskResponse)
+        .mockResolvedValueOnce(mockDocValidationResponse);
+
+      await taskService.getById(taskId, {}, folderId);
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        2,
+        TASK_ENDPOINTS.GET_TASK_DATA_BY_ID,
+        expect.any(Object)
+      );
+    });
+
+    it('should not pass taskType to the API query params', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const mockResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: TASK_TEST_CONSTANTS.TASK_TITLE
+      });
+
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      // Pass taskType that doesn't match Form or DocumentValidation (falls through to normal path)
+      await taskService.getById(taskId, { taskType: TaskType.External });
+
+      // Verify taskType is NOT included in the params sent to the API
+      const callArgs = mockApiClient.get.mock.calls[0];
+      const params = callArgs[1]?.params || {};
+      expect(params).not.toHaveProperty('taskType');
+    });
+
     it('should merge custom expand with default expand parameters', async () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
       const mockResponse = createMockTaskGetResponse({
