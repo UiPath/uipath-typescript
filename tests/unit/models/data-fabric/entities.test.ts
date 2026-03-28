@@ -596,7 +596,7 @@ describe('Entity Models', () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        const mockResponse = { records: [{ id: '1', name: 'John' }], totalCount: 1 };
+        const mockResponse = { value: [{ id: '1', name: 'John' }], totalRecordCount: 1 };
         mockService.query = vi.fn().mockResolvedValue(mockResponse);
 
         const options = {
