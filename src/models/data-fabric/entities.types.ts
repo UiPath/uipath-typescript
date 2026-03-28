@@ -192,6 +192,135 @@ export interface EntityUpdateResponse extends EntityOperationResponse {}
 export interface EntityDeleteResponse extends EntityOperationResponse {}
 
 /**
+ * Aggregate function types for query operations
+ */
+export enum QueryAggregateFunction {
+  COUNT = "COUNT",
+  SUM = "SUM",
+  AVG = "AVG",
+  MIN = "MIN",
+  MAX = "MAX",
+}
+
+/**
+ * Join types for cross-entity query operations
+ */
+export enum QueryJoinType {
+  INNER = "INNER",
+  LEFT = "LEFT",
+  RIGHT = "RIGHT",
+  FULL = "FULL",
+}
+
+/**
+ * Logical operators for combining query filters
+ */
+export enum QueryLogicalOperator {
+  AND = 0,
+  OR = 1,
+}
+
+/**
+ * An aggregate operation in a query
+ */
+export interface QueryAggregate {
+  /** Aggregate function to apply */
+  function: QueryAggregateFunction;
+  /** Field to aggregate on */
+  field: string;
+  /** Alias for the aggregated result */
+  alias: string;
+}
+
+/**
+ * A join condition for cross-entity queries
+ */
+export interface QueryJoinCondition {
+  /** Left side field name (from the primary entity) */
+  left: string;
+  /** Right side field name (from the joined entity) */
+  right: string;
+}
+
+/**
+ * A join clause for cross-entity queries
+ */
+export interface QueryJoin {
+  /** Type of join */
+  type: QueryJoinType;
+  /** Name of the entity to join */
+  entity: string;
+  /** Join condition specifying left and right field mappings */
+  on: QueryJoinCondition;
+}
+
+/**
+ * A single query filter condition
+ */
+export interface QueryFilter {
+  /** Field name to filter on */
+  fieldName: string;
+  /** Comparison operator (e.g. "=", "!=", ">", "<", ">=", "<=", "contains", "startswith", "endswith") */
+  operator: string;
+  /** Value to compare against */
+  value: unknown;
+}
+
+/**
+ * A group of query filters combined with a logical operator
+ */
+export interface QueryFilterGroup {
+  /** Logical operator to combine filters (0 = AND, 1 = OR) */
+  logicalOperator: QueryLogicalOperator;
+  /** Array of filter conditions */
+  queryFilters: QueryFilter[];
+  /** Nested filter groups for complex conditions */
+  queryFilterGroups?: QueryFilterGroup[];
+}
+
+/**
+ * Sort option for query results
+ */
+export interface QuerySortOption {
+  /** Field name to sort by */
+  fieldName: string;
+  /** Whether to sort in descending order (default: false) */
+  isDescending?: boolean;
+}
+
+/**
+ * Options for querying an entity with joins, aggregates, and filters
+ */
+export interface EntityQueryOptions {
+  /** Fields to include in the result set */
+  selectedFields?: string[];
+  /** Aggregate operations to perform */
+  aggregates?: QueryAggregate[];
+  /** Cross-entity join clauses */
+  joins?: QueryJoin[];
+  /** Filter conditions */
+  filterGroup?: QueryFilterGroup;
+  /** Fields to group results by (used with aggregates) */
+  groupBy?: string[];
+  /** Sort options for result ordering */
+  sortOptions?: QuerySortOption[];
+  /** Starting offset for pagination (default: 0) */
+  start?: number;
+  /** Maximum number of records to return (default: 100) */
+  limit?: number;
+}
+
+/**
+ * Response from a query operation
+ */
+export interface EntityQueryResponse {
+  /** Array of matching records */
+  records: Record<string, unknown>[];
+  /** Total count of matching records (before pagination) */
+  totalCount?: number;
+}
+
+/**
  * Entity type enum
  */
 export enum EntityType {
