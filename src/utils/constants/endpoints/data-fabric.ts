@@ -25,6 +25,7 @@ export const DATA_FABRIC_ENDPOINTS = {
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
     DELETE_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
+    QUERY: (entityName: string) => `${DATAFABRIC_BASE}/api/EntityService/${entityName}/query`,
   },
   CHOICESETS: {
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity/choiceset`,

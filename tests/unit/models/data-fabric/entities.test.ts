@@ -590,6 +590,40 @@ describe('Entity Models', () => {
         ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
     });
+
+    describe('entity.query()', () => {
+      it('should call query with entity name and options', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const mockResponse = { records: [{ id: '1', name: 'John' }], totalCount: 1 };
+        mockService.query = vi.fn().mockResolvedValue(mockResponse);
+
+        const options = {
+          selectedFields: ['name', 'email'],
+          limit: 10
+        };
+
+        const result = await entity.query(options);
+
+        expect(mockService.query).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          options
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('should throw error if entity name is undefined', async () => {
+        const entityData = createBasicEntity({ name: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        mockService.query = vi.fn();
+
+        await expect(
+          entity.query({ limit: 10 })
+        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_NAME_UNDEFINED);
+      });
+    });
   });
 
   describe('Entity data and methods are combined correctly', () => {
@@ -617,6 +651,7 @@ describe('Entity Models', () => {
       expect(typeof entity.getAllRecords).toBe('function');
       expect(typeof entity.getRecord).toBe('function');
       expect(typeof entity.downloadAttachment).toBe('function');
+      expect(typeof entity.query).toBe('function');
     });
   });
 });
