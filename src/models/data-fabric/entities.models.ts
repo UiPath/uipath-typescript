@@ -472,9 +472,9 @@ export interface EntityServiceModel {
     Preview: This method is experimental and may change or be removed in future releases.
     ///
    *
-   * Queries an entity by name with support for joins, aggregates, filters, grouping, and sorting
+   * Queries an entity by ID with support for joins, aggregates, filters, grouping, and sorting
    *
-   * @param entityName - Name of the entity to query
+   * @param entityId - UUID of the entity to query
    * @param options - Query options including selectedFields, aggregates, joins, filterGroup, groupBy, sortOptions, start, limit
    * @returns Promise resolving to query response with matching records
    * {@link EntityQueryResponse}
@@ -485,7 +485,7 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Simple query with filters
-   * const result = await entities.query('Customer', {
+   * const result = await entities.query('<entityId>', {
    *   selectedFields: ['name', 'email'],
    *   filterGroup: {
    *     logicalOperator: 0,
@@ -495,7 +495,7 @@ export interface EntityServiceModel {
    * });
    *
    * // Cross-entity join query
-   * const joinResult = await entities.query('Orders', {
+   * const joinResult = await entities.query('<entityId>', {
    *   selectedFields: ['Orders.orderId', 'Customer.name'],
    *   joins: [{
    *     type: 'INNER',
@@ -507,7 +507,7 @@ export interface EntityServiceModel {
    * });
    *
    * // Aggregate query
-   * const stats = await entities.query('Orders', {
+   * const stats = await entities.query('<entityId>', {
    *   aggregates: [
    *     { function: 'COUNT', field: 'Id', alias: 'totalOrders' },
    *     { function: 'SUM', field: 'amount', alias: 'totalAmount' }
@@ -516,7 +516,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  query(entityName: string, options?: EntityQueryOptions): Promise<EntityQueryResponse>;
+  query(entityId: string, options?: EntityQueryOptions): Promise<EntityQueryResponse>;
 }
 
 /**
@@ -763,9 +763,9 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     },
 
     async query(options?: EntityQueryOptions): Promise<EntityQueryResponse> {
-      if (!entityData.name) throw new Error('Entity name is undefined');
+      if (!entityData.id) throw new Error('Entity ID is undefined');
 
-      return service.query(entityData.name, options);
+      return service.query(entityData.id, options);
     },
 
     async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {

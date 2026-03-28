@@ -1024,7 +1024,7 @@ describe('EntityService Unit Tests', () => {
   });
 
   describe('query', () => {
-    it('should query an entity by name with default options', async () => {
+    it('should query an entity by ID with default options', async () => {
       const mockResponse = {
         data: {
           Records: [
@@ -1036,11 +1036,11 @@ describe('EntityService Unit Tests', () => {
       };
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_NAME);
+      const result = await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
       expect(result).toBeDefined();
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_NAME),
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         {},
         {}
       );
@@ -1064,10 +1064,10 @@ describe('EntityService Unit Tests', () => {
         limit: 50
       };
 
-      await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_NAME, options);
+      await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_NAME),
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         expect.objectContaining({
           selectedFields: ['name', 'email'],
           filterGroup: options.filterGroup,
@@ -1098,10 +1098,10 @@ describe('EntityService Unit Tests', () => {
         limit: 100
       };
 
-      await entityService.query('Orders', options);
+      await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY('Orders'),
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         expect.objectContaining({
           selectedFields: options.selectedFields,
           joins: options.joins,
@@ -1129,10 +1129,10 @@ describe('EntityService Unit Tests', () => {
         groupBy: ['status']
       };
 
-      await entityService.query('Orders', options);
+      await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY('Orders'),
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         expect.objectContaining({
           aggregates: options.aggregates,
           groupBy: ['status']
@@ -1146,7 +1146,7 @@ describe('EntityService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(error);
 
       await expect(entityService.query(
-        ENTITY_TEST_CONSTANTS.ENTITY_NAME
+        ENTITY_TEST_CONSTANTS.ENTITY_ID
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
