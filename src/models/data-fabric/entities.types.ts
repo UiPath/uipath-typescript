@@ -362,15 +362,15 @@ export interface QuerySortOption {
  * Options for querying an entity with joins, aggregates, and filters
  */
 export interface EntityQueryOptions {
-  /** Fields to include in the result set */
+  /** Fields to include in the result set. Required when using aggregates — must include the groupBy fields. */
   selectedFields?: string[];
-  /** Aggregate operations to perform */
+  /** Aggregate operations to perform. Requires selectedFields to include the groupBy fields. */
   aggregates?: QueryAggregate[];
-  /** Cross-entity join clauses */
+  /** Cross-entity join clauses. Joined entity fields can be referenced as "entityName.fieldName" in selectedFields. */
   joins?: QueryJoin[];
   /** Filter conditions */
   filterGroup?: QueryFilterGroup;
-  /** Fields to group results by (used with aggregates) */
+  /** Fields to group results by (used with aggregates). These fields must also appear in selectedFields. */
   groupBy?: string[];
   /** Sort options for result ordering */
   sortOptions?: QuerySortOption[];
@@ -392,9 +392,9 @@ export interface EntityQueryOptions {
  */
 export interface EntityQueryResponse {
   /** Array of matching records */
-  records: Record<string, unknown>[];
+  value: Record<string, unknown>[];
   /** Total count of matching records (before pagination) */
-  totalCount?: number;
+  totalRecordCount?: number;
 }
 
 /**
