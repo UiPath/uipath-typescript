@@ -192,6 +192,13 @@ export interface EntityUpdateResponse extends EntityOperationResponse {}
 export interface EntityDeleteResponse extends EntityOperationResponse {}
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * Aggregate function types for query operations
  */
 export enum QueryAggregateFunction {
@@ -203,6 +210,13 @@ export enum QueryAggregateFunction {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * Join types for cross-entity query operations
  */
 export enum QueryJoinType {
@@ -213,6 +227,13 @@ export enum QueryJoinType {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * Logical operators for combining query filters
  */
 export enum QueryLogicalOperator {
@@ -221,6 +242,13 @@ export enum QueryLogicalOperator {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * An aggregate operation in a query
  */
 export interface QueryAggregate {
@@ -233,6 +261,13 @@ export interface QueryAggregate {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * A join condition for cross-entity queries
  */
 export interface QueryJoinCondition {
@@ -243,6 +278,13 @@ export interface QueryJoinCondition {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * A join clause for cross-entity queries
  */
 export interface QueryJoin {
@@ -255,6 +297,13 @@ export interface QueryJoin {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * A single query filter condition
  */
 export interface QueryFilter {
@@ -267,6 +316,13 @@ export interface QueryFilter {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * A group of query filters combined with a logical operator
  */
 export interface QueryFilterGroup {
@@ -279,6 +335,13 @@ export interface QueryFilterGroup {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * Sort option for query results
  */
 export interface QuerySortOption {
@@ -289,6 +352,13 @@ export interface QuerySortOption {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * Options for querying an entity with joins, aggregates, and filters
  */
 export interface EntityQueryOptions {
@@ -311,6 +381,13 @@ export interface EntityQueryOptions {
 }
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
  * Response from a query operation
  */
 export interface EntityQueryResponse {
