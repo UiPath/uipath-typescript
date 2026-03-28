@@ -592,7 +592,7 @@ describe('Entity Models', () => {
     });
 
     describe('entity.query()', () => {
-      it('should call query with entity name and options', async () => {
+      it('should call query with entity id and options', async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -607,21 +607,21 @@ describe('Entity Models', () => {
         const result = await entity.query(options);
 
         expect(mockService.query).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
           options
         );
         expect(result).toEqual(mockResponse);
       });
 
-      it('should throw error if entity name is undefined', async () => {
-        const entityData = createBasicEntity({ name: undefined as any });
+      it('should throw error if entity id is undefined', async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
         mockService.query = vi.fn();
 
         await expect(
           entity.query({ limit: 10 })
-        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_NAME_UNDEFINED);
+        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
     });
   });

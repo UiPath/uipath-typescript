@@ -584,9 +584,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
     Preview: This method is experimental and may change or be removed in future releases.
     ///
    *
-   * Queries an entity by name with support for joins, aggregates, filters, grouping, and sorting
+   * Queries an entity by ID with support for joins, aggregates, filters, grouping, and sorting
    *
-   * @param entityName - Name of the entity to query
+   * @param entityId - UUID of the entity to query
    * @param options - Query options including selectedFields, aggregates, joins, filterGroup, groupBy, sortOptions, start, limit
    * @returns Promise resolving to query response with matching records
    *
@@ -597,7 +597,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Simple filtered query
-   * const result = await entities.query('Customer', {
+   * const result = await entities.query('<entityId>', {
    *   selectedFields: ['name', 'email'],
    *   filterGroup: {
    *     logicalOperator: 0,
@@ -607,7 +607,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    *
    * // Cross-entity join query
-   * const joinResult = await entities.query('Orders', {
+   * const joinResult = await entities.query('<entityId>', {
    *   selectedFields: ['Orders.orderId', 'Customer.name'],
    *   joins: [{
    *     type: 'INNER',
@@ -619,7 +619,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    *
    * // Aggregate query with grouping
-   * const stats = await entities.query('Orders', {
+   * const stats = await entities.query('<entityId>', {
    *   aggregates: [
    *     { function: 'COUNT', field: 'Id', alias: 'totalOrders' },
    *     { function: 'SUM', field: 'amount', alias: 'totalAmount' }
@@ -629,7 +629,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.Query')
-  async query(entityName: string, options: EntityQueryOptions = {}): Promise<EntityQueryResponse> {
+  async query(entityId: string, options: EntityQueryOptions = {}): Promise<EntityQueryResponse> {
     const body: Record<string, unknown> = {};
 
     if (options.selectedFields) body.selectedFields = options.selectedFields;
@@ -642,7 +642,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     if (options.limit !== undefined) body.limit = options.limit;
 
     const response = await this.post<EntityQueryResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(entityName),
+      DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(entityId),
       body
     );
 
