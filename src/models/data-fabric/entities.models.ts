@@ -465,6 +465,13 @@ export interface EntityServiceModel {
   deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
 
   /**
+   *
+   * @experimental
+   *
+   * /// warning
+    Preview: This method is experimental and may change or be removed in future releases.
+    ///
+   *
    * Queries an entity by name with support for joins, aggregates, filters, grouping, and sorting
    *
    * @param entityName - Name of the entity to query
@@ -626,6 +633,13 @@ export interface EntityMethods {
   deleteAttachment(recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
 
   /**
+   *
+   * @experimental
+   *
+   * /// warning
+    Preview: This method is experimental and may change or be removed in future releases.
+    ///
+   *
    * Queries this entity with support for joins, aggregates, filters, grouping, and sorting
    *
    * @param options - Query options

@@ -577,6 +577,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
+   *
+   * @experimental
+   *
+   * /// warning
+    Preview: This method is experimental and may change or be removed in future releases.
+    ///
+   *
    * Queries an entity by name with support for joins, aggregates, filters, grouping, and sorting
    *
    * @param entityName - Name of the entity to query
