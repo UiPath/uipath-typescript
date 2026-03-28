@@ -309,7 +309,7 @@ export interface QueryJoin {
 export interface QueryFilter {
   /** Field name to filter on */
   fieldName: string;
-  /** Comparison operator (e.g. "=", "!=", ">", "<", ">=", "<=", "contains", "startswith", "endswith") */
+  /** Comparison operator: "=", "!=", ">", "<", ">=", "<=", "contains", "startswith", "endswith" (lowercase for string operators) */
   operator: string;
   /** Value to compare against */
   value: unknown;
