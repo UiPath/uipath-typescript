@@ -57,7 +57,6 @@ export const QUEUE_ENDPOINTS = {
  */
 export const JOB_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs`,
-  GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Jobs(${id})`,
 } as const;
 
 /**

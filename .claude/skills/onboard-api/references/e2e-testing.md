@@ -337,16 +337,18 @@ E2E failures mean the implementation has a bug that unit tests missed. Do NOT sk
 5. Restart: `npm run dev`
 6. Revalidate the specific check that failed
 
-Do NOT clean up until ALL checks pass.
+Do NOT clean up until ALL checks pass. The app must survive failures so the fix loop can iterate without re-scaffolding.
 
 ## Step 6: Clean Up
 
-Delete everything:
+**The calling skill controls when cleanup happens.** This section only describes what to delete — see the calling skill's own cleanup rules for when to run these commands.
+
+Cleanup commands:
 
 ```bash
 # From repo root
 rm -rf samples/e2e-test
-rm uipath-uipath-typescript-1.0.0-test.1.tgz
+rm -f uipath-uipath-typescript-1.0.0-test.*.tgz
 
 # Revert root package.json version
 git checkout package.json

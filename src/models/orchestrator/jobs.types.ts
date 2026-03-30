@@ -174,7 +174,7 @@ export interface JobGetOutputOptions {
   jobKey: string;
 
   /**
-   * Folder ID for organization unit context
+   * Optional folder ID for organization unit context
    */
-  folderId: number;
+  folderId?: number;
 }

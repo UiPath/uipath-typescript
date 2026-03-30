@@ -8,7 +8,7 @@ import { JobMap } from '../../../models/orchestrator/jobs.constants';
 import { RawAttachmentResponse } from '../../../models/orchestrator/jobs.internal-types';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
-import { ValidationError } from '../../../core/errors';
+import { ValidationError, NetworkError } from '../../../core/errors';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
@@ -58,7 +58,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       ? PaginatedResponse<JobGetResponse>
       : NonPaginatedResponse<JobGetResponse>
   > {
-    const transformJobResponse = (job: any) =>
+    const transformJobResponse = (job: Record<string, unknown>) =>
       transformData(pascalToCamelCaseKeys(job) as JobGetResponse, JobMap);
 
     return PaginationHelpers.getAll({
@@ -86,7 +86,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * and file-based output (stored as a blob attachment for large outputs). Returns the parsed JSON
    * output or null if the job has no output.
    *
-   * @param options - Options containing the job ID and folder ID
+   * @param options - Options containing the job key (GUID) and optional folder ID
    * @returns Promise resolving to the parsed output object, or null if no output exists
    */
   @track('Jobs.GetOutput')
@@ -95,9 +95,6 @@ export class JobService extends FolderScopedService implements JobServiceModel {
 
     if (!jobKey) {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
-    }
-    if (!folderId) {
-      throw new ValidationError({ message: 'folderId is required for getOutput' });
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -108,7 +105,11 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     }
 
     if (job.OutputArguments) {
-      return JSON.parse(job.OutputArguments) as Record<string, unknown>;
+      try {
+        return JSON.parse(job.OutputArguments) as Record<string, unknown>;
+      } catch {
+        throw new ValidationError({ message: `Failed to parse job output arguments as JSON` });
+      }
     }
 
     if (job.OutputFile) {
@@ -181,7 +182,18 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       headers: blobHeaders,
     });
 
+    if (!blobResponse.ok) {
+      throw new NetworkError({
+        message: `Failed to download job output file: ${blobResponse.status} ${blobResponse.statusText}`,
+        statusCode: blobResponse.status,
+      });
+    }
+
     const content = await blobResponse.text();
-    return JSON.parse(content) as Record<string, unknown>;
+    try {
+      return JSON.parse(content) as Record<string, unknown>;
+    } catch {
+      throw new ValidationError({ message: `Failed to parse job output file as JSON` });
+    }
   }
 }

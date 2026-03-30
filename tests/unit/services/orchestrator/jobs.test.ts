@@ -45,6 +45,7 @@ describe('JobService Unit Tests', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe('getAll', () => {
@@ -247,6 +248,7 @@ describe('JobService Unit Tests', () => {
 
       // Mock fetch for blob download
       const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
         text: () => Promise.resolve(JOB_TEST_CONSTANTS.BLOB_CONTENT),
       });
       vi.stubGlobal('fetch', mockFetch);
@@ -267,8 +269,6 @@ describe('JobService Unit Tests', () => {
           headers: { 'x-ms-blob-type': 'BlockBlob' },
         })
       );
-
-      vi.unstubAllGlobals();
     });
 
     it('should add auth header when blob requires authentication', async () => {
@@ -292,6 +292,7 @@ describe('JobService Unit Tests', () => {
       mockApiClient.getValidToken = vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
 
       const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
         text: () => Promise.resolve(JOB_TEST_CONSTANTS.BLOB_CONTENT),
       });
       vi.stubGlobal('fetch', mockFetch);
@@ -307,8 +308,6 @@ describe('JobService Unit Tests', () => {
           }),
         })
       );
-
-      vi.unstubAllGlobals();
     });
 
     it('should return null when attachment has no blob URI', async () => {
@@ -339,10 +338,17 @@ describe('JobService Unit Tests', () => {
       ).rejects.toThrow('jobKey is required for getOutput');
     });
 
-    it('should throw validation error when folderId is missing', async () => {
-      await expect(
-        jobService.getOutput({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY, folderId: 0 })
-      ).rejects.toThrow('folderId is required for getOutput');
+    it('should work without folderId', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [{
+          OutputArguments: JOB_TEST_CONSTANTS.OUTPUT_ARGUMENTS,
+          OutputFile: null,
+        }],
+      });
+
+      const result = await jobService.getOutput({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
+
+      expect(result).toEqual(JOB_TEST_CONSTANTS.PARSED_OUTPUT);
     });
 
     it('should propagate API errors from job fetch', async () => {

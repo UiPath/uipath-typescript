@@ -94,8 +94,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       if (!folderId) {
-        console.warn('Skipping getOutput test: INTEGRATION_TEST_FOLDER_ID not configured.');
-        return;
+        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
       }
 
       // Find a successful job that might have output
@@ -106,8 +105,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (result.items.length === 0) {
-        console.warn('Skipping getOutput test: no successful jobs found.');
-        return;
+        throw new Error('No successful jobs found to test getOutput.');
       }
 
       const job = result.items[0];
@@ -130,8 +128,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       if (!folderId) {
-        console.warn('Skipping getOutput test: INTEGRATION_TEST_FOLDER_ID not configured.');
-        return;
+        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
       }
 
       // Find a job — it may or may not have output
@@ -141,8 +138,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (result.items.length === 0) {
-        console.warn('Skipping getOutput test: no jobs found.');
-        return;
+        throw new Error('No jobs found to test getOutput.');
       }
 
       const job = result.items[0];
