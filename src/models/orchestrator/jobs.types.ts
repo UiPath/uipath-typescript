@@ -171,3 +171,23 @@ export type JobGetAllOptions = RequestOptions & PaginationOptions & {
  */
 export interface JobGetByIdOptions extends BaseOptions {}
 
+/**
+ * Options for stopping jobs
+ */
+export interface JobStopOptions {
+  /**
+   * The stop strategy to use.
+   * - `SoftStop` — sends a cancellation request and waits for the job to finish gracefully
+   * - `Kill` — forcefully terminates the job immediately
+   * @default StopStrategy.SoftStop
+   */
+  strategy?: StopStrategy;
+}
+
+/**
+ * Data returned from a stop operation
+ */
+export interface JobStopData {
+  /** The resolved integer IDs of the jobs that were stopped */
+  jobIds: number[];
+}

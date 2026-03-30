@@ -18,6 +18,7 @@ import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { StopStrategy } from '../../../../src/models/orchestrator/processes.types';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -492,6 +493,137 @@ describe('JobService Unit Tests', () => {
       await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE
       );
+    });
+  });
+
+  describe('stop', () => {
+    it('should stop a single job with default soft stop strategy', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [{ Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      const result = await jobService.stop(
+        [JOB_TEST_CONSTANTS.JOB_KEY],
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result).toEqual({
+        success: true,
+        data: { jobIds: [JOB_TEST_CONSTANTS.JOB_ID] },
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: {
+            $filter: `Key in ('${JOB_TEST_CONSTANTS.JOB_KEY}')`,
+            $select: 'Id,Key',
+          },
+        })
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.STOP,
+        { jobIds: [JOB_TEST_CONSTANTS.JOB_ID], strategy: StopStrategy.SoftStop },
+        expect.any(Object)
+      );
+    });
+
+    it('should stop multiple jobs with Kill strategy', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [
+          { Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID },
+          { Key: JOB_TEST_CONSTANTS.JOB_KEY_2, Id: JOB_TEST_CONSTANTS.JOB_ID_2 },
+        ],
+      });
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      const result = await jobService.stop(
+        [JOB_TEST_CONSTANTS.JOB_KEY, JOB_TEST_CONSTANTS.JOB_KEY_2],
+        TEST_CONSTANTS.FOLDER_ID,
+        { strategy: StopStrategy.Kill }
+      );
+
+      expect(result).toEqual({
+        success: true,
+        data: { jobIds: [JOB_TEST_CONSTANTS.JOB_ID, JOB_TEST_CONSTANTS.JOB_ID_2] },
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.STOP,
+        {
+          jobIds: [JOB_TEST_CONSTANTS.JOB_ID, JOB_TEST_CONSTANTS.JOB_ID_2],
+          strategy: StopStrategy.Kill,
+        },
+        expect.any(Object)
+      );
+    });
+
+    it('should return empty result for empty job keys array', async () => {
+      const result = await jobService.stop([], TEST_CONSTANTS.FOLDER_ID);
+
+      expect(result).toEqual({
+        success: true,
+        data: { jobIds: [] },
+      });
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw when job keys are not found', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [],
+      });
+
+      await expect(
+        jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOBS_NOT_FOUND_FOR_KEYS);
+    });
+
+    it('should deduplicate job keys for resolution but preserve original order in result', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [{ Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      const result = await jobService.stop(
+        [JOB_TEST_CONSTANTS.JOB_KEY, JOB_TEST_CONSTANTS.JOB_KEY],
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(result.data.jobIds).toEqual([
+        JOB_TEST_CONSTANTS.JOB_ID,
+        JOB_TEST_CONSTANTS.JOB_ID,
+      ]);
+
+      // Only one resolution call with deduplicated keys
+      const filterArg = mockApiClient.get.mock.calls[0][1].params.$filter;
+      const keyMatches = filterArg.match(/'/g);
+      expect(keyMatches).toHaveLength(2); // One key, two quotes
+    });
+
+    it('should propagate resolution API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+      mockApiClient.get.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+    });
+
+    it('should propagate stop API errors', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [{ Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
