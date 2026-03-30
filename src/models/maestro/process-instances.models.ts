@@ -94,7 +94,7 @@ export interface ProcessInstancesServiceModel {
   getById(id: string, folderKey: string): Promise<ProcessInstanceGetResponse>;
 
   /**
-   * Get execution history (spans) for a process instance
+   * Get execution history for a process instance
    * @param instanceId The ID of the instance to get history for
    * @returns Promise resolving to execution history
    * {@link ProcessInstanceExecutionHistoryResponse}
@@ -105,15 +105,14 @@ export interface ProcessInstancesServiceModel {
    *   <instanceId>
    * );
    *
-   * // Analyze execution timeline
-   * history.forEach(span => {
-   *   console.log(`Activity: ${span.name}`);
-   *   console.log(`Start: ${span.startTime}`);
-   *   console.log(`Duration: ${span.duration}ms`);
+   * // Analyze element executions
+   * history.elementExecutions.forEach(execution => {
+   *   console.log(`Element: ${execution.elementName}`);
+   *   console.log(`Status: ${execution.status}`);
    * });
    * ```
    */
-  getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+  getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse>;
 
   /**
    * Get BPMN XML file for a process instance
@@ -291,11 +290,11 @@ export interface ProcessInstanceMethods {
   getIncidents(): Promise<ProcessIncidentGetResponse[]>;
    
   /**
-   * Gets execution history (spans) for this process instance
+   * Gets execution history for this process instance
    *
    * @returns Promise resolving to execution history
    */
-  getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+  getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse>;
 
   /**
    * Gets BPMN XML file for this process instance
@@ -353,7 +352,7 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
       return service.getIncidents(instanceData.instanceId, instanceData.folderKey);
     },
 
-    async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+    async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
 
       return service.getExecutionHistory(instanceData.instanceId);

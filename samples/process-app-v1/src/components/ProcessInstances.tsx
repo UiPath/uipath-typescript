@@ -237,7 +237,7 @@ export const ProcessInstances = () => {
 
     // Fetch BPMN and execution history (with individual error handling)
     let bpmnXml: BpmnXmlString | null = null;
-    let executionHistory: ProcessInstanceExecutionHistoryResponse[] = [];
+    let executionHistory: ProcessInstanceExecutionHistoryResponse | null = null;
 
     try {
       // Use modular ProcessInstances service directly
@@ -264,24 +264,14 @@ export const ProcessInstances = () => {
       if (match && match[1]) {
         activityType = match[1].replace(/([A-Z])/g, ' $1').trim(); // Add spaces between camelCase
 
-        // If it's a user task, look for the action center task link
-        if (activityType.toLowerCase() === 'user task' && executionHistory.length > 0) {
-          // Find the history entry with matching elementId
-          console.log('Looking for elementId:', elementId);
-          console.log('Execution History:', executionHistory);
-          const taskEntry = executionHistory.find((entry: ProcessInstanceExecutionHistoryResponse) => {
-            // Parse attributes JSON if it's a string
-            const attributes = typeof entry.attributes === 'string'
-              ? JSON.parse(entry.attributes)
-              : entry.attributes;
-            return attributes?.elementId === elementId;
-          });
+        // If it's a user task, look for the action center task link in element executions
+        if (activityType.toLowerCase() === 'user task' && executionHistory?.elementExecutions?.length) {
+          const taskEntry = executionHistory.elementExecutions.find(
+            (execution) => execution.elementId === elementId
+          );
 
-          if (taskEntry) {
-            const attributes = typeof taskEntry.attributes === 'string'
-              ? JSON.parse(taskEntry.attributes)
-              : taskEntry.attributes;
-            taskLink = attributes?.actionCenterTaskLink;
+          if (taskEntry?.externalLink) {
+            taskLink = taskEntry.externalLink;
             console.log('Found task link:', taskLink);
           }
         }
