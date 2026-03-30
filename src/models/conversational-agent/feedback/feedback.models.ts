@@ -38,9 +38,13 @@ export interface FeedbackServiceModel {
    * // Get all feedback (default pagination: returns first 100 items)
    * const allFeedback = await feedback.getAll();
    *
+   * // Get the agentId from a feedback entry
+   * const allFeedback = await feedback.getAll();
+   * const agentId = allFeedback.items[0].agentId;
+   *
    * // Get feedback for a specific agent
    * const agentFeedback = await feedback.getAll({
-   *   agentId: 'c3d2f644-a1a4-4cb1-90db-d0df5491a8d3',
+   *   agentId,
    * });
    *
    * // First page with pagination
