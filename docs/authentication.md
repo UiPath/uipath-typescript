@@ -43,6 +43,9 @@ const sdk = new UiPath({
 });
 ```
 
+!!! info "Using externally obtained tokens"
+    If you have backend / external system that handles authentication and token generation, you can pass the token directly to the SDK via the `secret` parameter at initialization. When the token expires, your backend / external system can inject a refreshed token into the same instance via `sdk.updateToken()` to keep it authenticated. In this setup, token lifecycle management stays entirely on your side.
+
 To Generate a PAT Token:
 
 1. Log in to [UiPath Cloud](https://cloud.uipath.com)
@@ -141,7 +144,7 @@ useEffect(() => {
 }, []);
 ```
 
-### Available OAuth Methods
+### Available Auth Methods
 - `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
 - `sdk.isInitialized()` - Check if SDK initialization completed
 - `sdk.isAuthenticated()` - Check if user has valid token
@@ -149,6 +152,7 @@ useEffect(() => {
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 - `sdk.getToken()` - Get the logged-in user's access token
 - `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again)
+- `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
 
 ---
 
