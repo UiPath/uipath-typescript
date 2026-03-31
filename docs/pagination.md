@@ -130,3 +130,4 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Tasks | `getUsers()` | ✅ Yes |
 | ConversationalAgent.conversations | `getAll()` | ❌ No |
 | ConversationalAgent.exchanges | `getAll()` | ❌ No |
+| Feedback | `getAll()` | ✅ Yes |

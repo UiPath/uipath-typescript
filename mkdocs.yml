@@ -182,6 +182,7 @@ nav:
               - Session: api/interfaces/SessionStream.md
               - Exchanges: api/interfaces/ExchangeServiceModel.md
               - Messages: api/interfaces/MessageServiceModel.md
+            - Feedback: api/interfaces/FeedbackServiceModel.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
           - Entities:

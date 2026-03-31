@@ -9,6 +9,7 @@ import {
   CasesService,
   CaseInstancesService,
 } from '../../../src/services/maestro';
+import { Feedback } from '../../../src/services/conversational-agent/feedback';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -41,6 +42,7 @@ export interface TestServices {
   processIncidents: ProcessIncidentsService;
   cases: CasesService;
   caseInstances: CaseInstancesService;
+  feedback?: Feedback;
 }
 
 /**
@@ -119,6 +121,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     processIncidents: new ProcessIncidentsService(sdk),
     cases: new CasesService(sdk),
     caseInstances: new CaseInstancesService(sdk),
+    feedback: new Feedback(sdk),
   };
 }
 
