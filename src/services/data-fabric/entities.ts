@@ -17,6 +17,8 @@ import {
   EntityUpdateResponse,
   EntityDeleteRecordsOptions,
   EntityDeleteResponse,
+  EntityDeleteRecordOptions,
+  EntityDeleteRecordResponse,
   EntityRecord,
   RawEntityGetResponse,
   FieldMetaData,
@@ -405,6 +407,34 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
 
     return response.data;
+  }
+
+  /**
+   * Deletes a single record from an entity by entity ID and record ID
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to delete
+   * @param options - Delete options
+   * @returns Promise resolving to delete response
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * const result = await entities.deleteRecordById("<entityId>", "<recordId>");
+   * console.log(result.success); // true
+   * ```
+   */
+  @track('Entities.DeleteRecordById')
+  async deleteRecordById(entityId: string, recordId: string, _options: EntityDeleteRecordOptions = {}): Promise<EntityDeleteRecordResponse> {
+    const response = await this.post<boolean>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(entityId),
+      recordId
+    );
+
+    return { success: response.data };
   }
 
   /**
