@@ -2,13 +2,15 @@ import { FolderScopedService } from '../../folder-scoped';
 import { JobGetResponse, JobGetAllOptions, JobGetOutputOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel } from '../../../models/orchestrator/jobs.models';
 import { pascalToCamelCaseKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
-import { JOB_ENDPOINTS, JOB_ATTACHMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { JobMap } from '../../../models/orchestrator/jobs.constants';
 import { RawAttachmentResponse } from '../../../models/orchestrator/jobs.internal-types';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
-import { ValidationError, NetworkError } from '../../../core/errors';
+import { ValidationError } from '../../../core/errors';
+import { ErrorFactory } from '../../../core/errors/error-factory';
+import { errorResponseParser } from '../../../core/errors/parser';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
@@ -154,7 +156,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     headers: Record<string, string>
   ): Promise<Record<string, unknown> | null> {
     const attachmentResponse = await this.get<RawAttachmentResponse>(
-      JOB_ATTACHMENT_ENDPOINTS.GET_BY_ID(outputFileKey),
+      ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(outputFileKey),
       { headers }
     );
 
@@ -183,10 +185,8 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     });
 
     if (!blobResponse.ok) {
-      throw new NetworkError({
-        message: `Failed to download job output file: ${blobResponse.status} ${blobResponse.statusText}`,
-        statusCode: blobResponse.status,
-      });
+      const errorInfo = await errorResponseParser.parse(blobResponse);
+      throw ErrorFactory.createFromHttpStatus(blobResponse.status, errorInfo);
     }
 
     const content = await blobResponse.text();

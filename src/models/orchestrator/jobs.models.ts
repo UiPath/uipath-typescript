@@ -65,9 +65,6 @@ export interface JobServiceModel {
    * as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for
    * large outputs). Returns the parsed JSON output or `null` if the job has no output.
    *
-   * This method mirrors the Python SDK's `extract_output` — it abstracts away the two storage
-   * mechanisms so consumers don't need to check for inline vs file-based output themselves.
-   *
    * @param options - {@link JobGetOutputOptions} containing the job key (GUID) and optional folder ID
    * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
    *

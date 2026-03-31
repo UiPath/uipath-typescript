@@ -90,10 +90,9 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
     });
 
-    it('should return null for a job without output', async () => {
+    it('should handle job with or without output', async () => {
       const { jobs, folderId } = getJobsServiceAndFolderId();
 
-      // Find a job — it may or may not have output
       const result = await jobs.getAll({
         folderId,
         pageSize: 1,
@@ -106,8 +105,12 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const job = result.items[0];
       const output = await jobs.getOutput({ jobKey: job.key, folderId });
 
-      // Either null or a valid object — both are acceptable
-      expect(output === null || typeof output === 'object').toBe(true);
+      // Smoke test: getOutput completes without error and returns a valid type
+      if (output !== null) {
+        expect(typeof output).toBe('object');
+      } else {
+        expect(output).toBeNull();
+      }
     });
   });
 

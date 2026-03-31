@@ -15,7 +15,7 @@ import {
 import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
-import { JOB_ENDPOINTS, JOB_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID } from '../../../../src/utils/constants/headers';
 
 // ===== MOCKING =====
@@ -259,7 +259,7 @@ describe('JobService Unit Tests', () => {
       expect(mockApiClient.get).toHaveBeenCalledTimes(2);
       expect(mockApiClient.get).toHaveBeenNthCalledWith(
         2,
-        JOB_ATTACHMENT_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY),
+        ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY),
         expect.objectContaining({ headers: expectedHeaders })
       );
       expect(mockFetch).toHaveBeenCalledWith(
@@ -330,6 +330,66 @@ describe('JobService Unit Tests', () => {
       const result = await jobService.getOutput(getOutputOptions);
 
       expect(result).toBeNull();
+    });
+
+    it('should throw AuthorizationError when blob download returns 403', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [{
+          OutputArguments: null,
+          OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        }],
+      });
+
+      mockApiClient.get.mockResolvedValueOnce({
+        Name: 'output.json',
+        BlobFileAccess: {
+          Uri: JOB_TEST_CONSTANTS.BLOB_URI,
+          Headers: { Keys: [], Values: [] },
+          RequiresAuth: false,
+        },
+      });
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+        json: () => Promise.reject(new Error('no json')),
+        text: () => Promise.resolve('Forbidden'),
+        headers: new Headers(),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await expect(jobService.getOutput(getOutputOptions)).rejects.toThrow('Forbidden');
+    });
+
+    it('should throw ServerError when blob download returns 500', async () => {
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [{
+          OutputArguments: null,
+          OutputFile: JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY,
+        }],
+      });
+
+      mockApiClient.get.mockResolvedValueOnce({
+        Name: 'output.json',
+        BlobFileAccess: {
+          Uri: JOB_TEST_CONSTANTS.BLOB_URI,
+          Headers: { Keys: [], Values: [] },
+          RequiresAuth: false,
+        },
+      });
+
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: () => Promise.reject(new Error('no json')),
+        text: () => Promise.resolve('Internal Server Error'),
+        headers: new Headers(),
+      });
+      vi.stubGlobal('fetch', mockFetch);
+
+      await expect(jobService.getOutput(getOutputOptions)).rejects.toThrow('Internal Server Error');
     });
 
     it('should throw validation error when jobKey is missing', async () => {
