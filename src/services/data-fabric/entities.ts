@@ -34,7 +34,7 @@ import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
-import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
+import { EntityFieldTypeMap, SqlFieldType, EntityMap, EntityRecordMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
 
 /**
@@ -178,9 +178,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    // Apply EntityMap transformations
-    const transformedResponse = transformData(response.data, EntityMap);
-    return transformedResponse;
+    return transformData(response.data, EntityRecordMap);
   }
    
   /**
@@ -221,7 +219,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return response.data;
+    return transformData(response.data, EntityRecordMap);
   }
 
   /**
@@ -270,7 +268,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return response.data;
+    const result = response.data;
+    result.successRecords = result.successRecords.map(record => transformData(record, EntityRecordMap));
+    return result;
   }
 
   /**
@@ -312,7 +312,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return response.data;
+    return transformData(response.data, EntityRecordMap);
   }
 
   /**
@@ -362,7 +362,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return response.data;
+    const result = response.data;
+    result.successRecords = result.successRecords.map(record => transformData(record, EntityRecordMap));
+    return result;
   }
 
   /**
@@ -522,7 +524,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    return response.data;
+    return transformData<EntityUploadAttachmentResponse>(response.data, EntityRecordMap);
   }
 
   /**

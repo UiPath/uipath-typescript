@@ -25,7 +25,7 @@ export interface EntityRecord {
   /**
    * Unique identifier for the record
    */
-  id: string;
+  Id: string;
 
   /**
    * Additional dynamic fields for the entity

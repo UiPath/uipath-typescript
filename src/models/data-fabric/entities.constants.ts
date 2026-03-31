@@ -19,13 +19,21 @@ export enum SqlFieldType {
 }
 
 /**
- * Maps fields for Entities
+ * Maps fields for Entities (entity metadata / schema responses)
  */
 export const EntityMap = {
   createTime: 'createdTime',
   updateTime: 'updatedTime',
   sqlType: 'fieldDataType',
-  fieldDefinition: 'fieldMetaData' 
+  fieldDefinition: 'fieldMetaData'
+};
+
+/**
+ * Maps fields for Entity record responses (PascalCase API keys → SDK keys)
+ */
+export const EntityRecordMap = {
+  CreateTime: 'CreatedTime',
+  UpdateTime: 'UpdatedTime',
 };
 
 /**
