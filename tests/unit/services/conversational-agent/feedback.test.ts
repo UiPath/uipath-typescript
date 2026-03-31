@@ -8,6 +8,11 @@ import {
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { FEEDBACK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import {
+  TEST_CONSTANTS,
+  FEEDBACK_TEST_CONSTANTS,
+  CONVERSATIONAL_AGENT_TEST_CONSTANTS,
+} from '../../../utils/constants';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -32,16 +37,16 @@ describe('FeedbackService Unit Tests', () => {
     it('should get all feedback successfully', async () => {
       const mockResponse: FeedbackResponse[] = [
         {
-          id: 'feedback-1',
-          traceId: 'trace-123',
-          spanId: 'span-456',
-          agentId: 'agent-789',
+          id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID,
+          traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,
+          spanId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_SPAN_ID,
+          agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
           isPositive: true,
           comment: 'Great!',
           feedbackCategories: [],
           status: FeedbackStatus.Pending,
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01',
+          createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
+          updatedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
         },
       ];
 
@@ -64,41 +69,48 @@ describe('FeedbackService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue(mockResponse);
 
       const options = {
-        agentId: 'agent-789',
+        agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
       };
 
       await feedbackService.getAll(options);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: { agentId: 'agent-789' } }
+        { params: { agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID } }
       );
+    });
+
+    it('should throw error when API call fails', async () => {
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(feedbackService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
     it('should get paginated feedback', async () => {
       const mockResponse: FeedbackResponse[] = [
         {
-          id: 'feedback-1',
-          traceId: 'trace-123',
-          spanId: 'span-456',
-          agentId: 'agent-789',
+          id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID,
+          traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,
+          spanId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_SPAN_ID,
+          agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
           isPositive: true,
           feedbackCategories: [],
           status: FeedbackStatus.Pending,
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-01',
+          createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
+          updatedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
         },
       ];
 
       mockApiClient.get.mockResolvedValue(mockResponse);
 
-      const result = await feedbackService.getAll({ pageSize: 10 });
+      const result = await feedbackService.getAll({ pageSize: TEST_CONSTANTS.PAGE_SIZE });
 
       expect(result.items).toBeDefined();
       expect(result.items.length).toBe(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: { skip: 0, take: 10 } }
+        { params: { skip: 0, take: TEST_CONSTANTS.PAGE_SIZE } }
       );
     });
   });
