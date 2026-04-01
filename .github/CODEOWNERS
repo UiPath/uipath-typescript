@@ -1,0 +1,5 @@
+# CODEOWNERS file - defines code owners for automatic PR review requests
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+* @vnaren23 @Raina451 @swati354
