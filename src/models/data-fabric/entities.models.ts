@@ -175,7 +175,7 @@ export interface EntityServiceModel {
    * // First, get records to obtain the record ID
    * const records = await entities.getAllRecords(<entityId>);
    * // Get the recordId for the record
-   * const recordId = records.items[0].id;
+   * const recordId = records.items[0].Id;
    * // Get the record
    * const record = await entities.getRecordById(<entityId>, recordId);
    * 
@@ -293,14 +293,14 @@ export interface EntityServiceModel {
    * ```typescript
    * // Basic usage
    * const result = await entities.updateRecordsById(<entityId>, [
-   *   { id: "123", name: "John Updated", age: 31 },
-   *   { id: "456", name: "Jane Updated", age: 26 }
+   *   { Id: "123", name: "John Updated", age: 31 },
+   *   { Id: "456", name: "Jane Updated", age: 26 }
    * ]);
    *
    * // With options
    * const result = await entities.updateRecordsById(<entityId>, [
-   *   { id: "123", name: "John Updated", age: 31 },
-   *   { id: "456", name: "Jane Updated", age: 26 }
+   *   { Id: "123", name: "John Updated", age: 31 },
+   *   { Id: "456", name: "Jane Updated", age: 26 }
    * ], {
    *   expansionLevel: 1,
    *   failOnFirst: true
@@ -355,7 +355,7 @@ export interface EntityServiceModel {
    * // First, get records to obtain the record ID
    * const records = await entities.getAllRecords("<entityId>");
    * // Get the recordId for the record that contains the attachment
-   * const recordId = records.items[0].id;
+   * const recordId = records.items[0].Id;
    *
    * // Get the entityId from getAll()
    * const allEntities = await entities.getAll();
@@ -363,7 +363,7 @@ export interface EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Download attachment using service method
    * const response = await entities.downloadAttachment(entityId, recordId, 'Documents');
@@ -416,7 +416,7 @@ export interface EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Browser: Upload a file from an input element
    * const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -450,7 +450,7 @@ export interface EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Delete attachment for a specific record and field
    * await entities.deleteAttachment(entityId, recordId, 'Documents');

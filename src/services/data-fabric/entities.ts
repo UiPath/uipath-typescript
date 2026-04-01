@@ -402,7 +402,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return response.data;
+    const result = response.data;
+    result.successRecords = result.successRecords.map(record => transformData(record, EntityRecordMap));
+    return result;
   }
 
   /**
@@ -461,7 +463,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Download attachment for a specific record and field
    * const blob = await entities.downloadAttachment(entityId, recordId, 'Documents');
@@ -501,7 +503,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Upload a file attachment
    * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
@@ -547,7 +549,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Delete attachment for a specific record and field
    * await entities.deleteAttachment(entityId, recordId, 'Documents');
