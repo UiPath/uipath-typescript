@@ -467,6 +467,22 @@ export class ConversationService extends BaseService implements ConversationServ
     return this._sessionManager.onConnectionStatusChanged(handler);
   }
 
+  /**
+   * Disconnects the WebSocket and releases all session resources.
+   *
+   * Immediately closes the WebSocket connection and clears all per-conversation
+   * socket tracking. Call this after ending all sessions to allow the process to exit.
+   *
+   * @example
+   * ```typescript
+   * conversationalAgent.conversations.endSession(conversationId);
+   * conversationalAgent.conversations.disconnect();
+   * ```
+   */
+  disconnect(): void {
+    this._sessionManager.disconnect();
+  }
+
   // ==================== Private Methods ====================
 
   private _getEvents(): ConversationEventHelperManager {
