@@ -2,10 +2,10 @@ import { FolderScopedService } from '../../folder-scoped';
 import { JobGetResponse, JobGetAllOptions, JobGetOutputOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel } from '../../../models/orchestrator/jobs.models';
 import { pascalToCamelCaseKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
-import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { JobMap } from '../../../models/orchestrator/jobs.constants';
-import { RawAttachmentResponse } from '../../../models/orchestrator/jobs.internal-types';
+import { AttachmentService } from '../attachments/attachments';
 import { ValidationError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
 import { errorResponseParser } from '../../../core/errors/parser';
@@ -13,11 +13,18 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import type { IUiPath } from '../../../core/types';
 
 /**
  * Service for interacting with UiPath Orchestrator Jobs API
  */
 export class JobService extends FolderScopedService implements JobServiceModel {
+  private attachmentService: AttachmentService;
+
+  constructor(instance: IUiPath) {
+    super(instance);
+    this.attachmentService = new AttachmentService(instance);
+  }
   /**
    * Gets all jobs across folders with optional filtering
    *
@@ -142,37 +149,33 @@ export class JobService extends FolderScopedService implements JobServiceModel {
 
   /**
    * Downloads the output file content via the Attachments API.
-   * 1. Fetches blob access info from the attachment
+   * 1. Fetches blob access info from the attachment using AttachmentService
    * 2. Downloads content from the presigned blob URI
    * 3. Parses and returns the JSON content
    */
   private async downloadOutputFile(
     outputFileKey: string
   ): Promise<Record<string, unknown> | null> {
-    const attachmentResponse = await this.get<RawAttachmentResponse>(
-      ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(outputFileKey)
-    );
+    const attachment = await this.attachmentService.getById(outputFileKey);
 
-    const blobAccess = attachmentResponse.data.BlobFileAccess;
-    if (!blobAccess?.Uri) {
+    const blobAccess = attachment.blobFileAccess;
+    if (!blobAccess?.uri) {
       return null;
     }
 
-    // Convert array-based headers {Keys: [...], Values: [...]} to a Record
-    const blobHeaders: Record<string, string> = blobAccess.Headers
-      ? arrayDictionaryToRecord({
-          keys: blobAccess.Headers.Keys,
-          values: blobAccess.Headers.Values,
-        })
-      : {};
+    // Convert array-based headers to a flat Record if needed
+    const blobHeaders: Record<string, string> =
+      blobAccess.headers && 'keys' in blobAccess.headers
+        ? arrayDictionaryToRecord(blobAccess.headers as unknown as { keys: string[]; values: string[] })
+        : (blobAccess.headers as Record<string, string>) ?? {};
 
     // Add auth header if the blob URI requires authenticated access
-    if (blobAccess.RequiresAuth) {
+    if (blobAccess.requiresAuth) {
       const token = await this.getValidAuthToken();
       blobHeaders['Authorization'] = `Bearer ${token}`;
     }
 
-    const blobResponse = await fetch(blobAccess.Uri, {
+    const blobResponse = await fetch(blobAccess.uri, {
       method: 'GET',
       headers: blobHeaders,
     });

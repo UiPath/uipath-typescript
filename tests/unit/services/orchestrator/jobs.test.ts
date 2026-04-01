@@ -253,7 +253,7 @@ describe('JobService Unit Tests', () => {
       expect(mockApiClient.get).toHaveBeenNthCalledWith(
         2,
         ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY),
-        {}
+        { params: {} }
       );
       expect(mockFetch).toHaveBeenCalledWith(
         JOB_TEST_CONSTANTS.BLOB_URI,

@@ -60,13 +60,6 @@ export const JOB_ENDPOINTS = {
 } as const;
 
 /**
- * Orchestrator Attachment Endpoints
- */
-export const ORCHESTRATOR_ATTACHMENT_ENDPOINTS = {
-  GET_BY_ID: (key: string) => `${ORCHESTRATOR_BASE}/odata/Attachments(${key})`,
-} as const;
-
-/**
  * Orchestrator Asset Service Endpoints
  */
 export const ASSET_ENDPOINTS = {
