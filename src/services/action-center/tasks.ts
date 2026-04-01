@@ -519,7 +519,6 @@ export class TaskService extends BaseService implements TaskServiceModel {
 
   /**
    * Routes to the type-specific endpoint based on task type.
-   * Returns null if the task type doesn't have a type-specific endpoint.
    */
   private getByTaskType(id: number, folderId: number, taskType: TaskType): Promise<TaskGetResponse> {
     const endpoint = TASK_TYPE_ENDPOINTS[taskType];
@@ -536,7 +535,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * @param extraParams - Additional query parameters (e.g. form options)
    * @returns Promise resolving to the task
    */
-  private async getTaskByTypeEndpoint(id: number, folderId: number, endpoint: string, extraParams: Record<string, any> = {}): Promise<TaskGetResponse> {
+  private async getTaskByTypeEndpoint(id: number, folderId: number, endpoint: string, extraParams: TaskGetFormOptions = {}): Promise<TaskGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
     const response = await this.get<TaskGetResponse>(

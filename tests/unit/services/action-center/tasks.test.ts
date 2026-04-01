@@ -510,9 +510,8 @@ describe('TaskService Unit Tests', () => {
 
       const result = await taskService.getById(taskId, {}, folderId);
 
-      expect(result).toBeDefined();
-      expect(result!.id).toBe(taskId);
-      expect(result!.title).toBe(TASK_TEST_CONSTANTS.TASK_TITLE);
+      expect(result.id).toBe(taskId);
+      expect(result.title).toBe(TASK_TEST_CONSTANTS.TASK_TITLE);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         expect.stringContaining(taskId.toString()),
         expect.any(Object)
@@ -600,7 +599,7 @@ describe('TaskService Unit Tests', () => {
       );
     });
 
-    it('should skip GET_BY_ID and call getTaskDataById directly when taskType is DocumentValidation', async () => {
+    it('should skip GET_BY_ID and call getByTaskType directly when taskType is DocumentValidation', async () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
       const folderId = TEST_CONSTANTS.FOLDER_ID;
 
@@ -615,7 +614,7 @@ describe('TaskService Unit Tests', () => {
 
       await taskService.getById(taskId, { taskType: TaskType.DocumentValidation }, folderId);
 
-      // Should only call GET once (getTaskDataById), not GET_BY_ID first
+      // Should only call GET once (getByTaskType), not GET_BY_ID first
       expect(mockApiClient.get).toHaveBeenCalledTimes(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
@@ -630,7 +629,7 @@ describe('TaskService Unit Tests', () => {
       );
     });
 
-    it('should auto-detect DocumentValidation type from GET_BY_ID response and call getTaskDataById', async () => {
+    it('should auto-detect DocumentValidation type from GET_BY_ID response and call getByTaskType', async () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
       const folderId = TEST_CONSTANTS.FOLDER_ID;
 
