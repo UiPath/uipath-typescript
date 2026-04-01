@@ -48,33 +48,24 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
       ? PaginatedResponse<FeedbackResponse>
       : NonPaginatedResponse<FeedbackResponse>
   > {
-    const { pageSize, cursor, jumpToPage, ...filterOptions } = options || {} as any;
-    const isPaginated = PaginationHelpers.hasPaginationParameters(options || {});
+    const { pageSize, cursor, jumpToPage, ...filterOptions } = (options ?? {}) as FeedbackGetAllOptions;
+    const isPaginated = PaginationHelpers.hasPaginationParameters(options ?? {});
 
     if (isPaginated) {
-      const paginationOptions = { pageSize, cursor, jumpToPage };
-      const params = PaginationHelpers.validatePaginationOptions(paginationOptions, PaginationType.OFFSET);
-      const limitedPageSize = getLimitedPageSize(params.pageSize);
-      const currentPage = params.pageNumber || 1;
-      const skip = (currentPage - 1) * limitedPageSize;
+      const params = PaginationHelpers.validatePaginationOptions(options!, PaginationType.OFFSET);
+      const take = getLimitedPageSize(params.pageSize); // clamp to max allowed, use default if unset
+      const skip = ((params.pageNumber ?? 1) - 1) * take; // page 1 → 0, page 2 → take, page 3 → 2*take
 
       const response = await this.get<FeedbackResponse[]>(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: { ...filterOptions, skip, take: limitedPageSize } }
+        { params: { ...filterOptions, skip, take } }
       );
 
-      const items = response.data || [];
-      const hasMore = items.length === limitedPageSize;
+      const items = response.data ?? [];
+      const hasMore = items.length === take;
 
       return PaginationManager.createPaginatedResponse<FeedbackResponse>(
-        {
-          pageInfo: {
-            hasMore,
-            currentPage,
-            pageSize: limitedPageSize,
-          },
-          type: PaginationType.OFFSET,
-        },
+        { pageInfo: { hasMore, currentPage: params.pageNumber ?? 1, pageSize: take }, type: PaginationType.OFFSET },
         items
       ) as any;
     }
@@ -84,8 +75,6 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
       { params: filterOptions }
     );
 
-    return {
-      items: response.data || [],
-    } as any;
+    return { items: response.data ?? [] } as any;
   }
 }
