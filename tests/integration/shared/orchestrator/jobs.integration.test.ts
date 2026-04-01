@@ -82,7 +82,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      const output = await jobs.getOutput({ jobKey: job.key, folderId });
+      const output = await jobs.getOutput({ jobKey: job.key });
 
       // Output can be null (if the job had no output) or a parsed object
       if (output !== null) {
@@ -103,7 +103,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      const output = await jobs.getOutput({ jobKey: job.key, folderId });
+      const output = await jobs.getOutput({ jobKey: job.key });
 
       // Smoke test: getOutput completes without error and returns a valid type
       if (output !== null) {

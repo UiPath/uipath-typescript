@@ -88,6 +88,8 @@ export interface JobGetResponse extends FolderProperties {
   inputArguments: string | null;
   /** Output parameters as a JSON string resulted from job execution */
   outputArguments: string | null;
+  /** Attachment key for file-based output when output is too large for inline arguments */
+  outputFile: string | null;
   /** Environment variables as a JSON string passed to the job execution */
   environmentVariables: string | null;
   /** Additional information about the current job */
@@ -172,9 +174,4 @@ export interface JobGetOutputOptions {
    * The unique key (GUID) of the job to retrieve output from
    */
   jobKey: string;
-
-  /**
-   * Optional folder ID for organization unit context
-   */
-  folderId?: number;
 }

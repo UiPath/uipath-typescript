@@ -65,7 +65,7 @@ export interface JobServiceModel {
    * as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for
    * large outputs). Returns the parsed JSON output or `null` if the job has no output.
    *
-   * @param options - {@link JobGetOutputOptions} containing the job key (GUID) and optional folder ID
+   * @param options - {@link JobGetOutputOptions} containing the job key (GUID)
    * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
    *
    * @example
@@ -85,10 +85,7 @@ export interface JobServiceModel {
    * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
    *
    * if (completedJob) {
-   *   const output = await jobs.getOutput({
-   *     jobKey: completedJob.key,
-   *     folderId: completedJob.folderId,
-   *   });
+   *   const output = await jobs.getOutput({ jobKey: completedJob.key });
    * }
    * ```
    */

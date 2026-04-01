@@ -6,8 +6,6 @@ import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../utils
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { JobMap } from '../../../models/orchestrator/jobs.constants';
 import { RawAttachmentResponse } from '../../../models/orchestrator/jobs.internal-types';
-import { createHeaders } from '../../../utils/http/headers';
-import { FOLDER_ID } from '../../../utils/constants/headers';
 import { ValidationError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
 import { errorResponseParser } from '../../../core/errors/parser';
@@ -88,19 +86,18 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * and file-based output (stored as a blob attachment for large outputs). Returns the parsed JSON
    * output or null if the job has no output.
    *
-   * @param options - Options containing the job key (GUID) and optional folder ID
+   * @param options - Options containing the job key (GUID)
    * @returns Promise resolving to the parsed output object, or null if no output exists
    */
   @track('Jobs.GetOutput')
   async getOutput(options: JobGetOutputOptions): Promise<Record<string, unknown> | null> {
-    const { jobKey, folderId } = options;
+    const { jobKey } = options;
 
     if (!jobKey) {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
 
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    const job = await this.fetchJobByKey(jobKey, headers);
+    const job = await this.fetchJobByKey(jobKey);
 
     if (!job) {
       return null;
@@ -115,7 +112,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     }
 
     if (job.OutputFile) {
-      return this.downloadOutputFile(job.OutputFile, headers);
+      return this.downloadOutputFile(job.OutputFile);
     }
 
     return null;
@@ -126,8 +123,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * Uses the Jobs list endpoint with a Key filter. Only selects fields needed for output extraction.
    */
   private async fetchJobByKey(
-    jobKey: string,
-    headers: Record<string, string>
+    jobKey: string
   ): Promise<{ OutputArguments: string | null; OutputFile: string | null } | null> {
     const response = await this.get<{
       value: { OutputArguments: string | null; OutputFile: string | null }[];
@@ -139,7 +135,6 @@ export class JobService extends FolderScopedService implements JobServiceModel {
           $select: 'OutputArguments,OutputFile',
           $top: 1,
         },
-        headers,
       }
     );
     return response.data.value?.[0] ?? null;
@@ -152,12 +147,10 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * 3. Parses and returns the JSON content
    */
   private async downloadOutputFile(
-    outputFileKey: string,
-    headers: Record<string, string>
+    outputFileKey: string
   ): Promise<Record<string, unknown> | null> {
     const attachmentResponse = await this.get<RawAttachmentResponse>(
-      ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(outputFileKey),
-      { headers }
+      ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(outputFileKey)
     );
 
     const blobAccess = attachmentResponse.data.BlobFileAccess;

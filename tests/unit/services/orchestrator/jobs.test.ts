@@ -16,7 +16,6 @@ import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { FOLDER_ID } from '../../../../src/utils/constants/headers';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -158,11 +157,6 @@ describe('JobService Unit Tests', () => {
   describe('getOutput', () => {
     const getOutputOptions = {
       jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
-      folderId: TEST_CONSTANTS.FOLDER_ID,
-    };
-
-    const expectedHeaders = {
-      [FOLDER_ID]: String(TEST_CONSTANTS.FOLDER_ID),
     };
 
     it('should return parsed inline output when OutputArguments is set', async () => {
@@ -184,7 +178,6 @@ describe('JobService Unit Tests', () => {
             $select: 'OutputArguments,OutputFile',
             $top: 1,
           },
-          headers: expectedHeaders,
         })
       );
     });
@@ -260,7 +253,7 @@ describe('JobService Unit Tests', () => {
       expect(mockApiClient.get).toHaveBeenNthCalledWith(
         2,
         ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY),
-        expect.objectContaining({ headers: expectedHeaders })
+        {}
       );
       expect(mockFetch).toHaveBeenCalledWith(
         JOB_TEST_CONSTANTS.BLOB_URI,
@@ -394,21 +387,8 @@ describe('JobService Unit Tests', () => {
 
     it('should throw validation error when jobKey is missing', async () => {
       await expect(
-        jobService.getOutput({ jobKey: '', folderId: TEST_CONSTANTS.FOLDER_ID })
+        jobService.getOutput({ jobKey: '' })
       ).rejects.toThrow('jobKey is required for getOutput');
-    });
-
-    it('should work without folderId', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        value: [{
-          OutputArguments: JOB_TEST_CONSTANTS.OUTPUT_ARGUMENTS,
-          OutputFile: null,
-        }],
-      });
-
-      const result = await jobService.getOutput({ jobKey: JOB_TEST_CONSTANTS.JOB_KEY });
-
-      expect(result).toEqual(JOB_TEST_CONSTANTS.PARSED_OUTPUT);
     });
 
     it('should propagate API errors from job fetch', async () => {

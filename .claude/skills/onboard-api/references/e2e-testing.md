@@ -341,7 +341,10 @@ Do NOT clean up until ALL checks pass. The app must survive failures so the fix 
 
 ## Step 6: Clean Up
 
-**The calling skill controls when cleanup happens.** This section only describes what to delete — see the calling skill's own cleanup rules for when to run these commands.
+**The calling skill controls when cleanup happens.** This section only describes what to delete — see the calling skill's own cleanup rules for when to run these commands. **NEVER clean up without checking the calling skill's cleanup policy first.**
+
+- **`onboard-api`:** Clean up automatically after all checks pass. Do NOT clean up on failure.
+- **`sdk-verify` (standalone):** Do NOT clean up automatically. Ask the user for explicit confirmation first — they may want to inspect the app in the browser.
 
 Cleanup commands:
 
