@@ -1,5 +1,35 @@
-import { JobGetAllOptions, JobGetOutputOptions, JobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetOutputOptions, RawJobGetResponse } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+
+/**
+ * Methods available on job response objects.
+ * These are bound to the job data and delegate to the service.
+ */
+export interface JobMethods {
+  /**
+   * Gets the output of this job.
+   *
+   * Retrieves the job's output arguments, handling both inline output (stored directly on the job
+   * as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for
+   * large outputs). Returns the parsed JSON output or `null` if the job has no output.
+   *
+   * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
+   *
+   * @example
+   * ```typescript
+   * const allJobs = await jobs.getAll({ folderId: <folderId> });
+   * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
+   *
+   * if (completedJob) {
+   *   const output = await completedJob.getOutput();
+   * }
+   * ```
+   */
+  getOutput(): Promise<Record<string, unknown> | null>;
+}
+
+// Combined type for job data with methods
+export type JobGetResponse = RawJobGetResponse & JobMethods;
 
 /**
  * Service for managing UiPath Orchestrator Jobs.
@@ -80,14 +110,45 @@ export interface JobServiceModel {
    *
    * @example
    * ```typescript
-   * // Get output after listing jobs
+   * // Get output using bound method
    * const allJobs = await jobs.getAll({ folderId: <folderId> });
    * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
    *
    * if (completedJob) {
-   *   const output = await jobs.getOutput({ jobKey: completedJob.key });
+   *   const output = await completedJob.getOutput();
    * }
    * ```
    */
   getOutput(options: JobGetOutputOptions): Promise<Record<string, unknown> | null>;
+}
+
+/**
+ * Creates methods for a job response object.
+ *
+ * @param jobData - The raw job data from API
+ * @param service - The job service instance
+ * @returns Object containing job methods
+ */
+function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel): JobMethods {
+  return {
+    async getOutput(): Promise<Record<string, unknown> | null> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      return service.getOutput({ jobKey: jobData.key });
+    },
+  };
+}
+
+/**
+ * Creates a job response with bound methods.
+ *
+ * @param jobData - The raw job data from API
+ * @param service - The job service instance
+ * @returns A job object with added methods
+ */
+export function createJobWithMethods(
+  jobData: RawJobGetResponse,
+  service: JobServiceModel
+): JobGetResponse {
+  const methods = createJobMethods(jobData, service);
+  return Object.assign({}, jobData, methods);
 }

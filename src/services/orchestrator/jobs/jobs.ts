@@ -1,6 +1,6 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { JobGetResponse, JobGetAllOptions, JobGetOutputOptions } from '../../../models/orchestrator/jobs.types';
-import { JobServiceModel } from '../../../models/orchestrator/jobs.models';
+import { RawJobGetResponse, JobGetAllOptions, JobGetOutputOptions } from '../../../models/orchestrator/jobs.types';
+import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
 import { pascalToCamelCaseKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
@@ -65,8 +65,10 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       ? PaginatedResponse<JobGetResponse>
       : NonPaginatedResponse<JobGetResponse>
   > {
-    const transformJobResponse = (job: Record<string, unknown>) =>
-      transformData(pascalToCamelCaseKeys(job) as JobGetResponse, JobMap);
+    const transformJobResponse = (job: Record<string, unknown>) => {
+      const rawJob = transformData(pascalToCamelCaseKeys(job) as RawJobGetResponse, JobMap);
+      return createJobWithMethods(rawJob, this);
+    };
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),

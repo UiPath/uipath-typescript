@@ -59,9 +59,9 @@ export interface ProcessMetadata {
 }
 
 /**
- * Interface for job response
+ * Raw job response from the API before method attachment
  */
-export interface JobGetResponse extends FolderProperties {
+export interface RawJobGetResponse extends FolderProperties {
   /** The unique numeric identifier of the job */
   id: number;
   /** The unique job identifier (GUID) */

@@ -10,8 +10,8 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { createMockError } from '../../../utils/mocks/core';
 import {
   JobGetAllOptions,
-  JobGetResponse,
 } from '../../../../src/models/orchestrator/jobs.types';
+import { JobGetResponse } from '../../../../src/models/orchestrator/jobs.models';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
@@ -151,6 +151,30 @@ describe('JobService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(jobService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should attach getOutput method to transformed job objects', async () => {
+      const mockResponse = createMockTransformedJobCollection();
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      await jobService.getAll();
+
+      // Capture the transformFn passed to PaginationHelpers.getAll
+      const callArgs = vi.mocked(PaginationHelpers.getAll).mock.calls[0][0];
+      const transformFn = callArgs.transformFn;
+
+      // Apply the transform to a raw PascalCase job
+      const rawJob = {
+        Id: 123,
+        Key: JOB_TEST_CONSTANTS.JOB_KEY,
+        State: 'Successful',
+        CreationTime: '2026-01-01T00:00:00Z',
+      };
+
+      const transformed = transformFn!(rawJob as Record<string, unknown>) as JobGetResponse;
+
+      expect(transformed.getOutput).toBeDefined();
+      expect(typeof transformed.getOutput).toBe('function');
     });
   });
 
