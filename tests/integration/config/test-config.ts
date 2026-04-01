@@ -18,6 +18,7 @@ export interface IntegrationConfig {
   dataFabricTestChoiceSetId?: string;
   dataFabricTestRecordId?: string;
   dataFabricTestAttachmentField?: string;
+  orchestratorAttachmentId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -67,6 +68,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestChoiceSetId: typeof rawConfig.dataFabricTestChoiceSetId === 'string' ? rawConfig.dataFabricTestChoiceSetId : undefined,
     dataFabricTestRecordId: typeof rawConfig.dataFabricTestRecordId === 'string' ? rawConfig.dataFabricTestRecordId : undefined,
     dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
+    orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
   };
 }
 
@@ -100,6 +102,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestChoiceSetId: process.env.DATA_FABRIC_TEST_CHOICESET_ID || undefined,
     dataFabricTestRecordId: process.env.DATA_FABRIC_TEST_RECORD_ID || undefined,
     dataFabricTestAttachmentField: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || undefined,
+    orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);

@@ -91,6 +91,7 @@ plugins:
           - api/interfaces/QueueServiceModel.md: Queue service methods
           - api/interfaces/BucketServiceModel.md: Bucket service methods
           - api/interfaces/TaskServiceModel.md: Task service methods
+          - api/interfaces/attachments/index.md: Attachment service methods
           - api/interfaces/entity/index.md: Entity service methods
           - api/interfaces/ChoiceSetServiceModel.md: Choice set service methods
           - api/interfaces/MaestroProcessesServiceModel.md: Maestro process methods
@@ -182,6 +183,8 @@ nav:
               - Session: api/interfaces/SessionStream.md
               - Exchanges: api/interfaces/ExchangeServiceModel.md
               - Messages: api/interfaces/MessageServiceModel.md
+          - Attachments:
+            - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
           - Entities:

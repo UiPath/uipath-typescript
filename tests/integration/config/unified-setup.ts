@@ -2,6 +2,7 @@ import { UiPath } from '../../../src/core';
 import { Entities, ChoiceSets } from '../../../src/services/data-fabric';
 import { Tasks } from '../../../src/services/action-center';
 import { Assets, Buckets, Jobs, Queues, Processes } from '../../../src/services/orchestrator';
+import { AttachmentService as Attachments } from '../../../src/services/orchestrator/attachments';
 import {
   MaestroProcessesService,
   ProcessInstancesService,
@@ -35,6 +36,7 @@ export interface TestServices {
   buckets: Buckets;
   queues: Queues;
   jobs?: Jobs;
+  attachments?: Attachments;
   processes: Processes;
   maestroProcesses: MaestroProcessesService;
   processInstances: ProcessInstancesService;
@@ -113,6 +115,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     buckets: new Buckets(sdk),
     queues: new Queues(sdk),
     jobs: new Jobs(sdk),
+    attachments: new Attachments(sdk),
     processes: new Processes(sdk),
     maestroProcesses: new MaestroProcessesService(sdk),
     processInstances: new ProcessInstancesService(sdk),
