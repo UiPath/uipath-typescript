@@ -249,7 +249,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
       const { processInstances } = getServices();
 
       try {
-        const result = await processInstances.getExecutionHistory(testInstanceId);
+        const result = await processInstances.getExecutionHistory(testInstanceId, config.folderId || '');
 
         expect(result).toBeDefined();
         expect(Array.isArray(result)).toBe(true);
