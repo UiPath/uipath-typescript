@@ -53,7 +53,12 @@ Quick summary:
 
 ### E2E Cleanup
 
-**Always clean up**, even on failure:
+Cleanup behavior depends on context:
+
+- **Standalone (user-invoked):** After reporting the verification summary, **ask the user** whether to clean up the E2E app. The user may want to inspect the app, manually test in the browser, or iterate on fixes before cleanup. Only clean up after explicit confirmation.
+- **Called from `onboard-api`:** Do **NOT** clean up on failure — the onboard skill owns the fix loop and needs the app alive to iterate (rebuild → bump version → reinstall → revalidate). Clean up only after all checks pass.
+
+Cleanup commands (when confirmed):
 ```bash
 # From repo root
 rm -rf samples/e2e-test

@@ -145,10 +145,10 @@ Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browse
 
 3. **Regenerate PR body** from the current state of the code:
    - Read the service class, ServiceModel interface, endpoint constants, types, and test files to build all table sections
-   - **Method Added** — read ServiceModel interface for method signatures
-   - **Endpoint Called** — read endpoint constants + service methods for HTTP method, path, scope
-   - **Example Usage** — copy from JSDoc `@example` blocks on ServiceModel interface
-   - **API Response vs SDK Response** — read transform pipeline in service class + types for field mapping
+   - **Method Added** — only include methods that are **new on this branch**. Run `git diff main...HEAD -- <models file>` to identify which methods were added to the ServiceModel interface, not all methods on the interface.
+   - **Endpoint Called** — read endpoint constants + service methods for HTTP method, path, scope. Only include endpoints used by newly added methods.
+   - **Example Usage** — copy from JSDoc `@example` blocks on the newly added methods in the ServiceModel interface
+   - **API Response vs SDK Response** — read transform pipeline in service class + types for field mapping. Only include for newly added methods.
    - **Files** — run `git diff main...HEAD --name-only` to get all files on the branch, group by area, count tests
    - Use the exact same template structure as Create mode
 4. **Update PR** using `gh pr edit <number> --body "<regenerated body>"`

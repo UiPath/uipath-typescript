@@ -1,19 +1,30 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { JobGetResponse, JobGetAllOptions } from '../../../models/orchestrator/jobs.types';
-import { JobServiceModel } from '../../../models/orchestrator/jobs.models';
-import { pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { RawJobGetResponse, JobGetAllOptions, JobGetOutputOptions } from '../../../models/orchestrator/jobs.types';
+import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
+import { pascalToCamelCaseKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { JobMap } from '../../../models/orchestrator/jobs.constants';
+import { AttachmentService } from '../attachments/attachments';
+import { ValidationError } from '../../../core/errors';
+import { ErrorFactory } from '../../../core/errors/error-factory';
+import { errorResponseParser } from '../../../core/errors/parser';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import type { IUiPath } from '../../../core/types';
 
 /**
  * Service for interacting with UiPath Orchestrator Jobs API
  */
 export class JobService extends FolderScopedService implements JobServiceModel {
+  private attachmentService: AttachmentService;
+
+  constructor(instance: IUiPath) {
+    super(instance);
+    this.attachmentService = new AttachmentService(instance);
+  }
   /**
    * Gets all jobs across folders with optional filtering
    *
@@ -54,8 +65,10 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       ? PaginatedResponse<JobGetResponse>
       : NonPaginatedResponse<JobGetResponse>
   > {
-    const transformJobResponse = (job: any) =>
-      transformData(pascalToCamelCaseKeys(job) as JobGetResponse, JobMap);
+    const transformJobResponse = (job: Record<string, unknown>) => {
+      const rawJob = transformData(pascalToCamelCaseKeys(job) as RawJobGetResponse, JobMap);
+      return createJobWithMethods(rawJob, this);
+    };
 
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -73,5 +86,112 @@ export class JobService extends FolderScopedService implements JobServiceModel {
         },
       },
     }, options) as any;
+  }
+
+  /**
+   * Gets the output of a completed job.
+   *
+   * Retrieves the job's output arguments, handling both inline output (stored directly on the job)
+   * and file-based output (stored as a blob attachment for large outputs). Returns the parsed JSON
+   * output or null if the job has no output.
+   *
+   * @param options - Options containing the job key (GUID)
+   * @returns Promise resolving to the parsed output object, or null if no output exists
+   */
+  @track('Jobs.GetOutput')
+  async getOutput(options: JobGetOutputOptions): Promise<Record<string, unknown> | null> {
+    const { jobKey } = options;
+
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for getOutput' });
+    }
+
+    const job = await this.fetchJobByKey(jobKey);
+
+    if (!job) {
+      return null;
+    }
+
+    if (job.OutputArguments) {
+      try {
+        return JSON.parse(job.OutputArguments) as Record<string, unknown>;
+      } catch {
+        throw new ValidationError({ message: `Failed to parse job output arguments as JSON` });
+      }
+    }
+
+    if (job.OutputFile) {
+      return this.downloadOutputFile(job.OutputFile);
+    }
+
+    return null;
+  }
+
+  /**
+   * Fetches a job by its Key (GUID), returning the raw API response (PascalCase).
+   * Uses the Jobs list endpoint with a Key filter. Only selects fields needed for output extraction.
+   */
+  private async fetchJobByKey(
+    jobKey: string
+  ): Promise<{ OutputArguments: string | null; OutputFile: string | null } | null> {
+    const response = await this.get<{
+      value: { OutputArguments: string | null; OutputFile: string | null }[];
+    }>(
+      JOB_ENDPOINTS.GET_ALL,
+      {
+        params: {
+          $filter: `Key eq ${jobKey}`,
+          $select: 'OutputArguments,OutputFile',
+          $top: 1,
+        },
+      }
+    );
+    return response.data.value?.[0] ?? null;
+  }
+
+  /**
+   * Downloads the output file content via the Attachments API.
+   * 1. Fetches blob access info from the attachment using AttachmentService
+   * 2. Downloads content from the presigned blob URI
+   * 3. Parses and returns the JSON content
+   */
+  private async downloadOutputFile(
+    outputFileKey: string
+  ): Promise<Record<string, unknown> | null> {
+    const attachment = await this.attachmentService.getById(outputFileKey);
+
+    const blobAccess = attachment.blobFileAccess;
+    if (!blobAccess?.uri) {
+      return null;
+    }
+
+    // Convert array-based headers to a flat Record if needed
+    const blobHeaders: Record<string, string> =
+      blobAccess.headers && 'keys' in blobAccess.headers
+        ? arrayDictionaryToRecord(blobAccess.headers as unknown as { keys: string[]; values: string[] })
+        : (blobAccess.headers as Record<string, string>) ?? {};
+
+    // Add auth header if the blob URI requires authenticated access
+    if (blobAccess.requiresAuth) {
+      const token = await this.getValidAuthToken();
+      blobHeaders['Authorization'] = `Bearer ${token}`;
+    }
+
+    const blobResponse = await fetch(blobAccess.uri, {
+      method: 'GET',
+      headers: blobHeaders,
+    });
+
+    if (!blobResponse.ok) {
+      const errorInfo = await errorResponseParser.parse(blobResponse);
+      throw ErrorFactory.createFromHttpStatus(blobResponse.status, errorInfo);
+    }
+
+    const content = await blobResponse.text();
+    try {
+      return JSON.parse(content) as Record<string, unknown>;
+    } catch {
+      throw new ValidationError({ message: `Failed to parse job output file as JSON` });
+    }
   }
 }
