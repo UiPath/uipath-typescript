@@ -199,6 +199,9 @@ nav:
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
+  - Coded Apps:
+      - Getting Started: coded-apps/getting-started.md
+      - CLI Reference: coded-apps/cli-reference.md
   - Coded Action Apps SDK:
       - Getting Started: coded-action-apps/getting-started.md
       - Coded Action Apps: coded-action-apps/interfaces/CodedActionAppsServiceModel.md

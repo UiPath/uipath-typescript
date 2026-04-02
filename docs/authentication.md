@@ -1,6 +1,21 @@
 # Authentication
 
-The SDK supports two authentication methods:
+The SDK supports multiple authentication methods depending on your use case.
+
+## Coded Apps (Hosted on UiPath)
+
+If your app is deployed as a [Coded App](coded-apps/getting-started.md), the platform injects all configuration automatically at deploy time. Construct `UiPath` with no arguments — the SDK reads from the injected meta tags:
+
+```typescript
+import { UiPath } from '@uipath/uipath-typescript/core';
+
+const sdk = new UiPath();
+await sdk.initialize();
+```
+
+No config to hardcode or keep in sync. See [Coded Apps — Getting Started](coded-apps/getting-started.md) for the full setup guide.
+
+---
 
 ## OAuth Authentication (Recommended)
 
@@ -14,20 +29,14 @@ For OAuth, first create a non confidential [External App](https://docs.uipath.co
    - **Scopes**: Select permissions you need ([see scopes guide](/uipath-typescript/oauth-scopes))
 4. Save and copy the **Client ID**
 
+Add the Client ID and other config to your `uipath.json` (see [Coded Apps — Getting Started](coded-apps/getting-started.md#configure-uipathjson)). The `@uipath/coded-apps` bundler plugin injects these as meta tags during local development; at deploy time the platform injects them automatically.
+
+With config in place, initialize the SDK with no arguments — it reads everything from the injected meta tags:
 
 ```typescript
 import { UiPath } from '@uipath/uipath-typescript/core';
 
-const sdk = new UiPath({
-  baseUrl: 'https://cloud.uipath.com',
-  orgName: 'your-organization',
-  tenantName: 'your-tenant',
-  clientId: 'your-client-id',
-  redirectUri: 'your-redirect-uri',
-  scope: 'your-scopes'
-});
-
-// IMPORTANT: OAuth requires calling initialize()
+const sdk = new UiPath();
 await sdk.initialize();
 ```
 
