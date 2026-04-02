@@ -1,5 +1,6 @@
-import { JobGetAllOptions, JobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetResponse, JobStopOptions, JobStopData } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { OperationResponse } from '../common/types';
 
 /**
  * Service for managing UiPath Orchestrator Jobs.
@@ -57,4 +58,41 @@ export interface JobServiceModel {
     ? PaginatedResponse<JobGetResponse>
     : NonPaginatedResponse<JobGetResponse>
   >;
+
+  /**
+   * Stops one or more jobs by their UUID keys.
+   *
+   * Resolves the provided job UUID keys to integer IDs, then sends a stop request to the Orchestrator.
+   * Keys are processed in chunks of 50 to avoid URL length limits. Throws if any keys cannot be resolved.
+   *
+   * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
+   * @param folderId - The folder ID where the jobs reside (required)
+   * @param options - Optional {@link JobStopOptions} including stop strategy
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobStopData}> with the resolved job IDs
+   *
+   * @example
+   * ```typescript
+   * import { Jobs } from '@uipath/uipath-typescript/jobs';
+   *
+   * const jobs = new Jobs(sdk);
+   *
+   * // Stop a single job with default soft stop
+   * const result = await jobs.stop(
+   *   ['c80c3b30-f010-4eb8-82d4-b67bc615e137'],
+   *   123
+   * );
+   *
+   * // Force-kill multiple jobs
+   * const killResult = await jobs.stop(
+   *   ['c80c3b30-f010-4eb8-82d4-b67bc615e137', '24ef1040-454d-4184-b994-c641ee32318d'],
+   *   123,
+   *   { strategy: StopStrategy.Kill }
+   * );
+   * ```
+   */
+  stop(
+    jobKeys: string[],
+    folderId: number,
+    options?: JobStopOptions
+  ): Promise<OperationResponse<JobStopData>>;
 }

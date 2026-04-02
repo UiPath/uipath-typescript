@@ -59,6 +59,7 @@ export const QUEUE_ENDPOINTS = {
  */
 export const JOB_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs`,
+  STOP: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs`,
 } as const;
 
 /**
