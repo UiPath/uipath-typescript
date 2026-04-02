@@ -234,13 +234,13 @@ export const createMockEntities = (count: number): RawEntityGetResponse[] => {
  */
 export const createMockEntityRecord = (overrides: Partial<EntityRecord> = {}): EntityRecord => {
   return createMockBaseResponse({
-    id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+    Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
     name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
     age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
     email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email,
-    recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-    createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+    RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+    CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+    UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
   }, overrides);
 };
 
@@ -256,7 +256,7 @@ export const createMockEntityRecords = (
 ): EntityRecord[] => {
   const records = createMockCollection(count, (i) => 
     createMockEntityRecord({
-      id: `r${i}234567-e89b-12d3-a456-42661417400${i}`,
+      Id: `r${i}234567-e89b-12d3-a456-42661417400${i}`,
       name: `Record ${i + 1}`,
       age: 20 + i,
       email: `record${i + 1}@example.com`,
@@ -280,8 +280,8 @@ export const createMockEntityRecords = (
 export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord => {
   const expanded: EntityRecord = { ...record };
   
-  // Expand reference fields that are typically string IDs
-  const referenceFields = ['recordOwner', 'createdBy', 'updatedBy'];
+  // Expand reference fields that are typically string IDs (PascalCase as returned by the API)
+  const referenceFields = ['RecordOwner', 'CreatedBy', 'UpdatedBy'];
   
   referenceFields.forEach(field => {
     if (expanded[field] && typeof expanded[field] === 'string') {
@@ -317,7 +317,7 @@ export const createMockSingleInsertResponse = (
 ): EntityInsertResponse => {
   let result: EntityInsertResponse = {
     ...requestData,
-    id: 'generated-id-1'
+    Id: 'generated-id-1'
   };
 
   // If expansionLevel is specified, expand reference fields in the response
@@ -368,11 +368,11 @@ export const createMockInsertResponse = (
 ): EntityBatchInsertResponse => {
   const successCount = options?.successCount ?? requestData.length;
   
-  let successRecords = requestData.slice(0, successCount).map((record, i) => ({
+  let successRecords: Record<string, any>[] = requestData.slice(0, successCount).map((record, i) => ({
     ...record,
-    id: `generated-id-${i + 1}`
+    Id: `generated-id-${i + 1}`
   }));
-  
+
   // If expansionLevel is specified, expand reference fields in the response
   if (options?.expansionLevel && options.expansionLevel > 0) {
     successRecords = successRecords.map(record => expandRecordReferenceFields(record));
@@ -498,11 +498,11 @@ export const createMockDeleteResponse = (
 ): EntityDeleteResponse => {
   const successCount = options?.successCount ?? requestIds.length;
   
-  const successRecords = requestIds.slice(0, successCount).map(id => ({ id }));
-  
+  const successRecords = requestIds.slice(0, successCount).map(id => ({ Id: id }));
+
   const failureRecords = requestIds.slice(successCount).map((id) => ({
     error: `${ENTITY_TEST_CONSTANTS.ERROR_MESSAGE} for id: ${id}`,
-    record: { id }
+    record: { Id: id }
   }));
 
   return { successRecords, failureRecords };

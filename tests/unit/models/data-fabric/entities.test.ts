@@ -47,7 +47,7 @@ describe('Entity Models', () => {
           undefined
         );
         expect(result).toEqual(mockResponse);
-        expect(result.id).toBeDefined();
+        expect(result.Id).toBeDefined();
       });
 
       it('should call entity.insertRecord with options', async () => {
@@ -153,7 +153,7 @@ describe('Entity Models', () => {
         expect(result.failureRecords).toHaveLength(1);
 
         // Validate successful record data
-        expect(result.successRecords[0]).toHaveProperty('id');
+        expect(result.successRecords[0]).toHaveProperty('Id');
         expect(result.successRecords[0].name).toBe(testData[0].name);
         expect(result.successRecords[0].age).toBe(testData[0].age);
 
@@ -171,7 +171,7 @@ describe('Entity Models', () => {
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = { name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE };
-        const mockResponse = createMockSingleUpdateResponse({ id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData });
+        const mockResponse = createMockSingleUpdateResponse({ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData });
         mockService.updateRecordById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.updateRecord(ENTITY_TEST_CONSTANTS.RECORD_ID, testData);
@@ -183,7 +183,7 @@ describe('Entity Models', () => {
           undefined
         );
         expect(result).toEqual(mockResponse);
-        expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+        expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
       });
 
       it('should call entity.updateRecord with options', async () => {
@@ -263,7 +263,7 @@ describe('Entity Models', () => {
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = [
-          { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE }
+          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE }
         ];
         const options = {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
@@ -286,7 +286,7 @@ describe('Entity Models', () => {
         // Validate response structure and data
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(0);
-        expect(result.successRecords[0].id).toBe(testData[0].id);
+        expect(result.successRecords[0].Id).toBe(testData[0].Id);
         expect(result.successRecords[0].name).toBe(testData[0].name);
         expect(result.successRecords[0].age).toBe(testData[0].age);
         
@@ -302,7 +302,7 @@ describe('Entity Models', () => {
         const entity = createEntityWithMethods(entityData, mockService);
 
         await expect(entity.updateRecords([
-          { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
+          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
         ])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
 
@@ -311,8 +311,8 @@ describe('Entity Models', () => {
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = [
-          { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_VALID_UPDATE_NAME },
-          { id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME }
+          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_VALID_UPDATE_NAME },
+          { Id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME }
         ];
         const mockResponse = createMockUpdateResponse(testData, { successCount: 1 });
         mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
@@ -323,7 +323,7 @@ describe('Entity Models', () => {
         expect(result.failureRecords).toHaveLength(1);
         
         // Validate successful record data
-        expect(result.successRecords[0].id).toBe(testData[0].id);
+        expect(result.successRecords[0].Id).toBe(testData[0].Id);
         expect(result.successRecords[0].name).toBe(testData[0].name);
         
         // Validate failure record structure
@@ -381,8 +381,8 @@ describe('Entity Models', () => {
         // Validate response structure and data
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(0);
-        expect(result.successRecords[0]).toHaveProperty('id');
-        expect(result.successRecords[0].id).toBe(recordIds[0]);
+        expect(result.successRecords[0]).toHaveProperty('Id');
+        expect(result.successRecords[0].Id).toBe(recordIds[0]);
       });
 
       it('should throw error if entity id is undefined', async () => {
@@ -407,15 +407,15 @@ describe('Entity Models', () => {
 
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(1);
-        
+
         // Validate successful deletion
-        expect(result.successRecords[0]).toHaveProperty('id');
-        expect(result.successRecords[0].id).toBe(recordIds[0]);
-        
+        expect(result.successRecords[0]).toHaveProperty('Id');
+        expect(result.successRecords[0].Id).toBe(recordIds[0]);
+
         // Validate failure record structure
         expect(result.failureRecords[0]).toHaveProperty('error');
         expect(result.failureRecords[0]).toHaveProperty('record');
-        expect(result.failureRecords[0].record?.id).toBe(recordIds[1]);
+        expect(result.failureRecords[0].record?.Id).toBe(recordIds[1]);
         expect(typeof result.failureRecords[0].error).toBe('string');
       });
     });
@@ -472,10 +472,10 @@ describe('Entity Models', () => {
         
         // Verify expansion level affected the data (reference fields should be objects)
         result.items.forEach(record => {
-          expect(record).toHaveProperty('id');
-          if (record.recordOwner) {
-            expect(typeof record.recordOwner).toBe('object');
-            expect(record.recordOwner).toHaveProperty('id');
+          expect(record).toHaveProperty('Id');
+          if (record.RecordOwner) {
+            expect(typeof record.RecordOwner).toBe('object');
+            expect(record.RecordOwner).toHaveProperty('id');
           }
         });
       });

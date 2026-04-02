@@ -352,7 +352,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(record.id).toBe(recordId);
+      expect(record.Id).toBe(recordId);
     });
   });
 
@@ -379,13 +379,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const result = await entities.insertRecordById(entityId, testData);
 
       expect(result).toBeDefined();
-      expect(result.id).toBeDefined();
+      expect(result.Id).toBeDefined();
 
-      serviceLevelRecordIds.push(result.id);
-      createdRecordIds.push(result.id);
+      serviceLevelRecordIds.push(result.Id);
+      createdRecordIds.push(result.Id);
       registerResource('entityRecords', {
         entityId,
-        recordIds: [result.id],
+        recordIds: [result.Id],
       });
     });
 
@@ -403,7 +403,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entities.getRecordById(entityId, recordId);
 
       expect(record).toBeDefined();
-      expect(record.id).toBe(recordId);
+      expect(record.Id).toBe(recordId);
     });
 
     it('should batch insert multiple records using insertRecordsById', async () => {
@@ -429,8 +429,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.successRecords)).toBe(true);
 
       const insertedIds = result.successRecords
-        .filter((r: any) => r.Id || r.id)
-        .map((r: any) => r.Id || r.id);
+        .filter((r: any) => r.Id)
+        .map((r: any) => r.Id);
       serviceLevelRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -456,7 +456,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       // Build update payloads: each must include `Id` plus at least one updated field
       const writableFields = getWritableFields(entityMetadata.fields);
       const updateData: EntityRecord[] = serviceLevelRecordIds.map((id) => {
-        const updates = { id: id } as EntityRecord;
+        const updates = { Id: id } as EntityRecord;
         // Update the first writable field with a new value
         if (writableFields.length > 0) {
           const field = writableFields[0];
@@ -518,13 +518,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const result = await entity.insertRecord(testData);
 
       expect(result).toBeDefined();
-      expect(result.id).toBeDefined();
+      expect(result.Id).toBeDefined();
 
-      entityMethodRecordIds.push(result.id);
-      createdRecordIds.push(result.id);
+      entityMethodRecordIds.push(result.Id);
+      createdRecordIds.push(result.Id);
       registerResource('entityRecords', {
         entityId,
-        recordIds: [result.id],
+        recordIds: [result.Id],
       });
     });
 
@@ -549,8 +549,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.successRecords)).toBe(true);
 
       const insertedIds = result.successRecords
-        .filter((r: any) => r.Id || r.id)
-        .map((r: any) => r.Id || r.id);
+        .filter((r: any) => r.Id)
+        .map((r: any) => r.Id);
       entityMethodRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -593,7 +593,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const record = await entity.getRecord(recordId);
 
       expect(record).toBeDefined();
-      expect(record.id).toBe(recordId);
+      expect(record.Id).toBe(recordId);
     });
 
     it('should update records via entity.updateRecords', async () => {
@@ -611,7 +611,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const writableFields = getWritableFields(entity.fields);
       const updateData: EntityRecord[] = entityMethodRecordIds.map((id) => {
-        const updates = { id: id } as EntityRecord;
+        const updates = { Id: id } as EntityRecord;
         if (writableFields.length > 0) {
           const field = writableFields[0];
           updates[field.name] = generateFieldValue(field);
@@ -670,7 +670,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       };
 
       const inserted = await entities.insertRecordById(entityId, insertData);
-      const updateTestRecordId = inserted.id;
+      const updateTestRecordId = inserted.Id;
 
       if (!updateTestRecordId) {
         throw new Error('Could not get inserted record ID');
@@ -688,7 +688,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       });
 
       expect(result).toBeDefined();
-      expect(result.id).toBe(updateTestRecordId);
+      expect(result.Id).toBe(updateTestRecordId);
     });
 
     it('should handle API errors for non-existent record', async () => {
