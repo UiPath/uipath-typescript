@@ -429,8 +429,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.successRecords)).toBe(true);
 
       const insertedIds = result.successRecords
-        .filter((r: any) => r.Id || r.id)
-        .map((r: any) => r.Id || r.id);
+        .filter((r: any) => r.Id)
+        .map((r: any) => r.Id);
       serviceLevelRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -456,7 +456,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       // Build update payloads: each must include `Id` plus at least one updated field
       const writableFields = getWritableFields(entityMetadata.fields);
       const updateData: EntityRecord[] = serviceLevelRecordIds.map((id) => {
-        const updates = { id: id } as EntityRecord;
+        const updates = { Id: id } as EntityRecord;
         // Update the first writable field with a new value
         if (writableFields.length > 0) {
           const field = writableFields[0];
@@ -549,8 +549,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.successRecords)).toBe(true);
 
       const insertedIds = result.successRecords
-        .filter((r: any) => r.Id || r.id)
-        .map((r: any) => r.Id || r.id);
+        .filter((r: any) => r.Id)
+        .map((r: any) => r.Id);
       entityMethodRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -611,7 +611,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const writableFields = getWritableFields(entity.fields);
       const updateData: EntityRecord[] = entityMethodRecordIds.map((id) => {
-        const updates = { id: id } as EntityRecord;
+        const updates = { Id: id } as EntityRecord;
         if (writableFields.length > 0) {
           const field = writableFields[0];
           updates[field.name] = generateFieldValue(field);

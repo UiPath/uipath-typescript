@@ -256,7 +256,7 @@ export const createMockEntityRecords = (
 ): EntityRecord[] => {
   const records = createMockCollection(count, (i) => 
     createMockEntityRecord({
-      id: `r${i}234567-e89b-12d3-a456-42661417400${i}`,
+      Id: `r${i}234567-e89b-12d3-a456-42661417400${i}`,
       name: `Record ${i + 1}`,
       age: 20 + i,
       email: `record${i + 1}@example.com`,

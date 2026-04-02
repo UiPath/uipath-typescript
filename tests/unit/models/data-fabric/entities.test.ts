@@ -472,10 +472,10 @@ describe('Entity Models', () => {
         
         // Verify expansion level affected the data (reference fields should be objects)
         result.items.forEach(record => {
-          expect(record).toHaveProperty('id');
-          if (record.recordOwner) {
-            expect(typeof record.recordOwner).toBe('object');
-            expect(record.recordOwner).toHaveProperty('id');
+          expect(record).toHaveProperty('Id');
+          if (record.RecordOwner) {
+            expect(typeof record.RecordOwner).toBe('object');
+            expect(record.RecordOwner).toHaveProperty('id');
           }
         });
       });

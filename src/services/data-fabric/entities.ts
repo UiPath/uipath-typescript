@@ -34,7 +34,7 @@ import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
-import { EntityFieldTypeMap, SqlFieldType, EntityMap, EntityRecordMap } from '../../models/data-fabric/entities.constants';
+import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
 
 /**
@@ -178,9 +178,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    return transformData(response.data, EntityRecordMap);
+    return response.data;
   }
-   
+
   /**
    * Inserts a single record into an entity by entity ID
    *
@@ -219,7 +219,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return transformData(response.data, EntityRecordMap);
+    return response.data;
   }
 
   /**
@@ -268,9 +268,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    const result = response.data;
-    result.successRecords = result.successRecords.map(record => transformData(record, EntityRecordMap));
-    return result;
+    return response.data;
   }
 
   /**
@@ -312,7 +310,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return transformData(response.data, EntityRecordMap);
+    return response.data;
   }
 
   /**
@@ -362,9 +360,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    const result = response.data;
-    result.successRecords = result.successRecords.map(record => transformData(record, EntityRecordMap));
-    return result;
+    return response.data;
   }
 
   /**
@@ -402,9 +398,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    const result = response.data;
-    result.successRecords = result.successRecords.map(record => transformData(record, EntityRecordMap));
-    return result;
+    return response.data;
   }
 
   /**
@@ -526,7 +520,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    return transformData<EntityUploadAttachmentResponse>(response.data, EntityRecordMap);
+    return response.data;
   }
 
   /**

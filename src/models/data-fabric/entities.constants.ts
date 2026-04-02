@@ -29,14 +29,6 @@ export const EntityMap = {
 };
 
 /**
- * Maps fields for Entity record responses
- */
-export const EntityRecordMap = {
-  CreateTime: 'CreatedTime',
-  UpdateTime: 'UpdatedTime',
-};
-
-/**
  * Maps SQL field types to friendly display names
  */
 export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldDataType> = {
