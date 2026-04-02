@@ -344,11 +344,9 @@ export interface EntityServiceModel {
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to delete
    * @param options - Delete options
-   * @returns Promise resolving to delete response
-   * {@link EntityDeleteRecordResponse}
+   * @returns Promise resolving to {@link EntityDeleteRecordResponse}
    * @example
    * ```typescript
-   * // Basic usage
    * const result = await entities.deleteRecordById(<entityId>, <recordId>);
    * console.log(result.success); // true
    * ```
