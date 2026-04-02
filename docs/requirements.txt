@@ -18,3 +18,4 @@ termynal==0.13.1
 typing_extensions==4.15.0
 pymdown-extensions==10.16.1
 python-dateutil==2.9.0.post0
+pygments==2.19.1
