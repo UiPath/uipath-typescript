@@ -192,6 +192,212 @@ export interface EntityUpdateResponse extends EntityOperationResponse {}
 export interface EntityDeleteResponse extends EntityOperationResponse {}
 
 /**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * Aggregate function types for query operations
+ */
+export enum QueryAggregateFunction {
+  COUNT = "COUNT",
+  SUM = "SUM",
+  AVG = "AVG",
+  MIN = "MIN",
+  MAX = "MAX",
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * Join types for cross-entity query operations
+ */
+export enum QueryJoinType {
+  INNER = "INNER",
+  LEFT = "LEFT",
+  RIGHT = "RIGHT",
+  FULL = "FULL",
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * Logical operators for combining query filters
+ */
+export enum QueryLogicalOperator {
+  AND = 0,
+  OR = 1,
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * An aggregate operation in a query
+ */
+export interface QueryAggregate {
+  /** Aggregate function to apply */
+  function: QueryAggregateFunction;
+  /** Field to aggregate on */
+  field: string;
+  /** Alias for the aggregated result */
+  alias: string;
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * A join condition for cross-entity queries
+ */
+export interface QueryJoinCondition {
+  /** Left side field name (from the primary entity) */
+  left: string;
+  /** Right side field name (from the joined entity) */
+  right: string;
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * A join clause for cross-entity queries
+ */
+export interface QueryJoin {
+  /** Type of join */
+  type: QueryJoinType;
+  /** Name of the entity to join */
+  entity: string;
+  /** Join condition specifying left and right field mappings */
+  on: QueryJoinCondition;
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * A single query filter condition
+ */
+export interface QueryFilter {
+  /** Field name to filter on */
+  fieldName: string;
+  /** Comparison operator: "=", "!=", ">", "<", ">=", "<=", "contains", "startswith", "endswith" (lowercase for string operators) */
+  operator: string;
+  /** Value to compare against */
+  value: unknown;
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * A group of query filters combined with a logical operator
+ */
+export interface QueryFilterGroup {
+  /** Logical operator to combine filters (0 = AND, 1 = OR) */
+  logicalOperator: QueryLogicalOperator;
+  /** Array of filter conditions */
+  queryFilters: QueryFilter[];
+  /** Nested filter groups for complex conditions */
+  queryFilterGroups?: QueryFilterGroup[];
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * Sort option for query results
+ */
+export interface QuerySortOption {
+  /** Field name to sort by */
+  fieldName: string;
+  /** Whether to sort in descending order (default: false) */
+  isDescending?: boolean;
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * Options for querying an entity with joins, aggregates, and filters
+ */
+export interface EntityQueryOptions {
+  /** Fields to include in the result set. Required when using aggregates — must include the groupBy fields. */
+  selectedFields?: string[];
+  /** Aggregate operations to perform. Requires selectedFields to include the groupBy fields. */
+  aggregates?: QueryAggregate[];
+  /** Cross-entity join clauses. Joined entity fields can be referenced as "entityName.fieldName" in selectedFields. */
+  joins?: QueryJoin[];
+  /** Filter conditions */
+  filterGroup?: QueryFilterGroup;
+  /** Fields to group results by (used with aggregates). These fields must also appear in selectedFields. */
+  groupBy?: string[];
+  /** Sort options for result ordering */
+  sortOptions?: QuerySortOption[];
+  /** Starting offset for pagination (default: 0) */
+  start?: number;
+  /** Maximum number of records to return (default: 100) */
+  limit?: number;
+}
+
+/**
+ *
+ * @experimental
+ *
+ * /// warning
+  Preview: This type is experimental and may change or be removed in future releases.
+  ///
+ *
+ * Response from a query operation
+ */
+export interface EntityQueryResponse {
+  /** Array of matching records */
+  value: Record<string, unknown>[];
+  /** Total count of matching records (before pagination) */
+  totalRecordCount?: number;
+}
+
+/**
  * Entity type enum
  */
 export enum EntityType {

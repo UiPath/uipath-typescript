@@ -24,7 +24,9 @@ import {
   EntityFileType,
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
-  EntityDeleteAttachmentResponse
+  EntityDeleteAttachmentResponse,
+  EntityQueryOptions,
+  EntityQueryResponse
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -572,6 +574,80 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
 
     return response.data;
+  }
+
+  /**
+   *
+   * @experimental
+   *
+   * /// warning
+    Preview: This method is experimental and may change or be removed in future releases.
+    ///
+   *
+   * Queries an entity by ID with support for joins, aggregates, filters, grouping, and sorting
+   *
+   * @param entityId - UUID of the entity to query
+   * @param options - Query options including selectedFields, aggregates, joins, filterGroup, groupBy, sortOptions, start, limit
+   * @returns Promise resolving to query response with matching records
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Simple filtered query
+   * const result = await entities.query('<entityId>', {
+   *   selectedFields: ['name', 'email'],
+   *   filterGroup: {
+   *     logicalOperator: 0,
+   *     queryFilters: [{ fieldName: 'status', operator: '=', value: 'active' }]
+   *   },
+   *   limit: 50
+   * });
+   *
+   * // Cross-entity join query
+   * const joinResult = await entities.query('<entityId>', {
+   *   selectedFields: ['Orders.orderId', 'Customer.name'],
+   *   joins: [{
+   *     type: 'INNER',
+   *     entity: 'Customer',
+   *     on: { left: 'customerId', right: 'Id' }
+   *   }],
+   *   sortOptions: [{ fieldName: 'Orders.createdDate', isDescending: true }],
+   *   limit: 100
+   * });
+   *
+   * // Aggregate query with grouping
+   * const stats = await entities.query('<entityId>', {
+   *   aggregates: [
+   *     { function: 'COUNT', field: 'Id', alias: 'totalOrders' },
+   *     { function: 'SUM', field: 'amount', alias: 'totalAmount' }
+   *   ],
+   *   groupBy: ['status']
+   * });
+   * ```
+   */
+  @track('Entities.Query')
+  async query(entityId: string, options: EntityQueryOptions = {}): Promise<EntityQueryResponse> {
+    const body: Record<string, unknown> = {};
+
+    if (options.selectedFields) body.selectedFields = options.selectedFields;
+    if (options.aggregates) body.aggregates = options.aggregates;
+    if (options.joins) body.joins = options.joins;
+    if (options.filterGroup) body.filterGroup = options.filterGroup;
+    if (options.groupBy) body.groupBy = options.groupBy;
+    if (options.sortOptions) body.sortOptions = options.sortOptions;
+    if (options.start !== undefined) body.start = options.start;
+    if (options.limit !== undefined) body.limit = options.limit;
+
+    const response = await this.post<EntityQueryResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(entityId),
+      body
+    );
+
+    const camelResponse = pascalToCamelCaseKeys(response.data);
+    return camelResponse;
   }
 
     /**

@@ -28,6 +28,11 @@ import type {
   EntityRecord,
   EntityGetAllRecordsOptions
 } from '../../../../src/models/data-fabric/entities.types';
+import {
+  QueryLogicalOperator,
+  QueryJoinType,
+  QueryAggregateFunction
+} from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { DATA_FABRIC_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -1015,6 +1020,134 @@ describe('EntityService Unit Tests', () => {
       )).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE
       );
+    });
+  });
+
+  describe('query', () => {
+    it('should query an entity by ID with default options', async () => {
+      const mockResponse = {
+        data: {
+          Records: [
+            { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, Name: 'John Doe' },
+            { Id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, Name: 'Jane Smith' }
+          ],
+          TotalCount: 2
+        }
+      };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+
+      expect(result).toBeDefined();
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        {},
+        {}
+      );
+    });
+
+    it('should query with selectedFields and filters', async () => {
+      const mockResponse = {
+        data: {
+          Records: [{ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, Name: 'John Doe' }],
+          TotalCount: 1
+        }
+      };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const options = {
+        selectedFields: ['name', 'email'],
+        filterGroup: {
+          logicalOperator: QueryLogicalOperator.AND,
+          queryFilters: [{ fieldName: 'name', operator: '=', value: 'John Doe' }]
+        },
+        limit: 50
+      };
+
+      await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expect.objectContaining({
+          selectedFields: ['name', 'email'],
+          filterGroup: options.filterGroup,
+          limit: 50
+        }),
+        {}
+      );
+    });
+
+    it('should query with joins', async () => {
+      const mockResponse = {
+        data: {
+          Records: [{ orderId: '1', customerName: 'John' }],
+          TotalCount: 1
+        }
+      };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const options = {
+        selectedFields: ['Orders.orderId', 'Customer.name'],
+        joins: [{
+          type: QueryJoinType.INNER,
+          entity: 'Customer',
+          on: { left: 'customerId', right: 'Id' }
+        }],
+        sortOptions: [{ fieldName: 'Orders.createdDate', isDescending: true }],
+        start: 0,
+        limit: 100
+      };
+
+      await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expect.objectContaining({
+          selectedFields: options.selectedFields,
+          joins: options.joins,
+          sortOptions: options.sortOptions,
+          start: 0,
+          limit: 100
+        }),
+        {}
+      );
+    });
+
+    it('should query with aggregates and groupBy', async () => {
+      const mockResponse = {
+        data: {
+          Records: [{ status: 'active', totalOrders: 42 }],
+          TotalCount: 1
+        }
+      };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const options = {
+        aggregates: [
+          { function: QueryAggregateFunction.COUNT, field: 'Id', alias: 'totalOrders' }
+        ],
+        groupBy: ['status']
+      };
+
+      await entityService.query(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expect.objectContaining({
+          aggregates: options.aggregates,
+          groupBy: ['status']
+        }),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(entityService.query(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
