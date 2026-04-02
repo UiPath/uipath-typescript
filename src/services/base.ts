@@ -84,6 +84,15 @@ export class BaseService {
   }
 
   /**
+   * Sets default headers that will be included in every HTTP request made by this service.
+   *
+   * @param headers - Key-value pairs to merge into the default request headers
+   */
+  protected setDefaultHeaders(headers: Record<string, string>): void {
+    this.#apiClient.setDefaultHeaders(headers);
+  }
+
+  /**
    * Creates a service accessor for pagination helpers
    * This allows pagination helpers to access protected methods without making them public
    */

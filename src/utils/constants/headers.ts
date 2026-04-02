@@ -28,10 +28,16 @@ export const RESPONSE_TYPES = {
 } as const;
 
 /**
+ * Header key for external user ID (used in both HTTP and WebSocket for external app auth
+ * in Conversational Agents Service)
+ */
+export const EXTERNAL_USER_ID_HEADER = 'x-uipath-external-user-id';
+
+/**
  * Query parameter keys sent during WebSocket connection
  */
 export const WEBSOCKET_QUERY_PARAMS = {
   ORGANIZATION_ID: 'x-uipath-internal-accountid',
   TENANT_ID: 'x-uipath-internal-tenantid',
-  EXTERNAL_USER_ID: 'x-uipath-external-user-id'
+  EXTERNAL_USER_ID: EXTERNAL_USER_ID_HEADER
 } as const;
