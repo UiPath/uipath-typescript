@@ -96,7 +96,7 @@ export interface TaskServiceModel {
    * const task = await tasks.getById(<taskId>);
    *
    * // Get a form task by ID
-   * const formTask = await tasks.getById(<taskId>, <folderId>);
+   * const formTask = await tasks.getById(<taskId>, {}, <folderId>);
    *
    * // Access form task properties
    * console.log(formTask.formLayout);

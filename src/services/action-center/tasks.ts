@@ -1,7 +1,7 @@
 import { ValidationError } from '../../core/errors';
 import { track } from '../../core/telemetry';
 import { DEFAULT_TASK_EXPAND, TaskMap, TaskStatusMap } from '../../models/action-center/tasks.constants';
-import { SUPPORTED_TASK_TYPES, TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
+import { TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
 import {
   TaskCreateResponse,
   TaskGetResponse,
@@ -20,7 +20,7 @@ import {
   TasksUnassignOptions,
   UserLoginInfo,
 } from '../../models/action-center/tasks.types';
-import { OperationResponse } from '../../models/common/types';
+import { BaseOptions, OperationResponse } from '../../models/common/types';
 import { ODATA_OFFSET_PARAMS, ODATA_PAGINATION, ODATA_PREFIX } from '../../utils/constants/common';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
 import { FOLDER_ID } from '../../utils/constants/headers';
@@ -246,7 +246,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * const task = await tasks.getById(<taskId>);
    *
    * // Get a form task by ID
-   * const formTask = await tasks.getById(<taskId>, <folderId>);
+   * const formTask = await tasks.getById(<taskId>, {}, <folderId>);
    *
    * // Access form task properties
    * console.log(formTask.formLayout);
@@ -260,11 +260,11 @@ export class TaskService extends BaseService implements TaskServiceModel {
     const { taskType, ...restOptions } = options;
 
     // If taskType is provided, skip the generic GET_BY_ID call and go directly to the type-specific endpoint
-    if (taskType && SUPPORTED_TASK_TYPES.has(taskType)) {
+    if (taskType && taskType in TASK_TYPE_ENDPOINTS) {
       if (!folderId) {
         throw new ValidationError({ message: 'folderId is required when taskType is provided' });
       }
-      return this.getByTaskType(id, folderId, taskType);
+      return this.getByTaskType(id, folderId, taskType, restOptions);
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -288,8 +288,8 @@ export class TaskService extends BaseService implements TaskServiceModel {
 
     // Get task type from response and fetch type-specific data
     const resolvedFolderId = folderId || transformedTask.folderId;
-    if (SUPPORTED_TASK_TYPES.has(transformedTask.type)) {
-      return this.getByTaskType(id, resolvedFolderId, transformedTask.type);
+    if (transformedTask.type in TASK_TYPE_ENDPOINTS) {
+      return this.getByTaskType(id, resolvedFolderId, transformedTask.type, restOptions);
     }
 
     return createTaskWithMethods(
@@ -520,9 +520,9 @@ export class TaskService extends BaseService implements TaskServiceModel {
   /**
    * Routes to the type-specific endpoint based on task type.
    */
-  private getByTaskType(id: number, folderId: number, taskType: TaskType): Promise<TaskGetResponse> {
+  private getByTaskType(id: number, folderId: number, taskType: TaskType, options: BaseOptions = {}): Promise<TaskGetResponse> {
     const endpoint = TASK_TYPE_ENDPOINTS[taskType];
-    const extraParams: TaskGetFormOptions = taskType === TaskType.Form ? { expandOnFormLayout: true } : {};
+    const extraParams: TaskGetFormOptions = taskType === TaskType.Form ? { expandOnFormLayout: true, ...options } : options;
     return this.getTaskByTypeEndpoint(id, folderId, endpoint, extraParams);
   }
 
