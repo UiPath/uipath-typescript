@@ -1,35 +1,36 @@
-import { BaseService } from '../base';
-import { 
-  TaskCreateOptions, 
-  TaskAssignmentOptions,
-  TaskAssignmentResponse,
-  TasksUnassignOptions,
-  TaskCompletionOptions,
-  TaskType,
-  TaskGetAllOptions,
-  TaskGetByIdOptions,
-  UserLoginInfo,
-  TaskGetUsersOptions,
-} from '../../models/action-center/tasks.types';
+import { ValidationError } from '../../core/errors';
+import { track } from '../../core/telemetry';
+import { DEFAULT_TASK_EXPAND, TaskMap, TaskStatusMap } from '../../models/action-center/tasks.constants';
+import { TASK_TYPE_ENDPOINTS, TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
 import {
-  TaskServiceModel,
-  TaskGetResponse,
   TaskCreateResponse,
+  TaskGetResponse,
+  TaskServiceModel,
   createTaskWithMethods
 } from '../../models/action-center/tasks.models';
-import { OperationResponse } from '../../models/common/types';
-import { pascalToCamelCaseKeys, camelToPascalCaseKeys, transformData, applyDataTransforms, addPrefixToKeys } from '../../utils/transform';
-import { TaskStatusMap, TaskMap, DEFAULT_TASK_EXPAND } from '../../models/action-center/tasks.constants';
-import { createHeaders } from '../../utils/http/headers';
-import { FOLDER_ID } from '../../utils/constants/headers';
+import {
+  TaskAssignmentOptions,
+  TaskAssignmentResponse,
+  TaskCompletionOptions,
+  TaskCreateOptions,
+  TaskGetAllOptions,
+  TaskGetByIdOptions,
+  TaskGetUsersOptions,
+  TaskType,
+  TasksUnassignOptions,
+  UserLoginInfo,
+} from '../../models/action-center/tasks.types';
+import { BaseOptions, OperationResponse } from '../../models/common/types';
+import { ODATA_OFFSET_PARAMS, ODATA_PAGINATION, ODATA_PREFIX } from '../../utils/constants/common';
 import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
-import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../utils/constants/common';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { FOLDER_ID } from '../../utils/constants/headers';
+import { createHeaders } from '../../utils/http/headers';
+import { processODataArrayResponse } from '../../utils/object';
+import { HasPaginationOptions, NonPaginatedResponse, PaginatedResponse } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
-import { TaskAssignmentResponseCollection, TaskGetFormOptions, TasksAssignOptions } from '../../models/action-center/tasks.internal-types';
-import { track } from '../../core/telemetry';
-import { processODataArrayResponse } from '../../utils/object';
+import { addPrefixToKeys, applyDataTransforms, camelToPascalCaseKeys, pascalToCamelCaseKeys, transformData } from '../../utils/transform';
+import { BaseService } from '../base';
 
 /**
  * Service for interacting with UiPath Tasks API
@@ -234,52 +235,63 @@ export class TaskService extends BaseService implements TaskServiceModel {
 
   /**
    * Gets a task by ID
-   * IMPORTANT: For form tasks, folderId must be provided.
-   * 
    * @param id - The ID of the task to retrieve
-   * @param options - Optional query parameters
-   * @param folderId - Optional folder ID (REQUIRED for form tasks)
-   * @returns Promise resolving to the task (form tasks will return form-specific data)
-   * 
+   * @param options - Optional query parameters including taskType for faster retrieval {@link TaskGetByIdOptions}
+   * @param folderId - Optional folder ID (REQUIRED when options.taskType is provided)
+   * @returns Promise resolving to the task
+   * {@link TaskGetResponse}
    * @example
    * ```typescript
-   * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   * // Get a task by ID
+   * const task = await tasks.getById(<taskId>);
    *
-   * const tasks = new Tasks(sdk);
+   * // Get a form task by ID
+   * const formTask = await tasks.getById(<taskId>, {}, <folderId>);
    *
-   * // Get task by ID
-   * const task = await tasks.getById(123);
+   * // Access form task properties
+   * console.log(formTask.formLayout);
    *
-   * // If the task is a form task, it will automatically return form-specific data
+   * // Get a document validation task by ID (faster with taskType provided in the options)
+   * const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
    * ```
    */
   @track('Tasks.GetById')
   async getById(id: number, options: TaskGetByIdOptions = {}, folderId?: number): Promise<TaskGetResponse> {
+    const { taskType, ...restOptions } = options;
+
+    // If taskType is provided, skip the generic GET_BY_ID call and go directly to the type-specific endpoint
+    if (taskType && taskType in TASK_TYPE_ENDPOINTS) {
+      if (!folderId) {
+        throw new ValidationError({ message: 'folderId is required when taskType is provided' });
+      }
+      return this.getByTaskType(id, folderId, taskType, restOptions);
+    }
+
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+
     // Add default expand parameters
-    const modifiedOptions = this.addDefaultExpand(options);
-    
+    const modifiedOptions = this.addDefaultExpand(restOptions);
+
     // prefix all keys in options
     const keysToPrefix = Object.keys(modifiedOptions);
     const apiOptions = addPrefixToKeys(modifiedOptions, ODATA_PREFIX, keysToPrefix);
     const response = await this.get<TaskGetResponse>(
       TASK_ENDPOINTS.GET_BY_ID(id),
-      { 
+      {
         params: apiOptions,
         headers
       }
     );
-    
+
     // Transform response from PascalCase to camelCase and normalize time fields
     const transformedTask = transformData(pascalToCamelCaseKeys(response.data) as TaskGetResponse, TaskMap);
-    
-    // Check if this is a form task and get form-specific data if it is
-    if (transformedTask.type === TaskType.Form) {
-      const formOptions: TaskGetFormOptions = { expandOnFormLayout: true };
-      return this.getFormTaskById(id, folderId || transformedTask.folderId, formOptions);
+
+    // Get task type from response and fetch type-specific data
+    const resolvedFolderId = folderId || transformedTask.folderId;
+    if (transformedTask.type in TASK_TYPE_ENDPOINTS) {
+      return this.getByTaskType(id, resolvedFolderId, transformedTask.type, restOptions);
     }
-    
+
     return createTaskWithMethods(
       applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
       this
@@ -506,29 +518,39 @@ export class TaskService extends BaseService implements TaskServiceModel {
   }
 
   /**
-   * Gets a form task by ID (private method)
-   * 
-   * @param id - The ID of the form task to retrieve
-   * @param folderId - Required folder ID
-   * @param options - Optional query parameters
-   * @returns Promise resolving to the form task
+   * Routes to the type-specific endpoint based on task type.
    */
-  private async getFormTaskById(id: number, folderId: number, options: TaskGetFormOptions = {}): Promise<TaskGetResponse> {
+  private getByTaskType(id: number, folderId: number, taskType: TaskType, options: BaseOptions = {}): Promise<TaskGetResponse> {
+    const endpoint = TASK_TYPE_ENDPOINTS[taskType];
+    const extraParams: TaskGetFormOptions = taskType === TaskType.Form ? { expandOnFormLayout: true, ...options } : options;
+    return this.getTaskByTypeEndpoint(id, folderId, endpoint, extraParams);
+  }
+
+  /**
+   * Fetches a task from a type-specific endpoint.
+   *
+   * @param id - The task ID
+   * @param folderId - Required folder ID
+   * @param endpoint - The type-specific endpoint to call
+   * @param extraParams - Additional query parameters (e.g. form options)
+   * @returns Promise resolving to the task
+   */
+  private async getTaskByTypeEndpoint(id: number, folderId: number, endpoint: string, extraParams: TaskGetFormOptions = {}): Promise<TaskGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+
     const response = await this.get<TaskGetResponse>(
-      TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
-      { 
+      endpoint,
+      {
         params: {
           taskId: id,
-          ...options
+          ...extraParams
         },
         headers
       }
     );
-    const transformedFormTask = transformData(response.data, TaskMap);
+    const transformedTask = transformData(response.data, TaskMap);
     return createTaskWithMethods(
-      applyDataTransforms(transformedFormTask, { field: 'status', valueMap: TaskStatusMap }),
+      applyDataTransforms(transformedTask, { field: 'status', valueMap: TaskStatusMap }),
       this
     ) as TaskGetResponse;
   }

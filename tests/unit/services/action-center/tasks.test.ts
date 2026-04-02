@@ -25,6 +25,7 @@ import { TASK_TEST_CONSTANTS } from '../../../utils/constants/tasks';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { TASK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { FOLDER_ID } from '../../../../src/utils/constants/headers';
+import { ValidationError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -499,6 +500,7 @@ describe('TaskService Unit Tests', () => {
   describe('getById', () => {
     it('should get a task by ID successfully', async () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
       const mockResponse = createMockTaskGetResponse({
         id: taskId,
         title: TASK_TEST_CONSTANTS.TASK_TITLE
@@ -506,9 +508,8 @@ describe('TaskService Unit Tests', () => {
 
       mockApiClient.get.mockResolvedValue(mockResponse);
 
-      const result = await taskService.getById(taskId);
+      const result = await taskService.getById(taskId, {}, folderId);
 
-      expect(result).toBeDefined();
       expect(result.id).toBe(taskId);
       expect(result.title).toBe(TASK_TEST_CONSTANTS.TASK_TITLE);
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -517,7 +518,7 @@ describe('TaskService Unit Tests', () => {
       );
     });
 
-    it('should include folderId in headers when provided', async () => {
+    it('should include folderId in headers', async () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
       const folderId = TEST_CONSTANTS.FOLDER_ID;
       const mockResponse = createMockTaskGetResponse({
@@ -573,39 +574,257 @@ describe('TaskService Unit Tests', () => {
       );
     });
 
-    it('should handle form tasks without folderId by using task folderId', async () => {
+    it('should skip GET_BY_ID and call getFormTaskById directly when taskType is Form', async () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
-      const taskFolderId = TEST_CONSTANTS.FOLDER_ID;
-
-      const mockTaskResponse = createMockTaskGetResponse({
-        id: taskId,
-        title: TASK_TEST_CONSTANTS.TASK_TITLE_FORM,
-        type: TaskType.Form,
-        folderId: taskFolderId
-      });
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
 
       const mockFormTaskResponse = createMockTaskGetResponse({
         id: taskId,
         title: TASK_TEST_CONSTANTS.TASK_TITLE_FORM,
         type: TaskType.Form,
-        folderId: taskFolderId,
-        formLayout: { /* form-specific data */ },
+        folderId: folderId,
+        formLayout: {},
         actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT
+      });
+
+      mockApiClient.get.mockResolvedValueOnce(mockFormTaskResponse);
+
+      await taskService.getById(taskId, { taskType: TaskType.Form }, folderId);
+
+      // Should only call GET once (getFormTaskById), not GET_BY_ID first
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
+        expect.any(Object)
+      );
+    });
+
+    it('should skip GET_BY_ID and call getByTaskType directly when taskType is DocumentValidation', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockDocValidationResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'Document Validation Task',
+        type: TaskType.DocumentValidation,
+        folderId: folderId
+      });
+
+      mockApiClient.get.mockResolvedValueOnce(mockDocValidationResponse);
+
+      await taskService.getById(taskId, { taskType: TaskType.DocumentValidation }, folderId);
+
+      // Should only call GET once (getByTaskType), not GET_BY_ID first
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            taskId: taskId,
+          }),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: folderId.toString()
+          })
+        })
+      );
+    });
+
+    it('should auto-detect DocumentValidation type from GET_BY_ID response and call getByTaskType', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'Document Validation Task',
+        type: TaskType.DocumentValidation,
+        folderId: folderId
+      });
+
+      const mockDocValidationResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'Document Validation Task',
+        type: TaskType.DocumentValidation,
+        folderId: folderId
       });
 
       mockApiClient.get
         .mockResolvedValueOnce(mockTaskResponse)
-        .mockResolvedValueOnce(mockFormTaskResponse);
+        .mockResolvedValueOnce(mockDocValidationResponse);
 
-      // Call without providing folderId parameter
+      await taskService.getById(taskId, {}, folderId);
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        2,
+        TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
+        expect.any(Object)
+      );
+    });
+
+    it('should skip GET_BY_ID and call getAppTaskById directly when taskType is App', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockAppTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'App Task',
+        type: TaskType.App,
+        folderId: folderId
+      });
+
+      mockApiClient.get.mockResolvedValueOnce(mockAppTaskResponse);
+
+      await taskService.getById(taskId, { taskType: TaskType.App }, folderId);
+
+      // Should only call GET once (getAppTaskById), not GET_BY_ID first
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_APP_TASK_BY_ID,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            taskId: taskId,
+          }),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: folderId.toString()
+          })
+        })
+      );
+    });
+
+    it('should auto-detect App type from GET_BY_ID response and call getAppTaskById', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'App Task',
+        type: TaskType.App,
+        folderId: folderId
+      });
+
+      const mockAppTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'App Task',
+        type: TaskType.App,
+        folderId: folderId
+      });
+
+      mockApiClient.get
+        .mockResolvedValueOnce(mockTaskResponse)
+        .mockResolvedValueOnce(mockAppTaskResponse);
+
+      await taskService.getById(taskId, {}, folderId);
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(
+        2,
+        TASK_ENDPOINTS.GET_APP_TASK_BY_ID,
+        expect.any(Object)
+      );
+    });
+
+    it('should skip GET_BY_ID and call getGenericTaskById directly when taskType is External', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'External Task',
+        type: TaskType.External,
+        folderId: folderId
+      });
+
+      mockApiClient.get.mockResolvedValueOnce(mockResponse);
+
+      await taskService.getById(taskId, { taskType: TaskType.External }, folderId);
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            taskId: taskId,
+          }),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: folderId.toString()
+          })
+        })
+      );
+    });
+
+    it('should send expandOnFormLayout param for Form tasks', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const folderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockFormTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: TASK_TEST_CONSTANTS.TASK_TITLE_FORM,
+        type: TaskType.Form,
+        folderId: folderId,
+        formLayout: {},
+        actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT
+      });
+
+      mockApiClient.get.mockResolvedValueOnce(mockFormTaskResponse);
+
+      await taskService.getById(taskId, { taskType: TaskType.Form }, folderId);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            taskId: taskId,
+            expandOnFormLayout: true
+          })
+        })
+      );
+    });
+
+    it('should resolve folderId from response when not provided', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+      const taskFolderId = TEST_CONSTANTS.FOLDER_ID;
+
+      const mockTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'App Task',
+        type: TaskType.App,
+        folderId: taskFolderId
+      });
+
+      const mockAppTaskResponse = createMockTaskGetResponse({
+        id: taskId,
+        title: 'App Task',
+        type: TaskType.App,
+        folderId: taskFolderId
+      });
+
+      mockApiClient.get
+        .mockResolvedValueOnce(mockTaskResponse)
+        .mockResolvedValueOnce(mockAppTaskResponse);
+
+      // Call without folderId — should resolve from response
       await taskService.getById(taskId);
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(2);
       expect(mockApiClient.get).toHaveBeenNthCalledWith(
         2,
-        TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
-        expect.any(Object)
+        TASK_ENDPOINTS.GET_APP_TASK_BY_ID,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: taskFolderId.toString()
+          })
+        })
       );
+    });
+
+    it('should throw ValidationError when taskType is provided without folderId', async () => {
+      const taskId = TASK_TEST_CONSTANTS.TASK_ID;
+
+      await expect(
+        taskService.getById(taskId, { taskType: TaskType.External })
+      ).rejects.toThrow(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
     it('should merge custom expand with default expand parameters', async () => {
@@ -618,7 +837,7 @@ describe('TaskService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue(mockResponse);
 
       // Test with custom expand parameter
-      await taskService.getById(taskId, { expand: 'CustomField' });
+      await taskService.getById(taskId, { expand: 'CustomField' }, TEST_CONSTANTS.FOLDER_ID);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         expect.stringContaining(taskId.toString()),

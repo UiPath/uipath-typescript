@@ -111,14 +111,50 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       try {
-        const result = await tasks.getById(createdTaskId, {} ,folderId!);
+        const result = await tasks.getById(createdTaskId, {}, folderId!);
 
-        expect(result).toBeDefined();
         expect(result.id).toBe(createdTaskId);
         expect(result.title).toBe(testTaskTitle);
       } catch (error: any) {
         throw new Error(`Get task by ID failed: ${error.message}`);
       }
+    });
+
+    it('should retrieve the created task by ID with taskType skipping initial GET', async () => {
+      if (!createdTaskId) {
+        throw new Error('No task ID available for testing');
+      }
+
+      const { tasks } = getServices();
+      const config = getTestConfig();
+
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      try {
+        const result = await tasks.getById(createdTaskId, { taskType: TaskType.External }, folderId!);
+
+        expect(result.id).toBe(createdTaskId);
+        expect(result.title).toBe(testTaskTitle);
+      } catch (error: any) {
+        throw new Error(`Get task by ID with taskType failed (may require External task): ${error.message}`);
+      }
+    });
+
+    it('should retrieve an app task by ID with taskType', async () => {
+      const { tasks } = getServices();
+
+      // Find an existing App task
+      const allTasks = await tasks.getAll({ filter: "Type eq 'AppTask' and Status eq 'Unassigned' and IsDeleted eq false" });
+
+      if (allTasks.items.length === 0) {
+        throw new Error('No App task available in the test environment');
+      }
+
+      const appTask = allTasks.items[0];
+      const result = await tasks.getById(appTask.id, { taskType: TaskType.App }, appTask.folderId);
+
+      expect(result.id).toBe(appTask.id);
+      expect(result.title).toBe(appTask.title);
     });
   });
 
@@ -173,7 +209,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
 
-        const task = await tasks.getById(createdTaskId, {} ,folderId!);
+        const task = await tasks.getById(createdTaskId, {}, folderId!);
         expect(task.assignedToUser).toBeDefined();
       } catch (error: any) {
         throw new Error(`Task assignment failed: ${error.message}`);
@@ -191,9 +227,9 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
       try {
-        let task = await tasks.getById(createdTaskId, {} ,folderId!);
+        let task = await tasks.getById(createdTaskId, {}, folderId!);
 
-        if (task.assignedToUser === null || task.assignedToUser === undefined) {
+        if (!task.assignedToUser) {
           const users = await tasks.getUsers(folderId!);
 
           if (users.items.length === 0) {
@@ -202,7 +238,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
           const userId = users.items[0].id;
 
-          const _result = await tasks.assign({
+          await tasks.assign({
             taskId: createdTaskId,
             userId: userId,
           });
@@ -214,7 +250,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         expect(result.success).toBe(true);
 
         task = await tasks.getById(createdTaskId, {}, folderId!);
-        expect(task.assignedToUser === null || task.assignedToUser === undefined).toBe(true);
+        expect(task.assignedToUser).toBeNull();
       } catch (error: any) {
         throw new Error(`Task unassignment failed: ${error.message}`);
       }
@@ -254,7 +290,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
 
-        const task = await tasks.getById(createdTaskId, {} ,folderId!);
+        const task = await tasks.getById(createdTaskId, {}, folderId!);
         expect(task.status).toMatch(/Completed/i);
 
         createdTaskId = null;

@@ -20,6 +20,8 @@ export const TASK_ENDPOINTS = {
   COMPLETE_APP_TASK: `${ORCHESTRATOR_BASE}/tasks/AppTasks/CompleteAppTask`,
   COMPLETE_GENERIC_TASK: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/CompleteTask`,
   GET_TASK_FORM_BY_ID: `${ORCHESTRATOR_BASE}/forms/TaskForms/GetTaskFormById`,
+  GET_GENERIC_TASK_BY_ID: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/GetTaskDataById`,
+  GET_APP_TASK_BY_ID: `${ORCHESTRATOR_BASE}/tasks/AppTasks/GetAppTaskById`,
 } as const;
 
 /**

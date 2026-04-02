@@ -85,10 +85,9 @@ export interface TaskServiceModel {
 
   /**
    * Gets a task by ID
-   * IMPORTANT: For form tasks, folderId must be provided.
    * @param id - The ID of the task to retrieve
-   * @param options - Optional query parameters
-   * @param folderId - Optional folder ID (REQUIRED for form tasks)
+   * @param options - Optional query parameters including taskType for faster retrieval {@link TaskGetByIdOptions}
+   * @param folderId - Optional folder ID (REQUIRED when options.taskType is provided)
    * @returns Promise resolving to the task
    * {@link TaskGetResponse}
    * @example
@@ -97,10 +96,13 @@ export interface TaskServiceModel {
    * const task = await tasks.getById(<taskId>);
    *
    * // Get a form task by ID
-   * const formTask = await tasks.getById(<taskId>, <folderId>);
+   * const formTask = await tasks.getById(<taskId>, {}, <folderId>);
    *
    * // Access form task properties
    * console.log(formTask.formLayout);
+   *
+   * // Get a document validation task by ID (faster with taskType provided in the options)
+   * const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
    * ```
    */
   getById(id: number, options?: TaskGetByIdOptions, folderId?: number): Promise<TaskGetResponse>;
