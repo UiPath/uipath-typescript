@@ -79,7 +79,7 @@
     opacity: 1 !important;
 }
 
-a[href^="https://"]:not(.md-source):not(.skip-link-icon)::after {
+.md-content a[href^="https://"]::after {
     content: "↗";
     font-size: 1em;
 }
