@@ -429,8 +429,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.successRecords)).toBe(true);
 
       const insertedIds = result.successRecords
-        .filter((r: any) => r.Id)
-        .map((r: any) => r.Id);
+        .filter((r) => r.Id)
+        .map((r) => r.Id);
       serviceLevelRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -549,8 +549,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.successRecords)).toBe(true);
 
       const insertedIds = result.successRecords
-        .filter((r: any) => r.Id)
-        .map((r: any) => r.Id);
+        .filter((r) => r.Id)
+        .map((r) => r.Id);
       entityMethodRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
