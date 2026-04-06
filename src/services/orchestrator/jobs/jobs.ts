@@ -10,6 +10,8 @@ import { AttachmentService } from '../attachments/attachments';
 import { ValidationError, ServerError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
 import { errorResponseParser } from '../../../core/errors/parser';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
@@ -106,16 +108,12 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * @returns Promise resolving to the parsed output object, or null if no output exists
    */
   @track('Jobs.GetOutput')
-  async getOutput(jobKey: string): Promise<Record<string, unknown> | null> {
+  async getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null> {
     if (!jobKey) {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
 
-    const job = await this.fetchJobByKey(jobKey);
-
-    if (!job) {
-      return null;
-    }
+    const job = await this.fetchJobByKey(jobKey, folderId);
 
     if (job.OutputArguments) {
       try {
@@ -133,25 +131,24 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
-   * Fetches a job by its Key (GUID), returning the raw API response (PascalCase).
-   * Uses the Jobs list endpoint with a Key filter. Only selects fields needed for output extraction.
+   * Fetches a job by its Key (GUID) using the GetByKey endpoint.
+   * Only selects fields needed for output extraction.
    */
   private async fetchJobByKey(
-    jobKey: string
-  ): Promise<RawJobOutputFields | null> {
-    const response = await this.get<{
-      value: RawJobOutputFields[];
-    }>(
-      JOB_ENDPOINTS.GET_ALL,
+    jobKey: string,
+    folderId: number
+  ): Promise<RawJobOutputFields> {
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    const response = await this.get<RawJobOutputFields>(
+      JOB_ENDPOINTS.GET_BY_KEY(jobKey),
       {
         params: {
-          $filter: `Key eq ${jobKey}`,
           $select: 'OutputArguments,OutputFile',
-          $top: 1,
         },
+        headers,
       }
     );
-    return response.data.value?.[0] ?? null;
+    return response.data;
   }
 
   /**

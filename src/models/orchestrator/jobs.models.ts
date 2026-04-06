@@ -78,12 +78,13 @@ export interface JobServiceModel {
    * large outputs). Returns the parsed JSON output or `null` if the job has no output.
    *
    * @param jobKey - The unique key (GUID) of the job to retrieve output from
+   * @param folderId - The folder ID where the job resides
    * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
    *
    * @example
    * ```typescript
    * // Get output from a completed job
-   * const output = await jobs.getOutput(<jobKey>);
+   * const output = await jobs.getOutput(<jobKey>, <folderId>);
    *
    * if (output) {
    *   console.log('Job output:', output);
@@ -92,7 +93,7 @@ export interface JobServiceModel {
    *
    * @example
    * ```typescript
-   * // Get output using bound method
+   * // Get output using bound method (folderId is taken from the job object)
    * const allJobs = await jobs.getAll();
    * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
    *
@@ -101,7 +102,7 @@ export interface JobServiceModel {
    * }
    * ```
    */
-  getOutput(jobKey: string): Promise<Record<string, unknown> | null>;
+  getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null>;
 }
 
 /**
@@ -142,7 +143,8 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
   return {
     async getOutput(): Promise<Record<string, unknown> | null> {
       if (!jobData.key) throw new Error('Job key is undefined');
-      return service.getOutput(jobData.key);
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.getOutput(jobData.key, jobData.folderId);
     },
   };
 }

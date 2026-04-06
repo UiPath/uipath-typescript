@@ -14,7 +14,7 @@ function getJobsServiceAndFolderId() {
   const folderId = config.folderId ? Number(config.folderId) : undefined;
 
   if (!folderId) {
-    console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
+    throw new Error('INTEGRATION_TEST_FOLDER_ID is required for Jobs integration tests (GetByKey requires a folder ID).');
   }
 
   return { jobs, folderId };
@@ -82,7 +82,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      const output = await jobs.getOutput(job.key);
+      const output = await jobs.getOutput(job.key, folderId);
 
       // Output can be null (if the job had no output) or a parsed object
       if (output !== null) {

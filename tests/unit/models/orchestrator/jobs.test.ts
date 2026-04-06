@@ -5,6 +5,7 @@ import {
 } from '../../../../src/models/orchestrator/jobs.models';
 import { createBasicJob } from '../../../utils/mocks/jobs';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
+import { TEST_CONSTANTS } from '../../../utils/constants/common';
 
 // ===== TEST SUITE =====
 describe('Job Models', () => {
@@ -32,7 +33,7 @@ describe('Job Models', () => {
 
         const result = await job.getOutput();
 
-        expect(mockService.getOutput).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY);
+        expect(mockService.getOutput).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
         expect(result).toEqual(mockOutput);
       });
 
@@ -44,7 +45,7 @@ describe('Job Models', () => {
 
         const result = await job.getOutput();
 
-        expect(mockService.getOutput).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY);
+        expect(mockService.getOutput).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
         expect(result).toBeNull();
       });
 
@@ -53,6 +54,13 @@ describe('Job Models', () => {
         const job = createJobWithMethods(mockJobData, mockService);
 
         await expect(job.getOutput()).rejects.toThrow('Job key is undefined');
+      });
+
+      it('should throw when job folderId is undefined', async () => {
+        const mockJobData = createBasicJob({ folderId: undefined as any });
+        const job = createJobWithMethods(mockJobData, mockService);
+
+        await expect(job.getOutput()).rejects.toThrow('Job folderId is undefined');
       });
     });
   });
