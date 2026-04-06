@@ -27,6 +27,7 @@
 - **Options types**: `{Entity}GetAllOptions`, `{Entity}GetByIdOptions`, `{Entity}{Operation}Options` (e.g., `TaskAssignmentOptions`, `ProcessInstanceOperationOptions`). Compose with `RequestOptions & PaginationOptions & { ... }` for list methods.
 - **Common base types**: `BaseOptions` (expand, select), `RequestOptions` (extends BaseOptions with filter, orderby), `OperationResponse<TData>` (success + data) — all from `src/models/common/types.ts`.
 - **Use "Options" not "Request"** for parameter types — never `{Entity}{Operation}Request`.
+- **Required parameters are always positional; Options objects are reserved for optional parameters only.** Required values (IDs, keys, data) are positional arguments. Options objects are always the last parameter, always marked `?`, and contain only optional fields. E.g., `getOutput(jobKey: string)` not `getOutput(options: { jobKey: string })`, `close(instanceId, folderKey, options?)` not `close(options: { instanceId, folderKey })`.
 
 Method names: **singular** for single-item ops (`insertRecordById`), **plural** for batch (`insertRecordsById`). Prefer plurals over `batch` prefix.
 
@@ -44,7 +45,7 @@ Each service has 3 files in `src/models/{domain}/`:
 
 1. **`{domain}.types.ts`** — raw interfaces (`Raw{Entity}GetResponse`), options types, enums
 2. **`{domain}.constants.ts`** — field mapping (`{Entity}Map`), status mapping (`{Entity}StatusMap`), expand defaults
-3. **`{domain}.models.ts`** — the service model interface (`{Entity}ServiceModel`), methods interface (`{Entity}Methods`), the composed response type (`Raw{Entity}GetResponse & {Entity}Methods`), and `create{Entity}WithMethods()` factory
+3. **`{domain}.models.ts`** — in this order: (a) composed response type (`type {Entity}GetResponse = Raw{Entity}GetResponse & {Entity}Methods`), (b) `{Entity}ServiceModel` interface, (c) `{Entity}Methods` interface (placed after ServiceModel, before factory functions), (d) `create{Entity}Methods()` private factory, (e) `create{Entity}WithMethods()` public factory
 
 The method attachment pattern:
 - `create{Entity}Methods(rawData, service)` — returns an object of bound async methods that delegate to the service
@@ -132,7 +133,7 @@ Naming: `{SERVICE}_PAGINATION` for response shape, `{SERVICE}_OFFSET_PARAMS` or 
 
 Types in `{domain}.types.ts` are public (re-exported through barrel). Types in `{domain}.internal-types.ts` are private (imported only by service implementations).
 
-**Put in `internal-types.ts`:** Raw API response shapes before transformation, intermediate parsing types, service-internal operation types, internal enums.
+**Put in `internal-types.ts`:** Raw API response shapes before transformation, intermediate parsing types, service-internal operation types, internal enums, return type interfaces for private service methods (e.g., `RawJobOutputFields` for `fetchJobByKey`).
 
 **Put in `types.ts`:** All types in public method signatures, `Raw{Entity}GetResponse` types that users compose with `{Entity}Methods`.
 
@@ -150,6 +151,30 @@ OData APIs require `$` prefix on query params. The SDK accepts clean camelCase k
 
 - **Orchestrator**: `createHeaders({ [FOLDER_ID]: folderId })` — numeric folder IDs
 - **Maestro**: `createHeaders({ [FOLDER_KEY]: folderKey })` — string folder keys
+
+## Constructor JSDoc
+
+Service constructors that take dependency parameters (beyond the `UiPath` instance) must have JSDoc comments. Pattern (from `case-instances.ts`):
+
+```typescript
+/**
+ * Creates an instance of the {Entity} service.
+ *
+ * @param instance - UiPath SDK instance providing authentication and configuration
+ */
+constructor(instance: IUiPath) {
+  super(instance);
+  this.dependencyService = new DependencyService(instance);
+}
+```
+
+If the constructor only calls `super()` with no additional setup, omit it entirely (redundant constructor rule).
+
+## Error types
+
+- **`ValidationError`** — for **user input validation only**: missing required params, invalid option values, malformed user-provided data. Example: `if (!jobKey) throw new ValidationError(...)`.
+- **`ServerError`** — for server-side issues: failed JSON parsing of API responses, unexpected response formats, API returning unparseable data. Example: `catch { throw new ServerError({ message: 'Failed to parse output as JSON' }) }`.
+- **`ErrorFactory.createFromHttpStatus()`** — for HTTP error responses from external calls (blob downloads, etc.). Maps status codes to typed errors automatically.
 
 ## BaseService
 
