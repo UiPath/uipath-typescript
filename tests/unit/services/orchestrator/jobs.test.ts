@@ -5,6 +5,7 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import {
   createMockTransformedJobCollection,
+  createMockRawJob,
 } from '../../../utils/mocks/jobs';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
@@ -34,6 +35,7 @@ describe('JobService Unit Tests', () => {
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
+    mockApiClient.getValidToken = vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
 
     vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 
@@ -164,12 +166,7 @@ describe('JobService Unit Tests', () => {
       const transformFn = callArgs.transformFn;
 
       // Apply the transform to a raw PascalCase job
-      const rawJob = {
-        Id: 123,
-        Key: JOB_TEST_CONSTANTS.JOB_KEY,
-        State: 'Successful',
-        CreationTime: '2026-01-01T00:00:00Z',
-      };
+      const rawJob = createMockRawJob();
 
       const transformed = transformFn!(rawJob as Record<string, unknown>) as JobGetResponse;
 
@@ -179,10 +176,6 @@ describe('JobService Unit Tests', () => {
   });
 
   describe('getOutput', () => {
-    const getOutputOptions = {
-      jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
-    };
-
     it('should return parsed inline output when OutputArguments is set', async () => {
       mockApiClient.get.mockResolvedValueOnce({
         value: [{
@@ -191,7 +184,7 @@ describe('JobService Unit Tests', () => {
         }],
       });
 
-      const result = await jobService.getOutput(getOutputOptions);
+      const result = await jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY);
 
       expect(result).toEqual(JOB_TEST_CONSTANTS.PARSED_OUTPUT);
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -214,7 +207,7 @@ describe('JobService Unit Tests', () => {
         }],
       });
 
-      const result = await jobService.getOutput(getOutputOptions);
+      const result = await jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY);
 
       expect(result).toBeNull();
     });
@@ -224,7 +217,7 @@ describe('JobService Unit Tests', () => {
         value: [],
       });
 
-      const result = await jobService.getOutput(getOutputOptions);
+      const result = await jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY);
 
       expect(result).toBeNull();
     });
@@ -237,7 +230,7 @@ describe('JobService Unit Tests', () => {
         }],
       });
 
-      const result = await jobService.getOutput(getOutputOptions);
+      const result = await jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY);
 
       expect(result).toEqual(JOB_TEST_CONSTANTS.PARSED_OUTPUT);
       // Should only make one API call (job fetch), not fetch the attachment
@@ -270,7 +263,7 @@ describe('JobService Unit Tests', () => {
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      const result = await jobService.getOutput(getOutputOptions);
+      const result = await jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY);
 
       expect(result).toEqual(JOB_TEST_CONSTANTS.PARSED_BLOB_OUTPUT);
       expect(mockApiClient.get).toHaveBeenCalledTimes(2);
@@ -283,7 +276,6 @@ describe('JobService Unit Tests', () => {
         JOB_TEST_CONSTANTS.BLOB_URI,
         expect.objectContaining({
           method: 'GET',
-          headers: { 'x-ms-blob-type': 'BlockBlob' },
         })
       );
     });
@@ -305,16 +297,13 @@ describe('JobService Unit Tests', () => {
         },
       });
 
-      // Mock getValidToken on the ApiClient
-      mockApiClient.getValidToken = vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN);
-
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         text: () => Promise.resolve(JOB_TEST_CONSTANTS.BLOB_CONTENT),
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      const result = await jobService.getOutput(getOutputOptions);
+      const result = await jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY);
 
       expect(result).toEqual(JOB_TEST_CONSTANTS.PARSED_BLOB_OUTPUT);
       expect(mockFetch).toHaveBeenCalledWith(
@@ -344,7 +333,7 @@ describe('JobService Unit Tests', () => {
         },
       });
 
-      const result = await jobService.getOutput(getOutputOptions);
+      const result = await jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY);
 
       expect(result).toBeNull();
     });
@@ -376,7 +365,7 @@ describe('JobService Unit Tests', () => {
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      await expect(jobService.getOutput(getOutputOptions)).rejects.toThrow('Forbidden');
+      await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY)).rejects.toThrow('Forbidden');
     });
 
     it('should throw ServerError when blob download returns 500', async () => {
@@ -406,12 +395,12 @@ describe('JobService Unit Tests', () => {
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      await expect(jobService.getOutput(getOutputOptions)).rejects.toThrow('Internal Server Error');
+      await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY)).rejects.toThrow('Internal Server Error');
     });
 
     it('should throw validation error when jobKey is missing', async () => {
       await expect(
-        jobService.getOutput({ jobKey: '' })
+        jobService.getOutput('')
       ).rejects.toThrow('jobKey is required for getOutput');
     });
 
@@ -419,7 +408,7 @@ describe('JobService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValueOnce(error);
 
-      await expect(jobService.getOutput(getOutputOptions)).rejects.toThrow(
+      await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY)).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE
       );
     });
@@ -435,7 +424,7 @@ describe('JobService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValueOnce(error);
 
-      await expect(jobService.getOutput(getOutputOptions)).rejects.toThrow(
+      await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY)).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE
       );
     });

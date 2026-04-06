@@ -166,12 +166,3 @@ export type JobGetAllOptions = RequestOptions & PaginationOptions & {
   folderId?: number;
 }
 
-/**
- * Options for getting job output
- */
-export interface JobGetOutputOptions {
-  /**
-   * The unique key (GUID) of the job to retrieve output from
-   */
-  jobKey: string;
-}

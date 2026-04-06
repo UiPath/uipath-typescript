@@ -1,12 +1,13 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions, JobGetOutputOptions } from '../../../models/orchestrator/jobs.types';
+import { RawJobGetResponse, JobGetAllOptions } from '../../../models/orchestrator/jobs.types';
+import { RawJobOutputFields } from '../../../models/orchestrator/jobs.internal-types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
-import { pascalToCamelCaseKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
+import { pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { JobMap } from '../../../models/orchestrator/jobs.constants';
 import { AttachmentService } from '../attachments/attachments';
-import { ValidationError } from '../../../core/errors';
+import { ValidationError, ServerError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
 import { errorResponseParser } from '../../../core/errors/parser';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
@@ -21,10 +22,16 @@ import type { IUiPath } from '../../../core/types';
 export class JobService extends FolderScopedService implements JobServiceModel {
   private attachmentService: AttachmentService;
 
+  /**
+   * Creates an instance of the Jobs service.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   */
   constructor(instance: IUiPath) {
     super(instance);
     this.attachmentService = new AttachmentService(instance);
   }
+
   /**
    * Gets all jobs across folders with optional filtering
    *
@@ -95,13 +102,11 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * and file-based output (stored as a blob attachment for large outputs). Returns the parsed JSON
    * output or null if the job has no output.
    *
-   * @param options - Options containing the job key (GUID)
+   * @param jobKey - The unique key (GUID) of the job
    * @returns Promise resolving to the parsed output object, or null if no output exists
    */
   @track('Jobs.GetOutput')
-  async getOutput(options: JobGetOutputOptions): Promise<Record<string, unknown> | null> {
-    const { jobKey } = options;
-
+  async getOutput(jobKey: string): Promise<Record<string, unknown> | null> {
     if (!jobKey) {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
@@ -116,7 +121,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       try {
         return JSON.parse(job.OutputArguments) as Record<string, unknown>;
       } catch {
-        throw new ValidationError({ message: `Failed to parse job output arguments as JSON` });
+        throw new ServerError({ message: 'Failed to parse job output arguments as JSON' });
       }
     }
 
@@ -133,9 +138,9 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    */
   private async fetchJobByKey(
     jobKey: string
-  ): Promise<{ OutputArguments: string | null; OutputFile: string | null } | null> {
+  ): Promise<RawJobOutputFields | null> {
     const response = await this.get<{
-      value: { OutputArguments: string | null; OutputFile: string | null }[];
+      value: RawJobOutputFields[];
     }>(
       JOB_ENDPOINTS.GET_ALL,
       {
@@ -165,11 +170,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       return null;
     }
 
-    // Convert array-based headers to a flat Record if needed
-    const blobHeaders: Record<string, string> =
-      blobAccess.headers && 'keys' in blobAccess.headers
-        ? arrayDictionaryToRecord(blobAccess.headers as unknown as { keys: string[]; values: string[] })
-        : (blobAccess.headers as Record<string, string>) ?? {};
+    const blobHeaders: Record<string, string> = { ...blobAccess.headers };
 
     // Add auth header if the blob URI requires authenticated access
     if (blobAccess.requiresAuth) {
@@ -191,7 +192,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     try {
       return JSON.parse(content) as Record<string, unknown>;
     } catch {
-      throw new ValidationError({ message: `Failed to parse job output file as JSON` });
+      throw new ServerError({ message: 'Failed to parse job output file as JSON' });
     }
   }
 }

@@ -67,7 +67,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
   });
 
   describe('getOutput', () => {
-    it('should return parsed output for a completed job with output arguments', async () => {
+    it('should return parsed output or null for a completed job', async () => {
       const { jobs, folderId } = getJobsServiceAndFolderId();
 
       // Find a successful job that might have output
@@ -82,34 +82,11 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      const output = await jobs.getOutput({ jobKey: job.key });
+      const output = await jobs.getOutput(job.key);
 
       // Output can be null (if the job had no output) or a parsed object
       if (output !== null) {
         expect(typeof output).toBe('object');
-      }
-    });
-
-    it('should handle job with or without output', async () => {
-      const { jobs, folderId } = getJobsServiceAndFolderId();
-
-      const result = await jobs.getAll({
-        folderId,
-        pageSize: 1,
-      });
-
-      if (result.items.length === 0) {
-        throw new Error('No jobs found to test getOutput.');
-      }
-
-      const job = result.items[0];
-      const output = await jobs.getOutput({ jobKey: job.key });
-
-      // Smoke test: getOutput completes without error and returns a valid type
-      if (output !== null) {
-        expect(typeof output).toBe('object');
-      } else {
-        expect(output).toBeNull();
       }
     });
   });

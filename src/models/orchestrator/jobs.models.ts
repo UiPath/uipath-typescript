@@ -1,32 +1,5 @@
-import { JobGetAllOptions, JobGetOutputOptions, RawJobGetResponse } from './jobs.types';
+import { JobGetAllOptions, RawJobGetResponse } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-
-/**
- * Methods available on job response objects.
- * These are bound to the job data and delegate to the service.
- */
-export interface JobMethods {
-  /**
-   * Gets the output of this job.
-   *
-   * Retrieves the job's output arguments, handling both inline output (stored directly on the job
-   * as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for
-   * large outputs). Returns the parsed JSON output or `null` if the job has no output.
-   *
-   * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
-   *
-   * @example
-   * ```typescript
-   * const allJobs = await jobs.getAll({ folderId: <folderId> });
-   * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
-   *
-   * if (completedJob) {
-   *   const output = await completedJob.getOutput();
-   * }
-   * ```
-   */
-  getOutput(): Promise<Record<string, unknown> | null>;
-}
 
 // Combined type for job data with methods
 export type JobGetResponse = RawJobGetResponse & JobMethods;
@@ -49,9 +22,13 @@ export type JobGetResponse = RawJobGetResponse & JobMethods;
  */
 export interface JobServiceModel {
   /**
-   * Gets all jobs across folders with optional filtering
+   * Gets all jobs across folders with optional filtering and pagination.
    *
-   * @param options - Query options including optional folderId and pagination options
+   * Returns jobs with full details including state, timing, and input/output arguments.
+   * Use `expand` to include related entities like Robot, Machine, or Release.
+   * Pass `folderId` to scope the query to a specific folder.
+   *
+   * @param options - Query options including optional folderId, filtering, and pagination options
    * @returns Promise resolving to either an array of jobs {@link NonPaginatedResponse}<{@link JobGetResponse}> or a {@link PaginatedResponse}<{@link JobGetResponse}> when pagination options are used.
    * {@link JobGetResponse}
    * @example
@@ -65,6 +42,11 @@ export interface JobServiceModel {
    * // With filtering
    * const runningJobs = await jobs.getAll({
    *   filter: "state eq 'Running'"
+   * });
+   *
+   * // With expand to include related entities
+   * const expandedJobs = await jobs.getAll({
+   *   expand: 'Robot,Machine,Release'
    * });
    *
    * // First page with pagination
@@ -95,13 +77,13 @@ export interface JobServiceModel {
    * as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for
    * large outputs). Returns the parsed JSON output or `null` if the job has no output.
    *
-   * @param options - {@link JobGetOutputOptions} containing the job key (GUID)
+   * @param jobKey - The unique key (GUID) of the job to retrieve output from
    * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
    *
    * @example
    * ```typescript
    * // Get output from a completed job
-   * const output = await jobs.getOutput({ jobKey: <jobKey> });
+   * const output = await jobs.getOutput(<jobKey>);
    *
    * if (output) {
    *   console.log('Job output:', output);
@@ -111,7 +93,7 @@ export interface JobServiceModel {
    * @example
    * ```typescript
    * // Get output using bound method
-   * const allJobs = await jobs.getAll({ folderId: <folderId> });
+   * const allJobs = await jobs.getAll();
    * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
    *
    * if (completedJob) {
@@ -119,7 +101,34 @@ export interface JobServiceModel {
    * }
    * ```
    */
-  getOutput(options: JobGetOutputOptions): Promise<Record<string, unknown> | null>;
+  getOutput(jobKey: string): Promise<Record<string, unknown> | null>;
+}
+
+/**
+ * Methods available on job response objects.
+ * These are bound to the job data and delegate to the service.
+ */
+export interface JobMethods {
+  /**
+   * Gets the output of this job.
+   *
+   * Retrieves the job's output arguments, handling both inline output (stored directly on the job
+   * as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for
+   * large outputs). Returns the parsed JSON output or `null` if the job has no output.
+   *
+   * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
+   *
+   * @example
+   * ```typescript
+   * const allJobs = await jobs.getAll();
+   * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
+   *
+   * if (completedJob) {
+   *   const output = await completedJob.getOutput();
+   * }
+   * ```
+   */
+  getOutput(): Promise<Record<string, unknown> | null>;
 }
 
 /**
@@ -133,7 +142,7 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
   return {
     async getOutput(): Promise<Record<string, unknown> | null> {
       if (!jobData.key) throw new Error('Job key is undefined');
-      return service.getOutput({ jobKey: jobData.key });
+      return service.getOutput(jobData.key);
     },
   };
 }
