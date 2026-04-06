@@ -135,6 +135,9 @@
                 "types": "./dist/conversational-agent/index.d.ts",
                 "default": "./dist/conversational-agent/index.cjs"
             }
+        },
+        "./types": {
+          "types": "./dist/types/index.d.ts"
         }
     },
     "files": [
