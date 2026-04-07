@@ -166,10 +166,10 @@ private async downloadOutput(downloadUrl: string): Promise<unknown> {
 }
 
 // Public composite method — the only one decorated with @track
+// Note: required params are always positional; Options objects are for optional params only
 @track('Jobs.GetOutput')
-async getOutput(jobId: string, options?: JobGetOutputOptions): Promise<JobOutputResponse> {
-  const headers = createHeaders({ [FOLDER_ID]: options?.folderId });
-  const job = await this.fetchJobDetails(jobId, headers);
+async getOutput(jobKey: string): Promise<JobOutputResponse> {
+  const job = await this.fetchJobDetails(jobKey);
 
   if (job.outputArguments && !isAttachmentReference(job.outputArguments)) {
     return this.composeInlineOutput(job);

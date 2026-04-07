@@ -59,9 +59,9 @@ export interface ProcessMetadata {
 }
 
 /**
- * Interface for job response
+ * Raw job response from the API before method attachment
  */
-export interface JobGetResponse extends FolderProperties {
+export interface RawJobGetResponse extends FolderProperties {
   /** The unique numeric identifier of the job */
   id: number;
   /** The unique job identifier (GUID) */
@@ -88,6 +88,8 @@ export interface JobGetResponse extends FolderProperties {
   inputArguments: string | null;
   /** Output parameters as a JSON string resulted from job execution */
   outputArguments: string | null;
+  /** Attachment key for file-based output when output is too large for inline arguments */
+  outputFile: string | null;
   /** Environment variables as a JSON string passed to the job execution */
   environmentVariables: string | null;
   /** Additional information about the current job */
@@ -163,3 +165,4 @@ export type JobGetAllOptions = RequestOptions & PaginationOptions & {
    */
   folderId?: number;
 }
+

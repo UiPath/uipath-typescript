@@ -3,23 +3,25 @@ import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../c
 
 const modes: InitMode[] = ['v1'];
 
+function getJobsService() {
+  const { jobs } = getServices();
+  const config = getTestConfig();
+
+  if (!jobs) {
+    throw new Error('Jobs service not available in test services');
+  }
+
+  const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+  return { jobs, folderId };
+}
+
 describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   describe('getAll', () => {
     it('should retrieve all jobs', async () => {
-      const { jobs } = getServices();
-      const config = getTestConfig();
-
-      if (!jobs) {
-        throw new Error('Jobs service not available in test services');
-      }
-
-      const folderId = config.folderId ? Number(config.folderId) : undefined;
-
-      if (!folderId) {
-        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
-      }
+      const { jobs, folderId } = getJobsService();
 
       const result = await jobs.getAll({
         folderId,
@@ -32,18 +34,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
 
     it('should retrieve jobs with pagination options', async () => {
-      const { jobs } = getServices();
-      const config = getTestConfig();
-
-      if (!jobs) {
-        throw new Error('Jobs service not available in test services');
-      }
-
-      const folderId = config.folderId ? Number(config.folderId) : undefined;
-
-      if (!folderId) {
-        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
-      }
+      const { jobs, folderId } = getJobsService();
 
       const result = await jobs.getAll({
         folderId,
@@ -57,18 +48,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
 
     it('should retrieve jobs with filter', async () => {
-      const { jobs } = getServices();
-      const config = getTestConfig();
-
-      if (!jobs) {
-        throw new Error('Jobs service not available in test services');
-      }
-
-      const folderId = config.folderId ? Number(config.folderId) : undefined;
-
-      if (!folderId) {
-        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
-      }
+      const { jobs, folderId } = getJobsService();
 
       const result = await jobs.getAll({
         folderId,
@@ -82,20 +62,38 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('Job structure validation', () => {
-    it('should have expected fields in job objects', async () => {
-      const { jobs } = getServices();
-      const config = getTestConfig();
-
-      if (!jobs) {
-        throw new Error('Jobs service not available in test services');
-      }
-
-      const folderId = config.folderId ? Number(config.folderId) : undefined;
+  describe('getOutput', () => {
+    it('should return parsed output or null for a completed job', async () => {
+      const { jobs, folderId } = getJobsService();
 
       if (!folderId) {
-        console.log('INTEGRATION_TEST_FOLDER_ID not configured, running without folder filter.');
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getOutput tests (GetByKey requires a folder ID).');
       }
+
+      // Find a successful job that might have output
+      const result = await jobs.getAll({
+        folderId,
+        pageSize: 5,
+        filter: "State eq 'Successful'",
+      });
+
+      if (result.items.length === 0) {
+        throw new Error('No successful jobs found to test getOutput.');
+      }
+
+      const job = result.items[0];
+      const output = await jobs.getOutput(job.key, folderId);
+
+      // Output can be null (if the job had no output) or a parsed object
+      if (output !== null) {
+        expect(typeof output).toBe('object');
+      }
+    });
+  });
+
+  describe('Job structure validation', () => {
+    it('should have expected fields in job objects', async () => {
+      const { jobs, folderId } = getJobsService();
 
       const result = await jobs.getAll({
         folderId,

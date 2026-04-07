@@ -16,6 +16,7 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER duplicate fields across option types** — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use `extends` (e.g., `export interface EntityUpdateRecordByIdOptions extends EntityGetRecordByIdOptions {}`) instead of a type alias, as type aliases break TypeDoc documentation generation.
 - **NEVER use type aliases for response types** — even when the shape matches an existing one, use an `extends` interface. Type aliases (e.g., `export type EntityUpdateRecordResponse = EntityRecord`) break TypeDoc docs generation by not rendering as standalone types. Use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
 - **NEVER write `param || {}` for required parameters** — this hides bugs by silently accepting missing required data at call sites.
+- **NEVER put required parameters in an Options object** — required values (IDs, keys, data) are always positional arguments. Options objects are reserved for optional parameters only, always the last argument, always marked `?`. E.g., `getOutput(jobKey: string)` not `getOutput(options: { jobKey: string })`, `close(instanceId, folderKey, options?)` not `close(options: { instanceId, folderKey })`. This is consistent across every service in the SDK.
 
 ### Transforms
 - **NEVER add case-only entries to `{Entity}Map`** — field maps are for semantic renames only (`creationTime` → `createdTime`). Case conversion (`CreationTime` → `creationTime`) is handled by `pascalToCamelCaseKeys()`. Mixing them causes double-conversion bugs and makes the map lie about its purpose.
@@ -34,6 +35,10 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER hardcode HTTP method strings in service methods** — use existing constants. Hardcoded strings drift and miss centralized changes.
 - **NEVER use inconsistent param names** across endpoints in the same group — if one endpoint uses `instanceId`, all should. Mixing `id`/`instanceId` creates confusion when reading endpoint constants.
 - **NEVER use redundant names** in nested groups — under a `CASE` group, use `REOPEN` not `REOPEN_CASE`. The group context already provides the prefix.
+
+### Error handling
+- **NEVER use `ValidationError` for server-side issues** — `ValidationError` is for user input validation only (missing required params, invalid option values). Server-side failures like failed JSON parsing of API responses must use `ServerError`. Using `ValidationError` for parse errors misrepresents the error source and confuses debugging.
+- **NEVER add unnecessary type casts on already-typed values** — if `blobAccess.headers` is already `Record<string, string>`, don't add `arrayDictionaryToRecord()` with `as unknown as` casts. Use a simple spread `{ ...blobAccess.headers }` instead. Redundant casts obscure the actual type and break when the upstream type changes.
 
 ### OperationResponse
 - **NEVER use `OperationResponse` for `getAll()`, `getById()`, `create()`** — these return entity data directly. `OperationResponse` is only for state-change operations (cancel, pause, resume) and bulk OData operations with ambiguous success.
@@ -73,6 +78,9 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **Use domain-specific error constants for entity-specific method tests** (e.g., `getById` → `JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND`, `ASSET_TEST_CONSTANTS.ERROR_ASSET_NOT_FOUND`). Generic `TEST_CONSTANTS.ERROR_MESSAGE` is acceptable for collection methods like `getAll`. Existing pattern: Assets, Queues, Jobs all follow this split.
 - Verify bound methods exist on response objects when `getById` returns entities with attached methods.
 - **Validate transform completeness** — for any method with a transform pipeline, verify both: (a) transformed fields have correct values (`result.createdTime`), AND (b) original PascalCase fields are absent (`(result as any).CreationTime` is `undefined`). This catches transform regressions that value-only assertions miss. Existing pattern: Assets (`assets.test.ts:94`), Queues (`queues.test.ts:88`), ChoiceSets (`choicesets.test.ts:243`).
+- **Every service with bound methods must have a model test file** — `tests/unit/models/{domain}/{entity}.test.ts` testing bound method delegation. This is separate from service tests and verifies that `create{Entity}WithMethods()` correctly binds methods. Existing pattern: Tasks, CaseInstances, ProcessInstances, Entities, Conversations.
+- **Mock factories must return `Raw{Entity}GetResponse`**, not `{Entity}GetResponse`** — mock factories like `createBasicJob()` produce plain data without bound methods. Methods are attached by the service layer via `create{Entity}WithMethods()`, not by mocks. Using the combined type causes compile errors for missing method properties.
+- **Shared mock setup belongs in `beforeEach`**, not inline in individual tests** — mock creation like `mockApiClient.getValidToken = vi.fn()` must be in the shared setup block, not duplicated inside each test.
 - **Coverage**: 80% minimum for new code, 100% for critical paths (auth, API calls).
 - Remove unused mock methods. Extract repeated logic into shared helpers.
 
@@ -80,17 +88,19 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 
 Every new method must also have an integration test in `tests/integration/shared/{domain}/`. These run against a live API and catch issues unit tests miss — wrong endpoints, broken transforms, auth/header problems.
 
+- Use `console.warn()` + skip (not `throw`) for `beforeAll` setup preconditions that are outside the test's control (e.g., no test data available). `throw` is for test body guards where missing config means the test can't run at all.
 - Use `getServices()` and `getTestConfig()` from `tests/integration/config/unified-setup.ts`
 - Use `registerResource()` from `tests/integration/utils/cleanup.ts` for cleanup tracking
 - Use `generateRandomString()` from `tests/integration/utils/helpers.ts` for unique test data
-- Tests run in both `v0` and `v1` init modes via `describe.each(modes)`
+- Tests run in both `v0` and `v1` init modes via `describe.each(modes)` — **only if the service is registered in both modes in `unified-setup.ts`**. New services that only support `v1` init should use `['v1']` only.
+- **NEVER write redundant integration tests** — each test must cover a distinct code path, error scenario, or response shape aspect. A test that repeats an existing one with minor value differences (e.g., "should handle job with or without output" duplicating "should return parsed output for a completed job") adds no value and wastes CI time.
 - **Include a transform validation test** for new methods with a transform pipeline. This test should verify: (a) transformed camelCase fields exist and have values (`job.createdTime`, `job.processName`), AND (b) original PascalCase API fields are absent (`(job as any).CreationTime` is `undefined`, `(job as any).ReleaseName` is `undefined`). This is a separate test from the basic "should retrieve by ID" test — it validates the SDK transform layer against the live API. Note: existing integration tests don't yet follow this pattern, but unit tests do (Assets, Queues, ChoiceSets). Extending it to integration tests catches mismatches between the Swagger spec assumptions and the live API response.
 
 ## Documentation
 
 JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth for the public API docs site**. TypeDoc (`typedoc.json`) runs on `src/index.ts`.
 
-- `{Entity}ServiceModel` interfaces become the main API reference pages.
+- `{Entity}ServiceModel` interfaces become the main API reference pages. **Only JSDoc on `{Entity}ServiceModel` is rendered in docs — JSDoc on `{Entity}Methods` does NOT appear.** Place all public-facing documentation on the ServiceModel interface.
 - Use `@example` with fenced TypeScript blocks, `@param`, `@returns`, `{@link TypeName}`.
 - Tag internal code with `@internal` or `@ignore`.
 - When adding methods, update `docs/oauth-scopes.md` with required OAuth scopes.
@@ -104,6 +114,9 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - Keep JSDoc in sync with method names.
 - **When a method supports `expand`**, show multiple expandable entities in the `@example` (e.g., `expand: 'Robot,Machine,Release'`) so users see the comma-separated pattern.
 - **Add a one-line description of what the response includes** beyond the method signature (e.g., "Returns the full job details including state, timing, and input/output arguments. Use `expand` to include related entities like Robot, Machine, or Release").
+- **NEVER reference unrelated parameters in JSDoc examples** — keep examples focused on the method being documented. If `getOutput()` doesn't accept `folderId`, don't show `folderId` in its example. Unrelated params confuse users about what the method actually accepts.
+- **Show bare minimum call first** in the first `@example`, then a second example with filtering/options. Never use `$` prefix on OData params in examples (`expand` not `$expand`).
+- **Add JSDoc to non-obvious enum values** — if an enum has values whose meaning isn't clear from the name alone, add a brief comment to each value.
 
 ## Post-implementation verification checklist
 
@@ -123,6 +136,7 @@ Manual checks:
 - [ ] All `@track('ServiceName.MethodName')` decorators present on public methods
 - [ ] JSDoc complete on `{Entity}ServiceModel` interface with `@example`, `@param`, `@returns`
 - [ ] Unit tests cover success + error paths for every public method
+- [ ] Model tests for bound methods in `tests/unit/models/{domain}/` (if service has `{Entity}Methods`)
 - [ ] Integration test written in `tests/integration/shared/{domain}/`
 
 Documentation (the most commonly missed step):

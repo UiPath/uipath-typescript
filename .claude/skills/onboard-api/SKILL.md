@@ -145,16 +145,16 @@ Without a real response, you cannot reliably decide: which fields are optional, 
 
 ## Step 4: Implement
 
-Implementation order:
-1. Create model files (`types.ts`, `constants.ts`, `models.ts`, optionally `internal-types.ts`) — follow type naming conventions, use "Options" never "Request". **Before creating any enum or interface, search `src/models/` for existing types to reuse.**
-2. Define endpoint constants — `as const`, consistent param names, no redundancy
-3. Define pagination constants (if paginated) — check BaseService vs FolderScopedService decision rule
-4. Implement service class — apply only justified transform pipeline steps, use `@track()` on all public methods. **If Composite:** The public method orchestrates multiple internal API calls. Private helper methods (not decorated with `@track`) handle individual calls. Only the public composite method gets `@track`. Follow the composition pattern from Step 3 — see `references/composite-methods.md` § Implementation Patterns.
-5. Wire up exports (area `index.ts`, `src/index.ts`, `package.json`, `rollup.config.js`)
-6. Write unit tests — use shared mocks, test constants, success + error paths
-7. Write integration tests — `throw` in test body guards (never `console.log` + `return`), `console.warn()` + skip for `beforeAll` setup preconditions, no try/catch around API calls. New services use v1 setup only.
-8. Write JSDoc on `{Entity}ServiceModel` interface — `@example`, `{@link}`, camelCase in examples. Show the bare minimum call in the first `@example` (no optional params), then a second example with filtering. Never use `$` prefix on OData params in examples (`expand` not `$expand`). Use PascalCase for field names in `$filter` examples (e.g., `filter: "State eq 'Running'"`). Add JSDoc to non-obvious enum values.
-9. Update docs (`oauth-scopes.md`, `pagination.md`, `mkdocs.yml`) — check NEVER Do § Docs
+Implementation order (follow `conventions.md` for patterns, `rules.md` for quality rules and testing):
+1. Create model files (`types.ts`, `constants.ts`, `models.ts`, optionally `internal-types.ts`) — see conventions.md § Type naming, § Service model + method attachment pattern, § Internal types. **Before creating any enum or interface, search `src/models/` for existing types to reuse.**
+2. Define endpoint constants — see conventions.md § Endpoint constants
+3. Define pagination constants (if paginated) — see conventions.md § Pagination
+4. Implement service class — see conventions.md § Response transformation pipeline, § Constructor JSDoc, § Error types. **If Composite:** see `references/composite-methods.md` § Implementation Patterns. Only the public composite method gets `@track`.
+5. Wire up exports (area `index.ts`, `src/index.ts`, `package.json`, `rollup.config.js`) — see conventions.md § Export naming
+6. Write unit tests — see rules.md § Testing guidelines. If the service has a `{Entity}Methods` interface, also create `tests/unit/models/{domain}/{entity}.test.ts` (see `tests/unit/models/maestro/case-instances.test.ts` for the pattern).
+7. Write integration tests — see rules.md § Integration tests
+8. Write JSDoc on `{Entity}ServiceModel` interface — see rules.md § Documentation. Show bare minimum call first, then a second example with filtering. Use PascalCase for field names in `$filter` examples (e.g., `filter: "State eq 'Running'"`).
+9. Update docs (`oauth-scopes.md`, `pagination.md`, `mkdocs.yml`) — see rules.md § NEVER Do → Docs
 
 ---
 

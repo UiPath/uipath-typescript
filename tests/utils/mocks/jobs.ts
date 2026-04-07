@@ -4,7 +4,7 @@
  */
 import { JobState } from '../../../src/models/common/types';
 import { JobPriority, JobType, PackageType, RemoteControlAccess, JobSourceType } from '../../../src/models/orchestrator/processes.types';
-import { JobGetResponse } from '../../../src/models/orchestrator/jobs.types';
+import { RawJobGetResponse } from '../../../src/models/orchestrator/jobs.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { JOB_TEST_CONSTANTS } from '../constants/jobs';
 import { TEST_CONSTANTS } from '../constants/common';
@@ -49,7 +49,7 @@ export const createMockRawJob = (overrides: Partial<any> = {}): any => {
  * @param overrides - Optional overrides for specific fields
  * @returns Job with transformed field names (camelCase)
  */
-export const createBasicJob = (overrides: Partial<JobGetResponse> = {}): JobGetResponse => {
+export const createBasicJob = (overrides: Partial<RawJobGetResponse> = {}): RawJobGetResponse => {
   return createMockBaseResponse({
     id: JOB_TEST_CONSTANTS.JOB_ID,
     key: JOB_TEST_CONSTANTS.JOB_KEY,
@@ -86,6 +86,7 @@ export const createBasicJob = (overrides: Partial<JobGetResponse> = {}): JobGetR
     info: null,
     inputArguments: null,
     outputArguments: null,
+    outputFile: null,
     environmentVariables: null,
     resumeTime: null,
     createdTime: JOB_TEST_CONSTANTS.CREATED_TIME,
