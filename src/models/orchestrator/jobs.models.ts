@@ -25,8 +25,10 @@ export interface JobServiceModel {
    * Gets all jobs across folders with optional filtering and pagination.
    *
    * Returns jobs with full details including state, timing, and input/output arguments.
-   * Use `expand` to include related entities like Robot, Machine, or Release.
    * Pass `folderId` to scope the query to a specific folder.
+   *
+   * !!! info "Input and output fields are not included in `getAll` responses"
+   *     The `inputArguments`, `inputFile`, `outputArguments`, and `outputFile` fields will always be `null` in the `getAll` response. To retrieve a job's output, use the {@link getOutput} method with the job's `key` and `folderId`.
    *
    * @param options - Query options including optional folderId, filtering, and pagination options
    * @returns Promise resolving to either an array of jobs {@link NonPaginatedResponse}<{@link JobGetResponse}> or a {@link PaginatedResponse}<{@link JobGetResponse}> when pagination options are used.
@@ -42,11 +44,6 @@ export interface JobServiceModel {
    * // With filtering
    * const runningJobs = await jobs.getAll({
    *   filter: "state eq 'Running'"
-   * });
-   *
-   * // With expand to include related entities
-   * const expandedJobs = await jobs.getAll({
-   *   expand: 'Robot,Machine,Release'
    * });
    *
    * // First page with pagination
@@ -93,7 +90,7 @@ export interface JobServiceModel {
    *
    * @example
    * ```typescript
-   * // Get output using bound method (folderId is taken from the job object)
+   * // Get output using bound method (jobKey and folderId are taken from the job object)
    * const allJobs = await jobs.getAll();
    * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
    *

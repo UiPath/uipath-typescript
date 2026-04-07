@@ -35,22 +35,24 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
-   * Gets all jobs across folders with optional filtering
+   * Gets all jobs across folders with optional filtering and pagination.
    *
-   * @param options - Query options including optional folderId and pagination options
-   * @returns Promise resolving to array of jobs or paginated response
+   * Returns jobs with full details including state, timing, and input/output arguments.
+   * Pass `folderId` to scope the query to a specific folder.
    *
+   * !!! info "Input and output fields are not included in `getAll` responses"
+   *     The `inputArguments`, `inputFile`, `outputArguments`, and `outputFile` fields will always be `null` in the `getAll` response. To retrieve a job's output, use the {@link getOutput} method with the job's `key` and `folderId`.
+   *
+   * @param options - Query options including optional folderId, filtering, and pagination options
+   * @returns Promise resolving to either an array of jobs {@link NonPaginatedResponse}<{@link JobGetResponse}> or a {@link PaginatedResponse}<{@link JobGetResponse}> when pagination options are used.
+   * {@link JobGetResponse}
    * @example
    * ```typescript
-   * import { Jobs } from '@uipath/uipath-typescript/jobs';
-   *
-   * const jobs = new Jobs(sdk);
-   *
    * // Get all jobs
    * const allJobs = await jobs.getAll();
    *
    * // Get all jobs in a specific folder
-   * const folderJobs = await jobs.getAll({ folderId: 123 });
+   * const folderJobs = await jobs.getAll({ folderId: <folderId> });
    *
    * // With filtering
    * const runningJobs = await jobs.getAll({
@@ -64,6 +66,12 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * if (page1.hasNextPage) {
    *   const page2 = await jobs.getAll({ cursor: page1.nextCursor });
    * }
+   *
+   * // Jump to specific page
+   * const page5 = await jobs.getAll({
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
    * ```
    */
   @track('Jobs.GetAll')
@@ -100,12 +108,34 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   /**
    * Gets the output of a completed job.
    *
-   * Retrieves the job's output arguments, handling both inline output (stored directly on the job)
-   * and file-based output (stored as a blob attachment for large outputs). Returns the parsed JSON
-   * output or null if the job has no output.
+   * Retrieves the job's output arguments, handling both inline output (stored directly on the job
+   * as a JSON string in `outputArguments`) and file-based output (stored as a blob attachment for
+   * large outputs). Returns the parsed JSON output or `null` if the job has no output.
    *
-   * @param jobKey - The unique key (GUID) of the job
-   * @returns Promise resolving to the parsed output object, or null if no output exists
+   * @param jobKey - The unique key (GUID) of the job to retrieve output from
+   * @param folderId - The folder ID where the job resides
+   * @returns Promise resolving to the parsed output as `Record<string, unknown>`, or `null` if no output exists
+   *
+   * @example
+   * ```typescript
+   * // Get output from a completed job
+   * const output = await jobs.getOutput(<jobKey>, <folderId>);
+   *
+   * if (output) {
+   *   console.log('Job output:', output);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get output using bound method (jobKey and folderId are taken from the job object)
+   * const allJobs = await jobs.getAll();
+   * const completedJob = allJobs.items.find(j => j.state === JobState.Successful);
+   *
+   * if (completedJob) {
+   *   const output = await completedJob.getOutput();
+   * }
+   * ```
    */
   @track('Jobs.GetOutput')
   async getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null> {
