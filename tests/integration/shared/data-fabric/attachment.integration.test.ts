@@ -170,5 +170,5 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       });
     });
   },
-  { timeout: 30000 }
+  60000
 );

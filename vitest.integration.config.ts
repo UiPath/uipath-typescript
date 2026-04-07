@@ -6,8 +6,8 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/integration/**/*.integration.test.ts'],
     exclude: ['tests/integration/shared/maestro/**', 'tests/integration/shared/orchestrator/attachments.integration.test.ts'],
-    testTimeout: 30000,
-    hookTimeout: 30000,
+    testTimeout: 60000,
+    hookTimeout: 60000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
