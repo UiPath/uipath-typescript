@@ -33,7 +33,7 @@ import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/c
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
-import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
+import { transformData } from '../../utils/transform';
 import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
 
@@ -178,13 +178,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    // Apply EntityMap transformations
-    const transformedResponse = transformData(camelResponse, EntityMap);
-    return transformedResponse;
+    return response.data;
   }
-   
+
   /**
    * Inserts a single record into an entity by entity ID
    *
@@ -223,9 +219,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -274,9 +268,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -318,9 +310,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -370,9 +360,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -410,9 +398,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -471,7 +457,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Download attachment for a specific record and field
    * const blob = await entities.downloadAttachment(entityId, recordId, 'Documents');
@@ -511,7 +497,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Upload a file attachment
    * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
@@ -534,9 +520,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -559,7 +543,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Delete attachment for a specific record and field
    * await entities.deleteAttachment(entityId, recordId, 'Documents');

@@ -400,14 +400,13 @@ describe('EntityService Unit Tests', () => {
 
   describe('getRecordById', () => {
     it('should get a single record by entity ID and record ID successfully', async () => {
-      // API returns PascalCase; service converts to camelCase
-      const mockRecordPascal = {
+      const mockRecord = {
         Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        Name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
-        Age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
-        Email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email
+        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
+        age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
+        email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email
       };
-      mockApiClient.get.mockResolvedValue(mockRecordPascal);
+      mockApiClient.get.mockResolvedValue(mockRecord);
 
       const result = await entityService.getRecordById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -415,7 +414,7 @@ describe('EntityService Unit Tests', () => {
       );
 
       expect(result).toBeDefined();
-      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
       expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name);
       expect(result.age).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age);
       expect(result.email).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email);
@@ -430,11 +429,11 @@ describe('EntityService Unit Tests', () => {
     });
 
     it('should get a record with expansion level option', async () => {
-      const mockRecordPascal = {
+      const mockRecord = {
         Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        Name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name
+        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name
       };
-      mockApiClient.get.mockResolvedValue(mockRecordPascal);
+      mockApiClient.get.mockResolvedValue(mockRecord);
 
       const options: EntityGetRecordByIdOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
@@ -447,7 +446,7 @@ describe('EntityService Unit Tests', () => {
       );
 
       expect(result).toBeDefined();
-      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
       expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -489,7 +488,7 @@ describe('EntityService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result.name).toBe(testData.name);
       expect(result.age).toBe(testData.age);
-      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('Id');
 
       // Verify the API call has correct endpoint and body (single object, not array)
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -504,8 +503,8 @@ describe('EntityService Unit Tests', () => {
     it('should insert a record with options', async () => {
       const testData = {
         ...ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
-        recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-        createdBy: ENTITY_TEST_CONSTANTS.USER_ID
+        RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+        CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID
       };
       const options: EntityInsertRecordOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
@@ -531,8 +530,8 @@ describe('EntityService Unit Tests', () => {
       );
 
       // Verify reference fields are expanded in the response
-      expect(result.recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
-      expect(result.createdBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.RecordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.CreatedBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
     });
 
     it('should handle API errors', async () => {
@@ -565,9 +564,9 @@ describe('EntityService Unit Tests', () => {
       // Verify the response contains the data we sent (with IDs added)
       expect(result.successRecords[0].name).toBe(testData[0].name);
       expect(result.successRecords[0].age).toBe(testData[0].age);
-      expect(result.successRecords[0]).toHaveProperty('id');
+      expect(result.successRecords[0]).toHaveProperty('Id');
       expect(result.successRecords[1].name).toBe(testData[1].name);
-      expect(result.successRecords[1]).toHaveProperty('id');
+      expect(result.successRecords[1]).toHaveProperty('Id');
 
       // Verify the API call has correct endpoint and body
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -582,8 +581,8 @@ describe('EntityService Unit Tests', () => {
     it('should insert records with options', async () => {
       const testData = [{
         ...ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
-        recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-        createdBy: ENTITY_TEST_CONSTANTS.USER_ID
+        RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+        CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID
       }];
       const options: EntityInsertRecordsOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
@@ -591,8 +590,8 @@ describe('EntityService Unit Tests', () => {
       };
 
       // With expansionLevel, reference fields should be expanded in the response
-      const mockResponse = createMockInsertResponse(testData, { 
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
+      const mockResponse = createMockInsertResponse(testData, {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
@@ -611,8 +610,8 @@ describe('EntityService Unit Tests', () => {
       );
 
       // Verify reference fields are expanded in the response
-      expect(result.successRecords[0].recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
-      expect(result.successRecords[0].createdBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.successRecords[0].RecordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.successRecords[0].CreatedBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
     });
 
     it('should handle partial insert failures', async () => {
@@ -636,7 +635,7 @@ describe('EntityService Unit Tests', () => {
       // Verify the success record has the data plus generated record ID
       expect(result.successRecords[0].name).toBe(testData[0].name);
       expect(result.successRecords[0].age).toBe(testData[0].age);
-      expect(result.successRecords[0]).toHaveProperty('id');
+      expect(result.successRecords[0]).toHaveProperty('Id');
     });
 
     it('should handle API errors', async () => {
@@ -657,14 +656,14 @@ describe('EntityService Unit Tests', () => {
         age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE
       };
 
-      const mockResponse = createMockSingleUpdateResponse({ id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData });
+      const mockResponse = createMockSingleUpdateResponse({ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
       const result = await entityService.updateRecordById(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID, testData);
 
       // Verify the result is the updated record
       expect(result).toBeDefined();
-      expect(result.id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
       expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME);
       expect(result.age).toBe(ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE);
 
@@ -682,15 +681,15 @@ describe('EntityService Unit Tests', () => {
       const testData = {
         name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
         age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
-        recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-        updatedBy: ENTITY_TEST_CONSTANTS.USER_ID
+        RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+        UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID
       };
       const options: EntityUpdateRecordOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
       };
 
       // With expansionLevel, reference fields should be expanded in the response
-      const mockResponse = createMockSingleUpdateResponse({ id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData }, {
+      const mockResponse = createMockSingleUpdateResponse({ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData }, {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -709,8 +708,8 @@ describe('EntityService Unit Tests', () => {
       );
 
       // Verify reference fields are expanded in the response
-      expect(result.recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
-      expect(result.updatedBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.RecordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.UpdatedBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
     });
 
     it('should handle API errors', async () => {
@@ -728,8 +727,8 @@ describe('EntityService Unit Tests', () => {
   describe('updateRecordsById', () => {
     it('should update records successfully', async () => {
       const testData: EntityRecord[] = [
-        { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE },
-        { id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_AGE }
+        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE },
+        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_AGE }
       ];
 
       const mockResponse = createMockUpdateResponse(testData);
@@ -756,12 +755,12 @@ describe('EntityService Unit Tests', () => {
 
     it('should update records with options', async () => {
       const testData: EntityRecord[] = [
-        { 
-          id: ENTITY_TEST_CONSTANTS.RECORD_ID, 
-          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, 
+        {
+          Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
           age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
-          recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-          updatedBy: ENTITY_TEST_CONSTANTS.USER_ID
+          RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+          UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID
         }
       ];
       const options: EntityUpdateRecordsOptions = {
@@ -790,14 +789,14 @@ describe('EntityService Unit Tests', () => {
       );
 
       // Verify reference fields are expanded in the response
-      expect(result.successRecords[0].recordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
-      expect(result.successRecords[0].updatedBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.successRecords[0].RecordOwner).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
+      expect(result.successRecords[0].UpdatedBy).toEqual({ id: ENTITY_TEST_CONSTANTS.USER_ID });
     });
 
     it('should handle partial update failures', async () => {
       const testData: EntityRecord[] = [
-        { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_VALID_UPDATE_NAME },
-        { id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME }
+        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_VALID_UPDATE_NAME },
+        { Id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME }
       ];
 
       // First record succeeds, second fails (1 success, 1 failure from testData)
@@ -821,7 +820,7 @@ describe('EntityService Unit Tests', () => {
 
       await expect(entityService.updateRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        [{ id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }]
+        [{ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }]
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -843,8 +842,8 @@ describe('EntityService Unit Tests', () => {
       expect(result.successRecords).toHaveLength(2);
       expect(result.failureRecords).toHaveLength(0);
       // Verify the response contains the IDs we sent
-      expect(result.successRecords[0].id).toBe(recordIds[0]);
-      expect(result.successRecords[1].id).toBe(recordIds[1]);
+      expect(result.successRecords[0].Id).toBe(recordIds[0]);
+      expect(result.successRecords[1].Id).toBe(recordIds[1]);
 
       // Verify the API call has correct endpoint and body
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -895,9 +894,9 @@ describe('EntityService Unit Tests', () => {
       expect(result.failureRecords).toHaveLength(1);
       expect(result.failureRecords[0]).toHaveProperty('error');
       // Verify the failure contains the ID we tried to delete
-      expect(result.failureRecords[0].record?.id).toBe(recordIds[1]);
+      expect(result.failureRecords[0].record?.Id).toBe(recordIds[1]);
       // Verify the success record contains the ID we deleted
-      expect(result.successRecords[0].id).toBe(recordIds[0]);
+      expect(result.successRecords[0].Id).toBe(recordIds[0]);
     });
 
     it('should handle API errors', async () => {
