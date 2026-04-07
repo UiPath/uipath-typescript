@@ -47,32 +47,60 @@ If no PRs found, report "No PRs found in the last N days" and stop.
 
 ---
 
-## Step 3: Fetch Comments for Each PR
+## Step 3: Fetch Review Threads via GraphQL
 
-For each PR, fetch both types of comments:
+Use GitHub's GraphQL API to fetch **review threads** (not individual comments) for each PR. This gives us thread resolution status and the full conversation in one call.
 
-### Review comments (inline code comments)
-
-```bash
-gh api "repos/UiPath/uipath-typescript/pulls/{pr_number}/comments" --paginate \
-  --jq '[.[] | {id, user: .user.login, body, path, line: .original_line, created_at}]'
-```
-
-### Conversation comments (issue-style thread comments)
+### GraphQL query (batch per PR)
 
 ```bash
-gh api "repos/UiPath/uipath-typescript/issues/{pr_number}/comments" --paginate \
-  --jq '[.[] | {id, user: .user.login, body, created_at}]'
+gh api graphql -f query='
+{
+  repository(owner: "UiPath", name: "uipath-typescript") {
+    pullRequest(number: {pr_number}) {
+      title
+      state
+      author { login }
+      reviewThreads(first: 100) {
+        nodes {
+          isResolved
+          isOutdated
+          path
+          line
+          comments(first: 30) {
+            nodes {
+              author { login }
+              body
+              createdAt
+            }
+          }
+        }
+      }
+    }
+  }
+}'
 ```
 
-### Filtering
+### Thread classification
 
-Discard comments that match any of these:
-- **Bot comments**: user login ends with `[bot]`
-- **Too short**: body is fewer than 10 characters
-- **Automated**: body starts with common bot prefixes (`/`, `<!--`)
+For each thread, classify it into one of three buckets:
 
-Collect all remaining comments with their PR context (PR number, title, state).
+| Bucket | Criteria | Action |
+|--------|----------|--------|
+| **Resolved** | `isResolved: true` | Analyze for insights |
+| **Effectively resolved** | `isResolved: false`, but has replies where the PR author acknowledged the feedback (e.g., "done", "fixed", "changed to X", "good point, updated", or any reply indicating the feedback was accepted and acted upon) | Analyze for insights |
+| **Unresolved / Rejected** | `isResolved: false`, and either no replies, or the PR author pushed back / debated without acting on it, or the thread is an open question with no conclusion | **Skip entirely** |
+
+**Important:** Do NOT use keyword matching for the "effectively resolved" bucket. Read the full thread conversation and use semantic understanding to judge whether the PR author acknowledged and acted on the feedback. The signal could be anything — a one-word "done", a detailed explanation of what they changed, or even just agreement followed by a code change.
+
+### Additional filtering
+
+After thread classification, also discard threads where:
+- All comments are from bots (user login ends with `[bot]`)
+- The reviewer's comment is fewer than 10 characters (too short to contain insight)
+- The thread is purely automated (`/`, `<!--` prefixes)
+
+Collect all remaining **resolved + effectively resolved** threads with their PR context (PR number, title, state).
 
 ---
 
@@ -88,11 +116,23 @@ Read all five documentation files:
 
 ---
 
-## Step 5: Analyze Comments for Insights
+## Step 5: Analyze Threads for Insights
 
-Review each comment and determine if it contains a documentation-worthy insight. Use these criteria:
+For each resolved/effectively-resolved thread, perform a two-stage analysis:
 
-### Docs-worthy (act on these)
+### Stage 1: Validity and resolution extraction
+
+Read the **full thread conversation** and determine:
+
+1. **Was the feedback valid?** — Did the reviewer raise a legitimate concern about a pattern, convention, architecture decision, or quality issue? Or was it a misunderstanding, a personal preference, or something the PR author correctly pushed back on?
+2. **What was the resolution?** — If valid, what specifically changed? Extract the concrete action taken (e.g., "switched from NetworkError to ErrorFactory", "moved folderId from positional param to options object", "added unit test for bound methods").
+3. **Is it generalizable?** — Is this a one-off fix for this specific PR, or does it reveal a pattern/rule that applies to future work?
+
+Skip threads where the feedback was invalid, the resolution is unclear, or the lesson is not generalizable.
+
+### Stage 2: Documentation mapping
+
+For each thread that passes Stage 1, determine if it contains a documentation-worthy insight:
 
 | Signal | Target file |
 |--------|-------------|
@@ -105,15 +145,14 @@ Review each comment and determine if it contains a documentation-worthy insight.
 ### Ignore (skip these)
 
 - One-off bug fixes with no general lesson
-- Typo corrections
+- Typo corrections or nit fixes
 - Insights already documented in the existing files
-- Unresolved debates or discussions without clear resolution
 - Subjective style preferences without team consensus
-- Comments that are questions rather than directives
+- Threads where the resolution was just "removed" or "deleted" with no broader lesson
 
 ### Deduplication
 
-If multiple comments across different PRs express the same insight, consolidate into a single documentation change and cite all source PRs.
+If multiple threads across different PRs express the same insight, consolidate into a single documentation change and cite all source PRs.
 
 ---
 
