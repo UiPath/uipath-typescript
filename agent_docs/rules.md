@@ -18,6 +18,8 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER write `param || {}` for required parameters** — this hides bugs by silently accepting missing required data at call sites.
 - **NEVER put required parameters in an Options object** — required values (IDs, keys, data) are always positional arguments. Options objects are reserved for optional parameters only, always the last argument, always marked `?`. E.g., `getOutput(jobKey: string)` not `getOutput(options: { jobKey: string })`, `close(instanceId, folderKey, options?)` not `close(options: { instanceId, folderKey })`. This is consistent across every service in the SDK.
 
+- **NEVER assume enum wire format from Swagger alone** — verify against the live API. If Swagger says `FeedbackStatus` is `0, 1, 2` but the API actually returns `"Pending"`, `"Approved"`, `"Dismissed"` (strings), the enum must use string values. Wrong enum formats cause silent filter/comparison failures with no error.
+
 ### Transforms
 - **NEVER add case-only entries to `{Entity}Map`** — field maps are for semantic renames only (`creationTime` → `createdTime`). Case conversion (`CreationTime` → `creationTime`) is handled by `pascalToCamelCaseKeys()`. Mixing them causes double-conversion bugs and makes the map lie about its purpose.
 - **NEVER add transform steps without checking the actual API response first** — if the API already returns camelCase, don't add `pascalToCamelCaseKeys()`. If it doesn't return raw enum codes, don't add `applyDataTransforms()`. Each step must be justified by what the API actually sends.
@@ -58,6 +60,9 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER create a separate `afterAll` per describe block** if the file already has one — reuse the existing cleanup block by pushing to the shared `createdRecordIds` array.
 - **NEVER copy-paste JSDoc comments between endpoint groups** — each constant needs its own comment. A "Asset Service Endpoints" comment on `JOB_ENDPOINTS` is a review rejection.
 
+### Versioning
+- **NEVER bump `package.json` version in feature PRs** — version bumps are separate, dedicated PRs. Mixing version changes with feature work creates merge conflicts and makes release history unclear.
+
 ### Code hygiene
 - **NEVER leave unused code** — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
 - **NEVER add redundant constructors** — if the constructor only calls `super()`, delete it entirely.
@@ -97,6 +102,7 @@ Every new method must also have an integration test in `tests/integration/shared
 - Use `generateRandomString()` from `tests/integration/utils/helpers.ts` for unique test data
 - Tests run in both `v0` and `v1` init modes via `describe.each(modes)` — **only if the service is registered in both modes in `unified-setup.ts`**. New services that only support `v1` init should use `['v1']` only.
 - **NEVER write redundant integration tests** — each test must cover a distinct code path, error scenario, or response shape aspect. A test that repeats an existing one with minor value differences (e.g., "should handle job with or without output" duplicating "should return parsed output for a completed job") adds no value and wastes CI time.
+- **Verify integration tests actually exercise new code paths** — if adding a new endpoint (e.g., `getTaskDataById` for DocumentValidation), confirm the test uses appropriate test data for that endpoint. A test that calls a DocumentValidation endpoint with a Form task ID will "pass" by falling back to generic behavior, giving false confidence. The test should fail if the endpoint URL is wrong.
 - **Include a transform validation test** for new methods with a transform pipeline. This test should verify: (a) transformed camelCase fields exist and have values (`job.createdTime`, `job.processName`), AND (b) original PascalCase API fields are absent (`(job as any).CreationTime` is `undefined`, `(job as any).ReleaseName` is `undefined`). This is a separate test from the basic "should retrieve by ID" test — it validates the SDK transform layer against the live API. Note: existing integration tests don't yet follow this pattern, but unit tests do (Assets, Queues, ChoiceSets). Extending it to integration tests catches mismatches between the Swagger spec assumptions and the live API response.
 
 ## Documentation
