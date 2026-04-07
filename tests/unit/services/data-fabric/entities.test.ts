@@ -1050,5 +1050,270 @@ describe('EntityService Unit Tests', () => {
       );
     });
   });
+
+  describe('queryRecords', () => {
+    it('should return items and totalCount from query response', async () => {
+      const mockRecords = createMockEntityRecords(2);
+      mockApiClient.post.mockResolvedValue({
+        value: mockRecords,
+        totalRecordCount: 2,
+      });
+
+      const result = await entityService.queryRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+
+      expect(result.items).toHaveLength(2);
+      expect(result.totalCount).toBe(2);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        {},
+        {}
+      );
+    });
+
+    it('should pass filter options to the API', async () => {
+      mockApiClient.post.mockResolvedValue({ value: [], totalRecordCount: 0 });
+
+      const options = {
+        filterGroup: {
+          logicalOperator: 0,
+          queryFilters: [{ fieldName: 'name', operator: '=', value: 'Alice' }],
+        },
+        limit: 10,
+        start: 0,
+      };
+
+      const result = await entityService.queryRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+
+      expect(result.totalCount).toBe(0);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        options,
+        {}
+      );
+    });
+
+    it('should handle missing value and totalRecordCount gracefully', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await entityService.queryRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+
+      expect(result.items).toEqual([]);
+      expect(result.totalCount).toBe(0);
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.queryRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('bulkImport', () => {
+    it('should post FormData to bulk import endpoint and return result', async () => {
+      const mockResponse = { totalRecords: 3, insertedRecords: 3 };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await entityService.bulkImport(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        'name,age\nAlice,30\nBob,25\nCharlie,40',
+        'import.csv'
+      );
+
+      expect(result).toEqual(mockResponse);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.BULK_IMPORT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expect.any(FormData),
+        { params: {} }
+      );
+    });
+
+    it('should include failOnFirst param when option is set', async () => {
+      mockApiClient.post.mockResolvedValue({ totalRecords: 1, insertedRecords: 0 });
+
+      await entityService.bulkImport(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        'name\nAlice',
+        'data.csv',
+        { failOnFirst: true }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.BULK_IMPORT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expect.any(FormData),
+        { params: { failOnFirst: true } }
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.bulkImport(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'name\nAlice', 'import.csv')
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('createEntity', () => {
+    it('should post entity schema and return created entity ID', async () => {
+      mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+
+      const result = await entityService.createEntity('My Entity', 'A test entity', [
+        { name: 'title', type: 'text' },
+      ]);
+
+      expect(result).toBe(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.CREATE_ENTITY,
+        expect.objectContaining({
+          description: 'A test entity',
+          displayName: 'My Entity',
+          entityDefinition: expect.objectContaining({
+            name: 'myentity',
+          }),
+        }),
+        {}
+      );
+    });
+
+    it('should strip spaces from entity name for technical name', async () => {
+      mockApiClient.post.mockResolvedValue('new-id');
+
+      await entityService.createEntity('My New Entity', '', []);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.CREATE_ENTITY,
+        expect.objectContaining({
+          entityDefinition: expect.objectContaining({ name: 'mynewentity' }),
+        }),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.createEntity('TestEntity', '', [])
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('deleteEntity', () => {
+    it('should call DELETE on the entity endpoint', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await entityService.deleteEntity(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ENTITY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      await expect(
+        entityService.deleteEntity(ENTITY_TEST_CONSTANTS.ENTITY_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('addField', () => {
+    it('should fetch schema, append new field, and post updated schema', async () => {
+      const rawSchema = {
+        name: 'customer',
+        displayName: 'Customer',
+        description: 'A customer entity',
+        fields: [
+          {
+            name: 'name',
+            isSystemField: false,
+            fieldDataType: { name: 'NVARCHAR', lengthLimit: 200 },
+          },
+        ],
+      };
+      mockApiClient.get.mockResolvedValue(rawSchema);
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await entityService.addField(ENTITY_TEST_CONSTANTS.ENTITY_ID, { name: 'category', type: 'text' });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        {}
+      );
+      const postedPayload = mockApiClient.post.mock.calls[0][1];
+      const fieldNames = postedPayload.entityDefinition.fields.map((f: any) => f.name);
+      expect(fieldNames).toContain('name');
+      expect(fieldNames).toContain('category');
+    });
+
+    it('should handle API errors on schema fetch', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        entityService.addField(ENTITY_TEST_CONSTANTS.ENTITY_ID, { name: 'category', type: 'text' })
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('removeField', () => {
+    it('should fetch schema, exclude the named field, and post updated schema', async () => {
+      const rawSchema = {
+        name: 'customer',
+        displayName: 'Customer',
+        description: '',
+        fields: [
+          { name: 'name', isSystemField: false, fieldDataType: { name: 'NVARCHAR', lengthLimit: 200 } },
+          { name: 'category', isSystemField: false, fieldDataType: { name: 'NVARCHAR', lengthLimit: 200 } },
+          { name: 'CreatedBy', isSystemField: true },
+        ],
+      };
+      mockApiClient.get.mockResolvedValue(rawSchema);
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await entityService.removeField(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category');
+
+      const postedPayload = mockApiClient.post.mock.calls[0][1];
+      const fieldNames = postedPayload.entityDefinition.fields.map((f: any) => f.name);
+      expect(fieldNames).toContain('name');
+      expect(fieldNames).not.toContain('category');
+      expect(fieldNames).not.toContain('CreatedBy');
+    });
+
+    it('should match field name case-insensitively', async () => {
+      const rawSchema = {
+        name: 'customer',
+        displayName: 'Customer',
+        description: '',
+        fields: [
+          { name: 'Category', isSystemField: false, fieldDataType: { name: 'NVARCHAR', lengthLimit: 200 } },
+        ],
+      };
+      mockApiClient.get.mockResolvedValue(rawSchema);
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await entityService.removeField(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category');
+
+      const postedPayload = mockApiClient.post.mock.calls[0][1];
+      expect(postedPayload.entityDefinition.fields).toHaveLength(0);
+    });
+
+    it('should handle API errors on schema fetch', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(
+        entityService.removeField(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category')
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
 });
 

@@ -22,6 +22,8 @@ describe('Entity Models', () => {
       updateRecordsById: vi.fn(),
       deleteRecordsById: vi.fn(),
       downloadAttachment: vi.fn(),
+      uploadAttachment: vi.fn(),
+      deleteAttachment: vi.fn(),
     } as any;
   });
 
@@ -589,6 +591,65 @@ describe('Entity Models', () => {
           entity.downloadAttachment(ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME)
         ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
+    });
+  });
+
+  describe('entity.uploadAttachment()', () => {
+    it('should call uploadAttachment with entity id, recordId, fieldName, and file', async () => {
+      const entityData = createBasicEntity();
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      const file = new Blob(['file content'], { type: 'application/pdf' });
+      const mockResponse = { id: ENTITY_TEST_CONSTANTS.RECORD_ID };
+      mockService.uploadAttachment = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await entity.uploadAttachment(ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME, file);
+
+      expect(mockService.uploadAttachment).toHaveBeenCalledWith(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file,
+        undefined
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should throw error if entity id is undefined', async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(
+        entity.uploadAttachment(ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME, new Blob())
+      ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+    });
+  });
+
+  describe('entity.deleteAttachment()', () => {
+    it('should call deleteAttachment with entity id, recordId, and fieldName', async () => {
+      const entityData = createBasicEntity();
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      const mockResponse = {};
+      mockService.deleteAttachment = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await entity.deleteAttachment(ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME);
+
+      expect(mockService.deleteAttachment).toHaveBeenCalledWith(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should throw error if entity id is undefined', async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(
+        entity.deleteAttachment(ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME)
+      ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
     });
   });
 
