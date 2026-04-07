@@ -93,6 +93,7 @@ Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g.
 - All objects use `as const`
 - **Group nested endpoints logically** (e.g., `ENTITY.ATTACHMENT.DOWNLOAD` not flat).
 - **Use consistent param names** across endpoints. Avoid redundancy.
+- **Prefix with service domain when names collide** — if `ATTACHMENT_ENDPOINTS` already exists in another service (e.g., `conversational-agent`), use `ORCHESTRATOR_ATTACHMENT_ENDPOINTS`. The domain prefix resolves cross-service ambiguity.
 
 ## Pagination
 

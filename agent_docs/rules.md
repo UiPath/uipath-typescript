@@ -30,6 +30,9 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 ### Internal types
 - **NEVER re-export `internal-types.ts` through index.ts** — these are private implementation details (raw API shapes, intermediate parsing types). Re-exporting pollutes the public API and creates breaking-change risk when internal formats change.
 
+### Static mappings
+- **NEVER define static mappings inside method bodies** — endpoint-to-type maps, status maps, and other constant lookup tables must be declared as module-level constants or in `internal-types.ts`. Rebuilding them on every call wastes memory and obscures that the data is fixed.
+
 ### Endpoints
 - **NEVER bypass base service classes** — never directly instantiate HTTP clients; use `this.get()`, `this.post()` from BaseService.
 - **NEVER hardcode HTTP method strings in service methods** — use existing constants. Hardcoded strings drift and miss centralized changes.
@@ -144,6 +147,7 @@ Documentation (the most commonly missed step):
 - [ ] `docs/pagination.md` — quick reference table updated (if paginated method)
 - [ ] `mkdocs.yml` — nav entry added (if new service, not needed for methods on existing services)
 - [ ] `package.json` exports + `rollup.config.js` — subpath export added (if new service)
+- [ ] Cloudflare Workers whitelist — new endpoints added in `apps-dev-tools` repo (`ApiCorsWorker/api-cors-worker.ts`)
 
 ## Skills for SDK development
 
