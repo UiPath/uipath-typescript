@@ -122,6 +122,114 @@ export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
 
 
 /**
+ * A single filter condition for querying entity records
+ */
+export interface EntityQueryFilter {
+  /** Name of the field to filter on */
+  fieldName: string;
+  /** Comparison operator (e.g., "=", "!=", ">", "<", ">=", "<=", "contains", "startswith", "endswith", "in", "not in") */
+  operator: string;
+  /** Value to compare against */
+  value: string;
+}
+
+/**
+ * A group of query filters combined with a logical operator
+ */
+export interface EntityQueryFilterGroup {
+  /** Logical operator: 0 = AND, 1 = OR */
+  logicalOperator?: 0 | 1;
+  /** Array of filter conditions */
+  queryFilters?: EntityQueryFilter[];
+}
+
+/**
+ * Sort option for query results
+ */
+export interface EntityQuerySortOption {
+  /** Name of the field to sort by */
+  fieldName: string;
+  /** Whether to sort in descending order (default: false) */
+  isDescending?: boolean;
+}
+
+/**
+ * Options for querying entity records with filters, sorting, and pagination
+ */
+export interface QueryEntityRecordsOptions {
+  /** Filter conditions to apply */
+  filterGroup?: EntityQueryFilterGroup;
+  /** List of field names to include in results (returns all fields if omitted) */
+  selectedFields?: string[];
+  /** Sort options for the results */
+  sortOptions?: EntityQuerySortOption[];
+  /** Number of records to skip (for pagination) */
+  start?: number;
+  /** Maximum number of records to return */
+  limit?: number;
+}
+
+/**
+ * Response from querying entity records
+ */
+export interface QueryEntityRecordsResponse {
+  /** Array of matching entity records */
+  items: EntityRecord[];
+  /** Total number of records matching the filter (before pagination) */
+  totalCount: number;
+}
+
+/**
+ * Friendly field type names for creating entity schemas
+ */
+export enum EntityFieldType {
+  Text = "text",
+  LongText = "longtext",
+  Number = "number",
+  Decimal = "decimal",
+  Boolean = "boolean",
+  DateTime = "datetime",
+  Date = "date",
+  File = "file",
+}
+
+/**
+ * User-facing field definition for creating or updating entity schemas
+ */
+export interface EntityFieldDefinition {
+  /** Field name (spaces will be stripped) */
+  name: string;
+  /** Display name shown in the UI (defaults to name) */
+  displayName?: string;
+  /** Field type — one of the EntityFieldType values (default: "text") */
+  type?: EntityFieldType | string;
+  /** Whether the field is required (default: false) */
+  isRequired?: boolean;
+  /** Optional field description */
+  description?: string;
+}
+
+/**
+ * Options for bulk importing records from a CSV file
+ */
+export interface EntityBulkImportOptions {
+  /** Whether to stop processing on first record failure (default: false) */
+  failOnFirst?: boolean;
+}
+
+/**
+ * Response from a bulk import operation
+ */
+export interface EntityBulkImportResponse {
+  /** Total number of records in the import file */
+  totalRecords: number;
+  /** Number of records successfully inserted */
+  insertedRecords: number;
+  /** Link to download the error file (if any records failed) */
+  errorFileLink?: string;
+}
+
+/**
  * Supported file types for attachment upload
  */
 export type EntityFileType = Blob | File | Uint8Array;

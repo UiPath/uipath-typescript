@@ -21,7 +21,12 @@ import {
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
   EntityGetAllRecordsOptions,
-  EntityInsertRecordOptions
+  EntityInsertRecordOptions,
+  QueryEntityRecordsOptions,
+  QueryEntityRecordsResponse,
+  EntityBulkImportOptions,
+  EntityBulkImportResponse,
+  EntityFieldDefinition,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -340,6 +345,45 @@ export interface EntityServiceModel {
   deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
 
   /**
+   * Queries entity records with filters, sorting, and pagination
+   *
+   * @param entityId - UUID of the entity
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
+   * @returns Promise resolving to {@link QueryEntityRecordsResponse} with matching records and total count
+   * @example
+   * ```typescript
+   * // Query with a filter
+   * const result = await entities.queryRecords(<entityId>, {
+   *   filterGroup: {
+   *     logicalOperator: 0,
+   *     queryFilters: [{ fieldName: "status", operator: "=", value: "active" }]
+   *   },
+   *   sortOptions: [{ fieldName: "createdAt", isDescending: true }],
+   *   start: 0,
+   *   limit: 50
+   * });
+   * ```
+   */
+  queryRecords(entityId: string, options?: QueryEntityRecordsOptions): Promise<QueryEntityRecordsResponse>;
+
+  /**
+   * Imports records from a CSV file into an entity
+   *
+   * @param entityId - UUID of the entity
+   * @param csvContent - CSV file content as a string
+   * @param fileName - Name of the CSV file
+   * @param options - Import options including failOnFirst
+   * @returns Promise resolving to {@link EntityBulkImportResponse} with record counts
+   * @example
+   * ```typescript
+   * const csvContent = "name,age\nJohn,30\nJane,25";
+   * const result = await entities.bulkImport(<entityId>, csvContent, "import.csv");
+   * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   * ```
+   */
+  bulkImport(entityId: string, csvContent: string, fileName: string, options?: EntityBulkImportOptions): Promise<EntityBulkImportResponse>;
+
+  /**
    * Downloads an attachment stored in a File-type field of an entity record.
    *
    * @param entityId - UUID of the entity
@@ -461,6 +505,42 @@ export interface EntityServiceModel {
    * ```
    */
   deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
+
+  /**
+   * Creates a new Data Fabric entity with the given schema
+   *
+   * @param name - Entity name (spaces are stripped for the technical name)
+   * @param description - Entity description
+   * @param fields - Array of field definitions
+   * @returns Promise resolving to the ID of the created entity
+   */
+  createEntity(name: string, description: string, fields: EntityFieldDefinition[]): Promise<string>;
+
+  /**
+   * Deletes a Data Fabric entity and all its records
+   *
+   * @param entityId - UUID of the entity to delete
+   * @returns Promise resolving when the entity is deleted
+   */
+  deleteEntity(entityId: string): Promise<void>;
+
+  /**
+   * Adds a new field to an existing Data Fabric entity
+   *
+   * @param entityId - UUID of the entity
+   * @param field - Field definition to add
+   * @returns Promise resolving when the field is added
+   */
+  addField(entityId: string, field: EntityFieldDefinition): Promise<void>;
+
+  /**
+   * Removes a field from a Data Fabric entity
+   *
+   * @param entityId - UUID of the entity
+   * @param fieldName - Name of the field to remove
+   * @returns Promise resolving when the field is removed
+   */
+  removeField(entityId: string, fieldName: string): Promise<void>;
 }
 
 /**

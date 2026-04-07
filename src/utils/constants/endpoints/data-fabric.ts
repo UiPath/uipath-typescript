@@ -19,6 +19,10 @@ export const DATA_FABRIC_ENDPOINTS = {
     UPDATE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update/${recordId}`,
     UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update-batch`,
     DELETE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/delete-batch`,
+    CREATE_ENTITY: `${DATAFABRIC_BASE}/api/Entity/`,
+    DELETE_ENTITY: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
+    QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/query`,
+    BULK_IMPORT_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/bulk-upload`,
     DOWNLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>
       `${DATAFABRIC_BASE}/api/Attachment/entity/${entityId}/${recordId}/${fieldName}`,
     UPLOAD_ATTACHMENT: (entityId: string, recordId: string, fieldName: string) =>

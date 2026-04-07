@@ -24,7 +24,12 @@ import {
   EntityFileType,
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
-  EntityDeleteAttachmentResponse
+  EntityDeleteAttachmentResponse,
+  QueryEntityRecordsOptions,
+  QueryEntityRecordsResponse,
+  EntityBulkImportOptions,
+  EntityBulkImportResponse,
+  EntityFieldDefinition,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -34,7 +39,7 @@ import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
-import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
+import { EntityFieldTypeMap, SqlFieldType, EntityMap, EntitySchemaFieldTypeMap, EntitySchemaField } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
 
 /**
@@ -438,6 +443,100 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
+   * Queries entity records with filters, sorting, and pagination
+   *
+   * @param entityId - UUID of the entity
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
+   * @returns Promise resolving to matching records and total count
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Query with a filter
+   * const result = await entities.queryRecords("<entityId>", {
+   *   filterGroup: {
+   *     logicalOperator: 0,
+   *     queryFilters: [
+   *       { fieldName: "status", operator: "=", value: "active" }
+   *     ]
+   *   },
+   *   sortOptions: [{ fieldName: "createdAt", isDescending: true }],
+   *   start: 0,
+   *   limit: 50
+   * });
+   *
+   * console.log(`Found ${result.totalCount} records`);
+   * result.items.forEach(record => console.log(record));
+   * ```
+   */
+  @track('Entities.QueryRecords')
+  async queryRecords(entityId: string, options: QueryEntityRecordsOptions = {}): Promise<QueryEntityRecordsResponse> {
+    const response = await this.post<{ value?: EntityRecord[]; totalRecordCount?: number }>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(entityId),
+      options
+    );
+
+    const raw = response.data;
+    const items = (raw.value ?? []).map((record: EntityRecord) => {
+      return transformData(record, EntityMap);
+    });
+
+    return {
+      items,
+      totalCount: raw.totalRecordCount ?? 0
+    };
+  }
+
+  /**
+   * Imports records from a CSV file into an entity
+   *
+   * @param entityId - UUID of the entity
+   * @param csvContent - CSV file content as a string
+   * @param fileName - Name of the CSV file (used for the multipart upload)
+   * @param options - Import options including failOnFirst
+   * @returns Promise resolving to import result with record counts
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Import records from a CSV string
+   * const csvContent = "name,age\nJohn,30\nJane,25";
+   * const result = await entities.bulkImport("<entityId>", csvContent, "import.csv");
+   *
+   * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   * if (result.errorFileLink) {
+   *   console.log(`Error file: ${result.errorFileLink}`);
+   * }
+   *
+   * // Stop on first failure
+   * const result = await entities.bulkImport("<entityId>", csvContent, "import.csv", {
+   *   failOnFirst: true
+   * });
+   * ```
+   */
+  @track('Entities.BulkImport')
+  async bulkImport(entityId: string, csvContent: string, fileName: string, options: EntityBulkImportOptions = {}): Promise<EntityBulkImportResponse> {
+    const formData = new FormData();
+    formData.append('file', new Blob([csvContent], { type: 'text/csv' }), fileName);
+
+    const params = createParams({ failOnFirst: options.failOnFirst });
+
+    const response = await this.post<EntityBulkImportResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.BULK_IMPORT_BY_ID(entityId),
+      formData,
+      { params }
+    );
+
+    return response.data;
+  }
+
+  /**
    * Downloads an attachment from an entity record field
    *
    * @param entityId - UUID of the entity
@@ -606,8 +705,96 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
+   * Creates a new Data Fabric entity with the given schema
+   *
+   * @param name - Entity name (spaces are stripped for the technical name)
+   * @param description - Entity description
+   * @param fields - Array of field definitions
+   * @returns Promise resolving to the ID of the created entity
+   *
+   * @example
+   * ```typescript
+   * const entityId = await entities.createEntity("Products", "Product catalog", [
+   *   { name: "ProductName", type: "text", isRequired: true },
+   *   { name: "Price", type: "decimal" },
+   * ]);
+   * ```
+   */
+  @track('Entities.CreateEntity')
+  async createEntity(name: string, description: string, fields: EntityFieldDefinition[]): Promise<string> {
+    const sanitizedName = name.replace(/\s+/g, '').toLowerCase();
+    const payload = {
+      description,
+      displayName: name,
+      entityDefinition: {
+        name: sanitizedName,
+        fields: fields.map(f => this.buildSchemaFieldPayload(f)),
+      },
+    };
+    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.CREATE_ENTITY, payload);
+    return String(response.data);
+  }
+
+  /**
+   * Deletes a Data Fabric entity and all its records
+   *
+   * @param entityId - UUID of the entity to delete
+   * @returns Promise resolving when the entity is deleted
+   *
+   * @example
+   * ```typescript
+   * await entities.deleteEntity("<entityId>");
+   * ```
+   */
+  @track('Entities.DeleteEntity')
+  async deleteEntity(entityId: string): Promise<void> {
+    await this.delete(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ENTITY(entityId));
+  }
+
+  /**
+   * Adds a new field to an existing Data Fabric entity
+   *
+   * @param entityId - UUID of the entity
+   * @param field - Field definition to add
+   * @returns Promise resolving when the field is added
+   *
+   * @example
+   * ```typescript
+   * await entities.addField("<entityId>", { name: "Category", type: "text" });
+   * ```
+   */
+  @track('Entities.AddField')
+  async addField(entityId: string, field: EntityFieldDefinition): Promise<void> {
+    const raw = await this.getRawEntitySchema(entityId);
+    const userFields = this.extractUserFields(raw);
+    const newField = this.buildSchemaFieldPayload(field);
+    await this.postEntitySchema(entityId, raw, [...userFields, newField]);
+  }
+
+  /**
+   * Removes a field from a Data Fabric entity
+   *
+   * @param entityId - UUID of the entity
+   * @param fieldName - Name of the field to remove
+   * @returns Promise resolving when the field is removed
+   *
+   * @example
+   * ```typescript
+   * await entities.removeField("<entityId>", "Category");
+   * ```
+   */
+  @track('Entities.RemoveField')
+  async removeField(entityId: string, fieldName: string): Promise<void> {
+    const raw = await this.getRawEntitySchema(entityId);
+    const userFields = this.extractUserFields(raw).filter(
+      f => f.name.toLowerCase() !== fieldName.toLowerCase()
+    );
+    await this.postEntitySchema(entityId, raw, userFields);
+  }
+
+  /**
    * Orchestrates all field mapping transformations
-   * 
+   *
    * @param metadata - Entity metadata to transform
    * @private
    */
@@ -660,13 +847,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Maps external field names to consistent naming
-   * 
+   *
    * @param metadata - Entity metadata with externalFields
    * @private
    */
   private mapExternalFields(metadata: RawEntityGetResponse): void {
     if (!metadata.externalFields?.length) return;
-    
+
     metadata.externalFields = metadata.externalFields.map(externalSource => {
       if (externalSource.fields?.length) {
         externalSource.fields = externalSource.fields.map(field => {
@@ -680,5 +867,76 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
       return externalSource;
     });
+  }
+
+  /** Fetches the raw entity schema (before any transformation) */
+  private async getRawEntitySchema(entityId: string): Promise<Record<string, unknown>> {
+    const response = await this.get<Record<string, unknown>>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId)
+    );
+    return response.data;
+  }
+
+  /** Extracts user-defined (non-system) fields from a raw entity response, preserving the API payload shape */
+  private extractUserFields(raw: Record<string, unknown>): EntitySchemaField[] {
+    const fields = (raw.fields ?? []) as Record<string, unknown>[];
+    return fields
+      .filter(f => !f.isSystemField)
+      .map(f => ({
+        name: (f.name as string | undefined) ?? '',
+        displayName: (f.displayName as string | undefined) ?? (f.name as string | undefined) ?? '',
+        type: (f.type as string | undefined) ?? 'text',
+        description: (f.description as string | undefined) ?? '',
+        isRequired: Boolean(f.isRequired ?? false),
+        fieldDisplayType: (f.fieldDisplayType as string | undefined) ?? 'Basic',
+        sqlType: (f.sqlType as { name: string; lengthLimit?: number }) ?? { name: 'NVARCHAR', lengthLimit: 200 },
+        choiceSetId: (f.choiceSetId as string | null) ?? null,
+        defaultValue: (f.defaultValue as string | null) ?? null,
+        isRbacEnabled: Boolean(f.isRbacEnabled ?? false),
+        isUnique: Boolean(f.isUnique ?? false),
+        isEncrypted: Boolean(f.isEncrypted ?? false),
+      }));
+  }
+
+  /** Converts a user-facing EntityFieldDefinition to the raw API field payload */
+  private buildSchemaFieldPayload(field: EntityFieldDefinition): EntitySchemaField {
+    const typeKey = (field.type ?? 'text').toLowerCase();
+    const mapping = EntitySchemaFieldTypeMap[typeKey] ?? EntitySchemaFieldTypeMap['text'];
+    const fieldName = field.name.replace(/\s+/g, '').toLowerCase();
+    return {
+      name: fieldName,
+      displayName: field.displayName ?? field.name,
+      type: mapping.apiType,
+      description: field.description ?? '',
+      isRequired: field.isRequired ?? false,
+      fieldDisplayType: mapping.fieldDisplayType,
+      sqlType: mapping.sqlType,
+      choiceSetId: null,
+      defaultValue: null,
+      isRbacEnabled: false,
+      isUnique: false,
+      isEncrypted: false,
+    };
+  }
+
+  /** POSTs a full entity schema update (used by addField / removeField) */
+  private async postEntitySchema(
+    entityId: string,
+    raw: Record<string, unknown>,
+    fields: EntitySchemaField[],
+  ): Promise<void> {
+    const payload = {
+      description: (raw.description as string | undefined) ?? '',
+      displayName: (raw.displayName as string | undefined) ?? (raw.name as string | undefined) ?? '',
+      entityDefinition: {
+        id: entityId,
+        name: raw.name,
+        fields,
+        folderId: '00000000-0000-0000-0000-000000000000',
+        isRbacEnabled: false,
+        externalFields: [],
+      },
+    };
+    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.CREATE_ENTITY, payload);
   }
 }
