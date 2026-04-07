@@ -17,6 +17,8 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER use type aliases for response types** — even when the shape matches an existing one, use an `extends` interface. Type aliases (e.g., `export type EntityUpdateRecordResponse = EntityRecord`) break TypeDoc docs generation by not rendering as standalone types. Use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
 - **NEVER write `param || {}` for required parameters** — this hides bugs by silently accepting missing required data at call sites.
 
+- **NEVER assume enum wire format from Swagger alone** — verify against the live API. If Swagger says `FeedbackStatus` is `0, 1, 2` but the API actually returns `"Pending"`, `"Approved"`, `"Dismissed"` (strings), the enum must use string values. Wrong enum formats cause silent filter/comparison failures with no error.
+
 ### Transforms
 - **NEVER add case-only entries to `{Entity}Map`** — field maps are for semantic renames only (`creationTime` → `createdTime`). Case conversion (`CreationTime` → `creationTime`) is handled by `pascalToCamelCaseKeys()`. Mixing them causes double-conversion bugs and makes the map lie about its purpose.
 - **NEVER add transform steps without checking the actual API response first** — if the API already returns camelCase, don't add `pascalToCamelCaseKeys()`. If it doesn't return raw enum codes, don't add `applyDataTransforms()`. Each step must be justified by what the API actually sends.
@@ -49,6 +51,12 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER wrap integration test API calls in try/catch** — let errors propagate naturally. Silent catches mask real failures and make tests pass when they should fail.
 - **NEVER create a separate `afterAll` per describe block** if the file already has one — reuse the existing cleanup block by pushing to the shared `createdRecordIds` array.
 - **NEVER copy-paste JSDoc comments between endpoint groups** — each constant needs its own comment. A "Asset Service Endpoints" comment on `JOB_ENDPOINTS` is a review rejection.
+
+### Static data
+- **NEVER define static lookup maps inside method bodies** — endpoint maps, type-to-endpoint mappings, and other constant data structures must be module-level constants. Rebuilding them on every call wastes allocations and obscures that the data is static.
+
+### Versioning
+- **NEVER bump `package.json` version in feature PRs** — version bumps are separate, dedicated PRs. Mixing version changes with feature work creates merge conflicts and makes release history unclear.
 
 ### Code hygiene
 - **NEVER leave unused code** — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
@@ -84,6 +92,7 @@ Every new method must also have an integration test in `tests/integration/shared
 - Use `registerResource()` from `tests/integration/utils/cleanup.ts` for cleanup tracking
 - Use `generateRandomString()` from `tests/integration/utils/helpers.ts` for unique test data
 - Tests run in both `v0` and `v1` init modes via `describe.each(modes)`
+- **Verify integration tests actually exercise new code paths** — if adding a new endpoint (e.g., `getTaskDataById` for DocumentValidation), confirm the test uses appropriate test data for that endpoint. A test that calls a DocumentValidation endpoint with a Form task ID will "pass" by falling back to generic behavior, giving false confidence. The test should fail if the endpoint URL is wrong.
 - **Include a transform validation test** for new methods with a transform pipeline. This test should verify: (a) transformed camelCase fields exist and have values (`job.createdTime`, `job.processName`), AND (b) original PascalCase API fields are absent (`(job as any).CreationTime` is `undefined`, `(job as any).ReleaseName` is `undefined`). This is a separate test from the basic "should retrieve by ID" test — it validates the SDK transform layer against the live API. Note: existing integration tests don't yet follow this pattern, but unit tests do (Assets, Queues, ChoiceSets). Extending it to integration tests catches mismatches between the Swagger spec assumptions and the live API response.
 
 ## Documentation

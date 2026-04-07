@@ -121,6 +121,19 @@ Naming: `{SERVICE}_PAGINATION` for response shape, `{SERVICE}_OFFSET_PARAMS` or 
 3. Type with conditional return: `Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<R> : NonPaginatedResponse<R>>`
 4. Update `docs/pagination.md` quick reference table
 
+## Barrel exports
+
+Use `export * from` for re-exporting types and services from barrel files (`index.ts`). Do not use explicit `export type { ... } from` when `export * from` covers the same exports — it creates duplication and maintenance burden.
+
+```typescript
+// CORRECT — clean, no duplication
+export * from '@/models/conversational-agent';
+
+// WRONG — redundant explicit re-export alongside wildcard
+export * from '@/models/conversational-agent';
+export type { FeedbackGetResponse } from '@/models/conversational-agent';
+```
+
 ## Export naming
 
 - Internal class: `{Entity}Service` (e.g., `EntityService`, `TaskService`)
