@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { setupUnifiedTests, getServices, InitMode } from '../../config/unified-setup';
+import { retryWithBackoff } from '../../utils/helpers';
 
 /**
  * Integration tests for entity attachment operations (upload, remove)
@@ -157,10 +158,12 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
           file,
         );
 
-        // Now download the attachment
-        const downloadedFile = await entity.downloadAttachment(
-          ATTACHMENT_CONFIG.recordId,
-          ATTACHMENT_CONFIG.fieldName,
+        // Retry download to handle API propagation delay after upload
+        const downloadedFile = await retryWithBackoff(() =>
+          entity.downloadAttachment(
+            ATTACHMENT_CONFIG.recordId,
+            ATTACHMENT_CONFIG.fieldName,
+          )
         );
 
         expect(downloadedFile).toBeDefined();
