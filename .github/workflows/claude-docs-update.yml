@@ -1,0 +1,43 @@
+name: Claude Docs Update
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Every Monday at 9am UTC
+  workflow_dispatch:
+    inputs:
+      days_back:
+        description: 'Number of days to look back for PR comments'
+        required: false
+        default: '7'
+
+jobs:
+  enhance-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure label exists
+        run: gh label create claude-docs-update --color 0E8A16 --description "Automated Claude docs enhancement" --force
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Enhance Claude docs
+        id: claude
+        uses: anthropics/claude-code-action@094bd24d575e7b30ac1576024817bf1a97c81262 # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            contents: write
+            pull-requests: write
+            issues: write
+          prompt: /enhance-claude-docs ${{ inputs.days_back || '7' }}
