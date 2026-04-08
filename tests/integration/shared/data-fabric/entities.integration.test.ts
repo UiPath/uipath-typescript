@@ -10,6 +10,7 @@ import { registerResource } from '../../utils/cleanup';
 import { generateRandomString, generateRandomInt, generateRandomFloat } from '../../utils/helpers';
 import {
   EntityFieldDataType,
+  EntityFieldType,
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
@@ -704,6 +705,125 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       await expect(
         entities.updateRecordById(entityId, 'non-existent-record-id', { description: 'No ID' })
       ).rejects.toThrow();
+    });
+  });
+
+  describe('queryRecords', () => {
+    it('should query records with no filters', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecords(entityId);
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(typeof result.totalCount).toBe('number');
+    });
+
+    it('should query records with filter options', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecords(entityId, {
+        start: 0,
+        limit: 5,
+      });
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(result.items.length).toBeLessThanOrEqual(5);
+      expect(typeof result.totalCount).toBe('number');
+    });
+  });
+
+  describe('bulkImport', () => {
+    it('should import records from CSV content', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
+      }
+
+      if (!entityMetadata || entityMetadata.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
+      }
+
+      // Build CSV from writable fields
+      const writableFields = getWritableFields(entityMetadata.fields).filter(
+        f => f.fieldDataType.name === EntityFieldDataType.STRING
+      );
+
+      if (writableFields.length === 0) {
+        throw new Error('No string fields available for bulk import test');
+      }
+
+      const fieldName = writableFields[0].name;
+      const csvContent = `${fieldName}\nBulkImport_${generateRandomString(8)}\nBulkImport_${generateRandomString(8)}`;
+      const result = await entities.bulkImport(entityId, csvContent, 'test-import.csv');
+
+      expect(result).toBeDefined();
+      expect(typeof result.totalRecords).toBe('number');
+      expect(typeof result.insertedRecords).toBe('number');
+      expect(result.totalRecords).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('Entity schema management (createEntity, deleteEntity, addField, removeField)', () => {
+    let schemaTestEntityId: string | null = null;
+
+    it('should create a new entity', async () => {
+      const { entities } = getServices();
+      const entityName = `sdktest${generateRandomString(6)}`;
+      const result = await entities.createEntity(entityName, 'Integration test entity', [
+        { name: 'title', type: EntityFieldType.Text, isRequired: false },
+      ]);
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('string');
+      schemaTestEntityId = result;
+    });
+
+    it('should add a field to the created entity', async () => {
+      const { entities } = getServices();
+      if (!schemaTestEntityId) {
+        throw new Error('No schema test entity available — createEntity test must run first');
+      }
+      await entities.addField(schemaTestEntityId, { name: 'notes', type: EntityFieldType.Text });
+      const updated = await entities.getById(schemaTestEntityId);
+      const fieldNames = updated.fields.map(f => f.name.toLowerCase());
+      expect(fieldNames).toContain('notes');
+    });
+
+    it('should remove a field from the created entity', async () => {
+      const { entities } = getServices();
+      if (!schemaTestEntityId) {
+        throw new Error('No schema test entity available — createEntity test must run first');
+      }
+      await entities.removeField(schemaTestEntityId, 'notes');
+      const updated = await entities.getById(schemaTestEntityId);
+      const fieldNames = updated.fields.map(f => f.name.toLowerCase());
+      expect(fieldNames).not.toContain('notes');
+    });
+
+    it('should delete the created entity', async () => {
+      const { entities } = getServices();
+      if (!schemaTestEntityId) {
+        throw new Error('No schema test entity available — createEntity test must run first');
+      }
+      await entities.deleteEntity(schemaTestEntityId);
+      schemaTestEntityId = null;
+    });
+
+    afterAll(async () => {
+      if (schemaTestEntityId) {
+        const { entities } = getServices();
+        await entities.deleteEntity(schemaTestEntityId).catch(() => {});
+      }
     });
   });
 

@@ -25,8 +25,8 @@ import {
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
   EntityDeleteAttachmentResponse,
-  QueryEntityRecordsOptions,
-  QueryEntityRecordsResponse,
+  EntityQueryRecordsOptions,
+  EntityQueryRecordsResponse,
   EntityBulkImportOptions,
   EntityBulkImportResponse,
   EntityFieldDefinition,
@@ -473,16 +473,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.QueryRecords')
-  async queryRecords(entityId: string, options: QueryEntityRecordsOptions = {}): Promise<QueryEntityRecordsResponse> {
+  async queryRecords(entityId: string, options: EntityQueryRecordsOptions = {}): Promise<EntityQueryRecordsResponse> {
     const response = await this.post<{ value?: EntityRecord[]; totalRecordCount?: number }>(
       DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(entityId),
       options
     );
 
     const raw = response.data;
-    const items = (raw.value ?? []).map((record: EntityRecord) => {
-      return transformData(record, EntityMap);
-    });
+    const items = raw.value ?? [];
 
     return {
       items,
@@ -932,8 +930,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
         id: entityId,
         name: raw.name,
         fields,
-        folderId: '00000000-0000-0000-0000-000000000000',
-        isRbacEnabled: false,
+        folderId: (raw.folderId as string | undefined) ?? '00000000-0000-0000-0000-000000000000',
+        isRbacEnabled: (raw.isRbacEnabled as boolean | undefined) ?? false,
         externalFields: [],
       },
     };

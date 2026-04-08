@@ -28,6 +28,5 @@ export { ChoiceSetService as ChoiceSets, ChoiceSetService } from './choicesets';
 // Re-export service-specific types
 export * from '../../models/data-fabric/entities.types';
 export * from '../../models/data-fabric/entities.models';
-export { EntitySchemaFieldTypeMap, ENTITY_FIELD_TYPES } from '../../models/data-fabric/entities.constants';
 export * from '../../models/data-fabric/choicesets.types';
 export * from '../../models/data-fabric/choicesets.models';

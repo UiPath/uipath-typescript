@@ -156,7 +156,7 @@ export interface EntityQuerySortOption {
 /**
  * Options for querying entity records with filters, sorting, and pagination
  */
-export interface QueryEntityRecordsOptions {
+export interface EntityQueryRecordsOptions {
   /** Filter conditions to apply */
   filterGroup?: EntityQueryFilterGroup;
   /** List of field names to include in results (returns all fields if omitted) */
@@ -172,7 +172,7 @@ export interface QueryEntityRecordsOptions {
 /**
  * Response from querying entity records
  */
-export interface QueryEntityRecordsResponse {
+export interface EntityQueryRecordsResponse {
   /** Array of matching entity records */
   items: EntityRecord[];
   /** Total number of records matching the filter (before pagination) */
@@ -202,7 +202,7 @@ export interface EntityFieldDefinition {
   /** Display name shown in the UI (defaults to name) */
   displayName?: string;
   /** Field type — one of the EntityFieldType values (default: "text") */
-  type?: EntityFieldType | string;
+  type?: EntityFieldType;
   /** Whether the field is required (default: false) */
   isRequired?: boolean;
   /** Optional field description */

@@ -47,6 +47,12 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `downloadAttachment()` | `DataFabric.Data.Read` |
 | `uploadAttachment()` | `DataFabric.Data.Write` |
 | `deleteAttachment()` | `DataFabric.Data.Write` |
+| `queryRecords()` | `DataFabric.Data.Read` |
+| `bulkImport()` | `DataFabric.Data.Write` |
+| `createEntity()` | `DataFabric.Schema.Write` |
+| `deleteEntity()` | `DataFabric.Schema.Write` |
+| `addField()` | `DataFabric.Schema.Write` |
+| `removeField()` | `DataFabric.Schema.Write` |
 
 ## ChoiceSets
 

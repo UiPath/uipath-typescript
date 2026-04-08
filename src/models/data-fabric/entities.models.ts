@@ -22,8 +22,8 @@ import {
   EntityDeleteRecordsOptions,
   EntityGetAllRecordsOptions,
   EntityInsertRecordOptions,
-  QueryEntityRecordsOptions,
-  QueryEntityRecordsResponse,
+  EntityQueryRecordsOptions,
+  EntityQueryRecordsResponse,
   EntityBulkImportOptions,
   EntityBulkImportResponse,
   EntityFieldDefinition,
@@ -349,7 +349,7 @@ export interface EntityServiceModel {
    *
    * @param entityId - UUID of the entity
    * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
-   * @returns Promise resolving to {@link QueryEntityRecordsResponse} with matching records and total count
+   * @returns Promise resolving to {@link EntityQueryRecordsResponse} with matching records and total count
    * @example
    * ```typescript
    * // Query with a filter
@@ -364,7 +364,7 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  queryRecords(entityId: string, options?: QueryEntityRecordsOptions): Promise<QueryEntityRecordsResponse>;
+  queryRecords(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse>;
 
   /**
    * Imports records from a CSV file into an entity
