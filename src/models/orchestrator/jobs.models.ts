@@ -1,4 +1,4 @@
-import { JobGetAllOptions, JobGetByKeyOptions, RawJobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 // Combined type for job data with methods
@@ -81,20 +81,20 @@ export interface JobServiceModel {
    * @example
    * ```typescript
    * // Get a job by key
-   * const job = await jobs.getByKey(<jobKey>, <folderId>);
+   * const job = await jobs.getById(<jobKey>, <folderId>);
    * console.log(job.state, job.processName);
    * ```
    *
    * @example
    * ```typescript
    * // With expanded related entities
-   * const job = await jobs.getByKey(<jobKey>, <folderId>, {
+   * const job = await jobs.getById(<jobKey>, <folderId>, {
    *   expand: 'Robot,Machine,Release'
    * });
    * console.log(job.robot?.name, job.machine?.name);
    * ```
    */
-  getByKey(jobKey: string, folderId: number, options?: JobGetByKeyOptions): Promise<JobGetResponse>;
+  getById(jobKey: string, folderId: number, options?: JobGetByIdOptions): Promise<JobGetResponse>;
 
   /**
    * Gets the output of a completed job.

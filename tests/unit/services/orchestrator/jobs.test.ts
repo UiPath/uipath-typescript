@@ -11,7 +11,7 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { createMockError } from '../../../utils/mocks/core';
 import {
   JobGetAllOptions,
-  JobGetByKeyOptions,
+  JobGetByIdOptions,
 } from '../../../../src/models/orchestrator/jobs.types';
 import { JobGetResponse } from '../../../../src/models/orchestrator/jobs.models';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
@@ -176,12 +176,12 @@ describe('JobService Unit Tests', () => {
     });
   });
 
-  describe('getByKey', () => {
+  describe('getById', () => {
     it('should return a job by key with transformed fields', async () => {
       const mockRawJob = createMockRawJob();
       mockApiClient.get.mockResolvedValueOnce(mockRawJob);
 
-      const result = await jobService.getByKey(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
@@ -206,7 +206,7 @@ describe('JobService Unit Tests', () => {
       const mockRawJob = createMockRawJob();
       mockApiClient.get.mockResolvedValueOnce(mockRawJob);
 
-      const result = await jobService.getByKey(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
 
       expect((result as any).CreationTime).toBeUndefined();
       expect((result as any).ReleaseName).toBeUndefined();
@@ -219,7 +219,7 @@ describe('JobService Unit Tests', () => {
       const mockRawJob = createMockRawJob();
       mockApiClient.get.mockResolvedValueOnce(mockRawJob);
 
-      const result = await jobService.getByKey(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
 
       expect(result.getOutput).toBeDefined();
       expect(typeof result.getOutput).toBe('function');
@@ -229,12 +229,12 @@ describe('JobService Unit Tests', () => {
       const mockRawJob = createMockRawJob();
       mockApiClient.get.mockResolvedValueOnce(mockRawJob);
 
-      const options: JobGetByKeyOptions = {
+      const options: JobGetByIdOptions = {
         expand: 'Robot,Machine,Release',
         select: 'Key,State,ReleaseName',
       };
 
-      await jobService.getByKey(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, options);
+      await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, options);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
@@ -249,8 +249,8 @@ describe('JobService Unit Tests', () => {
 
     it('should throw validation error when jobKey is missing', async () => {
       await expect(
-        jobService.getByKey('', TEST_CONSTANTS.FOLDER_ID)
-      ).rejects.toThrow('jobKey is required for getByKey');
+        jobService.getById('', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow('jobKey is required for getById');
     });
 
     it('should handle API errors', async () => {
@@ -258,7 +258,7 @@ describe('JobService Unit Tests', () => {
       mockApiClient.get.mockRejectedValueOnce(error);
 
       await expect(
-        jobService.getByKey(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+        jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
       ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
     });
   });

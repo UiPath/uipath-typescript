@@ -62,12 +62,12 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getByKey', () => {
+  describe('getById', () => {
     it('should retrieve a job by key', async () => {
       const { jobs, folderId } = getJobsService();
 
       if (!folderId) {
-        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getByKey tests.');
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getById tests.');
       }
 
       // First get a job key from getAll
@@ -77,11 +77,11 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (allJobs.items.length === 0) {
-        throw new Error('No jobs available to test getByKey.');
+        throw new Error('No jobs available to test getById.');
       }
 
       const jobKey = allJobs.items[0].key;
-      const job = await jobs.getByKey(jobKey, folderId);
+      const job = await jobs.getById(jobKey, folderId);
 
       expect(job).toBeDefined();
       expect(job.id).toBeDefined();
@@ -94,7 +94,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const { jobs, folderId } = getJobsService();
 
       if (!folderId) {
-        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getByKey tests.');
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getById tests.');
       }
 
       const allJobs = await jobs.getAll({
@@ -103,11 +103,11 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (allJobs.items.length === 0) {
-        throw new Error('No jobs available to test getByKey with expand.');
+        throw new Error('No jobs available to test getById with expand.');
       }
 
       const jobKey = allJobs.items[0].key;
-      const job = await jobs.getByKey(jobKey, folderId, {
+      const job = await jobs.getById(jobKey, folderId, {
         expand: 'Robot,Machine,Release',
       });
 
@@ -119,7 +119,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const { jobs, folderId } = getJobsService();
 
       if (!folderId) {
-        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getByKey tests.');
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getById tests.');
       }
 
       const allJobs = await jobs.getAll({
@@ -128,11 +128,11 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (allJobs.items.length === 0) {
-        throw new Error('No jobs available to test getByKey bound methods.');
+        throw new Error('No jobs available to test getById bound methods.');
       }
 
       const jobKey = allJobs.items[0].key;
-      const job = await jobs.getByKey(jobKey, folderId);
+      const job = await jobs.getById(jobKey, folderId);
 
       expect(job.getOutput).toBeDefined();
       expect(typeof job.getOutput).toBe('function');
@@ -142,7 +142,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const { jobs, folderId } = getJobsService();
 
       if (!folderId) {
-        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getByKey transform tests.');
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getById transform tests.');
       }
 
       const allJobs = await jobs.getAll({
@@ -155,7 +155,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const jobKey = allJobs.items[0].key;
-      const job = await jobs.getByKey(jobKey, folderId);
+      const job = await jobs.getById(jobKey, folderId);
 
       // Verify transformed camelCase fields exist
       expect(job.createdTime).toBeDefined();

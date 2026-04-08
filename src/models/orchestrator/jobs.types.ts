@@ -167,7 +167,7 @@ export type JobGetAllOptions = RequestOptions & PaginationOptions & {
 }
 
 /**
- * Options for getting a job by key
+ * Options for getting a job by ID
  */
-export interface JobGetByKeyOptions extends BaseOptions {}
+export interface JobGetByIdOptions extends BaseOptions {}
 

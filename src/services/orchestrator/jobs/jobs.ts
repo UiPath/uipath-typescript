@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions, JobGetByKeyOptions } from '../../../models/orchestrator/jobs.types';
+import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -117,24 +117,24 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    *
    * @example
    * ```typescript
-   * // Get a job by key
-   * const job = await jobs.getByKey(<jobKey>, <folderId>);
+   * // Get a job by ID
+   * const job = await jobs.getById(<jobKey>, <folderId>);
    * console.log(job.state, job.processName);
    * ```
    *
    * @example
    * ```typescript
    * // With expanded related entities
-   * const job = await jobs.getByKey(<jobKey>, <folderId>, {
+   * const job = await jobs.getById(<jobKey>, <folderId>, {
    *   expand: 'Robot,Machine,Release'
    * });
    * console.log(job.robot?.name, job.machine?.name);
    * ```
    */
-  @track('Jobs.GetByKey')
-  async getByKey(jobKey: string, folderId: number, options: JobGetByKeyOptions = {}): Promise<JobGetResponse> {
+  @track('Jobs.GetById')
+  async getById(jobKey: string, folderId: number, options: JobGetByIdOptions = {}): Promise<JobGetResponse> {
     if (!jobKey) {
-      throw new ValidationError({ message: 'jobKey is required for getByKey' });
+      throw new ValidationError({ message: 'jobKey is required for getById' });
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -191,7 +191,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
 
-    const job = await this.getByKey(jobKey, folderId, { select: 'OutputArguments,OutputFile' });
+    const job = await this.getById(jobKey, folderId, { select: 'OutputArguments,OutputFile' });
 
     if (job.outputArguments) {
       try {
