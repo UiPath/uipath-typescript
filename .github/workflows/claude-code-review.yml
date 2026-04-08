@@ -22,26 +22,26 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      issues: read
+      issues: write
       id-token: write
-      actions: read
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Review PR with Claude
+      - name: Run Claude Code Review
         id: claude-review
-        uses: anthropics/claude-code-action@094bd24d575e7b30ac1576024817bf1a97c81262 # v1
+        uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          additional_permissions: |
-            actions: read
+          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
+          plugins: 'code-review@claude-code-plugins'
           prompt: |
-            Review PR #${{ github.event.pull_request.number }}.
             Read CLAUDE.md at the repo root first — it references Agents.md and agent_docs/ which contain all project conventions, architecture, and rules. Follow every convention defined there during your review.
-            Use `gh pr diff ${{ github.event.pull_request.number }}` to get the full diff.
-            Use `gh pr view ${{ github.event.pull_request.number }}` to get the PR description.
+            /code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }} --comment
+          use_sticky_comment: true
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"
 
