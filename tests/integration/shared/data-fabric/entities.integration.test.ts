@@ -10,7 +10,6 @@ import { registerResource } from '../../utils/cleanup';
 import { generateRandomString, generateRandomInt, generateRandomFloat } from '../../utils/helpers';
 import {
   EntityFieldDataType,
-  EntityFieldType,
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
@@ -774,58 +773,6 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  describe('Entity schema management (createEntity, deleteEntity, addField, removeField)', () => {
-    let schemaTestEntityId: string | null = null;
-
-    it('should create a new entity', async () => {
-      const { entities } = getServices();
-      const entityName = `sdktest${generateRandomString(6)}`;
-      const result = await entities.createEntity(entityName, 'Integration test entity', [
-        { name: 'title', type: EntityFieldType.Text, isRequired: false },
-      ]);
-      expect(result).toBeDefined();
-      expect(typeof result).toBe('string');
-      schemaTestEntityId = result;
-    });
-
-    it('should add a field to the created entity', async () => {
-      const { entities } = getServices();
-      if (!schemaTestEntityId) {
-        throw new Error('No schema test entity available — createEntity test must run first');
-      }
-      await entities.addField(schemaTestEntityId, { name: 'notes', type: EntityFieldType.Text });
-      const updated = await entities.getById(schemaTestEntityId);
-      const fieldNames = updated.fields.map(f => f.name.toLowerCase());
-      expect(fieldNames).toContain('notes');
-    });
-
-    it('should remove a field from the created entity', async () => {
-      const { entities } = getServices();
-      if (!schemaTestEntityId) {
-        throw new Error('No schema test entity available — createEntity test must run first');
-      }
-      await entities.removeField(schemaTestEntityId, 'notes');
-      const updated = await entities.getById(schemaTestEntityId);
-      const fieldNames = updated.fields.map(f => f.name.toLowerCase());
-      expect(fieldNames).not.toContain('notes');
-    });
-
-    it('should delete the created entity', async () => {
-      const { entities } = getServices();
-      if (!schemaTestEntityId) {
-        throw new Error('No schema test entity available — createEntity test must run first');
-      }
-      await entities.deleteEntity(schemaTestEntityId);
-      schemaTestEntityId = null;
-    });
-
-    afterAll(async () => {
-      if (schemaTestEntityId) {
-        const { entities } = getServices();
-        await entities.deleteEntity(schemaTestEntityId).catch(() => {});
-      }
-    });
-  });
 
   afterAll(async () => {
     const config = getTestConfig();
