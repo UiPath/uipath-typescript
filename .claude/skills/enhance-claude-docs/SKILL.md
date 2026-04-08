@@ -202,7 +202,7 @@ BRANCH_NAME="claude-docs-update/$(date +%Y-%m-%d)"
 1. Check out the existing PR branch.
 2. Commit changes with message: `docs: update claude docs from PR review analysis (${START_DATE} to ${END_DATE})`
 3. Push to the existing branch.
-4. Update the PR body with the new analysis using `gh pr edit`.
+4. Regenerate the PR body from scratch by reading the **full diff** of the branch against `main` (`gh pr diff`). The diff is the source of truth — it captures all changes across all previous runs. Generate the PR body in the same format as "If no existing PR" below, using `gh pr edit` to update.
 
 ### If no existing PR
 
@@ -217,7 +217,7 @@ gh pr create \
   --repo UiPath/uipath-typescript \
   --title "docs: update Claude docs from PR review analysis" \
   --label "claude-docs-update" \
-  --reviewer "shreyash0502" \
+  --reviewer "ninja-shreyash" \
   --body "$(cat <<'EOF'
 ## Summary
 Weekly analysis of PR comments ({START_DATE} -> {END_DATE}).
