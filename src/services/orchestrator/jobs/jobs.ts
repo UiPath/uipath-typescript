@@ -1,10 +1,9 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions } from '../../../models/orchestrator/jobs.types';
-import { RawJobOutputFields } from '../../../models/orchestrator/jobs.internal-types';
+import { RawJobGetResponse, JobGetAllOptions, JobGetByKeyOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
-import { pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
 import { JobMap } from '../../../models/orchestrator/jobs.constants';
 import { AttachmentService } from '../attachments/attachments';
 import { ValidationError, ServerError } from '../../../core/errors';
@@ -106,6 +105,55 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
+   * Gets a job by its unique key (GUID).
+   *
+   * Returns the full job details including state, timing, input/output arguments, and error information.
+   * Use `expand` to include related entities like Robot, Machine, or Release.
+   *
+   * @param jobKey - The unique key (GUID) of the job to retrieve
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional query options for expanding or selecting fields
+   * @returns Promise resolving to a {@link JobGetResponse} with full job details and bound methods
+   *
+   * @example
+   * ```typescript
+   * // Get a job by key
+   * const job = await jobs.getByKey(<jobKey>, <folderId>);
+   * console.log(job.state, job.processName);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With expanded related entities
+   * const job = await jobs.getByKey(<jobKey>, <folderId>, {
+   *   expand: 'Robot,Machine,Release'
+   * });
+   * console.log(job.robot?.name, job.machine?.name);
+   * ```
+   */
+  @track('Jobs.GetByKey')
+  async getByKey(jobKey: string, folderId: number, options: JobGetByKeyOptions = {}): Promise<JobGetResponse> {
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for getByKey' });
+    }
+
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    const keysToPrefix = Object.keys(options);
+    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
+
+    const response = await this.get<Record<string, unknown>>(
+      JOB_ENDPOINTS.GET_BY_KEY(jobKey),
+      {
+        params: apiOptions,
+        headers,
+      }
+    );
+
+    const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
+    return createJobWithMethods(rawJob, this);
+  }
+
+  /**
    * Gets the output of a completed job.
    *
    * Retrieves the job's output arguments, handling both inline output (stored directly on the job
@@ -143,42 +191,21 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
 
-    const job = await this.fetchJobByKey(jobKey, folderId);
+    const job = await this.getByKey(jobKey, folderId, { select: 'OutputArguments,OutputFile' });
 
-    if (job.OutputArguments) {
+    if (job.outputArguments) {
       try {
-        return JSON.parse(job.OutputArguments) as Record<string, unknown>;
+        return JSON.parse(job.outputArguments) as Record<string, unknown>;
       } catch {
         throw new ServerError({ message: 'Failed to parse job output arguments as JSON' });
       }
     }
 
-    if (job.OutputFile) {
-      return this.downloadOutputFile(job.OutputFile);
+    if (job.outputFile) {
+      return this.downloadOutputFile(job.outputFile);
     }
 
     return null;
-  }
-
-  /**
-   * Fetches a job by its Key (GUID) using the GetByKey endpoint.
-   * Only selects fields needed for output extraction.
-   */
-  private async fetchJobByKey(
-    jobKey: string,
-    folderId: number
-  ): Promise<RawJobOutputFields> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-    const response = await this.get<RawJobOutputFields>(
-      JOB_ENDPOINTS.GET_BY_KEY(jobKey),
-      {
-        params: {
-          $select: 'OutputArguments,OutputFile',
-        },
-        headers,
-      }
-    );
-    return response.data;
   }
 
   /**

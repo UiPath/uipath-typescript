@@ -1,4 +1,4 @@
-import { JobState, RequestOptions } from '../common/types';
+import { JobState, BaseOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 import {
   JobPriority,
@@ -165,4 +165,9 @@ export type JobGetAllOptions = RequestOptions & PaginationOptions & {
    */
   folderId?: number;
 }
+
+/**
+ * Options for getting a job by key
+ */
+export interface JobGetByKeyOptions extends BaseOptions {}
 
