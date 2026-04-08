@@ -18,6 +18,7 @@
 - Subpath exports: when adding a new service module, add entries to `package.json` `exports` and `rollup.config.js`.
 - Every public service method must be decorated with `@track('ServiceName.MethodName')` for telemetry.
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
+- **Barrel files must use `export * from`**, not `export type * from`. Using `export type` re-exports only type declarations and silently drops runtime values (class constructors, enums), causing `undefined` errors for SDK consumers who import them. (Source: PR #184)
 
 ## Type naming
 
