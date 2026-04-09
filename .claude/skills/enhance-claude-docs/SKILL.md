@@ -1,11 +1,11 @@
 ---
 name: enhance-claude-docs
-description: Analyze recent PR review comments and update Claude documentation files with new insights. Fetches merged, open, and closed PRs from the last N days, extracts reviewer feedback, and proposes documentation improvements. Triggers on "update claude docs", "enhance docs from PRs", "analyze PR comments".
+description: Analyze recent PR review comments and update Claude documentation files with new insights. Fetches PRs merged in the last N days, extracts reviewer feedback, and proposes documentation improvements. Triggers on "update claude docs", "enhance docs from PRs", "analyze PR comments".
 ---
 
 # Enhance Claude Docs
 
-Analyzes PR review comments from `UiPath/uipath-typescript` and updates Claude documentation files (`CLAUDE.md`, `Agents.md`, `agent_docs/`) with documentation-worthy insights not already captured.
+Analyzes review comments from PRs merged in `UiPath/uipath-typescript` and updates Claude documentation files (`CLAUDE.md`, `Agents.md`, `agent_docs/`) with documentation-worthy insights not already captured.
 
 ---
 
@@ -34,16 +34,16 @@ Store `START_DATE` and `END_DATE` for use in the PR body later.
 
 ---
 
-## Step 2: Fetch PRs
+## Step 2: Fetch Merged PRs
 
-Fetch all PRs updated in the date range:
+Fetch only PRs that were **merged** in the date range. PRs that are still open or were closed without merging are skipped — they'll be picked up in a future run when (and if) they merge.
 
 ```bash
-gh api "repos/UiPath/uipath-typescript/pulls?state=all&sort=updated&direction=desc&per_page=100" \
-  --jq "[.[] | select(.updated_at >= \"${START_DATE}\") | {number, title, state, user: .user.login, updated_at}]"
+gh api "repos/UiPath/uipath-typescript/pulls?state=closed&sort=updated&direction=desc&per_page=100" \
+  --jq "[.[] | select(.merged_at != null and .merged_at >= \"${START_DATE}\") | {number, title, state: \"merged\", user: .user.login, merged_at}]"
 ```
 
-If no PRs found, report "No PRs found in the last N days" and stop.
+If no merged PRs found, report "No merged PRs found in the last N days" and stop.
 
 ---
 
@@ -233,9 +233,9 @@ Analyzed {X} PRs with {Y} comments. Found {Z} actionable insights.
 - {files not modified} -- no relevant insights found
 
 ## PRs Analyzed
-| PR | Title | State | Comments |
-|----|-------|-------|----------|
-| #{N} | {title} | {state} | {count} |
+| PR | Title | Comments |
+|----|-------|----------|
+| #{N} | {title} | {count} |
 EOF
 )"
 ```
@@ -244,8 +244,7 @@ EOF
 - Replace all `{placeholders}` with actual values.
 - The **Changes** section must list every file modified with the specific change, source PR, reviewer, and original comment quote.
 - The **No changes** section must list files that were read but had no relevant insights.
-- The **PRs Analyzed** table must list every PR that was fetched, regardless of whether it yielded insights.
-- State values: `merged`, `open`, `closed`.
+- The **PRs Analyzed** table must list every merged PR that was fetched, regardless of whether it yielded insights.
 
 ---
 
