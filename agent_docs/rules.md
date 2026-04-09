@@ -48,6 +48,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - Use `<paramName>` placeholder convention for IDs in examples.
 - Use camelCase in examples, matching SDK response format. **NEVER** use PascalCase in JSDoc examples — users will write broken code.
 - Keep JSDoc in sync with method names.
+- **Keep JSDoc on service class methods in sync with `{Entity}ServiceModel`** — both the models file and the service implementation file must have identical JSDoc for each public method. `ServiceModel` is the source of truth for docs, but the service class copy aids developer navigation and IDE tooltips. When updating JSDoc on one, update the other.
 - **When a method supports `expand`**, show multiple expandable entities in the `@example` (e.g., `expand: 'Robot,Machine,Release'`) so users see the comma-separated pattern.
 - **Add a one-line description of what the response includes** beyond the method signature (e.g., "Returns the full job details including state, timing, and input/output arguments. Use `expand` to include related entities like Robot, Machine, or Release").
 - **NEVER** reference unrelated parameters in JSDoc examples — keep examples focused on the method being documented. If `getOutput()` doesn't accept `folderId`, don't show `folderId` in its example.

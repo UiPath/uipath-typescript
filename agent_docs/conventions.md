@@ -35,6 +35,8 @@
 - **NEVER** duplicate fields across option types — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use `extends` (e.g., `export interface EntityUpdateRecordByIdOptions extends EntityGetRecordByIdOptions {}`).
 - **NEVER** use type aliases for response types — even when the shape matches an existing one, use an `extends` interface. Type aliases (e.g., `export type EntityUpdateRecordResponse = EntityRecord`) break TypeDoc docs generation by not rendering as standalone types. Use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
 
+**ID parameter types**: New methods must use `string` (GUID) for entity identifiers, not `string | number`. Legacy methods may still accept `string | number` for backward compatibility, but all new `getById`, `getOutput`, etc. should type their ID parameter as `string`.
+
 Method names: **singular** for single-item ops (`insertRecordById`), **plural** for batch (`insertRecordsById`). **NEVER** use `batch` prefix — the SDK convention is singular/plural to distinguish cardinality.
 
 **Singular vs batch patterns:**
@@ -197,26 +199,10 @@ If the constructor only calls `super()` with no additional setup, omit it entire
 
 ## Folder-scoped services
 
-Some Orchestrator services (Assets, Queues, Buckets) require a `folderId` for operations. These services handle it inline:
+Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` for operations. These services handle it inline:
 
 - **`getById(id, folderId, ...)`** — sets the `X-UIPATH-OrganizationUnitId` header via `createHeaders({ [FOLDER_ID]: folderId })`
 - **`getAll(options?)`** — passes `getByFolderEndpoint` to `PaginationHelpers.getAll()`, which switches endpoints based on whether `folderId` is in options
-
-### Required vs optional folderId
-
-**Required folderId** (Assets, Queues, Buckets): `folderId` is a positional parameter — `getById(id, folderId, options?)`. The API requires folder scoping.
-
-**Optional folderId** (Jobs): `folderId` is in the options object — `getById(id, options?)`. The API works across folders without a header.
-
-**In both cases, use the same `createHeaders` call** — the utility filters `undefined` values automatically, so there's no need for conditional creation:
-
-```typescript
-// CORRECT — consistent with all services in the codebase. createHeaders filters undefined.
-const headers = createHeaders({ [FOLDER_ID]: folderId });
-
-// WRONG — unnecessary conditional. Breaks codebase consistency.
-const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : undefined;
-```
 
 ## OperationResponse pattern
 

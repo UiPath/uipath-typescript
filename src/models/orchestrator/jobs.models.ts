@@ -73,7 +73,7 @@ export interface JobServiceModel {
    * Returns the full job details including state, timing, input/output arguments, and error information.
    * Use `expand` to include related entities like Robot, Machine, or Release.
    *
-   * @param jobKey - The unique key (GUID) of the job to retrieve
+   * @param id - The unique key (GUID) of the job to retrieve
    * @param folderId - The folder ID where the job resides
    * @param options - Optional query options for expanding or selecting fields
    * @returns Promise resolving to a {@link JobGetResponse} with full job details and bound methods
@@ -81,20 +81,20 @@ export interface JobServiceModel {
    * @example
    * ```typescript
    * // Get a job by key
-   * const job = await jobs.getById(<jobKey>, <folderId>);
+   * const job = await jobs.getById(<id>, <folderId>);
    * console.log(job.state, job.processName);
    * ```
    *
    * @example
    * ```typescript
    * // With expanded related entities
-   * const job = await jobs.getById(<jobKey>, <folderId>, {
+   * const job = await jobs.getById(<id>, <folderId>, {
    *   expand: 'Robot,Machine,Release'
    * });
    * console.log(job.robot?.name, job.machine?.name);
    * ```
    */
-  getById(jobKey: string, folderId: number, options?: JobGetByIdOptions): Promise<JobGetResponse>;
+  getById(id: string, folderId: number, options?: JobGetByIdOptions): Promise<JobGetResponse>;
 
   /**
    * Gets the output of a completed job.

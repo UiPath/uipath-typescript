@@ -110,31 +110,31 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * Returns the full job details including state, timing, input/output arguments, and error information.
    * Use `expand` to include related entities like Robot, Machine, or Release.
    *
-   * @param jobKey - The unique key (GUID) of the job to retrieve
+   * @param id - The unique key (GUID) of the job to retrieve
    * @param folderId - The folder ID where the job resides
    * @param options - Optional query options for expanding or selecting fields
    * @returns Promise resolving to a {@link JobGetResponse} with full job details and bound methods
    *
    * @example
    * ```typescript
-   * // Get a job by ID
-   * const job = await jobs.getById(<jobKey>, <folderId>);
+   * // Get a job by key
+   * const job = await jobs.getById(<id>, <folderId>);
    * console.log(job.state, job.processName);
    * ```
    *
    * @example
    * ```typescript
    * // With expanded related entities
-   * const job = await jobs.getById(<jobKey>, <folderId>, {
+   * const job = await jobs.getById(<id>, <folderId>, {
    *   expand: 'Robot,Machine,Release'
    * });
    * console.log(job.robot?.name, job.machine?.name);
    * ```
    */
   @track('Jobs.GetById')
-  async getById(jobKey: string, folderId: number, options: JobGetByIdOptions = {}): Promise<JobGetResponse> {
-    if (!jobKey) {
-      throw new ValidationError({ message: 'jobKey is required for getById' });
+  async getById(id: string, folderId: number, options: JobGetByIdOptions = {}): Promise<JobGetResponse> {
+    if (!id) {
+      throw new ValidationError({ message: 'id is required for getById' });
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -142,7 +142,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
 
     const response = await this.get<Record<string, unknown>>(
-      JOB_ENDPOINTS.GET_BY_KEY(jobKey),
+      JOB_ENDPOINTS.GET_BY_KEY(id),
       {
         params: apiOptions,
         headers,

@@ -247,10 +247,10 @@ describe('JobService Unit Tests', () => {
       );
     });
 
-    it('should throw validation error when jobKey is missing', async () => {
+    it('should throw validation error when id is missing', async () => {
       await expect(
         jobService.getById('', TEST_CONSTANTS.FOLDER_ID)
-      ).rejects.toThrow('jobKey is required for getById');
+      ).rejects.toThrow('id is required for getById');
     });
 
     it('should handle API errors', async () => {

@@ -14,6 +14,7 @@ describe('Job Models', () => {
   beforeEach(() => {
     mockService = {
       getAll: vi.fn(),
+      getById: vi.fn(),
       getOutput: vi.fn(),
     } as any;
   });
