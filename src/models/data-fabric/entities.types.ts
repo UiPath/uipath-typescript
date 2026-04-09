@@ -120,6 +120,19 @@ export interface EntityDeleteOptions {
  */
 export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
 
+/**
+ * Options for deleting a single record from an entity
+ */
+export interface EntityDeleteRecordOptions {}
+
+/**
+ * Response from deleting a single record from an entity
+ */
+export interface EntityDeleteRecordResponse {
+  /** Whether the record was successfully deleted */
+  success: boolean;
+}
+
 
 /**
  * Supported file types for attachment upload
