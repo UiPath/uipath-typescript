@@ -3,6 +3,7 @@ export const AUTH_CONSTANTS = {
   FILES: {
     UIPATH_DIR: '.uipath',
     APP_CONFIG: 'app.config.json',
+    POLICY_CONFIG: 'policy.config.json',
     AUTH_FILE: '.auth.json',
     ENV_FILE: '.env',
     METADATA_FILE: 'metadata.json',
@@ -74,7 +75,7 @@ export const AUTH_CONSTANTS = {
       altEnvVar: 'UIPATH_URL',
       configKey: 'baseUrl' as const,
       flag: '--baseUrl',
-      example: "'https://cloud.uipath.com'",
+      example: "'https://alpha.uipath.com'",
     },
     ORG_ID: {
       envVar: 'UIPATH_ORG_ID',
@@ -148,6 +149,20 @@ export const AUTH_CONSTANTS = {
     ],
     // Required for pull command (Studio Web) — same as PUSH
     PULL: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_ACCESS_TOKEN'
+    ],
+    // Required for publish-policy command (AI Trust Layer)
+    PUBLISH_POLICY: [
+      'UIPATH_BASE_URL',
+      'UIPATH_ORG_ID',
+      'UIPATH_TENANT_ID',
+      'UIPATH_ACCESS_TOKEN'
+    ],
+    // Required for deploy-policy command (AI Trust Layer)
+    DEPLOY_POLICY: [
       'UIPATH_BASE_URL',
       'UIPATH_ORG_ID',
       'UIPATH_TENANT_ID',

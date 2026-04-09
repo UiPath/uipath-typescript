@@ -5,7 +5,7 @@ import { Flags } from '@oclif/core';
  */
 export const COMMON_FLAGS = {
   baseUrl: Flags.string({
-    description: 'UiPath base URL (default: https://cloud.uipath.com)',
+    description: 'UiPath base URL (default: https://alpha.uipath.com)',
   }),
   orgId: Flags.string({
     description: 'UiPath organization ID',

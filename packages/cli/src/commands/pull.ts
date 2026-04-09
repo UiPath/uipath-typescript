@@ -35,7 +35,7 @@ export default class Pull extends Command {
         'Local directory to write pulled files; should be the root of the app project (default: current working directory)',
     }),
     baseUrl: Flags.string({
-      description: 'UiPath base URL (default: https://cloud.uipath.com)',
+      description: 'UiPath base URL (default: https://alpha.uipath.com)',
     }),
     orgId: Flags.string({
       description: 'UiPath organization ID',

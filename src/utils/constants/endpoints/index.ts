@@ -20,3 +20,6 @@ export * from './identity';
 
 // Conversational Agent endpoints
 export * from './conversational-agent';
+
+// AoPS (Autonomous Operations) endpoints
+export * from './aops';
