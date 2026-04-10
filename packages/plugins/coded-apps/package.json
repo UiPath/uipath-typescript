@@ -1,5 +1,5 @@
 {
-  "name": "@uipath/coded-apps",
+  "name": "@uipath/coded-apps-dev",
   "version": "1.0.0-dev.1",
   "description": "Universal bundler plugin for UiPath Coded Apps configuration injection",
   "type": "module",
