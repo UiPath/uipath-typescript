@@ -18,7 +18,7 @@ import { isInActionCenter } from '../utils/platform';
  *
  * Supports two usage patterns:
  * 1. Full config in constructor — for server-side or explicit configuration
- * 2. No config / partial config — loads from meta tags injected by @uipath/coded-apps plugin
+ * 2. No config / partial config — loads from meta tags injected by @uipath/coded-apps-dev plugin
  *
  * @example
  * ```typescript

@@ -10,3 +10,4 @@ Designed to run in both Node.js and browser environments, the SDK makes it simpl
 1. **[Install the SDK](getting-started.md)** - Add to your project with npm/yarn
 2. **[Set up Authentication](authentication.md)** - Connect to UiPath Cloud  
 3. **[Start Building](getting-started.md/#quick-examples)** - Jump into examples and guides
+4. **[Deploy App](/uipath-typescript/coded-apps/getting-started/)** - Deploy your coded app to UiPath
