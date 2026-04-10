@@ -130,6 +130,18 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
 
       expect(job).toBeDefined();
       expect(job.key).toBe(jobKey);
+
+      // Verify expand affected the response — expanded entities may not be
+      // present in all test environments, so guard assertions.
+      if (job.robot) {
+        expect(job.robot.id).toBeDefined();
+      }
+      if (job.machine) {
+        expect(job.machine.id).toBeDefined();
+      }
+      if (job.process) {
+        expect(job.process.id).toBeDefined();
+      }
     });
   });
 

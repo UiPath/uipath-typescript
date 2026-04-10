@@ -191,6 +191,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
 
+    // OData $select expects raw API field names (PascalCase), not SDK camelCase names
     const job = await this.getById(jobKey, folderId, { select: 'OutputArguments,OutputFile' });
 
     if (job.outputArguments) {
