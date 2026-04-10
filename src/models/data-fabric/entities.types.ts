@@ -122,25 +122,48 @@ export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
 
 
 /**
+ * Logical operator for combining query filter groups
+ */
+export enum LogicalOperator {
+  /** Combine conditions with AND — all conditions must match */
+  And = 0,
+  /** Combine conditions with OR — any condition must match */
+  Or = 1,
+}
+
+/**
  * A single filter condition for querying entity records
+ *
+ * Supported operators: `=`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `not contains`,
+ * `startswith`, `endswith`, `in`, `not in`.
+ * Not all operators are valid for all field types.
+ *
+ * Values are always strings. For numeric or boolean fields, pass the string representation
+ * (e.g., `"42"`, `"true"`). For `in` / `not in` operators, use {@link valueList} instead of `value`.
  */
 export interface EntityQueryFilter {
   /** Name of the field to filter on */
   fieldName: string;
-  /** Comparison operator (e.g., "=", "!=", ">", "<", ">=", "<=", "contains", "startswith", "endswith", "in", "not in") */
+  /** Comparison operator — see supported operators in the interface description */
   operator: string;
-  /** Value to compare against */
-  value: string;
+  /** Value to compare against (always a string; omit when using `valueList`) */
+  value?: string;
+  /** List of values for `in` / `not in` operators */
+  valueList?: string[];
 }
 
 /**
  * A group of query filters combined with a logical operator
  */
 export interface EntityQueryFilterGroup {
-  /** Logical operator: 0 = AND, 1 = OR */
-  logicalOperator?: 0 | 1;
+  /** Logical operator applied between filters in `queryFilters` (default: AND) */
+  logicalOperator?: LogicalOperator;
+  /** Logical operator applied between sibling filter groups (default: AND) */
+  continueLogicalOperator?: LogicalOperator;
   /** Array of filter conditions */
   queryFilters?: EntityQueryFilter[];
+  /** Nested filter groups for complex boolean expressions */
+  filterGroups?: EntityQueryFilterGroup[];
 }
 
 /**
@@ -148,7 +171,7 @@ export interface EntityQueryFilterGroup {
  */
 export interface EntityQuerySortOption {
   /** Name of the field to sort by */
-  fieldName: string;
+  fieldName?: string;
   /** Whether to sort in descending order (default: false) */
   isDescending?: boolean;
 }
@@ -167,6 +190,8 @@ export interface EntityQueryRecordsOptions {
   start?: number;
   /** Maximum number of records to return */
   limit?: number;
+  /** Level of entity expansion for related fields (default: 0) */
+  expansionLevel?: number;
 }
 
 /**
@@ -197,11 +222,14 @@ export enum EntityFieldType {
  * User-facing field definition for creating or updating entity schemas
  */
 export interface EntityFieldDefinition {
-  /** Field name (spaces will be stripped) */
+  /**
+   * Technical field name — must be lowercase, start with a letter, and contain only
+   * letters, numbers, and underscores (e.g., `"product_name"`).
+   */
   name: string;
-  /** Display name shown in the UI (defaults to name) */
+  /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
   displayName?: string;
-  /** Field type — one of the EntityFieldType values (default: "text") */
+  /** Field type — one of the {@link EntityFieldType} values (default: Text) */
   type?: EntityFieldType;
   /** Whether the field is required (default: false) */
   isRequired?: boolean;
@@ -210,23 +238,50 @@ export interface EntityFieldDefinition {
 }
 
 /**
+ * Options for updating an entity's metadata (displayName, description)
+ */
+export interface EntityMetadataUpdateOptions {
+  /** New display name for the entity */
+  displayName?: string;
+  /** New description for the entity */
+  description?: string;
+  /** Whether role-based access control is enabled for this entity */
+  isRbacEnabled?: boolean;
+}
+
+/**
+ * Options for updating a field's metadata
+ */
+export interface EntityUpdateFieldOptions {
+  /** New display name for the field */
+  displayName?: string;
+  /** New description for the field */
+  description?: string;
+  /** Whether the field is required */
+  isRequired?: boolean;
+  /** Default value for the field */
+  defaultValue?: string;
+  /** Whether the field value must be unique across records */
+  isUnique?: boolean;
+  /** Whether role-based access control is enabled for this field */
+  isRbacEnabled?: boolean;
+}
+
+/**
  * Options for bulk importing records from a CSV file
  */
-export interface EntityBulkImportOptions {
-  /** Whether to stop processing on first record failure (default: false) */
-  failOnFirst?: boolean;
-}
+export interface EntityBulkImportOptions {}
 
 /**
  * Response from a bulk import operation
  */
 export interface EntityBulkImportResponse {
   /** Total number of records in the import file */
-  totalRecords: number;
+  totalRecords?: number;
   /** Number of records successfully inserted */
-  insertedRecords: number;
+  insertedRecords?: number;
   /** Link to download the error file (if any records failed) */
-  errorFileLink?: string;
+  errorFileLink?: string | null;
 }
 
 /**

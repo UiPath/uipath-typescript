@@ -28,6 +28,7 @@ import type {
   EntityRecord,
   EntityGetAllRecordsOptions
 } from '../../../../src/models/data-fabric/entities.types';
+import { EntityFieldType } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { DATA_FABRIC_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -1066,16 +1067,16 @@ describe('EntityService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         {},
-        {}
+        { params: {} }
       );
     });
 
-    it('should pass filter options to the API', async () => {
+    it('should pass filter options in request body', async () => {
       mockApiClient.post.mockResolvedValue({ value: [], totalRecordCount: 0 });
 
       const options = {
         filterGroup: {
-          logicalOperator: 0,
+          logicalOperator: 0 as const,
           queryFilters: [{ fieldName: 'name', operator: '=', value: 'Alice' }],
         },
         limit: 10,
@@ -1087,8 +1088,47 @@ describe('EntityService Unit Tests', () => {
       expect(result.totalCount).toBe(0);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
-        options,
-        {}
+        { filterGroup: options.filterGroup, limit: 10, start: 0 },
+        { params: {} }
+      );
+    });
+
+    it('should pass expansionLevel as a query param, not in the request body', async () => {
+      mockApiClient.post.mockResolvedValue({ value: [], totalRecordCount: 0 });
+
+      await entityService.queryRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+        limit: 10,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        { limit: 10 },
+        { params: { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL } }
+      );
+    });
+
+    it('should support nested filterGroups', async () => {
+      mockApiClient.post.mockResolvedValue({ value: [], totalRecordCount: 0 });
+
+      const options = {
+        filterGroup: {
+          logicalOperator: 0 as const,
+          filterGroups: [
+            {
+              logicalOperator: 1 as const,
+              queryFilters: [{ fieldName: 'status', operator: '=', value: 'active' }],
+            },
+          ],
+        },
+      };
+
+      await entityService.queryRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        { filterGroup: options.filterGroup },
+        { params: {} }
       );
     });
 
@@ -1111,59 +1151,67 @@ describe('EntityService Unit Tests', () => {
     });
   });
 
-  describe('bulkImport', () => {
-    it('should post FormData to bulk import endpoint and return result', async () => {
-      const mockResponse = { totalRecords: 3, insertedRecords: 3 };
+  describe('importRecordsById', () => {
+    it('should post FormData to bulk upload endpoint with a File and return result', async () => {
+      const mockResponse = { totalRecords: 3, insertedRecords: 3, errorFileLink: null };
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.bulkImport(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        'name,age\nAlice,30\nBob,25\nCharlie,40',
-        'import.csv'
-      );
+      const file = new File(['name,age\nAlice,30\nBob,25\nCharlie,40'], 'import.csv', { type: 'text/csv' });
+
+      const result = await entityService.importRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, file);
 
       expect(result).toEqual(mockResponse);
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.BULK_IMPORT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         expect.any(FormData),
-        { params: {} }
+        {}
       );
     });
 
-    it('should include failOnFirst param when option is set', async () => {
-      mockApiClient.post.mockResolvedValue({ totalRecords: 1, insertedRecords: 0 });
+    it('should accept a plain Blob', async () => {
+      mockApiClient.post.mockResolvedValue({ totalRecords: 2, insertedRecords: 2, errorFileLink: null });
 
-      await entityService.bulkImport(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        'name\nAlice',
-        'data.csv',
-        { failOnFirst: true }
-      );
+      const blob = new Blob(['name\nAlice\nBob'], { type: 'text/csv' });
+
+      await entityService.importRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, blob);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.BULK_IMPORT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         expect.any(FormData),
-        { params: { failOnFirst: true } }
+        {}
       );
+    });
+
+    it('should return errorFileLink when some records fail', async () => {
+      const mockResponse = { totalRecords: 3, insertedRecords: 2, errorFileLink: 'error-file-abc123' };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const file = new File(['name\nAlice\nBob\nCharlie'], 'import.csv', { type: 'text/csv' });
+
+      const result = await entityService.importRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, file);
+
+      expect(result.errorFileLink).toBe('error-file-abc123');
     });
 
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
+      const file = new File(['name\nAlice'], 'import.csv', { type: 'text/csv' });
+
       await expect(
-        entityService.bulkImport(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'name\nAlice', 'import.csv')
+        entityService.importRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, file)
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
-  describe('createEntity', () => {
+  describe('create', () => {
     it('should post entity schema and return created entity ID', async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
-      const result = await entityService.createEntity('My Entity', 'A test entity', [
-        { name: 'title', type: 'text' },
-      ]);
+      const result = await entityService.create('my_entity', 'A test entity', [
+        { name: 'title', type: EntityFieldType.Text },
+      ], 'My Entity');
 
       expect(result).toBe(ENTITY_TEST_CONSTANTS.ENTITY_ID);
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -1172,23 +1220,65 @@ describe('EntityService Unit Tests', () => {
           description: 'A test entity',
           displayName: 'My Entity',
           entityDefinition: expect.objectContaining({
-            name: 'myentity',
+            name: 'my_entity',
           }),
         }),
         {}
       );
     });
 
-    it('should strip spaces from entity name for technical name', async () => {
+    it('should use name as displayName when displayName is not provided', async () => {
       mockApiClient.post.mockResolvedValue('new-id');
 
-      await entityService.createEntity('My New Entity', '', []);
+      await entityService.create('my_new_entity', '', []);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.CREATE_ENTITY,
         expect.objectContaining({
-          entityDefinition: expect.objectContaining({ name: 'mynewentity' }),
+          displayName: 'my_new_entity',
+          entityDefinition: expect.objectContaining({ name: 'my_new_entity' }),
         }),
+        {}
+      );
+    });
+
+    it('should throw if entity name has spaces', async () => {
+      await expect(
+        entityService.create('My New Entity', '', [])
+      ).rejects.toThrow("Invalid entity name 'My New Entity'");
+    });
+
+    it('should throw if entity name has uppercase letters', async () => {
+      await expect(
+        entityService.create('MyEntity', '', [])
+      ).rejects.toThrow("Invalid entity name 'MyEntity'");
+    });
+
+    it('should throw if field name is invalid', async () => {
+      await expect(
+        entityService.create('myentity', '', [{ name: 'Bad Field Name' }])
+      ).rejects.toThrow("Invalid field name 'Bad Field Name'");
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.create('test_entity', '', [])
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('deleteEntityById', () => {
+    it('should call POST on the entity delete endpoint', async () => {
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await entityService.deleteEntityById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ENTITY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        {},
         {}
       );
     });
@@ -1198,112 +1288,157 @@ describe('EntityService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(error);
 
       await expect(
-        entityService.createEntity('TestEntity', '', [])
+        entityService.deleteEntityById(ENTITY_TEST_CONSTANTS.ENTITY_ID)
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
-  describe('deleteEntity', () => {
-    it('should call DELETE on the entity endpoint', async () => {
-      mockApiClient.delete.mockResolvedValue(undefined);
+  describe('updateEntity', () => {
+    it('should PATCH the entity metadata endpoint and echo back the applied options', async () => {
+      mockApiClient.patch.mockResolvedValue(true);
 
-      await entityService.deleteEntity(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+      const options = { displayName: 'Updated Name', description: 'New description' };
+      const result = await entityService.updateEntity(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
-      expect(mockApiClient.delete).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ENTITY(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+      expect(result).toEqual(options);
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        options,
         {}
       );
     });
 
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.delete.mockRejectedValue(error);
+      mockApiClient.patch.mockRejectedValue(error);
 
       await expect(
-        entityService.deleteEntity(ENTITY_TEST_CONSTANTS.ENTITY_ID)
+        entityService.updateEntity(ENTITY_TEST_CONSTANTS.ENTITY_ID, { displayName: 'X' })
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
-  describe('addField', () => {
-    it('should fetch schema, append new field, and post updated schema', async () => {
+  describe('updateField', () => {
+    it('should PATCH the field endpoint and echo back the applied options', async () => {
+      mockApiClient.patch.mockResolvedValue(true);
+
+      const options = { displayName: 'Category Label', isRequired: true };
+      const result = await entityService.updateField(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY,
+        options
+      );
+
+      expect(result).toEqual(options);
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_FIELD(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY
+        ),
+        options,
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.patch.mockRejectedValue(error);
+
+      await expect(
+        entityService.updateField(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY, { isRequired: true })
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('insertFieldById', () => {
+    it('should POST to ADD_FIELD endpoint and return the created field ID', async () => {
+      mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY);
+
+      const result = await entityService.insertFieldById(ENTITY_TEST_CONSTANTS.ENTITY_ID, { name: 'category', type: EntityFieldType.Text });
+
+      expect(result).toBe(ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.ADD_FIELD(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        expect.objectContaining({
+          entityId: ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          fieldDefinition: expect.objectContaining({ name: 'category' }),
+        }),
+        {}
+      );
+    });
+
+    it('should throw if field name is invalid', async () => {
+      await expect(
+        entityService.insertFieldById(ENTITY_TEST_CONSTANTS.ENTITY_ID, { name: 'Invalid Field', type: EntityFieldType.Text })
+      ).rejects.toThrow("Invalid field name 'Invalid Field'");
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        entityService.insertFieldById(ENTITY_TEST_CONSTANTS.ENTITY_ID, { name: 'category', type: EntityFieldType.Text })
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('deleteFieldById', () => {
+    it('should GET entity schema to resolve field ID then POST to delete endpoint', async () => {
       const rawSchema = {
-        name: 'customer',
-        displayName: 'Customer',
-        description: 'A customer entity',
         fields: [
-          {
-            name: 'name',
-            isSystemField: false,
-            fieldDataType: { name: 'NVARCHAR', lengthLimit: 200 },
-          },
+          { id: ENTITY_TEST_CONSTANTS.FIELD_ID_NAME, name: 'name' },
+          { id: ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY, name: 'category' },
         ],
       };
       mockApiClient.get.mockResolvedValue(rawSchema);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.addField(ENTITY_TEST_CONSTANTS.ENTITY_ID, { name: 'category', type: 'text' });
+      await entityService.deleteFieldById(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category');
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         {}
       );
-      const postedPayload = mockApiClient.post.mock.calls[0][1];
-      const fieldNames = postedPayload.entityDefinition.fields.map((f: any) => f.name);
-      expect(fieldNames).toContain('name');
-      expect(fieldNames).toContain('category');
-    });
-
-    it('should handle API errors on schema fetch', async () => {
-      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.get.mockRejectedValue(error);
-
-      await expect(
-        entityService.addField(ENTITY_TEST_CONSTANTS.ENTITY_ID, { name: 'category', type: 'text' })
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
-  });
-
-  describe('removeField', () => {
-    it('should fetch schema, exclude the named field, and post updated schema', async () => {
-      const rawSchema = {
-        name: 'customer',
-        displayName: 'Customer',
-        description: '',
-        fields: [
-          { name: 'name', isSystemField: false, fieldDataType: { name: 'NVARCHAR', lengthLimit: 200 } },
-          { name: 'category', isSystemField: false, fieldDataType: { name: 'NVARCHAR', lengthLimit: 200 } },
-          { name: 'CreatedBy', isSystemField: true },
-        ],
-      };
-      mockApiClient.get.mockResolvedValue(rawSchema);
-      mockApiClient.post.mockResolvedValue(undefined);
-
-      await entityService.removeField(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category');
-
-      const postedPayload = mockApiClient.post.mock.calls[0][1];
-      const fieldNames = postedPayload.entityDefinition.fields.map((f: any) => f.name);
-      expect(fieldNames).toContain('name');
-      expect(fieldNames).not.toContain('category');
-      expect(fieldNames).not.toContain('CreatedBy');
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_FIELD(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY
+        ),
+        {},
+        {}
+      );
+      expect(mockApiClient.delete).not.toHaveBeenCalled();
     });
 
     it('should match field name case-insensitively', async () => {
       const rawSchema = {
-        name: 'customer',
-        displayName: 'Customer',
-        description: '',
         fields: [
-          { name: 'Category', isSystemField: false, fieldDataType: { name: 'NVARCHAR', lengthLimit: 200 } },
+          { id: ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY, name: 'Category' },
         ],
       };
       mockApiClient.get.mockResolvedValue(rawSchema);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.removeField(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category');
+      await entityService.deleteFieldById(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category');
 
-      const postedPayload = mockApiClient.post.mock.calls[0][1];
-      expect(postedPayload.entityDefinition.fields).toHaveLength(0);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_FIELD(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.FIELD_ID_CATEGORY
+        ),
+        {},
+        {}
+      );
+    });
+
+    it('should throw when field not found in entity', async () => {
+      mockApiClient.get.mockResolvedValue({ fields: [] });
+
+      await expect(
+        entityService.deleteFieldById(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'nonexistent')
+      ).rejects.toThrow("Field 'nonexistent' not found in entity");
     });
 
     it('should handle API errors on schema fetch', async () => {
@@ -1311,7 +1446,7 @@ describe('EntityService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(
-        entityService.removeField(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category')
+        entityService.deleteFieldById(ENTITY_TEST_CONSTANTS.ENTITY_ID, 'category')
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
