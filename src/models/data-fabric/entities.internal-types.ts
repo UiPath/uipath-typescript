@@ -1,20 +1,27 @@
 import { FieldDisplayType } from './entities.types';
-import { SqlFieldType } from './entities.constants';
+
+/**
+ * Shape of each entry in EntitySchemaFieldTypeMap. Internal only.
+ */
+export interface EntitySchemaFieldMapping {
+  apiType: string;
+  fieldDisplayType: FieldDisplayType;
+}
 
 /**
  * Internal field payload used when creating or updating entity schemas.
  * Not part of the public API.
  */
 export interface EntitySchemaField {
+  id?: string;
   name: string;
   displayName: string;
   type: string;
   description: string;
   isRequired: boolean;
   fieldDisplayType: FieldDisplayType;
-  sqlType: { name: SqlFieldType; lengthLimit?: number };
-  choiceSetId: string | null;
-  defaultValue: string | null;
+  choiceSetId?: string;
+  defaultValue?: string;
   isRbacEnabled: boolean;
   isUnique: boolean;
   isEncrypted: boolean;

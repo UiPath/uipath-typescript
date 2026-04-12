@@ -219,22 +219,80 @@ export enum EntityFieldType {
 }
 
 /**
+ * Common field properties shared across field definition and update types
+ */
+export interface EntityFieldBase {
+  /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
+  displayName?: string;
+  /** Optional field description */
+  description?: string;
+  /** Whether the field is required (default: false) */
+  isRequired?: boolean;
+  /** Whether the field value must be unique across records (default: false) */
+  isUnique?: boolean;
+  /** Whether role-based access control is enabled for this field (default: false) */
+  isRbacEnabled?: boolean;
+  /** Whether the field value is encrypted at rest (default: false) */
+  isEncrypted?: boolean;
+  /** Default value for the field */
+  defaultValue?: string;
+}
+
+/**
  * User-facing field definition for creating or updating entity schemas
  */
-export interface EntityFieldDefinition {
+export interface EntityCreateFieldRequest extends EntityFieldBase {
   /**
    * Technical field name — must be lowercase, start with a letter, and contain only
    * letters, numbers, and underscores (e.g., `"product_name"`).
    */
   name: string;
-  /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
-  displayName?: string;
   /** Field type — one of the {@link EntityFieldType} values (default: Text) */
   type?: EntityFieldType;
-  /** Whether the field is required (default: false) */
-  isRequired?: boolean;
-  /** Optional field description */
-  description?: string;
+  /** Choice set ID for choice-set fields */
+  choiceSetId?: string;
+  /** Name of the referenced entity for relationship fields */
+  referenceEntityName?: string;
+  /** Name of the field in the referenced entity */
+  referenceFieldName?: string;
+}
+
+
+/**
+ * Options for creating a new Data Fabric entity
+ */
+export interface EntityCreateOptions {
+  /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
+  displayName?: string;
+  /** Folder ID for the entity (defaults to the tenant-level folder) */
+  folderId?: string;
+  /** Whether role-based access control is enabled for this entity (default: false) */
+  isRbacEnabled?: boolean;
+  /** Whether Insights integration is enabled for this entity (default: false) */
+  isInsightsEnabled?: boolean;
+  /** External field source definitions (default: empty) */
+  externalFields?: unknown[];
+}
+
+/**
+ * Identifies a field by its ID and supplies metadata updates to apply
+ */
+export interface EntityFieldUpdateRequest extends EntityFieldBase {
+  /** ID of the field to update */
+  id: string;
+}
+
+/**
+ * Options for updating an existing entity's field schema.
+ * Supports adding, removing, and updating fields in a single call.
+ */
+export interface EntitySchemaUpdateOptions {
+  /** New fields to add */
+  addFields?: EntityCreateFieldRequest[];
+  /** Names of fields to remove (case-insensitive) */
+  removeFields?: string[];
+  /** Fields to update, each identified by its field ID */
+  updateFields?: EntityFieldUpdateRequest[];
 }
 
 /**
@@ -246,24 +304,6 @@ export interface EntityMetadataUpdateOptions {
   /** New description for the entity */
   description?: string;
   /** Whether role-based access control is enabled for this entity */
-  isRbacEnabled?: boolean;
-}
-
-/**
- * Options for updating a field's metadata
- */
-export interface EntityUpdateFieldOptions {
-  /** New display name for the field */
-  displayName?: string;
-  /** New description for the field */
-  description?: string;
-  /** Whether the field is required */
-  isRequired?: boolean;
-  /** Default value for the field */
-  defaultValue?: string;
-  /** Whether the field value must be unique across records */
-  isUnique?: boolean;
-  /** Whether role-based access control is enabled for this field */
   isRbacEnabled?: boolean;
 }
 

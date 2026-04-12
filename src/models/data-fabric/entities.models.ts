@@ -6,7 +6,6 @@ import {
   EntityInsertResponse,
   EntityBatchInsertResponse,
   EntityUpdateOptions,
-  EntityMetadataUpdateOptions,
   EntityUpdateResponse,
   EntityUpdateRecordOptions,
   EntityUpdateRecordResponse,
@@ -26,8 +25,10 @@ import {
   EntityQueryRecordsOptions,
   EntityQueryRecordsResponse,
   EntityBulkImportResponse,
-  EntityFieldDefinition,
-  EntityUpdateFieldOptions,
+  EntityCreateOptions,
+  EntityCreateFieldRequest,
+  EntitySchemaUpdateOptions,
+  EntityMetadataUpdateOptions,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -529,12 +530,12 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * const entityId = await entities.create("product_catalog", "Our product catalog", [
-   *   { name: "product_name", type: EntityFieldType.Text, isRequired: true },
-   *   { name: "price", type: EntityFieldType.Decimal },
-   * ], "Product Catalog");
+   *   { name: "product_name", type: EntityFieldType.Text, isRequired: true, isUnique: true },
+   *   { name: "price", type: EntityFieldType.Decimal, defaultValue: "0" },
+   * ], { displayName: "Product Catalog", isRbacEnabled: true });
    * ```
    */
-  create(name: string, description: string, fields: EntityFieldDefinition[], displayName?: string): Promise<string>;
+  create(name: string, description: string, fields: EntityCreateFieldRequest[], options?: EntityCreateOptions): Promise<string>;
 
   /**
    * Deletes a Data Fabric entity and all its records
@@ -549,84 +550,45 @@ export interface EntityServiceModel {
   deleteEntityById(entityId: string): Promise<void>;
 
   /**
-   * Updates an existing Data Fabric entity's metadata
+   * Updates an existing Data Fabric entity's field schema.
+   *
+   * Pass `addFields` to append new fields, `removeFields` (by name) to delete fields,
+   * and `updateFields` (array of {@link EntityFieldUpdateRequest}) to update field metadata.
+   * To update entity-level metadata use {@link updateEntitySchemaMetadata} instead.
+   *
+   * @param entityId - UUID of the entity to update
+   * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
+   * @returns Promise resolving when the entity schema is updated
+   *
+   * @example
+   * ```typescript
+   * await entities.updateEntitySchema("<entityId>", {
+   *   addFields: [{ name: "notes", type: EntityFieldType.LongText }],
+   *   removeFields: ["old_field"],
+   *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
+   * });
+   * ```
+   */
+  updateEntitySchema(entityId: string, options: EntitySchemaUpdateOptions): Promise<void>;
+
+  /**
+   * Updates only the metadata of an existing Data Fabric entity (displayName, description, isRbacEnabled).
+   * Use this when you only need to change entity-level metadata without touching the field schema.
    *
    * @param entityId - UUID of the entity to update
    * @param options - Metadata fields to update ({@link EntityMetadataUpdateOptions})
-   * @returns Promise resolving to the applied options
+   * @returns Promise resolving when the metadata is updated
+   *
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * const applied = await entities.updateEntity("<entityId>", {
-   *   displayName: "Updated Name",
-   *   description: "New description",
+   * await entities.updateEntitySchemaMetadata("<entityId>", {
+   *   displayName: "My Updated Entity",
+   *   description: "Updated description",
    * });
    * ```
    */
-  updateEntity(entityId: string, options: EntityMetadataUpdateOptions): Promise<EntityMetadataUpdateOptions>;
+  updateEntitySchemaMetadata(entityId: string, options: EntityMetadataUpdateOptions): Promise<void>;
 
-  /**
-   * Updates an existing field's metadata on a Data Fabric entity
-   *
-   * @param entityId - UUID of the entity containing the field
-   * @param fieldId - UUID of the field to update. Obtain from {@link getById}.
-   * @param options - Field properties to update ({@link EntityUpdateFieldOptions})
-   * @returns Promise resolving to the applied options
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * // Get the fieldId from getById()
-   * const entity = await entities.getById("<entityId>");
-   * const fieldId = entity.fields.find(f => f.name === "category")?.id;
-   *
-   * const applied = await entities.updateField("<entityId>", fieldId, {
-   *   displayName: "Category Label",
-   *   isRequired: true,
-   * });
-   * ```
-   */
-  updateField(entityId: string, fieldId: string, options: EntityUpdateFieldOptions): Promise<EntityUpdateFieldOptions>;
-
-  /**
-   * Adds a new field to an existing Data Fabric entity
-   *
-   * @param entityId - UUID of the entity
-   * @param field - Field definition to add. `name` must be a valid technical name
-   *   (lowercase, starts with a letter, letters/numbers/underscores only).
-   * @returns Promise resolving to the ID of the newly created field
-   * @example
-   * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * const fieldId = await entities.insertFieldById("<entityId>", {
-   *   name: "category",
-   *   displayName: "Category",
-   *   type: EntityFieldType.Text,
-   * });
-   * ```
-   */
-  insertFieldById(entityId: string, field: EntityFieldDefinition): Promise<string>;
-
-  /**
-   * Removes a field from a Data Fabric entity by field name
-   *
-   * @param entityId - UUID of the entity
-   * @param fieldName - Technical name of the field to remove (case-insensitive)
-   * @returns Promise resolving when the field is removed
-   * @example
-   * ```typescript
-   * await entities.deleteFieldById("<entityId>", "category");
-   * ```
-   */
-  deleteFieldById(entityId: string, fieldName: string): Promise<void>;
 }
 
 /**
@@ -685,7 +647,7 @@ export interface EntityMethods {
 
   /**
    * Delete data from this entity
-   * 
+   *
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
    * @returns Promise resolving to delete response
@@ -754,7 +716,7 @@ export interface EntityMethods {
    */
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
-    /**
+  /**
    * @deprecated Use {@link updateRecords} instead.
    * @hidden
    */
@@ -779,42 +741,28 @@ export interface EntityMethods {
   /**
    * Deletes this entity and all its records
    *
+   * @param entityId - UUID of the entity to delete
    * @returns Promise resolving when the entity is deleted
    */
-  deleteEntityById(): Promise<void>;
+  deleteEntityById(entityId: string): Promise<void>;
 
   /**
-   * Updates this entity's metadata
+   * Updates this entity's field schema
    *
+   * @param entityId - UUID of the entity
+   * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
+   * @returns Promise resolving when the entity schema is updated
+   */
+  updateEntitySchema(entityId: string, options: EntitySchemaUpdateOptions): Promise<void>;
+
+  /**
+   * Updates only the metadata of this entity (displayName, description, isRbacEnabled)
+   *
+   * @param entityId - UUID of the entity
    * @param options - Metadata fields to update ({@link EntityMetadataUpdateOptions})
-   * @returns Promise resolving to the applied options
+   * @returns Promise resolving when the metadata is updated
    */
-  updateEntity(options: EntityMetadataUpdateOptions): Promise<EntityMetadataUpdateOptions>;
-
-  /**
-   * Updates a field's metadata on this entity
-   *
-   * @param fieldId - UUID of the field to update. Obtain from `entity.fields`.
-   * @param options - Field properties to update ({@link EntityUpdateFieldOptions})
-   * @returns Promise resolving to the applied options
-   */
-  updateField(fieldId: string, options: EntityUpdateFieldOptions): Promise<EntityUpdateFieldOptions>;
-
-  /**
-   * Adds a new field to this entity
-   *
-   * @param field - Field definition to add. `name` must be a valid technical name.
-   * @returns Promise resolving to the ID of the newly created field
-   */
-  insertFieldById(field: EntityFieldDefinition): Promise<string>;
-
-  /**
-   * Removes a field from this entity by field name
-   *
-   * @param fieldName - Technical name of the field to remove (case-insensitive)
-   * @returns Promise resolving when the field is removed
-   */
-  deleteFieldById(fieldName: string): Promise<void>;
+  updateEntitySchemaMetadata(entityId: string, options: EntityMetadataUpdateOptions): Promise<void>;
 }
 
 /**
@@ -833,32 +781,27 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
   return {
     async insertRecord(data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.insertRecordById(entityData.id, data, options);
     },
 
     async insertRecords(data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.insertRecordsById(entityData.id, data, options);
     },
 
     async updateRecord(recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
-
       return service.updateRecordById(entityData.id, recordId, data, options);
     },
 
     async updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.updateRecordsById(entityData.id, data, options);
     },
 
     async deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.deleteRecordsById(entityData.id, recordIds, options);
     },
 
@@ -868,32 +811,27 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
         : NonPaginatedResponse<EntityRecord>
     > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.getAllRecords(entityData.id, options) as any;
     },
 
     async getRecord(recordId: string, options?: EntityGetRecordByIdOptions): Promise<EntityRecord> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
-
       return service.getRecordById(entityData.id, recordId, options);
     },
 
     async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.downloadAttachment(entityData.id, recordId, fieldName);
     },
 
     async uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.uploadAttachment(entityData.id, recordId, fieldName, file, options);
     },
 
     async deleteAttachment(recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.deleteAttachment(entityData.id, recordId, fieldName);
     },
 
@@ -921,30 +859,16 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.getAllRecords(options);
     },
 
-    async deleteEntityById(): Promise<void> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.deleteEntityById(entityData.id);
+    async deleteEntityById(entityId: string): Promise<void> {
+      return service.deleteEntityById(entityId);
     },
 
-    async updateEntity(options: EntityMetadataUpdateOptions): Promise<EntityMetadataUpdateOptions> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.updateEntity(entityData.id, options);
+    async updateEntitySchema(entityId: string, options: EntitySchemaUpdateOptions): Promise<void> {
+      return service.updateEntitySchema(entityId, options);
     },
 
-    async updateField(fieldId: string, options: EntityUpdateFieldOptions): Promise<EntityUpdateFieldOptions> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-      if (!fieldId) throw new Error('Field ID is undefined');
-      return service.updateField(entityData.id, fieldId, options);
-    },
-
-    async insertFieldById(field: EntityFieldDefinition): Promise<string> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.insertFieldById(entityData.id, field);
-    },
-
-    async deleteFieldById(fieldName: string): Promise<void> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.deleteFieldById(entityData.id, fieldName);
+    async updateEntitySchemaMetadata(entityId: string, options: EntityMetadataUpdateOptions): Promise<void> {
+      return service.updateEntitySchemaMetadata(entityId, options);
     },
   };
 }

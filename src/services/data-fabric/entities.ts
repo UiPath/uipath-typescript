@@ -28,16 +28,17 @@ import {
   EntityQueryRecordsOptions,
   EntityQueryRecordsResponse,
   EntityBulkImportResponse,
-  EntityFieldDefinition,
+  EntityCreateOptions,
+  EntityCreateFieldRequest,
   EntityFieldType,
+  EntitySchemaUpdateOptions,
   EntityMetadataUpdateOptions,
-  EntityUpdateFieldOptions,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
+import { DATA_FABRIC_ENDPOINTS, DATAFABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
@@ -526,6 +527,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   async importRecordsById(entityId: string, file: Blob): Promise<EntityBulkImportResponse> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('entityId', entityId);
 
     const response = await this.post<EntityBulkImportResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(entityId),
@@ -710,29 +712,33 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   only letters, numbers, and underscores (e.g., `"product_catalog"`).
    * @param description - Entity description
    * @param fields - Array of field definitions
-   * @param displayName - Human-readable display name shown in the UI (defaults to `name`)
+   * @param options - Optional entity-level settings ({@link EntityCreateOptions})
    * @returns Promise resolving to the ID of the created entity
    *
    * @example
    * ```typescript
    * const entityId = await entities.create("product_catalog", "Our product catalog", [
-   *   { name: "product_name", type: EntityFieldType.Text, isRequired: true },
-   *   { name: "price", type: EntityFieldType.Decimal },
-   * ], "Product Catalog");
+   *   { name: "product_name", type: EntityFieldType.Text, isRequired: true, isUnique: true },
+   *   { name: "price", type: EntityFieldType.Decimal, defaultValue: "0" },
+   * ], { displayName: "Product Catalog", isRbacEnabled: true });
    * ```
    */
   @track('Entities.Create')
-  async create(name: string, description: string, fields: EntityFieldDefinition[], displayName?: string): Promise<string> {
+  async create(name: string, description: string, fields: EntityCreateFieldRequest[], options: EntityCreateOptions = {}): Promise<string> {
     EntityService.validateTechnicalName(name, 'entity');
     const payload = {
       description,
-      displayName: displayName ?? name,
+      displayName: options.displayName ?? name,
       entityDefinition: {
         name,
         fields: fields.map(f => this.buildSchemaFieldPayload(f)),
+        folderId: options.folderId ?? DATAFABRIC_TENANT_FOLDER_ID,
+        isRbacEnabled: options.isRbacEnabled ?? false,
+        isInsightsEnabled: options.isInsightsEnabled ?? false,
+        externalFields: options.externalFields ?? [],
       },
     };
-    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.CREATE_ENTITY, payload);
+    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY, payload);
     return String(response.data);
   }
 
@@ -753,91 +759,106 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Updates an existing Data Fabric entity's metadata (displayName and/or description)
+   * Updates an existing Data Fabric entity's field schema.
+   *
+   * Fetches the current entity schema, applies the requested field delta
+   * (add/remove/update fields), then posts the full updated schema.
    *
    * @param entityId - UUID of the entity to update
-   * @param options - Fields to update (displayName, description)
-   * @returns Promise resolving when the entity metadata is updated
+   * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
+   * @returns Promise resolving when the entity schema is updated
    *
    * @example
    * ```typescript
-   * await entities.updateEntity("<entityId>", { displayName: "Updated Name", description: "New description" });
-   * ```
-   */
-  @track('Entities.UpdateEntity')
-  async updateEntity(entityId: string, options: EntityMetadataUpdateOptions): Promise<EntityMetadataUpdateOptions> {
-    await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(entityId), options);
-    return options;
-  }
-
-  /**
-   * Updates an existing field's metadata on a Data Fabric entity
-   *
-   * @param entityId - UUID of the entity containing the field
-   * @param fieldId - UUID of the field to update
-   * @param options - Field properties to update (displayName, description, isRequired, etc.)
-   * @returns Promise resolving when the field metadata is updated
-   *
-   * @example
-   * ```typescript
-   * await entities.updateField("<entityId>", "<fieldId>", { displayName: "Category Label", isRequired: true });
-   * ```
-   */
-  @track('Entities.UpdateField')
-  async updateField(entityId: string, fieldId: string, options: EntityUpdateFieldOptions): Promise<EntityUpdateFieldOptions> {
-    await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_FIELD(entityId, fieldId), options);
-    return options;
-  }
-
-  /**
-   * Adds a new field to an existing Data Fabric entity
-   *
-   * @param entityId - UUID of the entity
-   * @param field - Field definition to add
-   * @returns Promise resolving when the field is added
-   *
-   * @example
-   * ```typescript
-   * const fieldId = await entities.insertFieldById("<entityId>", {
-   *   name: "category",
-   *   displayName: "Category",
-   *   type: EntityFieldType.Text,
+   * await entities.updateEntitySchema("<entityId>", {
+   *   addFields: [{ name: "notes", type: EntityFieldType.LongText }],
+   *   removeFields: ["old_field"],
+   *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
    * });
    * ```
    */
-  @track('Entities.InsertFieldById')
-  async insertFieldById(entityId: string, field: EntityFieldDefinition): Promise<string> {
+  @track('Entities.UpdateEntity')
+  async updateEntitySchema(entityId: string, options: EntitySchemaUpdateOptions): Promise<void> {
+    const entityResponse = await this.get<RawEntityGetResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId)
+    );
+    const raw = entityResponse.data as any;
+
+    // Carry forward existing non-system fields from GET response (skip system/primary-key fields)
+    let fields: any[] = ((raw.fields ?? []) as any[])
+      .filter((f: any) => !f.isSystemField && !f.isPrimaryKey);
+
+    // Apply removals
+    if (options.removeFields?.length) {
+      const removeSet = new Set(options.removeFields.map(n => n.toLowerCase()));
+      fields = fields.filter(f => !removeSet.has(f.name.toLowerCase()));
+    }
+
+    // Apply per-field metadata updates (matched by field ID)
+    if (options.updateFields?.length) {
+      const updateMap = new Map(options.updateFields.map(u => [u.id, u]));
+      fields = fields.map((f: any) => {
+        const update = updateMap.get(f.id ?? '');
+        if (!update) return f;
+        return {
+          ...f,
+          ...(update.displayName !== undefined && { displayName: update.displayName }),
+          ...(update.description !== undefined && { description: update.description }),
+          ...(update.isRequired !== undefined && { isRequired: update.isRequired }),
+          ...(update.isUnique !== undefined && { isUnique: update.isUnique }),
+          ...(update.isRbacEnabled !== undefined && { isRbacEnabled: update.isRbacEnabled }),
+          ...(update.isEncrypted !== undefined && { isEncrypted: update.isEncrypted }),
+          ...(update.defaultValue !== undefined && { defaultValue: update.defaultValue }),
+        };
+      });
+    }
+
+    // Append new fields
+    if (options.addFields?.length) {
+      for (const field of options.addFields) {
+        EntityService.validateTechnicalName(field.name, 'field');
+      }
+      fields = [...fields, ...options.addFields.map((f: EntityCreateFieldRequest) => this.buildSchemaFieldPayload(f))];
+    }
+
     const payload = {
-      entityId,
-      fieldDefinition: this.buildSchemaFieldPayload(field),
+      displayName: raw.displayName,
+      description: raw.description,
+      entityDefinition: {
+        id: entityId,
+        name: raw.name,
+        fields,
+        folderId: DATAFABRIC_TENANT_FOLDER_ID,
+        isRbacEnabled: raw.isRbacEnabled ?? false,
+        isInsightsEnabled: false,
+        externalFields: [],
+      },
     };
-    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.ADD_FIELD(entityId), payload);
-    return String(response.data);
+
+    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY, payload);
   }
 
   /**
-   * Removes a field from a Data Fabric entity by field name
+   * Updates only the metadata of an existing Data Fabric entity.
    *
-   * @param entityId - UUID of the entity
-   * @param fieldName - Name of the field to remove (case-insensitive)
-   * @returns Promise resolving when the field is removed
+   * Use this when you only need to change entity-level metadata (displayName, description,
+   * isRbacEnabled) without modifying the field schema.
+   *
+   * @param entityId - UUID of the entity to update
+   * @param options - Metadata fields to update ({@link EntityMetadataUpdateOptions})
+   * @returns Promise resolving when the metadata is updated
    *
    * @example
    * ```typescript
-   * await entities.deleteFieldById("<entityId>", "category");
+   * await entities.updateEntitySchemaMetadata("<entityId>", {
+   *   displayName: "My Updated Entity",
+   *   description: "Updated description",
+   * });
    * ```
    */
-  @track('Entities.DeleteFieldById')
-  async deleteFieldById(entityId: string, fieldName: string): Promise<void> {
-    const response = await this.get<RawEntityGetResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId)
-    );
-    const fields = response.data.fields ?? [];
-    const field = fields.find(f => f.name.toLowerCase() === fieldName.toLowerCase());
-    if (!field?.id) {
-      throw new Error(`Field '${fieldName}' not found in entity ${entityId}`);
-    }
-    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_FIELD(entityId, field.id), {});
+  @track('Entities.UpdateEntityMetadata')
+  async updateEntitySchemaMetadata(entityId: string, options: EntityMetadataUpdateOptions): Promise<void> {
+    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(entityId), options);
   }
 
   /**
@@ -917,8 +938,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
     });
   }
 
-  /** Converts a user-facing EntityFieldDefinition to the raw API field payload */
-  private buildSchemaFieldPayload(field: EntityFieldDefinition): EntitySchemaField {
+  /** Converts a user-facing EntityCreateFieldRequest to the raw API field payload */
+  private buildSchemaFieldPayload(field: EntityCreateFieldRequest): EntitySchemaField {
     EntityService.validateTechnicalName(field.name, 'field');
     const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldType.Text];
     return {
@@ -928,12 +949,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
       description: field.description ?? '',
       isRequired: field.isRequired ?? false,
       fieldDisplayType: mapping.fieldDisplayType,
-      sqlType: mapping.sqlType,
-      choiceSetId: null,
-      defaultValue: null,
-      isRbacEnabled: false,
-      isUnique: false,
-      isEncrypted: false,
+      isRbacEnabled: field.isRbacEnabled ?? false,
+      isUnique: field.isUnique ?? false,
+      isEncrypted: field.isEncrypted ?? false,
+      ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
     };
   }
 

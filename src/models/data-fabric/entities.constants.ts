@@ -1,4 +1,5 @@
 import { EntityFieldDataType, EntityFieldType, FieldDisplayType } from "./entities.types";
+import { EntitySchemaFieldMapping } from "./entities.internal-types";
 
 /**
  * Entity field data types (SQL types from API)
@@ -29,26 +30,17 @@ export const EntityMap = {
 };
 
 /**
- * Shape of each entry in EntitySchemaFieldTypeMap
- */
-export interface EntitySchemaFieldMapping {
-  apiType: string;
-  sqlType: { name: SqlFieldType; lengthLimit?: number };
-  fieldDisplayType: FieldDisplayType;
-}
-
-/**
  * Maps EntityFieldType enum values to the API field payload components
  */
 export const EntitySchemaFieldTypeMap: Record<EntityFieldType, EntitySchemaFieldMapping> = {
-  [EntityFieldType.Text]:     { apiType: "text",     sqlType: { name: SqlFieldType.NVARCHAR, lengthLimit: 200 },  fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.LongText]: { apiType: "text",     sqlType: { name: SqlFieldType.NVARCHAR, lengthLimit: 4000 }, fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.Number]:   { apiType: "int",      sqlType: { name: SqlFieldType.INT },                          fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.Decimal]:  { apiType: "decimal",  sqlType: { name: SqlFieldType.DECIMAL },                      fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.Boolean]:  { apiType: "bit",      sqlType: { name: SqlFieldType.BIT },                          fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.DateTime]: { apiType: "datetime", sqlType: { name: SqlFieldType.DATETIME2 },                    fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.Date]:     { apiType: "date",     sqlType: { name: SqlFieldType.DATE },                         fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.File]:     { apiType: "file",     sqlType: { name: SqlFieldType.NVARCHAR, lengthLimit: 200 },   fieldDisplayType: FieldDisplayType.File },
+  [EntityFieldType.Text]:     { apiType: "text",     fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldType.LongText]: { apiType: "text",     fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldType.Number]:   { apiType: "int",      fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldType.Decimal]:  { apiType: "decimal",  fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldType.Boolean]:  { apiType: "bit",      fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldType.DateTime]: { apiType: "datetime", fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldType.Date]:     { apiType: "date",     fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldType.File]:     { apiType: "file",     fieldDisplayType: FieldDisplayType.File  },
 };
 
 /**

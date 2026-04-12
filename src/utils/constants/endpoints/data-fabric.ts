@@ -5,6 +5,13 @@
 import { DATAFABRIC_BASE } from './base';
 
 /**
+ * Default folder key used for tenant-level Data Fabric entities.
+ * Tenant-level entities are not scoped to a folder; this is the
+ * conventional placeholder value the API expects.
+ */
+export const DATAFABRIC_TENANT_FOLDER_ID = '00000000-0000-0000-0000-000000000000';
+
+/**
  * Data Fabric Entity Service Endpoints
  */
 export const DATA_FABRIC_ENDPOINTS = {
@@ -19,11 +26,8 @@ export const DATA_FABRIC_ENDPOINTS = {
     UPDATE_RECORD_BY_ID: (entityId: string, recordId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update/${recordId}`,
     UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update-batch`,
     DELETE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/delete-batch`,
-    CREATE_ENTITY: `${DATAFABRIC_BASE}/api/Entity`,
+    UPSERT_ENTITY: `${DATAFABRIC_BASE}/api/Entity`,
     DELETE_ENTITY: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/delete`,
-    ADD_FIELD: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/field`,
-    UPDATE_FIELD: (entityId: string, fieldId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/field/${fieldId}`,
-    DELETE_FIELD: (entityId: string, fieldId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/field/${fieldId}/delete`,
     UPDATE_ENTITY_METADATA: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/metadata`,
     QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/query`,
     BULK_UPLOAD_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/bulk-upload`,
