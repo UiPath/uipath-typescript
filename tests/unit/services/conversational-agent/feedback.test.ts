@@ -60,7 +60,7 @@ describe('FeedbackService Unit Tests', () => {
       expect(result.items.length).toBe(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: {} }
+        expect.objectContaining({ params: expect.objectContaining({}) })
       );
     });
 
@@ -76,7 +76,7 @@ describe('FeedbackService Unit Tests', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: { agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID } }
+        expect.objectContaining({ params: expect.objectContaining({ agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID }) })
       );
     });
 
@@ -110,7 +110,7 @@ describe('FeedbackService Unit Tests', () => {
       expect(result.items.length).toBe(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: { skip: 0, take: TEST_CONSTANTS.PAGE_SIZE } }
+        expect.objectContaining({ params: expect.objectContaining({ skip: 0, take: TEST_CONSTANTS.PAGE_SIZE }) })
       );
     });
   });

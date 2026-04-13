@@ -93,6 +93,20 @@ export const ODATA_OFFSET_PARAMS = {
 };
 
 /**
+ * Feedback OFFSET pagination parameter names (take/skip style)
+ */
+export const FEEDBACK_OFFSET_PARAMS = {
+  /** Feedback page size parameter name */
+  PAGE_SIZE_PARAM: 'take',
+
+  /** Feedback offset parameter name */
+  OFFSET_PARAM: 'skip',
+
+  /** Feedback count parameter (not used) */
+  COUNT_PARAM: undefined
+};
+
+/**
  * Entity OFFSET pagination parameter names (limit/start style)
  */
 export const ENTITY_OFFSET_PARAMS = {
