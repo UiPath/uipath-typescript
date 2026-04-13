@@ -127,9 +127,15 @@ jobs:
                    INSTEAD of posting a new comment.
                 4. Only post if STEP 3 says OK to post.
 
-              The same gate applies to the summary comment: when summarizing, do not
-              list issues whose threads you chose to skip or unresolve — summarize
-              only genuinely new findings and any threads you unresolved.
+              Top-level summary comment — POST ONLY IF the run produced an action.
+              An action means: (a) you posted at least one new inline comment, OR
+              (b) you unresolved at least one previously-resolved thread. If neither
+              happened, post NO summary comment at all — stay completely silent.
+              Do NOT post filler summaries like "No new issues" or "Nothing to report".
+
+              When you DO post a summary, list only: (a) the new findings you posted
+              this run, and (b) any threads you unresolved this run. Do not list
+              issues you skipped via the dedupe gate.
 
             Now run the plugin:
             /code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }} --comment
