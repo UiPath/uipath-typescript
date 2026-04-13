@@ -151,6 +151,7 @@ useEffect(() => {
 - `sdk.isInOAuthCallback()` - Check if processing OAuth redirect
 - `sdk.completeOAuth()` - Manually complete OAuth (advanced use)
 - `sdk.getToken()` - Get the logged-in user's access token
+- `sdk.getTokenIdentity()` - Get identity claims (email, firstName, lastName, preferredUsername, name) decoded from the current JWT access token
 - `sdk.logout()` - Logout and clear all authentication state (requires re-initialization to authenticate again)
 - `sdk.updateToken()` - Inject a refreshed token into the SDK instance (useful for backend services managing token lifecycle)
 

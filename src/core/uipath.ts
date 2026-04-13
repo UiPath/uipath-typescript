@@ -1,7 +1,7 @@
 import { UiPathConfig } from './config/config';
 import { ExecutionContext } from './context/execution';
 import { AuthService } from './auth/service';
-import { TokenInfo } from './auth/types';
+import { TokenInfo, TokenIdentity } from './auth/types';
 import { UiPathSDKConfig, PartialUiPathConfig, BaseConfig, hasOAuthConfig, hasSecretConfig } from './config/sdk-config';
 import { validateConfig, normalizeBaseUrl, isCompleteConfig } from './config/config-utils';
 import { telemetryClient, trackEvent } from './telemetry';
@@ -9,6 +9,8 @@ import { SDKInternalsRegistry } from './internals';
 import { loadFromMetaTags } from './config/runtime';
 import type { IUiPath } from './types';
 import { isInActionCenter } from '../utils/platform';
+import { decodeBase64 } from '../utils/encoding/base64';
+import { AuthenticationError, ValidationError } from './errors';
 
 /**
  * UiPath - Core SDK class for authentication and configuration management.
@@ -236,6 +238,65 @@ export class UiPath implements IUiPath {
    */
   public getToken(): string | undefined {
     return this.#authService?.getToken();
+  }
+
+  /**
+   * Retrieves identity claims of the currently authenticated user by decoding
+   * the JWT access token held in memory. Does not make an API call.
+   *
+   * Returns the following camelCase claims when present on the token:
+   * `email`, `firstName`, `lastName`, `preferredUsername`, `name`.
+   *
+   * @returns The {@link TokenIdentity} extracted from the JWT payload.
+   * @throws {@link AuthenticationError} If the user is not authenticated.
+   * @throws {@link ValidationError} If the token is malformed or its payload cannot be decoded.
+   *
+   * @example
+   * ```typescript
+   * const sdk = new UiPath({ ...config });
+   * await sdk.initialize();
+   *
+   * const identity = sdk.getTokenIdentity();
+   * console.log(identity.email, identity.name);
+   * ```
+   */
+  public getTokenIdentity(): TokenIdentity {
+    if (!this.isAuthenticated()) {
+      throw new AuthenticationError({
+        message: 'User is not authenticated. Call initialize() before getTokenIdentity().'
+      });
+    }
+
+    const token = this.getToken();
+    if (!token) {
+      throw new AuthenticationError({
+        message: 'User is not authenticated. Call initialize() before getTokenIdentity().'
+      });
+    }
+
+    const segments = token.split('.');
+    if (segments.length !== 3) {
+      throw new ValidationError({ message: 'Invalid JWT token format.' });
+    }
+
+    let claims: Record<string, unknown>;
+    try {
+      // Convert base64url to base64 and pad to a multiple of 4.
+      let payload = segments[1].replace(/-/g, '+').replace(/_/g, '/');
+      const paddingLength = (4 - (payload.length % 4)) % 4;
+      payload = payload + '='.repeat(paddingLength);
+      claims = JSON.parse(decodeBase64(payload));
+    } catch {
+      throw new ValidationError({ message: 'Failed to decode JWT token payload.' });
+    }
+
+    return {
+      email: claims.email as string | undefined,
+      firstName: claims.first_name as string | undefined,
+      lastName: claims.last_name as string | undefined,
+      preferredUsername: claims.preferred_username as string | undefined,
+      name: claims.name as string | undefined
+    };
   }
 
   /**
