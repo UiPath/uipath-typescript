@@ -135,6 +135,12 @@ export interface ExternalValue {
 export type InlineOrExternalValue<T> = InlineValue<T> | ExternalValue;
 
 /**
+ * Input arguments passed to the agent on each exchange. Only inline values are currently supported by the API.
+ * Using the InlineOrExternalValue type to make future external value support easier.
+ */
+export type AgentInput = InlineOrExternalValue<JSONObject>;
+
+/**
  * Tool call input value type.
  */
 export type ToolCallInputValue = JSONObject;
