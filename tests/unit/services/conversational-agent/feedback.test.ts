@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FeedbackService } from '../../../../src/services/conversational-agent/feedback/feedback';
 import {
-  FeedbackResponse,
+  FeedbackGetResponse,
   FeedbackStatus,
 } from '../../../../src/models/conversational-agent/feedback/feedback.types';
 import { ApiClient } from '../../../../src/core/http/api-client';
@@ -35,7 +35,7 @@ describe('FeedbackService Unit Tests', () => {
 
   describe('getAll', () => {
     it('should get all feedback successfully', async () => {
-      const mockResponse: FeedbackResponse[] = [
+      const mockResponse: FeedbackGetResponse[] = [
         {
           id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID,
           traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,
@@ -65,7 +65,7 @@ describe('FeedbackService Unit Tests', () => {
     });
 
     it('should get all feedback with filters', async () => {
-      const mockResponse: FeedbackResponse[] = [];
+      const mockResponse: FeedbackGetResponse[] = [];
       mockApiClient.get.mockResolvedValue(mockResponse);
 
       const options = {
@@ -88,7 +88,7 @@ describe('FeedbackService Unit Tests', () => {
     });
 
     it('should get paginated feedback', async () => {
-      const mockResponse: FeedbackResponse[] = [
+      const mockResponse: FeedbackGetResponse[] = [
         {
           id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID,
           traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,

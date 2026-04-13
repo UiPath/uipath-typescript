@@ -186,7 +186,6 @@ nav:
             - Feedback: api/interfaces/FeedbackServiceModel.md
           - Attachments:
             - api/interfaces/attachments/index.md
-            - Feedback: api/interfaces/FeedbackServiceModel.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
           - Entities:
