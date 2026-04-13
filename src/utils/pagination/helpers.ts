@@ -260,8 +260,9 @@ export class PaginationHelpers {
     }
 
     // Extract and transform items from response
-    const rawItems = response.data?.[itemsField];
-    const totalCount = response.data?.[totalCountField];
+    // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
+    const rawItems = Array.isArray(response.data) ? response.data : response.data?.[itemsField];
+    const totalCount = Array.isArray(response.data) ? response.data.length : response.data?.[totalCountField];
 
     // Parse items - automatically handle JSON string responses
     const parsedItems: T[] = typeof rawItems === 'string' ? JSON.parse(rawItems) : (rawItems || []);
