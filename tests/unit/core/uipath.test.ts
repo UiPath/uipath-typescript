@@ -443,6 +443,19 @@ describe('UiPath Core', () => {
       expect(() => sdk.getTokenIdentity()).toThrow(ValidationError);
     });
 
+    it('should throw ValidationError when token has more than 3 segments', () => {
+      mockAuthState.token = 'header.payload.sig.extra';
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      expect(() => sdk.getTokenIdentity()).toThrow(ValidationError);
+    });
+
     it('should throw ValidationError when payload is not valid JSON', () => {
       const header = Buffer.from(JSON.stringify({ alg: 'none' })).toString('base64url');
       const invalidPayload = Buffer.from('not-json-content').toString('base64url');
