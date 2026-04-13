@@ -65,8 +65,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       const result = await feedback.getAll({ pageSize: 1 });
 
       if (result.items.length === 0) {
-        console.log('No feedback available to validate structure');
-        return;
+        throw new Error('No feedback available to validate structure');
       }
 
       const item = result.items[0];
