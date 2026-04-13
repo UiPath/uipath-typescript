@@ -77,8 +77,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (allJobs.items.length === 0) {
-        console.warn('No jobs available to test getById — skipping.');
-        return;
+        throw new Error('No jobs available in the test environment to test getById.');
       }
 
       const jobKey = allJobs.items[0].key;
@@ -119,13 +118,12 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (allJobs.items.length === 0) {
-        console.warn('No jobs available to test getById with expand — skipping.');
-        return;
+        throw new Error('No jobs available in the test environment to test getById with expand.');
       }
 
       const jobKey = allJobs.items[0].key;
       const job = await jobs.getById(jobKey, folderId, {
-        expand: 'Robot,Machine,Release',
+        expand: 'robot,machine',
       });
 
       expect(job).toBeDefined();
@@ -138,9 +136,6 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
       if (job.machine) {
         expect(job.machine.id).toBeDefined();
-      }
-      if (job.process) {
-        expect(job.process.id).toBeDefined();
       }
     });
   });
@@ -161,8 +156,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (result.items.length === 0) {
-        console.warn('No successful jobs found to test getOutput — skipping.');
-        return;
+        throw new Error('No successful jobs found in the test environment to test getOutput.');
       }
 
       const job = result.items[0];

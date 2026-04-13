@@ -108,7 +108,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * Gets a job by its unique key (GUID).
    *
    * Returns the full job details including state, timing, input/output arguments, and error information.
-   * Use `expand` to include related entities like Robot, Machine, or Release.
+   * Use `expand` to include related entities like `robot`, or `machine`.
    *
    * @param id - The unique key (GUID) of the job to retrieve
    * @param folderId - The folder ID where the job resides
@@ -126,7 +126,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * ```typescript
    * // With expanded related entities
    * const job = await jobs.getById(<id>, <folderId>, {
-   *   expand: 'Robot,Machine,Release'
+   *   expand: 'robot,machine'
    * });
    * console.log(job.robot?.name, job.machine?.name);
    * ```
@@ -191,8 +191,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       throw new ValidationError({ message: 'jobKey is required for getOutput' });
     }
 
-    // OData $select expects raw API field names (PascalCase), not SDK camelCase names
-    const job = await this.getById(jobKey, folderId, { select: 'OutputArguments,OutputFile' });
+    const job = await this.getById(jobKey, folderId, { select: 'outputArguments,outputFile' });
 
     if (job.outputArguments) {
       try {

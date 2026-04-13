@@ -230,8 +230,8 @@ describe('JobService Unit Tests', () => {
       mockApiClient.get.mockResolvedValueOnce(mockRawJob);
 
       const options: JobGetByIdOptions = {
-        expand: 'Robot,Machine,Release',
-        select: 'Key,State,ReleaseName',
+        expand: 'robot,machine',
+        select: 'key,state',
       };
 
       await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, options);
@@ -240,8 +240,8 @@ describe('JobService Unit Tests', () => {
         JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
         expect.objectContaining({
           params: {
-            $expand: 'Robot,Machine,Release',
-            $select: 'Key,State,ReleaseName',
+            $expand: 'robot,machine',
+            $select: 'key,state',
           },
         })
       );
@@ -277,7 +277,7 @@ describe('JobService Unit Tests', () => {
         JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
         expect.objectContaining({
           params: {
-            $select: 'OutputArguments,OutputFile',
+            $select: 'outputArguments,outputFile',
           },
           headers: expect.objectContaining({
             'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),

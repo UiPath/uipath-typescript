@@ -71,7 +71,7 @@ Use the appropriate checklist based on the ticket type detected in Step 1. You m
 - Swagger/OpenAPI URL + endpoint paths → use directly
 - Missing either → stop and ask
 
-**If Jira ticket:** Parse description for URLs ending in `.json`/`.yaml`/`swagger.json`/`openapi.json`, HTTP method + path patterns, scope strings (e.g., `OR.Jobs`), and whether each endpoint requires a `folderId`. If Swagger URL missing, stop and report.
+**If Jira ticket:** Parse description for URLs ending in `.json`/`.yaml`/`swagger.json`/`openapi.json`, HTTP method + path patterns, scope strings (e.g., `OR.Jobs`), and whether each endpoint requires a `folderId` or `folderKey`. If Swagger URL missing, stop and report.
 
 **Ticket type detection:**
 - `API:` field present → **Direct API** (existing workflow)
