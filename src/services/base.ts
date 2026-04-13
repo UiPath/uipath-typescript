@@ -269,7 +269,7 @@ export class BaseService {
     // Extract items and metadata
     // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
     const items = Array.isArray(response.data) ? response.data : (response.data[itemsField] || []);
-    const totalCount = Array.isArray(response.data) ? response.data.length : response.data[totalCountField];
+    const totalCount = Array.isArray(response.data) ? undefined : response.data[totalCountField];
     const continuationToken = response.data[continuationTokenField];
     
     // Determine if there are more pages

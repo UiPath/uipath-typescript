@@ -1,6 +1,6 @@
 import { BaseService } from '../../base';
 import {
-  FeedbackResponse,
+  FeedbackGetResponse,
   FeedbackGetAllOptions,
 } from '../../../models/conversational-agent/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/conversational-agent/feedback/feedback.models';
@@ -44,10 +44,10 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<FeedbackResponse>
-      : NonPaginatedResponse<FeedbackResponse>
+      ? PaginatedResponse<FeedbackGetResponse>
+      : NonPaginatedResponse<FeedbackGetResponse>
   > {
-    return PaginationHelpers.getAll<T, FeedbackResponse>({
+    return PaginationHelpers.getAll<T, FeedbackGetResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => FEEDBACK_ENDPOINTS.GET_ALL,
       pagination: {
@@ -58,7 +58,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
           countParam: FEEDBACK_OFFSET_PARAMS.COUNT_PARAM,
         },
       },
-      excludeFromPrefix: ['agentId', 'agentVersion', 'status', 'traceId', FEEDBACK_OFFSET_PARAMS.OFFSET_PARAM, FEEDBACK_OFFSET_PARAMS.PAGE_SIZE_PARAM],
+      excludeFromPrefix: ['agentId', 'agentVersion', 'status', 'traceId', 'spanId', FEEDBACK_OFFSET_PARAMS.OFFSET_PARAM, FEEDBACK_OFFSET_PARAMS.PAGE_SIZE_PARAM],
     }, options);
   }
 }

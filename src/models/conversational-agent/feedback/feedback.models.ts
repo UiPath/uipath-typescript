@@ -1,5 +1,5 @@
 import type {
-  FeedbackResponse,
+  FeedbackGetResponse,
   FeedbackGetAllOptions,
 } from './feedback.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
@@ -10,7 +10,7 @@ import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } fr
  * Feedback allows you to collect and manage user feedback on AI agent responses,
  * including positive/negative ratings, comments, and categorized feedback.
  * This is useful for monitoring agent quality, identifying areas for improvement,
- * and building datasets for fine-tuning.
+ * and building datasets for fine-tuning. [Feedback on agent runs](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/agent-traces#feedback-on-agent-runs)
  *
  * ### Usage
  *
@@ -31,8 +31,7 @@ export interface FeedbackServiceModel {
    * When no pagination options are provided, the API defaults to returning the first 100 items.
    *
    * @param options - Optional query parameters for filtering and pagination
-   * @returns Promise resolving to array of feedback or paginated response
-   * {@link FeedbackResponse}
+   * @returns Promise resolving to either an array of feedback entries NonPaginatedResponse<FeedbackGetResponse> or a PaginatedResponse<FeedbackGetResponse> when pagination options are used.
    * @example
    * ```typescript
    * // Get all feedback (default pagination: returns first 100 items)
@@ -63,7 +62,7 @@ export interface FeedbackServiceModel {
    */
   getAll<T extends FeedbackGetAllOptions = FeedbackGetAllOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<FeedbackResponse>
-      : NonPaginatedResponse<FeedbackResponse>
+      ? PaginatedResponse<FeedbackGetResponse>
+      : NonPaginatedResponse<FeedbackGetResponse>
   >;
 }

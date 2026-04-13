@@ -34,12 +34,12 @@ export enum FeedbackStatus {
 /**
  * Complete feedback object returned from the API
  */
-export interface FeedbackResponse {
+export interface FeedbackGetResponse {
   /** Unique identifier of the feedback entry */
   id: string;
-  /** OpenTelemetry trace identifier (32-character hexadecimal string) linking feedback to a specific agent execution */
+  /** Trace identifier linking feedback to a specific agent execution */
   traceId: string;
-  /** OpenTelemetry span identifier (16-character hexadecimal string) representing a specific operation within the trace */
+  /** Span identifier representing a specific operation within the trace */
   spanId: string;
   /** Identifier of the agent that generated the response being reviewed */
   agentId: string | null;
