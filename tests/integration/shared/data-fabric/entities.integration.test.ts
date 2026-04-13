@@ -742,7 +742,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  // Bulk import requires write-schema PAT scope — not supported yet
+  // Bulk import requires DataFabric.Data.Write scope — not supported via PAT token yet
   describe.skip('importRecordsById', () => {
     it('should import records from a CSV blob', async () => {
       const { entities } = getServices();
@@ -791,8 +791,6 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         { name: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
       ], { displayName: `SDK Test Entity ${name}` });
 
-      console.log(`[${mode}] Created entity: name="${name}" id="${entityId}"`);
-
       expect(typeof entityId).toBe('string');
       expect(entityId.length).toBeGreaterThan(0);
       createdEntityIds.push(entityId);
@@ -818,7 +816,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  describe.skip('updateSchemaById', () => {
+  describe.skip('updateById', () => {
     it('should update entity display name and description', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
@@ -826,7 +824,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       createdEntityIds.push(entityId);
 
       const newDisplayName = `Updated ${name}`;
-      await entities.updateMetadataById(entityId, {
+      await entities.updateById(entityId, {
         displayName: newDisplayName,
         description: 'Updated description',
       });
@@ -844,7 +842,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       ]);
       createdEntityIds.push(entityId);
 
-      await entities.updateSchemaById(entityId, {
+      await entities.updateById(entityId, {
         addFields: [{ name: 'new_field', type: EntityFieldDataType.INTEGER }],
       });
 
@@ -862,7 +860,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       ]);
       createdEntityIds.push(entityId);
 
-      await entities.updateSchemaById(entityId, {
+      await entities.updateById(entityId, {
         removeFields: ['remove_me'],
       });
 
@@ -887,7 +885,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         throw new Error('Could not find updatable_field id in entity schema');
       }
 
-      await entities.updateSchemaById(entityId, {
+      await entities.updateById(entityId, {
         updateFields: [{ id: field.id, displayName: 'Updated Name', isRequired: true }],
       });
 
@@ -913,7 +911,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         throw new Error('Could not find to_update field id');
       }
 
-      await entities.updateSchemaById(entityId, {
+      await entities.updateById(entityId, {
         addFields: [{ name: 'new_addition', type: EntityFieldDataType.BOOLEAN }],
         updateFields: [{ id: fieldToUpdate.id, displayName: 'After Update' }],
         removeFields: ['to_remove'],
@@ -932,7 +930,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  describe.skip('deleteEntityById', () => {
+  describe.skip('deleteById', () => {
     it('should delete an entity created for this test', async () => {
       const { entities } = getServices();
 
@@ -940,7 +938,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = await entities.create(name, 'To be deleted', []);
 
       // Delete it immediately (not added to createdEntityIds so afterAll won't double-delete)
-      await entities.deleteEntityById(entityId);
+      await entities.deleteById(entityId);
 
       // Verify it no longer appears in getAll
       const all = await entities.getAll();
@@ -950,18 +948,18 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   });
 
   describe.skip('entity schema methods (bound)', () => {
-    it('should call deleteEntityById via bound method on entity', async () => {
+    it('should call deleteById via bound method on entity', async () => {
       const { entities } = getServices();
 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, 'For bound method test', []);
 
       const entity = await entities.getById(entityId);
-      expect(typeof entity.deleteEntityById).toBe('function');
-      expect(typeof entity.updateSchemaById).toBe('function');
+      expect(typeof entity.deleteById).toBe('function');
+      expect(typeof entity.updateById).toBe('function');
 
       // Delete via bound method — do NOT add to createdEntityIds
-      await entity.deleteEntityById();
+      await entity.deleteById();
 
       const all = await entities.getAll();
       expect(all.find(e => e.id === entityId)).toBeUndefined();
@@ -981,7 +979,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         const { entities } = getServices();
         for (const entityId of createdEntityIds) {
           try {
-            await entities.deleteEntityById(entityId);
+            await entities.deleteById(entityId);
           } catch {
             // Best-effort cleanup — entity may have already been deleted
           }

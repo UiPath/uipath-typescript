@@ -289,22 +289,19 @@ export interface EntityFieldUpdateOptions extends EntityFieldBase {
 }
 
 /**
- * Options for updating an existing entity's field schema.
- * Supports adding, removing, and updating fields in a single call.
+ * Options for updating an existing entity — schema and/or metadata in a single call.
+ *
+ * Schema changes (`addFields`, `removeFields`, `updateFields`) and metadata changes
+ * (`displayName`, `description`, `isRbacEnabled`) can be combined; each is applied
+ * only when the corresponding fields are provided.
  */
-export interface EntitySchemaUpdateOptions {
+export interface EntityUpdateByIdOptions {
   /** New fields to add */
   addFields?: EntityCreateFieldOptions[];
   /** Names of fields to remove (case-insensitive) */
   removeFields?: string[];
   /** Fields to update, each identified by its field ID */
   updateFields?: EntityFieldUpdateOptions[];
-}
-
-/**
- * Options for updating an entity's metadata (displayName, description)
- */
-export interface EntityMetadataUpdateOptions {
   /** New display name for the entity */
   displayName?: string;
   /** New description for the entity */

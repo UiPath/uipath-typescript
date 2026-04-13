@@ -27,8 +27,7 @@ import {
   EntityBulkImportResponse,
   EntityCreateOptions,
   EntityCreateFieldOptions,
-  EntitySchemaUpdateOptions,
-  EntityMetadataUpdateOptions,
+  EntityUpdateByIdOptions,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -316,11 +315,6 @@ export interface EntityServiceModel {
    */
   updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
-  /**
-   * @deprecated Use {@link updateRecordsById} instead.
-   * @hidden
-   */
-  updateById(id: string, data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
 
   /**
    * Deletes data from an entity by entity ID
@@ -340,11 +334,6 @@ export interface EntityServiceModel {
    */
   deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
 
-  /**
-   * @deprecated Use {@link deleteRecordsById} instead.
-   * @hidden
-   */
-  deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
 
   /**
    * Queries entity records with filters, sorting, and pagination
@@ -388,6 +377,7 @@ export interface EntityServiceModel {
    * const result = await entities.importRecordsById(<entityId>, fileInput.files[0]);
    * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
    * ```
+   * @internal
    */
   importRecordsById(entityId: string, file: Blob): Promise<EntityBulkImportResponse>;
 
@@ -534,6 +524,7 @@ export interface EntityServiceModel {
    *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", isRbacEnabled: true });
    * ```
+   * @internal
    */
   create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
 
@@ -544,50 +535,46 @@ export interface EntityServiceModel {
    * @returns Promise resolving when the entity is deleted
    * @example
    * ```typescript
-   * await entities.deleteEntityById("<entityId>");
+   * await entities.deleteById("<entityId>");
    * ```
+   * @internal
    */
-  deleteEntityById(entityId: string): Promise<void>;
+  deleteById(entityId: string): Promise<void>;
 
   /**
-   * Updates an existing Data Fabric entity's field schema.
+   * Updates an existing Data Fabric entity — schema and/or metadata in a single call.
    *
-   * Pass `addFields` to append new fields, `removeFields` (by name) to delete fields,
-   * and `updateFields` (array of {@link EntityFieldUpdateOptions}) to update field metadata.
-   * To update entity-level metadata use {@link updateMetadataById} instead.
+   * Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
+   * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
+   * only when the corresponding fields are provided.
    *
    * @param entityId - UUID of the entity to update
-   * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
-   * @returns Promise resolving when the entity schema is updated
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @returns Promise resolving when the update is complete
    *
    * @example
    * ```typescript
-   * await entities.updateSchemaById("<entityId>", {
+   * // Schema-only: add a field and remove another
+   * await entities.updateById("<entityId>", {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    *   removeFields: ["old_field"],
-   *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
    * });
-   * ```
-   */
-  updateSchemaById(entityId: string, options: EntitySchemaUpdateOptions): Promise<void>;
-
-  /**
-   * Updates only the metadata of an existing Data Fabric entity (displayName, description, isRbacEnabled).
-   * Use this when you only need to change entity-level metadata without touching the field schema.
    *
-   * @param entityId - UUID of the entity to update
-   * @param options - Metadata fields to update ({@link EntityMetadataUpdateOptions})
-   * @returns Promise resolving when the metadata is updated
-   *
-   * @example
-   * ```typescript
-   * await entities.updateMetadataById("<entityId>", {
+   * // Metadata-only: rename the entity
+   * await entities.updateById("<entityId>", {
    *   displayName: "My Updated Entity",
    *   description: "Updated description",
    * });
+   *
+   * // Combined: update a field and rename at the same time
+   * await entities.updateById("<entityId>", {
+   *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
+   *   displayName: "Price Catalog",
+   * });
    * ```
+   * @internal
    */
-  updateMetadataById(entityId: string, options: EntityMetadataUpdateOptions): Promise<void>;
+  updateById(entityId: string, options: EntityUpdateByIdOptions): Promise<void>;
 
 }
 
@@ -738,45 +725,33 @@ export interface EntityMethods {
       : NonPaginatedResponse<EntityRecord>
   >;
 
-}
-
-/**
- * Entity management methods interface - defines entity lifecycle operations
- * (schema changes, metadata updates, deletion)
- */
-export interface EntityManagementMethods {
   /**
    * Deletes this entity and all its records
    *
    * @returns Promise resolving when the entity is deleted
+   * @internal
    */
-  deleteEntityById(): Promise<void>;
+  deleteById(): Promise<void>;
 
   /**
-   * Updates this entity's field schema
+   * Updates this entity — schema and/or metadata in a single call.
    *
-   * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
-   * @returns Promise resolving when the entity schema is updated
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @returns Promise resolving when the update is complete
+   * @internal
    */
-  updateSchemaById(options: EntitySchemaUpdateOptions): Promise<void>;
+  updateById(options: EntityUpdateByIdOptions): Promise<void>;
 
-  /**
-   * Updates only the metadata of this entity (displayName, description, isRbacEnabled)
-   *
-   * @param options - Metadata fields to update ({@link EntityMetadataUpdateOptions})
-   * @returns Promise resolving when the metadata is updated
-   */
-  updateMetadataById(options: EntityMetadataUpdateOptions): Promise<void>;
 }
 
 /**
  * Entity with methods combining metadata with operation methods
  */
-export interface EntityGetResponse extends RawEntityGetResponse, EntityMethods, EntityManagementMethods {}
+export interface EntityGetResponse extends RawEntityGetResponse, EntityMethods {}
 
 /**
  * Creates entity methods that can be attached to entity data
- * 
+ *
  * @param entityData - The entity metadata
  * @param service - The entity service instance
  * @returns Object containing entity methods
@@ -863,32 +838,14 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.getAllRecords(options);
     },
 
-  };
-}
-
-/**
- * Creates entity management methods bound to a specific entity ID.
- * These methods operate on the entity itself (schema, metadata, deletion) — not on its records.
- *
- * @param entityId - UUID of the entity
- * @param service - The entity service instance
- * @returns Object containing entity management methods
- */
-function createEntityManagementMethods(entityId: string, service: EntityServiceModel): EntityManagementMethods {
-  return {
-    async deleteEntityById(): Promise<void> {
-      if (!entityId) throw new Error('Entity ID is undefined');
-      return service.deleteEntityById(entityId);
+    async deleteById(): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.deleteById(entityData.id);
     },
 
-    async updateSchemaById(options: EntitySchemaUpdateOptions): Promise<void> {
-      if (!entityId) throw new Error('Entity ID is undefined');
-      return service.updateSchemaById(entityId, options);
-    },
-
-    async updateMetadataById(options: EntityMetadataUpdateOptions): Promise<void> {
-      if (!entityId) throw new Error('Entity ID is undefined');
-      return service.updateMetadataById(entityId, options);
+    async updateById(options: EntityUpdateByIdOptions): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.updateById(entityData.id, options);
     },
   };
 }
@@ -904,7 +861,5 @@ export function createEntityWithMethods(
   entityMetadata: RawEntityGetResponse,
   service: EntityServiceModel
 ): EntityGetResponse {
-  const dataMethods = createEntityMethods(entityMetadata, service);
-  const managementMethods = createEntityManagementMethods(entityMetadata.id, service);
-  return Object.assign({}, entityMetadata, dataMethods, managementMethods) as EntityGetResponse;
+  return Object.assign({}, entityMetadata, createEntityMethods(entityMetadata, service)) as EntityGetResponse;
 }

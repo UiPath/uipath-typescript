@@ -11,12 +11,10 @@ import {
   EntityInsertRecordsOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
-  EntityUpdateOptions,
   EntityUpdateRecordOptions,
   EntityUpdateRecordResponse,
   EntityUpdateRecordsOptions,
   EntityUpdateResponse,
-  EntityDeleteOptions,
   EntityDeleteRecordsOptions,
   EntityDeleteResponse,
   EntityRecord,
@@ -33,14 +31,13 @@ import {
   EntityCreateFieldOptions,
   EntityFieldDataType,
   FieldDisplayType,
-  EntitySchemaUpdateOptions,
-  EntityMetadataUpdateOptions,
+  EntityUpdateByIdOptions,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS, DATAFABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
+import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
@@ -502,7 +499,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Imports records from a CSV file into an entity
    *
    * @param entityId - UUID of the entity
-   * @param file - CSV file to import as a Blob or File
+   * @param file - CSV file to import (Blob, File, or Uint8Array)
    * @returns Promise resolving to import result with record counts
    *
    * @example
@@ -524,11 +521,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   console.log(`Error file link: ${result.errorFileLink}`);
    * }
    * ```
+   * @internal
    */
   @track('Entities.ImportRecordsById')
-  async importRecordsById(entityId: string, file: Blob): Promise<EntityBulkImportResponse> {
+  async importRecordsById(entityId: string, file: EntityFileType): Promise<EntityBulkImportResponse> {
     const formData = new FormData();
-    formData.append('file', file);
+    if (file instanceof Uint8Array) {
+      formData.append('file', new Blob([file.buffer as ArrayBuffer]));
+    } else {
+      formData.append('file', file);
+    }
 
     const response = await this.post<EntityBulkImportResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(entityId),
@@ -691,22 +693,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * @hidden
-   * @deprecated Use {@link updateRecordsById} instead.
-   */
-  async updateById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
-    return this.updateRecordsById(id, data, options);
-  }
-
-  /**
-   * @hidden
-   * @deprecated Use {@link deleteRecordsById} instead.
-   */
-  async deleteById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
-    return this.deleteRecordsById(id, recordIds, options);
-  }
-
-  /**
    * Creates a new Data Fabric entity with the given schema
    *
    * @param name - Technical entity name — must be lowercase, start with a letter, and contain
@@ -723,6 +709,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", isRbacEnabled: true });
    * ```
+   * @internal
    */
   @track('Entities.Create')
   async create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
@@ -734,14 +721,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
       entityDefinition: {
         name,
         fields: fields.map(f => this.buildSchemaFieldPayload(f)),
-        folderId: opts.folderId ?? DATAFABRIC_TENANT_FOLDER_ID,
+        folderId: opts.folderId ?? DATA_FABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: opts.isRbacEnabled ?? false,
         isInsightsEnabled: opts.isInsightsEnabled ?? false,
         externalFields: opts.externalFields ?? [],
       },
     };
     const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, payload);
-    return String(response.data);
+    return response.data;
   }
 
   /**
@@ -752,35 +739,73 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * await entities.deleteEntityById("<entityId>");
+   * await entities.deleteById("<entityId>");
    * ```
+   * @internal
    */
-  @track('Entities.DeleteEntityById')
-  async deleteEntityById(entityId: string): Promise<void> {
+  @track('Entities.DeleteById')
+  async deleteById(entityId: string): Promise<void> {
     await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(entityId), {});
   }
 
   /**
-   * Updates an existing Data Fabric entity's field schema.
+   * Updates an existing Data Fabric entity — schema and/or metadata in a single call.
    *
-   * Fetches the current entity schema, applies the requested field delta
-   * (add/remove/update fields), then posts the full updated schema.
+   * Provide any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
+   * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
+   * only when the corresponding fields are present.
    *
    * @param entityId - UUID of the entity to update
-   * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
-   * @returns Promise resolving when the entity schema is updated
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @returns Promise resolving when the update is complete
    *
    * @example
    * ```typescript
-   * await entities.updateSchemaById("<entityId>", {
+   * // Schema-only
+   * await entities.updateById("<entityId>", {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    *   removeFields: ["old_field"],
+   * });
+   *
+   * // Metadata-only
+   * await entities.updateById("<entityId>", {
+   *   displayName: "My Updated Entity",
+   *   description: "Updated description",
+   * });
+   *
+   * // Combined
+   * await entities.updateById("<entityId>", {
    *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
+   *   displayName: "Price Catalog",
    * });
    * ```
+   * @internal
    */
-  @track('Entities.UpdateSchemaById')
-  async updateSchemaById(entityId: string, options: EntitySchemaUpdateOptions): Promise<void> {
+  @track('Entities.UpdateById')
+  async updateById(entityId: string, options: EntityUpdateByIdOptions): Promise<void> {
+    const hasSchemaChanges = !!(options.addFields?.length || options.removeFields?.length || options.updateFields?.length);
+    const hasMetadataChanges = options.displayName !== undefined || options.description !== undefined || options.isRbacEnabled !== undefined;
+
+    if (hasSchemaChanges) {
+      await this.applySchemaUpdate(entityId, options);
+    }
+    if (hasMetadataChanges) {
+      await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(entityId), {
+        ...(options.displayName !== undefined && { displayName: options.displayName }),
+        ...(options.description !== undefined && { description: options.description }),
+        ...(options.isRbacEnabled !== undefined && { isRbacEnabled: options.isRbacEnabled }),
+      });
+    }
+  }
+
+  /**
+   * Fetches the current entity schema, applies the field delta, then posts the full updated schema.
+   *
+   * @param entityId - UUID of the entity to update
+   * @param options - Field changes to apply
+   * @private
+   */
+  private async applySchemaUpdate(entityId: string, options: Pick<EntityUpdateByIdOptions, 'addFields' | 'removeFields' | 'updateFields'>): Promise<void> {
     const entityResponse = await this.get<RawEntityGetResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId)
     );
@@ -824,44 +849,19 @@ export class EntityService extends BaseService implements EntityServiceModel {
       newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
     }
 
-    const payload = {
+    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, {
       displayName: raw.displayName,
       description: raw.description,
       entityDefinition: {
         id: entityId,
         name: raw.name,
         fields: [...fields, ...newFields],
-        folderId: raw.folderId ?? DATAFABRIC_TENANT_FOLDER_ID,
+        folderId: raw.folderId ?? DATA_FABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: raw.isRbacEnabled ?? false,
         isInsightsEnabled: raw.isInsightsEnabled ?? false,
         externalFields: raw.externalFields ?? [],
       },
-    };
-
-    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, payload);
-  }
-
-  /**
-   * Updates only the metadata of an existing Data Fabric entity.
-   *
-   * Use this when you only need to change entity-level metadata (displayName, description,
-   * isRbacEnabled) without modifying the field schema.
-   *
-   * @param entityId - UUID of the entity to update
-   * @param options - Metadata fields to update ({@link EntityMetadataUpdateOptions})
-   * @returns Promise resolving when the metadata is updated
-   *
-   * @example
-   * ```typescript
-   * await entities.updateMetadataById("<entityId>", {
-   *   displayName: "My Updated Entity",
-   *   description: "Updated description",
-   * });
-   * ```
-   */
-  @track('Entities.UpdateMetadataById')
-  async updateMetadataById(entityId: string, options: EntityMetadataUpdateOptions): Promise<void> {
-    await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(entityId), options);
+    });
   }
 
   /**

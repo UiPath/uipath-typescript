@@ -9,7 +9,7 @@ import { DATAFABRIC_BASE } from './base';
  * Tenant-level entities are not scoped to a folder; this is the
  * conventional placeholder value the API expects.
  */
-export const DATAFABRIC_TENANT_FOLDER_ID = '00000000-0000-0000-0000-000000000000';
+export const DATA_FABRIC_TENANT_FOLDER_ID = '00000000-0000-0000-0000-000000000000';
 
 /**
  * Data Fabric Entity Service Endpoints
