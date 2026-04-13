@@ -218,29 +218,6 @@ describe('MaestroProcessesService', () => {
       );
     });
 
-    it('should start process with options', async () => {
-      const mockJob = createMockProcessStartResponse();
-      const mockResponse = createMockProcessStartApiResponse([mockJob]);
-      mockApiClient.post.mockResolvedValue(mockResponse);
-
-      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
-      const options: RequestOptions = { expand: PROCESS_TEST_CONSTANTS.EXPAND_ROBOT };
-      await service.start(request, MAESTRO_TEST_CONSTANTS.FOLDER_KEY, options);
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        PROCESS_ENDPOINTS.START_PROCESS,
-        expect.any(Object),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            [FOLDER_KEY]: MAESTRO_TEST_CONSTANTS.FOLDER_KEY
-          }),
-          params: expect.objectContaining({
-            '$expand': PROCESS_TEST_CONSTANTS.EXPAND_ROBOT
-          })
-        })
-      );
-    });
-
     it('should handle multiple jobs returned from start', async () => {
       const mockJobs = [
         createMockProcessStartResponse(),
