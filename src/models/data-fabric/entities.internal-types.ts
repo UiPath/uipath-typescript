@@ -1,7 +1,7 @@
 import { FieldDisplayType } from './entities.types';
 
 /**
- * Shape of each entry in EntitySchemaFieldTypeMap. Internal only.
+ * Shape of each entry in EntitySchemaFieldTypeMap — internal only.
  */
 export interface EntitySchemaFieldMapping {
   sqlTypeName: string;

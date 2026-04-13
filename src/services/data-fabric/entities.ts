@@ -32,6 +32,7 @@ import {
   EntityCreateOptions,
   EntityCreateFieldOptions,
   EntityFieldDataType,
+  FieldDisplayType,
   EntitySchemaUpdateOptions,
   EntityMetadataUpdateOptions,
 } from '../../models/data-fabric/entities.types';
@@ -831,10 +832,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
         id: entityId,
         name: raw.name,
         fields: [...fields, ...newFields],
-        folderId: DATAFABRIC_TENANT_FOLDER_ID,
+        folderId: raw.folderId ?? DATAFABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: raw.isRbacEnabled ?? false,
-        isInsightsEnabled: false,
-        externalFields: [],
+        isInsightsEnabled: raw.isInsightsEnabled ?? false,
+        externalFields: raw.externalFields ?? [],
       },
     };
 
@@ -890,7 +891,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       
       // Map field type: prefer fieldDisplayType for types that share SQL types (File, ChoiceSet, AutoNumber)
       if (transformedField.fieldDataType?.name) {
-        const displayTypeMapped = FieldDisplayTypeToDataType[transformedField.fieldDisplayType as import('../../models/data-fabric/entities.types').FieldDisplayType];
+        const displayTypeMapped = FieldDisplayTypeToDataType[transformedField.fieldDisplayType as FieldDisplayType];
         if (displayTypeMapped) {
           transformedField.fieldDataType.name = displayTypeMapped;
         } else {

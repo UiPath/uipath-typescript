@@ -45,11 +45,11 @@ export const EntitySchemaFieldTypeMap: Record<EntityFieldDataType, EntitySchemaF
   [EntityFieldDataType.BOOLEAN]:        { sqlTypeName: SqlFieldType.BIT,              fieldDisplayType: FieldDisplayType.Basic },
   [EntityFieldDataType.BIG_INTEGER]:    { sqlTypeName: SqlFieldType.BIGINT,           fieldDisplayType: FieldDisplayType.Basic },
   [EntityFieldDataType.MULTILINE_TEXT]:    { sqlTypeName: SqlFieldType.MULTILINE,        fieldDisplayType: FieldDisplayType.Basic          },
-  [EntityFieldDataType.File]:              { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File           },
-  [EntityFieldDataType.ChoiceSetSingle]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle  },
-  [EntityFieldDataType.ChoiceSetMultiple]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple },
-  [EntityFieldDataType.AutoNumber]:        { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.AutoNumber        },
-  [EntityFieldDataType.Relationship]:      { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Relationship      },
+  [EntityFieldDataType.FILE]:              { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File           },
+  [EntityFieldDataType.CHOICE_SET_SINGLE]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle  },
+  [EntityFieldDataType.CHOICE_SET_MULTIPLE]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple },
+  [EntityFieldDataType.AUTO_NUMBER]:        { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.AutoNumber        },
+  [EntityFieldDataType.RELATIONSHIP]:      { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Relationship      },
 };
 
 /**
@@ -58,11 +58,11 @@ export const EntitySchemaFieldTypeMap: Record<EntityFieldDataType, EntitySchemaF
  * Used during read-side transformation to produce the correct EntityFieldDataType.
  */
 export const FieldDisplayTypeToDataType: Partial<Record<FieldDisplayType, EntityFieldDataType>> = {
-  [FieldDisplayType.File]:              EntityFieldDataType.File,
-  [FieldDisplayType.ChoiceSetSingle]:   EntityFieldDataType.ChoiceSetSingle,
-  [FieldDisplayType.ChoiceSetMultiple]: EntityFieldDataType.ChoiceSetMultiple,
-  [FieldDisplayType.AutoNumber]:        EntityFieldDataType.AutoNumber,
-  [FieldDisplayType.Relationship]:      EntityFieldDataType.Relationship,
+  [FieldDisplayType.File]:              EntityFieldDataType.FILE,
+  [FieldDisplayType.ChoiceSetSingle]:   EntityFieldDataType.CHOICE_SET_SINGLE,
+  [FieldDisplayType.ChoiceSetMultiple]: EntityFieldDataType.CHOICE_SET_MULTIPLE,
+  [FieldDisplayType.AutoNumber]:        EntityFieldDataType.AUTO_NUMBER,
+  [FieldDisplayType.Relationship]:      EntityFieldDataType.RELATIONSHIP,
 };
 
 /**

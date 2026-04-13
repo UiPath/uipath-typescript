@@ -252,19 +252,19 @@ describe("EntityService Unit Tests", () => {
       expect(result.fields).toHaveLength(5);
 
       const fileField = result.fields.find((f) => f.name === "attachment");
-      expect(fileField?.fieldDataType?.name).toBe(EntityFieldDataType.File);
+      expect(fileField?.fieldDataType?.name).toBe(EntityFieldDataType.FILE);
 
       const csField = result.fields.find((f) => f.name === "category");
-      expect(csField?.fieldDataType?.name).toBe(EntityFieldDataType.ChoiceSetSingle);
+      expect(csField?.fieldDataType?.name).toBe(EntityFieldDataType.CHOICE_SET_SINGLE);
 
       const csMultiField = result.fields.find((f) => f.name === "tags");
-      expect(csMultiField?.fieldDataType?.name).toBe(EntityFieldDataType.ChoiceSetMultiple);
+      expect(csMultiField?.fieldDataType?.name).toBe(EntityFieldDataType.CHOICE_SET_MULTIPLE);
 
       const autoNumField = result.fields.find((f) => f.name === "seq_no");
-      expect(autoNumField?.fieldDataType?.name).toBe(EntityFieldDataType.AutoNumber);
+      expect(autoNumField?.fieldDataType?.name).toBe(EntityFieldDataType.AUTO_NUMBER);
 
       const relField = result.fields.find((f) => f.name === "customer_id");
-      expect(relField?.fieldDataType?.name).toBe(EntityFieldDataType.Relationship);
+      expect(relField?.fieldDataType?.name).toBe(EntityFieldDataType.RELATIONSHIP);
     });
 
     it("should handle API errors", async () => {
@@ -1770,11 +1770,11 @@ describe("EntityService Unit Tests", () => {
       { type: EntityFieldDataType.DATETIME_WITH_TZ, expectedSqlType: "DATETIMEOFFSET" },
       { type: EntityFieldDataType.DATE,             expectedSqlType: "DATE"            },
       { type: EntityFieldDataType.DECIMAL,          expectedSqlType: "DECIMAL"         },
-      { type: EntityFieldDataType.File,             expectedSqlType: "UNIQUEIDENTIFIER" },
-      { type: EntityFieldDataType.ChoiceSetSingle,  expectedSqlType: "INT"             },
-      { type: EntityFieldDataType.ChoiceSetMultiple, expectedSqlType: "NVARCHAR"       },
-      { type: EntityFieldDataType.AutoNumber,        expectedSqlType: "DECIMAL"          },
-      { type: EntityFieldDataType.Relationship,     expectedSqlType: "UNIQUEIDENTIFIER" },
+      { type: EntityFieldDataType.FILE,              expectedSqlType: "UNIQUEIDENTIFIER" },
+      { type: EntityFieldDataType.CHOICE_SET_SINGLE,  expectedSqlType: "INT"           },
+      { type: EntityFieldDataType.CHOICE_SET_MULTIPLE, expectedSqlType: "NVARCHAR"     },
+      { type: EntityFieldDataType.AUTO_NUMBER,        expectedSqlType: "DECIMAL"       },
+      { type: EntityFieldDataType.RELATIONSHIP,      expectedSqlType: "UNIQUEIDENTIFIER" },
     ])(
       "should map EntityFieldDataType.$type to sqlType '$expectedSqlType' for added fields",
       async ({ type, expectedSqlType }) => {

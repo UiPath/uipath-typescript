@@ -16,11 +16,11 @@ export enum EntityFieldDataType {
   BOOLEAN = "BOOLEAN",
   BIG_INTEGER = "BIG_INTEGER",
   MULTILINE_TEXT = "MULTILINE_TEXT",
-  File = "FILE",
-  ChoiceSetSingle = "CHOICE_SET_SINGLE",
-  ChoiceSetMultiple = "CHOICE_SET_MULTIPLE",
-  AutoNumber = "AUTO_NUMBER",
-  Relationship = "RELATIONSHIP",
+  FILE = "FILE",
+  CHOICE_SET_SINGLE = "CHOICE_SET_SINGLE",
+  CHOICE_SET_MULTIPLE = "CHOICE_SET_MULTIPLE",
+  AUTO_NUMBER = "AUTO_NUMBER",
+  RELATIONSHIP = "RELATIONSHIP",
 }
 
 /**
@@ -575,6 +575,7 @@ export interface RawEntityGetResponse {
   entityType: EntityType;
   description: string;
   fields: FieldMetaData[];
+  folderId: string;
   externalFields?: ExternalSourceFields[];
   sourceJoinCriterias?: SourceJoinCriteria[];
   recordCount?: number;
@@ -582,6 +583,7 @@ export interface RawEntityGetResponse {
   usedStorageSizeInMB?: number;
   attachmentSizeInByte?: number;
   isRbacEnabled: boolean;
+  isInsightsEnabled: boolean;
   id: string;
   createdBy: string;
   createdTime: string;

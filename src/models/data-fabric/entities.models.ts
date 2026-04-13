@@ -770,14 +770,14 @@ export interface EntityManagementMethods {
 }
 
 /**
- * Entity with methods combining metadata with data and management methods
+ * Entity with methods combining metadata with operation methods
  */
 export type EntityGetResponse = RawEntityGetResponse & EntityMethods & EntityManagementMethods;
 
 /**
  * Creates entity methods that can be attached to entity data
  * 
- * @param entityData - The entity data
+ * @param entityData - The entity metadata
  * @param service - The entity service instance
  * @returns Object containing entity methods
  */
