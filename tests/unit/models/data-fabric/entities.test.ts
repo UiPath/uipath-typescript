@@ -35,7 +35,7 @@ describe("Entity Models", () => {
       updateRecordById: vi.fn(),
       updateRecordsById: vi.fn(),
       deleteRecordsById: vi.fn(),
-      queryRecords: vi.fn(),
+      queryRecordsById: vi.fn(),
       importRecordsById: vi.fn(),
       downloadAttachment: vi.fn(),
       uploadAttachment: vi.fn(),
@@ -271,6 +271,15 @@ describe("Entity Models", () => {
     });
 
     describe("entity.updateRecords()", () => {
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.updateRecords([{ Id: ENTITY_TEST_CONSTANTS.RECORD_ID }]),
+        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+      });
+
       it("should call entity.updateRecords with entity id and data", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
@@ -382,6 +391,15 @@ describe("Entity Models", () => {
     });
 
     describe("entity.deleteRecords()", () => {
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.deleteRecords([ENTITY_TEST_CONSTANTS.RECORD_ID]),
+        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+      });
+
       it("should call entity.deleteRecords with entity id and record ids", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);

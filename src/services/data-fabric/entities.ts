@@ -459,7 +459,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Query with a filter
-   * const result = await entities.queryRecords("<entityId>", {
+   * const result = await entities.queryRecordsById("<entityId>", {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
    *     queryFilters: [
@@ -475,8 +475,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * result.items.forEach(record => console.log(record));
    * ```
    */
-  @track('Entities.QueryRecords')
-  async queryRecords(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
+  @track('Entities.QueryRecordsById')
+  async queryRecordsById(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
     const { expansionLevel, ...queryBody } = options ?? {};
     const params = createParams({ expansionLevel });
 
@@ -754,6 +754,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Provide any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
    * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
    * only when the corresponding fields are present.
+   *
+   * **Warning:** Schema changes (`addFields`, `removeFields`, `updateFields`) use a
+   * read-modify-write pattern — concurrent calls on the same entity may silently
+   * overwrite each other's changes.
    *
    * @param entityId - UUID of the entity to update
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})

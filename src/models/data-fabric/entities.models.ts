@@ -348,7 +348,7 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Query with a filter
-   * const result = await entities.queryRecords("<entityId>", {
+   * const result = await entities.queryRecordsById("<entityId>", {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
    *     queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
@@ -362,7 +362,7 @@ export interface EntityServiceModel {
    * result.items.forEach(record => console.log(record));
    * ```
    */
-  queryRecords(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse>;
+  queryRecordsById(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse>;
 
   /**
    * Imports records from a CSV file into an entity
@@ -374,12 +374,12 @@ export interface EntityServiceModel {
    * ```typescript
    * // Browser: upload from file input
    * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
-   * const result = await entities.importRecordsById(<entityId>, fileInput.files[0]);
+   * const result = await entities.importRecordsById("<entityId>", fileInput.files[0]);
    * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
    * ```
    * @internal
    */
-  importRecordsById(entityId: string, file: Blob): Promise<EntityBulkImportResponse>;
+  importRecordsById(entityId: string, file: EntityFileType): Promise<EntityBulkImportResponse>;
 
   /**
    * Downloads an attachment stored in a File-type field of an entity record.
@@ -729,6 +729,11 @@ export interface EntityMethods {
    * Deletes this entity and all its records
    *
    * @returns Promise resolving when the entity is deleted
+   * @example
+   * ```typescript
+   * const entity = await entities.getById("<entityId>");
+   * await entity.deleteById();
+   * ```
    * @internal
    */
   deleteById(): Promise<void>;
@@ -738,6 +743,14 @@ export interface EntityMethods {
    *
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
    * @returns Promise resolving when the update is complete
+   * @example
+   * ```typescript
+   * const entity = await entities.getById("<entityId>");
+   * await entity.updateById({
+   *   displayName: "Updated Name",
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   * });
+   * ```
    * @internal
    */
   updateById(options: EntityUpdateByIdOptions): Promise<void>;

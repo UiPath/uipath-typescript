@@ -1263,7 +1263,7 @@ describe("EntityService Unit Tests", () => {
     });
   });
 
-  describe("queryRecords", () => {
+  describe("queryRecordsById", () => {
     it("should return items and totalCount from query response", async () => {
       const mockRecords = createMockEntityRecords(2);
       mockApiClient.post.mockResolvedValue({
@@ -1271,7 +1271,7 @@ describe("EntityService Unit Tests", () => {
         totalRecordCount: 2,
       });
 
-      const result = await entityService.queryRecords(
+      const result = await entityService.queryRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
       );
 
@@ -1298,7 +1298,7 @@ describe("EntityService Unit Tests", () => {
         start: 0,
       };
 
-      const result = await entityService.queryRecords(
+      const result = await entityService.queryRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         options,
       );
@@ -1316,7 +1316,7 @@ describe("EntityService Unit Tests", () => {
     it("should pass expansionLevel as a query param, not in the request body", async () => {
       mockApiClient.post.mockResolvedValue({ value: [], totalRecordCount: 0 });
 
-      await entityService.queryRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         limit: 10,
       });
@@ -1347,7 +1347,7 @@ describe("EntityService Unit Tests", () => {
         },
       };
 
-      await entityService.queryRecords(
+      await entityService.queryRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         options,
       );
@@ -1364,7 +1364,7 @@ describe("EntityService Unit Tests", () => {
     it("should handle missing value and totalRecordCount gracefully", async () => {
       mockApiClient.post.mockResolvedValue({});
 
-      const result = await entityService.queryRecords(
+      const result = await entityService.queryRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
       );
 
@@ -1377,7 +1377,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.post.mockRejectedValue(error);
 
       await expect(
-        entityService.queryRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

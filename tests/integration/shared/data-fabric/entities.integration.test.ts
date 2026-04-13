@@ -709,7 +709,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  describe('queryRecords', () => {
+  describe('queryRecordsById', () => {
     it('should query records with no filters', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
@@ -717,7 +717,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       if (!entityId) {
         throw new Error('No entity ID available for testing');
       }
-      const result = await entities.queryRecords(entityId);
+      const result = await entities.queryRecordsById(entityId);
       expect(result).toBeDefined();
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
@@ -731,7 +731,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       if (!entityId) {
         throw new Error('No entity ID available for testing');
       }
-      const result = await entities.queryRecords(entityId, {
+      const result = await entities.queryRecordsById(entityId, {
         start: 0,
         limit: 5,
       });
@@ -816,6 +816,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
   describe.skip('updateById', () => {
     it('should update entity display name and description', async () => {
       const { entities } = getServices();
@@ -930,6 +931,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
   describe.skip('deleteById', () => {
     it('should delete an entity created for this test', async () => {
       const { entities } = getServices();
@@ -947,6 +949,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
   describe.skip('entity schema methods (bound)', () => {
     it('should call deleteById via bound method on entity', async () => {
       const { entities } = getServices();

@@ -593,7 +593,7 @@ export const createMockEntityWithSqlFieldTypes = (): any => {
  * Creates a mock entity with special display-type fields (File, ChoiceSetSingle, ChoiceSetMultiple, AutoNumber)
  * to test that fieldDisplayType takes precedence over SQL type during read-side mapping.
  */
-export const createMockEntityWithDisplayTypeFields = (): any => {
+export const createMockEntityWithDisplayTypeFields = (): { data: RawEntityGetResponse } => {
   return createMockEntityResponse({
     fields: [
       // File field: sqlType=UNIQUEIDENTIFIER, displayType=File → EntityFieldDataType.File
