@@ -1,6 +1,10 @@
-import { ValidationError } from '../../core/errors';
-import { BaseService } from '../base';
-import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
+import { ValidationError } from "../../core/errors";
+import { BaseService } from "../base";
+import {
+  EntityServiceModel,
+  EntityGetResponse,
+  createEntityWithMethods,
+} from "../../models/data-fabric/entities.models";
 import {
   EntityGetRecordsByIdOptions,
   EntityGetAllRecordsOptions,
@@ -26,24 +30,42 @@ import {
   EntityDeleteAttachmentResponse,
   EntityQueryRecordsOptions,
   EntityQueryRecordsResponse,
-  EntityBulkImportResponse,
+  EntityImportRecordsResponse,
   EntityCreateOptions,
   EntityCreateFieldOptions,
   EntityFieldDataType,
   FieldDisplayType,
   EntityUpdateByIdOptions,
-} from '../../models/data-fabric/entities.types';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
-import { PaginationType } from '../../utils/pagination/internal-types';
-import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
-import { RESPONSE_TYPES } from '../../utils/constants/headers';
-import { createParams } from '../../utils/http/params';
-import { transformData } from '../../utils/transform';
-import { EntityFieldTypeMap, SqlFieldType, EntityMap, EntitySchemaFieldTypeMap, FieldDisplayTypeToDataType } from '../../models/data-fabric/entities.constants';
-import { EntityQueryRawResponse } from '../../models/data-fabric/entities.internal-types';
-import { track } from '../../core/telemetry';
+} from "../../models/data-fabric/entities.types";
+import {
+  PaginatedResponse,
+  NonPaginatedResponse,
+  HasPaginationOptions,
+} from "../../utils/pagination/types";
+import { PaginationType } from "../../utils/pagination/internal-types";
+import { PaginationHelpers } from "../../utils/pagination/helpers";
+import {
+  ENTITY_PAGINATION,
+  ENTITY_OFFSET_PARAMS,
+} from "../../utils/constants/common";
+import {
+  DATA_FABRIC_ENDPOINTS,
+  DATA_FABRIC_TENANT_FOLDER_ID,
+} from "../../utils/constants/endpoints/data-fabric";
+import { RESPONSE_TYPES } from "../../utils/constants/headers";
+import { createParams } from "../../utils/http/params";
+import { transformData } from "../../utils/transform";
+import {
+  EntityFieldTypeMap,
+  EntityMap,
+  EntitySchemaFieldTypeMap,
+  FieldDisplayTypeToDataType,
+} from "../../models/data-fabric/entities.constants";
+import {
+  EntityQueryRawResponse,
+  SqlFieldType,
+} from "../../models/data-fabric/entities.internal-types";
+import { track } from "../../core/telemetry";
 
 /**
  * Service for interacting with the Data Fabric Entity API
@@ -75,19 +97,22 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ]);
    * ```
    */
-  @track('Entities.GetById')
+  @track("Entities.GetById")
   async getById(id: string): Promise<EntityGetResponse> {
     // Get entity metadata
     const response = await this.get<RawEntityGetResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id)
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id),
     );
-    
+
     // Apply EntityMap transformations
-    const metadata = transformData(response.data as RawEntityGetResponse, EntityMap)
-    
+    const metadata = transformData(
+      response.data as RawEntityGetResponse,
+      EntityMap,
+    );
+
     // Transform metadata with field mappers
     this.applyFieldMappings(metadata);
-    
+
     // Return the entity metadata with methods attached
     return createEntityWithMethods(metadata, this);
   }
@@ -126,30 +151,36 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.GetAllRecords')
-  async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
+  @track("Entities.GetAllRecords")
+  async getAllRecords<
+    T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions,
+  >(
     entityId: string,
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   > {
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
-        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,    
-          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,         
-          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM            
-        }
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () =>
+          DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
+        pagination: {
+          paginationType: PaginationType.OFFSET,
+          itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
+          totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
+          paginationParams: {
+            pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+            offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+            countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM,
+          },
+        },
+        excludeFromPrefix: ["expansionLevel"], // Don't add ODATA prefix to expansionLevel
       },
-      excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
-    }, options);
+      options,
+    );
   }
 
   /**
@@ -171,19 +202,19 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.GetRecordById')
+  @track("Entities.GetRecordById")
   async getRecordById(
     entityId: string,
     recordId: string,
-    options: EntityGetRecordByIdOptions = {}
+    options: EntityGetRecordByIdOptions = {},
   ): Promise<EntityRecord> {
     const params = createParams({
-      expansionLevel: options.expansionLevel
+      expansionLevel: options.expansionLevel,
     });
 
     const response = await this.get<EntityRecord>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(entityId, recordId),
-      { params }
+      { params },
     );
 
     return response.data;
@@ -212,10 +243,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.InsertRecordById')
-  async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
+  @track("Entities.InsertRecordById")
+  async insertRecordById(
+    id: string,
+    data: Record<string, any>,
+    options: EntityInsertRecordOptions = {},
+  ): Promise<EntityInsertResponse> {
     const params = createParams({
-      expansionLevel: options.expansionLevel
+      expansionLevel: options.expansionLevel,
     });
 
     const response = await this.post<EntityInsertResponse>(
@@ -223,8 +258,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
       data,
       {
         params,
-        ...options
-      }
+        ...options,
+      },
     );
 
     return response.data;
@@ -260,11 +295,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.InsertRecordsById')
-  async insertRecordsById(id: string, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
+  @track("Entities.InsertRecordsById")
+  async insertRecordsById(
+    id: string,
+    data: Record<string, any>[],
+    options: EntityInsertRecordsOptions = {},
+  ): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
-      failOnFirst: options.failOnFirst
+      failOnFirst: options.failOnFirst,
     });
 
     const response = await this.post<EntityBatchInsertResponse>(
@@ -272,8 +311,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
       data,
       {
         params,
-        ...options
-      }
+        ...options,
+      },
     );
 
     return response.data;
@@ -303,10 +342,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.UpdateRecordById')
-  async updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options: EntityUpdateRecordOptions = {}): Promise<EntityUpdateRecordResponse> {
+  @track("Entities.UpdateRecordById")
+  async updateRecordById(
+    entityId: string,
+    recordId: string,
+    data: Record<string, any>,
+    options: EntityUpdateRecordOptions = {},
+  ): Promise<EntityUpdateRecordResponse> {
     const params = createParams({
-      expansionLevel: options.expansionLevel
+      expansionLevel: options.expansionLevel,
     });
 
     const response = await this.post<EntityUpdateRecordResponse>(
@@ -314,8 +358,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
       data,
       {
         params,
-        ...options
-      }
+        ...options,
+      },
     );
 
     return response.data;
@@ -352,11 +396,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * ```
    */
-  @track('Entities.UpdateRecordsById')
-  async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
+  @track("Entities.UpdateRecordsById")
+  async updateRecordsById(
+    id: string,
+    data: EntityRecord[],
+    options: EntityUpdateRecordsOptions = {},
+  ): Promise<EntityUpdateResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
-      failOnFirst: options.failOnFirst
+      failOnFirst: options.failOnFirst,
     });
 
     const response = await this.post<EntityUpdateResponse>(
@@ -364,8 +412,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
       data,
       {
         params,
-        ...options
-      }
+        ...options,
+      },
     );
 
     return response.data;
@@ -391,10 +439,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ]);
    * ```
    */
-  @track('Entities.DeleteRecordsById')
-  async deleteRecordsById(id: string, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
+  @track("Entities.DeleteRecordsById")
+  async deleteRecordsById(
+    id: string,
+    recordIds: string[],
+    options: EntityDeleteRecordsOptions = {},
+  ): Promise<EntityDeleteResponse> {
     const params = createParams({
-      failOnFirst: options.failOnFirst
+      failOnFirst: options.failOnFirst,
     });
 
     const response = await this.post<EntityDeleteResponse>(
@@ -402,8 +454,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
       recordIds,
       {
         params,
-        ...options
-      }
+        ...options,
+      },
     );
 
     return response.data;
@@ -427,21 +479,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const records = await allEntities[0].getAllRecords();
    * ```
    */
-  @track('Entities.GetAll')
+  @track("Entities.GetAll")
   async getAll(): Promise<EntityGetResponse[]> {
     const response = await this.get<RawEntityGetResponse[]>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
     );
-    
+
     // Apply transformations
-    const entities = response.data.map(entity => {
+    const entities = response.data.map((entity) => {
       // Transform each entity
       const metadata = transformData(entity as RawEntityGetResponse, EntityMap);
       this.applyFieldMappings(metadata);
       // Attach entity methods
       return createEntityWithMethods(metadata, this);
     });
-    
+
     return entities;
   }
 
@@ -475,15 +527,18 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * result.items.forEach(record => console.log(record));
    * ```
    */
-  @track('Entities.QueryRecordsById')
-  async queryRecordsById(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
+  @track("Entities.QueryRecordsById")
+  async queryRecordsById(
+    entityId: string,
+    options?: EntityQueryRecordsOptions,
+  ): Promise<EntityQueryRecordsResponse> {
     const { expansionLevel, ...queryBody } = options ?? {};
     const params = createParams({ expansionLevel });
 
     const response = await this.post<EntityQueryRawResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(entityId),
       queryBody,
-      { params }
+      { params },
     );
 
     const raw = response.data;
@@ -491,7 +546,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
     return {
       items,
-      totalCount: raw.totalRecordCount ?? 0
+      totalCount: raw.totalRecordCount ?? 0,
     };
   }
 
@@ -523,18 +578,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    * @internal
    */
-  @track('Entities.ImportRecordsById')
-  async importRecordsById(entityId: string, file: EntityFileType): Promise<EntityBulkImportResponse> {
+  @track("Entities.ImportRecordsById")
+  async importRecordsById(
+    entityId: string,
+    file: EntityFileType,
+  ): Promise<EntityImportRecordsResponse> {
     const formData = new FormData();
     if (file instanceof Uint8Array) {
-      formData.append('file', new Blob([file.buffer as ArrayBuffer]));
+      formData.append("file", new Blob([file.buffer as ArrayBuffer]));
     } else {
-      formData.append('file', file);
+      formData.append("file", file);
     }
 
-    const response = await this.post<EntityBulkImportResponse>(
+    const response = await this.post<EntityImportRecordsResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(entityId),
-      formData
+      formData,
     );
 
     return response.data;
@@ -566,13 +624,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const blob = await entities.downloadAttachment(entityId, recordId, 'Documents');
    * ```
    */
-  @track('Entities.DownloadAttachment')
-  async downloadAttachment(entityId: string, recordId: string, fieldName: string): Promise<Blob> {
+  @track("Entities.DownloadAttachment")
+  async downloadAttachment(
+    entityId: string,
+    recordId: string,
+    fieldName: string,
+  ): Promise<Blob> {
     const response = await this.get<Blob>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(entityId, recordId, fieldName),
+      DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(
+        entityId,
+        recordId,
+        fieldName,
+      ),
       {
-        responseType: RESPONSE_TYPES.BLOB
-      }
+        responseType: RESPONSE_TYPES.BLOB,
+      },
     );
 
     return response.data;
@@ -606,21 +672,31 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
    * ```
    */
-  @track('Entities.UploadAttachment')
-  async uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
+  @track("Entities.UploadAttachment")
+  async uploadAttachment(
+    entityId: string,
+    recordId: string,
+    fieldName: string,
+    file: EntityFileType,
+    options?: EntityUploadAttachmentOptions,
+  ): Promise<EntityUploadAttachmentResponse> {
     const formData = new FormData();
     if (file instanceof Uint8Array) {
-      formData.append('file', new Blob([file.buffer as ArrayBuffer]));
+      formData.append("file", new Blob([file.buffer as ArrayBuffer]));
     } else {
-      formData.append('file', file);
+      formData.append("file", file);
     }
 
     const params = createParams({ expansionLevel: options?.expansionLevel });
 
     const response = await this.post<EntityUploadAttachmentResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityId, recordId, fieldName),
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
+        entityId,
+        recordId,
+        fieldName,
+      ),
       formData,
-      { params }
+      { params },
     );
 
     return response.data;
@@ -652,22 +728,32 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * await entities.deleteAttachment(entityId, recordId, 'Documents');
    * ```
    */
-  @track('Entities.DeleteAttachment')
-  async deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse> {
+  @track("Entities.DeleteAttachment")
+  async deleteAttachment(
+    entityId: string,
+    recordId: string,
+    fieldName: string,
+  ): Promise<EntityDeleteAttachmentResponse> {
     const response = await this.delete<EntityDeleteAttachmentResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(entityId, recordId, fieldName)
+      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(
+        entityId,
+        recordId,
+        fieldName,
+      ),
     );
 
     return response.data;
   }
 
-    /**
+  /**
    * @hidden
    * @deprecated Use {@link getAllRecords} instead.
    */
-  async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+  async getRecordsById<
+    T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions,
+  >(
     entityId: string,
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<EntityRecord>
@@ -680,7 +766,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @hidden
    * @deprecated Use {@link insertRecordById} instead.
    */
-  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+  async insertById(
+    id: string,
+    data: Record<string, any>,
+    options: EntityInsertOptions = {},
+  ): Promise<EntityInsertResponse> {
     return this.insertRecordById(id, data, options);
   }
 
@@ -688,7 +778,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @hidden
    * @deprecated Use {@link insertRecordsById} instead.
    */
-  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
+  async batchInsertById(
+    id: string,
+    data: Record<string, any>[],
+    options: EntityBatchInsertOptions = {},
+  ): Promise<EntityBatchInsertResponse> {
     return this.insertRecordsById(id, data, options);
   }
 
@@ -711,23 +805,31 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    * @internal
    */
-  @track('Entities.Create')
-  async create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
-    EntityService.validateTechnicalName(name, 'entity');
+  @track("Entities.Create")
+  async create(
+    name: string,
+    description: string,
+    fields: EntityCreateFieldOptions[],
+    options?: EntityCreateOptions,
+  ): Promise<string> {
+    EntityService.validateTechnicalName(name, "entity");
     const opts = options ?? {};
     const payload = {
       description,
       displayName: opts.displayName ?? name,
       entityDefinition: {
         name,
-        fields: fields.map(f => this.buildSchemaFieldPayload(f)),
+        fields: fields.map((f) => this.buildSchemaFieldPayload(f)),
         folderId: opts.folderId ?? DATA_FABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: opts.isRbacEnabled ?? false,
         isInsightsEnabled: opts.isInsightsEnabled ?? false,
         externalFields: opts.externalFields ?? [],
       },
     };
-    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, payload);
+    const response = await this.post<string>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
+      payload,
+    );
     return response.data;
   }
 
@@ -739,11 +841,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * await entities.deleteById("<entityId>");
+   * await entities.deleteById(<entityId>);
    * ```
    * @internal
    */
-  @track('Entities.DeleteById')
+  @track("Entities.DeleteById")
   async deleteById(entityId: string): Promise<void> {
     await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(entityId), {});
   }
@@ -785,19 +887,35 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    * @internal
    */
-  @track('Entities.UpdateById')
-  async updateById(entityId: string, options: EntityUpdateByIdOptions): Promise<void> {
-    const hasSchemaChanges = !!(options.addFields?.length || options.removeFields?.length || options.updateFields?.length);
-    const hasMetadataChanges = options.displayName !== undefined || options.description !== undefined || options.isRbacEnabled !== undefined;
+  @track("Entities.UpdateById")
+  async updateById(
+    entityId: string,
+    options: EntityUpdateByIdOptions,
+  ): Promise<void> {
+    const hasSchemaChanges = !!(
+      options.addFields?.length ||
+      options.removeFields?.length ||
+      options.updateFields?.length
+    );
+    const hasMetadataChanges =
+      options.displayName !== undefined ||
+      options.description !== undefined ||
+      options.isRbacEnabled !== undefined;
 
     if (hasSchemaChanges) {
       await this.applySchemaUpdate(entityId, options);
     }
     if (hasMetadataChanges) {
       await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(entityId), {
-        ...(options.displayName !== undefined && { displayName: options.displayName }),
-        ...(options.description !== undefined && { description: options.description }),
-        ...(options.isRbacEnabled !== undefined && { isRbacEnabled: options.isRbacEnabled }),
+        ...(options.displayName !== undefined && {
+          displayName: options.displayName,
+        }),
+        ...(options.description !== undefined && {
+          description: options.description,
+        }),
+        ...(options.isRbacEnabled !== undefined && {
+          isRbacEnabled: options.isRbacEnabled,
+        }),
       });
     }
   }
@@ -809,37 +927,56 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @param options - Field changes to apply
    * @private
    */
-  private async applySchemaUpdate(entityId: string, options: Pick<EntityUpdateByIdOptions, 'addFields' | 'removeFields' | 'updateFields'>): Promise<void> {
+  private async applySchemaUpdate(
+    entityId: string,
+    options: Pick<
+      EntityUpdateByIdOptions,
+      "addFields" | "removeFields" | "updateFields"
+    >,
+  ): Promise<void> {
     const entityResponse = await this.get<RawEntityGetResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId)
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId),
     );
     const raw = entityResponse.data;
 
     // Carry forward existing non-system fields from GET response (skip system/primary-key fields)
-    let fields: FieldMetaData[] = (raw.fields ?? [])
-      .filter(f => !f.isSystemField && !f.isPrimaryKey);
+    let fields: FieldMetaData[] = (raw.fields ?? []).filter(
+      (f) => !f.isSystemField && !f.isPrimaryKey,
+    );
 
     // Apply removals
     if (options.removeFields?.length) {
-      const removeSet = new Set(options.removeFields.map(n => n.toLowerCase()));
-      fields = fields.filter(f => !removeSet.has(f.name.toLowerCase()));
+      const removeSet = new Set(options.removeFields);
+      fields = fields.filter((f) => !removeSet.has(f.name));
     }
 
     // Apply per-field metadata updates (matched by field ID)
     if (options.updateFields?.length) {
-      const updateMap = new Map(options.updateFields.map(u => [u.id, u]));
-      fields = fields.map(f => {
-        const update = updateMap.get(f.id ?? '');
+      const updateMap = new Map(options.updateFields.map((u) => [u.id, u]));
+      fields = fields.map((f) => {
+        const update = updateMap.get(f.id ?? "");
         if (!update) return f;
         return {
           ...f,
-          ...(update.displayName !== undefined && { displayName: update.displayName }),
-          ...(update.description !== undefined && { description: update.description }),
-          ...(update.isRequired !== undefined && { isRequired: update.isRequired }),
+          ...(update.displayName !== undefined && {
+            displayName: update.displayName,
+          }),
+          ...(update.description !== undefined && {
+            description: update.description,
+          }),
+          ...(update.isRequired !== undefined && {
+            isRequired: update.isRequired,
+          }),
           ...(update.isUnique !== undefined && { isUnique: update.isUnique }),
-          ...(update.isRbacEnabled !== undefined && { isRbacEnabled: update.isRbacEnabled }),
-          ...(update.isEncrypted !== undefined && { isEncrypted: update.isEncrypted }),
-          ...(update.defaultValue !== undefined && { defaultValue: update.defaultValue }),
+          ...(update.isRbacEnabled !== undefined && {
+            isRbacEnabled: update.isRbacEnabled,
+          }),
+          ...(update.isEncrypted !== undefined && {
+            isEncrypted: update.isEncrypted,
+          }),
+          ...(update.defaultValue !== undefined && {
+            defaultValue: update.defaultValue,
+          }),
         };
       });
     }
@@ -848,9 +985,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const newFields: FieldMetaData[] = [];
     if (options.addFields?.length) {
       for (const field of options.addFields) {
-        EntityService.validateTechnicalName(field.name, 'field');
+        EntityService.validateTechnicalName(field.name, "field");
       }
-      newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
+      newFields.push(
+        ...options.addFields.map((f) => this.buildSchemaFieldPayload(f)),
+      );
     }
 
     await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, {
@@ -881,33 +1020,37 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Maps SQL field types to friendly EntityFieldTypes
-   * 
+   *
    * @param metadata - Entity metadata with fields
    * @private
    */
   private mapFieldTypes(metadata: RawEntityGetResponse): void {
     if (!metadata.fields?.length) return;
-    
-    metadata.fields = metadata.fields.map(field => {
+
+    metadata.fields = metadata.fields.map((field) => {
       // Rename sqlType to fieldDataType
       let transformedField = transformData(field, EntityMap);
-      
+
       // Map field type: prefer fieldDisplayType for types that share SQL types (File, ChoiceSet, AutoNumber)
       if (transformedField.fieldDataType?.name) {
-        const displayTypeMapped = FieldDisplayTypeToDataType[transformedField.fieldDisplayType as FieldDisplayType];
+        const displayTypeMapped =
+          FieldDisplayTypeToDataType[
+            transformedField.fieldDisplayType as FieldDisplayType
+          ];
         if (displayTypeMapped) {
           transformedField.fieldDataType.name = displayTypeMapped;
         } else {
-          const sqlTypeName = (transformedField.fieldDataType.name as string) as SqlFieldType;
+          const sqlTypeName = transformedField.fieldDataType
+            .name as string as SqlFieldType;
           const mapped = EntityFieldTypeMap[sqlTypeName];
           if (mapped) {
             transformedField.fieldDataType.name = mapped;
           }
         }
       }
-      
+
       this.transformNestedReferences(transformedField);
-      
+
       return transformedField;
     });
   }
@@ -920,10 +1063,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
       field.referenceEntity = transformData(field.referenceEntity, EntityMap);
     }
     if (field.referenceChoiceSet) {
-      field.referenceChoiceSet = transformData(field.referenceChoiceSet, EntityMap);
+      field.referenceChoiceSet = transformData(
+        field.referenceChoiceSet,
+        EntityMap,
+      );
     }
     if (field.referenceField?.definition) {
-      field.referenceField.definition = transformData(field.referenceField.definition, EntityMap);
+      field.referenceField.definition = transformData(
+        field.referenceField.definition,
+        EntityMap,
+      );
     }
   }
 
@@ -936,12 +1085,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
   private mapExternalFields(metadata: RawEntityGetResponse): void {
     if (!metadata.externalFields?.length) return;
 
-    metadata.externalFields = metadata.externalFields.map(externalSource => {
+    metadata.externalFields = metadata.externalFields.map((externalSource) => {
       if (externalSource.fields?.length) {
-        externalSource.fields = externalSource.fields.map(field => {
+        externalSource.fields = externalSource.fields.map((field) => {
           const transformedField = transformData(field, EntityMap);
           if (transformedField.fieldMetaData) {
-            transformedField.fieldMetaData = transformData(transformedField.fieldMetaData, EntityMap);
+            transformedField.fieldMetaData = transformData(
+              transformedField.fieldMetaData,
+              EntityMap,
+            );
             this.transformNestedReferences(transformedField.fieldMetaData);
           }
           return transformedField;
@@ -952,23 +1104,34 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
-  private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldMetaData {
-    EntityService.validateTechnicalName(field.name, 'field');
-    const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldDataType.STRING];
+  private buildSchemaFieldPayload(
+    field: EntityCreateFieldOptions,
+  ): FieldMetaData {
+    EntityService.validateTechnicalName(field.name, "field");
+    const mapping =
+      EntitySchemaFieldTypeMap[field.type ?? EntityFieldDataType.STRING];
     return {
       name: field.name,
       displayName: field.displayName ?? field.name,
       sqlType: { name: mapping.sqlTypeName },
       fieldDisplayType: mapping.fieldDisplayType,
-      description: field.description ?? '',
+      description: field.description ?? "",
       isRequired: field.isRequired ?? false,
       isUnique: field.isUnique ?? false,
       isRbacEnabled: field.isRbacEnabled ?? false,
       isEncrypted: field.isEncrypted ?? false,
-      ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
-      ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
-      ...(field.referenceEntityName !== undefined && { referenceEntityName: field.referenceEntityName }),
-      ...(field.referenceFieldName !== undefined && { referenceFieldName: field.referenceFieldName }),
+      ...(field.defaultValue !== undefined && {
+        defaultValue: field.defaultValue,
+      }),
+      ...(field.choiceSetId !== undefined && {
+        choiceSetId: field.choiceSetId,
+      }),
+      ...(field.referenceEntityName !== undefined && {
+        referenceEntityName: field.referenceEntityName,
+      }),
+      ...(field.referenceFieldName !== undefined && {
+        referenceFieldName: field.referenceFieldName,
+      }),
     };
   }
 
@@ -980,9 +1143,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
   private static validateTechnicalName(name: string, context: string): void {
     if (!/^[a-z][a-z0-9_]*$/.test(name)) {
       throw new ValidationError({
-        message: `Invalid ${context} name '${name}'. Name must be lowercase, start with a letter, and contain only letters, numbers, and underscores (e.g., "${name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}").`
+        message: `Invalid ${context} name '${name}'. Name must be lowercase, start with a letter, and contain only letters, numbers, and underscores (e.g., "${name
+          .toLowerCase()
+          .replace(/\s+/g, "_")
+          .replace(/[^a-z0-9_]/g, "")}").`,
       });
     }
   }
-
 }

@@ -1,23 +1,6 @@
 import { EntityFieldDataType, FieldDisplayType } from "./entities.types";
-import { EntitySchemaFieldMapping } from "./entities.internal-types";
-
-/**
- * Entity field data types (SQL types from API)
- */
-export enum SqlFieldType {
-  UNIQUEIDENTIFIER = 'UNIQUEIDENTIFIER',
-  NVARCHAR = 'NVARCHAR',
-  INT = 'INT',
-  DATETIME2 = 'DATETIME2',
-  DATETIMEOFFSET = 'DATETIMEOFFSET',
-  FLOAT = 'FLOAT',
-  REAL = 'REAL',
-  BIGINT = 'BIGINT',
-  DATE = 'DATE',
-  BIT = 'BIT',
-  DECIMAL = 'DECIMAL',
-  MULTILINE = 'MULTILINE'
-}
+import { EntitySchemaFieldMapping, SqlFieldType } from "./entities.internal-types";
+export { SqlFieldType };
 
 /**
  * Maps fields for Entities

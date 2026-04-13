@@ -958,11 +958,11 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = await entities.create(name, 'For bound method test', []);
 
       const entity = await entities.getById(entityId);
-      expect(typeof entity.deleteById).toBe('function');
-      expect(typeof entity.updateById).toBe('function');
+      expect(typeof entity.delete).toBe('function');
+      expect(typeof entity.update).toBe('function');
 
       // Delete via bound method — do NOT add to createdEntityIds
-      await entity.deleteById();
+      await entity.delete();
 
       const all = await entities.getAll();
       expect(all.find(e => e.id === entityId)).toBeUndefined();

@@ -277,7 +277,7 @@ export interface EntityCreateOptions {
   /** Whether Insights integration is enabled for this entity (default: false) */
   isInsightsEnabled?: boolean;
   /** External field source definitions (default: empty) */
-  externalFields?: unknown[];
+  externalFields?: ExternalField[];
 }
 
 /**
@@ -313,7 +313,7 @@ export interface EntityUpdateByIdOptions {
 /**
  * Response from a bulk import operation
  */
-export interface EntityBulkImportResponse {
+export interface EntityImportRecordsResponse {
   /** Total number of records in the import file */
   totalRecords?: number;
   /** Number of records successfully inserted */

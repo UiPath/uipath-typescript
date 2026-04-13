@@ -5,11 +5,9 @@ import {
   EntityBatchInsertOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
-  EntityUpdateOptions,
   EntityUpdateResponse,
   EntityUpdateRecordOptions,
   EntityUpdateRecordResponse,
-  EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
@@ -24,7 +22,7 @@ import {
   EntityInsertRecordOptions,
   EntityQueryRecordsOptions,
   EntityQueryRecordsResponse,
-  EntityBulkImportResponse,
+  EntityImportRecordsResponse,
   EntityCreateOptions,
   EntityCreateFieldOptions,
   EntityUpdateByIdOptions,
@@ -338,7 +336,7 @@ export interface EntityServiceModel {
   /**
    * Queries entity records with filters, sorting, and pagination
    *
-   * @param entityId - UUID of the entity
+   * @param id - UUID of the entity
    * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
    * @returns Promise resolving to {@link EntityQueryRecordsResponse} with matching records and total count
    * @example
@@ -348,7 +346,7 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Query with a filter
-   * const result = await entities.queryRecordsById("<entityId>", {
+   * const result = await entities.queryRecordsById(<id>, {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
    *     queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
@@ -362,24 +360,24 @@ export interface EntityServiceModel {
    * result.items.forEach(record => console.log(record));
    * ```
    */
-  queryRecordsById(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse>;
+  queryRecordsById(id: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse>;
 
   /**
    * Imports records from a CSV file into an entity
    *
-   * @param entityId - UUID of the entity
-   * @param file - CSV file to import as a Blob or File
-   * @returns Promise resolving to {@link EntityBulkImportResponse} with record counts
+   * @param id - UUID of the entity
+   * @param file - CSV file to import as a Blob or File or Uint8Array
+   * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
    * @example
    * ```typescript
    * // Browser: upload from file input
    * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
-   * const result = await entities.importRecordsById("<entityId>", fileInput.files[0]);
+   * const result = await entities.importRecordsById(<id>, fileInput.files[0]);
    * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
    * ```
    * @internal
    */
-  importRecordsById(entityId: string, file: EntityFileType): Promise<EntityBulkImportResponse>;
+  importRecordsById(id: string, file: EntityFileType): Promise<EntityImportRecordsResponse>;
 
   /**
    * Downloads an attachment stored in a File-type field of an entity record.
@@ -511,7 +509,7 @@ export interface EntityServiceModel {
    *   (e.g., `"product_catalog"`).
    * @param description - Entity description
    * @param fields - Array of field definitions
-   * @param displayName - Human-readable display name shown in the UI (defaults to `name`)
+   * @param options - Optional entity-level settings ({@link EntityCreateOptions})
    * @returns Promise resolving to the ID of the created entity
    * @example
    * ```typescript
@@ -519,7 +517,7 @@ export interface EntityServiceModel {
    *
    * const entities = new Entities(sdk);
    *
-   * const entityId = await entities.create("product_catalog", "Our product catalog", [
+   * const id = await entities.create("product_catalog", "Our product catalog", [
    *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
    *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", isRbacEnabled: true });
@@ -531,15 +529,15 @@ export interface EntityServiceModel {
   /**
    * Deletes a Data Fabric entity and all its records
    *
-   * @param entityId - UUID of the entity to delete
+   * @param id - UUID of the entity to delete
    * @returns Promise resolving when the entity is deleted
    * @example
    * ```typescript
-   * await entities.deleteById("<entityId>");
+   * await entities.deleteById(<id>);
    * ```
    * @internal
    */
-  deleteById(entityId: string): Promise<void>;
+  deleteById(id: string): Promise<void>;
 
   /**
    * Updates an existing Data Fabric entity — schema and/or metadata in a single call.
@@ -548,33 +546,33 @@ export interface EntityServiceModel {
    * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
    * only when the corresponding fields are provided.
    *
-   * @param entityId - UUID of the entity to update
+   * @param id - UUID of the entity to update
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
    * @returns Promise resolving when the update is complete
    *
    * @example
    * ```typescript
    * // Schema-only: add a field and remove another
-   * await entities.updateById("<entityId>", {
+   * await entities.updateById(<id>, {
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    *   removeFields: ["old_field"],
    * });
    *
    * // Metadata-only: rename the entity
-   * await entities.updateById("<entityId>", {
+   * await entities.updateById(<id>, {
    *   displayName: "My Updated Entity",
    *   description: "Updated description",
    * });
    *
    * // Combined: update a field and rename at the same time
-   * await entities.updateById("<entityId>", {
-   *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
+   * await entities.updateById(<id>, {
+   *   updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
    *   displayName: "Price Catalog",
    * });
    * ```
    * @internal
    */
-  updateById(entityId: string, options: EntityUpdateByIdOptions): Promise<void>;
+  updateById(id: string, options: EntityUpdateByIdOptions): Promise<void>;
 
 }
 
@@ -704,16 +702,20 @@ export interface EntityMethods {
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
-   * @deprecated Use {@link updateRecords} instead.
-   * @hidden
+   * Queries records in this entity with filters, sorting, and pagination
+   *
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
+   * @returns Promise resolving to {@link EntityQueryRecordsResponse} with matching records and total count
    */
-  update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
+  queryRecords(options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse>;
 
   /**
-   * @deprecated Use {@link deleteRecords} instead.
-   * @hidden
+   * Imports records from a CSV file into this entity
+   *
+   * @param file - CSV file to import as a Blob, File, or Uint8Array
+   * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
    */
-  delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+  importRecords(file: EntityFileType): Promise<EntityImportRecordsResponse>;
 
   /**
    * @deprecated Use {@link getAllRecords} instead.
@@ -731,12 +733,12 @@ export interface EntityMethods {
    * @returns Promise resolving when the entity is deleted
    * @example
    * ```typescript
-   * const entity = await entities.getById("<entityId>");
-   * await entity.deleteById();
+   * const entity = await entities.getById(<id>);
+   * await entity.delete();
    * ```
    * @internal
    */
-  deleteById(): Promise<void>;
+  delete(): Promise<void>;
 
   /**
    * Updates this entity — schema and/or metadata in a single call.
@@ -745,15 +747,15 @@ export interface EntityMethods {
    * @returns Promise resolving when the update is complete
    * @example
    * ```typescript
-   * const entity = await entities.getById("<entityId>");
-   * await entity.updateById({
+   * const entity = await entities.getById(<id>);
+   * await entity.update({
    *   displayName: "Updated Name",
    *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
    * @internal
    */
-  updateById(options: EntityUpdateByIdOptions): Promise<void>;
+  update(options: EntityUpdateByIdOptions): Promise<void>;
 
 }
 
@@ -827,6 +829,16 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.deleteAttachment(entityData.id, recordId, fieldName);
     },
 
+    async queryRecords(options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.queryRecordsById(entityData.id, options);
+    },
+
+    async importRecords(file: EntityFileType): Promise<EntityImportRecordsResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.importRecordsById(entityData.id, file);
+    },
+
     async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
       return this.insertRecord(data, options);
     },
@@ -835,13 +847,6 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.insertRecords(data, options);
     },
 
-    async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
-      return this.updateRecords(data, options);
-    },
-
-    async delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse> {
-      return this.deleteRecords(recordIds, options);
-    },
 
     async getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
       T extends HasPaginationOptions<T>
@@ -851,12 +856,12 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.getAllRecords(options);
     },
 
-    async deleteById(): Promise<void> {
+    async delete(): Promise<void> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       return service.deleteById(entityData.id);
     },
 
-    async updateById(options: EntityUpdateByIdOptions): Promise<void> {
+    async update(options: EntityUpdateByIdOptions): Promise<void> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       return service.updateById(entityData.id, options);
     },
@@ -871,8 +876,9 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
  * @returns Entity metadata with added methods
  */
 export function createEntityWithMethods(
-  entityMetadata: RawEntityGetResponse,
+  entityData: RawEntityGetResponse,
   service: EntityServiceModel
 ): EntityGetResponse {
-  return Object.assign({}, entityMetadata, createEntityMethods(entityMetadata, service)) as EntityGetResponse;
+  const methods = createEntityMethods(entityData, service);
+  return Object.assign({}, entityData, methods) as EntityGetResponse;
 }

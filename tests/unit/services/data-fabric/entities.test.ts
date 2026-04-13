@@ -33,10 +33,20 @@ import type {
   EntityGetAllRecordsOptions,
   EntityUpdateByIdOptions,
 } from "../../../../src/models/data-fabric/entities.types";
-import { EntityFieldDataType, QueryFilterOperator } from "../../../../src/models/data-fabric/entities.types";
+import {
+  EntityFieldDataType,
+  FieldDisplayType,
+  QueryFilterOperator,
+} from "../../../../src/models/data-fabric/entities.types";
+import {
+  EntityFieldTypeMap,
+  EntitySchemaFieldTypeMap,
+  FieldDisplayTypeToDataType,
+} from "../../../../src/models/data-fabric/entities.constants";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { TEST_CONSTANTS } from "../../../utils/constants/common";
 import { DATA_FABRIC_ENDPOINTS } from "../../../../src/utils/constants/endpoints";
+import { SqlFieldType } from "@/models/data-fabric/entities.internal-types";
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -247,7 +257,9 @@ describe("EntityService Unit Tests", () => {
       const mockResponse = createMockEntityWithDisplayTypeFields();
       mockApiClient.get.mockResolvedValue(mockResponse);
 
-      const result = await entityService.getById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+      const result = await entityService.getById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+      );
 
       expect(result.fields).toHaveLength(5);
 
@@ -255,16 +267,24 @@ describe("EntityService Unit Tests", () => {
       expect(fileField?.fieldDataType?.name).toBe(EntityFieldDataType.FILE);
 
       const csField = result.fields.find((f) => f.name === "category");
-      expect(csField?.fieldDataType?.name).toBe(EntityFieldDataType.CHOICE_SET_SINGLE);
+      expect(csField?.fieldDataType?.name).toBe(
+        EntityFieldDataType.CHOICE_SET_SINGLE,
+      );
 
       const csMultiField = result.fields.find((f) => f.name === "tags");
-      expect(csMultiField?.fieldDataType?.name).toBe(EntityFieldDataType.CHOICE_SET_MULTIPLE);
+      expect(csMultiField?.fieldDataType?.name).toBe(
+        EntityFieldDataType.CHOICE_SET_MULTIPLE,
+      );
 
       const autoNumField = result.fields.find((f) => f.name === "seq_no");
-      expect(autoNumField?.fieldDataType?.name).toBe(EntityFieldDataType.AUTO_NUMBER);
+      expect(autoNumField?.fieldDataType?.name).toBe(
+        EntityFieldDataType.AUTO_NUMBER,
+      );
 
       const relField = result.fields.find((f) => f.name === "customer_id");
-      expect(relField?.fieldDataType?.name).toBe(EntityFieldDataType.RELATIONSHIP);
+      expect(relField?.fieldDataType?.name).toBe(
+        EntityFieldDataType.RELATIONSHIP,
+      );
     });
 
     it("should handle API errors", async () => {
@@ -1292,7 +1312,13 @@ describe("EntityService Unit Tests", () => {
       const options = {
         filterGroup: {
           logicalOperator: 0 as const,
-          queryFilters: [{ fieldName: "name", operator: QueryFilterOperator.Equals, value: "Alice" }],
+          queryFilters: [
+            {
+              fieldName: "name",
+              operator: QueryFilterOperator.Equals,
+              value: "Alice",
+            },
+          ],
         },
         limit: 10,
         start: 0,
@@ -1340,7 +1366,11 @@ describe("EntityService Unit Tests", () => {
             {
               logicalOperator: 1 as const,
               queryFilters: [
-                { fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" },
+                {
+                  fieldName: "status",
+                  operator: QueryFilterOperator.Equals,
+                  value: "active",
+                },
               ],
             },
           ],
@@ -1592,7 +1622,9 @@ describe("EntityService Unit Tests", () => {
     it("should pass externalFields when provided", async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
-      const externalFields = [{ connectionId: ENTITY_TEST_CONSTANTS.EXTERNAL_CONNECTION_ID }];
+      const externalFields = [
+        { connectionId: ENTITY_TEST_CONSTANTS.EXTERNAL_CONNECTION_ID },
+      ];
 
       await entityService.create("my_entity", "desc", [], { externalFields });
 
@@ -1624,9 +1656,7 @@ describe("EntityService Unit Tests", () => {
       await entityService.deleteById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ),
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         {},
         {},
       );
@@ -1686,7 +1716,10 @@ describe("EntityService Unit Tests", () => {
             name: "my_entity",
             fields: expect.arrayContaining([
               expect.objectContaining({ name: "title" }),
-              expect.objectContaining({ name: "count", sqlType: { name: "INT" } }),
+              expect.objectContaining({
+                name: "count",
+                sqlType: { name: "INT" },
+              }),
             ]),
           }),
         }),
@@ -1749,7 +1782,9 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+        addFields: [
+          { name: "notes", type: EntityFieldDataType.MULTILINE_TEXT },
+        ],
         removeFields: ["title"],
         updateFields: [],
       });
@@ -1758,7 +1793,9 @@ describe("EntityService Unit Tests", () => {
       const fields = call.entityDefinition.fields;
       expect(fields.find((f: any) => f.name === "title")).toBeUndefined();
       expect(fields.find((f: any) => f.name === "notes")).toBeDefined();
-      expect(fields.find((f: any) => f.name === "notes").sqlType.name).toBe("MULTILINE");
+      expect(fields.find((f: any) => f.name === "notes").sqlType.name).toBe(
+        "MULTILINE",
+      );
     });
 
     it("should leave field unchanged when updateFields ID does not match any existing field", async () => {
@@ -1787,18 +1824,30 @@ describe("EntityService Unit Tests", () => {
     });
 
     it.each([
-      { type: EntityFieldDataType.STRING,           expectedSqlType: "NVARCHAR"        },
-      { type: EntityFieldDataType.MULTILINE_TEXT,   expectedSqlType: "MULTILINE"       },
-      { type: EntityFieldDataType.INTEGER,          expectedSqlType: "INT"             },
-      { type: EntityFieldDataType.BOOLEAN,          expectedSqlType: "BIT"             },
-      { type: EntityFieldDataType.DATETIME_WITH_TZ, expectedSqlType: "DATETIMEOFFSET" },
-      { type: EntityFieldDataType.DATE,             expectedSqlType: "DATE"            },
-      { type: EntityFieldDataType.DECIMAL,          expectedSqlType: "DECIMAL"         },
-      { type: EntityFieldDataType.FILE,              expectedSqlType: "UNIQUEIDENTIFIER" },
-      { type: EntityFieldDataType.CHOICE_SET_SINGLE,  expectedSqlType: "INT"           },
-      { type: EntityFieldDataType.CHOICE_SET_MULTIPLE, expectedSqlType: "NVARCHAR"     },
-      { type: EntityFieldDataType.AUTO_NUMBER,        expectedSqlType: "DECIMAL"       },
-      { type: EntityFieldDataType.RELATIONSHIP,      expectedSqlType: "UNIQUEIDENTIFIER" },
+      { type: EntityFieldDataType.STRING, expectedSqlType: "NVARCHAR" },
+      {
+        type: EntityFieldDataType.MULTILINE_TEXT,
+        expectedSqlType: "MULTILINE",
+      },
+      { type: EntityFieldDataType.INTEGER, expectedSqlType: "INT" },
+      { type: EntityFieldDataType.BOOLEAN, expectedSqlType: "BIT" },
+      {
+        type: EntityFieldDataType.DATETIME_WITH_TZ,
+        expectedSqlType: "DATETIMEOFFSET",
+      },
+      { type: EntityFieldDataType.DATE, expectedSqlType: "DATE" },
+      { type: EntityFieldDataType.DECIMAL, expectedSqlType: "DECIMAL" },
+      { type: EntityFieldDataType.FILE, expectedSqlType: "UNIQUEIDENTIFIER" },
+      { type: EntityFieldDataType.CHOICE_SET_SINGLE, expectedSqlType: "INT" },
+      {
+        type: EntityFieldDataType.CHOICE_SET_MULTIPLE,
+        expectedSqlType: "NVARCHAR",
+      },
+      { type: EntityFieldDataType.AUTO_NUMBER, expectedSqlType: "DECIMAL" },
+      {
+        type: EntityFieldDataType.RELATIONSHIP,
+        expectedSqlType: "UNIQUEIDENTIFIER",
+      },
     ])(
       "should map EntityFieldDataType.$type to sqlType '$expectedSqlType' for added fields",
       async ({ type, expectedSqlType }) => {
@@ -1823,7 +1872,13 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "secret_field", type: EntityFieldDataType.STRING, isEncrypted: true }],
+        addFields: [
+          {
+            name: "secret_field",
+            type: EntityFieldDataType.STRING,
+            isEncrypted: true,
+          },
+        ],
       });
 
       const call = mockApiClient.post.mock.calls[0][1];
@@ -1845,7 +1900,9 @@ describe("EntityService Unit Tests", () => {
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ),
         {
           displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME,
           description: ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION,
@@ -1864,7 +1921,9 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ),
         { displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME },
         {},
       );
@@ -1878,7 +1937,9 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ),
         { isRbacEnabled: false },
         {},
       );
@@ -1906,7 +1967,9 @@ describe("EntityService Unit Tests", () => {
         {},
       );
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(ENTITY_TEST_CONSTANTS.ENTITY_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ),
         { displayName: "New Display Name" },
         {},
       );
@@ -1933,5 +1996,60 @@ describe("EntityService Unit Tests", () => {
         }),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+  });
+});
+
+// ===== MAP SYNC TESTS =====
+describe("Entity field type map synchronization", () => {
+  it("every EntityFieldDataType in EntitySchemaFieldTypeMap has a round-trip via EntityFieldTypeMap and FieldDisplayTypeToDataType", () => {
+    for (const [dataType, { sqlTypeName, fieldDisplayType }] of Object.entries(
+      EntitySchemaFieldTypeMap,
+    ) as [
+      EntityFieldDataType,
+      { sqlTypeName: SqlFieldType; fieldDisplayType: FieldDisplayType },
+    ][]) {
+      if (fieldDisplayType !== FieldDisplayType.Basic) {
+        // Non-basic types must be recoverable via FieldDisplayTypeToDataType
+        expect(FieldDisplayTypeToDataType[fieldDisplayType]).toBe(dataType);
+      } else {
+        // Basic types must be recoverable via EntityFieldTypeMap
+        expect(EntityFieldTypeMap[sqlTypeName]).toBe(dataType);
+      }
+    }
+  });
+
+  it("every entry in FieldDisplayTypeToDataType has a matching entry in EntitySchemaFieldTypeMap", () => {
+    for (const [displayType, dataType] of Object.entries(
+      FieldDisplayTypeToDataType,
+    ) as [FieldDisplayType, EntityFieldDataType][]) {
+      const schemaEntry = EntitySchemaFieldTypeMap[dataType];
+      expect(schemaEntry).toBeDefined();
+      expect(schemaEntry.fieldDisplayType).toBe(displayType);
+    }
+  });
+
+  it("every SqlFieldType used in EntitySchemaFieldTypeMap for Basic display type is covered by EntityFieldTypeMap", () => {
+    const basicSqlTypes = new Set(
+      (
+        Object.values(EntitySchemaFieldTypeMap) as {
+          sqlTypeName: SqlFieldType;
+          fieldDisplayType: FieldDisplayType;
+        }[]
+      )
+        .filter(
+          ({ fieldDisplayType }) => fieldDisplayType === FieldDisplayType.Basic,
+        )
+        .map(({ sqlTypeName }) => sqlTypeName),
+    );
+
+    for (const sqlType of basicSqlTypes) {
+      expect(EntityFieldTypeMap[sqlType]).toBeDefined();
+    }
+  });
+
+  it("every SqlFieldType value has an entry in EntityFieldTypeMap", () => {
+    for (const sqlType of Object.values(SqlFieldType)) {
+      expect(EntityFieldTypeMap[sqlType]).toBeDefined();
+    }
   });
 });
