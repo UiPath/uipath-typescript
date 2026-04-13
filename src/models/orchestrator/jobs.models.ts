@@ -2,7 +2,7 @@ import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse } from './jobs.t
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /** Combined response type for job data with bound methods. */
-export interface JobGetResponse extends RawJobGetResponse, JobMethods {}
+export type JobGetResponse = RawJobGetResponse & JobMethods;
 
 /**
  * Service for managing UiPath Orchestrator Jobs.

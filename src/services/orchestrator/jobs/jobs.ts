@@ -136,6 +136,9 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     if (!id) {
       throw new ValidationError({ message: 'id is required for getById' });
     }
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for getById' });
+    }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     const keysToPrefix = Object.keys(options);

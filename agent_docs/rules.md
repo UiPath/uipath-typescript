@@ -24,7 +24,6 @@
 
 Every new method must also have an integration test in `tests/integration/shared/{domain}/`. These run against a live API and catch issues unit tests miss — wrong endpoints, broken transforms, auth/header problems.
 
-- Use `console.warn()` + skip (not `throw`) for `beforeAll` setup preconditions that are outside the test's control (e.g., no test data available). `throw` is for test body guards where missing config means the test can't run at all. **NEVER** use `console.log` + `return` for integration test guards — silent skips hide missing test configuration.
 - Use `getServices()` and `getTestConfig()` from `tests/integration/config/unified-setup.ts`
 - Use `registerResource()` from `tests/integration/utils/cleanup.ts` for cleanup tracking
 - Use `generateRandomString()` from `tests/integration/utils/helpers.ts` for unique test data

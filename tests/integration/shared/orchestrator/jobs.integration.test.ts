@@ -179,8 +179,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (result.items.length === 0) {
-        console.warn('No jobs available to validate structure — skipping.');
-        return;
+        throw new Error('No jobs available to validate structure.');
       }
 
       const job = result.items[0];

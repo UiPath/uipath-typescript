@@ -161,6 +161,15 @@ OData APIs require `$` prefix on query params. The SDK accepts clean camelCase k
 
 **Apply manually in:** `getById()` methods accepting `BaseOptions` — `const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, Object.keys(options))`.
 
+### Case for OData query values
+
+OData is case-insensitive, so the server accepts either case. Convention: `filter`, `select`, `expand`, `orderby` values use the field case shown in the SDK response (camelCase for services that transform, else as-is) — not the raw API. Applies within JSDoc examples, tests, and internal calls.
+
+```ts
+filter: "state eq 'Running'"            // not "State eq ..."
+select: "outputArguments,outputFile"    // not "OutputArguments,..."
+```
+
 ## Headers utility
 
 `createHeaders()` from `src/utils/http/headers.ts` builds headers from key-value pairs, filtering undefined.
