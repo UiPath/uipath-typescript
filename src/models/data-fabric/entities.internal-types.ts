@@ -1,4 +1,4 @@
-import { FieldDisplayType } from './entities.types';
+import { FieldDisplayType, EntityRecord } from './entities.types';
 
 /**
  * Shape of each entry in EntitySchemaFieldTypeMap — internal only.
@@ -13,6 +13,6 @@ export interface EntitySchemaFieldMapping {
  * Internal type for the query response shape returned by the entity query API.
  */
 export interface EntityQueryRawResponse {
-  value?: import('./entities.types').EntityRecord[];
+  value?: EntityRecord[];
   totalRecordCount?: number;
 }

@@ -100,7 +100,7 @@ export interface EntityServiceModel {
    * const choicesets = new ChoiceSets(sdk);
    *
    * // Get entity metadata with methods
-   * const entity = await entities.getById(<entityId>);
+   * const entity = await entities.getById("<entityId>");
    *
    * // Call operations directly on the entity
    * const records = await entity.getAllRecords();
@@ -133,7 +133,7 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage (non-paginated)
-   * const records = await entities.getAllRecords(<entityId>);
+   * const records = await entities.getAllRecords("<entityId>");
    *
    * // With expansion level
    * const records = await entities.getAllRecords(<entityId>, {
@@ -180,7 +180,7 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // First, get records to obtain the record ID
-   * const records = await entities.getAllRecords(<entityId>);
+   * const records = await entities.getAllRecords("<entityId>");
    * // Get the recordId for the record
    * const recordId = records.items[0].Id;
    * // Get the record
@@ -772,7 +772,7 @@ export interface EntityManagementMethods {
 /**
  * Entity with methods combining metadata with operation methods
  */
-export type EntityGetResponse = RawEntityGetResponse & EntityMethods & EntityManagementMethods;
+export interface EntityGetResponse extends RawEntityGetResponse, EntityMethods, EntityManagementMethods {}
 
 /**
  * Creates entity methods that can be attached to entity data
@@ -815,7 +815,7 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
         : NonPaginatedResponse<EntityRecord>
     > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.getAllRecords(entityData.id, options) as any;
+      return service.getAllRecords<T>(entityData.id, options);
     },
 
     async getRecord(recordId: string, options?: EntityGetRecordByIdOptions): Promise<EntityRecord> {

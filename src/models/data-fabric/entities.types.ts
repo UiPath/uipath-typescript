@@ -575,7 +575,7 @@ export interface RawEntityGetResponse {
   entityType: EntityType;
   description: string;
   fields: FieldMetaData[];
-  folderId: string;
+  folderId?: string;
   externalFields?: ExternalSourceFields[];
   sourceJoinCriterias?: SourceJoinCriteria[];
   recordCount?: number;
@@ -583,7 +583,7 @@ export interface RawEntityGetResponse {
   usedStorageSizeInMB?: number;
   attachmentSizeInByte?: number;
   isRbacEnabled: boolean;
-  isInsightsEnabled: boolean;
+  isInsightsEnabled?: boolean;
   id: string;
   createdBy: string;
   createdTime: string;

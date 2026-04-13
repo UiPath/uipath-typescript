@@ -529,7 +529,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
   async importRecordsById(entityId: string, file: Blob): Promise<EntityBulkImportResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('entityId', entityId);
 
     const response = await this.post<EntityBulkImportResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(entityId),
@@ -741,7 +740,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         externalFields: opts.externalFields ?? [],
       },
     };
-    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY, payload);
+    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, payload);
     return String(response.data);
   }
 
@@ -758,7 +757,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.DeleteEntityById')
   async deleteEntityById(entityId: string): Promise<void> {
-    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ENTITY(entityId), {});
+    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(entityId), {});
   }
 
   /**
@@ -839,7 +838,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       },
     };
 
-    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY, payload);
+    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, payload);
   }
 
   /**
@@ -862,7 +861,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.UpdateMetadataById')
   async updateMetadataById(entityId: string, options: EntityMetadataUpdateOptions): Promise<void> {
-    await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(entityId), options);
+    await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(entityId), options);
   }
 
   /**

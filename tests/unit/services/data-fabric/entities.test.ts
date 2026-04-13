@@ -1482,7 +1482,7 @@ describe("EntityService Unit Tests", () => {
 
       expect(result).toBe(ENTITY_TEST_CONSTANTS.ENTITY_ID);
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY,
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
         expect.objectContaining({
           description: "A test entity",
           displayName: "My Entity",
@@ -1503,7 +1503,7 @@ describe("EntityService Unit Tests", () => {
       await entityService.create("my_new_entity", "", []);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY,
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
         expect.objectContaining({
           displayName: "my_new_entity",
           entityDefinition: expect.objectContaining({ name: "my_new_entity" }),
@@ -1538,7 +1538,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY,
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
         expect.objectContaining({
           entityDefinition: expect.objectContaining({
             folderId: ENTITY_TEST_CONSTANTS.FIELD_ID,
@@ -1556,7 +1556,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY,
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
         expect.objectContaining({
           entityDefinition: expect.objectContaining({
             isInsightsEnabled: true,
@@ -1574,7 +1574,7 @@ describe("EntityService Unit Tests", () => {
       await entityService.create("my_entity", "desc", [], { externalFields });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY,
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
         expect.objectContaining({
           entityDefinition: expect.objectContaining({
             externalFields,
@@ -1601,7 +1601,7 @@ describe("EntityService Unit Tests", () => {
       await entityService.deleteEntityById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ENTITY(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         {},
@@ -1656,7 +1656,7 @@ describe("EntityService Unit Tests", () => {
         {},
       );
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY,
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
         expect.objectContaining({
           entityDefinition: expect.objectContaining({
             id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -1712,7 +1712,7 @@ describe("EntityService Unit Tests", () => {
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY,
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
         expect.objectContaining({
           displayName: mockRawEntity.displayName,
           description: mockRawEntity.description,
@@ -1822,7 +1822,7 @@ describe("EntityService Unit Tests", () => {
   });
 
   describe("updateMetadataById", () => {
-    it("should call UPDATE_ENTITY_METADATA endpoint with provided options", async () => {
+    it("should call UPDATE_METADATA endpoint with provided options", async () => {
       mockApiClient.patch.mockResolvedValue({ data: undefined });
 
       const options: EntityMetadataUpdateOptions = {
@@ -1837,7 +1837,7 @@ describe("EntityService Unit Tests", () => {
       );
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         options,
@@ -1854,7 +1854,7 @@ describe("EntityService Unit Tests", () => {
       );
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME },
@@ -1871,7 +1871,7 @@ describe("EntityService Unit Tests", () => {
       );
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { description: ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION },
@@ -1888,7 +1888,7 @@ describe("EntityService Unit Tests", () => {
       );
 
       expect(mockApiClient.patch).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
         { isRbacEnabled: false },
