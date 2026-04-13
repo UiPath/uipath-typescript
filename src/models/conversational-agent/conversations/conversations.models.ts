@@ -82,7 +82,7 @@ export interface ConversationServiceModel {
    * @param options - Optional settings for the conversation
    * @returns Promise resolving to {@link ConversationCreateResponse} with bound methods
    *
-   * @example
+   * @example Basic usage
    * ```typescript
    * const conversation = await conversationalAgent.conversations.create(
    *   agentId,
@@ -98,6 +98,19 @@ export interface ConversationServiceModel {
    *
    * // Delete the conversation
    * await conversation.delete();
+   * ```
+   *
+   * @example With agent input arguments
+   * ```typescript
+   * const conversation = await conversationalAgent.conversations.create(
+   *   agentId,
+   *   folderId,
+   *   {
+   *     agentInput: {
+   *       inline: { userId: 'user-123', language: 'en' }
+   *     }
+   *   }
+   * );
    * ```
    */
   create(agentId: number, folderId: number, options?: ConversationCreateOptions): Promise<ConversationCreateResponse>;
