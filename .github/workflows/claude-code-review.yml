@@ -12,6 +12,11 @@ on:
 
 jobs:
   claude-review:
+    # Opt-out: PR authors can apply the `skip-claude-review` label to suppress
+    # the bot on subsequent commits. Removing the label re-enables review on
+    # the next push.
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-claude-review') }}
+
     # Optional: Filter by PR author
     # if: |
     #   github.event.pull_request.user.login == 'external-contributor' ||
@@ -39,9 +44,95 @@ jobs:
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: |
-            Read CLAUDE.md at the repo root first — it references Agents.md and agent_docs/ which contain all project conventions, architecture, and rules. Follow every convention defined there during your review.
+            You are reviewing PR #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+
+            STEP 1 — Fetch existing review threads and issue comments BEFORE reviewing.
+            Run this GraphQL query and read the results carefully:
+
+              gh api graphql -f query='
+                query($owner:String!,$repo:String!,$num:Int!){
+                  repository(owner:$owner,name:$repo){
+                    pullRequest(number:$num){
+                      reviewThreads(first:100){
+                        nodes{
+                          id
+                          isResolved
+                          path
+                          line
+                          comments(first:20){ nodes{ author{login} body }}
+                        }
+                      }
+                      comments(first:100){
+                        nodes{ author{login} body }
+                      }
+                    }
+                  }
+                }' \
+                -f owner=${{ github.repository_owner }} \
+                -f repo=${{ github.event.repository.name }} \
+                -F num=${{ github.event.pull_request.number }}
+
+            STEP 2 — Build a set of issues already covered by prior bot comments
+            (threads whose first comment is authored by a bot or this workflow's
+            identity). Treat each prior comment as "(path, line, topic)".
+
+            STEP 3 — Dedupe policy. For each issue you are about to raise, look for a
+            prior thread covering the same (path, line, topic):
+
+              • If an UNRESOLVED thread exists for this (path, line, topic) → SKIP.
+                Don't duplicate an open thread; the user will get to it.
+
+              • If a RESOLVED thread exists for this (path, line, topic), classify the
+                ORIGINAL comment:
+                  (a) Actionable ask (it requested the author to change something —
+                      e.g. "rename X", "use Y instead", "extract this", "add null check"):
+                      → Read the CURRENT code at that location.
+                          - If the requested change WAS made → SKIP (user fixed it).
+                          - If the requested change was NOT made → UNRESOLVE the
+                            original thread (do NOT post a new comment). Use:
+
+                              gh api graphql -f query='
+                                mutation($id:ID!){
+                                  unresolveReviewThread(input:{threadId:$id}){
+                                    thread{ id isResolved }
+                                  }
+                                }' -f id=<THREAD_ID>
+
+                            where <THREAD_ID> is the thread.id from STEP 1.
+                      → If thread replies show the author/maintainer explicitly
+                        disagreed or declined ("won't fix", "intentional", "ship it
+                        anyway") → SKIP regardless of code state. The decision was made.
+                  (b) Informational / nit / praise / question (not an ask for a change):
+                      → SKIP. Resolution means acknowledged; don't re-post and don't
+                        unresolve.
+
+              • If a prior comment raised a DIFFERENT topic on the same line → OK to post.
+              • New issues the prior review missed entirely → post normally.
+
+            STEP 4 — Read CLAUDE.md at the repo root first — it references Agents.md
+            and agent_docs/ which contain all project conventions, architecture, and
+            rules. Follow every convention defined there during your review.
+
+            STEP 5 — Run the review. The /code-review plugin below will analyze the PR
+            and propose inline comments. You MUST apply STEP 3 as a POSTING GATE on
+            every single comment the plugin wants to create — this includes comments
+            the plugin would post via mcp__github_inline_comment__create_inline_comment
+            or via `gh pr comment`. Concretely:
+
+              BEFORE every call to mcp__github_inline_comment__create_inline_comment:
+                1. Compute (path, line, topic) of the comment you are about to post.
+                2. Look it up in the dedupe set from STEP 1.
+                3. Apply STEP 3. If STEP 3 says SKIP → do NOT call the tool at all.
+                   If STEP 3 says UNRESOLVE → call the unresolveReviewThread mutation
+                   INSTEAD of posting a new comment.
+                4. Only post if STEP 3 says OK to post.
+
+              The same gate applies to the summary comment: when summarizing, do not
+              list issues whose threads you chose to skip or unresolve — summarize
+              only genuinely new findings and any threads you unresolved.
+
+            Now run the plugin:
             /code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }} --comment
           use_sticky_comment: true
           claude_args: |
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"
-
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh api graphql:*),Bash(gh api:*)"
