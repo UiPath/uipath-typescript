@@ -7,6 +7,8 @@ import { hasOAuthConfig } from '../config/sdk-config';
 import { isBrowser } from '../../utils/platform';
 import { IDENTITY_ENDPOINTS } from '../../utils/constants/endpoints';
 
+const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export class AuthService {
   private config: Config;
   private tokenManager: TokenManager;
@@ -329,7 +331,9 @@ export class AuthService {
     state?: string;
   }): string {
     const orgName = this.config.orgName;
-    
+    const isGuid = GUID_REGEX.test(orgName);
+    const acrValues = isGuid ? `tenant:${orgName}` : `tenantName:${orgName}`;
+
     const queryParams = new URLSearchParams({
       response_type: 'code',
       client_id: params.clientId,
@@ -340,7 +344,7 @@ export class AuthService {
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
-    return `${this.config.baseUrl}/${orgName}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
+    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}&acr_values=${acrValues}`;
   }
 
   /**
@@ -352,8 +356,6 @@ export class AuthService {
     code: string;
     codeVerifier: string;
   }): Promise<AuthToken> {
-    const orgName = this.config.orgName;
-    
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: params.clientId,
@@ -362,7 +364,7 @@ export class AuthService {
       code_verifier: params.codeVerifier
     });
 
-    const response = await fetch(`${this.config.baseUrl}/${orgName}/${IDENTITY_ENDPOINTS.TOKEN}`, {
+    const response = await fetch(`${this.config.baseUrl}/${IDENTITY_ENDPOINTS.TOKEN}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
