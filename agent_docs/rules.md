@@ -7,7 +7,7 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 ### Naming
 - **NEVER use "Request" for parameter types** — always "Options". The entire SDK uses `{Entity}{Operation}Options`. Using "Request" creates inconsistency and confuses the public API. (`TaskAssignmentOptions`, not `TaskAssignmentRequest`)
 - **NEVER use `batch` prefix** for batch methods — use plural names instead. `insertRecordsById`, not `batchInsertRecords`. The SDK convention is singular/plural to distinguish cardinality.
-- **NEVER use internal product/team names in service file paths or class names** — use the user-facing domain name instead. E.g., name the file `feedback.ts` under `conversational-agent/feedback/`, not `llmops.ts` under `llmops/`. Internal product names change, confuse API consumers, and leak internal team organization into the public API. (Source: PR #184)
+- **NEVER use internal product/team names in service file paths or class names** — use the user-facing domain name instead. E.g., name the file `feedback.ts` under `conversational-agent/feedback/`, not `llmops.ts` under `llmops/`. Internal product names change, confuse API consumers, and leak internal team organization into the public API.
 
 ### Types
 - **NEVER use `any` type** — use `unknown` then validate.
@@ -23,7 +23,7 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER add case-only entries to `{Entity}Map`** — field maps are for semantic renames only (`creationTime` → `createdTime`). Case conversion (`CreationTime` → `creationTime`) is handled by `pascalToCamelCaseKeys()`. Mixing them causes double-conversion bugs and makes the map lie about its purpose.
 - **NEVER add transform steps without checking the actual API response first** — if the API already returns camelCase, don't add `pascalToCamelCaseKeys()`. If it doesn't return raw enum codes, don't add `applyDataTransforms()`. Each step must be justified by what the API actually sends.
 - **NEVER skip transformations** — never return raw API responses; apply applicable pipeline steps.
-- **NEVER apply camelCase or field-rename transforms to Data Fabric entity record fields** — DF field names are user-defined schema columns that must be returned exactly as the API sends them. Transforming them would silently break any user whose column names don't match SDK naming assumptions. See the "Data Fabric exception" note in `conventions.md`. (Source: PR #327)
+- **NEVER apply camelCase or field-rename transforms to Data Fabric entity record fields** — DF field names are user-defined schema columns that must be returned exactly as the API sends them. Transforming them would silently break any user whose column names don't match SDK naming assumptions. See the "Data Fabric exception" note in `conventions.md`.
 
 ### Method binding
 - **NEVER bind `getAll()`, `getById()`, `create()`** to response objects — these are service-level entry points, not entity operations. Binding them creates circular nonsense (an entity that retrieves itself).
@@ -61,7 +61,7 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER leave unused code** — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
 - **NEVER add redundant constructors** — if the constructor only calls `super()`, delete it entirely.
 - **NEVER commit sensitive files** — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
-- **NEVER define static lookup tables inside method bodies** — move them to module-level constants or `*.internal-types.ts`. A static mapping that doesn't change between calls (e.g., `TaskTypeEndpoints` mapping task types to endpoint functions) rebuilt on every invocation wastes memory, hides structure, and makes the code harder to read and test. (Source: PR #323)
+- **NEVER define static lookup tables inside method bodies** — move them to module-level constants or `*.internal-types.ts`. A static mapping that doesn't change between calls (e.g., `TaskTypeEndpoints` mapping task types to endpoint functions) rebuilt on every invocation wastes memory, hides structure, and makes the code harder to read and test.
 
 ### Docs
 - **NEVER skip `docs/oauth-scopes.md` when adding a method** — every public method needs its scope listed in the same PR. Missing scopes break the OAuth integration guide.

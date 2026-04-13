@@ -18,7 +18,7 @@
 - Subpath exports: when adding a new service module, add entries to `package.json` `exports` and `rollup.config.js`.
 - Every public service method must be decorated with `@track('ServiceName.MethodName')` for telemetry.
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
-- **Barrel files must use `export * from`**, not `export type * from`. Using `export type` re-exports only type declarations and silently drops runtime values (class constructors, enums), causing `undefined` errors for SDK consumers who import them. (Source: PR #184)
+- **Barrel files must use `export * from`**, not `export type * from`. Using `export type` re-exports only type declarations and silently drops runtime values (class constructors, enums), causing `undefined` errors for SDK consumers who import them.
 
 ## Type naming
 
@@ -86,7 +86,7 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent. Adding transforms here would silently break users whose field names don't match any camelCase assumption.
 
-**Include output/attachment indicator fields in response types:** When an entity response can reference a file or attachment produced by the operation (e.g., `outputFile` on a Job indicating a blob attachment key), include that field in `Raw{Entity}GetResponse` even if the primary retrieval method does not fetch the file. Exposing the indicator field lets callers check for output availability without an extra API call, and signals which method to call next (e.g., `job.getOutput()`). Source: PR #320 — reviewer @swati354 noted that without `outputFile` in `JobGetResponse`, users with empty `outputArguments` would have no way to know that file output was available.
+**Include output/attachment indicator fields in response types:** When an entity response can reference a file or attachment produced by the operation (e.g., `outputFile` on a Job indicating a blob attachment key), include that field in `Raw{Entity}GetResponse` even if the primary retrieval method does not fetch the file. Exposing the indicator field lets callers check for output availability without an extra API call, and signals which method to call next (e.g., `job.getOutput()`). Without this, callers with an empty `outputArguments` have no signal that file output was available.
 
 ## Endpoint constants
 
