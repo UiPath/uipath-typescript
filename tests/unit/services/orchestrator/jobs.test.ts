@@ -253,6 +253,12 @@ describe('JobService Unit Tests', () => {
       ).rejects.toThrow('id is required for getById');
     });
 
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, 0)
+      ).rejects.toThrow('folderId is required for getById');
+    });
+
     it('should handle API errors', async () => {
       const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
       mockApiClient.get.mockRejectedValueOnce(error);
