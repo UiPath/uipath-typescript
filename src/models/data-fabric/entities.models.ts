@@ -359,7 +359,7 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * // Query with a filter
-   * const result = await entities.queryRecords(<entityId>, {
+   * const result = await entities.queryRecords("<entityId>", {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
    *     queryFilters: [{ fieldName: "status", operator: "=", value: "active" }]
@@ -741,28 +741,25 @@ export interface EntityMethods {
   /**
    * Deletes this entity and all its records
    *
-   * @param entityId - UUID of the entity to delete
    * @returns Promise resolving when the entity is deleted
    */
-  deleteEntityById(entityId: string): Promise<void>;
+  deleteEntityById(): Promise<void>;
 
   /**
    * Updates this entity's field schema
    *
-   * @param entityId - UUID of the entity
    * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
    * @returns Promise resolving when the entity schema is updated
    */
-  updateEntitySchema(entityId: string, options: EntitySchemaUpdateOptions): Promise<void>;
+  updateEntitySchema(options: EntitySchemaUpdateOptions): Promise<void>;
 
   /**
    * Updates only the metadata of this entity (displayName, description, isRbacEnabled)
    *
-   * @param entityId - UUID of the entity
    * @param options - Metadata fields to update ({@link EntityMetadataUpdateOptions})
    * @returns Promise resolving when the metadata is updated
    */
-  updateEntitySchemaMetadata(entityId: string, options: EntityMetadataUpdateOptions): Promise<void>;
+  updateEntitySchemaMetadata(options: EntityMetadataUpdateOptions): Promise<void>;
 }
 
 /**
@@ -859,16 +856,19 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.getAllRecords(options);
     },
 
-    async deleteEntityById(entityId: string): Promise<void> {
-      return service.deleteEntityById(entityId);
+    async deleteEntityById(): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.deleteEntityById(entityData.id);
     },
 
-    async updateEntitySchema(entityId: string, options: EntitySchemaUpdateOptions): Promise<void> {
-      return service.updateEntitySchema(entityId, options);
+    async updateEntitySchema(options: EntitySchemaUpdateOptions): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.updateEntitySchema(entityData.id, options);
     },
 
-    async updateEntitySchemaMetadata(entityId: string, options: EntityMetadataUpdateOptions): Promise<void> {
-      return service.updateEntitySchemaMetadata(entityId, options);
+    async updateEntitySchemaMetadata(options: EntityMetadataUpdateOptions): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.updateEntitySchemaMetadata(entityData.id, options);
     },
   };
 }

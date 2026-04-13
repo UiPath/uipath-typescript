@@ -1,3 +1,4 @@
+import { ValidationError } from '../../core/errors';
 import { BaseService } from '../base';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
@@ -477,8 +478,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.QueryRecords')
-  async queryRecords(entityId: string, options: EntityQueryRecordsOptions = {}): Promise<EntityQueryRecordsResponse> {
-    const { expansionLevel, ...queryBody } = options;
+  async queryRecords(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
+    const { expansionLevel, ...queryBody } = options ?? {};
     const params = createParams({ expansionLevel });
 
     const response = await this.post<EntityQueryRawResponse>(
@@ -963,9 +964,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   private static validateTechnicalName(name: string, context: string): void {
     if (!/^[a-z][a-z0-9_]*$/.test(name)) {
-      throw new Error(
-        `Invalid ${context} name '${name}'. Name must be lowercase, start with a letter, and contain only letters, numbers, and underscores (e.g., "${name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}").`
-      );
+      throw new ValidationError({
+        message: `Invalid ${context} name '${name}'. Name must be lowercase, start with a letter, and contain only letters, numbers, and underscores (e.g., "${name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}").`
+      });
     }
   }
 

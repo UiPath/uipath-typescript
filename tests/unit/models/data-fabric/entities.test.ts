@@ -722,25 +722,34 @@ describe("Entity Models", () => {
   });
 
   describe("bound schema methods on entity", () => {
-    it("entity.deleteEntityById() should delegate to service.deleteEntityById with entity id", async () => {
+    it("entity.deleteEntityById() should delegate to service.deleteEntityById using entity's own id", async () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
       mockService.deleteEntityById = vi.fn().mockResolvedValue(undefined);
 
-      await entity.deleteEntityById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+      await entity.deleteEntityById();
 
       expect(mockService.deleteEntityById).toHaveBeenCalledWith(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
       );
     });
 
-    it("entity.updateEntitySchema() should delegate to service.updateEntitySchema with entity id", async () => {
+    it("entity.deleteEntityById() should throw if entity id is undefined", async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(entity.deleteEntityById()).rejects.toThrow(
+        ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+      );
+    });
+
+    it("entity.updateEntitySchema() should delegate to service.updateEntitySchema using entity's own id", async () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
       const options: EntitySchemaUpdateOptions = { addFields: [{ name: "notes" }] };
       mockService.updateEntitySchema = vi.fn().mockResolvedValue(undefined);
 
-      await entity.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+      await entity.updateEntitySchema(options);
 
       expect(mockService.updateEntitySchema).toHaveBeenCalledWith(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
@@ -748,18 +757,36 @@ describe("Entity Models", () => {
       );
     });
 
-    it("entity.updateEntitySchemaMetadata() should delegate to service.updateEntitySchemaMetadata with entity id", async () => {
+    it("entity.updateEntitySchema() should throw if entity id is undefined", async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(
+        entity.updateEntitySchema({ addFields: [{ name: "notes" }] }),
+      ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+    });
+
+    it("entity.updateEntitySchemaMetadata() should delegate to service.updateEntitySchemaMetadata using entity's own id", async () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
       const options: EntityMetadataUpdateOptions = { displayName: "New Name", isRbacEnabled: true };
       mockService.updateEntitySchemaMetadata = vi.fn().mockResolvedValue(undefined);
 
-      await entity.updateEntitySchemaMetadata(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+      await entity.updateEntitySchemaMetadata(options);
 
       expect(mockService.updateEntitySchemaMetadata).toHaveBeenCalledWith(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         options,
       );
+    });
+
+    it("entity.updateEntitySchemaMetadata() should throw if entity id is undefined", async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(
+        entity.updateEntitySchemaMetadata({ displayName: "X" }),
+      ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
     });
   });
 });

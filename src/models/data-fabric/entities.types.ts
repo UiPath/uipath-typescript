@@ -308,11 +308,6 @@ export interface EntityMetadataUpdateOptions {
 }
 
 /**
- * Options for bulk importing records from a CSV file
- */
-export interface EntityBulkImportOptions {}
-
-/**
  * Response from a bulk import operation
  */
 export interface EntityBulkImportResponse {
