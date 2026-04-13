@@ -5,11 +5,10 @@ import {
 } from '../../../models/conversational-agent/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/conversational-agent/feedback/feedback.models';
 import { FEEDBACK_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { FEEDBACK_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
-import { PaginationManager } from '../../../utils/pagination/pagination-manager';
-import { getLimitedPageSize } from '../../../utils/pagination/constants';
 import { track } from '../../../core/telemetry';
 
 /**
@@ -48,33 +47,18 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
       ? PaginatedResponse<FeedbackResponse>
       : NonPaginatedResponse<FeedbackResponse>
   > {
-    const { pageSize, cursor, jumpToPage, ...filterOptions } = (options ?? {}) as FeedbackGetAllOptions;
-    const isPaginated = PaginationHelpers.hasPaginationParameters(options ?? {});
-
-    if (isPaginated) {
-      const params = PaginationHelpers.validatePaginationOptions(options!, PaginationType.OFFSET);
-      const take = getLimitedPageSize(params.pageSize); // clamp to max allowed, use default if unset
-      const skip = ((params.pageNumber ?? 1) - 1) * take; // page 1 → 0, page 2 → take, page 3 → 2*take
-
-      const response = await this.get<FeedbackResponse[]>(
-        FEEDBACK_ENDPOINTS.GET_ALL,
-        { params: { ...filterOptions, skip, take } }
-      );
-
-      const items = response.data ?? [];
-      const hasMore = items.length === take;
-
-      return PaginationManager.createPaginatedResponse<FeedbackResponse>(
-        { pageInfo: { hasMore, currentPage: params.pageNumber ?? 1, pageSize: take }, type: PaginationType.OFFSET },
-        items
-      ) as any;
-    }
-
-    const response = await this.get<FeedbackResponse[]>(
-      FEEDBACK_ENDPOINTS.GET_ALL,
-      { params: filterOptions }
-    );
-
-    return { items: response.data ?? [] } as any;
+    return PaginationHelpers.getAll<T, FeedbackResponse>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => FEEDBACK_ENDPOINTS.GET_ALL,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        paginationParams: {
+          pageSizeParam: FEEDBACK_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: FEEDBACK_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: FEEDBACK_OFFSET_PARAMS.COUNT_PARAM,
+        },
+      },
+      excludeFromPrefix: ['agentId', 'agentVersion', 'status', 'traceId', FEEDBACK_OFFSET_PARAMS.OFFSET_PARAM, FEEDBACK_OFFSET_PARAMS.PAGE_SIZE_PARAM],
+    }, options);
   }
 }
