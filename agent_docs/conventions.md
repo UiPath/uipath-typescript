@@ -84,6 +84,10 @@ Transform functions live in `src/utils/transform.ts`. Not every service uses eve
 
 **Field maps vs case conversion:** `{Entity}Map` is for semantic renames only. Case conversion is handled by `pascalToCamelCaseKeys()`. Do not add case-only entries to a field map.
 
+**Data Fabric exception:** Do NOT apply `pascalToCamelCaseKeys()` or any field-rename transforms to Data Fabric entity record data (`EntityRecord`, record fields returned by `getRecordById`, `getAllRecords`, etc.). DF entity field names are user-defined schema columns and must be returned exactly as the API sends them — casing is part of the schema contract. Only system-generated DF fields (e.g., `Id`, `CreatedBy`) use PascalCase, and those are also left untransformed to keep behavior consistent. Adding transforms here would silently break users whose field names don't match any camelCase assumption.
+
+**Include output/attachment indicator fields in response types:** When an entity response can reference a file or attachment produced by the operation (e.g., `outputFile` on a Job indicating a blob attachment key), include that field in `Raw{Entity}GetResponse` even if the primary retrieval method does not fetch the file. Exposing the indicator field lets callers check for output availability without an extra API call, and signals which method to call next (e.g., `job.getOutput()`). Source: PR #320 — reviewer @swati354 noted that without `outputFile` in `JobGetResponse`, users with empty `outputArguments` would have no way to know that file output was available.
+
 ## Endpoint constants
 
 Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`):

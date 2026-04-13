@@ -23,6 +23,7 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 - **NEVER add case-only entries to `{Entity}Map`** — field maps are for semantic renames only (`creationTime` → `createdTime`). Case conversion (`CreationTime` → `creationTime`) is handled by `pascalToCamelCaseKeys()`. Mixing them causes double-conversion bugs and makes the map lie about its purpose.
 - **NEVER add transform steps without checking the actual API response first** — if the API already returns camelCase, don't add `pascalToCamelCaseKeys()`. If it doesn't return raw enum codes, don't add `applyDataTransforms()`. Each step must be justified by what the API actually sends.
 - **NEVER skip transformations** — never return raw API responses; apply applicable pipeline steps.
+- **NEVER apply camelCase or field-rename transforms to Data Fabric entity record fields** — DF field names are user-defined schema columns that must be returned exactly as the API sends them. Transforming them would silently break any user whose column names don't match SDK naming assumptions. See the "Data Fabric exception" note in `conventions.md`. (Source: PR #327)
 
 ### Method binding
 - **NEVER bind `getAll()`, `getById()`, `create()`** to response objects — these are service-level entry points, not entity operations. Binding them creates circular nonsense (an entity that retrieves itself).
