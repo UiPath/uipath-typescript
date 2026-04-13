@@ -590,6 +590,47 @@ export const createMockEntityWithSqlFieldTypes = (): any => {
 };
 
 /**
+ * Creates a mock entity with special display-type fields (File, ChoiceSetSingle, ChoiceSetMultiple, AutoNumber)
+ * to test that fieldDisplayType takes precedence over SQL type during read-side mapping.
+ */
+export const createMockEntityWithDisplayTypeFields = (): any => {
+  return createMockEntityResponse({
+    fields: [
+      // File field: sqlType=UNIQUEIDENTIFIER, displayType=File → EntityFieldDataType.File
+      {
+        ...createMockFieldMetaData({ id: 'field-file-id', name: 'attachment', displayName: 'Attachment' }),
+        sqlType: { name: 'UNIQUEIDENTIFIER' },
+        fieldDisplayType: FieldDisplayType.File,
+      },
+      // ChoiceSetSingle field: sqlType=INT, displayType=ChoiceSetSingle → EntityFieldDataType.ChoiceSetSingle
+      {
+        ...createMockFieldMetaData({ id: 'field-cs-single-id', name: 'category', displayName: 'Category' }),
+        sqlType: { name: 'INT' },
+        fieldDisplayType: FieldDisplayType.ChoiceSetSingle,
+      },
+      // ChoiceSetMultiple field: sqlType=NVARCHAR, displayType=ChoiceSetMultiple → EntityFieldDataType.ChoiceSetMultiple
+      {
+        ...createMockFieldMetaData({ id: 'field-cs-multi-id', name: 'tags', displayName: 'Tags' }),
+        sqlType: { name: 'NVARCHAR' },
+        fieldDisplayType: FieldDisplayType.ChoiceSetMultiple,
+      },
+      // AutoNumber field: sqlType=DECIMAL, displayType=AutoNumber → EntityFieldDataType.AutoNumber
+      {
+        ...createMockFieldMetaData({ id: 'field-autonumber-id', name: 'seq_no', displayName: 'Seq No' }),
+        sqlType: { name: 'DECIMAL' },
+        fieldDisplayType: FieldDisplayType.AutoNumber,
+      },
+      // Relationship field: sqlType=UNIQUEIDENTIFIER, displayType=Relationship → EntityFieldDataType.Relationship
+      {
+        ...createMockFieldMetaData({ id: 'field-rel-id', name: 'customer_id', displayName: 'Customer' }),
+        sqlType: { name: 'UNIQUEIDENTIFIER' },
+        fieldDisplayType: FieldDisplayType.Relationship,
+      },
+    ],
+  });
+};
+
+/**
  * Creates a mock entity with nested reference fields for testing transformNestedReferences
  * Uses RAW API field names: sqlType, createTime, updateTime
  * @returns Mock entity with reference fields

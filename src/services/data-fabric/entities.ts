@@ -21,7 +21,7 @@ import {
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  EntityFieldDataType,
+  FieldMetaData,
   EntityFileType,
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
@@ -30,8 +30,8 @@ import {
   EntityQueryRecordsResponse,
   EntityBulkImportResponse,
   EntityCreateOptions,
-  EntityCreateFieldRequest,
-  EntityFieldType,
+  EntityCreateFieldOptions,
+  EntityFieldDataType,
   EntitySchemaUpdateOptions,
   EntityMetadataUpdateOptions,
 } from '../../models/data-fabric/entities.types';
@@ -43,8 +43,8 @@ import { DATA_FABRIC_ENDPOINTS, DATAFABRIC_TENANT_FOLDER_ID } from '../../utils/
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
-import { EntityFieldTypeMap, SqlFieldType, EntityMap, EntitySchemaFieldTypeMap } from '../../models/data-fabric/entities.constants';
-import { EntitySchemaField, EntityQueryRawResponse } from '../../models/data-fabric/entities.internal-types';
+import { EntityFieldTypeMap, SqlFieldType, EntityMap, EntitySchemaFieldTypeMap, FieldDisplayTypeToDataType } from '../../models/data-fabric/entities.constants';
+import { EntityQueryRawResponse } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /**
@@ -456,7 +456,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -465,7 +465,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
    *     queryFilters: [
-   *       { fieldName: "status", operator: "=", value: "active" }
+   *       { fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }
    *     ]
    *   },
    *   sortOptions: [{ fieldName: "created_at", isDescending: true }],
@@ -719,24 +719,25 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @example
    * ```typescript
    * const entityId = await entities.create("product_catalog", "Our product catalog", [
-   *   { name: "product_name", type: EntityFieldType.Text, isRequired: true, isUnique: true },
-   *   { name: "price", type: EntityFieldType.Decimal, defaultValue: "0" },
+   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", isRbacEnabled: true });
    * ```
    */
   @track('Entities.Create')
-  async create(name: string, description: string, fields: EntityCreateFieldRequest[], options: EntityCreateOptions = {}): Promise<string> {
+  async create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     EntityService.validateTechnicalName(name, 'entity');
+    const opts = options ?? {};
     const payload = {
       description,
-      displayName: options.displayName ?? name,
+      displayName: opts.displayName ?? name,
       entityDefinition: {
         name,
         fields: fields.map(f => this.buildSchemaFieldPayload(f)),
-        folderId: options.folderId ?? DATAFABRIC_TENANT_FOLDER_ID,
-        isRbacEnabled: options.isRbacEnabled ?? false,
-        isInsightsEnabled: options.isInsightsEnabled ?? false,
-        externalFields: options.externalFields ?? [],
+        folderId: opts.folderId ?? DATAFABRIC_TENANT_FOLDER_ID,
+        isRbacEnabled: opts.isRbacEnabled ?? false,
+        isInsightsEnabled: opts.isInsightsEnabled ?? false,
+        externalFields: opts.externalFields ?? [],
       },
     };
     const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT_ENTITY, payload);
@@ -771,23 +772,23 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * await entities.updateEntitySchema("<entityId>", {
-   *   addFields: [{ name: "notes", type: EntityFieldType.LongText }],
+   * await entities.updateSchemaById("<entityId>", {
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    *   removeFields: ["old_field"],
    *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
    * });
    * ```
    */
-  @track('Entities.UpdateEntity')
-  async updateEntitySchema(entityId: string, options: EntitySchemaUpdateOptions): Promise<void> {
+  @track('Entities.UpdateSchemaById')
+  async updateSchemaById(entityId: string, options: EntitySchemaUpdateOptions): Promise<void> {
     const entityResponse = await this.get<RawEntityGetResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId)
     );
-    const raw = entityResponse.data as any;
+    const raw = entityResponse.data;
 
     // Carry forward existing non-system fields from GET response (skip system/primary-key fields)
-    let fields: any[] = ((raw.fields ?? []) as any[])
-      .filter((f: any) => !f.isSystemField && !f.isPrimaryKey);
+    let fields: FieldMetaData[] = (raw.fields ?? [])
+      .filter(f => !f.isSystemField && !f.isPrimaryKey);
 
     // Apply removals
     if (options.removeFields?.length) {
@@ -798,7 +799,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // Apply per-field metadata updates (matched by field ID)
     if (options.updateFields?.length) {
       const updateMap = new Map(options.updateFields.map(u => [u.id, u]));
-      fields = fields.map((f: any) => {
+      fields = fields.map(f => {
         const update = updateMap.get(f.id ?? '');
         if (!update) return f;
         return {
@@ -814,12 +815,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
       });
     }
 
-    // Append new fields
+    // Build and append new fields
+    const newFields: FieldMetaData[] = [];
     if (options.addFields?.length) {
       for (const field of options.addFields) {
         EntityService.validateTechnicalName(field.name, 'field');
       }
-      fields = [...fields, ...options.addFields.map((f: EntityCreateFieldRequest) => this.buildSchemaFieldPayload(f))];
+      newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
     }
 
     const payload = {
@@ -828,7 +830,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       entityDefinition: {
         id: entityId,
         name: raw.name,
-        fields,
+        fields: [...fields, ...newFields],
         folderId: DATAFABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: raw.isRbacEnabled ?? false,
         isInsightsEnabled: false,
@@ -851,15 +853,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @example
    * ```typescript
-   * await entities.updateEntitySchemaMetadata("<entityId>", {
+   * await entities.updateMetadataById("<entityId>", {
    *   displayName: "My Updated Entity",
    *   description: "Updated description",
    * });
    * ```
    */
-  @track('Entities.UpdateEntityMetadata')
-  async updateEntitySchemaMetadata(entityId: string, options: EntityMetadataUpdateOptions): Promise<void> {
-    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(entityId), options);
+  @track('Entities.UpdateMetadataById')
+  async updateMetadataById(entityId: string, options: EntityMetadataUpdateOptions): Promise<void> {
+    await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(entityId), options);
   }
 
   /**
@@ -886,11 +888,17 @@ export class EntityService extends BaseService implements EntityServiceModel {
       // Rename sqlType to fieldDataType
       let transformedField = transformData(field, EntityMap);
       
-      // Map SQL field type to friendly name
+      // Map field type: prefer fieldDisplayType for types that share SQL types (File, ChoiceSet, AutoNumber)
       if (transformedField.fieldDataType?.name) {
-        const sqlTypeName = transformedField.fieldDataType.name as unknown as SqlFieldType;
-        if (EntityFieldTypeMap[sqlTypeName]) {
-          transformedField.fieldDataType.name = EntityFieldTypeMap[sqlTypeName] as unknown as EntityFieldDataType;
+        const displayTypeMapped = FieldDisplayTypeToDataType[transformedField.fieldDisplayType as import('../../models/data-fabric/entities.types').FieldDisplayType];
+        if (displayTypeMapped) {
+          transformedField.fieldDataType.name = displayTypeMapped;
+        } else {
+          const sqlTypeName = (transformedField.fieldDataType.name as string) as SqlFieldType;
+          const mapped = EntityFieldTypeMap[sqlTypeName];
+          if (mapped) {
+            transformedField.fieldDataType.name = mapped;
+          }
         }
       }
       
@@ -903,7 +911,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Transforms nested reference objects in field metadata
    */
-  private transformNestedReferences(field: any): void {
+  private transformNestedReferences(field: FieldMetaData): void {
     if (field.referenceEntity) {
       field.referenceEntity = transformData(field.referenceEntity, EntityMap);
     }
@@ -939,21 +947,24 @@ export class EntityService extends BaseService implements EntityServiceModel {
     });
   }
 
-  /** Converts a user-facing EntityCreateFieldRequest to the raw API field payload */
-  private buildSchemaFieldPayload(field: EntityCreateFieldRequest): EntitySchemaField {
+  /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
+  private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldMetaData {
     EntityService.validateTechnicalName(field.name, 'field');
-    const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldType.Text];
+    const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldDataType.STRING];
     return {
       name: field.name,
       displayName: field.displayName ?? field.name,
-      type: mapping.apiType,
+      sqlType: { name: mapping.sqlTypeName },
+      fieldDisplayType: mapping.fieldDisplayType,
       description: field.description ?? '',
       isRequired: field.isRequired ?? false,
-      fieldDisplayType: mapping.fieldDisplayType,
-      isRbacEnabled: field.isRbacEnabled ?? false,
       isUnique: field.isUnique ?? false,
+      isRbacEnabled: field.isRbacEnabled ?? false,
       isEncrypted: field.isEncrypted ?? false,
       ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
+      ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
+      ...(field.referenceEntityName !== undefined && { referenceEntityName: field.referenceEntityName }),
+      ...(field.referenceFieldName !== undefined && { referenceFieldName: field.referenceFieldName }),
     };
   }
 

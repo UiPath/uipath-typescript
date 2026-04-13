@@ -1,7 +1,7 @@
 import { PaginationOptions } from "../../utils/pagination/types";
 
 /**
- * Entity field type names
+ * Entity field data type names (SQL-level types returned by the API)
  */
 export enum EntityFieldDataType {
   UUID = "UUID",
@@ -16,6 +16,11 @@ export enum EntityFieldDataType {
   BOOLEAN = "BOOLEAN",
   BIG_INTEGER = "BIG_INTEGER",
   MULTILINE_TEXT = "MULTILINE_TEXT",
+  File = "FILE",
+  ChoiceSetSingle = "CHOICE_SET_SINGLE",
+  ChoiceSetMultiple = "CHOICE_SET_MULTIPLE",
+  AutoNumber = "AUTO_NUMBER",
+  Relationship = "RELATIONSHIP",
 }
 
 /**
@@ -132,20 +137,35 @@ export enum LogicalOperator {
 }
 
 /**
+ * Comparison operators for entity query filters.
+ * Not all operators are valid for all field types.
+ */
+export enum QueryFilterOperator {
+  Equals = '=',
+  NotEquals = '!=',
+  GreaterThan = '>',
+  LessThan = '<',
+  GreaterThanOrEqual = '>=',
+  LessThanOrEqual = '<=',
+  Contains = 'contains',
+  NotContains = 'not contains',
+  StartsWith = 'startswith',
+  EndsWith = 'endswith',
+  In = 'in',
+  NotIn = 'not in',
+}
+
+/**
  * A single filter condition for querying entity records
  *
- * Supported operators: `=`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `not contains`,
- * `startswith`, `endswith`, `in`, `not in`.
- * Not all operators are valid for all field types.
- *
  * Values are always strings. For numeric or boolean fields, pass the string representation
- * (e.g., `"42"`, `"true"`). For `in` / `not in` operators, use {@link valueList} instead of `value`.
+ * (e.g., `"42"`, `"true"`). For `In` / `NotIn` operators, use {@link valueList} instead of `value`.
  */
 export interface EntityQueryFilter {
   /** Name of the field to filter on */
   fieldName: string;
-  /** Comparison operator — see supported operators in the interface description */
-  operator: string;
+  /** Comparison operator */
+  operator: QueryFilterOperator;
   /** Value to compare against (always a string; omit when using `valueList`) */
   value?: string;
   /** List of values for `in` / `not in` operators */
@@ -205,20 +225,6 @@ export interface EntityQueryRecordsResponse {
 }
 
 /**
- * Friendly field type names for creating entity schemas
- */
-export enum EntityFieldType {
-  Text = "text",
-  LongText = "longtext",
-  Number = "number",
-  Decimal = "decimal",
-  Boolean = "boolean",
-  DateTime = "datetime",
-  Date = "date",
-  File = "file",
-}
-
-/**
  * Common field properties shared across field definition and update types
  */
 export interface EntityFieldBase {
@@ -241,14 +247,14 @@ export interface EntityFieldBase {
 /**
  * User-facing field definition for creating or updating entity schemas
  */
-export interface EntityCreateFieldRequest extends EntityFieldBase {
+export interface EntityCreateFieldOptions extends EntityFieldBase {
   /**
    * Technical field name — must be lowercase, start with a letter, and contain only
    * letters, numbers, and underscores (e.g., `"product_name"`).
    */
   name: string;
-  /** Field type — one of the {@link EntityFieldType} values (default: Text) */
-  type?: EntityFieldType;
+  /** Field data type — one of the {@link EntityFieldDataType} values (default: STRING) */
+  type?: EntityFieldDataType;
   /** Choice set ID for choice-set fields */
   choiceSetId?: string;
   /** Name of the referenced entity for relationship fields */
@@ -277,7 +283,7 @@ export interface EntityCreateOptions {
 /**
  * Identifies a field by its ID and supplies metadata updates to apply
  */
-export interface EntityFieldUpdateRequest extends EntityFieldBase {
+export interface EntityFieldUpdateOptions extends EntityFieldBase {
   /** ID of the field to update */
   id: string;
 }
@@ -288,11 +294,11 @@ export interface EntityFieldUpdateRequest extends EntityFieldBase {
  */
 export interface EntitySchemaUpdateOptions {
   /** New fields to add */
-  addFields?: EntityCreateFieldRequest[];
+  addFields?: EntityCreateFieldOptions[];
   /** Names of fields to remove (case-insensitive) */
   removeFields?: string[];
   /** Fields to update, each identified by its field ID */
-  updateFields?: EntityFieldUpdateRequest[];
+  updateFields?: EntityFieldUpdateOptions[];
 }
 
 /**
@@ -456,32 +462,40 @@ export interface Field {
  * Detailed field definition
  */
 export interface FieldMetaData {
-  id: string;
+  id?: string;
   name: string;
-  isPrimaryKey: boolean;
-  isForeignKey: boolean;
-  isExternalField: boolean;
-  isHiddenField: boolean;
-  isUnique: boolean;
+  isPrimaryKey?: boolean;
+  isForeignKey?: boolean;
+  isExternalField?: boolean;
+  isHiddenField?: boolean;
+  isUnique?: boolean;
   referenceName?: string;
   referenceEntity?: RawEntityGetResponse;
   referenceChoiceSet?: RawEntityGetResponse;
   referenceField?: Field;
-  referenceType: ReferenceType;
-  fieldDataType: FieldDataType;
-  isRequired: boolean;
-  displayName: string;
-  description: string;
-  createdTime: string;
-  createdBy: string;
-  updatedTime: string;
+  referenceType?: ReferenceType;
+  /** Raw SQL type from API — present on raw GET responses, used on write payloads */
+  sqlType?: { name: string };
+  /** Transformed field data type — present after SDK transformation */
+  fieldDataType?: FieldDataType;
+  isRequired?: boolean;
+  displayName?: string;
+  description?: string;
+  createdTime?: string;
+  createdBy?: string;
+  updatedTime?: string;
   updatedBy?: string;
-  isSystemField: boolean;
+  isSystemField?: boolean;
   fieldDisplayType?: FieldDisplayType;
   choiceSetId?: string;
   defaultValue?: string;
-  isAttachment: boolean;
-  isRbacEnabled: boolean;
+  isAttachment?: boolean;
+  isEncrypted?: boolean;
+  isRbacEnabled?: boolean;
+  /** Name of the referenced entity (used on write payloads for relationship fields) */
+  referenceEntityName?: string;
+  /** Name of the field in the referenced entity (used on write payloads for relationship fields) */
+  referenceFieldName?: string;
 }
 
 /**

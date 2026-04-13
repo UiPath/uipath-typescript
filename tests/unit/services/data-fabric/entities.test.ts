@@ -15,6 +15,7 @@ import {
   createMockEntityWithExternalFields,
   createMockEntityWithNestedReferences,
   createMockEntityWithSqlFieldTypes,
+  createMockEntityWithDisplayTypeFields,
 } from "../../../utils/mocks/entities";
 import {
   createServiceTestDependencies,
@@ -32,7 +33,7 @@ import type {
   EntityGetAllRecordsOptions,
   EntityMetadataUpdateOptions,
 } from "../../../../src/models/data-fabric/entities.types";
-import { EntityFieldType } from "../../../../src/models/data-fabric/entities.types";
+import { EntityFieldDataType, QueryFilterOperator } from "../../../../src/models/data-fabric/entities.types";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
 import { TEST_CONSTANTS } from "../../../utils/constants/common";
 import { DATA_FABRIC_ENDPOINTS } from "../../../../src/utils/constants/endpoints";
@@ -240,6 +241,30 @@ describe("EntityService Unit Tests", () => {
         ENTITY_TEST_CONSTANTS.FIELD_TYPE_DECIMAL,
       );
       expect(decimalField?.fieldDataType.decimalPrecision).toBe(2);
+    });
+
+    it("should map display types (File, ChoiceSet, AutoNumber) over SQL type during read", async () => {
+      const mockResponse = createMockEntityWithDisplayTypeFields();
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      const result = await entityService.getById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
+
+      expect(result.fields).toHaveLength(5);
+
+      const fileField = result.fields.find((f) => f.name === "attachment");
+      expect(fileField?.fieldDataType?.name).toBe(EntityFieldDataType.File);
+
+      const csField = result.fields.find((f) => f.name === "category");
+      expect(csField?.fieldDataType?.name).toBe(EntityFieldDataType.ChoiceSetSingle);
+
+      const csMultiField = result.fields.find((f) => f.name === "tags");
+      expect(csMultiField?.fieldDataType?.name).toBe(EntityFieldDataType.ChoiceSetMultiple);
+
+      const autoNumField = result.fields.find((f) => f.name === "seq_no");
+      expect(autoNumField?.fieldDataType?.name).toBe(EntityFieldDataType.AutoNumber);
+
+      const relField = result.fields.find((f) => f.name === "customer_id");
+      expect(relField?.fieldDataType?.name).toBe(EntityFieldDataType.Relationship);
     });
 
     it("should handle API errors", async () => {
@@ -1267,7 +1292,7 @@ describe("EntityService Unit Tests", () => {
       const options = {
         filterGroup: {
           logicalOperator: 0 as const,
-          queryFilters: [{ fieldName: "name", operator: "=", value: "Alice" }],
+          queryFilters: [{ fieldName: "name", operator: QueryFilterOperator.Equals, value: "Alice" }],
         },
         limit: 10,
         start: 0,
@@ -1315,7 +1340,7 @@ describe("EntityService Unit Tests", () => {
             {
               logicalOperator: 1 as const,
               queryFilters: [
-                { fieldName: "status", operator: "=", value: "active" },
+                { fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" },
               ],
             },
           ],
@@ -1451,7 +1476,7 @@ describe("EntityService Unit Tests", () => {
       const result = await entityService.create(
         "my_entity",
         "A test entity",
-        [{ name: "title", type: EntityFieldType.Text }],
+        [{ name: "title", type: EntityFieldDataType.STRING }],
         { displayName: "My Entity", isRbacEnabled: true },
       );
 
@@ -1594,7 +1619,7 @@ describe("EntityService Unit Tests", () => {
     });
   });
 
-  describe("updateEntitySchema", () => {
+  describe("updateSchemaById", () => {
     const mockRawEntity = {
       id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
       name: "my_entity",
@@ -1622,8 +1647,8 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "count", type: EntityFieldType.Number }],
+      await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        addFields: [{ name: "count", type: EntityFieldDataType.INTEGER }],
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -1638,7 +1663,7 @@ describe("EntityService Unit Tests", () => {
             name: "my_entity",
             fields: expect.arrayContaining([
               expect.objectContaining({ name: "title" }),
-              expect.objectContaining({ name: "count", type: "int" }),
+              expect.objectContaining({ name: "count", sqlType: { name: "INT" } }),
             ]),
           }),
         }),
@@ -1650,7 +1675,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+      await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         removeFields: ["title"],
       });
 
@@ -1662,7 +1687,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+      await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         updateFields: [
           {
             id: ENTITY_TEST_CONSTANTS.FIELD_ID,
@@ -1682,8 +1707,8 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "status", type: EntityFieldType.Text }],
+      await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        addFields: [{ name: "status", type: EntityFieldDataType.STRING }],
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -1700,8 +1725,8 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "notes", type: EntityFieldType.LongText }],
+      await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
         removeFields: ["title"],
         updateFields: [],
       });
@@ -1710,14 +1735,14 @@ describe("EntityService Unit Tests", () => {
       const fields = call.entityDefinition.fields;
       expect(fields.find((f: any) => f.name === "title")).toBeUndefined();
       expect(fields.find((f: any) => f.name === "notes")).toBeDefined();
-      expect(fields.find((f: any) => f.name === "notes").type).toBe("text");
+      expect(fields.find((f: any) => f.name === "notes").sqlType.name).toBe("MULTILINE");
     });
 
     it("should leave field unchanged when updateFields ID does not match any existing field", async () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+      await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         updateFields: [{ id: "non-existent-id", displayName: "Ghost" }],
       });
 
@@ -1730,7 +1755,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {});
+      await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {});
 
       const call = mockApiClient.post.mock.calls[0][1];
       expect(call.entityDefinition.fields).toHaveLength(1);
@@ -1738,21 +1763,25 @@ describe("EntityService Unit Tests", () => {
     });
 
     it.each([
-      { type: EntityFieldType.Text,     expectedApiType: "text"     },
-      { type: EntityFieldType.LongText, expectedApiType: "text"     },
-      { type: EntityFieldType.Number,   expectedApiType: "int"      },
-      { type: EntityFieldType.Decimal,  expectedApiType: "decimal"  },
-      { type: EntityFieldType.Boolean,  expectedApiType: "bit"      },
-      { type: EntityFieldType.DateTime, expectedApiType: "datetime" },
-      { type: EntityFieldType.Date,     expectedApiType: "date"     },
-      { type: EntityFieldType.File,     expectedApiType: "file"     },
+      { type: EntityFieldDataType.STRING,           expectedSqlType: "NVARCHAR"        },
+      { type: EntityFieldDataType.MULTILINE_TEXT,   expectedSqlType: "MULTILINE"       },
+      { type: EntityFieldDataType.INTEGER,          expectedSqlType: "INT"             },
+      { type: EntityFieldDataType.BOOLEAN,          expectedSqlType: "BIT"             },
+      { type: EntityFieldDataType.DATETIME_WITH_TZ, expectedSqlType: "DATETIMEOFFSET" },
+      { type: EntityFieldDataType.DATE,             expectedSqlType: "DATE"            },
+      { type: EntityFieldDataType.DECIMAL,          expectedSqlType: "DECIMAL"         },
+      { type: EntityFieldDataType.File,             expectedSqlType: "UNIQUEIDENTIFIER" },
+      { type: EntityFieldDataType.ChoiceSetSingle,  expectedSqlType: "INT"             },
+      { type: EntityFieldDataType.ChoiceSetMultiple, expectedSqlType: "NVARCHAR"       },
+      { type: EntityFieldDataType.AutoNumber,        expectedSqlType: "DECIMAL"          },
+      { type: EntityFieldDataType.Relationship,     expectedSqlType: "UNIQUEIDENTIFIER" },
     ])(
-      "should map EntityFieldType.$type to apiType '$expectedApiType' for added fields",
-      async ({ type, expectedApiType }) => {
+      "should map EntityFieldDataType.$type to sqlType '$expectedSqlType' for added fields",
+      async ({ type, expectedSqlType }) => {
         mockApiClient.get.mockResolvedValue(mockRawEntity);
         mockApiClient.post.mockResolvedValue(undefined);
 
-        await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{ name: "new_field", type }],
         });
 
@@ -1761,7 +1790,7 @@ describe("EntityService Unit Tests", () => {
           (f: any) => f.name === "new_field",
         );
         expect(newField).toBeDefined();
-        expect(newField.type).toBe(expectedApiType);
+        expect(newField.sqlType.name).toBe(expectedSqlType);
       },
     );
 
@@ -1769,8 +1798,8 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "secret_field", type: EntityFieldType.Text, isEncrypted: true }],
+      await entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        addFields: [{ name: "secret_field", type: EntityFieldDataType.STRING, isEncrypted: true }],
       });
 
       const call = mockApiClient.post.mock.calls[0][1];
@@ -1785,16 +1814,16 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(
-        entityService.updateEntitySchema(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        entityService.updateSchemaById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [],
         }),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
-  describe("updateEntitySchemaMetadata", () => {
+  describe("updateMetadataById", () => {
     it("should call UPDATE_ENTITY_METADATA endpoint with provided options", async () => {
-      mockApiClient.post.mockResolvedValue({ data: undefined });
+      mockApiClient.patch.mockResolvedValue({ data: undefined });
 
       const options: EntityMetadataUpdateOptions = {
         displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME,
@@ -1802,12 +1831,12 @@ describe("EntityService Unit Tests", () => {
         isRbacEnabled: true,
       };
 
-      await entityService.updateEntitySchemaMetadata(
+      await entityService.updateMetadataById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         options,
       );
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
@@ -1817,14 +1846,14 @@ describe("EntityService Unit Tests", () => {
     });
 
     it("should update only displayName when only displayName is provided", async () => {
-      mockApiClient.post.mockResolvedValue(undefined);
+      mockApiClient.patch.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchemaMetadata(
+      await entityService.updateMetadataById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         { displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME },
       );
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
@@ -1834,14 +1863,14 @@ describe("EntityService Unit Tests", () => {
     });
 
     it("should update only description when only description is provided", async () => {
-      mockApiClient.post.mockResolvedValue(undefined);
+      mockApiClient.patch.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchemaMetadata(
+      await entityService.updateMetadataById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         { description: ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION },
       );
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
@@ -1851,14 +1880,14 @@ describe("EntityService Unit Tests", () => {
     });
 
     it("should update only isRbacEnabled when only isRbacEnabled is provided", async () => {
-      mockApiClient.post.mockResolvedValue(undefined);
+      mockApiClient.patch.mockResolvedValue(undefined);
 
-      await entityService.updateEntitySchemaMetadata(
+      await entityService.updateMetadataById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         { isRbacEnabled: false },
       );
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_ENTITY_METADATA(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ),
@@ -1869,10 +1898,10 @@ describe("EntityService Unit Tests", () => {
 
     it("should handle API errors", async () => {
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.post.mockRejectedValue(error);
+      mockApiClient.patch.mockRejectedValue(error);
 
       await expect(
-        entityService.updateEntitySchemaMetadata(
+        entityService.updateMetadataById(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           { displayName: "X" },
         ),

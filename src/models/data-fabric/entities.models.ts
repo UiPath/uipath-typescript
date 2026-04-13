@@ -26,7 +26,7 @@ import {
   EntityQueryRecordsResponse,
   EntityBulkImportResponse,
   EntityCreateOptions,
-  EntityCreateFieldRequest,
+  EntityCreateFieldOptions,
   EntitySchemaUpdateOptions,
   EntityMetadataUpdateOptions,
 } from './entities.types';
@@ -354,7 +354,7 @@ export interface EntityServiceModel {
    * @returns Promise resolving to {@link EntityQueryRecordsResponse} with matching records and total count
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -362,7 +362,7 @@ export interface EntityServiceModel {
    * const result = await entities.queryRecords("<entityId>", {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
-   *     queryFilters: [{ fieldName: "status", operator: "=", value: "active" }]
+   *     queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
    *   },
    *   sortOptions: [{ fieldName: "created_at", isDescending: true }],
    *   start: 0,
@@ -530,12 +530,12 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * const entityId = await entities.create("product_catalog", "Our product catalog", [
-   *   { name: "product_name", type: EntityFieldType.Text, isRequired: true, isUnique: true },
-   *   { name: "price", type: EntityFieldType.Decimal, defaultValue: "0" },
+   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", isRbacEnabled: true });
    * ```
    */
-  create(name: string, description: string, fields: EntityCreateFieldRequest[], options?: EntityCreateOptions): Promise<string>;
+  create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
 
   /**
    * Deletes a Data Fabric entity and all its records
@@ -553,8 +553,8 @@ export interface EntityServiceModel {
    * Updates an existing Data Fabric entity's field schema.
    *
    * Pass `addFields` to append new fields, `removeFields` (by name) to delete fields,
-   * and `updateFields` (array of {@link EntityFieldUpdateRequest}) to update field metadata.
-   * To update entity-level metadata use {@link updateEntitySchemaMetadata} instead.
+   * and `updateFields` (array of {@link EntityFieldUpdateOptions}) to update field metadata.
+   * To update entity-level metadata use {@link updateMetadataById} instead.
    *
    * @param entityId - UUID of the entity to update
    * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
@@ -562,14 +562,14 @@ export interface EntityServiceModel {
    *
    * @example
    * ```typescript
-   * await entities.updateEntitySchema("<entityId>", {
-   *   addFields: [{ name: "notes", type: EntityFieldType.LongText }],
+   * await entities.updateSchemaById("<entityId>", {
+   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    *   removeFields: ["old_field"],
    *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
    * });
    * ```
    */
-  updateEntitySchema(entityId: string, options: EntitySchemaUpdateOptions): Promise<void>;
+  updateSchemaById(entityId: string, options: EntitySchemaUpdateOptions): Promise<void>;
 
   /**
    * Updates only the metadata of an existing Data Fabric entity (displayName, description, isRbacEnabled).
@@ -581,13 +581,13 @@ export interface EntityServiceModel {
    *
    * @example
    * ```typescript
-   * await entities.updateEntitySchemaMetadata("<entityId>", {
+   * await entities.updateMetadataById("<entityId>", {
    *   displayName: "My Updated Entity",
    *   description: "Updated description",
    * });
    * ```
    */
-  updateEntitySchemaMetadata(entityId: string, options: EntityMetadataUpdateOptions): Promise<void>;
+  updateMetadataById(entityId: string, options: EntityMetadataUpdateOptions): Promise<void>;
 
 }
 
@@ -738,6 +738,13 @@ export interface EntityMethods {
       : NonPaginatedResponse<EntityRecord>
   >;
 
+}
+
+/**
+ * Entity management methods interface - defines entity lifecycle operations
+ * (schema changes, metadata updates, deletion)
+ */
+export interface EntityManagementMethods {
   /**
    * Deletes this entity and all its records
    *
@@ -751,7 +758,7 @@ export interface EntityMethods {
    * @param options - Field changes to apply ({@link EntitySchemaUpdateOptions})
    * @returns Promise resolving when the entity schema is updated
    */
-  updateEntitySchema(options: EntitySchemaUpdateOptions): Promise<void>;
+  updateSchemaById(options: EntitySchemaUpdateOptions): Promise<void>;
 
   /**
    * Updates only the metadata of this entity (displayName, description, isRbacEnabled)
@@ -759,18 +766,18 @@ export interface EntityMethods {
    * @param options - Metadata fields to update ({@link EntityMetadataUpdateOptions})
    * @returns Promise resolving when the metadata is updated
    */
-  updateEntitySchemaMetadata(options: EntityMetadataUpdateOptions): Promise<void>;
+  updateMetadataById(options: EntityMetadataUpdateOptions): Promise<void>;
 }
 
 /**
- * Entity with methods combining metadata with operation methods
+ * Entity with methods combining metadata with data and management methods
  */
-export type EntityGetResponse = RawEntityGetResponse & EntityMethods;
+export type EntityGetResponse = RawEntityGetResponse & EntityMethods & EntityManagementMethods;
 
 /**
  * Creates entity methods that can be attached to entity data
  * 
- * @param entityData - The entity metadata
+ * @param entityData - The entity data
  * @param service - The entity service instance
  * @returns Object containing entity methods
  */
@@ -856,34 +863,48 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.getAllRecords(options);
     },
 
+  };
+}
+
+/**
+ * Creates entity management methods bound to a specific entity ID.
+ * These methods operate on the entity itself (schema, metadata, deletion) — not on its records.
+ *
+ * @param entityId - UUID of the entity
+ * @param service - The entity service instance
+ * @returns Object containing entity management methods
+ */
+function createEntityManagementMethods(entityId: string, service: EntityServiceModel): EntityManagementMethods {
+  return {
     async deleteEntityById(): Promise<void> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.deleteEntityById(entityData.id);
+      if (!entityId) throw new Error('Entity ID is undefined');
+      return service.deleteEntityById(entityId);
     },
 
-    async updateEntitySchema(options: EntitySchemaUpdateOptions): Promise<void> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.updateEntitySchema(entityData.id, options);
+    async updateSchemaById(options: EntitySchemaUpdateOptions): Promise<void> {
+      if (!entityId) throw new Error('Entity ID is undefined');
+      return service.updateSchemaById(entityId, options);
     },
 
-    async updateEntitySchemaMetadata(options: EntityMetadataUpdateOptions): Promise<void> {
-      if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.updateEntitySchemaMetadata(entityData.id, options);
+    async updateMetadataById(options: EntityMetadataUpdateOptions): Promise<void> {
+      if (!entityId) throw new Error('Entity ID is undefined');
+      return service.updateMetadataById(entityId, options);
     },
   };
 }
 
 /**
- * Creates an actionable entity metadata by combining entity with operational methods
- * 
- * @param entityData - Entity metadata
+ * Creates an actionable entity by combining entity metadata with data and management methods
+ *
+ * @param entityMetadata - Entity metadata
  * @param service - The entity service instance
  * @returns Entity metadata with added methods
  */
 export function createEntityWithMethods(
-  entityData: RawEntityGetResponse, 
+  entityMetadata: RawEntityGetResponse,
   service: EntityServiceModel
 ): EntityGetResponse {
-  const methods = createEntityMethods(entityData, service);
-  return Object.assign({}, entityData, methods) as EntityGetResponse;
+  const dataMethods = createEntityMethods(entityMetadata, service);
+  const managementMethods = createEntityManagementMethods(entityMetadata.id, service);
+  return Object.assign({}, entityMetadata, dataMethods, managementMethods) as EntityGetResponse;
 }

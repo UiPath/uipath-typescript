@@ -36,11 +36,8 @@ describe("Entity Models", () => {
       uploadAttachment: vi.fn(),
       deleteAttachment: vi.fn(),
       deleteEntityById: vi.fn(),
-      updateEntitySchema: vi.fn(),
-      updateEntitySchemaMetadata: vi.fn(),
-      updateField: vi.fn(),
-      insertFieldById: vi.fn(),
-      deleteFieldById: vi.fn(),
+      updateSchemaById: vi.fn(),
+      updateMetadataById: vi.fn(),
     } as any;
   });
 
@@ -67,6 +64,15 @@ describe("Entity Models", () => {
         );
         expect(result).toEqual(mockResponse);
         expect(result.Id).toBeDefined();
+      });
+
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.insertRecord(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA),
+        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
 
       it("should call entity.insertRecord with options", async () => {
@@ -115,6 +121,15 @@ describe("Entity Models", () => {
         expect(result).toEqual(mockResponse);
         expect(result.successRecords).toHaveLength(2);
         expect(result.failureRecords).toHaveLength(0);
+      });
+
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.insertRecords([ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA]),
+        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
       });
 
       it("should call entity.insertRecords with options", async () => {
@@ -716,8 +731,8 @@ describe("Entity Models", () => {
 
       // Schema methods
       expect(typeof entity.deleteEntityById).toBe("function");
-      expect(typeof entity.updateEntitySchema).toBe("function");
-      expect(typeof entity.updateEntitySchemaMetadata).toBe("function");
+      expect(typeof entity.updateSchemaById).toBe("function");
+      expect(typeof entity.updateMetadataById).toBe("function");
     });
   });
 
@@ -743,49 +758,49 @@ describe("Entity Models", () => {
       );
     });
 
-    it("entity.updateEntitySchema() should delegate to service.updateEntitySchema using entity's own id", async () => {
+    it("entity.updateSchemaById() should delegate to service.updateSchemaById using entity's own id", async () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
       const options: EntitySchemaUpdateOptions = { addFields: [{ name: "notes" }] };
-      mockService.updateEntitySchema = vi.fn().mockResolvedValue(undefined);
+      mockService.updateSchemaById = vi.fn().mockResolvedValue(undefined);
 
-      await entity.updateEntitySchema(options);
+      await entity.updateSchemaById(options);
 
-      expect(mockService.updateEntitySchema).toHaveBeenCalledWith(
+      expect(mockService.updateSchemaById).toHaveBeenCalledWith(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         options,
       );
     });
 
-    it("entity.updateEntitySchema() should throw if entity id is undefined", async () => {
+    it("entity.updateSchemaById() should throw if entity id is undefined", async () => {
       const entityData = createBasicEntity({ id: undefined as any });
       const entity = createEntityWithMethods(entityData, mockService);
 
       await expect(
-        entity.updateEntitySchema({ addFields: [{ name: "notes" }] }),
+        entity.updateSchemaById({ addFields: [{ name: "notes" }] }),
       ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
     });
 
-    it("entity.updateEntitySchemaMetadata() should delegate to service.updateEntitySchemaMetadata using entity's own id", async () => {
+    it("entity.updateMetadataById() should delegate to service.updateMetadataById using entity's own id", async () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
       const options: EntityMetadataUpdateOptions = { displayName: "New Name", isRbacEnabled: true };
-      mockService.updateEntitySchemaMetadata = vi.fn().mockResolvedValue(undefined);
+      mockService.updateMetadataById = vi.fn().mockResolvedValue(undefined);
 
-      await entity.updateEntitySchemaMetadata(options);
+      await entity.updateMetadataById(options);
 
-      expect(mockService.updateEntitySchemaMetadata).toHaveBeenCalledWith(
+      expect(mockService.updateMetadataById).toHaveBeenCalledWith(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         options,
       );
     });
 
-    it("entity.updateEntitySchemaMetadata() should throw if entity id is undefined", async () => {
+    it("entity.updateMetadataById() should throw if entity id is undefined", async () => {
       const entityData = createBasicEntity({ id: undefined as any });
       const entity = createEntityWithMethods(entityData, mockService);
 
       await expect(
-        entity.updateEntitySchemaMetadata({ displayName: "X" }),
+        entity.updateMetadataById({ displayName: "X" }),
       ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
     });
   });

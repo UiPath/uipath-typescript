@@ -1,4 +1,4 @@
-import { EntityFieldDataType, EntityFieldType, FieldDisplayType } from "./entities.types";
+import { EntityFieldDataType, FieldDisplayType } from "./entities.types";
 import { EntitySchemaFieldMapping } from "./entities.internal-types";
 
 /**
@@ -30,17 +30,39 @@ export const EntityMap = {
 };
 
 /**
- * Maps EntityFieldType enum values to the API field payload components
+ * Maps EntityFieldDataType values to the API field payload components for create/update operations
  */
-export const EntitySchemaFieldTypeMap: Record<EntityFieldType, EntitySchemaFieldMapping> = {
-  [EntityFieldType.Text]:     { apiType: "text",     fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.LongText]: { apiType: "text",     fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.Number]:   { apiType: "int",      fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.Decimal]:  { apiType: "decimal",  fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.Boolean]:  { apiType: "bit",      fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.DateTime]: { apiType: "datetime", fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.Date]:     { apiType: "date",     fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldType.File]:     { apiType: "file",     fieldDisplayType: FieldDisplayType.File  },
+export const EntitySchemaFieldTypeMap: Record<EntityFieldDataType, EntitySchemaFieldMapping> = {
+  [EntityFieldDataType.UUID]:           { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.STRING]:         { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.INTEGER]:        { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.DATETIME]:       { sqlTypeName: SqlFieldType.DATETIME2,        fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.DATETIME_WITH_TZ]: { sqlTypeName: SqlFieldType.DATETIMEOFFSET, fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.DECIMAL]:        { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.FLOAT]:          { sqlTypeName: SqlFieldType.FLOAT,            fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.DOUBLE]:         { sqlTypeName: SqlFieldType.REAL,             fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.DATE]:           { sqlTypeName: SqlFieldType.DATE,             fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.BOOLEAN]:        { sqlTypeName: SqlFieldType.BIT,              fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.BIG_INTEGER]:    { sqlTypeName: SqlFieldType.BIGINT,           fieldDisplayType: FieldDisplayType.Basic },
+  [EntityFieldDataType.MULTILINE_TEXT]:    { sqlTypeName: SqlFieldType.MULTILINE,        fieldDisplayType: FieldDisplayType.Basic          },
+  [EntityFieldDataType.File]:              { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File           },
+  [EntityFieldDataType.ChoiceSetSingle]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle  },
+  [EntityFieldDataType.ChoiceSetMultiple]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple },
+  [EntityFieldDataType.AutoNumber]:        { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.AutoNumber        },
+  [EntityFieldDataType.Relationship]:      { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Relationship      },
+};
+
+/**
+ * Maps FieldDisplayType values to EntityFieldDataType for types that share SQL types
+ * with other field types (File, ChoiceSetSingle, ChoiceSetMultiple, AutoNumber).
+ * Used during read-side transformation to produce the correct EntityFieldDataType.
+ */
+export const FieldDisplayTypeToDataType: Partial<Record<FieldDisplayType, EntityFieldDataType>> = {
+  [FieldDisplayType.File]:              EntityFieldDataType.File,
+  [FieldDisplayType.ChoiceSetSingle]:   EntityFieldDataType.ChoiceSetSingle,
+  [FieldDisplayType.ChoiceSetMultiple]: EntityFieldDataType.ChoiceSetMultiple,
+  [FieldDisplayType.AutoNumber]:        EntityFieldDataType.AutoNumber,
+  [FieldDisplayType.Relationship]:      EntityFieldDataType.Relationship,
 };
 
 /**
@@ -48,15 +70,15 @@ export const EntitySchemaFieldTypeMap: Record<EntityFieldType, EntitySchemaField
  */
 export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldDataType> = {
   [SqlFieldType.UNIQUEIDENTIFIER]: EntityFieldDataType.UUID,
-  [SqlFieldType.NVARCHAR]: EntityFieldDataType.STRING,
-  [SqlFieldType.INT]: EntityFieldDataType.INTEGER,
-  [SqlFieldType.DATETIME2]: EntityFieldDataType.DATETIME,
-  [SqlFieldType.DATETIMEOFFSET]: EntityFieldDataType.DATETIME_WITH_TZ,
-  [SqlFieldType.FLOAT]: EntityFieldDataType.FLOAT,
-  [SqlFieldType.REAL]: EntityFieldDataType.DOUBLE,
-  [SqlFieldType.BIGINT]: EntityFieldDataType.BIG_INTEGER,
-  [SqlFieldType.DATE]: EntityFieldDataType.DATE,
-  [SqlFieldType.BIT]: EntityFieldDataType.BOOLEAN,
-  [SqlFieldType.DECIMAL]: EntityFieldDataType.DECIMAL,
-  [SqlFieldType.MULTILINE]: EntityFieldDataType.MULTILINE_TEXT
+  [SqlFieldType.NVARCHAR]:         EntityFieldDataType.STRING,
+  [SqlFieldType.INT]:              EntityFieldDataType.INTEGER,
+  [SqlFieldType.DATETIME2]:        EntityFieldDataType.DATETIME,
+  [SqlFieldType.DATETIMEOFFSET]:   EntityFieldDataType.DATETIME_WITH_TZ,
+  [SqlFieldType.FLOAT]:            EntityFieldDataType.FLOAT,
+  [SqlFieldType.REAL]:             EntityFieldDataType.DOUBLE,
+  [SqlFieldType.BIGINT]:           EntityFieldDataType.BIG_INTEGER,
+  [SqlFieldType.DATE]:             EntityFieldDataType.DATE,
+  [SqlFieldType.BIT]:              EntityFieldDataType.BOOLEAN,
+  [SqlFieldType.DECIMAL]:          EntityFieldDataType.DECIMAL,
+  [SqlFieldType.MULTILINE]:        EntityFieldDataType.MULTILINE_TEXT,
 };
