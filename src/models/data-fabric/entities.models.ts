@@ -355,7 +355,7 @@ export interface EntityServiceModel {
    * });
    * console.log(`Found ${result.totalCount} records`);
    *
-   * // SDK-managed pagination
+   * // With pagination
    * const page1 = await entities.queryRecordsById(<id>, { pageSize: 25 });
    * if (page1.hasNextPage) {
    *   const page2 = await entities.queryRecordsById(<id>, { cursor: page1.nextCursor });

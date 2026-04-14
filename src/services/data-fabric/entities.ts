@@ -469,7 +469,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * });
    * console.log(`Found ${result.totalCount} records`);
    *
-   * // SDK-managed pagination
+   * // With pagination
    * const page1 = await entities.queryRecordsById("<entityId>", {
    *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
    *   pageSize: 25,
