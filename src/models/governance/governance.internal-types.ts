@@ -31,3 +31,42 @@ export interface PolicyConfigureRequestBody {
     };
   };
 }
+
+/**
+ * A single row in the tenant policy assignment table.
+ * Each row represents one (tenant × product × licenseType) slot.
+ * @internal
+ */
+export interface TenantPolicySlot {
+  /** UUID of the tenant */
+  tenantIdentifier: string;
+  /** Human-readable tenant name — present in GET responses, omitted in PUT body */
+  tenantName?: string;
+  /** License type identifier (e.g. 'Attended', 'Unattended', 'NoLicense', 'Development') */
+  licenseTypeIdentifier: string;
+  /** UUID of the policy assigned to this slot, or null if unassigned */
+  policyIdentifier: string | null;
+  /** Product identifier (e.g. 'AITrustLayer', 'Robot', 'Assistant', 'Development') */
+  productIdentifier: string;
+}
+
+/**
+ * A tenant entry in the GET /Tenant/ response.
+ * @internal
+ */
+export interface TenantEntry {
+  name: string;
+  identifier: string;
+  url: string;
+  status: string;
+  tenantPolicies: TenantPolicySlot[];
+}
+
+/**
+ * Response shape from GET /Tenant/.
+ * @internal
+ */
+export interface TenantGetResponse {
+  totalCount: number;
+  result: TenantEntry[];
+}

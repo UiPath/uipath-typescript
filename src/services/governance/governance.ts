@@ -1,6 +1,6 @@
 import { track } from '../../core/telemetry';
-import { DEFAULT_TENANT_LICENSE_TYPES } from '../../models/governance/governance.constants';
-import type { RawPolicySettingsApiResponse, PolicyConfigureRequestBody } from '../../models/governance/governance.internal-types';
+import { SDKInternalsRegistry } from '../../core/internals';
+import type { RawPolicySettingsApiResponse, PolicyConfigureRequestBody, TenantPolicySlot, TenantGetResponse } from '../../models/governance/governance.internal-types';
 import {
   GovernanceServiceModel,
   PolicyGetResponse,
@@ -16,12 +16,19 @@ import {
   RawPolicyGetResponse,
 } from '../../models/governance/governance.types';
 import { GOVERNANCE_ENDPOINTS } from '../../utils/constants/endpoints';
+import type { IUiPath } from '../../core/types';
 import { BaseService } from '../base';
 
 /**
  * Service for managing UiPath Automation Ops governance policies.
  */
 export class GovernanceService extends BaseService implements GovernanceServiceModel {
+  private readonly tenantName: string;
+
+  constructor(instance: IUiPath) {
+    super(instance);
+    this.tenantName = SDKInternalsRegistry.get(instance).config.tenantName;
+  }
   /**
    * Lists all governance policies in the organization.
    *
@@ -113,6 +120,10 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    * Deploys a policy to a tenant, group, or individual user.
    * Called via the bound `policy.deploy()` method.
    *
+   * For tenant deployment, the API uses a replace-all model: GET the current 19-slot
+   * assignment table, set policyIdentifier on all slots matching the policy's product,
+   * then PUT the full table back (without tenantName fields).
+   *
    * @param policyId - UUID of the policy to deploy
    * @param options - Deployment target and options
    */
@@ -120,11 +131,7 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
   async deploy(policyId: string, options: PolicyDeployOptions): Promise<void> {
     switch (options.target) {
       case 'tenant': {
-        const body = {
-          policyId,
-          licenseTypes: options.licenseTypes ?? [...DEFAULT_TENANT_LICENSE_TYPES],
-        };
-        await this.post<void>(GOVERNANCE_ENDPOINTS.POLICIES.DEPLOY.TENANT, body);
+        await this.deployToTenant(policyId);
         break;
       }
       case 'group': {
@@ -138,6 +145,52 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
         break;
       }
     }
+  }
+
+  /**
+   * Deploys a policy to all product slots for the configured tenant.
+   *
+   * The governance Tenant API is a replace-all operation:
+   * 1. GET /Tenant/ — fetch the full assignment table for all tenants in the org
+   * 2. Find the target tenant by name
+   * 3. Set policyIdentifier on every slot whose productIdentifier matches the policy's product
+   * 4. PUT /Tenant/ with the full modified table (tenantName stripped — API rejects it on write)
+   */
+  private async deployToTenant(policyId: string): Promise<void> {
+    // Step 1: read current policy object to know its product
+    const allPolicies = await this.getAll();
+    const policy = allPolicies.find(p => p.identifier === policyId);
+    if (!policy) {
+      throw new Error(`Policy ${policyId} not found — cannot determine product for tenant deployment`);
+    }
+    const productName = policy.product.name;
+
+    // Step 2: GET the tenant list — response is { totalCount, result: [{ name, identifier, tenantPolicies }] }
+    const response = await this.get<TenantGetResponse>(GOVERNANCE_ENDPOINTS.TENANT.POLICIES);
+    const tenants = response.data.result;
+
+    // Step 3: Find the tenant matching the configured tenantName
+    const tenant = tenants.find(
+      t => t.name.toLowerCase() === this.tenantName.toLowerCase()
+    );
+    if (!tenant) {
+      throw new Error(
+        `Tenant "${this.tenantName}" not found in governance assignment table. ` +
+        `Available tenants: ${tenants.map(t => t.name).join(', ')}`
+      );
+    }
+
+    // Step 4: Build the modified slot list — set policyIdentifier for slots matching the product,
+    // strip tenantName (API rejects it on PUT)
+    const updatedSlots = tenant.tenantPolicies.map(({ tenantName: _name, ...slot }) => {
+      if (slot.productIdentifier === productName) {
+        return { ...slot, policyIdentifier: policyId };
+      }
+      return slot;
+    });
+
+    // Step 5: POST the flat slot array (browser-validated: POST /Tenant/ replaces tenant assignments)
+    await this.post<void>(GOVERNANCE_ENDPOINTS.TENANT.POLICIES, updatedSlots);
   }
 
   /**

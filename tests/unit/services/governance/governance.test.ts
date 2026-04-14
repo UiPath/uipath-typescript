@@ -3,11 +3,10 @@ import { GovernanceService } from '../../../../src/services/governance/governanc
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
-import { createMockRawPolicy, createMockRawPolicySettings } from '../../../utils/mocks/governance';
+import { createMockRawPolicy, createMockRawPolicySettings, createMockTenantPolicySlots } from '../../../utils/mocks/governance';
 import { GOVERNANCE_TEST_CONSTANTS } from '../../../utils/constants/governance';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { GOVERNANCE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { PolicyLicenseType } from '../../../../src/models/governance/governance.types';
 
 vi.mock('../../../../src/core/http/api-client');
 
@@ -212,35 +211,84 @@ describe('GovernanceService Unit Tests', () => {
   // ─── deploy ───────────────────────────────────────────────────────────────
 
   describe('deploy', () => {
-    it('should deploy to tenant with default license types when none provided', async () => {
+    it('should deploy to tenant via read-modify-write on POST /Tenant/', async () => {
+      const mockPolicy = createMockRawPolicy();
+      const slots = createMockTenantPolicySlots(
+        GOVERNANCE_TEST_CONSTANTS.TENANT_IDENTIFIER,
+        TEST_CONSTANTS.TENANT_ID
+      );
+      // GET /Policy, then GET /Tenant/
+      mockApiClient.get.mockResolvedValueOnce([mockPolicy]);
+      mockApiClient.get.mockResolvedValueOnce(slots);
       mockApiClient.post.mockResolvedValue(undefined);
 
       await governanceService.deploy(GOVERNANCE_TEST_CONSTANTS.POLICY_ID, { target: 'tenant' });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        GOVERNANCE_ENDPOINTS.POLICIES.DEPLOY.TENANT,
-        expect.objectContaining({
-          policyId: GOVERNANCE_TEST_CONSTANTS.POLICY_ID,
-          licenseTypes: expect.arrayContaining(['Attended', 'Unattended']),
-        }),
+        GOVERNANCE_ENDPOINTS.TENANT.POLICIES,
+        expect.arrayContaining([
+          expect.objectContaining({
+            tenantIdentifier: GOVERNANCE_TEST_CONSTANTS.TENANT_IDENTIFIER,
+            productIdentifier: GOVERNANCE_TEST_CONSTANTS.PRODUCT_NAME,
+            policyIdentifier: GOVERNANCE_TEST_CONSTANTS.POLICY_ID,
+          }),
+        ]),
         expect.any(Object)
       );
     });
 
-    it('should deploy to tenant with specified license types', async () => {
-      mockApiClient.post.mockResolvedValue(undefined);
-      const licenseTypes = [PolicyLicenseType.Attended, PolicyLicenseType.Unattended];
-
-      await governanceService.deploy(GOVERNANCE_TEST_CONSTANTS.POLICY_ID, {
-        target: 'tenant',
-        licenseTypes,
-      });
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        GOVERNANCE_ENDPOINTS.POLICIES.DEPLOY.TENANT,
-        expect.objectContaining({ licenseTypes }),
-        expect.any(Object)
+    it('should only modify slots matching the policy product, not others', async () => {
+      const mockPolicy = createMockRawPolicy();
+      const slots = createMockTenantPolicySlots(
+        GOVERNANCE_TEST_CONSTANTS.TENANT_IDENTIFIER,
+        TEST_CONSTANTS.TENANT_ID
       );
+      mockApiClient.get.mockResolvedValueOnce([mockPolicy]);
+      mockApiClient.get.mockResolvedValueOnce(slots);
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await governanceService.deploy(GOVERNANCE_TEST_CONSTANTS.POLICY_ID, { target: 'tenant' });
+
+      const postBody = mockApiClient.post.mock.calls[0][1] as Array<Record<string, unknown>>;
+      // Robot slot should remain null — different product
+      const robotSlot = postBody.find(s => s.productIdentifier === 'Robot');
+      expect(robotSlot?.policyIdentifier).toBeNull();
+      // AITrustLayer slot should be set
+      const aiSlot = postBody.find(s => s.productIdentifier === GOVERNANCE_TEST_CONSTANTS.PRODUCT_NAME);
+      expect(aiSlot?.policyIdentifier).toBe(GOVERNANCE_TEST_CONSTANTS.POLICY_ID);
+    });
+
+    it('should strip tenantName from all slots in POST body', async () => {
+      const mockPolicy = createMockRawPolicy();
+      const slots = createMockTenantPolicySlots(
+        GOVERNANCE_TEST_CONSTANTS.TENANT_IDENTIFIER,
+        TEST_CONSTANTS.TENANT_ID
+      );
+      mockApiClient.get.mockResolvedValueOnce([mockPolicy]);
+      mockApiClient.get.mockResolvedValueOnce(slots);
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await governanceService.deploy(GOVERNANCE_TEST_CONSTANTS.POLICY_ID, { target: 'tenant' });
+
+      const postBody = mockApiClient.post.mock.calls[0][1] as Array<Record<string, unknown>>;
+      postBody.forEach(slot => {
+        expect(slot).not.toHaveProperty('tenantName');
+      });
+    });
+
+    it('should throw if tenant name is not found in the assignment table', async () => {
+      const mockPolicy = createMockRawPolicy();
+      // Slots have a different tenantName than the configured one
+      const slots = createMockTenantPolicySlots(
+        GOVERNANCE_TEST_CONSTANTS.TENANT_IDENTIFIER,
+        'some-other-tenant'
+      );
+      mockApiClient.get.mockResolvedValueOnce([mockPolicy]);
+      mockApiClient.get.mockResolvedValueOnce(slots);
+
+      await expect(
+        governanceService.deploy(GOVERNANCE_TEST_CONSTANTS.POLICY_ID, { target: 'tenant' })
+      ).rejects.toThrow(TEST_CONSTANTS.TENANT_ID);
     });
 
     it('should deploy to group', async () => {
@@ -273,8 +321,8 @@ describe('GovernanceService Unit Tests', () => {
       );
     });
 
-    it('should propagate errors from the API', async () => {
-      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+    it('should propagate GET errors during tenant deployment', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
         governanceService.deploy(GOVERNANCE_TEST_CONSTANTS.POLICY_ID, { target: 'tenant' })

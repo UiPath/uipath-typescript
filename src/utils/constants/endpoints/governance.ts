@@ -14,10 +14,13 @@ export const GOVERNANCE_ENDPOINTS = {
     CONFIGURE: `${GOVERNANCE_BASE}/api/Policy`,
     CREATE: `${GOVERNANCE_BASE}/api/Policy`,
     DEPLOY: {
-      TENANT: `${GOVERNANCE_BASE}/api/Policy/Deploy/Tenant`,
       GROUP: `${GOVERNANCE_BASE}/api/Policy/Deploy/Group`,
       USER: `${GOVERNANCE_BASE}/api/Policy/Deploy/User`,
     },
+  },
+  TENANT: {
+    /** GET all tenant policy slot assignments; PUT replaces the full assignment table */
+    POLICIES: `${GOVERNANCE_BASE}/api/Tenant`,
   },
   PRODUCT: {
     ENABLE_ROBOT_GOVERNANCE: `${GOVERNANCE_BASE}/api/Product/Robot/enable`,

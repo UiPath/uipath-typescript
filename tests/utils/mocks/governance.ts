@@ -2,6 +2,7 @@
  * Governance service mock utilities
  */
 import type { RawPolicyGetResponse, PolicyProduct } from '../../../src/models/governance/governance.types';
+import type { TenantPolicySlot, TenantGetResponse } from '../../../src/models/governance/governance.internal-types';
 import { GOVERNANCE_TEST_CONSTANTS } from '../constants/governance';
 
 const MOCK_PRODUCT: PolicyProduct = {
@@ -24,6 +25,51 @@ export const createMockRawPolicy = (overrides: Partial<RawPolicyGetResponse> = {
   availability: GOVERNANCE_TEST_CONSTANTS.POLICY_AVAILABILITY,
   product: MOCK_PRODUCT,
   ...overrides,
+});
+
+/**
+ * Creates a mock GET /Tenant/ response with the wrapped `{ totalCount, result }` shape.
+ * tenantName is included in slot data (present in GET, stripped before PUT).
+ *
+ * @param tenantIdentifier - UUID of the tenant
+ * @param tenantName - Human-readable tenant name matching SDK config
+ */
+export const createMockTenantPolicySlots = (
+  tenantIdentifier: string,
+  tenantName: string
+): TenantGetResponse => ({
+  totalCount: 1,
+  result: [
+    {
+      name: tenantName,
+      identifier: tenantIdentifier,
+      url: `https://cloud.uipath.com/test-org/${tenantName}/orchestrator_/`,
+      status: 'Enabled',
+      tenantPolicies: [
+        {
+          tenantIdentifier,
+          tenantName,
+          licenseTypeIdentifier: 'NoLicense',
+          policyIdentifier: null,
+          productIdentifier: GOVERNANCE_TEST_CONSTANTS.PRODUCT_NAME,
+        },
+        {
+          tenantIdentifier,
+          tenantName,
+          licenseTypeIdentifier: 'Attended',
+          policyIdentifier: null,
+          productIdentifier: 'Robot',
+        },
+        {
+          tenantIdentifier,
+          tenantName,
+          licenseTypeIdentifier: 'NoLicense',
+          policyIdentifier: null,
+          productIdentifier: 'IntegrationService',
+        },
+      ],
+    },
+  ],
 });
 
 /**

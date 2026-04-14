@@ -7,6 +7,9 @@ export const GOVERNANCE_TEST_CONSTANTS = {
   POLICY_ID: '93d36f8a-6931-4a38-8a32-135e87c9286b',
   POLICY_ID_2: '9781562f-8a00-41eb-8c20-b1b21170e6a8',
 
+  // Tenant identifier (UUID used in the API slot table)
+  TENANT_IDENTIFIER: '880f829a-5e31-425b-9b0d-e5ee82164f5f',
+
   // Policy metadata
   POLICY_NAME: 'ISO42001-AITrustLayer-v1',
   POLICY_NAME_2: 'default',
