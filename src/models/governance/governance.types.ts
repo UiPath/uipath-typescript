@@ -68,6 +68,13 @@ export interface PolicyCreateOptions {
   priority?: number;
   /** Offline cache duration in days. Defaults to 30. */
   availability?: number;
+  /**
+   * Initial settings data for the policy shell.
+   * When provided, sent as `data: { data: <settings> }` in the POST /Policy body.
+   * Use the default template from `POLICY_TEMPLATES[product.name]` to avoid 500 errors
+   * caused by the API receiving a null settings object.
+   */
+  data?: Record<string, unknown>;
 }
 
 /**
@@ -129,4 +136,52 @@ export enum PolicyLicenseType {
   CitizenDeveloper = 'CitizenDeveloper',
   TestingUser = 'TestingUser',
   NonProduction = 'NonProduction',
+}
+
+// ─── Compliance Packs ─────────────────────────────────────────────────────────
+
+/**
+ * A single policy within a compliance pack — one policy per UiPath product.
+ */
+export interface CompliancePolicyDef {
+  /** Policy name (e.g. 'HIPAA-AITrustLayer-v1') — used to find or create the policy shell */
+  name: string;
+  /** UiPath product identifier (e.g. 'AITrustLayer', 'Robot', 'Development') */
+  product: string;
+  /**
+   * Settings to apply when configuring this policy.
+   * Values are extracted from the rich-object format in the source JSON
+   * (the `value` field from each setting definition).
+   */
+  settings: Record<string, unknown>;
+}
+
+/**
+ * A compliance pack — a set of pre-configured governance policies for a regulatory framework.
+ * Import pre-built packs from `@uipath/uipath-typescript/governance`:
+ * `HIPAA`, `ISO42001`, `EU_AI_ACT`, `NIST_AI_RMF`, `SOC2`.
+ */
+export interface CompliancePack {
+  /** Short identifier (e.g. 'HIPAA') */
+  id: string;
+  /** Human-readable framework name (e.g. 'HIPAA Security Rule') */
+  framework: string;
+  /** Pack version (e.g. '1.0') */
+  version: string;
+  /** One policy definition per UiPath product in the framework */
+  policies: CompliancePolicyDef[];
+}
+
+/**
+ * Options for applyPack() — controls whether to create missing policy shells
+ * and what happens when creation fails.
+ */
+export interface ApplyPackOptions {
+  /** Deployment target (tenant / group / user). Same options as deploy(). */
+  deploy: PolicyDeployOptions;
+  /**
+   * When true, creates a new policy shell if no matching policy name exists.
+   * When false (default), skips policies that don't already exist.
+   */
+  createIfMissing?: boolean;
 }

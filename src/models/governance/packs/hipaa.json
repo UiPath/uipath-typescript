@@ -1,0 +1,1098 @@
+{
+  "_version": "1.0",
+  "_comment": "HIPAA Compliance Pack for UiPath Automation Ops",
+  "_description": "HIPAA Security Rule — UiPath governance settings mapped to 45 CFR Part 164 Technical, Physical, and Administrative Safeguards.",
+  "_usage": "Version 1.0 — initial draft. Apply with: python3 uipath_governance.py --mode configure --pack hipaa_policies.json --no-dry-run --jwt '...' --cookie '...'",
+  "_format": "Each field is a rich object: { type, default, description, value, clause_ref, rationale, requirement, mapping_ids }. The 'value' key is what gets applied. All other keys are documentation.",
+  "_runtime_standards": ["hipaa_runtime", "owasp_agentic"],
+  "_runtime_standards_comment": "Standards evaluated at agent runtime by UiPathGovernanceMiddleware. Set here at compile time — runtime reads this automatically. Add/remove standards here to change what all agents in this tenant/group are evaluated against.",
+  "_requirement_legend": {
+    "mandatory":             "MUST be set — HIPAA Security Rule requires this control",
+    "conditional_mandatory": "MUST be set when condition applies (e.g. PHI is processed)",
+    "recommended":           "SHOULD be set — HIPAA best practice / NIST SP 800-66 guidance",
+    "optional":              "MAY be set — no direct HIPAA requirement"
+  },
+  "_framework": {
+    "name": "HIPAA Security Rule",
+    "regulation": "45 CFR Part 164 (Subparts A, C)",
+    "year": 2003,
+    "last_amended": 2013,
+    "scope": "Electronic Protected Health Information (ePHI)",
+    "key_sections": {
+      "164.306": "Security standards — general requirements",
+      "164.308": "Administrative safeguards",
+      "164.310": "Physical safeguards",
+      "164.312": "Technical safeguards",
+      "164.314": "Organizational requirements",
+      "164.316": "Policies and procedures",
+      "164.514(b)": "De-identification of PHI"
+    }
+  },
+
+  "HIPAA-AITrustLayer-v1": {
+    "_description": "AI Trust Layer — audit, PHI filtering, provider access controls (45 CFR §164.312(b), §164.312(a)(1), §164.308(b)(1))",
+    "_product": "AITrustLayer",
+    "_uipath_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-ai-trust-layer-policies",
+
+    "_section_master": "── Master Switch ─────────────────────────────────────────",
+    "global-control-toggle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Master enable/disable for the AI Trust Layer. Must be true for all sub-controls to take effect.",
+      "value": true,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.306(a) Security standards",
+      "rationale": "§164.306(a) requires covered entities to protect ePHI from reasonably anticipated threats. The master switch is the top-level gate ensuring all AI Trust Layer policies are enforced.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM01"]
+    },
+
+    "_section_features": "── AI Feature Access Controls ────────────────────────────",
+    "agents": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath Agents capability.",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.308(a)(1) Risk analysis",
+      "rationale": "§164.308(a)(1) requires risk analysis before enabling AI capabilities that process ePHI. Disabled by default; enable only after HIPAA risk assessment and BAA verification.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM08"]
+    },
+    "agenthub": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath Agent Hub.",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.308(a)(1) Risk analysis",
+      "rationale": "Agent Hub provides access to external AI agents. Disabled until risk assessment confirms no ePHI exposure and BAA is in place with any relevant sub-processors.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM08"]
+    },
+    "apps": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath Apps.",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control",
+      "rationale": "Apps may expose ePHI via user-facing forms. Disabled until access control review is complete.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM08"]
+    },
+    "jarvis": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath Autopilot (Jarvis).",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.308(a)(1) Risk analysis",
+      "rationale": "Autopilot uses generative AI. Disabled until risk assessment and BAA verification complete.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM08"]
+    },
+    "uia": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath Intelligence (UIA) — core AI inference engine.",
+      "value": true,
+      "clause_ref": "45 CFR §164.306(a) Security standards",
+      "rationale": "UIA is the foundational AI engine used for document understanding and ML inference. Kept enabled; individual capabilities (documentunderstanding, etc.) are controlled separately.",
+      "requirement": "recommended",
+      "mapping_ids": ["HM08"]
+    },
+    "documentunderstanding": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Document Understanding (OCR, ML extraction of documents including medical records).",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.308(a)(1)(ii)(A) Risk analysis",
+      "rationale": "Document Understanding processes document content which frequently contains ePHI (medical records, lab results). Disabled until HIPAA risk assessment and vendor BAA confirmed.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM09"]
+    },
+    "communicationsmining": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Communications Mining (email/chat analytics).",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.514(b) De-identification",
+      "rationale": "Communications Mining analyzes message content which may contain ePHI. Disabled until data flow review confirms PHI de-identification or BAA is in place.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM09"]
+    },
+    "uipath-ai-rdk": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable UiPath AI RDK (custom model deployment).",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis; §164.312(a)(1) Access control",
+      "rationale": "Custom models via AI RDK require security review before ePHI may be processed. Disabled by default.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM09"]
+    },
+    "healing-agent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Healing Agent (self-healing UI automation).",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis",
+      "rationale": "Healing Agent autonomously modifies automation behavior. Disabled pending risk assessment in clinical environments.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM25"]
+    },
+    "wingman": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Wingman (AI-assisted process guidance).",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis; §164.312(a)(1) Access control",
+      "rationale": "Wingman provides AI suggestions during runtime. Disabled until evaluated for ePHI exposure.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM25"]
+    },
+    "uipath-testmanager": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable UiPath Test Manager integration.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis",
+      "rationale": "Test Manager may store test artifacts containing ePHI. Disabled pending review.",
+      "requirement": "optional",
+      "mapping_ids": ["HM25"]
+    },
+
+    "_section_audit": "── Audit Trail ───────────────────────────────────────────",
+    "saveprompts": {
+      "type": "boolean",
+      "default": false,
+      "description": "Capture all AI prompts and responses for audit purposes.",
+      "value": true,
+      "clause_ref": "45 CFR §164.312(b) Audit controls; §164.308(a)(1)(ii)(D) Information system activity review",
+      "rationale": "§164.312(b) requires mechanisms to record and examine ePHI activity. Logging all AI I/O provides the audit trail required for HIPAA compliance and breach investigation.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM05"]
+    },
+    "traces-ttl-enforcement": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enforce the traces-ttl retention window — discard logs older than the configured TTL.",
+      "value": true,
+      "clause_ref": "45 CFR §164.312(b) Audit controls; §164.316(b)(2)(i) Documentation retention (6 years)",
+      "rationale": "§164.316(b)(2)(i) requires retaining documentation for 6 years from creation or last effective date. TTL enforcement ensures UiPath trace logs are retained for the configured window. For 6-year HIPAA archival, supplement with an external SIEM pipeline.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM06"]
+    },
+    "traces-ttl": {
+      "type": "string",
+      "default": "30d",
+      "description": "Duration for which AI trace logs are retained in the UiPath platform cache (e.g. '30d', '90d', '365d').",
+      "value": "365d",
+      "clause_ref": "45 CFR §164.316(b)(2)(i) Documentation retention",
+      "rationale": "HIPAA requires 6-year retention. Set to maximum platform window (365d) and route to external SIEM for long-term archival beyond the platform TTL.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM06"]
+    },
+    "traces-ttl-effective": {
+      "type": "string",
+      "default": "30d",
+      "description": "Effective TTL actually applied after enforcement evaluation.",
+      "value": "365d",
+      "clause_ref": "45 CFR §164.316(b)(2)(i) Documentation retention",
+      "rationale": "Must match traces-ttl to confirm enforcement is active.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM06"]
+    },
+    "traces-disable-insights": {
+      "type": "boolean",
+      "default": false,
+      "description": "Disable AI Insights analytics (prevents ePHI from being included in aggregated telemetry).",
+      "value": true,
+      "clause_ref": "45 CFR §164.514(b) De-identification; §164.308(a)(1) Risk analysis",
+      "rationale": "AI Insights aggregates usage telemetry that may include ePHI fragments. Disabled to prevent inadvertent ePHI disclosure through analytics pipelines not covered by BAA.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM10"]
+    },
+
+    "_section_phi": "── PHI Filtering ──────────────────────────────────────────",
+    "container": {
+      "type": "object",
+      "default": {},
+      "description": "In-flight PII/PHI detection settings per capability.",
+      "value": {
+        "pii-in-flight-agents": true,
+        "pii-in-flight-uipath-ai-rdk": true
+      },
+      "clause_ref": "45 CFR §164.312(e)(2)(ii) Encryption and decryption; §164.514(b) De-identification",
+      "rationale": "§164.312(e)(2)(ii) requires encryption of ePHI in transit. In-flight PII scanning detects and blocks PHI before it reaches external AI models, satisfying both transmission security and de-identification requirements.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM07"]
+    },
+    "pii-entity-table": {
+      "type": "array",
+      "default": [],
+      "description": "HIPAA 18 PHI identifier categories configured for PII scanning at 0.5 confidence threshold. Covers all 18 HIPAA identifiers (§164.514(b)(2)).",
+      "value": [
+        {"pii-entity-category": "Person",                             "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "Person0.5"},
+        {"pii-entity-category": "Address",                            "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "Address0.5"},
+        {"pii-entity-category": "Date",                               "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "Date0.5"},
+        {"pii-entity-category": "PhoneNumber",                        "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "PhoneNumber0.5"},
+        {"pii-entity-category": "EugpsCoordinates",                   "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "EugpsCoordinates0.5"},
+        {"pii-entity-category": "Email",                              "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "Email0.5"},
+        {"pii-entity-category": "CreditCardNumber",                   "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "CreditCardNumber0.5"},
+        {"pii-entity-category": "InternationalBankingAccountNumber",  "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "InternationalBankingAccountNumber0.5"},
+        {"pii-entity-category": "SwiftCode",                          "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "SwiftCode0.5"},
+        {"pii-entity-category": "ABARoutingNumber",                   "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "ABARoutingNumber0.5"},
+        {"pii-entity-category": "USDriversLicenseNumber",             "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "USDriversLicenseNumber0.5"},
+        {"pii-entity-category": "UKDriversLicenseNumber",             "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "UKDriversLicenseNumber0.5"},
+        {"pii-entity-category": "USIndividualTaxpayerIdentification",  "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "USIndividualTaxpayerIdentification0.5"},
+        {"pii-entity-category": "UKUniqueTaxpayerNumber",             "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "UKUniqueTaxpayerNumber0.5"},
+        {"pii-entity-category": "USBankAccountNumber",                "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "USBankAccountNumber0.5"},
+        {"pii-entity-category": "USSocialSecurityNumber",             "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "USSocialSecurityNumber0.5"},
+        {"pii-entity-category": "UsukPassportNumber",                 "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "UsukPassportNumber0.5"},
+        {"pii-entity-category": "URL",                                "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "URL0.5"},
+        {"pii-entity-category": "IPAddress",                          "pii-entity-confidence-threshold": 0.5, "pii-entity-is-enabled": true, "identifier": "IPAddress0.5"}
+      ],
+      "clause_ref": "45 CFR §164.514(b)(2) PHI identifiers; §164.312(e)(2)(ii) Encryption",
+      "rationale": "§164.514(b)(2) enumerates 18 PHI identifier types that must be removed for de-identification. All 18 categories enabled at 0.5 confidence threshold to detect and block PHI before transmission to AI models.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM07"]
+    },
+
+    "_section_providers": "── Third-Party AI Provider Controls ──────────────────────",
+    "anthropic-control-toggle": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Anthropic Claude as an AI provider.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(b)(1) Business Associate Contracts; §164.314(a)(2) Business Associate Contract requirements",
+      "rationale": "§164.308(b)(1) requires a signed Business Associate Agreement (BAA) before transmitting ePHI to any third-party processor. Anthropic must have a BAA in place before enabling.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM04"]
+    },
+    "azure-openai-control-toggle": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Azure OpenAI as an AI provider.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(b)(1) Business Associate Contracts",
+      "rationale": "Azure OpenAI requires a signed BAA (Microsoft offers a HIPAA BAA for Azure services). Disabled until legal confirms BAA covers this specific service and tenant configuration.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM04"]
+    },
+    "gemini-control-toggle": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Google Gemini as an AI provider.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(b)(1) Business Associate Contracts",
+      "rationale": "Google Cloud offers a HIPAA BAA but it must be explicitly executed and the specific Gemini service must be listed. Disabled until BAA is confirmed.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["HM04"]
+    }
+  },
+
+  "HIPAA-Studio-v1": {
+    "_description": "Studio — automation development controls (45 CFR §164.308(a)(1) Risk management, §164.312(b) Audit)",
+    "_product": "Studio",
+    "_uipath_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-studio-policies",
+
+    "_section_analyzer": "── Code Quality & Audit Enforcement ──────────────────────",
+    "enforceAnalyzerBeforePublish": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require all analyzer rules to pass before a process can be published.",
+      "value": true,
+      "clause_ref": "45 CFR §164.308(a)(1)(ii)(B) Risk management; §164.308(a)(8) Evaluation",
+      "rationale": "§164.308(a)(1)(ii)(B) requires implementing security measures to reduce risks to ePHI. Enforcing analyzer before publish prevents automations with known security/quality violations from reaching production.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM11"]
+    },
+    "enforceAnalyzerBeforeRun": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require analyzer rules to pass before local execution (development-time enforcement).",
+      "value": true,
+      "clause_ref": "45 CFR §164.308(a)(1)(ii)(B) Risk management",
+      "rationale": "Prevents developers from running non-compliant automations even locally, reducing risk of ePHI exposure during development and testing.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM11"]
+    },
+    "enforceAnalyzerBeforePushCheckIn": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require analyzer rules to pass before source control check-in.",
+      "value": true,
+      "clause_ref": "45 CFR §164.308(a)(1)(ii)(B) Risk management",
+      "rationale": "Gate at source control ensures all committed code is compliant, supporting auditability of the entire development lifecycle.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM11"]
+    },
+    "enforceCheckInBeforePublish": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require source control check-in before publishing — ensures every release is tracked in version control.",
+      "value": true,
+      "clause_ref": "45 CFR §164.312(b) Audit controls; §164.308(a)(1) Risk analysis",
+      "rationale": "§164.312(b) requires audit mechanisms for ePHI activity. Version control provides traceability of all automation changes, supporting breach investigation and change management.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM12"]
+    },
+    "enforceReleaseNotes": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require release notes before publishing — documents the purpose and changes in each release.",
+      "value": true,
+      "clause_ref": "45 CFR §164.316(b)(1) Documentation; §164.308(a)(1) Risk management",
+      "rationale": "§164.316(b)(1) requires written policies and procedures. Release notes provide documented evidence of change rationale, supporting HIPAA audit requirements.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM12"]
+    },
+    "exportAnalyzerResults": {
+      "type": "boolean",
+      "default": false,
+      "description": "Export analyzer results as part of the published package for auditing.",
+      "value": true,
+      "clause_ref": "45 CFR §164.312(b) Audit controls",
+      "rationale": "Exported analyzer results provide an artifact proving code quality checks were run and passed, supporting HIPAA audit trail requirements.",
+      "requirement": "recommended",
+      "mapping_ids": ["HM15"]
+    },
+    "analyzeRpaXamlFilesOnly": {
+      "type": "boolean",
+      "default": false,
+      "description": "Restrict analyzer to RPA XAML files only (exclude test files).",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis",
+      "rationale": "Set false to analyze all files including test files, maximizing coverage of ePHI risk detection across the entire project.",
+      "requirement": "recommended",
+      "mapping_ids": ["HM11"]
+    },
+
+    "_section_ai_code": "── AI-Generated Code Controls ────────────────────────────",
+    "enableAiActivitySuggestions": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable AI-generated activity suggestions in Studio.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis; §164.308(a)(8) Evaluation",
+      "rationale": "AI-generated code suggestions may introduce logic that inadvertently mishandles ePHI. Disabled to ensure developers retain full ownership and review of all automation logic in clinical contexts.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM13"]
+    },
+    "autoUpdatePackagesForAutopilot": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically update packages for Autopilot-generated projects.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis",
+      "rationale": "Auto-updating packages bypasses the validation process required for HIPAA compliance. All package updates must go through change management review.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM13"]
+    },
+
+    "_section_packaging": "── Package & Dependency Controls ─────────────────────────",
+    "includeSources": {
+      "type": "boolean",
+      "default": false,
+      "description": "Include source files (.xaml) in published packages to support auditing and reproducibility.",
+      "value": true,
+      "clause_ref": "45 CFR §164.312(b) Audit controls; §164.316(b)(1) Documentation",
+      "rationale": "Including sources in published packages supports HIPAA audit requirements by allowing reviewers to inspect the exact code running in production.",
+      "requirement": "recommended",
+      "mapping_ids": ["HM15"]
+    },
+    "enableAllAvailableActivities": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow use of all available activity packages in Studio.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1)(ii)(B) Risk management; §164.308(a)(3) Workforce security",
+      "rationale": "Restricting available activities limits the attack surface. Developers should only access activities approved for clinical use, reducing risk of inadvertent ePHI exposure via unapproved integrations.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM14"]
+    },
+    "allowPreviewPackagesInActivitiesPanel": {
+      "type": "boolean",
+      "default": false,
+      "description": "Allow preview/pre-release packages in the activities panel.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis",
+      "rationale": "Preview packages have not undergone full security validation. Prohibited in HIPAA environments where all components must be vetted and stable.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM14"]
+    },
+    "objectRepositoryEnforced": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enforce use of the Object Repository for UI descriptor management.",
+      "value": true,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk management",
+      "rationale": "Centralized UI descriptors improve maintainability and reduce risk of brittle automations that mishandle ePHI due to UI changes.",
+      "requirement": "recommended",
+      "mapping_ids": ["HM23"]
+    },
+    "separateRuntimeDependencies": {
+      "type": "boolean",
+      "default": false,
+      "description": "Separate design-time and runtime dependencies for cleaner production deployments.",
+      "value": true,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk management",
+      "rationale": "Separating dependencies ensures only tested, approved runtime packages are deployed, reducing the attack surface in production clinical environments.",
+      "requirement": "recommended",
+      "mapping_ids": ["HM23"]
+    },
+
+    "_section_build": "── Build Target Controls ─────────────────────────────────",
+    "allowedCompatibilityFrameworks": {
+      "type": "array",
+      "default": ["Windows", "Cross-platform", "Windows-Legacy"],
+      "description": "List of compatibility frameworks allowed for new projects.",
+      "value": ["Windows", "Cross-platform"],
+      "clause_ref": "45 CFR §164.308(a)(1) Risk management",
+      "rationale": "Windows-Legacy framework has reduced security support. Restricting to modern frameworks (Windows, Cross-platform) ensures current security patches and .NET security features are available.",
+      "requirement": "recommended",
+      "mapping_ids": ["HM24"]
+    }
+  },
+
+  "HIPAA-Robot-v1": {
+    "_description": "Robot — runtime execution controls (45 CFR §164.312(a)(1) Access control, §164.312(e)(1) Transmission security)",
+    "_product": "Robot",
+    "_uipath_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-robot-policies",
+
+    "_section_runtime": "── Runtime Analyzer Rules ────────────────────────────────",
+    "runtimeAnalyzerRules": {
+      "type": "array",
+      "default": [],
+      "description": "Runtime analyzer rules enforced during execution. Each rule specifies a ruleId, action (Error/Warning/Verbose/Off), and parameters.",
+      "value": [
+        {
+          "ruleId": "RT-UIA-001",
+          "enabled": true,
+          "action": "Error",
+          "parameters": {
+            "whitelistApps": "",
+            "whitelistUrls": "",
+            "blacklistApps": "",
+            "blacklistUrls": "",
+            "CustomMessage": "HIPAA VIOLATION (45 CFR §164.312(a)(1)): This automation attempted to access an application or URL not approved for PHI handling. Execution halted. Contact your HIPAA Compliance Officer."
+          }
+        },
+        {
+          "ruleId": "RT-OUT-001",
+          "enabled": true,
+          "action": "Error",
+          "parameters": {
+            "blocklist": [],
+            "CustomMessage": "HIPAA VIOLATION (45 CFR §164.312(e)(1)): Outbound transmission of PHI requires encryption and recipient authorization. This communication has been blocked. Route through Action Center for compliance review."
+          }
+        }
+      ],
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.312(e)(1) Transmission security; §164.308(a)(1) Risk management",
+      "rationale": "RT-UIA-001: §164.312(a)(1) requires technical policies to allow only authorized persons to access ePHI. App/URL whitelisting enforces access control at runtime. RT-OUT-001: §164.312(e)(1) requires guard against unauthorized access to ePHI transmitted over electronic communications networks.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM16", "HM17"]
+    }
+  },
+
+  "HIPAA-Assistant-v1": {
+    "_description": "Assistant — workforce access controls and human oversight (45 CFR §164.308(a)(3), §164.312(a), §164.308(a)(6))",
+    "_product": "Assistant",
+    "_uipath_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-assistant-policies",
+
+    "_section_widgets": "── Widget & Feed Controls ────────────────────────────────",
+    "allowCustomWidgets": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow installation of custom third-party widgets in the Assistant.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(3) Workforce security; §164.312(a)(1) Access control",
+      "rationale": "Custom widgets from untrusted sources may exfiltrate ePHI. Only approved UiPath widgets are permitted in clinical environments.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM18"]
+    },
+    "useOfficialFeeds": {
+      "type": "boolean",
+      "default": false,
+      "description": "Restrict package feeds to official UiPath feeds only.",
+      "value": true,
+      "clause_ref": "45 CFR §164.308(a)(3) Workforce security",
+      "rationale": "Official feeds ensure packages have been vetted by UiPath. Unapproved package sources could introduce components that mishandle ePHI.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM18"]
+    },
+    "widgets": {
+      "type": "array",
+      "default": [],
+      "description": "Approved widget list. Only UiPath.Apps.Widget enabled; all marketplace/community widgets disabled.",
+      "value": [
+        {"enabled": true,  "nugetPackageName": "UiPath.Apps.Widget",            "version": ""},
+        {"enabled": false, "nugetPackageName": "UiPath.Marketplace.Widget",     "version": ""},
+        {"enabled": false, "nugetPackageName": "UiPath.AutomationStore.Widget", "version": ""},
+        {"enabled": false, "nugetPackageName": "UiPath.Autopilot.Widget",       "version": ""}
+      ],
+      "clause_ref": "45 CFR §164.308(a)(3) Workforce security; §164.312(a)(1) Access control",
+      "rationale": "Marketplace and community widgets are not vetted for HIPAA compliance. Only the official UiPath Apps widget is approved for clinical use.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM18"]
+    },
+
+    "_section_access": "── Workforce Access Restrictions ─────────────────────────",
+    "allowRunOutsidePersonalWorkspace": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow running automations outside the user's personal workspace.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(3)(ii)(A) Authorization and/or supervision; §164.312(a)(1) Access control",
+      "rationale": "§164.308(a)(3)(ii)(A) requires that workforce members access ePHI only as appropriate for their role. Restricting execution to personal workspaces enforces the minimum necessary principle.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM19"]
+    },
+    "allowShareAutomationUrl": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow sharing automation URLs with other users.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(3) Workforce security; §164.308(a)(4) Information access management",
+      "rationale": "Sharing automation URLs could grant unauthorized access to automations that handle ePHI. Disabled to enforce access management controls.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM19"]
+    },
+    "allowLoggingLevelChange": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow end-users to change the logging verbosity level.",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(b) Audit controls",
+      "rationale": "§164.312(b) requires audit controls to record activity. Allowing users to reduce log verbosity could suppress the audit trail required for HIPAA compliance.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM21"]
+    },
+    "displayEDRProtectionStatus": {
+      "type": "boolean",
+      "default": false,
+      "description": "Display endpoint detection and response (EDR) protection status in the Assistant.",
+      "value": true,
+      "clause_ref": "45 CFR §164.308(a)(1)(ii)(A) Risk analysis; §164.308(a)(6) Security incident procedures",
+      "rationale": "Displaying EDR status makes security posture visible to users and IT, supporting rapid identification of unprotected endpoints that may handle ePHI.",
+      "requirement": "recommended",
+      "mapping_ids": ["HM21"]
+    },
+
+    "_section_oversight": "── Human Oversight & Action Center ──────────────────────",
+    "enableActionCenter": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Action Center for human-in-the-loop approval workflows.",
+      "value": true,
+      "clause_ref": "45 CFR §164.308(a)(3)(ii)(A) Supervision; §164.308(a)(6)(ii) Response and reporting",
+      "rationale": "HIPAA requires human oversight for high-risk actions involving ePHI (update_patient_record, prescribe_medication, send_referral). Action Center routes these decisions to authorized approvers.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM20"]
+    },
+
+    "_section_surface": "── Surface Area Reduction ────────────────────────────────",
+    "enableStudioWeb": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Studio Web (browser-based development environment).",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(1) Risk analysis; §164.312(a)(1) Access control",
+      "rationale": "Studio Web expands the development surface area and attack vectors. Disabled in HIPAA environments where development must occur on managed, hardened workstations.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM22"]
+    },
+    "enableTaskCapture": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Task Capture (screen recording for process documentation).",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.514(b) De-identification",
+      "rationale": "Task Capture records screen activity which may capture ePHI. Disabled to prevent inadvertent recording and storage of ePHI outside controlled audit systems.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM26"]
+    },
+    "enableTaskMining": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Task Mining (automated process discovery via screen/event capture).",
+      "value": false,
+      "clause_ref": "45 CFR §164.312(a)(1) Access control; §164.514(b) De-identification; §164.308(b)(1) Business Associate Contracts",
+      "rationale": "Task Mining captures detailed user activity data that may contain ePHI. Disabled; requires dedicated HIPAA assessment, data processing agreement, and BAA before use in clinical environments.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM26"]
+    },
+    "useLocalUserPreferences": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow users to override governance settings with local preferences.",
+      "value": false,
+      "clause_ref": "45 CFR §164.308(a)(3) Workforce security; §164.306(a) Security standards",
+      "rationale": "§164.306(a) requires covered entities to ensure compliance of workforce. Local preference overrides undermine centralized governance and could allow individuals to circumvent HIPAA controls.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM27"]
+    }
+  },
+
+  "HIPAA-IntegrationService-v1": {
+    "_description": "Integration Service — connector access controls (45 CFR §164.308(b)(1) Business Associate Contracts, §164.312(e) Transmission security)",
+    "_product": "IntegrationService",
+    "_uipath_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-integration-service-policies",
+
+    "_section_connectors": "── Connector State ───────────────────────────────────────",
+    "defaultConnectorState": {
+      "type": "string",
+      "default": "Enabled",
+      "description": "Default state for all Integration Service connectors. 'Disabled' means all connectors are off unless explicitly enabled.",
+      "value": "Disabled",
+      "clause_ref": "45 CFR §164.308(b)(1) Business Associate Contracts; §164.312(e)(1) Transmission security; §164.308(a)(3) Workforce security",
+      "rationale": "§164.308(b)(1) requires a BAA with every Business Associate before ePHI may be transmitted. Disabling all connectors by default enforces a deny-all policy — connectors are only enabled after legal confirms BAA coverage for the specific third-party service.",
+      "requirement": "mandatory",
+      "mapping_ids": ["HM03"]
+    }
+  },
+
+  "_hipaa_clause_mapping": {
+    "standard": "HIPAA Security Rule — 45 CFR Part 164",
+    "coverage_summary": {
+      "total_controls_assessed": 37,
+      "mapped_to_uipath": 27,
+      "gaps_requiring_compensating_controls": 10
+    },
+    "mapped": [
+      {
+        "id": "HM01",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.306(a) + §164.312(a)(1)",
+        "title": "AI Trust Layer Master Switch",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["global-control-toggle"],
+        "value_to_set": "true",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Top-level gate ensuring all AI Trust Layer HIPAA controls are active."
+      },
+      {
+        "id": "HM02",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1)(ii)(A) Risk analysis",
+        "title": "Risk Analysis — AI Feature Risk Assessment",
+        "uipath_policies": [],
+        "uipath_fields": [],
+        "value_to_set": "deployment_practice",
+        "coverage": "Partial",
+        "requirement": "Mandatory",
+        "notes": "Formal risk analysis must be conducted before enabling any AI feature (agents, documentunderstanding, etc.). UiPath enforces the outcome (features off by default); the analysis itself is an organizational process."
+      },
+      {
+        "id": "HM03",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(b)(1) Business Associate Contracts",
+        "title": "Integration Service Default Deny",
+        "uipath_policies": ["HIPAA-IntegrationService-v1"],
+        "uipath_fields": ["defaultConnectorState"],
+        "value_to_set": "\"Disabled\"",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "All third-party connectors disabled by default. Enable only after BAA with each sub-processor is confirmed."
+      },
+      {
+        "id": "HM04",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(b)(1) Business Associate Contracts",
+        "title": "Third-Party AI Provider BAA Controls",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["anthropic-control-toggle", "azure-openai-control-toggle", "gemini-control-toggle"],
+        "value_to_set": "false (until BAA confirmed)",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Anthropic, Azure OpenAI, and Google Gemini all disabled until signed BAA for the specific service is on file."
+      },
+      {
+        "id": "HM05",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(b) Audit controls",
+        "title": "AI Prompt Logging (Audit Trail)",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["saveprompts"],
+        "value_to_set": "true",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Captures all AI I/O for HIPAA audit trail. Supplement with external SIEM for 6-year retention."
+      },
+      {
+        "id": "HM06",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(b) Audit controls; §164.316(b)(2)(i) Retention",
+        "title": "Audit Log Retention Enforcement",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["traces-ttl-enforcement", "traces-ttl", "traces-ttl-effective"],
+        "value_to_set": "true / \"365d\" / \"365d\"",
+        "coverage": "Partial",
+        "requirement": "Mandatory",
+        "notes": "Platform TTL max is 365d. Full 6-year HIPAA retention requires external archival pipeline (Orchestrator → Splunk/SIEM)."
+      },
+      {
+        "id": "HM07",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(e)(2)(ii) Encryption; §164.514(b)(2) PHI identifiers",
+        "title": "In-Flight PHI Detection & Blocking",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["container", "pii-entity-table"],
+        "value_to_set": "pii-in-flight-* = true; all 19 PII categories enabled at 0.5",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Covers all 18 HIPAA PHI identifiers (§164.514(b)(2)). In-flight scanning prevents ePHI transmission to AI models."
+      },
+      {
+        "id": "HM08",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(a)(1) Access control; §164.308(a)(1) Risk analysis",
+        "title": "AI Feature Access — Default Off",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["agents", "agenthub", "apps", "jarvis", "uia"],
+        "value_to_set": "false (except uia=true)",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "All high-risk AI features disabled by default. Enable individually after per-feature risk assessment and BAA verification."
+      },
+      {
+        "id": "HM09",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(a)(1) Access control; §164.308(a)(1) Risk analysis",
+        "title": "Document & Communications Processing — Default Off",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["documentunderstanding", "communicationsmining", "uipath-ai-rdk"],
+        "value_to_set": "false",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "These capabilities directly process content likely to contain ePHI. Disabled until risk assessment and BAA complete."
+      },
+      {
+        "id": "HM10",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.514(b) De-identification; §164.308(a)(1) Risk analysis",
+        "title": "Disable AI Telemetry/Insights",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["traces-disable-insights"],
+        "value_to_set": "true",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Prevents ePHI fragments from entering aggregated analytics pipelines not covered by BAA."
+      },
+      {
+        "id": "HM11",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1)(ii)(B) Risk management; §164.308(a)(8) Evaluation",
+        "title": "Analyzer Enforcement (Publish/Run/Check-In)",
+        "uipath_policies": ["HIPAA-Studio-v1"],
+        "uipath_fields": ["enforceAnalyzerBeforePublish", "enforceAnalyzerBeforeRun", "enforceAnalyzerBeforePushCheckIn", "analyzeRpaXamlFilesOnly"],
+        "value_to_set": "true / true / true / false",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Ensures security and quality analysis gates are enforced throughout the development lifecycle."
+      },
+      {
+        "id": "HM12",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.312(b) Audit controls; §164.316(b)(1) Documentation",
+        "title": "Source Control & Release Documentation",
+        "uipath_policies": ["HIPAA-Studio-v1"],
+        "uipath_fields": ["enforceCheckInBeforePublish", "enforceReleaseNotes"],
+        "value_to_set": "true / true",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Version control + release notes provide the documented change record required by HIPAA."
+      },
+      {
+        "id": "HM13",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1) Risk analysis; §164.308(a)(8) Evaluation",
+        "title": "AI-Generated Code Controls",
+        "uipath_policies": ["HIPAA-Studio-v1"],
+        "uipath_fields": ["enableAiActivitySuggestions", "autoUpdatePackagesForAutopilot"],
+        "value_to_set": "false / false",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Developers must own and review all automation code. AI-generated suggestions disabled to maintain accountability."
+      },
+      {
+        "id": "HM14",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1)(ii)(B) Risk management; §164.308(a)(3) Workforce security",
+        "title": "Activity & Package Restrictions",
+        "uipath_policies": ["HIPAA-Studio-v1"],
+        "uipath_fields": ["enableAllAvailableActivities", "allowPreviewPackagesInActivitiesPanel"],
+        "value_to_set": "false / false",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Restricts development to approved, vetted activity packages only."
+      },
+      {
+        "id": "HM15",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(b) Audit controls; §164.316(b)(1) Documentation",
+        "title": "Audit Artifacts in Published Packages",
+        "uipath_policies": ["HIPAA-Studio-v1"],
+        "uipath_fields": ["exportAnalyzerResults", "includeSources"],
+        "value_to_set": "true / true",
+        "coverage": "Full",
+        "requirement": "Recommended",
+        "notes": "Analyzer results and sources in packages support post-deployment audit and reproducibility."
+      },
+      {
+        "id": "HM16",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(a)(1) Access control",
+        "title": "Runtime App/URL Access Control (RT-UIA-001)",
+        "uipath_policies": ["HIPAA-Robot-v1"],
+        "uipath_fields": ["runtimeAnalyzerRules"],
+        "value_to_set": "RT-UIA-001 enabled=true, action=Error",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Enforces application and URL whitelisting at runtime. Configure whitelistApps/URLs per approved clinical app inventory."
+      },
+      {
+        "id": "HM17",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(e)(1) Transmission security",
+        "title": "Runtime Outbound Transmission Control (RT-OUT-001)",
+        "uipath_policies": ["HIPAA-Robot-v1"],
+        "uipath_fields": ["runtimeAnalyzerRules"],
+        "value_to_set": "RT-OUT-001 enabled=true, action=Error",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Blocks unauthorized outbound email/data transmission containing ePHI. Routes to Action Center for compliance review."
+      },
+      {
+        "id": "HM18",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(3) Workforce security; §164.312(a)(1) Access control",
+        "title": "Widget & Package Feed Restrictions",
+        "uipath_policies": ["HIPAA-Assistant-v1"],
+        "uipath_fields": ["allowCustomWidgets", "useOfficialFeeds", "widgets"],
+        "value_to_set": "false / true / official widgets only",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Only UiPath.Apps.Widget approved. Marketplace/community widgets disabled to prevent ePHI exfiltration via unvetted components."
+      },
+      {
+        "id": "HM19",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(3)(ii)(A) Authorization; §164.308(a)(4) Information access management",
+        "title": "Workforce Access Restrictions — Run & Share",
+        "uipath_policies": ["HIPAA-Assistant-v1"],
+        "uipath_fields": ["allowRunOutsidePersonalWorkspace", "allowShareAutomationUrl"],
+        "value_to_set": "false / false",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Enforces minimum necessary access principle. Users can only run automations in their own workspace."
+      },
+      {
+        "id": "HM20",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(3)(ii)(A) Supervision; §164.308(a)(6)(ii) Response and reporting",
+        "title": "Human-in-the-Loop — Action Center",
+        "uipath_policies": ["HIPAA-Assistant-v1"],
+        "uipath_fields": ["enableActionCenter"],
+        "value_to_set": "true",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Routes high-risk clinical actions (update_patient_record, prescribe_medication, send_referral) to authorized human approvers."
+      },
+      {
+        "id": "HM21",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(b) Audit controls; §164.308(a)(1)(ii)(A) Risk analysis",
+        "title": "Audit Integrity — Logging & EDR Visibility",
+        "uipath_policies": ["HIPAA-Assistant-v1"],
+        "uipath_fields": ["allowLoggingLevelChange", "displayEDRProtectionStatus"],
+        "value_to_set": "false / true",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Prevents users from suppressing audit logs; displays endpoint security status for operational awareness."
+      },
+      {
+        "id": "HM22",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1) Risk analysis; §164.312(a)(1) Access control",
+        "title": "Studio Web Disabled",
+        "uipath_policies": ["HIPAA-Assistant-v1"],
+        "uipath_fields": ["enableStudioWeb"],
+        "value_to_set": "false",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Development must occur on managed, hardened workstations. Browser-based development expands attack surface."
+      },
+      {
+        "id": "HM23",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1) Risk management",
+        "title": "Object Repository & Dependency Management",
+        "uipath_policies": ["HIPAA-Studio-v1"],
+        "uipath_fields": ["objectRepositoryEnforced", "separateRuntimeDependencies"],
+        "value_to_set": "true / true",
+        "coverage": "Full",
+        "requirement": "Recommended",
+        "notes": "Centralized UI descriptors and clean runtime dependencies reduce brittleness and attack surface in clinical automations."
+      },
+      {
+        "id": "HM24",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1) Risk management",
+        "title": "Modern Framework Enforcement",
+        "uipath_policies": ["HIPAA-Studio-v1"],
+        "uipath_fields": ["allowedCompatibilityFrameworks"],
+        "value_to_set": "[\"Windows\", \"Cross-platform\"]",
+        "coverage": "Full",
+        "requirement": "Recommended",
+        "notes": "Windows-Legacy framework excluded to ensure modern .NET security features and current patch levels."
+      },
+      {
+        "id": "HM25",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1) Risk analysis",
+        "title": "Autonomous Agent Features — Default Off",
+        "uipath_policies": ["HIPAA-AITrustLayer-v1"],
+        "uipath_fields": ["healing-agent", "wingman", "uipath-testmanager"],
+        "value_to_set": "false",
+        "coverage": "Full",
+        "requirement": "Conditional_mandatory",
+        "notes": "Autonomous features that modify or observe automation behavior disabled pending HIPAA risk assessment."
+      },
+      {
+        "id": "HM26",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.312(a)(1) Access control; §164.514(b) De-identification",
+        "title": "Screen Capture Capabilities Disabled",
+        "uipath_policies": ["HIPAA-Assistant-v1"],
+        "uipath_fields": ["enableTaskCapture", "enableTaskMining"],
+        "value_to_set": "false / false",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Screen recording and event capture could inadvertently capture ePHI. Disabled; Task Mining requires dedicated HIPAA assessment and BAA before any clinical use."
+      },
+      {
+        "id": "HM27",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(3) Workforce security; §164.306(a) Security standards",
+        "title": "Governance Override Prevention",
+        "uipath_policies": ["HIPAA-Assistant-v1"],
+        "uipath_fields": ["useLocalUserPreferences"],
+        "value_to_set": "false",
+        "coverage": "Full",
+        "requirement": "Mandatory",
+        "notes": "Prevents workforce members from overriding centralized HIPAA governance settings via local preferences."
+      }
+    ],
+    "not_mapped": [
+      {
+        "id": "HG01",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(1)(ii)(A) Risk analysis",
+        "title": "Formal HIPAA Risk Analysis",
+        "gap_description": "UiPath enforces outcomes of risk analysis (features off by default) but cannot perform the formal §164.308(a)(1)(ii)(A) risk analysis itself. A documented organizational risk assessment is required.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "Risk assessment workflow integration (roadmap)",
+        "compensating_control": "Conduct formal HIPAA risk analysis per NIST SP 800-66r2. Document threats, vulnerabilities, likelihood, and impact for all systems handling ePHI."
+      },
+      {
+        "id": "HG02",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(2) Assigned Security Responsibility",
+        "title": "HIPAA Security Officer Designation",
+        "gap_description": "No UiPath control exists for designating a HIPAA Security Officer. This is an organizational requirement.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "None anticipated",
+        "compensating_control": "Formally designate a HIPAA Security Officer. Document the appointment and responsibilities. Ensure this individual reviews UiPath governance settings."
+      },
+      {
+        "id": "HG03",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(5) Security Awareness Training",
+        "title": "Workforce HIPAA Security Training",
+        "gap_description": "UiPath has no built-in training module. Workforce must be trained on HIPAA security policies.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "None anticipated",
+        "compensating_control": "Implement annual HIPAA security awareness training for all staff accessing ePHI via UiPath automations. Track completion."
+      },
+      {
+        "id": "HG04",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(6) Security Incident Procedures",
+        "title": "Security Incident Response Plan",
+        "gap_description": "UiPath surfaces audit logs and EDR status but does not provide an incident response workflow.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "Action Center could be used for incident routing",
+        "compensating_control": "Maintain a documented security incident response plan. Integrate UiPath audit logs with SIEM for automated alerting. Route incidents through Action Center if using UiPath."
+      },
+      {
+        "id": "HG05",
+        "_group": "Administrative Safeguards — §164.308",
+        "clause": "45 CFR §164.308(a)(7) Contingency Plan",
+        "title": "Business Continuity & Disaster Recovery",
+        "gap_description": "No UiPath governance field controls backup, recovery, or contingency procedures for ePHI.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "None anticipated",
+        "compensating_control": "Maintain tested data backup and disaster recovery plans for UiPath Orchestrator and audit log storage. Include UiPath in BCP/DR exercises."
+      },
+      {
+        "id": "HG06",
+        "_group": "Physical Safeguards — §164.310",
+        "clause": "45 CFR §164.310 Physical Safeguards (all sub-sections)",
+        "title": "Physical Access Controls for UiPath Infrastructure",
+        "gap_description": "UiPath governance policies control software behavior only. Physical access to servers, workstations, and data centers running UiPath is outside policy scope.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "None — physical controls are infrastructure layer",
+        "compensating_control": "Implement physical access controls per §164.310: facility access controls, workstation use policies, device/media disposal procedures. For cloud deployments, verify CSP physical compliance."
+      },
+      {
+        "id": "HG07",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(a)(2)(i) Unique User Identification",
+        "title": "Unique User ID per Workforce Member",
+        "gap_description": "UiPath relies on external IdP (Active Directory, Azure AD, Okta) for unique user identification. No UiPath governance field enforces this.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "None — identity is managed by IdP",
+        "compensating_control": "Configure UiPath to use federated authentication. Enforce unique user accounts in the IdP. Prohibit shared credentials. Audit user accounts quarterly."
+      },
+      {
+        "id": "HG08",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(a)(2)(iii) Automatic Logoff",
+        "title": "Automatic Session Timeout",
+        "gap_description": "Session timeout for the UiPath web console is not configurable via governance policy fields. Controlled at the platform/IdP level.",
+        "requirement": "Mandatory",
+        "priority": "Medium",
+        "future_uipath_control": "Session timeout governance setting (roadmap consideration)",
+        "compensating_control": "Configure automatic logoff in the UiPath cloud portal settings and/or IdP. Set session timeout to 15 minutes of inactivity per NIST SP 800-66 guidance."
+      },
+      {
+        "id": "HG09",
+        "_group": "Technical Safeguards — §164.312",
+        "clause": "45 CFR §164.312(a)(2)(iv) Encryption and Decryption",
+        "title": "ePHI Encryption at Rest",
+        "gap_description": "UiPath governance policies control data flow and access; encryption of stored ePHI (in Orchestrator DB, audit logs) is not configurable via policy fields.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "None — encryption at rest is infrastructure layer",
+        "compensating_control": "Ensure all UiPath data stores (Orchestrator DB, storage buckets, audit log archives) use AES-256 encryption at rest. For cloud: verify CSP encryption settings. For on-premise: deploy encrypted volumes."
+      },
+      {
+        "id": "HG10",
+        "_group": "Organizational Requirements — §164.314",
+        "clause": "45 CFR §164.314(a)(1) Business Associate Contract Requirements",
+        "title": "Long-Term ePHI Archival (6-Year Retention)",
+        "gap_description": "UiPath traces-ttl has a maximum of 365 days. HIPAA §164.316(b)(2)(i) requires 6-year documentation retention. Platform TTL alone is insufficient.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "Extended retention or SIEM export configuration (roadmap)",
+        "compensating_control": "Deploy an audit log pipeline: UiPath Orchestrator → SIEM (Splunk, Microsoft Sentinel, etc.) with 6-year retention policy. Ensure SIEM vendor has signed HIPAA BAA."
+      }
+    ]
+  }
+}

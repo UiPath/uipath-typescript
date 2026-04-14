@@ -1,4 +1,16 @@
 /**
+ * Full product object as returned by GET /Product.
+ * @internal
+ */
+export interface ProductApiResponse {
+  name: string;
+  label: string;
+  isRestricted: boolean;
+  isCloud: boolean;
+  isRemote: boolean;
+}
+
+/**
  * Raw API response from GET /Policy/form-data/{id}.
  * The settings are nested two levels deep in the API response.
  * @internal

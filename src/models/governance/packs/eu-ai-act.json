@@ -1,0 +1,307 @@
+{
+  "_version": "1.0",
+  "_comment": "EU AI Act Compliance Pack for UiPath AI Agent Operations",
+  "_description": "EU Artificial Intelligence Act (Regulation (EU) 2024/1689) — maps UiPath platform settings to obligations for providers and deployers of AI systems, with focus on high-risk AI and general-purpose AI models.",
+  "_usage": "Version 1.0 — initial draft. Apply with: python3 uipath_governance.py --mode configure --pack eu_ai_act_policies.json --no-dry-run --jwt '...' --cookie '...'",
+  "_format": "Each field is a rich object: { type, default, description, value, clause_ref, rationale, requirement, mapping_ids }. The 'value' key is what gets applied. All other keys are documentation.",
+  "_runtime_standards": ["eu_ai_act_runtime", "owasp_agentic"],
+  "_runtime_standards_comment": "Standards evaluated at agent runtime by UiPathGovernanceMiddleware. EU AI Act runtime rules enforce Article 9 (risk management), Article 14 (human oversight), and Article 15 (robustness) on every agent session.",
+  "_requirement_legend": {
+    "mandatory":             "MUST be set — directly required by the EU AI Act for the applicable risk category",
+    "conditional_mandatory": "MUST be set when AI system is classified as High-Risk per Annex III",
+    "recommended":           "SHOULD be set — EU AI Act best practice / recital guidance",
+    "optional":              "MAY be set — goes beyond minimum Act requirements"
+  },
+  "_framework": {
+    "name": "EU Artificial Intelligence Act",
+    "regulation": "Regulation (EU) 2024/1689",
+    "official_journal": "OJ L, 2024/1689",
+    "in_force": "2024-08-01",
+    "fully_applicable": "2026-08-01",
+    "risk_classification": {
+      "prohibited":     "Title II — Unacceptable risk; absolute ban (Art. 5)",
+      "high_risk":      "Title III — High-risk AI systems (Annex III); strictest obligations",
+      "gpai":           "Title VIII — General-Purpose AI models; transparency + systemic risk rules",
+      "limited_risk":   "Title IV — Transparency obligations (Art. 50)",
+      "minimal_risk":   "Minimal obligations; encouraged to adopt voluntary codes"
+    },
+    "key_articles": {
+      "Art. 5":  "Prohibited AI practices",
+      "Art. 9":  "Risk management system",
+      "Art. 10": "Data and data governance",
+      "Art. 13": "Transparency and provision of information to deployers",
+      "Art. 14": "Human oversight",
+      "Art. 15": "Accuracy, robustness and cybersecurity",
+      "Art. 17": "Quality management system",
+      "Art. 26": "Obligations of deployers of high-risk AI systems",
+      "Art. 50": "Transparency obligations for certain AI systems",
+      "Art. 72": "Post-market monitoring by providers"
+    }
+  },
+
+  "EUAI-AITrustLayer-v1": {
+    "_description": "AI Trust Layer — platform controls for Art. 9 (risk management), Art. 14 (human oversight), Art. 15 (robustness)",
+    "_product": "AITrustLayer",
+    "_eu_ai_act_scope": ["high_risk", "gpai", "limited_risk"],
+
+    "_section_prohibited": "── Art. 5: Prohibited Practices ──────────────────────────────",
+
+    "global-control-toggle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Master enable for AI Trust Layer governance — prevents prohibited AI practices.",
+      "value": true,
+      "clause_ref": "Art. 5 Prohibited AI practices; Art. 9(1) Risk management system",
+      "rationale": "Art. 5 mandates absolute prohibition of certain AI practices. The master switch is the platform-level gate that ensures governance controls preventing prohibited uses are always active.",
+      "requirement": "mandatory",
+      "mapping_ids": ["EA01"]
+    },
+    "prohibit-social-scoring": {
+      "type": "boolean",
+      "default": false,
+      "description": "Prohibit AI systems that perform social scoring of natural persons.",
+      "value": true,
+      "clause_ref": "Art. 5(1)(c) — General-purpose social scoring prohibited",
+      "rationale": "Art. 5(1)(c) absolutely prohibits AI for general-purpose social scoring by public authorities. This toggle prevents agent workflows from implementing scoring-based citizen profiling.",
+      "requirement": "mandatory",
+      "mapping_ids": ["EA02"]
+    },
+    "prohibit-subliminal-manipulation": {
+      "type": "boolean",
+      "default": false,
+      "description": "Prohibit AI systems using subliminal, manipulative, or deceptive techniques to influence users.",
+      "value": true,
+      "clause_ref": "Art. 5(1)(a) — Subliminal techniques that bypass free will; Art. 5(1)(b) — Exploiting vulnerabilities",
+      "rationale": "Art. 5(1)(a-b) prohibit AI that subverts rational agency. AI agents must not use persuasion techniques that exploit psychological weaknesses or bypass informed consent.",
+      "requirement": "mandatory",
+      "mapping_ids": ["EA03"]
+    },
+
+    "_section_risk_management": "── Art. 9: Risk Management System ────────────────────────────",
+
+    "risk-management-system-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable documented risk management system for high-risk AI systems (Art. 9).",
+      "value": true,
+      "clause_ref": "Art. 9(1) — Continuous iterative risk management process; Art. 9(2) — Risk identification, estimation, evaluation",
+      "rationale": "Art. 9 requires a continuous risk management system for high-risk AI. This flag enables the audit hooks and controls that constitute the technical part of the risk management system.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA04"]
+    },
+    "residual-risk-threshold": {
+      "type": "string",
+      "default": "medium",
+      "description": "Maximum tolerated residual risk level after mitigation before deployment is blocked.",
+      "value": "low",
+      "clause_ref": "Art. 9(4) — Residual risks eliminated or reduced to acceptable level; Art. 9(6) — Testing against reasonably foreseeable misuse",
+      "rationale": "Art. 9(4) requires reducing risks to acceptable levels. Setting to 'low' ensures only adequately mitigated AI systems pass the deployment gate — medium/high residual risk = no deployment.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA05"]
+    },
+    "post-market-monitoring-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable post-market monitoring of AI system performance and incidents (Art. 72).",
+      "value": true,
+      "clause_ref": "Art. 72 — Post-market monitoring system; Art. 9(1) — Continuous risk management",
+      "rationale": "Art. 72 requires providers to monitor high-risk AI post-deployment. Monitoring detects performance degradation, discriminatory outcomes, and new risks not present at initial assessment.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA06"]
+    },
+
+    "_section_transparency": "── Art. 13/50: Transparency Obligations ───────────────────────",
+
+    "ai-interaction-disclosure": {
+      "type": "boolean",
+      "default": false,
+      "description": "Disclose to users when they are interacting with an AI system (Art. 50).",
+      "value": true,
+      "clause_ref": "Art. 50(1) — Natural persons notified when interacting with AI; Art. 13(1) — Transparency and provision of information",
+      "rationale": "Art. 50(1) mandates AI disclosure unless the context makes it obvious. Agents interacting with employees, customers, or citizens must identify themselves as AI.",
+      "requirement": "mandatory",
+      "mapping_ids": ["EA07"]
+    },
+    "instructions-for-use-published": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require instructions for use to be published with high-risk AI systems before deployment.",
+      "value": true,
+      "clause_ref": "Art. 13(3) — Instructions for use in accessible format; Art. 26(1) — Deployer obligations",
+      "rationale": "Art. 13(3) requires providers to supply instructions for use. Deployers (Art. 26) must ensure they have and follow these instructions — this gate prevents deployment without documentation.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA08"]
+    },
+
+    "_section_human_oversight": "── Art. 14: Human Oversight ────────────────────────────────────",
+
+    "action-center-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable UiPath Action Center for human oversight of high-risk AI decisions.",
+      "value": true,
+      "clause_ref": "Art. 14(1) — Human oversight measures; Art. 14(4) — Ability to intervene, override, halt",
+      "rationale": "Art. 14 requires that high-risk AI systems allow natural persons to effectively oversee them and intervene or override. Action Center is the UiPath implementation of the Art. 14 override mechanism.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA09"]
+    },
+    "halt-capability-exposed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Expose a halt/stop capability to human overseers to interrupt AI agent operation.",
+      "value": true,
+      "clause_ref": "Art. 14(4)(d) — Ability to decide not to use, override, or halt the AI system",
+      "rationale": "Art. 14(4)(d) explicitly requires the ability to halt AI systems. The halt capability must be technically implemented and accessible to the designated oversight role, not just a policy statement.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA10"]
+    },
+
+    "_section_data": "── Art. 10: Data and Data Governance ───────────────────────────",
+
+    "training-data-documentation-required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require documentation of training data provenance and bias assessment for high-risk AI.",
+      "value": true,
+      "clause_ref": "Art. 10(2) — Data governance practices; Art. 10(3) — Training, validation, testing data requirements",
+      "rationale": "Art. 10 requires data governance for high-risk AI including examination of bias. Documentation gate ensures training data lineage is captured before deployment sign-off.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA11"]
+    },
+    "pii-detection-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable PII detection to prevent personal data from entering AI prompts in violation of GDPR and AI Act data minimisation requirements.",
+      "value": true,
+      "clause_ref": "Art. 10(5) — Special categories of data only where necessary; GDPR Art. 5(1)(c) Data minimisation",
+      "rationale": "Art. 10(5) restricts special category data in AI training/operation. PII detection prevents personal data leakage into LLM prompts, satisfying both AI Act and GDPR data minimisation obligations.",
+      "requirement": "mandatory",
+      "mapping_ids": ["EA12"]
+    }
+  },
+
+  "EUAI-Robot-v1": {
+    "_description": "Robot execution settings — Art. 15 (accuracy/robustness), Art. 26 (deployer obligations)",
+    "_product": "Orchestrator",
+    "_eu_ai_act_scope": ["high_risk"],
+
+    "_section_accuracy": "── Art. 15: Accuracy, Robustness and Cybersecurity ───────────────",
+
+    "accuracy-testing-required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require accuracy testing against defined metrics before AI automation deployment.",
+      "value": true,
+      "clause_ref": "Art. 15(1) — Appropriate level of accuracy, robustness and cybersecurity",
+      "rationale": "Art. 15(1) requires high-risk AI to achieve appropriate accuracy. Testing against defined metrics before deployment ensures the system meets accuracy commitments declared in the conformity assessment.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA13"]
+    },
+    "adversarial-robustness-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable robustness checks against adversarial inputs (prompt injection, data poisoning).",
+      "value": true,
+      "clause_ref": "Art. 15(3) — Resilient to errors, faults or inconsistencies; Art. 15(4) — Resilient to attempts by third parties to alter use",
+      "rationale": "Art. 15(3-4) require AI resilience against adversarial manipulation. Prompt injection and data poisoning are the primary adversarial threats to LLM-based agents — runtime detection is required.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA14"]
+    },
+    "max-tool-calls-per-session": {
+      "type": "integer",
+      "default": 100,
+      "description": "Maximum tool calls per agent session to limit blast radius of errors.",
+      "value": 30,
+      "clause_ref": "Art. 15(3) — Resilience to errors and inconsistencies; Art. 9(2)(b) — Risk estimation and evaluation",
+      "rationale": "Art. 15(3) requires resilience against errors. Bounding autonomous action limits the consequences of AI errors — consistent with proportionality principle and the Art. 9 risk assessment.",
+      "requirement": "recommended",
+      "mapping_ids": ["EA15"]
+    },
+
+    "_section_deployer": "── Art. 26: Deployer Obligations ────────────────────────────────",
+
+    "conformity-assessment-documented": {
+      "type": "boolean",
+      "default": false,
+      "description": "Record that a conformity assessment has been completed before deploying high-risk AI.",
+      "value": true,
+      "clause_ref": "Art. 26(1) — Deployers ensure use in accordance with instructions; Art. 43 — Conformity assessment",
+      "rationale": "Art. 43 requires conformity assessment before high-risk AI is placed on the market. Deployers (Art. 26) must verify this. This flag records the assessment completion in the deployment audit trail.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA16"]
+    },
+    "eu-ai-act-registration-number": {
+      "type": "string",
+      "default": "",
+      "description": "EU AI Act registration number from the EU AI database (required for high-risk AI systems).",
+      "value": "",
+      "clause_ref": "Art. 49 — Registration obligations; Art. 71 — EU database of high-risk AI",
+      "rationale": "Art. 49 and Art. 71 require high-risk AI providers to register in the EU AI database before deployment. The registration number is the primary identifier linking the deployed system to its conformity documentation.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA17"]
+    }
+  },
+
+  "EUAI-Studio-v1": {
+    "_description": "Studio development settings — Art. 17 (quality management), Art. 9 (testing obligations)",
+    "_product": "Studio",
+    "_eu_ai_act_scope": ["high_risk", "gpai"],
+
+    "_section_qms": "── Art. 17: Quality Management System ─────────────────────────",
+
+    "quality-management-system-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable quality management system controls for high-risk AI development.",
+      "value": true,
+      "clause_ref": "Art. 17(1) — Quality management system proportionate to risk; Art. 17(2)(a-k) — QMS elements",
+      "rationale": "Art. 17 requires providers of high-risk AI to implement a QMS. Development-time controls (code review, testing gates, documentation) constitute the technical part of the QMS.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA18"]
+    },
+    "version-control-required": {
+      "type": "boolean",
+      "default": true,
+      "description": "Require version control for all AI automations to support audit trail and rollback.",
+      "value": true,
+      "clause_ref": "Art. 17(2)(f) — Technical documentation and record-keeping; Art. 18 — Technical documentation",
+      "rationale": "Art. 18 requires technical documentation including version history. Version control ensures each deployed version is traceable and rollback is possible when non-conformities are detected.",
+      "requirement": "mandatory",
+      "mapping_ids": ["EA19"]
+    },
+    "testing-before-deployment-required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require testing against defined test plan before production deployment.",
+      "value": true,
+      "clause_ref": "Art. 9(6) — Testing against reasonably foreseeable misuse; Art. 17(2)(g) — Testing and validation",
+      "rationale": "Art. 9(6) requires testing high-risk AI against reasonably foreseeable misuse scenarios. Testing gate prevents untested automations from reaching production.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["EA20"]
+    }
+  },
+
+  "_eu_ai_act_mapping": {
+    "_comment": "Maps UiPath controls (EA01-EA20) to EU AI Act Articles",
+    "EA01": { "article": "Art. 5 + Art. 9(1)", "title": "Master governance switch", "risk_scope": ["prohibited", "high_risk"] },
+    "EA02": { "article": "Art. 5(1)(c)",       "title": "Prohibit social scoring", "risk_scope": ["prohibited"] },
+    "EA03": { "article": "Art. 5(1)(a-b)",     "title": "Prohibit subliminal manipulation", "risk_scope": ["prohibited"] },
+    "EA04": { "article": "Art. 9(1-2)",        "title": "Risk management system", "risk_scope": ["high_risk"] },
+    "EA05": { "article": "Art. 9(4)",          "title": "Residual risk threshold", "risk_scope": ["high_risk"] },
+    "EA06": { "article": "Art. 72",            "title": "Post-market monitoring", "risk_scope": ["high_risk", "gpai"] },
+    "EA07": { "article": "Art. 50(1)",         "title": "AI interaction disclosure", "risk_scope": ["limited_risk", "high_risk"] },
+    "EA08": { "article": "Art. 13(3) + Art. 26(1)", "title": "Instructions for use", "risk_scope": ["high_risk"] },
+    "EA09": { "article": "Art. 14(1)",         "title": "Action Center oversight", "risk_scope": ["high_risk"] },
+    "EA10": { "article": "Art. 14(4)(d)",      "title": "Halt capability", "risk_scope": ["high_risk"] },
+    "EA11": { "article": "Art. 10(2-3)",       "title": "Training data documentation", "risk_scope": ["high_risk"] },
+    "EA12": { "article": "Art. 10(5)",         "title": "PII detection", "risk_scope": ["high_risk", "gpai"] },
+    "EA13": { "article": "Art. 15(1)",         "title": "Accuracy testing gate", "risk_scope": ["high_risk"] },
+    "EA14": { "article": "Art. 15(3-4)",       "title": "Adversarial robustness", "risk_scope": ["high_risk"] },
+    "EA15": { "article": "Art. 15(3)",         "title": "Tool call budget", "risk_scope": ["high_risk"] },
+    "EA16": { "article": "Art. 26(1) + Art. 43", "title": "Conformity assessment record", "risk_scope": ["high_risk"] },
+    "EA17": { "article": "Art. 49 + Art. 71",  "title": "EU AI database registration", "risk_scope": ["high_risk"] },
+    "EA18": { "article": "Art. 17(1-2)",       "title": "Quality management system", "risk_scope": ["high_risk"] },
+    "EA19": { "article": "Art. 17(2)(f) + Art. 18", "title": "Version control requirement", "risk_scope": ["high_risk"] },
+    "EA20": { "article": "Art. 9(6) + Art. 17(2)(g)", "title": "Testing before deployment", "risk_scope": ["high_risk"] }
+  }
+}

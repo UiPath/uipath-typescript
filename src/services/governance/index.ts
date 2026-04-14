@@ -24,3 +24,11 @@ export { GovernanceService as Governance, GovernanceService } from './governance
 
 export * from '../../models/governance/governance.types';
 export * from '../../models/governance/governance.models';
+export {
+  HIPAA,
+  ISO42001,
+  EU_AI_ACT,
+  NIST_AI_RMF,
+  SOC2,
+  COMPLIANCE_PACKS,
+} from '../../models/governance/compliance-packs';

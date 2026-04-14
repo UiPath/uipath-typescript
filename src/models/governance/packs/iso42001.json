@@ -1,0 +1,1699 @@
+{
+  "_version": "1.0",
+  "_comment": "ISO/IEC 42001:2023 governance compliance pack for UiPath Automation Ops.",
+  "_usage": "Edit 'value' fields below, then run: python3 uipath_governance.py --mode configure --pack packs/iso42001_policies.json --no-dry-run --jwt '...' --cookie '...'",
+  "_format": "Each policy field uses a rich-object format: { value, type, default, description, iso_clause, iso_rationale, requirement }. The governance script extracts 'value' automatically before calling the API.",
+  "_runtime_standards": ["iso42001_runtime", "owasp_agentic"],
+  "_runtime_standards_comment": "Standards evaluated at agent runtime by UiPathGovernanceMiddleware. Set here at compile time — runtime reads this automatically. Add/remove standards here to change what all agents in this tenant/group are evaluated against.",
+  "_requirement_legend": {
+    "mandatory": "Must be set to this value. Non-compliance is a direct gap against the cited ISO clause.",
+    "conditional_mandatory": "Mandatory when the stated condition applies. Review and document the condition.",
+    "recommended": "ISO 42001 best practice or inferred from the spirit of the standard. Strongly advised.",
+    "optional": "Not required by ISO 42001. Included for completeness; set based on operational preference."
+  },
+  "_framework": {
+    "name": "ISO/IEC 42001:2023",
+    "full_title": "Information technology — Artificial intelligence — Management system",
+    "publisher": "ISO/IEC JTC 1/SC 42",
+    "edition": "First edition 2023-12",
+    "scope": "Establishes requirements for an AI management system (AIMS) for any organisation that develops, provides or uses AI systems.",
+    "structure": {
+      "main_clauses": "Clauses 4–10 are normative requirements (SHALL).",
+      "annex_a": "Annex A provides recommended implementation controls (SHOULD). Referenced as A.X.Y."
+    }
+  },
+  "ISO42001-AITrustLayer-v1": {
+    "_product": "AITrustLayer",
+    "_category": "AI Trust Layer",
+    "_description": "Controls which generative AI features and third-party AI providers are available. First line of technical control under ISO 42001 — most clauses map here.",
+    "_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-ai-trust-layer-policies",
+    "global-control-toggle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Master switch. Must be true for all sub-controls to take effect.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §8.1",
+      "rationale": "§8.1 requires operational planning and control processes for AI. The master toggle activates the governance framework; setting it false disables all downstream controls.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M06"
+      ]
+    },
+    "_section_feature_gates": "── AI Feature Gates (§8.6 / §8.2 / §8.3) ───────────────────────────",
+    "agents": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath autonomous Agents. Disable to block agent creation and execution.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.3, §8.6",
+      "rationale": "§8.2 requires an AI risk assessment before deployment. §8.3 requires risk treatment. §8.6 governs implementation. Autonomous agents have the highest blast radius — disable until a formal risk assessment and treatment plan are documented.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M19"
+      ]
+    },
+    "agenthub": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Agent Hub / Coded Agents.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.6",
+      "rationale": "Coded agents execute arbitrary AI-driven logic. §8.2 risk assessment must be completed before enabling.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M20"
+      ]
+    },
+    "apps": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable AI features inside UiPath Apps (Autopilot in forms, AI-powered filling).",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.6, Annex A §A.9 (Human oversight)",
+      "rationale": "AI features in end-user apps affect human-AI interaction surfaces. Disable until interaction design and oversight controls (Annex A §A.9) are reviewed.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M22"
+      ]
+    },
+    "jarvis": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Autopilot for Everyone (Jarvis) — AI assistant for business users.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.4, Annex A §A.9",
+      "rationale": "§8.4 requires assessing AI impact on individuals. Autopilot for Everyone reaches all users; disable until impact assessment and acceptable-use policy are in place.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M18"
+      ]
+    },
+    "documentunderstanding": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Document Understanding AI — sends documents to LLMs for extraction.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.3, Annex A §A.7 (Data)",
+      "rationale": "Documents may contain sensitive or regulated data (PII, PHI). Annex A §A.7 requires data governance controls. Disable until a data classification review and BAA/DPA with the AI provider are in place.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": [
+        "M21"
+      ],
+      "_condition": "Mandatory unless a data classification review confirms no sensitive documents will be processed AND a DPA/BAA is signed with the AI provider."
+    },
+    "communicationsmining": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Communications Mining (IXP) — AI analysis of emails and tickets.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, Annex A §A.7",
+      "rationale": "Emails and tickets typically contain personal data. Annex A §A.7 data governance and §8.2 risk assessment must be completed before routing communications through AI.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M29"
+      ]
+    },
+    "healing-agent": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Healing Agent — AI self-recovery for UI automation failures.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.5, §8.6",
+      "rationale": "§8.5 requires AI system design controls. Self-healing changes automation behavior unpredictably without developer review — violates deterministic execution requirements in regulated environments.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M17"
+      ]
+    },
+    "wingman": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Wingman — AI code suggestions in Studio/Studio Web.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.5, Annex A §A.5 (AI system design)",
+      "rationale": "AI-generated code suggestions may introduce un-reviewed logic. §8.5 design controls and Annex A §A.5 require review gates before AI influences code artifacts. Disable unless code review processes explicitly cover AI-generated suggestions.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M17"
+      ]
+    },
+    "uipath-testmanager": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Test Manager AI features (AI-generated test cases, analysis).",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.5",
+      "rationale": "AI-generated test cases may miss edge cases. §8.5 design quality gates should cover test generation. Disable until AI-assisted testing is included in your quality review process.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M17"
+      ]
+    },
+    "uia": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UIAutomation GenAI activities (Computer Vision, etc.).",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §8.6",
+      "rationale": "Core UIAutomation GenAI activities (e.g. Computer Vision selectors) are bounded, deterministic, and well-understood. Enabling aligns with §8.6 controlled implementation of tested AI capabilities.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M17"
+      ]
+    },
+    "uipath-ai-rdk": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath AI Runtime Dev Kit — custom LLM activity packages.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.6, Annex A §A.10 (Third-party AI supply chain)",
+      "rationale": "Custom LLM activities can call arbitrary external AI endpoints. Annex A §A.10 requires supply chain controls for third-party AI components. Disable until all custom AI activities are inventoried and risk-assessed.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M17"
+      ]
+    },
+    "_section_audit": "── Audit & Data Retention (§9.1 / Annex A §A.7.5) ──────────────────",
+    "saveprompts": {
+      "type": "boolean",
+      "default": true,
+      "description": "Save all AI prompt inputs and model outputs to trace logs for audit.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §9.1, Annex A §A.7.5 (Data provenance), Annex A §A.8.5 (Logging)",
+      "rationale": "§9.1 requires monitoring and measurement of AI systems. Annex A §A.7.5 requires data provenance records. Prompt and response logs are the primary audit trail for AI activity — must be enabled.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M26",
+        "M33"
+      ]
+    },
+    "traces-ttl-enforcement": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enforce a maximum retention period on AI trace data.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §9.1, Annex A §A.7 (Data governance)",
+      "rationale": "§9.1 monitoring obligations require retaining enough data for meaningful analysis. Annex A §A.7 data minimization principles require limiting retention. Enable enforcement to apply a defined TTL rather than the platform default of indefinite retention.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M28",
+        "M33"
+      ]
+    },
+    "traces-ttl": {
+      "type": "enum",
+      "default": "7d",
+      "values": [
+        "1d",
+        "7d"
+      ],
+      "description": "Maximum retention period for AI trace data when enforcement is on.",
+      "value": "7d",
+      "clause_ref": "ISO 42001:2023 §9.1, Annex A §A.7",
+      "rationale": "7 days balances §9.1 monitoring (enough window for incident investigation) with data minimization. Use 1d only if your AI usage volume makes 7d retention impractical and incident response windows are very short. Note: for long-term audit archival (e.g. HIPAA 7yr), forward traces to an external SIEM before TTL expiry.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": [
+        "M28",
+        "M33"
+      ],
+      "_condition": "Set to '7d' unless a documented risk decision prefers '1d'. Long-term archival must be handled externally."
+    },
+    "traces-ttl-effective": {
+      "type": "enum",
+      "default": "30d",
+      "values": [
+        "1d",
+        "7d",
+        "30d"
+      ],
+      "description": "Read-only effective value shown in UI. Set same as traces-ttl when enforcement is on.",
+      "value": "7d",
+      "clause_ref": "ISO 42001:2023 §9.1",
+      "rationale": "Must match traces-ttl to ensure displayed effective retention aligns with enforced policy.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M28"
+      ]
+    },
+    "traces-disable-insights": {
+      "type": "boolean",
+      "default": false,
+      "description": "Prevent AI trace data from flowing into UiPath Insights analytics.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 Annex A §A.7 (Data minimization)",
+      "rationale": "Annex A §A.7 requires limiting data processing to stated purposes. AI trace data sent to Insights analytics broadens the processing scope beyond audit. Disable Insights flow unless a separate data processing assessment covers analytics use.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M27"
+      ]
+    },
+    "_section_pii": "── PII Protection In-Flight (Annex A §A.7 / §A.9) ─────────────────",
+    "container": {
+      "type": "object",
+      "description": "PII scanning controls applied to data passing through AI calls in-flight.",
+      "value": {
+        "pii-in-flight-agents": true,
+        "pii-in-flight-uipath-ai-rdk": true
+      },
+      "clause_ref": "ISO 42001:2023 Annex A §A.7 (Data), Annex A §A.9 (Privacy)",
+      "rationale": "Annex A §A.7 requires data governance for AI inputs/outputs. Scanning and redacting PII in-flight prevents personal data from being transmitted to AI providers without explicit purpose. Enable for all active AI feature categories.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M27"
+      ]
+    },
+    "_section_providers": "── Third-Party AI Provider Controls (Annex A §A.10.2) ──────────────",
+    "anthropic-control-toggle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow use of Anthropic (Claude) models.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.3, Annex A §A.10.2 (Third-party AI)",
+      "rationale": "Annex A §A.10.2 requires assessing and managing risks from third-party AI components including supply chain dependencies, data handling, and contractual controls. Disable until a Data Processing Agreement (DPA) with Anthropic is reviewed and signed.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M06"
+      ]
+    },
+    "azure-openai-control-toggle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow use of Azure OpenAI models.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.3, Annex A §A.10.2",
+      "rationale": "Same supply chain assessment as other providers per Annex A §A.10.2. Azure has HIPAA BAA and GDPR DPA available — enable only after verifying the appropriate agreement is in place for your data classification.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": [
+        "M06"
+      ],
+      "_condition": "Mandatory to disable unless: (a) Azure DPA/BAA is signed for your tenant, AND (b) a documented risk assessment confirms Azure OpenAI is approved for your data types."
+    },
+    "gemini-control-toggle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow use of Google Gemini models.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.3, Annex A §A.10.2",
+      "rationale": "Annex A §A.10.2 supply chain assessment required. Disable until Google Cloud DPA is reviewed and signed, and data residency requirements are confirmed.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M06"
+      ]
+    },
+    "submit": {
+      "type": "boolean",
+      "default": true,
+      "description": "Internal form submission flag required by the UiPath API. Always true.",
+      "value": true,
+      "clause_ref": "N/A",
+      "rationale": "Technical API requirement. No compliance implication.",
+      "requirement": "mandatory"
+    },
+    "_section_pii_table": "── PII Entity Detection Table (Annex A §A.7 / §A.9) ────────────────",
+    "pii-entity-table": {
+      "type": "array",
+      "description": "PII entity categories to detect and redact. Each entry controls one category.",
+      "clause_ref": "ISO 42001:2023 Annex A §A.7 (Data governance), Annex A §A.9 (Privacy)",
+      "rationale": "Annex A §A.7 requires data governance controls including minimizing exposure of personal data in AI pipelines. Enable all relevant PII categories at 0.5 confidence threshold as baseline — tighten thresholds (higher = more precise, lower = more sensitive) based on data risk assessment.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M27"
+      ],
+      "value": [
+        {
+          "pii-entity-category": "Person",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "Person0.5"
+        },
+        {
+          "pii-entity-category": "Address",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "Address0.5"
+        },
+        {
+          "pii-entity-category": "Date",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "Date0.5"
+        },
+        {
+          "pii-entity-category": "PhoneNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "PhoneNumber0.5"
+        },
+        {
+          "pii-entity-category": "EugpsCoordinates",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "EugpsCoordinates0.5"
+        },
+        {
+          "pii-entity-category": "Email",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "Email0.5"
+        },
+        {
+          "pii-entity-category": "CreditCardNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "CreditCardNumber0.5"
+        },
+        {
+          "pii-entity-category": "InternationalBankingAccountNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "InternationalBankingAccountNumber0.5"
+        },
+        {
+          "pii-entity-category": "SwiftCode",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "SwiftCode0.5"
+        },
+        {
+          "pii-entity-category": "ABARoutingNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "ABARoutingNumber0.5"
+        },
+        {
+          "pii-entity-category": "USDriversLicenseNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "USDriversLicenseNumber0.5"
+        },
+        {
+          "pii-entity-category": "UKDriversLicenseNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "UKDriversLicenseNumber0.5"
+        },
+        {
+          "pii-entity-category": "USIndividualTaxpayerIdentification",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "USIndividualTaxpayerIdentification0.5"
+        },
+        {
+          "pii-entity-category": "UKUniqueTaxpayerNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "UKUniqueTaxpayerNumber0.5"
+        },
+        {
+          "pii-entity-category": "USBankAccountNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "USBankAccountNumber0.5"
+        },
+        {
+          "pii-entity-category": "USSocialSecurityNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "USSocialSecurityNumber0.5"
+        },
+        {
+          "pii-entity-category": "UsukPassportNumber",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "UsukPassportNumber0.5"
+        },
+        {
+          "pii-entity-category": "URL",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "URL0.5"
+        },
+        {
+          "pii-entity-category": "IPAddress",
+          "pii-entity-confidence-threshold": 0.5,
+          "pii-entity-is-enabled": true,
+          "identifier": "IPAddress0.5"
+        }
+      ]
+    }
+  },
+  "ISO42001-Studio-v1": {
+    "_product": "Development",
+    "_category": "Studio (Development)",
+    "_description": "Studio IDE governance — enforces quality gates, code documentation, and packaging controls before automation is published.",
+    "_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-studio-policies",
+    "_section_analyzer": "── Workflow Analyzer Gates (§8.5 / Annex A §A.5) ──────────────────",
+    "enforceAnalyzerBeforePublish": {
+      "type": "boolean",
+      "default": false,
+      "description": "Block publishing to Orchestrator if Workflow Analyzer finds errors.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §8.5, §8.3, Annex A §A.5 (AI system design)",
+      "rationale": "§8.5 requires design controls to ensure AI systems meet quality and safety requirements before deployment. Blocking publish on analyzer errors is a technical gate that prevents non-compliant automations from reaching production.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M07",
+        "M11"
+      ]
+    },
+    "enforceAnalyzerBeforeRun": {
+      "type": "boolean",
+      "default": false,
+      "description": "Block local debug/run if Workflow Analyzer finds errors.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §8.5",
+      "rationale": "§8.5 design controls should apply at the earliest point in the lifecycle. Blocking local execution enforces quality from the development phase, not just at publish time.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M08",
+        "M11"
+      ]
+    },
+    "enforceAnalyzerBeforePushCheckIn": {
+      "type": "boolean",
+      "default": false,
+      "description": "Block Git push/check-in if Workflow Analyzer finds errors.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §8.5, Annex A §A.5",
+      "rationale": "Source control gates ensure quality standards are enforced at the point of code sharing, preventing non-conforming work from entering the shared repository. Supports §8.5 design controls across team development.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M09"
+      ]
+    },
+    "analyzeRpaXamlFilesOnly": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, Analyzer only runs on RPA XAML files, skipping test files and coded workflows.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.5",
+      "rationale": "§8.5 design controls should apply to all automation artifacts, not just RPA XAML. Setting false ensures coded workflows and test files are also subject to quality gates.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M07"
+      ]
+    },
+    "enforceCheckInBeforePublish": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require source control check-in before publishing.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 Annex A §A.5.3 (Documentation), §8.5",
+      "rationale": "Annex A §A.5.3 requires documented information about the AI system. Requiring source control ensures all published automations have a version history — essential for audit, incident investigation, and rollback.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M15"
+      ]
+    },
+    "exportAnalyzerResults": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically export Workflow Analyzer results to a file on each run.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §9.1, Annex A §A.5.3",
+      "rationale": "§9.1 requires monitoring records. Exported analyzer results provide evidence for internal audits (§9.2) that quality gates were executed and passed.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M12"
+      ]
+    },
+    "enforceReleaseNotes": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require developers to enter release notes before publishing.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 Annex A §A.5.3 (Documentation)",
+      "rationale": "Annex A §A.5.3 requires maintaining documented information about AI system changes over time. Mandatory release notes create a traceable change log that supports management review (§9.3) and audit (§9.2).",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M10",
+        "M12"
+      ]
+    },
+    "_section_ai": "── AI & Package Controls (§8.5 / §8.1) ──────────────────────────────",
+    "enableAiActivitySuggestions": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable AI-powered activity suggestions (Wingman) in the Activities panel.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.5",
+      "rationale": "AI suggestions in the IDE can introduce un-reviewed code patterns. §8.5 design controls require that AI contributions to automation artifacts are subject to review. Disable unless AI-assisted development is covered by your code review process.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M17"
+      ]
+    },
+    "autoUpdatePackagesForAutopilot": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically update activity packages to versions required by Autopilot.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.5, Annex A §A.10 (Supply chain)",
+      "rationale": "Automatic dependency updates can silently introduce changes to automation behaviour. §8.5 design controls and Annex A §A.10 supply chain governance require explicit review of dependency changes.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M16"
+      ]
+    },
+    "enableAllAvailableActivities": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show all activities including unlicensed ones in the Activities panel.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.1",
+      "rationale": "§8.1 requires limiting operational scope to approved components. Showing unlicensed or unevaluated activities increases the risk of developers using untested capabilities.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M06"
+      ]
+    },
+    "allowPreviewPackagesInActivitiesPanel": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show preview/pre-release NuGet packages in the Activities panel.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.5, Annex A §A.10",
+      "rationale": "Preview packages are not stable or fully tested. §8.5 design quality controls and Annex A §A.10 supply chain governance require using production-grade, assessed dependencies.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M16"
+      ]
+    },
+    "_section_deps": "── Build & Source Controls (Annex A §A.5.3) ────────────────────────",
+    "separateRuntimeDependencies": {
+      "type": "boolean",
+      "default": false,
+      "description": "Split design-time and runtime dependencies into separate nuspec sections.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 Annex A §A.5 (AI system design controls)",
+      "rationale": "Explicit separation of runtime dependencies makes the deployed artifact's dependency surface auditable and reproducible — supports Annex A §A.5 system specification controls.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M16"
+      ]
+    },
+    "includeSources": {
+      "type": "boolean",
+      "default": false,
+      "description": "Include source XAML files in the published NuGet package.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 Annex A §A.5.3 (Documentation), §9.2 (Internal audit)",
+      "rationale": "Including sources in published packages ensures auditors can inspect automation logic directly from deployed artifacts, supporting §9.2 internal audit and Annex A §A.5.3 documentation requirements.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M12"
+      ]
+    },
+    "objectRepositoryEnforced": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require use of Object Repository for UI element descriptors.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §8.5",
+      "rationale": "Centralised UI descriptors in Object Repository improve maintainability and reduce brittleness of automations — supports §8.5 design quality controls.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M14"
+      ]
+    },
+    "_section_design": "── Design Defaults (operational preference) ─────────────────────────",
+    "defaultLanguage": {
+      "type": "enum",
+      "default": "VisualBasic",
+      "values": [
+        "VisualBasic",
+        "C#"
+      ],
+      "description": "Default coding language for new projects.",
+      "value": "C#",
+      "clause_ref": "N/A",
+      "rationale": "No direct ISO 42001 mapping. C# is the recommended language for modern UiPath development — set per organisational standards.",
+      "requirement": "optional"
+    },
+    "useModernForNewProjects": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use Modern design experience for new projects.",
+      "value": true,
+      "clause_ref": "N/A",
+      "rationale": "No direct ISO 42001 mapping. Modern experience aligns with current UiPath best practices.",
+      "requirement": "optional"
+    },
+    "defaultCompatibility": {
+      "type": "enum",
+      "default": "Windows",
+      "values": [
+        "Windows-Legacy",
+        "Windows",
+        "Cross-platform"
+      ],
+      "description": "Default target framework for new projects.",
+      "value": "Windows",
+      "clause_ref": "N/A",
+      "rationale": "No direct ISO 42001 mapping. Set per organisational infrastructure standards.",
+      "requirement": "optional"
+    },
+    "allowedCompatibilityFrameworks": {
+      "type": "array",
+      "default": [
+        "Windows-Legacy",
+        "Windows",
+        "Cross-platform"
+      ],
+      "values": [
+        "Windows-Legacy",
+        "Windows",
+        "Cross-platform"
+      ],
+      "description": "Which target frameworks developers are allowed to select.",
+      "value": [
+        "Windows",
+        "Cross-platform"
+      ],
+      "clause_ref": "ISO 42001:2023 §8.1",
+      "rationale": "§8.1 operational planning benefits from limiting framework choices to supported, maintained targets. Excluding Windows-Legacy reduces the untested attack surface.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M13"
+      ]
+    }
+  },
+  "ISO42001-Robot-v1": {
+    "_product": "Robot",
+    "_category": "Robot",
+    "_description": "Runtime enforcement rules — block or warn when automations exceed operational boundaries. Primary technical control for §6.1 risk treatment at execution time.",
+    "_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-robot-policies",
+    "runtimeAnalyzerRules": {
+      "type": "array",
+      "description": "Runtime governance rules enforced by the Robot executor at automation run time.",
+      "clause_ref": "ISO 42001:2023 §6.1, §8.1, §8.3",
+      "rationale": "§6.1 requires identifying and treating risks. §8.3 requires risk treatment controls be implemented. Runtime rules provide the only technical enforcement point during execution — they prevent automations from exceeding pre-approved operational boundaries (apps, URLs, recipients) without developer code changes.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M04",
+        "M05",
+        "M30"
+      ],
+      "value": [
+        {
+          "ruleId": "RT-UIA-001",
+          "enabled": true,
+          "action": "Error",
+          "parameters": {
+            "whitelistApps": "",
+            "whitelistUrls": "",
+            "blacklistApps": "",
+            "blacklistUrls": "",
+            "CustomMessage": "GOVERNANCE VIOLATION (ISO 42001 §6.1): Automation interacted with an unapproved application or URL. Contact the Automation COE to request approval before re-running."
+          }
+        },
+        {
+          "ruleId": "RT-OUT-001",
+          "enabled": true,
+          "action": "Error",
+          "parameters": {
+            "blocklist": [],
+            "CustomMessage": "GOVERNANCE VIOLATION (ISO 42001 §6.1): Automation attempted to send email to a restricted recipient. Contact the Automation COE to whitelist this address."
+          }
+        }
+      ]
+    }
+  },
+  "ISO42001-Assistant-v1": {
+    "_product": "Assistant",
+    "_category": "Assistant",
+    "_description": "Controls UiPath Assistant for attended users — restricts widgets, AI tools, and execution context to the governed scope.",
+    "_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-assistant-policies",
+    "_section_widgets": "── Widget Governance (§8.1) ─────────────────────────────────────────",
+    "allowCustomWidgets": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow users to install custom (non-official) widgets.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.1, Annex A §A.10 (Third-party AI supply chain)",
+      "rationale": "Custom widgets may embed unevaluated AI features. §8.1 requires limiting the operational scope to approved components. Disabling ensures only officially vetted widgets can be installed.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M35"
+      ]
+    },
+    "useOfficialFeeds": {
+      "type": "boolean",
+      "default": true,
+      "description": "Restrict widget installation to official UiPath NuGet feeds only.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §8.1, Annex A §A.10",
+      "rationale": "Annex A §A.10 supply chain governance requires components to come from assessed, trusted sources. Restricting to official feeds enforces provenance control.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M35"
+      ]
+    },
+    "widgets": {
+      "type": "array",
+      "description": "Explicit widget allowlist. Unlisted widgets follow allowCustomWidgets.",
+      "clause_ref": "ISO 42001:2023 §8.1, Annex A §A.9 (Human oversight of AI)",
+      "rationale": "§8.1 operational control requires an explicit allowlist of approved components. Autopilot and Marketplace widgets carry AI features that require independent risk assessment. Only the Apps widget (automation launcher) is enabled as baseline.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M35"
+      ],
+      "value": [
+        {
+          "enabled": true,
+          "nugetPackageName": "UiPath.Apps.Widget",
+          "version": ""
+        },
+        {
+          "enabled": false,
+          "nugetPackageName": "UiPath.Marketplace.Widget",
+          "version": ""
+        },
+        {
+          "enabled": false,
+          "nugetPackageName": "UiPath.AutomationStore.Widget",
+          "version": ""
+        },
+        {
+          "enabled": false,
+          "nugetPackageName": "UiPath.Autopilot.Widget",
+          "version": ""
+        }
+      ]
+    },
+    "_section_features": "── Feature Controls (§8.1 / §9.1) ────────────────────────────────────",
+    "allowLoggingLevelChange": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow users to change logging verbosity in Assistant settings.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §9.1",
+      "rationale": "§9.1 monitoring requires consistent, policy-controlled log verbosity. Allowing users to change log levels can reduce visibility into AI system behaviour during monitoring periods.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M34"
+      ]
+    },
+    "displayEDRProtectionStatus": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show EDR (Endpoint Detection & Response) protection status in Assistant.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §9.1",
+      "rationale": "§9.1 monitoring benefits from surface-level endpoint security visibility. Showing EDR status helps users and support staff identify unprotected endpoints running AI automations.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M33"
+      ]
+    },
+    "allowRunOutsidePersonalWorkspace": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow users to run automations from shared Orchestrator folders.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.1",
+      "rationale": "§8.1 operational control requires limiting automation execution scope. Restricting to Personal Workspace reduces the risk of users inadvertently running governed automations against unintended data.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M36"
+      ]
+    },
+    "allowShareAutomationUrl": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow users to copy and share automation trigger URLs.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.1",
+      "rationale": "Sharing trigger URLs broadens the execution scope beyond the governed user population. §8.1 operational control requires limiting who can initiate AI-driven automations.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M36"
+      ]
+    },
+    "enablePictureInPicture": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Picture-in-Picture mode (isolated virtual desktop for attended automations).",
+      "value": false,
+      "clause_ref": "N/A",
+      "rationale": "No direct ISO 42001 mapping. PiP is operationally useful but adds complexity — set based on attended use case requirements.",
+      "requirement": "optional"
+    },
+    "enableStudioWeb": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show the Studio Web launch button in Assistant.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.1",
+      "rationale": "§8.1 requires restricting the operational scope to approved functions. Attended users should not have direct access to development tools unless they are developers covered by the Studio governance policy.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M32"
+      ]
+    },
+    "enableActionCenter": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Action Center for human-in-the-loop task approval workflows.",
+      "value": true,
+      "clause_ref": "ISO 42001:2023 §9.1, Annex A §A.9 (Human oversight of AI systems)",
+      "rationale": "Annex A §A.9 requires human oversight controls for AI systems. Action Center is the primary human-in-the-loop mechanism in UiPath — enabling it ensures humans can review and approve AI-driven decisions at designated checkpoints.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M33"
+      ]
+    },
+    "autoLaunchAtStartup": {
+      "type": "boolean",
+      "default": false,
+      "description": "Automatically start Assistant when Windows starts.",
+      "value": true,
+      "clause_ref": "N/A",
+      "rationale": "No ISO 42001 mapping. Enable for attended users who rely on Assistant daily — reduces risk of users bypassing governance by not launching Assistant.",
+      "requirement": "optional"
+    },
+    "minimizeAssistantDuringExecution": {
+      "type": "boolean",
+      "default": false,
+      "description": "Minimize Assistant window while an automation is running.",
+      "value": true,
+      "clause_ref": "N/A",
+      "rationale": "No ISO 42001 mapping. Operational preference for attended execution UX.",
+      "requirement": "optional"
+    },
+    "enableTaskCapture": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Task Capture (screen recording for process documentation).",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 Annex A §A.7 (Data governance)",
+      "rationale": "Screen recording captures potentially sensitive screen content. Annex A §A.7 data governance requires limiting data capture to documented, necessary purposes. Disable unless Task Capture use is explicitly covered in your AIMS scope and data classification.",
+      "requirement": "recommended",
+      "mapping_ids": [
+        "M27"
+      ]
+    },
+    "enableTaskMining": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable Task Mining (AI-driven process discovery from user activity).",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.2, §8.4, Annex A §A.7",
+      "rationale": "Task Mining collects detailed user activity data and processes it through AI. §8.4 impact assessment on individuals and Annex A §A.7 data governance must be completed before enabling. High privacy impact — disable by default.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": [
+        "M27"
+      ],
+      "_condition": "Mandatory to disable unless a privacy impact assessment (§8.4) is completed and employees are notified per applicable privacy law."
+    },
+    "useLocalUserPreferences": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow users to override certain Assistant settings with local preferences.",
+      "value": false,
+      "clause_ref": "ISO 42001:2023 §8.1",
+      "rationale": "§8.1 requires that operational controls are enforced consistently. Allowing local preference overrides creates gaps where users can bypass governance settings — disable to ensure policy is uniformly applied.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M35"
+      ]
+    }
+  },
+  "ISO42001-IntegrationService-v1": {
+    "_product": "IntegrationService",
+    "_category": "Integration Service",
+    "_description": "Controls which third-party connectors are available to automations. Enforces zero-trust connector posture required by Annex A §A.10.2.",
+    "_docs": "https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/settings-for-integration-service-policies",
+    "_important": "Policy affects new connections only. Existing connections are not affected. Allow up to 5 minutes for policy cache refresh after applying.",
+    "defaultConnectorState": {
+      "type": "enum",
+      "default": "Enabled",
+      "values": [
+        "Enabled",
+        "Disabled"
+      ],
+      "description": "Default state for connectors not explicitly listed. 'Disabled' = zero-trust (deny-all).",
+      "value": "Disabled",
+      "clause_ref": "ISO 42001:2023 §8.1, §8.2, §8.3, Annex A §A.10.2 (Third-party AI supply chain)",
+      "rationale": "Annex A §A.10.2 requires assessing and managing risks from third-party AI and integration components. A zero-trust default (Disabled) ensures no new connector is usable until it has been explicitly evaluated and enabled by an administrator — aligning with §8.3 risk treatment. Individual connectors must be enabled one-by-one in the Automation Ops UI after assessment.",
+      "requirement": "mandatory",
+      "mapping_ids": [
+        "M23"
+      ]
+    }
+  },
+  "_iso42001_clause_mapping": {
+    "_description": "Complete traceability matrix: ISO/IEC 42001:2023 controls mapped to UiPath Automation Ops policy settings. 36 controls are mapped to specific UiPath settings or deployment practices. 14 gaps require compensating controls outside UiPath. Use this section as the basis for your Statement of Applicability (SoA) and audit evidence.",
+    "standard": "ISO/IEC 42001:2023",
+    "assessment_date": "2024-12",
+    "uipath_version": "Automation Cloud 2024.10",
+    "control_id_prefix": {
+      "M": "Mapped — UiPath policy setting or deployment practice implements this control.",
+      "G": "Gap — UiPath cannot fully enforce this control; compensating control required."
+    },
+    "coverage_summary": {
+      "total_controls_assessed": 50,
+      "mapped_via_json_pack_settings": 30,
+      "mapped_via_deployment_practice": 6,
+      "gaps_requiring_compensating_ctrl": 14,
+      "note": "ISO 42001 is a management system standard. Clauses 4–7 and most of Annex A are organisational/process requirements. UiPath policy enforces the technical controls layer (Clauses 6.1, 8, 9.1 and selected Annex A controls)."
+    },
+    "mapped": [
+      {
+        "_group": "ORGANISATIONAL GOVERNANCE",
+        "id": "M01",
+        "clause": "ISO 42001:2023 §5.2 + Annex A §A.2.2",
+        "title": "AI policy must exist and be communicated across the organization",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1",
+          "ISO42001-Studio-v1",
+          "ISO42001-Robot-v1",
+          "ISO42001-Assistant-v1",
+          "ISO42001-IntegrationService-v1"
+        ],
+        "uipath_fields": [
+          "Tenant-level policy deployment (set policies to active, not 'No Policy')"
+        ],
+        "value_to_set": "All 5 policy types deployed at tenant level — must not be 'No Policy'",
+        "coverage": "deployment_practice",
+        "requirement": "Mandatory",
+        "notes": "A live tenant policy is the organisational AI governance baseline. All users inherit it as a minimum control floor. Deploy using: python3 uipath_governance.py --mode deploy --target tenant"
+      },
+      {
+        "id": "M02",
+        "clause": "ISO 42001:2023 §5.3 + Annex A §A.3.2",
+        "title": "Roles and responsibilities for AI governance must be defined and assigned",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1",
+          "ISO42001-Studio-v1",
+          "ISO42001-Robot-v1",
+          "ISO42001-Assistant-v1"
+        ],
+        "uipath_fields": [
+          "Group-level policies per role (RPA Developers / Citizen Developers / Admins)"
+        ],
+        "value_to_set": "Create distinct group policies for each role type with appropriate permission levels",
+        "coverage": "deployment_practice",
+        "requirement": "Mandatory",
+        "notes": "Separates accountability by role. Group policies make per-role AI responsibility enforceable and auditable. Create separate packs with looser/stricter settings per role group."
+      },
+      {
+        "id": "M03",
+        "clause": "ISO 42001:2023 §6.3",
+        "title": "Changes to the AI management system must be planned and controlled",
+        "uipath_policies": [
+          "All"
+        ],
+        "uipath_fields": [
+          "Policy naming convention — use versioned names: <Framework>-<Product>-v<N>"
+        ],
+        "value_to_set": "Name policies with version suffix (e.g. ISO42001-Studio-v2 when updating); document template version changes",
+        "coverage": "deployment_practice",
+        "requirement": "Recommended",
+        "notes": "Template versioning creates a change-control record. Policy changes become traceable governance events. Rename rather than overwrite when making breaking changes."
+      },
+      {
+        "_group": "OPERATIONAL RISK CONTROLS",
+        "id": "M04",
+        "clause": "ISO 42001:2023 §6.1",
+        "title": "AI runtime operational risks must be controlled — app/URL access",
+        "uipath_policies": [
+          "ISO42001-Robot-v1"
+        ],
+        "uipath_fields": [
+          "runtimeAnalyzerRules.RT-UIA-001.enabled",
+          "runtimeAnalyzerRules.RT-UIA-001.action",
+          "runtimeAnalyzerRules.RT-UIA-001.parameters.whitelistApps",
+          "runtimeAnalyzerRules.RT-UIA-001.parameters.whitelistUrls"
+        ],
+        "value_to_set": "enabled=true, action=Error; populate whitelistApps/whitelistUrls with approved resources",
+        "coverage": "partial",
+        "requirement": "Mandatory",
+        "notes": "Prevents robots accessing unapproved resources at runtime. Error action halts process and generates audit event. Whitelist must be populated with org-approved apps/URLs — empty whitelist means no restrictions."
+      },
+      {
+        "id": "M05",
+        "clause": "ISO 42001:2023 §6.1",
+        "title": "Risk of data exfiltration via automated email must be prevented",
+        "uipath_policies": [
+          "ISO42001-Robot-v1"
+        ],
+        "uipath_fields": [
+          "runtimeAnalyzerRules.RT-OUT-001.enabled",
+          "runtimeAnalyzerRules.RT-OUT-001.action",
+          "runtimeAnalyzerRules.RT-OUT-001.parameters.blocklist"
+        ],
+        "value_to_set": "enabled=true, action=Error; populate blocklist with prohibited recipient domains",
+        "coverage": "partial",
+        "requirement": "Mandatory",
+        "notes": "Prevents unauthorised data exfiltration via automated email. Runtime enforcement is immediate without requiring workflow redeployment. Populate blocklist with external domains."
+      },
+      {
+        "id": "M06",
+        "clause": "ISO 42001:2023 §6.1",
+        "title": "Use of unvetted third-party AI models must be blocked by default",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "anthropic-control-toggle",
+          "azure-openai-control-toggle",
+          "gemini-control-toggle"
+        ],
+        "value_to_set": "All three = false (blocked at tenant); enable per group ONLY after documented risk assessment per model/vendor",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Prevents organisational data reaching unvetted LLMs. Each exception at group level requires a documented impact assessment on file."
+      },
+      {
+        "_group": "IMPACT ASSESSMENT",
+        "id": "M07",
+        "clause": "ISO 42001:2023 Annex A §A.5.2",
+        "title": "AI systems must be impact-assessed before deployment to production",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "enforceAnalyzerBeforePublish"
+        ],
+        "value_to_set": "true — user override disabled",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Mandatory verification gate — no automation reaches production without passing analysis. Non-overridable ensures developers cannot bypass it."
+      },
+      {
+        "id": "M08",
+        "clause": "ISO 42001:2023 Annex A §A.5.2",
+        "title": "AI systems should be assessed during development, not only at publish",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "enforceAnalyzerBeforeRun"
+        ],
+        "value_to_set": "true for RPA Developer groups; review for Citizen Developer groups",
+        "coverage": "full",
+        "requirement": "Recommended",
+        "notes": "Catches policy violations during development rather than at publish time. Reduces rework and promotes shift-left compliance."
+      },
+      {
+        "id": "M09",
+        "clause": "ISO 42001:2023 Annex A §A.5.2",
+        "title": "AI systems should be assessed before committing to source control",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "enforceAnalyzerBeforePushCheckIn"
+        ],
+        "value_to_set": "true",
+        "coverage": "full",
+        "requirement": "Recommended",
+        "notes": "Ensures source control repository contains only policy-compliant code, maintaining a clean and auditable history."
+      },
+      {
+        "id": "M10",
+        "clause": "ISO 42001:2023 Annex A §A.5.3",
+        "title": "Outcomes of AI system impact assessments must be documented",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "enforceReleaseNotes"
+        ],
+        "value_to_set": "true — user override disabled",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Release notes are the documented impact assessment record per deployment. Non-overridable ensures no deployment is undocumented. Note: see G13 for model card gap."
+      },
+      {
+        "_group": "AI DEVELOPMENT LIFECYCLE",
+        "id": "M11",
+        "clause": "ISO 42001:2023 Annex A §A.6.1.4 + §8.4",
+        "title": "Verification and validation must block deployment — not just warn",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "enforceAnalyzerBeforePublish",
+          "enforceAnalyzerBeforeRun — critical Analyzer rules must be set to Error severity in the rule configuration"
+        ],
+        "value_to_set": "enforceAnalyzerBeforePublish=true; ensure all critical custom Analyzer rules have severity=Error not Warning",
+        "coverage": "partial",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When org develops or modifies AI automations",
+        "notes": "Validation gate only works if violations actually block deployment. Warning-level rules allow non-compliant code to pass. Analyzer rule severity is configured per-rule, not by this pack."
+      },
+      {
+        "id": "M12",
+        "clause": "ISO 42001:2023 Annex A §A.6.1.5 + §8.4",
+        "title": "AI system documentation must be maintained throughout the lifecycle",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "enforceReleaseNotes",
+          "exportAnalyzerResults",
+          "includeSources"
+        ],
+        "value_to_set": "enforceReleaseNotes=true; release notes must include: purpose, changes made, risk notes, known limitations",
+        "coverage": "partial",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When org develops AI automations",
+        "notes": "Creates per-version documentation record. Content of release notes is not enforced by UiPath — process guidance must define what to include. See G13 for model card gap."
+      },
+      {
+        "id": "M13",
+        "clause": "ISO 42001:2023 Annex A §A.6.1.3 + §8.4",
+        "title": "AI design must use approved frameworks only",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "allowedCompatibilityFrameworks"
+        ],
+        "value_to_set": "[\"Windows\", \"Cross-platform\"] — exclude Windows-Legacy unless formally approved",
+        "coverage": "full",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When org develops AI automations",
+        "notes": "Prevents use of deprecated frameworks lacking security patches. Windows-Legacy exceptions require written technical justification."
+      },
+      {
+        "id": "M14",
+        "clause": "ISO 42001:2023 Annex A §A.6.1.2",
+        "title": "AI system design should follow standardised patterns and requirements",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "objectRepositoryEnforced"
+        ],
+        "value_to_set": "true",
+        "coverage": "full",
+        "requirement": "Recommended",
+        "notes": "Standardises automation design, reduces brittle UI interactions, and improves maintainability and auditability of UI-layer automations."
+      },
+      {
+        "id": "M15",
+        "clause": "ISO 42001:2023 §8.5 + Annex A §A.6.4.2",
+        "title": "AI system deployment must be version-controlled and traceable",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "enforceCheckInBeforePublish"
+        ],
+        "value_to_set": "true",
+        "coverage": "full",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When org deploys AI systems to production",
+        "notes": "Ensures no automation is deployed to production without being version-controlled first. Creates a traceable deployment audit trail."
+      },
+      {
+        "id": "M16",
+        "clause": "ISO 42001:2023 Annex A §A.6.4.3",
+        "title": "AI systems should remain stable post-deployment — no silent dependency drift",
+        "uipath_policies": [
+          "ISO42001-Studio-v1"
+        ],
+        "uipath_fields": [
+          "separateRuntimeDependencies"
+        ],
+        "value_to_set": "true",
+        "coverage": "full",
+        "requirement": "Recommended",
+        "notes": "Keeps runtime packages stable after deployment, preventing silent dependency updates that could alter automation behavior."
+      },
+      {
+        "_group": "RESPONSIBLE AI USE",
+        "id": "M17",
+        "clause": "ISO 42001:2023 §8.6",
+        "title": "GenAI execution in automations must be authorised before use",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "uipath-ai-rdk",
+          "uia",
+          "uipath-testmanager",
+          "wingman"
+        ],
+        "value_to_set": "uipath-ai-rdk=false; uia=true (bounded activities); others disabled until assessed",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Prevents unrestricted GenAI execution in production. uia (Computer Vision) is enabled as it is bounded and well-tested. Custom RDK activities are blocked until each is individually assessed."
+      },
+      {
+        "id": "M18",
+        "clause": "ISO 42001:2023 §8.6",
+        "title": "Conversational AI (Autopilot) must be authorised and disclosure-assessed",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "jarvis"
+        ],
+        "value_to_set": "false — disabled until formally approved with documented scope and disclosure review",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Autopilot for Everyone interacts directly with end-users, requiring both impact assessment and user disclosure review before enablement."
+      },
+      {
+        "id": "M19",
+        "clause": "ISO 42001:2023 §8.6 + Annex A §A.6.4.2",
+        "title": "Autonomous AI agents must be strictly controlled — highest-risk category",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "agents"
+        ],
+        "value_to_set": "false — disabled at tenant; enable ONLY after formal impact assessment including human oversight review",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Agents can take autonomous multi-step actions. Default off. Formal approval with documented human oversight mechanism required before any group-level enablement."
+      },
+      {
+        "id": "M20",
+        "clause": "ISO 42001:2023 §8.6",
+        "title": "Coded agents must be restricted to approved developer groups only",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "agenthub"
+        ],
+        "value_to_set": "false — disabled at tenant; enable for specific RPA Developer Pro groups only after technical review",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Coded agents require elevated technical review. Limiting to approved developer groups ensures only vetted implementations reach production."
+      },
+      {
+        "id": "M21",
+        "clause": "ISO 42001:2023 §8.6",
+        "title": "Generative annotation must be controlled — sends document content to LLMs",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "documentunderstanding"
+        ],
+        "value_to_set": "false — disabled unless document types and data sensitivity have been formally assessed and approved",
+        "coverage": "full",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When Document Understanding is used in workflows",
+        "notes": "Generative annotation sends document content (potentially PII/sensitive) to LLMs. Risk assessment must be completed and documented before enablement."
+      },
+      {
+        "id": "M22",
+        "clause": "ISO 42001:2023 Annex A §A.9.4",
+        "title": "AI-generated content should not bypass development governance",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "apps"
+        ],
+        "value_to_set": "false — all apps must go through proper Studio development and review lifecycle",
+        "coverage": "full",
+        "requirement": "Recommended",
+        "notes": "Auto-generated apps bypass development and code review governance. Standard publish lifecycle must apply."
+      },
+      {
+        "_group": "INTEGRATION SERVICE / THIRD-PARTY AI",
+        "id": "M23",
+        "clause": "ISO 42001:2023 Annex A §A.10.2",
+        "title": "Third-party service connectors must be limited to approved integrations only",
+        "uipath_policies": [
+          "ISO42001-IntegrationService-v1"
+        ],
+        "uipath_fields": [
+          "defaultConnectorState"
+        ],
+        "value_to_set": "Disabled — zero-trust default; individual connectors enabled one-by-one in UI after vendor approval",
+        "coverage": "partial",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When Integration Service connectors are used",
+        "notes": "defaultConnectorState=Disabled implements the zero-trust deny-all baseline. Per-connector enablement after vendor review must be done in the Automation Ops UI — it is not configurable via this JSON pack."
+      },
+      {
+        "id": "M24",
+        "clause": "ISO 42001:2023 Annex A §A.10.2",
+        "title": "Authentication methods for third-party services must be controlled",
+        "uipath_policies": [
+          "ISO42001-IntegrationService-v1"
+        ],
+        "uipath_fields": [
+          "Per-connector auth type restriction — configured in Automation Ops UI, not in JSON pack"
+        ],
+        "value_to_set": "OAuth 2.0 preferred; disable 'bring your own app' unless vendor is on approved list — SET IN UI",
+        "coverage": "verify_only",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When Integration Service connectors are used",
+        "notes": "Auth type restriction per connector is configured in the Automation Ops Integration Service policy UI, not via the policyFormData JSON API. Verify each enabled connector has auth type restricted after enablement."
+      },
+      {
+        "_group": "DATA GOVERNANCE",
+        "id": "M25",
+        "clause": "ISO 42001:2023 Annex A §A.7.2",
+        "title": "A data management policy for AI systems must be established — data residency",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "Tenant region — verify in UiPath Admin portal, not a policy setting"
+        ],
+        "value_to_set": "VERIFY — confirm UiPath tenant region matches legal/regulatory data residency requirement (GDPR, local law)",
+        "coverage": "verify_only",
+        "requirement": "Mandatory",
+        "notes": "UiPath guarantees data is never stored outside the tenant's cloud region. Organisation must separately verify the region (Settings → Admin → Organisation) matches applicable data residency laws."
+      },
+      {
+        "id": "M26",
+        "clause": "ISO 42001:2023 Annex A §A.7.5",
+        "title": "Provenance of data used in and produced by AI systems should be tracked",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "saveprompts"
+        ],
+        "value_to_set": "true; restrict Audit tab access to compliance/legal roles only in Orchestrator RBAC",
+        "coverage": "partial",
+        "requirement": "Recommended",
+        "notes": "Creates an immutable record of data sent to/from AI models per interaction. Access restriction (Orchestrator RBAC) prevents tampering with the provenance record — configure separately in Orchestrator."
+      },
+      {
+        "id": "M27",
+        "clause": "ISO 42001:2023 Annex A §A.7.6 + §8.6",
+        "title": "Personal data must be protected during AI system operation — Insights restriction",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "traces-disable-insights"
+        ],
+        "value_to_set": "true",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "_condition": "When personal data is processed by AI systems",
+        "notes": "Limits metadata sent to analytics systems, reducing personal data exposure and supporting GDPR/privacy compliance in AI operations."
+      },
+      {
+        "id": "M28",
+        "clause": "ISO 42001:2023 Annex A §A.7.6",
+        "title": "AI interaction data must be subject to data minimisation and retention limits",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "traces-ttl-enforcement",
+          "traces-ttl",
+          "traces-ttl-effective"
+        ],
+        "value_to_set": "traces-ttl-enforcement=true; traces-ttl=7d (or 1d for PII-sensitive workflows — document exception for any longer retention)",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "_condition": "When personal data is processed by AI systems",
+        "notes": "Enforces automatic purge of AI interaction data. Aligns with data minimisation principle under GDPR and ISO 42001 privacy controls. Note: 7d is platform max — forward to external SIEM for longer legal archival."
+      },
+      {
+        "id": "M29",
+        "clause": "ISO 42001:2023 Annex A §A.7.3",
+        "title": "Transmission of organisational data to external LLMs must be controlled",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "communicationsmining"
+        ],
+        "value_to_set": "false — disabled unless specific LLM vendor is on approved list AND data sharing terms have been reviewed by legal",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Communications Mining routes emails/tickets through external AI classification. Prevents arbitrary data flowing to external LLM providers. Each vendor requires legal review of data sharing terms."
+      },
+      {
+        "_group": "TRANSPARENCY & USER INFORMATION",
+        "id": "M30",
+        "clause": "ISO 42001:2023 Annex A §A.8.2",
+        "title": "Users should be informed when AI governance constraints halt a process",
+        "uipath_policies": [
+          "ISO42001-Robot-v1"
+        ],
+        "uipath_fields": [
+          "runtimeAnalyzerRules.RT-UIA-001.parameters.CustomMessage",
+          "runtimeAnalyzerRules.RT-OUT-001.parameters.CustomMessage"
+        ],
+        "value_to_set": "Meaningful text: which policy was violated, operational impact, and contact for remediation (e.g. Automation COE email)",
+        "coverage": "full",
+        "requirement": "Recommended",
+        "notes": "Users must understand why an automation was halted. Generic error messages do not satisfy A.8.2 transparency intent. The current pack includes ISO clause references in the CustomMessage text."
+      },
+      {
+        "id": "M31",
+        "clause": "ISO 42001:2023 Annex A §A.8.3",
+        "title": "AI governance source should be visible and meaningful to developers",
+        "uipath_policies": [
+          "All"
+        ],
+        "uipath_fields": [
+          "Policy name field — set in the policy shell metadata, not in policyFormData"
+        ],
+        "value_to_set": "Policy name must be descriptive (e.g. 'ISO42001-Studio-v1') NOT generic (e.g. 'Default')",
+        "coverage": "deployment_practice",
+        "requirement": "Recommended",
+        "notes": "'Config source: Modern Governance' is displayed in UiPath apps with the policy name. A meaningful, versioned name communicates the compliance basis to developers."
+      },
+      {
+        "id": "M32",
+        "clause": "ISO 42001:2023 Annex A §A.8.4",
+        "title": "AI development tools should be restricted to appropriately trained users",
+        "uipath_policies": [
+          "ISO42001-Assistant-v1"
+        ],
+        "uipath_fields": [
+          "enableStudioWeb"
+        ],
+        "value_to_set": "false — restrict Studio Web to groups with documented training completion",
+        "coverage": "partial",
+        "requirement": "Recommended",
+        "notes": "Restricts browser-based AI development to trained users, reducing the risk of incorrectly designed AI automations reaching production. Training completion gate must be managed outside UiPath (see G01)."
+      },
+      {
+        "_group": "MONITORING",
+        "id": "M33",
+        "clause": "ISO 42001:2023 §9.1",
+        "title": "AI system compliance must be continuously monitored",
+        "uipath_policies": [
+          "ISO42001-AITrustLayer-v1"
+        ],
+        "uipath_fields": [
+          "saveprompts",
+          "traces-ttl-enforcement",
+          "traces-ttl"
+        ],
+        "value_to_set": "saveprompts=true; traces-ttl-enforcement=true; schedule periodic Audit tab review — minimum monthly",
+        "coverage": "partial",
+        "requirement": "Mandatory",
+        "notes": "Enables ongoing compliance monitoring of all GenAI usage. Audit log review frequency must be defined in AIMS procedures to be auditable — the policy enables logging but the review schedule is a process."
+      },
+      {
+        "id": "M34",
+        "clause": "ISO 42001:2023 §9.1",
+        "title": "Users must not be able to downgrade system logging verbosity",
+        "uipath_policies": [
+          "ISO42001-Assistant-v1"
+        ],
+        "uipath_fields": [
+          "allowLoggingLevelChange"
+        ],
+        "value_to_set": "false — user override disabled",
+        "coverage": "full",
+        "requirement": "Mandatory",
+        "notes": "Prevents users from reducing log verbosity, which could obscure compliance issues and governance violations from monitoring."
+      },
+      {
+        "_group": "OPERATIONAL CONTROL",
+        "id": "M35",
+        "clause": "ISO 42001:2023 §8.1",
+        "title": "Unvetted third-party widgets and AI extensions should be blocked",
+        "uipath_policies": [
+          "ISO42001-Assistant-v1"
+        ],
+        "uipath_fields": [
+          "allowCustomWidgets",
+          "useOfficialFeeds",
+          "widgets"
+        ],
+        "value_to_set": "allowCustomWidgets=false; useOfficialFeeds=true; widgets list with only UiPath.Apps.Widget enabled",
+        "coverage": "full",
+        "requirement": "Recommended",
+        "notes": "Prevents unvetted third-party widgets that could interact with AI pipelines outside governance controls."
+      },
+      {
+        "id": "M36",
+        "clause": "ISO 42001:2023 §8.1",
+        "title": "Automation execution scope should be bounded to sanctioned areas",
+        "uipath_policies": [
+          "ISO42001-Assistant-v1"
+        ],
+        "uipath_fields": [
+          "allowRunOutsidePersonalWorkspace"
+        ],
+        "value_to_set": "false — automations execute only within their designated folder scope",
+        "coverage": "full",
+        "requirement": "Recommended",
+        "notes": "Prevents automations from accessing data or resources outside their sanctioned organisational scope, limiting blast radius of misconfigurations."
+      }
+    ],
+    "not_mapped": [
+      {
+        "_group": "GAPS — UIPATH POLICY CANNOT FULLY ENFORCE (COMPENSATING CONTROLS REQUIRED)",
+        "id": "G01",
+        "clause": "ISO 42001:2023 §7.2",
+        "title": "Personnel competency must be verified before granting AI system access",
+        "gap_description": "No UiPath policy can verify training completion or certification before granting AI feature access. Group policy assignment is not gated on competency.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "compensating_control": "Manual: Training register in HR/LMS System; group policy assignment manually gated on completion status, verified quarterly by Role Owner. Evidence stored in SharePoint/GRC."
+      },
+      {
+        "id": "G02",
+        "clause": "ISO 42001:2023 Annex A §A.5.2 — Bias & Fairness",
+        "title": "Bias and fairness must be assessed as part of the AI system impact assessment",
+        "gap_description": "Analyzer enforcement validates technical/structural rules but contains zero bias or fairness check rules. No mechanism exists to require bias review before publishing AI-driven automations.",
+        "requirement": "Conditional Mandatory",
+        "_condition": "For high-risk AI systems",
+        "priority": "High",
+        "future_uipath_control": "New Analyzer rule ST-FAIR-001: require a bias-review activity or bias-assessment tag in project metadata for any project containing AI/ML activities",
+        "compensating_control": "Manual: External bias assessment checklist completed and appended to release notes for any automation using AI activities. Reviewed and signed off by Designated Ethics/Risk Reviewer before publish approval."
+      },
+      {
+        "id": "G03",
+        "clause": "ISO 42001:2023 Annex A §A.6.3.5 — Model Monitoring",
+        "title": "AI model performance must be monitored post-deployment to detect drift or degradation",
+        "gap_description": "No runtime policy tracks whether an AI model's outputs are degrading or drifting over time. Only compliance rule violations (app/URL/email) are detected at runtime.",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When AI models are used post-deployment",
+        "priority": "High",
+        "future_uipath_control": "New policy domain: AI Model Monitoring Policy with alert thresholds for accuracy drop, output sampling rates, drift escalation triggers, model retirement criteria",
+        "compensating_control": "Manual: Orchestrator queue analysis + manual accuracy spot-checks conducted quarterly for all automations using Document Understanding or ML activities. Reviewed by Model Owner. Deviation >X% triggers formal review."
+      },
+      {
+        "id": "G04",
+        "clause": "ISO 42001:2023 Annex A §A.8.3 — End-User AI Disclosure",
+        "title": "End-users must be affirmatively informed when an AI system is making or influencing a decision about them",
+        "gap_description": "Policies display governance source to developers. No enforcement exists that end-user-facing automations include a disclosure step to the humans being affected.",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When AI makes or influences decisions affecting human end-users",
+        "priority": "High",
+        "future_uipath_control": "New runtime rule RT-DISC-001: require a disclosure activity in any automation that uses AI activities AND has a human-interaction step",
+        "compensating_control": "Manual: Development standard document requiring explicit AI disclosure in automation UX design. Reviewed during code review by QA Lead. Non-compliant automations blocked from UAT sign-off."
+      },
+      {
+        "id": "G05",
+        "clause": "ISO 42001:2023 §10.2 — Incident Management",
+        "title": "AI governance violations must trigger a structured incident record and corrective action",
+        "gap_description": "Robot policy can halt execution on violation (Error action) but does NOT automatically create an incident record, assign ownership, or trigger a corrective action workflow.",
+        "requirement": "Mandatory",
+        "priority": "High",
+        "future_uipath_control": "Add Incident Escalation setting: on violation, auto-create Orchestrator Alert + Action Center task for compliance review with defined SLA",
+        "compensating_control": "Manual: IT Service Desk monitors Orchestrator violation alerts. Each alert manually converted to incident in ServiceNow/Jira within 24 hours. Incident SLA: acknowledge 24h, resolve 5 business days."
+      },
+      {
+        "id": "G06",
+        "clause": "ISO 42001:2023 Annex A §A.6.4.4 — Decommissioning",
+        "title": "A defined, governed process must exist for decommissioning AI systems",
+        "gap_description": "No UiPath policy governs when or how an automation should be retired. No end-of-life controls, archiving requirements, or approval gates exist for decommissioning.",
+        "requirement": "Recommended",
+        "priority": "Medium",
+        "future_uipath_control": "Add Decommission Workflow setting: require a 'decommission' release-note type and process owner approval record before unpublishing a production automation",
+        "compensating_control": "Manual: Decommission checklist in change management system required before any automation is removed from production Orchestrator. Process owner approval required. Archived evidence stored N years."
+      },
+      {
+        "id": "G07",
+        "clause": "ISO 42001:2023 Annex A §A.10.2 — Vendor AI Risk Assessment",
+        "title": "Third-party AI suppliers must be formally assessed before their tools are used in production",
+        "gap_description": "Integration Service policies can block/allow connectors but contain no formal vendor risk scoring, assessment cycle enforcement, or re-assessment triggers.",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When third-party AI tools or services are used",
+        "priority": "High",
+        "future_uipath_control": "Add Vendor Risk Tier metadata per connector: Tier 1 (approved), Tier 2 (conditional with documented risk), Tier 3 (blocked/unassessed). Require mandatory re-assessment after 12 months.",
+        "compensating_control": "Manual: Vendor risk register maintained by Procurement/InfoSec. Integration Service connectors only enabled after vendor achieves Tier 1/2 status with documented review. Annual re-assessment triggered by Compliance Calendar."
+      },
+      {
+        "id": "G08",
+        "clause": "ISO 42001:2023 Annex A §A.7.4 — Data Quality",
+        "title": "Data fed into AI models must be validated for quality and integrity before processing",
+        "gap_description": "No UiPath policy domain governs data quality checks before data enters AI activities. Data validation is entirely at developer discretion.",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When AI systems consume external or user-supplied data",
+        "priority": "Medium",
+        "future_uipath_control": "New policy domain: AI Data Quality Policy — enforce presence of data validation activities upstream of Document Understanding and GenAI activities",
+        "compensating_control": "Manual: Data quality gate activity required in automation design standard. Checked as part of Analyzer review process. Non-compliant projects flagged in code review by Senior Developer."
+      },
+      {
+        "id": "G09",
+        "clause": "ISO 42001:2023 §7.4 — Governance Communication",
+        "title": "Affected stakeholders must be notified of changes to AI governance policies",
+        "gap_description": "No UiPath policy requires notification to impacted users or groups before governance policy changes take effect. Changes can be silently applied.",
+        "requirement": "Recommended",
+        "priority": "Medium",
+        "future_uipath_control": "New domain: Governance Change Communication Policy — define mandatory notification period before policy changes affecting >X users take effect",
+        "compensating_control": "Manual: Change management process requires a communications plan for any governance policy change affecting >10 users. Notification sent minimum 5 business days in advance by AIMS Owner via email/Teams."
+      },
+      {
+        "id": "G10",
+        "clause": "ISO 42001:2023 Annex A §A.6.2.4 — Development Data Validation",
+        "title": "Data used during AI automation development must be validated for quality and integrity",
+        "gap_description": "No Studio policy enforces data validation steps within the development workflow. Developers may use unvalidated inputs in AI activities.",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When org develops AI automations using external or user-supplied data",
+        "priority": "Medium",
+        "future_uipath_control": "New Analyzer rule ST-DATA-001: require at least one data validation activity before any AI/ML activity in the workflow execution graph",
+        "compensating_control": "Manual: Code review checklist includes data validation verification for all workflows containing AI activities. Signed off by Senior Developer. Non-compliant workflows blocked from check-in approval."
+      },
+      {
+        "id": "G11",
+        "clause": "ISO 42001:2023 Annex A §A.4.2 — Human Resources for AI",
+        "title": "Human resources must be adequate and competent to manage AI system responsibilities",
+        "gap_description": "No UiPath policy ties license type or group policy assignment to demonstrated AI competency level. Anyone with a license can be placed in any group.",
+        "requirement": "Recommended",
+        "priority": "Medium",
+        "future_uipath_control": "Tie group policy assignment to Orchestrator roles that have prerequisite training role as a dependency. IT access provisioning enforces training gate.",
+        "compensating_control": "Manual: HR/IT access provisioning process requires training completion in LMS before IT grants Orchestrator role. Role assignment reviewed annually by Line Manager and Automation COE."
+      },
+      {
+        "id": "G12",
+        "clause": "ISO 42001:2023 §9.2 — Internal Audit",
+        "title": "Periodic internal audits of the AI management system must be conducted and evidenced",
+        "gap_description": "No UiPath policy mandates or schedules automated audit log exports or compliance report generation. Audit evidence must be manually collected.",
+        "requirement": "Mandatory",
+        "priority": "Medium",
+        "future_uipath_control": "New domain: Compliance Audit Policy — scheduled automated export of Audit tab logs and policy deployment snapshots to compliance system at defined intervals",
+        "compensating_control": "Manual: Quarterly manual export of Orchestrator Audit logs and policy configuration snapshot (use 'python3 uipath_governance.py --mode discover') performed by Compliance Team. Stored with retention >= 3 years."
+      },
+      {
+        "id": "G13",
+        "clause": "ISO 42001:2023 Annex A §A.6.3.3 — AI Model Documentation",
+        "title": "AI models must be documented — including design intent, known limitations, and applicable risks",
+        "gap_description": "No Studio policy or Analyzer rule requires a model card, limitations document, or risk reference to be attached when AI/ML activities are used in a project.",
+        "requirement": "Conditional Mandatory",
+        "_condition": "When org builds, adapts, or deploys AI models",
+        "priority": "Low",
+        "future_uipath_control": "New Analyzer rule ST-MODEL-DOC-001: require 'AI Model Reference' field in project metadata (URL/ticket) when AI/ML activities are present in the workflow",
+        "compensating_control": "Manual: Project metadata standard includes mandatory 'AI Model Reference' field pointing to model documentation in Confluence/SharePoint. Reviewed during publish peer review process by Technical Lead."
+      },
+      {
+        "id": "G14",
+        "clause": "ISO 42001:2023 §6.2 — AI Objectives",
+        "title": "Measurable AI system objectives must be defined and progress against them tracked",
+        "gap_description": "No UiPath policy domain governs whether AI systems meet their intended objectives. No KPI threshold or performance objective triggers a governance review.",
+        "requirement": "Mandatory",
+        "priority": "Low",
+        "future_uipath_control": "New policy domain: AI Objectives Policy — define KPI thresholds (accuracy rate, exception rate, processing SLA) that trigger mandatory governance review when breached",
+        "compensating_control": "Manual: AI objectives defined in project charter template (mandatory for AI projects). Reviewed in quarterly AIMS management review meeting. Tracked in performance dashboard/GRC tool."
+      }
+    ]
+  }
+}

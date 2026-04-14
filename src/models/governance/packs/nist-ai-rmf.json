@@ -1,0 +1,272 @@
+{
+  "_version": "1.0",
+  "_comment": "NIST AI Risk Management Framework (AI RMF 1.0) Compliance Pack for UiPath",
+  "_description": "NIST AI RMF 1.0 (January 2023) — four core functions: GOVERN, MAP, MEASURE, MANAGE. Maps UiPath platform settings to AI risk management categories and subcategories.",
+  "_usage": "Version 1.0 — initial draft. Apply with: python3 uipath_governance.py --mode configure --pack nist_ai_rmf_policies.json --no-dry-run --jwt '...' --cookie '...'",
+  "_format": "Each field is a rich object: { type, default, description, value, clause_ref, rationale, requirement, mapping_ids }. The 'value' key is what gets applied. All other keys are documentation.",
+  "_runtime_standards": ["nist_ai_rmf_runtime", "owasp_agentic"],
+  "_runtime_standards_comment": "Standards evaluated at agent runtime by UiPathGovernanceMiddleware. NIST AI RMF provides AI-specific risk controls; OWASP Agentic covers the technical threat surface.",
+  "_requirement_legend": {
+    "mandatory":             "MUST be set — NIST AI RMF identifies this as a core practice",
+    "conditional_mandatory": "MUST be set when AI system is classified as high-impact",
+    "recommended":           "SHOULD be set — AI RMF best practice",
+    "optional":              "MAY be set — supplementary risk control"
+  },
+  "_framework": {
+    "name": "NIST AI Risk Management Framework",
+    "publication": "NIST AI 100-1",
+    "year": 2023,
+    "url": "https://airc.nist.gov/Home",
+    "core_functions": {
+      "GOVERN": "Culture, processes, and people for AI risk management",
+      "MAP":    "Context is established and risks identified",
+      "MEASURE":"Risks are analyzed, assessed, and tracked",
+      "MANAGE": "Risks are prioritized and addressed"
+    },
+    "trustworthy_ai_characteristics": [
+      "Accountable and Transparent",
+      "Explainable and Interpretable",
+      "Fair with Bias Managed",
+      "Privacy Enhanced",
+      "Reliable and Performant",
+      "Safe",
+      "Secure and Resilient"
+    ]
+  },
+
+  "NIST-AITrustLayer-v1": {
+    "_description": "AI Trust Layer — platform-level controls for GOVERN and MEASURE functions",
+    "_product": "AITrustLayer",
+    "_rmf_functions": ["GOVERN", "MEASURE"],
+
+    "_section_govern": "── GOVERN: Policies and Accountability ───────────────────",
+
+    "global-control-toggle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Master enable for AI Trust Layer governance controls.",
+      "value": true,
+      "clause_ref": "GOVERN 1.1 — Policies, processes, procedures, and practices across the organization",
+      "rationale": "GOVERN 1.1 requires organizational policies for AI risk management. The master switch ensures all downstream controls activate consistently.",
+      "requirement": "mandatory",
+      "mapping_ids": ["NM01"]
+    },
+    "audit-logging": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable comprehensive audit logging for all AI interactions.",
+      "value": true,
+      "clause_ref": "GOVERN 1.4 — Organizational teams are committed to AI risk management; MEASURE 2.5 — AI risk and benefit data",
+      "rationale": "MEASURE 2.5 requires maintaining AI risk and impact metrics. Audit logs are the primary evidence source for AI RMF accountability requirements.",
+      "requirement": "mandatory",
+      "mapping_ids": ["NM02"]
+    },
+    "prompt-audit-retention-days": {
+      "type": "integer",
+      "default": 30,
+      "description": "Number of days to retain AI prompt and response audit logs.",
+      "value": 90,
+      "clause_ref": "MANAGE 4.2 — Mechanisms are in place to sustain risk management",
+      "rationale": "MANAGE 4.2 requires sustained monitoring. 90 days provides sufficient history for trend analysis, incident investigation, and periodic AI RMF reviews.",
+      "requirement": "recommended",
+      "mapping_ids": ["NM03"]
+    },
+    "agents": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath Agents capability.",
+      "value": true,
+      "clause_ref": "MAP 1.1 — Context is established for the AI lifecycle; GOVERN 2.1 — Roles and responsibilities for AI risk management",
+      "rationale": "MAP 1.1 requires documenting AI system context before deployment. Agents should be enabled only after risk categorization per AI RMF MAP function.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["NM04"]
+    },
+    "model-monitoring-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable continuous monitoring of AI model performance and drift.",
+      "value": true,
+      "clause_ref": "MEASURE 2.7 — AI system performance is monitored; MANAGE 2.4 — Residual risks are monitored",
+      "rationale": "MEASURE 2.7 and MANAGE 2.4 require ongoing performance monitoring. Model drift and degradation are key AI risks requiring continuous measurement.",
+      "requirement": "mandatory",
+      "mapping_ids": ["NM05"]
+    },
+    "bias-detection-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable automated bias and fairness monitoring for AI outputs.",
+      "value": true,
+      "clause_ref": "MEASURE 2.11 — Fairness and bias in AI; GOVERN 5.1 — Organizational policies addressing AI bias",
+      "rationale": "MEASURE 2.11 identifies bias as a core AI RMF measurement requirement. AI agents making automated decisions require bias monitoring to meet fairness characteristics.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["NM06"]
+    },
+
+    "_section_measure": "── MEASURE: Risk Metrics and Tracking ────────────────────",
+
+    "impact-assessment-required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require AI impact assessment before agent deployment.",
+      "value": true,
+      "clause_ref": "MAP 5.1 — Likelihood and impact of identified risks; MEASURE 2.5 — AI risk and benefit metrics",
+      "rationale": "MAP 5.1 requires risk likelihood and impact analysis before deployment. This gate enforces the assessment workflow before agents go to production.",
+      "requirement": "mandatory",
+      "mapping_ids": ["NM07"]
+    },
+    "risk-tier": {
+      "type": "string",
+      "default": "standard",
+      "description": "AI system risk tier classification (low/standard/high/critical). Affects which controls activate.",
+      "value": "standard",
+      "clause_ref": "MAP 1.5 — Organizational risk tolerances are determined; MAP 3.5 — Risk tiers for AI systems",
+      "rationale": "MAP 1.5 and MAP 3.5 require risk tiering. Higher tiers trigger additional controls (human oversight, enhanced monitoring, audit frequency).",
+      "requirement": "mandatory",
+      "mapping_ids": ["NM08"]
+    },
+
+    "_section_transparency": "── GOVERN: Transparency and Explainability ───────────────",
+
+    "ai-disclosure-to-users": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require disclosure to end users when they are interacting with an AI system.",
+      "value": true,
+      "clause_ref": "GOVERN 4.1 — Organizational teams document the basis for proceeding; MANAGE 4.1 — Response is monitored by appropriate teams",
+      "rationale": "Transparency is a core NIST AI RMF trustworthy characteristic. Users must know when interacting with AI to maintain informed consent and appropriate trust calibration.",
+      "requirement": "recommended",
+      "mapping_ids": ["NM09"]
+    },
+    "explainability-logging": {
+      "type": "boolean",
+      "default": false,
+      "description": "Log reasoning chain and decision rationale for AI agent outputs.",
+      "value": true,
+      "clause_ref": "MEASURE 2.6 — AI system performance and effectiveness are evaluated; GOVERN 1.7 — Processes for accountability",
+      "rationale": "Explainability is a core NIST AI RMF characteristic. Decision chains must be reconstructable for post-incident analysis, audits, and regulatory queries.",
+      "requirement": "recommended",
+      "mapping_ids": ["NM10"]
+    }
+  },
+
+  "NIST-Robot-v1": {
+    "_description": "Robot execution settings — MANAGE and MAP function controls for runtime AI risk",
+    "_product": "Orchestrator",
+    "_rmf_functions": ["MAP", "MANAGE"],
+
+    "_section_manage": "── MANAGE: Runtime Risk Controls ────────────────────────────",
+
+    "human-in-loop-for-high-risk": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require human approval (Action Center) for AI actions classified as high-risk in the risk tier.",
+      "value": true,
+      "clause_ref": "MANAGE 1.3 — Responses to mapped risks; GOVERN 6.1 — Policies for human oversight",
+      "rationale": "MANAGE 1.3 requires appropriate responses proportional to risk. High-risk AI decisions must route through human oversight to maintain accountability and prevent automated harm.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["NM11"]
+    },
+    "action-center-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable UiPath Action Center for human-AI collaborative decision workflows.",
+      "value": true,
+      "clause_ref": "GOVERN 6.1 — Policies for human oversight of AI; MANAGE 1.3 — Risk response",
+      "rationale": "Action Center is the UiPath implementation of human-in-the-loop oversight required by MANAGE function. Enables humans to review, approve, or override AI decisions.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["NM12"]
+    },
+    "max-tool-calls-per-session": {
+      "type": "integer",
+      "default": 100,
+      "description": "Maximum number of external tool/API calls an agent may make per session.",
+      "value": 50,
+      "clause_ref": "MANAGE 2.2 — Risk tolerance thresholds; MAP 5.2 — Likelihood of risk occurrence",
+      "rationale": "Unbounded agency is a key AI risk. Caps enforce minimum-necessary principle and reduce likelihood of cascading automation errors (MAP 5.2 likelihood control).",
+      "requirement": "recommended",
+      "mapping_ids": ["NM13"]
+    },
+
+    "_section_map": "── MAP: Risk Identification at Runtime ───────────────────────",
+
+    "anomaly-detection-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable runtime anomaly detection to flag unusual AI behaviour patterns.",
+      "value": true,
+      "clause_ref": "MAP 5.1 — Likelihood and impact of identified risks; MEASURE 2.7 — AI system performance monitored",
+      "rationale": "MAP 5.1 requires continuous risk identification. Runtime anomaly detection surfaces emerging AI risks that were not anticipated at design time.",
+      "requirement": "recommended",
+      "mapping_ids": ["NM14"]
+    },
+    "context-window-logging": {
+      "type": "boolean",
+      "default": false,
+      "description": "Log the full context window (redacted) passed to AI models for traceability.",
+      "value": false,
+      "clause_ref": "MEASURE 2.5 — AI risk and benefit data; GOVERN 1.4 — Accountability for AI risk",
+      "rationale": "Context logging supports root cause analysis after AI incidents but must be balanced against data minimisation. Disabled by default; enable only when incident investigation requires it.",
+      "requirement": "optional",
+      "mapping_ids": ["NM15"]
+    }
+  },
+
+  "NIST-Studio-v1": {
+    "_description": "Studio development settings — GOVERN and MAP controls for AI development lifecycle",
+    "_product": "Studio",
+    "_rmf_functions": ["GOVERN", "MAP"],
+
+    "ai-use-documentation-required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require developers to complete AI use case documentation before publishing automations using AI.",
+      "value": true,
+      "clause_ref": "GOVERN 1.2 — Accountability mechanisms for AI; MAP 1.1 — Context established for AI lifecycle",
+      "rationale": "MAP 1.1 requires documenting AI system context, intended purpose, and stakeholders. Development-time gate prevents undocumented AI use cases from reaching production.",
+      "requirement": "mandatory",
+      "mapping_ids": ["NM16"]
+    },
+    "model-card-required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require model card / AI system card to be attached to published AI automations.",
+      "value": true,
+      "clause_ref": "GOVERN 1.7 — Transparency documentation for AI; MAP 2.1 — Scientific findings documented",
+      "rationale": "NIST AI RMF recommends AI system cards as accountability artifacts. Cards document capabilities, limitations, training data, and evaluation results — critical for responsible deployment.",
+      "requirement": "recommended",
+      "mapping_ids": ["NM17"]
+    },
+    "allowed-ai-providers": {
+      "type": "array",
+      "default": [],
+      "description": "Approved AI model providers for use in automations. Empty list = all allowed.",
+      "value": ["azure_openai", "google_vertex_ai", "uipath_autopilot"],
+      "clause_ref": "GOVERN 2.2 — Organizational risk management for AI third-party; MAP 5.2 — Third-party AI risk",
+      "rationale": "GOVERN 2.2 requires managing third-party AI risk. Restricting to approved providers ensures procurement, legal, and security reviews have been completed for each provider.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["NM18"]
+    }
+  },
+
+  "_nist_rmf_mapping": {
+    "_comment": "Maps UiPath governance controls (NM01-NM18) to NIST AI RMF categories and subcategories",
+    "NM01": { "function": "GOVERN", "category": "GV.1", "subcategory": "GV-1.1", "control": "Master governance switch", "trustworthy_chars": ["Accountable and Transparent"] },
+    "NM02": { "function": "MEASURE", "category": "MS.2", "subcategory": "MS-2.5", "control": "Audit logging", "trustworthy_chars": ["Accountable and Transparent"] },
+    "NM03": { "function": "MANAGE", "category": "MG.4", "subcategory": "MG-4.2", "control": "Log retention", "trustworthy_chars": ["Accountable and Transparent"] },
+    "NM04": { "function": "MAP", "category": "MP.1", "subcategory": "MP-1.1", "control": "Agent capability enablement", "trustworthy_chars": ["Safe"] },
+    "NM05": { "function": "MEASURE", "category": "MS.2", "subcategory": "MS-2.7", "control": "Model monitoring", "trustworthy_chars": ["Reliable and Performant"] },
+    "NM06": { "function": "MEASURE", "category": "MS.2", "subcategory": "MS-2.11", "control": "Bias detection", "trustworthy_chars": ["Fair with Bias Managed"] },
+    "NM07": { "function": "MAP", "category": "MP.5", "subcategory": "MP-5.1", "control": "Impact assessment gate", "trustworthy_chars": ["Safe", "Accountable and Transparent"] },
+    "NM08": { "function": "MAP", "category": "MP.1", "subcategory": "MP-1.5", "control": "Risk tier classification", "trustworthy_chars": ["Safe"] },
+    "NM09": { "function": "GOVERN", "category": "GV.4", "subcategory": "GV-4.1", "control": "AI disclosure", "trustworthy_chars": ["Accountable and Transparent", "Explainable and Interpretable"] },
+    "NM10": { "function": "MEASURE", "category": "MS.2", "subcategory": "MS-2.6", "control": "Explainability logging", "trustworthy_chars": ["Explainable and Interpretable"] },
+    "NM11": { "function": "MANAGE", "category": "MG.1", "subcategory": "MG-1.3", "control": "Human-in-loop for high-risk", "trustworthy_chars": ["Safe", "Accountable and Transparent"] },
+    "NM12": { "function": "GOVERN", "category": "GV.6", "subcategory": "GV-6.1", "control": "Action Center integration", "trustworthy_chars": ["Safe", "Accountable and Transparent"] },
+    "NM13": { "function": "MANAGE", "category": "MG.2", "subcategory": "MG-2.2", "control": "Tool call budget", "trustworthy_chars": ["Safe", "Secure and Resilient"] },
+    "NM14": { "function": "MAP", "category": "MP.5", "subcategory": "MP-5.1", "control": "Anomaly detection", "trustworthy_chars": ["Secure and Resilient"] },
+    "NM15": { "function": "MEASURE", "category": "MS.2", "subcategory": "MS-2.5", "control": "Context window logging", "trustworthy_chars": ["Accountable and Transparent"] },
+    "NM16": { "function": "GOVERN", "category": "GV.1", "subcategory": "GV-1.2", "control": "AI use documentation", "trustworthy_chars": ["Accountable and Transparent"] },
+    "NM17": { "function": "GOVERN", "category": "GV.1", "subcategory": "GV-1.7", "control": "Model card requirement", "trustworthy_chars": ["Accountable and Transparent", "Explainable and Interpretable"] },
+    "NM18": { "function": "GOVERN", "category": "GV.2", "subcategory": "GV-2.2", "control": "Approved AI providers", "trustworthy_chars": ["Secure and Resilient"] }
+  }
+}

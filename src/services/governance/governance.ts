@@ -1,6 +1,6 @@
 import { track } from '../../core/telemetry';
 import { SDKInternalsRegistry } from '../../core/internals';
-import type { RawPolicySettingsApiResponse, PolicyConfigureRequestBody, TenantPolicySlot, TenantGetResponse } from '../../models/governance/governance.internal-types';
+import type { RawPolicySettingsApiResponse, PolicyConfigureRequestBody, TenantPolicySlot, TenantGetResponse, ProductApiResponse } from '../../models/governance/governance.internal-types';
 import {
   GovernanceServiceModel,
   PolicyGetResponse,
@@ -16,6 +16,8 @@ import {
   RawPolicyGetResponse,
 } from '../../models/governance/governance.types';
 import { GOVERNANCE_ENDPOINTS } from '../../utils/constants/endpoints';
+import type { ApplyPackOptions, CompliancePack } from '../../models/governance/governance.types';
+import { POLICY_TEMPLATES } from '../../models/governance/policy-templates';
 import type { IUiPath } from '../../core/types';
 import { BaseService } from '../base';
 
@@ -68,13 +70,39 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    */
   @track('Governance.Create')
   async create(options: PolicyCreateOptions): Promise<PolicyCreateResponse> {
+    // The API requires the full product object (label, isRestricted, isCloud, isRemote).
+    // Fetch it from GET /Product so we don't send a bare { name } stub.
+    const productsResponse = await this.get<ProductApiResponse[]>(GOVERNANCE_ENDPOINTS.PRODUCT.GET_ALL);
+    // Compliance packs use legacy names; map them to actual API product identifiers.
+    const PRODUCT_ALIASES: Record<string, string> = {
+      Studio: 'Development',
+      Orchestrator: 'Robot',
+    };
+    const resolvedName = PRODUCT_ALIASES[options.product.name] ?? options.product.name;
+    const fullProduct = productsResponse.data.find(
+      p => p.name.toLowerCase() === resolvedName.toLowerCase()
+    );
+    if (!fullProduct) {
+      throw new Error(
+        `Product "${options.product.name}" not found — available: ${productsResponse.data.map(p => p.name).join(', ')}`
+      );
+    }
+
+    // POST /Policy uses the same { policy, policyFormData } structure as PUT /Policy (configure).
+    // The settings are included at create time — no separate configure step needed.
     const body = {
-      name: options.name,
-      description: options.description ?? '',
-      product: options.product,
-      priority: options.priority ?? 1,
-      availability: options.availability ?? 30,
-      data: null,
+      policy: {
+        name: options.name,
+        description: options.description ?? null,
+        product: fullProduct,
+        priority: options.priority ?? 1,
+        availability: options.availability ?? 30,
+      },
+      policyFormData: {
+        data: {
+          data: options.data ?? {},
+        },
+      },
     };
     const response = await this.post<PolicyCreateResponse>(
       GOVERNANCE_ENDPOINTS.POLICIES.CREATE,
@@ -199,6 +227,66 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
   @track('Governance.EnableRobotGovernance')
   async enableRobotGovernance(): Promise<void> {
     await this.post<void>(GOVERNANCE_ENDPOINTS.PRODUCT.ENABLE_ROBOT_GOVERNANCE, {});
+  }
+
+  /**
+   * Applies a compliance pack — for each policy definition, finds the matching policy
+   * by name (or creates it when createIfMissing is true), configures it with the pack
+   * settings, then deploys it to the specified target.
+   */
+  @track('Governance.ApplyPack')
+  async applyPack(pack: CompliancePack, options: ApplyPackOptions): Promise<void> {
+    const existing = await this.getAll();
+    const byName = new Map(existing.map(p => [p.name.trim(), p]));
+
+    for (const policyDef of pack.policies) {
+      let policy = byName.get(policyDef.name);
+
+      if (!policy) {
+        if (!options.createIfMissing) {
+          console.warn(`[applyPack] "${policyDef.name}" not found — skipping (set createIfMissing: true to create it automatically)`);
+          continue;
+        }
+        console.log(`[applyPack] "${policyDef.name}" — creating...`);
+        // Merge template defaults with pack-specific settings so POST /Policy gets complete data.
+        const mergedSettings = {
+          ...(POLICY_TEMPLATES[policyDef.product] ?? {}),
+          ...policyDef.settings,
+        };
+        try {
+          await this.create({
+            name: policyDef.name,
+            product: { name: policyDef.product },
+            priority: 1,
+            availability: 30,
+            data: mergedSettings,
+          });
+        } catch (err) {
+          console.warn(
+            `[applyPack] "${policyDef.name}" — create failed (${err instanceof Error ? err.message : String(err)}). ` +
+            `Create the shell manually in Automation Ops → Governance → Policies → New Policy, then re-run.`
+          );
+          continue;
+        }
+        const refreshed = await this.getAll();
+        policy = refreshed.find(p => p.name.trim() === policyDef.name);
+        if (!policy) {
+          console.warn(`[applyPack] "${policyDef.name}" — created but not found in policy list, skipping.`);
+          continue;
+        }
+        // Settings already applied during create — skip configure, go straight to deploy.
+        console.log(`[applyPack] "${policyDef.name}" — deploying...`);
+        await policy.deploy(options.deploy);
+        console.log(`[applyPack] "${policyDef.name}" ✓`);
+        continue;
+      }
+
+      console.log(`[applyPack] "${policyDef.name}" — configuring...`);
+      await policy.configure(policyDef.settings);
+      console.log(`[applyPack] "${policyDef.name}" — deploying...`);
+      await policy.deploy(options.deploy);
+      console.log(`[applyPack] "${policyDef.name}" ✓`);
+    }
   }
 
   /**

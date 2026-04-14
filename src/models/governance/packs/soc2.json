@@ -1,0 +1,247 @@
+{
+  "_version": "1.0",
+  "_comment": "SOC 2 Type II Compliance Pack for UiPath AI Agent Operations",
+  "_description": "AICPA SOC 2 Trust Service Criteria (2017 with 2022 updates) — maps UiPath platform settings to Security (CC), Availability (A), Processing Integrity (PI), Confidentiality (C), and Privacy (P) criteria for AI agent workloads.",
+  "_usage": "Version 1.0 — initial draft. Apply with: python3 uipath_governance.py --mode configure --pack soc2_policies.json --no-dry-run --jwt '...' --cookie '...'",
+  "_format": "Each field is a rich object: { type, default, description, value, clause_ref, rationale, requirement, mapping_ids }. The 'value' key is what gets applied. All other keys are documentation.",
+  "_runtime_standards": ["soc2_runtime", "owasp_agentic"],
+  "_runtime_standards_comment": "Standards evaluated at agent runtime by UiPathGovernanceMiddleware. SOC 2 runtime rules enforce the Trust Service Criteria on every agent interaction.",
+  "_requirement_legend": {
+    "mandatory":             "MUST be set — TSC Security criteria (CC) apply to all SOC 2 audits",
+    "conditional_mandatory": "MUST be set when the applicable Trust Service Category is in scope",
+    "recommended":           "SHOULD be set — SOC 2 best practice for AI workloads",
+    "optional":              "MAY be set — supplementary control"
+  },
+  "_framework": {
+    "name": "SOC 2 Trust Service Criteria",
+    "issuer": "AICPA",
+    "year": 2017,
+    "revision": "2022 points of focus update",
+    "criteria_categories": {
+      "CC": "Common Criteria (Security) — required for all SOC 2 audits",
+      "A":  "Availability — optional; required if availability is in scope",
+      "PI": "Processing Integrity — optional; required if PI is in scope",
+      "C":  "Confidentiality — optional; required if confidentiality is in scope",
+      "P":  "Privacy — optional; required if privacy is in scope"
+    },
+    "key_common_criteria": {
+      "CC1": "Control Environment",
+      "CC2": "Communication and Information",
+      "CC3": "Risk Assessment",
+      "CC4": "Monitoring Activities",
+      "CC5": "Control Activities",
+      "CC6": "Logical and Physical Access Controls",
+      "CC7": "System Operations",
+      "CC8": "Change Management",
+      "CC9": "Risk Mitigation"
+    }
+  },
+
+  "SOC2-AITrustLayer-v1": {
+    "_description": "AI Trust Layer — CC6 (Access), CC7 (Operations), CC3 (Risk) controls for AI agents",
+    "_product": "AITrustLayer",
+    "_tsc_categories": ["CC"],
+
+    "_section_cc6": "── CC6: Logical and Physical Access Controls ─────────────────",
+
+    "global-control-toggle": {
+      "type": "boolean",
+      "default": true,
+      "description": "Master enable for AI Trust Layer governance controls.",
+      "value": true,
+      "clause_ref": "CC6.1 — Logical access security measures; CC6.3 — Access restricted to authorized users",
+      "rationale": "CC6.1 requires logical access controls to protect system components. The master switch is the top-level enforcement gate for all AI access controls.",
+      "requirement": "mandatory",
+      "mapping_ids": ["SC01"]
+    },
+    "agents": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UiPath Agents capability.",
+      "value": true,
+      "clause_ref": "CC6.3 — Access restricted to authorized users; CC6.6 — Changes implemented in accordance with commitments",
+      "rationale": "CC6.3 requires access restrictions. AI agents represent a new access vector — capability must be explicitly authorized, with access controls verified before enabling.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["SC02"]
+    },
+    "mfa-for-ai-admin": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require multi-factor authentication for admin access to AI Trust Layer settings.",
+      "value": true,
+      "clause_ref": "CC6.1 — Logical access security measures; CC6.3 — Access restricted to authorized users",
+      "rationale": "CC6.1 specifies MFA as a key logical access control for sensitive system components. AI governance configuration is privileged — MFA prevents unauthorized policy changes.",
+      "requirement": "mandatory",
+      "mapping_ids": ["SC03"]
+    },
+    "allowed-llm-providers": {
+      "type": "array",
+      "default": [],
+      "description": "Whitelist of approved LLM providers. Empty = all allowed.",
+      "value": ["azure_openai", "google_vertex_ai", "uipath_autopilot"],
+      "clause_ref": "CC9.2 — Management of vendor and business partner risk; CC6.3 — Access restricted",
+      "rationale": "CC9.2 requires vendor risk management. Restricting LLM providers to those with completed SOC 2 attestations and vendor assessments is required before processing customer data.",
+      "requirement": "mandatory",
+      "mapping_ids": ["SC04"]
+    },
+
+    "_section_cc7": "── CC7: System Operations ─────────────────────────────────────",
+
+    "audit-logging": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable comprehensive audit logging for all AI interactions.",
+      "value": true,
+      "clause_ref": "CC7.2 — Security incidents are identified and monitored; CC7.3 — Anomalies are identified and acted upon",
+      "rationale": "CC7.2 requires security event monitoring. AI agent interactions are system operations — audit logs provide the detection and evidence trail required for SOC 2 CC7 controls.",
+      "requirement": "mandatory",
+      "mapping_ids": ["SC05"]
+    },
+    "prompt-audit-retention-days": {
+      "type": "integer",
+      "default": 30,
+      "description": "Days to retain AI audit logs.",
+      "value": 365,
+      "clause_ref": "CC7.4 — Response and recovery; A1.3 — Recovery objectives met",
+      "rationale": "SOC 2 Type II audits typically cover a 12-month period. Retaining 365 days of logs ensures full audit period coverage and supports incident investigation and forensics.",
+      "requirement": "mandatory",
+      "mapping_ids": ["SC06"]
+    },
+    "anomaly-alerting-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable alerting for anomalous AI agent behaviour patterns.",
+      "value": true,
+      "clause_ref": "CC7.3 — Anomalies are identified and acted on in a timely manner",
+      "rationale": "CC7.3 explicitly requires anomaly identification. Alerting on unusual agent behaviour (excessive tool calls, policy violations, unexpected data access) is required for SOC 2 CC7.",
+      "requirement": "mandatory",
+      "mapping_ids": ["SC07"]
+    },
+
+    "_section_cc3": "── CC3: Risk Assessment ───────────────────────────────────────",
+
+    "risk-assessment-required-before-deploy": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require risk assessment sign-off before AI automation is deployed to production.",
+      "value": true,
+      "clause_ref": "CC3.1 — COSO principle 6: specifies objectives; CC3.2 — Identifies and analyzes risk",
+      "rationale": "CC3.2 requires risk identification and analysis. AI workloads introduce new risks (data exposure, hallucination, autonomous action) that must be assessed before production deployment.",
+      "requirement": "mandatory",
+      "mapping_ids": ["SC08"]
+    }
+  },
+
+  "SOC2-Robot-v1": {
+    "_description": "Robot execution controls — CC7 (Operations), PI1 (Processing Integrity), C1 (Confidentiality)",
+    "_product": "Orchestrator",
+    "_tsc_categories": ["CC", "PI", "C"],
+
+    "_section_pi": "── PI1: Processing Integrity ──────────────────────────────────",
+
+    "output-validation-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable validation checks on AI agent outputs before they are acted upon.",
+      "value": true,
+      "clause_ref": "PI1.1 — System processes complete, valid, accurate transactions; PI1.2 — System outputs are complete and accurate",
+      "rationale": "PI1.1 and PI1.2 require processing integrity. AI hallucinations and errors can cause downstream processing failures — output validation catches integrity issues before they propagate.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["SC09"]
+    },
+    "action-center-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable UiPath Action Center for human review of AI outputs before execution.",
+      "value": true,
+      "clause_ref": "PI1.1 — Complete and valid processing; CC1.2 — Oversight responsibility",
+      "rationale": "PI1.1 requires complete and valid processing. For consequential AI decisions, human review via Action Center provides the processing integrity check that pure automation cannot guarantee.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["SC10"]
+    },
+
+    "_section_c": "── C1: Confidentiality ────────────────────────────────────────",
+
+    "pii-detection-enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable PII detection to prevent confidential data from entering AI prompts unintentionally.",
+      "value": true,
+      "clause_ref": "C1.1 — Confidential information is protected during processing; CC6.7 — Information assets are protected during transmission",
+      "rationale": "C1.1 requires confidential information protection. PII detection prevents sensitive customer data from leaking into LLM prompts sent to third-party providers.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["SC11"]
+    },
+    "pii-entities": {
+      "type": "array",
+      "default": ["PERSON", "EMAIL_ADDRESS"],
+      "description": "List of PII entity types to detect in AI prompts and responses.",
+      "value": ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "LOCATION", "CREDIT_CARD", "US_SSN", "IBAN_CODE", "IP_ADDRESS", "DATE_TIME", "NRP"],
+      "clause_ref": "C1.1 — Confidential information identified and protected; P3.1 — Privacy policies for collection",
+      "rationale": "C1.1 and P3.1 require identifying confidential/personal information. The entity list defines the detection scope — must cover all data types subject to confidentiality commitments.",
+      "requirement": "conditional_mandatory",
+      "mapping_ids": ["SC12"]
+    },
+
+    "_section_availability": "── A1: Availability ───────────────────────────────────────────",
+
+    "failover-on-governance-block": {
+      "type": "boolean",
+      "default": false,
+      "description": "When governance blocks an agent, route work to a manual queue rather than failing hard.",
+      "value": true,
+      "clause_ref": "A1.1 — Availability commitments and requirements are met; A1.2 — Capacity planning",
+      "rationale": "A1.1 requires meeting availability commitments. Routing blocked work to manual processing ensures business continuity — customers are not left without service when AI fails governance.",
+      "requirement": "recommended",
+      "mapping_ids": ["SC13"]
+    }
+  },
+
+  "SOC2-Studio-v1": {
+    "_description": "Studio development settings — CC8 (Change Management) controls for AI development",
+    "_product": "Studio",
+    "_tsc_categories": ["CC"],
+
+    "_section_cc8": "── CC8: Change Management ─────────────────────────────────────",
+
+    "require-peer-review-for-ai-automations": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require peer review and approval before AI automations are published.",
+      "value": true,
+      "clause_ref": "CC8.1 — Changes implemented in accordance with change management policies",
+      "rationale": "CC8.1 requires change management processes. AI automations represent software changes that can affect data processing commitments — peer review catches policy violations before production.",
+      "requirement": "mandatory",
+      "mapping_ids": ["SC14"]
+    },
+    "governance-pack-pinned-version": {
+      "type": "string",
+      "default": "latest",
+      "description": "Pin the governance pack version used in this tenant to prevent uncontrolled policy changes.",
+      "value": "1.0",
+      "clause_ref": "CC8.1 — Changes implemented in accordance with change management; CC5.3 — Controls selected to mitigate risks",
+      "rationale": "CC8.1 requires controlled changes. Pinning governance pack versions prevents unintended policy loosening from upstream updates — changes require an explicit version bump with change approval.",
+      "requirement": "recommended",
+      "mapping_ids": ["SC15"]
+    }
+  },
+
+  "_soc2_mapping": {
+    "_comment": "Maps UiPath controls (SC01-SC15) to SOC 2 Trust Service Criteria",
+    "SC01": { "tsc": "CC6.1", "category": "Security", "control": "Master governance switch" },
+    "SC02": { "tsc": "CC6.3", "category": "Security", "control": "Agent enablement" },
+    "SC03": { "tsc": "CC6.1", "category": "Security", "control": "MFA for AI admin" },
+    "SC04": { "tsc": "CC9.2", "category": "Security", "control": "Approved LLM providers" },
+    "SC05": { "tsc": "CC7.2", "category": "Security", "control": "Audit logging" },
+    "SC06": { "tsc": "CC7.4", "category": "Security", "control": "Log retention (365 days)" },
+    "SC07": { "tsc": "CC7.3", "category": "Security", "control": "Anomaly alerting" },
+    "SC08": { "tsc": "CC3.2", "category": "Security", "control": "Risk assessment gate" },
+    "SC09": { "tsc": "PI1.1", "category": "Processing Integrity", "control": "Output validation" },
+    "SC10": { "tsc": "PI1.1", "category": "Processing Integrity", "control": "Action Center review" },
+    "SC11": { "tsc": "C1.1",  "category": "Confidentiality",      "control": "PII detection" },
+    "SC12": { "tsc": "C1.1",  "category": "Confidentiality",      "control": "PII entity list" },
+    "SC13": { "tsc": "A1.1",  "category": "Availability",         "control": "Failover on block" },
+    "SC14": { "tsc": "CC8.1", "category": "Security",             "control": "Peer review gate" },
+    "SC15": { "tsc": "CC8.1", "category": "Security",             "control": "Pack version pinning" }
+  }
+}

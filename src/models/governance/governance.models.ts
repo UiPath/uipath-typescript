@@ -1,4 +1,6 @@
 import type {
+  ApplyPackOptions,
+  CompliancePack,
   PolicyCreateOptions,
   PolicyCreateResponse,
   PolicyDeployOptions,
@@ -100,6 +102,38 @@ export interface GovernanceServiceModel {
    * ```
    */
   enableRobotGovernance(): Promise<void>;
+
+  /**
+   * Applies a compliance pack to the organization — finds or creates each policy shell,
+   * configures it with the pack's settings, and deploys it to the specified target.
+   *
+   * Policies that already exist are updated in-place. Missing policies are created
+   * only when `createIfMissing: true` is set (default: skipped with a warning).
+   *
+   * @param pack - A compliance pack (e.g. `HIPAA`, `ISO42001`, `EU_AI_ACT`)
+   * @param options - Deployment target and creation options
+   * @returns Promise that resolves when all policies in the pack are applied
+   *
+   * @example
+   * ```typescript
+   * import { HIPAA, Governance } from '@uipath/uipath-typescript/governance';
+   *
+   * const governance = new Governance(sdk);
+   * await governance.applyPack(HIPAA, { deploy: { target: 'tenant' } });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { ISO42001, Governance } from '@uipath/uipath-typescript/governance';
+   *
+   * // Create missing policy shells and deploy to a group
+   * await governance.applyPack(ISO42001, {
+   *   deploy: { target: 'group', groupId: '<groupId>' },
+   *   createIfMissing: true,
+   * });
+   * ```
+   */
+  applyPack(pack: CompliancePack, options: ApplyPackOptions): Promise<void>;
 }
 
 /**

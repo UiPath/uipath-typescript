@@ -23,6 +23,7 @@ export const GOVERNANCE_ENDPOINTS = {
     POLICIES: `${GOVERNANCE_BASE}/api/Tenant`,
   },
   PRODUCT: {
+    GET_ALL: `${GOVERNANCE_BASE}/api/Product`,
     ENABLE_ROBOT_GOVERNANCE: `${GOVERNANCE_BASE}/api/Product/Robot/enable`,
   },
 } as const;
