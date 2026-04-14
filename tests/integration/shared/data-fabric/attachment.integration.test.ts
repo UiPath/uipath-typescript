@@ -1,14 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { setupUnifiedTests, getServices, InitMode } from '../../config/unified-setup';
-import { retryWithBackoff } from '../../utils/helpers';
+import { registerResource } from '../../utils/cleanup';
 
 /**
- * Integration tests for entity attachment operations (upload, remove)
+ * Integration tests for entity attachment operations (upload, remove, download)
  *
  * Required environment variables:
- *   DATA_FABRIC_TEST_ENTITY_ID   - UUID of an entity that has a File-type field
- *   DATA_FABRIC_TEST_RECORD_ID   - UUID of a record in that entity
+ *   DATA_FABRIC_TEST_ENTITY_ID        - UUID of an entity that has a File-type field
  *   DATA_FABRIC_TEST_ATTACHMENT_FIELD - Name of the File-type field
+ *
+ * A fresh record is created per test run and deleted in afterAll — no shared
+ * record ID is needed and concurrent runs operate on completely different records.
  *
  * Run with:
  *   npx vitest run tests/integration/shared/data-fabric/attachment.integration.test.ts --config vitest.integration.config.ts
@@ -16,13 +18,11 @@ import { retryWithBackoff } from '../../utils/helpers';
 
 const ATTACHMENT_CONFIG = {
   entityId: process.env.DATA_FABRIC_TEST_ENTITY_ID || '',
-  recordId: process.env.DATA_FABRIC_TEST_RECORD_ID || '',
   fieldName: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || '',
 };
 
 const hasAttachmentConfig = !!(
   ATTACHMENT_CONFIG.entityId &&
-  ATTACHMENT_CONFIG.recordId &&
   ATTACHMENT_CONFIG.fieldName
 );
 
@@ -33,16 +33,40 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
   (mode) => {
     setupUnifiedTests(mode);
 
+    let recordId!: string;
+
+    beforeAll(async () => {
+      const { entities } = getServices();
+
+      const inserted = await entities.insertRecordById(ATTACHMENT_CONFIG.entityId, {});
+
+      if (!inserted.Id) {
+        throw new Error('Failed to insert test record for attachment tests');
+      }
+
+      recordId = inserted.Id;
+
+      registerResource('entityRecords', {
+        entityId: ATTACHMENT_CONFIG.entityId,
+        recordIds: [recordId],
+      });
+    });
+
+    afterAll(async () => {
+      if (!recordId) return;
+      const { entities } = getServices();
+      await entities.deleteRecordsById(ATTACHMENT_CONFIG.entityId, [recordId]);
+    });
+
     describe('uploadAttachment', () => {
       it('should upload an attachment via service method', async () => {
         const { entities } = getServices();
 
-        const fileContent = 'Hello from UiPath TypeScript SDK integration test!';
-        const file = new Blob([fileContent], { type: 'text/plain' });
+        const file = new Blob(['Hello from UiPath TypeScript SDK integration test!'], { type: 'text/plain' });
 
         const result = await entities.uploadAttachment(
           ATTACHMENT_CONFIG.entityId,
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
           file,
         );
@@ -54,12 +78,10 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         const { entities } = getServices();
 
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
-
-        const fileContent = 'Hello from entity method upload test!';
-        const file = new Blob([fileContent], { type: 'text/plain' });
+        const file = new Blob(['Hello from entity method upload test!'], { type: 'text/plain' });
 
         const result = await entity.uploadAttachment(
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
           file,
         );
@@ -72,21 +94,18 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       it('should upload and then delete an attachment via service method', async () => {
         const { entities } = getServices();
 
-        // First upload an attachment so there's something to delete
-        const fileContent = 'Temporary file for delete attachment test';
-        const file = new Blob([fileContent], { type: 'text/plain' });
+        const file = new Blob(['Temporary file for delete attachment test'], { type: 'text/plain' });
 
         await entities.uploadAttachment(
           ATTACHMENT_CONFIG.entityId,
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
           file,
         );
 
-        // Now delete the attachment
         const result = await entities.deleteAttachment(
           ATTACHMENT_CONFIG.entityId,
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
         );
 
@@ -97,20 +116,16 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         const { entities } = getServices();
 
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
-
-        // First upload an attachment so there's something to delete
-        const fileContent = 'Temporary file for entity method delete test';
-        const file = new Blob([fileContent], { type: 'text/plain' });
+        const file = new Blob(['Temporary file for entity method delete test'], { type: 'text/plain' });
 
         await entity.uploadAttachment(
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
           file,
         );
 
-        // Now delete the attachment
         const result = await entity.deleteAttachment(
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
         );
 
@@ -122,21 +137,18 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       it('should upload and then download an attachment via service method', async () => {
         const { entities } = getServices();
 
-        // First upload an attachment so there's something to download
-        const fileContent = 'Temporary file for download attachment test';
-        const file = new Blob([fileContent], { type: 'text/plain' });
+        const file = new Blob(['Temporary file for download attachment test'], { type: 'text/plain' });
 
         await entities.uploadAttachment(
           ATTACHMENT_CONFIG.entityId,
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
           file,
         );
 
-        // Now download the attachment
         const downloadedFile = await entities.downloadAttachment(
           ATTACHMENT_CONFIG.entityId,
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
         );
 
@@ -147,23 +159,17 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         const { entities } = getServices();
 
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
-
-        // First upload an attachment so there's something to download
-        const fileContent = 'Temporary file for entity method download test';
-        const file = new Blob([fileContent], { type: 'text/plain' });
+        const file = new Blob(['Temporary file for entity method download test'], { type: 'text/plain' });
 
         await entity.uploadAttachment(
-          ATTACHMENT_CONFIG.recordId,
+          recordId,
           ATTACHMENT_CONFIG.fieldName,
           file,
         );
 
-        // Retry download to handle API propagation delay after upload
-        const downloadedFile = await retryWithBackoff(() =>
-          entity.downloadAttachment(
-            ATTACHMENT_CONFIG.recordId,
-            ATTACHMENT_CONFIG.fieldName,
-          )
+        const downloadedFile = await entity.downloadAttachment(
+          recordId,
+          ATTACHMENT_CONFIG.fieldName,
         );
 
         expect(downloadedFile).toBeDefined();
