@@ -61,6 +61,7 @@ export const JOB_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs`,
   GET_BY_KEY: (identifier: string) => `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.GetByKey(identifier=${identifier})`,
   STOP: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs`,
+  RESUME: `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob`,
 } as const;
 
 /**
