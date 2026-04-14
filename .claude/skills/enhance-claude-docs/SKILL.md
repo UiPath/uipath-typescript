@@ -175,6 +175,16 @@ If actionable insights exist:
 5. For `agent_docs/architecture.md`, update tables or sections as appropriate.
 6. For `Agents.md`, update the quick reference or add new sections.
 
+### Content rules for doc edits
+
+The text written into the doc files must be self-contained guidance, not a changelog.
+
+- **Do not include source PR references** (`#327`, `Source: PR #184`, etc.) in the file content — they create permanent cross-link noise in the source PRs.
+- **Do not include @-mentions** (`@swati354`, `reviewer @maninder noted`) in the file content — handles don't belong in long-lived docs.
+- Rewrite each insight as a generalized rule/convention; don't quote the original comment verbatim.
+
+Provenance belongs in the PR body (Step 7) and the terminal output (Step 8) — not inside the docs.
+
 ---
 
 ## Step 7: Create or Update PR
