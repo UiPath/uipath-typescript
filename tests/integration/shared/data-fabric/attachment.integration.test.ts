@@ -90,49 +90,6 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       });
     });
 
-    describe('downloadAttachment', () => {
-      it('should upload and then download an attachment via service method', async () => {
-        const { entities } = getServices();
-
-        const file = new Blob(['Temporary file for download attachment test'], { type: 'text/plain' });
-
-        await entities.uploadAttachment(
-          ATTACHMENT_CONFIG.entityId,
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-          file,
-        );
-
-        const downloadedFile = await entities.downloadAttachment(
-          ATTACHMENT_CONFIG.entityId,
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-        );
-
-        expect(downloadedFile).toBeDefined();
-      });
-
-      it('should upload and then download an attachment via entity method', async () => {
-        const { entities } = getServices();
-
-        const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
-        const file = new Blob(['Temporary file for entity method download test'], { type: 'text/plain' });
-
-        await entity.uploadAttachment(
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-          file,
-        );
-
-        const downloadedFile = await entity.downloadAttachment(
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-        );
-
-        expect(downloadedFile).toBeDefined();
-      });
-    });
-
     describe('deleteAttachment', () => {
       it('should upload and then delete an attachment via service method', async () => {
         const { entities } = getServices();
@@ -173,6 +130,49 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         );
 
         expect(result).toBeDefined();
+      });
+    });
+
+    describe('downloadAttachment', () => {
+      it('should upload and then download an attachment via service method', async () => {
+        const { entities } = getServices();
+
+        const file = new Blob(['Temporary file for download attachment test'], { type: 'text/plain' });
+
+        await entities.uploadAttachment(
+          ATTACHMENT_CONFIG.entityId,
+          recordId,
+          ATTACHMENT_CONFIG.fieldName,
+          file,
+        );
+
+        const downloadedFile = await entities.downloadAttachment(
+          ATTACHMENT_CONFIG.entityId,
+          recordId,
+          ATTACHMENT_CONFIG.fieldName,
+        );
+
+        expect(downloadedFile).toBeDefined();
+      });
+
+      it('should upload and then download an attachment via entity method', async () => {
+        const { entities } = getServices();
+
+        const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
+        const file = new Blob(['Temporary file for entity method download test'], { type: 'text/plain' });
+
+        await entity.uploadAttachment(
+          recordId,
+          ATTACHMENT_CONFIG.fieldName,
+          file,
+        );
+
+        const downloadedFile = await entity.downloadAttachment(
+          recordId,
+          ATTACHMENT_CONFIG.fieldName,
+        );
+
+        expect(downloadedFile).toBeDefined();
       });
     });
   },
