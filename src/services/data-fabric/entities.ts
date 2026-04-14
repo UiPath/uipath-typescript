@@ -444,7 +444,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Queries entity records with filters, sorting, and SDK-managed pagination
+   * Queries entity records with filters, sorting, and pagination
    *
    * @param id - UUID of the entity
    * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
@@ -498,7 +498,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['expansionLevel', 'filterGroup', 'selectedFields', 'sortOptions', 'start', 'limit']
+      excludeFromPrefix: ['expansionLevel', 'filterGroup', 'selectedFields', 'sortOptions']
     }, options);
   }
 
@@ -704,36 +704,35 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @param name - Technical entity name — must start with a letter and contain
    *   only letters, numbers, and underscores (e.g., `"productCatalog"`).
-   * @param description - Entity description
    * @param fields - Array of field definitions
    * @param options - Optional entity-level settings ({@link EntityCreateOptions})
    * @returns Promise resolving to the ID of the created entity
    *
    * @example
    * ```typescript
-   * const entityId = await entities.create("product_catalog", "Our product catalog", [
+   * const entityId = await entities.create("product_catalog", [
    *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
    *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
-   * ], { displayName: "Product Catalog", isRbacEnabled: true });
+   * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    * ```
    * @internal
    */
   @track('Entities.Create')
-  async create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
+  async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     this.validateName(name, 'entity');
     for (const field of fields) {
       this.validateName(field.name, 'field');
     }
     const opts = options ?? {};
     const payload = {
-      description,
+      ...(opts.description !== undefined && { description: opts.description }),
       displayName: opts.displayName ?? name,
       entityDefinition: {
         name,
         fields: fields.map(f => this.buildSchemaFieldPayload(f)),
-        folderId: opts.folderId ?? DATA_FABRIC_TENANT_FOLDER_ID,
+        folderId: opts.folderKey ?? DATA_FABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: opts.isRbacEnabled ?? false,
-        isInsightsEnabled: opts.isInsightsEnabled ?? false,
+        isInsightsEnabled: opts.isAnalyticsEnabled ?? false,
         externalFields: opts.externalFields ?? [],
       },
     };

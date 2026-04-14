@@ -513,7 +513,6 @@ export interface EntityServiceModel {
    *
    * @param name - Technical entity name — must start with a letter, letters/numbers/underscores only
    *   (e.g., `"productCatalog"`).
-   * @param description - Entity description
    * @param fields - Array of field definitions
    * @param options - Optional entity-level settings ({@link EntityCreateOptions})
    * @returns Promise resolving to the ID of the created entity
@@ -523,14 +522,14 @@ export interface EntityServiceModel {
    *
    * const entities = new Entities(sdk);
    *
-   * const id = await entities.create("product_catalog", "Our product catalog", [
+   * const id = await entities.create("product_catalog", [
    *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
    *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
-   * ], { displayName: "Product Catalog", isRbacEnabled: true });
+   * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    * ```
    * @internal
    */
-  create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
+  create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
 
   /**
    * Deletes a Data Fabric entity and all its records

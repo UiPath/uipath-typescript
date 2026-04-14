@@ -1307,7 +1307,7 @@ describe("EntityService Unit Tests", () => {
             itemsField: "value",
             totalCountField: "totalRecordCount",
           }),
-          excludeFromPrefix: expect.arrayContaining(["expansionLevel", "filterGroup", "sortOptions", "start", "limit"]),
+          excludeFromPrefix: expect.arrayContaining(["expansionLevel", "filterGroup", "sortOptions"]),
         }),
         undefined,
       );
@@ -1324,8 +1324,6 @@ describe("EntityService Unit Tests", () => {
           queryFilters: [{ fieldName: "name", operator: QueryFilterOperator.Equals, value: "Alice" }],
         },
         sortOptions: [{ fieldName: "name", isDescending: false }],
-        limit: 10,
-        start: 0,
       };
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
@@ -1335,8 +1333,6 @@ describe("EntityService Unit Tests", () => {
         expect.objectContaining({
           filterGroup: options.filterGroup,
           sortOptions: options.sortOptions,
-          limit: 10,
-          start: 0,
         }),
       );
     });
@@ -1350,7 +1346,6 @@ describe("EntityService Unit Tests", () => {
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-        limit: 10,
       });
 
       // expansionLevel is in excludeFromPrefix — no URL manipulation
@@ -1535,9 +1530,8 @@ describe("EntityService Unit Tests", () => {
 
       const result = await entityService.create(
         "my_entity",
-        "A test entity",
         [{ name: "title", type: EntityFieldDataType.STRING }],
-        { displayName: "My Entity", isRbacEnabled: true },
+        { displayName: "My Entity", description: "A test entity", isRbacEnabled: true },
       );
 
       expect(result).toBe(ENTITY_TEST_CONSTANTS.ENTITY_ID);
@@ -1560,7 +1554,7 @@ describe("EntityService Unit Tests", () => {
     it("should use name as displayName when displayName is not provided", async () => {
       mockApiClient.post.mockResolvedValue("new-id");
 
-      await entityService.create("my_new_entity", "", []);
+      await entityService.create("my_new_entity", []);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
@@ -1574,27 +1568,27 @@ describe("EntityService Unit Tests", () => {
 
     it("should throw if entity name has spaces", async () => {
       await expect(
-        entityService.create("My New Entity", "", []),
+        entityService.create("My New Entity", []),
       ).rejects.toThrow("Invalid entity name 'My New Entity'");
     });
 
     it("should throw if entity name starts with a number", async () => {
-      await expect(entityService.create("1entity", "", [])).rejects.toThrow(
+      await expect(entityService.create("1entity", [])).rejects.toThrow(
         "Invalid entity name '1entity'",
       );
     });
 
     it("should throw if field name is invalid", async () => {
       await expect(
-        entityService.create("myentity", "", [{ name: "Bad Field Name" }]),
+        entityService.create("myentity", [{ name: "Bad Field Name" }]),
       ).rejects.toThrow("Invalid field name 'Bad Field Name'");
     });
 
-    it("should pass custom folderId to the entity definition", async () => {
+    it("should pass custom folderKey to the entity definition", async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
-      await entityService.create("my_entity", "desc", [], {
-        folderId: ENTITY_TEST_CONSTANTS.FIELD_ID,
+      await entityService.create("my_entity", [], {
+        folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -1608,11 +1602,11 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should pass isInsightsEnabled: true when provided", async () => {
+    it("should pass isAnalyticsEnabled: true when provided", async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
-      await entityService.create("my_entity", "desc", [], {
-        isInsightsEnabled: true,
+      await entityService.create("my_entity", [], {
+        isAnalyticsEnabled: true,
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -1633,7 +1627,7 @@ describe("EntityService Unit Tests", () => {
         { connectionId: ENTITY_TEST_CONSTANTS.EXTERNAL_CONNECTION_ID },
       ] as unknown as ExternalField[];
 
-      await entityService.create("my_entity", "desc", [], { externalFields });
+      await entityService.create("my_entity", [], { externalFields });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT,
@@ -1650,7 +1644,7 @@ describe("EntityService Unit Tests", () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.create("test_entity", "", [])).rejects.toThrow(
+      await expect(entityService.create("test_entity", [])).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE,
       );
     });
