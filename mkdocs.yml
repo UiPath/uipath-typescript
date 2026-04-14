@@ -197,6 +197,7 @@ nav:
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
           - Jobs: api/interfaces/JobServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
+          - Governance: api/interfaces/GovernanceServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
   - Coded Apps:

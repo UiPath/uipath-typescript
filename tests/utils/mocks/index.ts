@@ -18,6 +18,7 @@ export * from './queues';
 export * from './pagination';
 export * from './conversational-agent';
 export * from './attachments';
+export * from './governance';
 
 // Re-export constants for convenience
 export * from '../constants';

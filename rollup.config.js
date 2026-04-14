@@ -193,6 +193,11 @@ const serviceEntries = [
     name: 'conversational-agent',
     input: 'src/services/conversational-agent/index.ts',
     output: 'conversational-agent/index'
+  },
+  {
+    name: 'governance',
+    input: 'src/services/governance/index.ts',
+    output: 'governance/index'
   }
 ];
 

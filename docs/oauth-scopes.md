@@ -169,3 +169,14 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `unassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `complete()` | `OR.Tasks` or `OR.Tasks.Write` |
+
+## Governance
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `AutomationOps` |
+| `getSettings()` | `AutomationOps` |
+| `create()` | `AutomationOps` |
+| `configure()` | `AutomationOps` (write — browser session JWT recommended) |
+| `deploy()` | `AutomationOps` (write — browser session JWT recommended) |
+| `enableRobotGovernance()` | `AutomationOps` (write — browser session JWT recommended) |
