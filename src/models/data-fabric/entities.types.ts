@@ -249,8 +249,8 @@ export interface EntityFieldBase {
  */
 export interface EntityCreateFieldOptions extends EntityFieldBase {
   /**
-   * Technical field name — must be lowercase, start with a letter, and contain only
-   * letters, numbers, and underscores (e.g., `"product_name"`).
+   * Technical field name — must start with a letter and contain only
+   * letters, numbers, and underscores (e.g., `"productName"`).
    */
   name: string;
   /** Field data type — one of the {@link EntityFieldDataType} values (default: STRING) */
@@ -456,39 +456,51 @@ export interface Field {
 }
 
 /**
+ * SQL type metadata
+ */
+export interface SqlType {
+  /** Raw SQL type name (e.g., `"NVARCHAR"`, `"INT"`, `"UNIQUEIDENTIFIER"`) */
+  name: string;
+  lengthLimit?: number;
+  maxValue?: number;
+  minValue?: number;
+  decimalPrecision?: number;
+}
+
+/**
  * Detailed field definition
  */
 export interface FieldMetaData {
-  id?: string;
+  id: string;
   name: string;
-  isPrimaryKey?: boolean;
-  isForeignKey?: boolean;
-  isExternalField?: boolean;
-  isHiddenField?: boolean;
-  isUnique?: boolean;
+  isPrimaryKey: boolean;
+  isForeignKey: boolean;
+  isExternalField: boolean;
+  isHiddenField: boolean;
+  isUnique: boolean;
+  isRequired: boolean;
+  isSystemField: boolean;
+  isAttachment: boolean;
+  isEncrypted: boolean;
+  isRbacEnabled: boolean;
+  fieldDisplayType: FieldDisplayType;
+  /** Transformed field data type — present after SDK transformation */
+  fieldDataType: FieldDataType;
+  createdTime: string;
+  createdBy: string;
+  /** Raw SQL type from API — present on raw GET responses, used on write payloads */
+  sqlType?: SqlType;
+  updatedTime?: string;
+  updatedBy?: string;
+  displayName?: string;
+  description?: string;
   referenceName?: string;
   referenceEntity?: RawEntityGetResponse;
   referenceChoiceSet?: RawEntityGetResponse;
   referenceField?: Field;
   referenceType?: ReferenceType;
-  /** Raw SQL type from API — present on raw GET responses, used on write payloads */
-  sqlType?: { name: string };
-  /** Transformed field data type — present after SDK transformation */
-  fieldDataType?: FieldDataType;
-  isRequired?: boolean;
-  displayName?: string;
-  description?: string;
-  createdTime?: string;
-  createdBy?: string;
-  updatedTime?: string;
-  updatedBy?: string;
-  isSystemField?: boolean;
-  fieldDisplayType?: FieldDisplayType;
   choiceSetId?: string;
   defaultValue?: string;
-  isAttachment?: boolean;
-  isEncrypted?: boolean;
-  isRbacEnabled?: boolean;
   /** Name of the referenced entity (used on write payloads for relationship fields) */
   referenceEntityName?: string;
   /** Name of the field in the referenced entity (used on write payloads for relationship fields) */

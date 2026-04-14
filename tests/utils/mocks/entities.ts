@@ -205,8 +205,8 @@ export const createBasicEntity = (overrides: Partial<RawEntityGetResponse> = {})
     sourceJoinCriterias: [],
     isRbacEnabled: false,
     createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,  // TRANSFORMED field name
-    updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,  // TRANSFORMED field name
+    createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,
+    updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,
     updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
   }, overrides);
 };

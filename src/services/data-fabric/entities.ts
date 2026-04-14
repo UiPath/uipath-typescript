@@ -42,7 +42,7 @@ import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
 import { EntityFieldTypeMap, EntityMap, EntitySchemaFieldTypeMap, FieldDisplayTypeToDataType } from '../../models/data-fabric/entities.constants';
-import { EntityQueryRawResponse, SqlFieldType } from '../../models/data-fabric/entities.internal-types';
+import { EntityQueryRawResponse, FieldSchemaPayload, SqlFieldType } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /**
@@ -695,8 +695,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Creates a new Data Fabric entity with the given schema
    *
-   * @param name - Technical entity name — must be lowercase, start with a letter, and contain
-   *   only letters, numbers, and underscores (e.g., `"product_catalog"`).
+   * @param name - Technical entity name — must start with a letter and contain
+   *   only letters, numbers, and underscores (e.g., `"productCatalog"`).
    * @param description - Entity description
    * @param fields - Array of field definitions
    * @param options - Optional entity-level settings ({@link EntityCreateOptions})
@@ -848,7 +848,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }
 
     // Build and append new fields
-    const newFields: FieldMetaData[] = [];
+    const newFields: FieldSchemaPayload[] = [];
     if (options.addFields?.length) {
       for (const field of options.addFields) {
         this.validateName(field.name, 'field');
@@ -955,7 +955,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
-  private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldMetaData {
+  private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
     this.validateName(field.name, 'field');
     const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldDataType.STRING];
     return {

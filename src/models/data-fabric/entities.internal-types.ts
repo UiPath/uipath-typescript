@@ -1,4 +1,25 @@
-import { FieldDisplayType, EntityRecord } from './entities.types';
+import { FieldDisplayType, EntityRecord, SqlType } from './entities.types';
+
+/**
+ * Write-side payload shape for creating a new field in a schema upsert call.
+ * Distinct from FieldMetaData (the full read-side type) because new fields
+ * don't have an id, timestamps, or other server-generated fields yet.
+ */
+export interface FieldSchemaPayload {
+  name: string;
+  displayName?: string;
+  description?: string;
+  sqlType: SqlType;
+  fieldDisplayType: FieldDisplayType;
+  isRequired?: boolean;
+  isUnique?: boolean;
+  isRbacEnabled?: boolean;
+  isEncrypted?: boolean;
+  defaultValue?: string;
+  choiceSetId?: string;
+  referenceEntityName?: string;
+  referenceFieldName?: string;
+}
 
 /**
  * Shape of each entry in EntitySchemaFieldTypeMap — internal only.

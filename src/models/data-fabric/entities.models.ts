@@ -505,8 +505,8 @@ export interface EntityServiceModel {
   /**
    * Creates a new Data Fabric entity with the given schema
    *
-   * @param name - Technical entity name — lowercase, starts with a letter, letters/numbers/underscores only
-   *   (e.g., `"product_catalog"`).
+   * @param name - Technical entity name — must start with a letter, letters/numbers/underscores only
+   *   (e.g., `"productCatalog"`).
    * @param description - Entity description
    * @param fields - Array of field definitions
    * @param options - Optional entity-level settings ({@link EntityCreateOptions})
