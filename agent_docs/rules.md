@@ -7,7 +7,6 @@ Every item below has caused rejected PRs. Each has a reason — not arbitrary st
 ### Naming
 - **NEVER use "Request" for parameter types** — always "Options". The entire SDK uses `{Entity}{Operation}Options`. Using "Request" creates inconsistency and confuses the public API. (`TaskAssignmentOptions`, not `TaskAssignmentRequest`)
 - **NEVER use `batch` prefix** for batch methods — use plural names instead. `insertRecordsById`, not `batchInsertRecords`. The SDK convention is singular/plural to distinguish cardinality.
-- **NEVER use internal product/team names in service file paths or class names** — use the user-facing domain name instead. E.g., name the file `feedback.ts` under `conversational-agent/feedback/`, not `llmops.ts` under `llmops/`. Internal product names change, confuse API consumers, and leak internal team organization into the public API.
 
 ### Types
 - **NEVER use `any` type** — use `unknown` then validate.
