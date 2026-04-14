@@ -693,4 +693,53 @@ describe('JobService Unit Tests', () => {
       ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_RESUME_FAILED);
     });
   });
+
+  describe('restart', () => {
+    it('should restart a job and return transformed response', async () => {
+      const mockRawJob = createMockRawJob({ State: 'Pending' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.restart(JOB_TEST_CONSTANTS.JOB_ID, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESTART,
+        { jobId: JOB_TEST_CONSTANTS.JOB_ID },
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
+          }),
+        })
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+    });
+
+    it('should attach bound methods to the returned job', async () => {
+      const mockRawJob = createMockRawJob({ State: 'Pending' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.restart(JOB_TEST_CONSTANTS.JOB_ID, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(typeof result.data.getOutput).toBe('function');
+      expect(typeof result.data.resume).toBe('function');
+      expect(typeof result.data.restart).toBe('function');
+    });
+
+    it('should throw validation error when jobId is missing', async () => {
+      await expect(
+        jobService.restart(0, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow('jobId is required for restart');
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+      mockApiClient.post.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.restart(JOB_TEST_CONSTANTS.JOB_ID, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+    });
+  });
 });

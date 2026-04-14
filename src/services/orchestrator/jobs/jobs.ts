@@ -17,6 +17,7 @@ import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
 import { StopStrategy } from '../../../models/orchestrator/processes.types';
+import { OperationResponse } from '../../../models/common/types';
 
 /**
  * Service for interacting with UiPath Orchestrator Jobs API
@@ -310,6 +311,43 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       body,
       { headers }
     );
+  }
+
+  /**
+   * Restarts a completed or faulted job.
+   *
+   * Creates a new job execution from a previously completed, faulted, or stopped job.
+   * The new job is created with `Pending` state and uses the same process and input
+   * arguments as the original job.
+   *
+   * @param jobId - The numeric ID of the job to restart
+   * @param folderId - The folder ID where the job resides
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the new job details
+   *
+   * @example
+   * ```typescript
+   * // Restart a faulted job
+   * const result = await jobs.restart(<jobId>, <folderId>);
+   * console.log(result.data.state); // 'Pending'
+   * console.log(result.data.key);   // new job key
+   * ```
+   */
+  @track('Jobs.Restart')
+  async restart(jobId: number, folderId: number): Promise<OperationResponse<JobGetResponse>> {
+    if (!jobId) {
+      throw new ValidationError({ message: 'jobId is required for restart' });
+    }
+
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+
+    const response = await this.post<Record<string, unknown>>(
+      JOB_ENDPOINTS.RESTART,
+      { jobId },
+      { headers }
+    );
+
+    const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
+    return { success: true, data: createJobWithMethods(rawJob, this) };
   }
 
   /**
