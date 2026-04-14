@@ -2008,12 +2008,12 @@ describe("Entity field type map synchronization", () => {
       EntityFieldDataType,
       { sqlTypeName: SqlFieldType; fieldDisplayType: FieldDisplayType },
     ][]) {
-      if (fieldDisplayType !== FieldDisplayType.Basic) {
-        // Non-basic types must be recoverable via FieldDisplayTypeToDataType
-        expect(FieldDisplayTypeToDataType[fieldDisplayType]).toBe(dataType);
-      } else {
+      if (fieldDisplayType === FieldDisplayType.Basic) {
         // Basic types must be recoverable via EntityFieldTypeMap
         expect(EntityFieldTypeMap[sqlTypeName]).toBe(dataType);
+      } else {
+        // Non-basic types must be recoverable via FieldDisplayTypeToDataType
+        expect(FieldDisplayTypeToDataType[fieldDisplayType]).toBe(dataType);
       }
     }
   });

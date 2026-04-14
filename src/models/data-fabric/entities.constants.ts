@@ -1,6 +1,6 @@
 import { EntityFieldDataType, FieldDisplayType } from "./entities.types";
 import { EntitySchemaFieldMapping, SqlFieldType } from "./entities.internal-types";
-export { SqlFieldType };
+export { SqlFieldType } from "./entities.internal-types";
 
 /**
  * Maps fields for Entities

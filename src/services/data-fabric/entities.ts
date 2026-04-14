@@ -30,7 +30,6 @@ import {
   EntityCreateOptions,
   EntityCreateFieldOptions,
   EntityFieldDataType,
-  FieldDisplayType,
   EntityUpdateByIdOptions,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
@@ -448,7 +447,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Queries entity records with filters, sorting, and pagination
    *
-   * @param entityId - UUID of the entity
+   * @param id - UUID of the entity
    * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
    * @returns Promise resolving to matching records and total count
    *
@@ -476,12 +475,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.QueryRecordsById')
-  async queryRecordsById(entityId: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
+  async queryRecordsById(id: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
     const { expansionLevel, ...queryBody } = options ?? {};
     const params = createParams({ expansionLevel });
 
     const response = await this.post<EntityQueryRawResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(entityId),
+      DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
       queryBody,
       { params }
     );
@@ -498,7 +497,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Imports records from a CSV file into an entity
    *
-   * @param entityId - UUID of the entity
+   * @param id - UUID of the entity
    * @param file - CSV file to import (Blob, File, or Uint8Array)
    * @returns Promise resolving to import result with record counts
    *
@@ -524,7 +523,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @internal
    */
   @track('Entities.ImportRecordsById')
-  async importRecordsById(entityId: string, file: EntityFileType): Promise<EntityImportRecordsResponse> {
+  async importRecordsById(id: string, file: EntityFileType): Promise<EntityImportRecordsResponse> {
     const formData = new FormData();
     if (file instanceof Uint8Array) {
       formData.append('file', new Blob([file.buffer as ArrayBuffer]));
@@ -533,7 +532,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     }
 
     const response = await this.post<EntityImportRecordsResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(entityId),
+      DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(id),
       formData
     );
 
@@ -737,7 +736,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Deletes a Data Fabric entity and all its records
    *
-   * @param entityId - UUID of the entity to delete
+   * @param id - UUID of the entity to delete
    * @returns Promise resolving when the entity is deleted
    *
    * @example
@@ -747,8 +746,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @internal
    */
   @track('Entities.DeleteById')
-  async deleteById(entityId: string): Promise<void> {
-    await this.delete(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(entityId));
+  async deleteById(id: string): Promise<void> {
+    await this.delete(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(id));
   }
 
   /**
@@ -762,7 +761,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * read-modify-write pattern — concurrent calls on the same entity may silently
    * overwrite each other's changes.
    *
-   * @param entityId - UUID of the entity to update
+   * @param id - UUID of the entity to update
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
    * @returns Promise resolving when the update is complete
    *
@@ -789,15 +788,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @internal
    */
   @track('Entities.UpdateById')
-  async updateById(entityId: string, options: EntityUpdateByIdOptions): Promise<void> {
+  async updateById(id: string, options: EntityUpdateByIdOptions): Promise<void> {
     const hasSchemaChanges = !!(options.addFields?.length || options.removeFields?.length || options.updateFields?.length);
     const hasMetadataChanges = options.displayName !== undefined || options.description !== undefined || options.isRbacEnabled !== undefined;
 
     if (hasSchemaChanges) {
-      await this.applySchemaUpdate(entityId, options);
+      await this.applySchemaUpdate(id, options);
     }
     if (hasMetadataChanges) {
-      await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(entityId), {
+      await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(id), {
         ...(options.displayName !== undefined && { displayName: options.displayName }),
         ...(options.description !== undefined && { description: options.description }),
         ...(options.isRbacEnabled !== undefined && { isRbacEnabled: options.isRbacEnabled }),
@@ -897,7 +896,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       
       // Map field type: prefer fieldDisplayType for types that share SQL types (File, ChoiceSet, AutoNumber)
       if (transformedField.fieldDataType?.name) {
-        const displayTypeMapped = FieldDisplayTypeToDataType[transformedField.fieldDisplayType as FieldDisplayType];
+        const displayTypeMapped = transformedField.fieldDisplayType
+          ? FieldDisplayTypeToDataType[transformedField.fieldDisplayType]
+          : undefined;
         if (displayTypeMapped) {
           transformedField.fieldDataType.name = displayTypeMapped;
         } else {
@@ -980,10 +981,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
   ]);
 
   private validateName(name: string, context: 'entity' | 'field'): void {
-    if (name.length < 3 || name.length > 100 || !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(name)) {
-      const suggestion = name.replace(/[^a-zA-Z0-9_]/g, '').replace(/^[0-9_]+/, '');
+    if (name.length < 3 || name.length > 100 || !/^[a-zA-Z]\w*$/.test(name)) {
+      const suggestion = name.replace(/\W/g, '').replace(/^[0-9_]+/, '');
+      const defaultName = `My${context.charAt(0).toUpperCase() + context.slice(1)}`;
       throw new ValidationError({
-        message: `Invalid ${context} name '${name}'. Must start with a letter, contain only letters, numbers, and underscores, 3–100 characters (e.g., "${suggestion || `My${context.charAt(0).toUpperCase() + context.slice(1)}`}").`
+        message: `Invalid ${context} name '${name}'. Must start with a letter, contain only letters, numbers, and underscores, 3–100 characters (e.g., "${suggestion || defaultName}").`
       });
     }
     if (context === 'field' && EntityService.RESERVED_FIELD_NAMES.has(name)) {

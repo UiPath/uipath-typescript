@@ -752,7 +752,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
       }
 
-      if (!entityMetadata || entityMetadata.id !== entityId) {
+      if (entityMetadata?.id !== entityId) {
         entityMetadata = await entities.getById(entityId);
       }
 
