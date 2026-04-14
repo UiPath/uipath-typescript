@@ -400,4 +400,70 @@ describe('JobService Unit Tests', () => {
       );
     });
   });
+
+  describe('resume', () => {
+    it('should resume a suspended job and return transformed response', async () => {
+      const mockRawJob = createMockRawJob({ State: 'Resumed' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESUME,
+        { jobKey: JOB_TEST_CONSTANTS.JOB_KEY },
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
+          }),
+        })
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+    });
+
+    it('should pass input arguments when provided', async () => {
+      const mockRawJob = createMockRawJob({ State: 'Resumed' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
+        inputArguments: JOB_TEST_CONSTANTS.INPUT_ARGUMENTS,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESUME,
+        {
+          jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
+          inputArguments: JOB_TEST_CONSTANTS.INPUT_ARGUMENTS,
+        },
+        expect.any(Object)
+      );
+    });
+
+    it('should attach bound methods to the returned job', async () => {
+      const mockRawJob = createMockRawJob({ State: 'Resumed' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(typeof result.data.getOutput).toBe('function');
+      expect(typeof result.data.resume).toBe('function');
+    });
+
+    it('should throw validation error when jobKey is missing', async () => {
+      await expect(
+        jobService.resume('', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow('jobKey is required for resume');
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_RESUME_FAILED);
+      mockApiClient.post.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_RESUME_FAILED);
+    });
+  });
 });
