@@ -27,7 +27,7 @@ export const DATA_FABRIC_ENDPOINTS = {
     UPDATE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/update-batch`,
     DELETE_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/delete-batch`,
     UPSERT: `${DATAFABRIC_BASE}/api/Entity`,
-    DELETE: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/delete`,
+    DELETE: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
     UPDATE_METADATA: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}/metadata`,
     QUERY_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/query`,
     BULK_UPLOAD_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/bulk-upload`,

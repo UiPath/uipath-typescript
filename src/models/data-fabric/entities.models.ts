@@ -762,7 +762,7 @@ export interface EntityMethods {
 /**
  * Entity with methods combining metadata with operation methods
  */
-export interface EntityGetResponse extends RawEntityGetResponse, EntityMethods {}
+export type EntityGetResponse = RawEntityGetResponse & EntityMethods;
 
 /**
  * Creates entity methods that can be attached to entity data

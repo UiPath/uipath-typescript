@@ -14,7 +14,7 @@ import {
   createMockBlob,
 } from "../../../utils/mocks/entities";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
-import { EntityUpdateByIdOptions } from "@/services";
+import type { EntityUpdateByIdOptions } from "../../../../src/models/data-fabric/entities.types";
 
 // ===== TEST SUITE =====
 describe("Entity Models", () => {

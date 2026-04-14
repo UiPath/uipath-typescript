@@ -713,7 +713,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.Create')
   async create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
-    EntityService.validateTechnicalName(name, 'entity');
+    this.validateName(name, 'entity');
+    for (const field of fields) {
+      this.validateName(field.name, 'field');
+    }
     const opts = options ?? {};
     const payload = {
       description,
@@ -745,7 +748,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.DeleteById')
   async deleteById(entityId: string): Promise<void> {
-    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(entityId), {});
+    await this.delete(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(entityId));
   }
 
   /**
@@ -819,10 +822,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
     let fields: FieldMetaData[] = (raw.fields ?? [])
       .filter(f => !f.isSystemField && !f.isPrimaryKey);
 
-    // Apply removals
+    // Filter out removed fields
     if (options.removeFields?.length) {
-      const removeSet = new Set(options.removeFields.map(n => n.toLowerCase()));
-      fields = fields.filter(f => !removeSet.has(f.name.toLowerCase()));
+      const removeSet = new Set(options.removeFields);
+      fields = fields.filter(f => !removeSet.has(f.name));
     }
 
     // Apply per-field metadata updates (matched by field ID)
@@ -848,7 +851,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const newFields: FieldMetaData[] = [];
     if (options.addFields?.length) {
       for (const field of options.addFields) {
-        EntityService.validateTechnicalName(field.name, 'field');
+        this.validateName(field.name, 'field');
       }
       newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
     }
@@ -953,7 +956,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
   private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldMetaData {
-    EntityService.validateTechnicalName(field.name, 'field');
+    this.validateName(field.name, 'field');
     const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldDataType.STRING];
     return {
       name: field.name,
@@ -972,15 +975,20 @@ export class EntityService extends BaseService implements EntityServiceModel {
     };
   }
 
-  /**
-   * Validates that a name is a valid technical identifier:
-   * lowercase, starts with a letter, contains only letters, numbers, and underscores.
-   * @throws Error if the name is invalid
-   */
-  private static validateTechnicalName(name: string, context: string): void {
-    if (!/^[a-z][a-z0-9_]*$/.test(name)) {
+  private static readonly RESERVED_FIELD_NAMES = new Set([
+    'Id', 'CreatedBy', 'CreateTime', 'UpdatedBy', 'UpdateTime'
+  ]);
+
+  private validateName(name: string, context: 'entity' | 'field'): void {
+    if (name.length < 3 || name.length > 100 || !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(name)) {
+      const suggestion = name.replace(/[^a-zA-Z0-9_]/g, '').replace(/^[0-9_]+/, '');
       throw new ValidationError({
-        message: `Invalid ${context} name '${name}'. Name must be lowercase, start with a letter, and contain only letters, numbers, and underscores (e.g., "${name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}").`
+        message: `Invalid ${context} name '${name}'. Must start with a letter, contain only letters, numbers, and underscores, 3–100 characters (e.g., "${suggestion || `My${context.charAt(0).toUpperCase() + context.slice(1)}`}").`
+      });
+    }
+    if (context === 'field' && EntityService.RESERVED_FIELD_NAMES.has(name)) {
+      throw new ValidationError({
+        message: `Field name '${name}' is reserved. Reserved names: ${[...EntityService.RESERVED_FIELD_NAMES].join(', ')}.`
       });
     }
   }

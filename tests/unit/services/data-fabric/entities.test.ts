@@ -35,6 +35,7 @@ import type {
 } from "../../../../src/models/data-fabric/entities.types";
 import {
   EntityFieldDataType,
+  ExternalField,
   FieldDisplayType,
   QueryFilterOperator,
 } from "../../../../src/models/data-fabric/entities.types";
@@ -1571,9 +1572,9 @@ describe("EntityService Unit Tests", () => {
       ).rejects.toThrow("Invalid entity name 'My New Entity'");
     });
 
-    it("should throw if entity name has uppercase letters", async () => {
-      await expect(entityService.create("MyEntity", "", [])).rejects.toThrow(
-        "Invalid entity name 'MyEntity'",
+    it("should throw if entity name starts with a number", async () => {
+      await expect(entityService.create("1entity", "", [])).rejects.toThrow(
+        "Invalid entity name '1entity'",
       );
     });
 
@@ -1624,7 +1625,7 @@ describe("EntityService Unit Tests", () => {
 
       const externalFields = [
         { connectionId: ENTITY_TEST_CONSTANTS.EXTERNAL_CONNECTION_ID },
-      ];
+      ] as unknown as ExternalField[];
 
       await entityService.create("my_entity", "desc", [], { externalFields });
 
@@ -1650,21 +1651,20 @@ describe("EntityService Unit Tests", () => {
   });
 
   describe("deleteById", () => {
-    it("should call POST on the entity delete endpoint", async () => {
-      mockApiClient.post.mockResolvedValue(undefined);
+    it("should call DELETE on the entity soft delete endpoint", async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
 
       await entityService.deleteById(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(ENTITY_TEST_CONSTANTS.ENTITY_ID),
-        {},
         {},
       );
     });
 
     it("should handle API errors", async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.post.mockRejectedValue(error);
+      mockApiClient.delete.mockRejectedValue(error);
 
       await expect(
         entityService.deleteById(ENTITY_TEST_CONSTANTS.ENTITY_ID),

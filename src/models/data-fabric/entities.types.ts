@@ -315,9 +315,9 @@ export interface EntityUpdateByIdOptions {
  */
 export interface EntityImportRecordsResponse {
   /** Total number of records in the import file */
-  totalRecords?: number;
+  totalRecords: number;
   /** Number of records successfully inserted */
-  insertedRecords?: number;
+  insertedRecords: number;
   /** Link to download the error file (if any records failed) */
   errorFileLink?: string | null;
 }
