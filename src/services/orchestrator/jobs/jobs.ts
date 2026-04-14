@@ -1,11 +1,12 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions } from '../../../models/orchestrator/jobs.types';
+import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobResumeOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
 import { JobMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
 import { AttachmentService } from '../attachments/attachments';
+import { OperationResponse } from '../../../models/common/types';
 import { ValidationError, ServerError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
 import { errorResponseParser } from '../../../core/errors/parser';
@@ -260,6 +261,56 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     const jobIds = await this.resolveJobKeys(jobKeys, folderId);
 
     await this.stopJobsByIds(jobIds, strategy, headers);
+  }
+
+  /**
+   * Resumes a suspended job.
+   *
+   * Sends a resume request to a job that is currently in the `Suspended` state.
+   * The job transitions to `Resumed` and continues execution. Optionally pass
+   * input arguments to provide data for the resumed workflow.
+   *
+   * @param jobKey - The unique key (GUID) of the suspended job to resume
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional parameters including input arguments
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the resumed job details
+   *
+   * @example
+   * ```typescript
+   * // Resume a suspended job
+   * const result = await jobs.resume(<jobKey>, <folderId>);
+   * console.log(result.data.state); // 'Resumed'
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Resume with input arguments
+   * const result = await jobs.resume(<jobKey>, <folderId>, {
+   *   inputArguments: JSON.stringify({ approved: true })
+   * });
+   * ```
+   */
+  @track('Jobs.Resume')
+  async resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<OperationResponse<JobGetResponse>> {
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for resume' });
+    }
+
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    const body: Record<string, unknown> = { jobKey };
+
+    if (options?.inputArguments) {
+      body.inputArguments = options.inputArguments;
+    }
+
+    const response = await this.post<Record<string, unknown>>(
+      JOB_ENDPOINTS.RESUME,
+      body,
+      { headers }
+    );
+
+    const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
+    return { success: true, data: createJobWithMethods(rawJob, this) };
   }
 
   /**
