@@ -130,6 +130,27 @@ export interface JobServiceModel {
    * ```
    */
   resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<OperationResponse<JobGetResponse>>;
+
+  /**
+   * Restarts a completed or faulted job.
+   *
+   * Creates a new job execution from a previously completed, faulted, or stopped job.
+   * The new job is created with `Pending` state and uses the same process and input
+   * arguments as the original job.
+   *
+   * @param jobId - The numeric ID of the job to restart
+   * @param folderId - The folder ID where the job resides
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the new job details
+   *
+   * @example
+   * ```typescript
+   * // Restart a faulted job
+   * const result = await jobs.restart(<jobId>, <folderId>);
+   * console.log(result.data.state); // 'Pending'
+   * console.log(result.data.key);   // new job key
+   * ```
+   */
+  restart(jobId: number, folderId: number): Promise<OperationResponse<JobGetResponse>>;
 }
 
 /**
@@ -165,6 +186,13 @@ export interface JobMethods {
    * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the resumed job details
    */
   resume(options?: JobResumeOptions): Promise<OperationResponse<JobGetResponse>>;
+
+  /**
+   * Restarts this job, creating a new execution.
+   *
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the new job details
+   */
+  restart(): Promise<OperationResponse<JobGetResponse>>;
 }
 
 /**
@@ -185,6 +213,11 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.resume(jobData.key, jobData.folderId, options);
+    },
+    async restart(): Promise<OperationResponse<JobGetResponse>> {
+      if (!jobData.id) throw new Error('Job id is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.restart(jobData.id, jobData.folderId);
     },
   };
 }
