@@ -132,7 +132,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * ```
    */
   @track('Jobs.GetById')
-  async getById(id: string, folderId: number, options: JobGetByIdOptions = {}): Promise<JobGetResponse> {
+  async getById(id: string, folderId: number, options?: JobGetByIdOptions): Promise<JobGetResponse> {
     if (!id) {
       throw new ValidationError({ message: 'id is required for getById' });
     }
@@ -141,8 +141,8 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
+    const keysToPrefix = Object.keys(options ?? {});
+    const apiOptions = options ? addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix) : {};
 
     const response = await this.get<Record<string, unknown>>(
       JOB_ENDPOINTS.GET_BY_KEY(id),

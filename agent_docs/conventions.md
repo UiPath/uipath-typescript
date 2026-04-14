@@ -33,7 +33,7 @@
 - **Use "Options" not "Request"** for parameter types — the entire SDK uses `{Entity}{Operation}Options`.
 - **Required parameters are always positional; Options objects are reserved for optional parameters only.** Required values (IDs, keys, data) are positional arguments. Options objects are always the last parameter, always marked `?`, and contain only optional fields. E.g., `getOutput(jobKey: string)` not `getOutput(options: { jobKey: string })`, `close(instanceId, folderKey, options?)` not `close(options: { instanceId, folderKey })`.
 - **NEVER** duplicate fields across option types — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use `extends` (e.g., `export interface EntityUpdateRecordByIdOptions extends EntityGetRecordByIdOptions {}`).
-- **NEVER** use type aliases for response types — even when the shape matches an existing one, use an `extends` interface. Type aliases (e.g., `export type EntityUpdateRecordResponse = EntityRecord`) break TypeDoc docs generation by not rendering as standalone types. Use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
+- **Always use `type` for response types** (intersections, unions, composed types). The only place `interface extends` is required is single-type aliases (`type X = Y`), which break TypeDoc — use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
 
 **ID parameter types**: New methods must use `string` (GUID) for entity identifiers, not `string | number`. Legacy methods may still accept `string | number` for backward compatibility, but all new `getById`, `getOutput`, etc. should type their ID parameter as `string`.
 
@@ -212,6 +212,8 @@ Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` 
 
 - **`getById(id, folderId, ...)`** — sets the `X-UIPATH-OrganizationUnitId` header via `createHeaders({ [FOLDER_ID]: folderId })`
 - **`getAll(options?)`** — passes `getByFolderEndpoint` to `PaginationHelpers.getAll()`, which switches endpoints based on whether `folderId` is in options
+
+Always pass `folderId` directly to `createHeaders` — the utility filters `undefined` values, so no conditional is needed.
 
 ## OperationResponse pattern
 
