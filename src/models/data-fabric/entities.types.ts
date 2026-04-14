@@ -197,22 +197,26 @@ export interface EntityQuerySortOption {
 }
 
 /**
- * Options for querying entity records with filters, sorting, and pagination
+ * Options for querying entity records with filters, sorting, and pagination.
+ *
+ * Supports both raw offset parameters (`start`/`limit`) and SDK-managed pagination
+ * (`pageSize`, `cursor`, `jumpToPage`). When SDK pagination options are provided,
+ * the SDK computes and manages `start`/`limit` automatically.
  */
-export interface EntityQueryRecordsOptions {
+export type EntityQueryRecordsOptions = {
   /** Filter conditions to apply */
   filterGroup?: EntityQueryFilterGroup;
   /** List of field names to include in results (returns all fields if omitted) */
   selectedFields?: string[];
   /** Sort options for the results */
   sortOptions?: EntityQuerySortOption[];
-  /** Number of records to skip (for pagination) */
+  /** Number of records to skip — use for direct control, or use `pageSize`/`cursor` for SDK-managed pagination */
   start?: number;
-  /** Maximum number of records to return */
+  /** Maximum number of records to return — use for direct control, or use `pageSize`/`cursor` for SDK-managed pagination */
   limit?: number;
   /** Level of entity expansion for related fields (default: 0) */
   expansionLevel?: number;
-}
+} & PaginationOptions;
 
 /**
  * Response from querying entity records

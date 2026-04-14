@@ -1285,127 +1285,133 @@ describe("EntityService Unit Tests", () => {
   });
 
   describe("queryRecordsById", () => {
-    it("should return items and totalCount from query response", async () => {
+    beforeEach(() => {
+      vi.mocked(PaginationHelpers.getAll).mockReset();
+    });
+
+    it("should delegate to PaginationHelpers.getAll with POST method and correct pagination config", async () => {
       const mockRecords = createMockEntityRecords(2);
-      mockApiClient.post.mockResolvedValue({
-        value: mockRecords,
-        totalRecordCount: 2,
-      });
+      const mockResponse = { items: mockRecords, totalCount: 2 };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const result = await entityService.queryRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
       );
 
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serviceAccess: expect.any(Object),
+          getEndpoint: expect.any(Function),
+          method: "POST",
+          pagination: expect.objectContaining({
+            itemsField: "value",
+            totalCountField: "totalRecordCount",
+          }),
+          excludeFromPrefix: expect.arrayContaining(["expansionLevel", "filterGroup", "sortOptions", "start", "limit"]),
+        }),
+        undefined,
+      );
       expect(result.items).toHaveLength(2);
       expect(result.totalCount).toBe(2);
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ),
-        {},
-        { params: {} },
-      );
     });
 
-    it("should pass filter options in request body", async () => {
-      mockApiClient.post.mockResolvedValue({ value: [], totalRecordCount: 0 });
+    it("should pass filter and sort options through to PaginationHelpers.getAll", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
 
       const options = {
         filterGroup: {
           logicalOperator: 0 as const,
-          queryFilters: [
-            {
-              fieldName: "name",
-              operator: QueryFilterOperator.Equals,
-              value: "Alice",
-            },
-          ],
+          queryFilters: [{ fieldName: "name", operator: QueryFilterOperator.Equals, value: "Alice" }],
         },
+        sortOptions: [{ fieldName: "name", isDescending: false }],
         limit: 10,
         start: 0,
       };
 
-      const result = await entityService.queryRecordsById(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        options,
-      );
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
 
-      expect(result.totalCount).toBe(0);
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ),
-        { filterGroup: options.filterGroup, limit: 10, start: 0 },
-        { params: {} },
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          filterGroup: options.filterGroup,
+          sortOptions: options.sortOptions,
+          limit: 10,
+          start: 0,
+        }),
       );
     });
 
-    it("should pass expansionLevel as a query param, not in the request body", async () => {
-      mockApiClient.post.mockResolvedValue({ value: [], totalRecordCount: 0 });
+    it("should pass expansionLevel through excludeFromPrefix without ODATA prefix", async () => {
+      let capturedConfig: any;
+      vi.mocked(PaginationHelpers.getAll).mockImplementation(async (config) => {
+        capturedConfig = config;
+        return { items: [], totalCount: 0 };
+      });
 
       await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         limit: 10,
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ),
-        { limit: 10 },
-        { params: { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL } },
+      // expansionLevel is in excludeFromPrefix — no URL manipulation
+      expect(capturedConfig.getEndpoint()).toBe(
+        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
       );
+      expect(capturedConfig.getEndpoint()).not.toContain("expansionLevel");
+      expect(capturedConfig.excludeFromPrefix).toContain("expansionLevel");
+      // no processParametersFn — same pattern as getAllRecords
+      expect(capturedConfig.processParametersFn).toBeUndefined();
     });
 
-    it("should support nested filterGroups", async () => {
-      mockApiClient.post.mockResolvedValue({ value: [], totalRecordCount: 0 });
-
-      const options = {
-        filterGroup: {
-          logicalOperator: 0 as const,
-          filterGroups: [
-            {
-              logicalOperator: 1 as const,
-              queryFilters: [
-                {
-                  fieldName: "status",
-                  operator: QueryFilterOperator.Equals,
-                  value: "active",
-                },
-              ],
-            },
-          ],
-        },
+    it("should return paginated response when pageSize is provided", async () => {
+      const mockRecords = createMockEntityRecords(10);
+      const mockPaginatedResponse = {
+        items: mockRecords,
+        totalCount: 100,
+        hasNextPage: true,
+        nextCursor: { value: TEST_CONSTANTS.NEXT_CURSOR },
+        supportsPageJump: true,
       };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockPaginatedResponse);
 
-      await entityService.queryRecordsById(
+      const result = (await entityService.queryRecordsById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        options,
-      );
+        { pageSize: TEST_CONSTANTS.PAGE_SIZE },
+      )) as typeof mockPaginatedResponse;
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ),
-        { filterGroup: options.filterGroup },
-        { params: {} },
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ pageSize: TEST_CONSTANTS.PAGE_SIZE }),
       );
+      expect(result.hasNextPage).toBe(true);
+      expect(result.nextCursor?.value).toBe(TEST_CONSTANTS.NEXT_CURSOR);
+      expect(result.items).toHaveLength(10);
     });
 
-    it("should handle missing value and totalRecordCount gracefully", async () => {
-      mockApiClient.post.mockResolvedValue({});
+    it("should support jumpToPage for direct page navigation", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: [],
+        totalCount: 50,
+        hasNextPage: false,
+        supportsPageJump: true,
+        currentPage: 3,
+        totalPages: 5,
+      });
 
-      const result = await entityService.queryRecordsById(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        jumpToPage: 3,
+        pageSize: TEST_CONSTANTS.PAGE_SIZE,
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ jumpToPage: 3, pageSize: TEST_CONSTANTS.PAGE_SIZE }),
       );
-
-      expect(result.items).toEqual([]);
-      expect(result.totalCount).toBe(0);
     });
 
     it("should handle API errors", async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.post.mockRejectedValue(error);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(
         entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID),

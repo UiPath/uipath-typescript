@@ -740,6 +740,20 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(result.items.length).toBeLessThanOrEqual(5);
       expect(typeof result.totalCount).toBe('number');
     });
+
+    it('should return paginated records when pageSize is provided', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecordsById(entityId, { pageSize: 2 });
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeLessThanOrEqual(2);
+      expect(typeof (result as any).hasNextPage).toBe('boolean');
+    });
   });
 
   // Bulk import requires DataFabric.Data.Write scope — not supported via PAT token yet
