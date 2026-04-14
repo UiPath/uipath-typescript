@@ -136,8 +136,9 @@ For each thread that passes Stage 1, determine if it contains a documentation-wo
 
 | Signal | Target file |
 |--------|-------------|
-| Reviewer correcting a pattern violation not yet in rules | `agent_docs/rules.md` |
+| Reviewer correcting a pattern violation or convention (including anti-patterns) | `agent_docs/conventions.md` (add inline **NEVER** next to the relevant convention) |
 | Explaining WHY a convention exists or should be followed | `agent_docs/conventions.md` |
+| New testing guidelines or quality rules | `agent_docs/rules.md` (testing & quality only) |
 | New project structure info, service patterns, or architecture decisions | `agent_docs/architecture.md` |
 | New commands, quick-reference items, or workflow changes | `Agents.md` |
 | Top-level pointers or high-level project changes (rare) | `CLAUDE.md` |
@@ -170,8 +171,8 @@ If actionable insights exist:
 
 1. For each insight, determine the correct file and section.
 2. Edit the files using the Edit tool. Follow existing formatting, heading levels, and conventions in each file.
-3. For `agent_docs/rules.md`, add new items under the appropriate "NEVER" subsection or create a new subsection if needed. Follow the existing pattern: bold "NEVER" + action, followed by explanation with rationale.
-4. For `agent_docs/conventions.md`, add to the relevant section or create a new subsection following existing patterns.
+3. For `agent_docs/conventions.md`, add conventions and anti-patterns to the relevant section. Anti-patterns go inline as **NEVER** next to the related convention — only when they add a non-obvious *why* or call out a specific trap. Do not add NEVERs that merely restate the convention in negative form.
+4. For `agent_docs/rules.md`, add only testing guidelines, integration test rules, documentation/JSDoc rules, or quality checklist items. This file does not contain coding conventions or anti-patterns — those belong in `conventions.md`.
 5. For `agent_docs/architecture.md`, update tables or sections as appropriate.
 6. For `Agents.md`, update the quick reference or add new sections.
 
