@@ -1,5 +1,6 @@
-import { JobGetAllOptions, RawJobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobResumeOptions, RawJobGetResponse } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
+import { OperationResponse } from '../common/types';
 
 // Combined type for job data with methods
 export type JobGetResponse = RawJobGetResponse & JobMethods;
@@ -100,6 +101,35 @@ export interface JobServiceModel {
    * ```
    */
   getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Resumes a suspended job.
+   *
+   * Sends a resume request to a job that is currently in the `Suspended` state.
+   * The job transitions to `Resumed` and continues execution. Optionally pass
+   * input arguments to provide data for the resumed workflow.
+   *
+   * @param jobKey - The unique key (GUID) of the suspended job to resume
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional parameters including input arguments
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the resumed job details
+   *
+   * @example
+   * ```typescript
+   * // Resume a suspended job
+   * const result = await jobs.resume(<jobKey>, <folderId>);
+   * console.log(result.data.state); // 'Resumed'
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Resume with input arguments
+   * const result = await jobs.resume(<jobKey>, <folderId>, {
+   *   inputArguments: JSON.stringify({ approved: true })
+   * });
+   * ```
+   */
+  resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<OperationResponse<JobGetResponse>>;
 }
 
 /**
@@ -127,6 +157,14 @@ export interface JobMethods {
    * ```
    */
   getOutput(): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Resumes this suspended job.
+   *
+   * @param options - Optional parameters including input arguments
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the resumed job details
+   */
+  resume(options?: JobResumeOptions): Promise<OperationResponse<JobGetResponse>>;
 }
 
 /**
@@ -142,6 +180,11 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.getOutput(jobData.key, jobData.folderId);
+    },
+    async resume(options?: JobResumeOptions): Promise<OperationResponse<JobGetResponse>> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.resume(jobData.key, jobData.folderId, options);
     },
   };
 }
