@@ -290,14 +290,6 @@ export interface EntityFieldUpdateOptions extends EntityFieldBase {
 }
 
 /**
- * Identifies a field to remove by its name
- */
-export interface EntityRemoveFieldOptions {
-  /** Name of the field to remove */
-  fieldName: string;
-}
-
-/**
  * Options for updating an existing entity — schema and/or metadata in a single call.
  *
  * Schema changes (`addFields`, `removeFields`, `updateFields`) and metadata changes
@@ -308,7 +300,7 @@ export interface EntityUpdateByIdOptions {
   /** New fields to add */
   addFields?: EntityCreateFieldOptions[];
   /** Fields to remove, each identified by field name */
-  removeFields?: EntityRemoveFieldOptions[];
+  removeFields?: Array<{ fieldName: string }>;
   /** Fields to update, each identified by its field ID */
   updateFields?: EntityFieldUpdateOptions[];
   /** New display name for the entity */
