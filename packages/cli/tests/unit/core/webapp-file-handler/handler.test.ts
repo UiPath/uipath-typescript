@@ -15,10 +15,18 @@ vi.mock('../../../../src/core/webapp-file-handler/local-files.js', () => ({
 
 vi.mock('../../../../src/core/webapp-file-handler/push-plan.js', () => ({
   computeExecutionPlan: vi.fn().mockResolvedValue({
-    createFolders: [], uploadFiles: [], updateFiles: [], deleteFiles: [], deleteFolders: [],
+    createFolders: [],
+    uploadFiles: [],
+    updateFiles: [],
+    deleteFiles: [],
+    deleteFolders: [],
   }),
   computeFirstPushPlan: vi.fn().mockReturnValue({
-    createFolders: [], uploadFiles: [], updateFiles: [], deleteFiles: [], deleteFolders: [],
+    createFolders: [],
+    uploadFiles: [],
+    updateFiles: [],
+    deleteFiles: [],
+    deleteFolders: [],
   }),
 }));
 

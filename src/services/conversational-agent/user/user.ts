@@ -11,7 +11,7 @@ import type {
   UserSettingsUpdateOptions,
   UserServiceModel,
   UserSettingsGetResponse,
-  UserSettingsUpdateResponse
+  UserSettingsUpdateResponse,
 } from '@/models/conversational-agent';
 import { UserSettingsMap } from '@/models/conversational-agent';
 

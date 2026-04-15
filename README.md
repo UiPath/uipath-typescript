@@ -6,9 +6,6 @@
   <img src="./docs/assets/logo-dark.svg" alt="UiPath Logo" width="200">
 </picture>
 
-
-
-
 # UiPath TypeScript SDK
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -84,7 +81,7 @@ const sdk = new UiPath({
   tenantName: 'your-tenant',
   clientId: 'your-client-id',
   redirectUri: 'your-redirect-uri',
-  scope: 'your-scopes'
+  scope: 'your-scopes',
 });
 
 // Initialize OAuth flow
@@ -125,7 +122,7 @@ const sdk = new UiPath({
   tenantName: 'your-tenant',
   clientId: 'your-client-id',
   redirectUri: 'your-redirect-uri',
-  scope: 'your-scopes'
+  scope: 'your-scopes',
 });
 
 // IMPORTANT: OAuth requires calling initialize()
@@ -144,7 +141,7 @@ const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token
+  secret: 'your-secret', //PAT Token or Bearer Token
 });
 ```
 
@@ -161,6 +158,7 @@ The `initialize()` method completes the authentication process for the SDK:
 - **OAuth Authentication**: **MUST call** `await sdk.initialize()` before using any SDK services
 
 #### Example: Secret Authentication (Auto-initialized)
+
 ```typescript
 import { UiPath } from '@uipath/uipath-typescript/core';
 import { Tasks } from '@uipath/uipath-typescript/tasks';
@@ -169,7 +167,7 @@ const sdk = new UiPath({
   baseUrl: 'https://cloud.uipath.com',
   orgName: 'your-organization',
   tenantName: 'your-tenant',
-  secret: 'your-secret' //PAT Token or Bearer Token
+  secret: 'your-secret', //PAT Token or Bearer Token
 });
 
 // Ready to use immediately - no initialize() needed
@@ -178,6 +176,7 @@ const allTasks = await tasks.getAll();
 ```
 
 #### Example: OAuth Authentication (Requires initialize)
+
 ```typescript
 import { UiPath } from '@uipath/uipath-typescript/core';
 import { Tasks } from '@uipath/uipath-typescript/tasks';
@@ -188,7 +187,7 @@ const sdk = new UiPath({
   tenantName: 'your-tenant',
   clientId: 'your-client-id',
   redirectUri: 'http://localhost:3000',
-  scope: 'your-scopes'
+  scope: 'your-scopes',
 });
 
 // Must initialize before using services
@@ -212,12 +211,13 @@ try {
 <summary><strong>View Integration Patterns</strong></summary>
 
 #### Auto-login on App Load
+
 ```typescript
 import { UiPath } from '@uipath/uipath-typescript/core';
 
 useEffect(() => {
   const initSDK = async () => {
-    const sdk = new UiPath({...oauthConfig});
+    const sdk = new UiPath({ ...oauthConfig });
     await sdk.initialize();
   };
   initSDK();
@@ -225,6 +225,7 @@ useEffect(() => {
 ```
 
 #### User-Triggered Login
+
 ```typescript
 const onLogin = async () => {
   await sdk.initialize();
@@ -241,6 +242,7 @@ useEffect(() => {
 ```
 
 #### Available OAuth Methods
+
 - `sdk.initialize()` - Start OAuth flow (auto completes also based on callback state)
 - `sdk.isInitialized()` - Check if SDK initialization completed
 - `sdk.isAuthenticated()` - Check if user has valid token
@@ -284,7 +286,9 @@ import { Buckets } from '@uipath/uipath-typescript/buckets';
 import { Entities } from '@uipath/uipath-typescript/entities';
 
 // Initialize SDK
-const sdk = new UiPath({ /* config */ });
+const sdk = new UiPath({
+  /* config */
+});
 
 // Create service instances
 const maestroProcesses = new MaestroProcesses(sdk);
@@ -300,14 +304,14 @@ const entities = new Entities(sdk);
 const allProcesses = await maestroProcesses.getAll();
 const instances = await processInstances.getAll({
   processKey: 'my-process',
-  pageSize: 10
+  pageSize: 10,
 });
 
 // Control Process Instances
 await processInstances.pause(instanceId, 'folder-key');
 await processInstances.resume(instanceId, 'folder-key');
 await processInstances.cancel(instanceId, 'folder-key', {
-  comment: 'Cancelled due to error'
+  comment: 'Cancelled due to error',
 });
 
 // Maestro Case Instances
@@ -316,68 +320,79 @@ const stages = await caseInstances.getStages(instanceId, 'folder-key');
 
 // Control Case Instances
 await caseInstances.close(instanceId, 'folder-key', {
-  comment: 'Case resolved successfully'
+  comment: 'Case resolved successfully',
 });
 
 // Orchestrator Processes - Start a process
-const result = await processes.start({
-  processKey: 'MyProcess_Key',
-}, folderId);
+const result = await processes.start(
+  {
+    processKey: 'MyProcess_Key',
+  },
+  folderId,
+);
 
 // Tasks - Create, assign, and complete
-const task = await tasks.create({
-  title: 'Review Invoice',
-  priority: 'High'
-}, folderId);
+const task = await tasks.create(
+  {
+    title: 'Review Invoice',
+    priority: 'High',
+  },
+  folderId,
+);
 
-await tasks.assign({
-  taskId: task.id,
-  userNameOrEmail: 'user@company.com'
-}, folderId);
+await tasks.assign(
+  {
+    taskId: task.id,
+    userNameOrEmail: 'user@company.com',
+  },
+  folderId,
+);
 
-await tasks.complete(TaskType.App, {
-  taskId: task.id,
-  data: {},
-  action: 'submit'
-}, folderId);
+await tasks.complete(
+  TaskType.App,
+  {
+    taskId: task.id,
+    data: {},
+    action: 'submit',
+  },
+  folderId,
+);
 
 // Buckets - File operations
 const bucket = await buckets.getById(bucketId, folderId);
 const fileMetadata = await buckets.getFileMetaData(bucketId, folderId, {
-  prefix: '/invoices/'
+  prefix: '/invoices/',
 });
 
 // Upload file
 await buckets.uploadFile({
   bucketId: bucketId,
   folderId: folderId,
-  prefix: '/folder1'
+  prefix: '/folder1',
 });
 
 // Get download URL
 const downloadUrl = await buckets.getReadUri({
   bucketId: bucketId,
   folderId: folderId,
-  path: '/folder/file.pdf'
+  path: '/folder/file.pdf',
 });
 
 // Data Fabric Entities - CRUD operations
 const entity = await entities.getById('entity-uuid');
 const records = await entities.getAllRecords('entity-uuid', {
   pageSize: 100,
-  expansionLevel: 1
+  expansionLevel: 1,
 });
 
 // Insert records
 await entities.insertRecordsById('entity-uuid', [
   { name: 'John Doe', email: 'john@company.com', status: 'Active' },
-  { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' }
+  { name: 'Jane Smith', email: 'jane@company.com', status: 'Active' },
 ]);
 
 // Update records
-await entities.updateRecordsById('entity-uuid', [
-  { Id: 'record-id-1', status: 'Inactive' }
-]);
+await entities.updateRecordsById('entity-uuid', [{ Id: 'record-id-1', status: 'Inactive' }]);
 
 // Delete records
 await entities.deleteRecordsById('entity-uuid', ['record-id-1', 'record-id-2']);
@@ -413,11 +428,13 @@ Before submitting a pull request, please review our [Contribution Guidelines](ht
 To build and serve the documentation locally using MkDocs:
 
 **Prerequisites:**
+
 - Python
 - Node.js 18.x or higher
 - npm 8.x or higher
 
 **Steps:**
+
 ```bash
 pip3 install -r docs/requirements.txt
 npm run docs:api

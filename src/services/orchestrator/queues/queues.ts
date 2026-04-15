@@ -1,9 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import {
-  QueueGetResponse,
-  QueueGetAllOptions,
-  QueueGetByIdOptions
-} from '../../../models/orchestrator/queues.types';
+import { QueueGetResponse, QueueGetAllOptions, QueueGetByIdOptions } from '../../../models/orchestrator/queues.types';
 import { QueueServiceModel } from '../../../models/orchestrator/queues.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
@@ -22,14 +18,14 @@ import { track } from '../../../core/telemetry';
 export class QueueService extends FolderScopedService implements QueueServiceModel {
   /**
    * Gets all queues across folders with optional filtering and folder scoping
-   * 
+   *
    * The method returns either:
    * - An array of queues (when no pagination parameters are provided)
    * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of queues or paginated result
-   * 
+   *
    * @example
    * ```typescript
    * import { Queues } from '@uipath/uipath-typescript/queues';
@@ -66,41 +62,42 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
    */
   @track('Queues.GetAll')
   async getAll<T extends QueueGetAllOptions = QueueGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<QueueGetResponse>
-      : NonPaginatedResponse<QueueGetResponse>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<QueueGetResponse> : NonPaginatedResponse<QueueGetResponse>
   > {
     // Transformation function for queues
-    const transformQueueResponse = (queue: any) => 
+    const transformQueueResponse = (queue: any) =>
       transformData(pascalToCamelCaseKeys(queue) as QueueGetResponse, QueueMap);
 
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: (folderId) => folderId ? QUEUE_ENDPOINTS.GET_BY_FOLDER : QUEUE_ENDPOINTS.GET_ALL,
-      getByFolderEndpoint: QUEUE_ENDPOINTS.GET_BY_FOLDER,
-      transformFn: transformQueueResponse,
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
-          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
-          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
-        }
-      }
-    }, options) as any;
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: (folderId) => (folderId ? QUEUE_ENDPOINTS.GET_BY_FOLDER : QUEUE_ENDPOINTS.GET_ALL),
+        getByFolderEndpoint: QUEUE_ENDPOINTS.GET_BY_FOLDER,
+        transformFn: transformQueueResponse,
+        pagination: {
+          paginationType: PaginationType.OFFSET,
+          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+          paginationParams: {
+            pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+            offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+            countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
+          },
+        },
+      },
+      options,
+    ) as any;
   }
 
   /**
    * Gets a single queue by ID
-   * 
+   *
    * @param id - Queue ID
    * @param folderId - Required folder ID
    * @returns Promise resolving to a queue definition
-   * 
+   *
    * @example
    * ```typescript
    * import { Queues } from '@uipath/uipath-typescript/queues';
@@ -114,17 +111,14 @@ export class QueueService extends FolderScopedService implements QueueServiceMod
   @track('Queues.GetById')
   async getById(id: number, folderId: number, options: QueueGetByIdOptions = {}): Promise<QueueGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<QueueGetResponse>(
-      QUEUE_ENDPOINTS.GET_BY_ID(id),
-      { 
-        headers,
-        params: apiOptions
-      }
-    );
+
+    const response = await this.get<QueueGetResponse>(QUEUE_ENDPOINTS.GET_BY_ID(id), {
+      headers,
+      params: apiOptions,
+    });
 
     return transformData(pascalToCamelCaseKeys(response.data) as QueueGetResponse, QueueMap);
   }

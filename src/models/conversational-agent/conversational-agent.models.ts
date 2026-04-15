@@ -1,7 +1,4 @@
-import type {
-  AgentGetResponse,
-  AgentGetByIdResponse
-} from './agents';
+import type { AgentGetResponse, AgentGetByIdResponse } from './agents';
 import type { ConversationServiceModel } from './conversations';
 import type { FeatureFlags } from './feature-flags.types';
 import type { ConnectionStatus } from '@/core/websocket';
@@ -159,5 +156,4 @@ export interface ConversationalAgentServiceModel {
    * @internal
    */
   getFeatureFlags(): Promise<FeatureFlags>;
-
 }

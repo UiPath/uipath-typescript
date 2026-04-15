@@ -18,12 +18,14 @@
 
 **Problem**: During authentication, you may encounter errors related to invalid redirect URIs, scopes, or other configuration issues.
 
-**Error URL Example**: 
+**Error URL Example**:
+
 ```
 https://cloud.uipath.com/identity_/web/?errorCode=invalid_request&errorId=eyJDcmWRpcmVjdFVyaSI6bnVsbCwiUmVzcG9uc2VNb2RlIjpudWxsLCJDbGllbnRJZCI6IjhmZjMyM2FlLTAwZTEtNDU2NC1hOGMyLWVmZDg0YWY2Njc1MiJ9fQ
 ```
 
-**Solution**: 
+**Solution**:
+
 1. **Extract the Error Details**:
    - Copy the `errorId` value from the URL (the long encoded string after `errorId=`)
    - Go to [jwt.io](https://jwt.io)
@@ -31,6 +33,7 @@ https://cloud.uipath.com/identity_/web/?errorCode=invalid_request&errorId=eyJDcm
    - The decoded payload will show you the specific error details
 
 2. **Example Decoded Error**:
+
 ```json
 {
   "Created": 638900000000000000,

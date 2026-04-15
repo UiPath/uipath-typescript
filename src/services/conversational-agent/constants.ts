@@ -7,7 +7,7 @@
  */
 export const WEBSOCKET_EVENTS = {
   /** Main event for conversation messages */
-  CONVERSATION_EVENT: 'ConversationEvent'
+  CONVERSATION_EVENT: 'ConversationEvent',
 } as const;
 
 /**

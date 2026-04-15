@@ -19,7 +19,7 @@ export const HTTP_METHODS = {
   POST: 'POST',
   PUT: 'PUT',
   PATCH: 'PATCH',
-  DELETE: 'DELETE'
+  DELETE: 'DELETE',
 } as const;
 
 /**
@@ -28,9 +28,9 @@ export const HTTP_METHODS = {
 export const ODATA_PAGINATION = {
   /** Default field name for items in a paginated OData response */
   ITEMS_FIELD: 'value',
-  
+
   /** Default field name for total count in a paginated OData response */
-  TOTAL_COUNT_FIELD: '@odata.count'
+  TOTAL_COUNT_FIELD: '@odata.count',
 };
 
 /**
@@ -41,7 +41,7 @@ export const ENTITY_PAGINATION = {
   ITEMS_FIELD: 'value',
 
   /** Field name for total count in entity response */
-  TOTAL_COUNT_FIELD: 'totalRecordCount'
+  TOTAL_COUNT_FIELD: 'totalRecordCount',
 };
 
 /**
@@ -53,7 +53,7 @@ export const CHOICESET_VALUES_PAGINATION = {
   ITEMS_FIELD: 'jsonValue',
 
   /** Field name for total count in choice set values response */
-  TOTAL_COUNT_FIELD: 'totalRecordCount'
+  TOTAL_COUNT_FIELD: 'totalRecordCount',
 };
 
 /**
@@ -62,9 +62,9 @@ export const CHOICESET_VALUES_PAGINATION = {
 export const BUCKET_PAGINATION = {
   /** Field name for items in bucket file metadata response */
   ITEMS_FIELD: 'items',
-  
+
   /** Field name for continuation token in bucket file metadata response */
-  CONTINUATION_TOKEN_FIELD: 'continuationToken'
+  CONTINUATION_TOKEN_FIELD: 'continuationToken',
 };
 
 /**
@@ -73,9 +73,9 @@ export const BUCKET_PAGINATION = {
 export const PROCESS_INSTANCE_PAGINATION = {
   /** Field name for items in process instance response */
   ITEMS_FIELD: 'instances',
-  
+
   /** Field name for continuation token in process instance response */
-  CONTINUATION_TOKEN_FIELD: 'nextPage'
+  CONTINUATION_TOKEN_FIELD: 'nextPage',
 };
 
 /**
@@ -84,12 +84,12 @@ export const PROCESS_INSTANCE_PAGINATION = {
 export const ODATA_OFFSET_PARAMS = {
   /** OData page size parameter name */
   PAGE_SIZE_PARAM: '$top',
-  
+
   /** OData offset parameter name */
   OFFSET_PARAM: '$skip',
-  
+
   /** OData count parameter name */
-  COUNT_PARAM: '$count'
+  COUNT_PARAM: '$count',
 };
 
 /**
@@ -98,12 +98,12 @@ export const ODATA_OFFSET_PARAMS = {
 export const ENTITY_OFFSET_PARAMS = {
   /** Entity page size parameter name */
   PAGE_SIZE_PARAM: 'limit',
-  
+
   /** Entity offset parameter name */
   OFFSET_PARAM: 'start',
-  
+
   /** Entity count parameter (not used) */
-  COUNT_PARAM: undefined
+  COUNT_PARAM: undefined,
 };
 
 /**
@@ -112,9 +112,9 @@ export const ENTITY_OFFSET_PARAMS = {
 export const BUCKET_TOKEN_PARAMS = {
   /** Bucket page size parameter name */
   PAGE_SIZE_PARAM: 'takeHint',
-  
+
   /** Bucket token parameter name */
-  TOKEN_PARAM: 'continuationToken'
+  TOKEN_PARAM: 'continuationToken',
 };
 
 /**
@@ -125,7 +125,7 @@ export const PROCESS_INSTANCE_TOKEN_PARAMS = {
   PAGE_SIZE_PARAM: 'pageSize',
 
   /** Process instance token parameter name */
-  TOKEN_PARAM: 'nextPage'
+  TOKEN_PARAM: 'nextPage',
 };
 
 /**
@@ -136,7 +136,7 @@ export const CONVERSATIONAL_PAGINATION = {
   ITEMS_FIELD: 'data',
 
   /** Field name for cursor in conversational agent response */
-  CONTINUATION_TOKEN_FIELD: 'cursor'
+  CONTINUATION_TOKEN_FIELD: 'cursor',
 };
 
 /**
@@ -147,5 +147,5 @@ export const CONVERSATIONAL_TOKEN_PARAMS = {
   PAGE_SIZE_PARAM: 'limit',
 
   /** Conversational agent cursor parameter name */
-  TOKEN_PARAM: 'cursor'
+  TOKEN_PARAM: 'cursor',
 };

@@ -27,7 +27,7 @@ export const getOrchestratorApiUrl = (
   domain: string,
   organizationName: string,
   tenantName: string,
-  path: string
+  path: string,
 ): string => {
   const baseUrl = getBaseUrl(domain);
   return `${baseUrl}/${organizationName}/${tenantName}${AUTH_CONSTANTS.SERVICE_PATHS.ORCHESTRATOR_API}${path}`;

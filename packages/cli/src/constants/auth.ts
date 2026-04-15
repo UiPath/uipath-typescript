@@ -53,7 +53,8 @@ export const AUTH_CONSTANTS = {
     CODE_CHALLENGE_METHOD: 'S256',
     DEFAULT_CLIENT_ID: '36dea5b8-e8bb-423d-8e7b-c808df8f1c00',
     REDIRECT_URI_TEMPLATE: 'http://localhost:{PORT}/oidc/login',
-    DEFAULT_SCOPE: 'offline_access ProcessMining OrchestratorApiUserAccess StudioWebBackend IdentityServerApi ConnectionService DataService DocumentUnderstanding EnterpriseContextService Directory JamJamApi LLMGateway LLMOps OMS RCS.FolderAuthorization TM.Projects TM.TestCases TM.Requirements TM.TestSets',
+    DEFAULT_SCOPE:
+      'offline_access ProcessMining OrchestratorApiUserAccess StudioWebBackend IdentityServerApi ConnectionService DataService DocumentUnderstanding EnterpriseContextService Directory JamJamApi LLMGateway LLMOps OMS RCS.FolderAuthorization TM.Projects TM.TestCases TM.Requirements TM.TestSets',
   },
   CRYPTO: {
     RANDOM_BYTES_LENGTH: 32,
@@ -116,13 +117,7 @@ export const AUTH_CONSTANTS = {
   },
   REQUIRED_ENV_VARS: {
     // Required for publish command (includes tenant name for coded app registration)
-    PUBLISH: [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID',
-      'UIPATH_TENANT_ID',
-      'UIPATH_TENANT_NAME',
-      'UIPATH_ACCESS_TOKEN'
-    ],
+    PUBLISH: ['UIPATH_BASE_URL', 'UIPATH_ORG_ID', 'UIPATH_TENANT_ID', 'UIPATH_TENANT_NAME', 'UIPATH_ACCESS_TOKEN'],
     // Required for deploy command
     DEPLOY: [
       'UIPATH_BASE_URL',
@@ -130,29 +125,14 @@ export const AUTH_CONSTANTS = {
       'UIPATH_ORG_NAME',
       'UIPATH_TENANT_ID',
       'UIPATH_FOLDER_KEY',
-      'UIPATH_ACCESS_TOKEN'
+      'UIPATH_ACCESS_TOKEN',
     ],
     // Required for pack command (app name uniqueness check)
-    PACK: [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID',
-      'UIPATH_TENANT_ID',
-      'UIPATH_ACCESS_TOKEN'
-    ],
+    PACK: ['UIPATH_BASE_URL', 'UIPATH_ORG_ID', 'UIPATH_TENANT_ID', 'UIPATH_ACCESS_TOKEN'],
     // Required for push command (Studio Web)
-    PUSH: [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID',
-      'UIPATH_TENANT_ID',
-      'UIPATH_ACCESS_TOKEN'
-    ],
+    PUSH: ['UIPATH_BASE_URL', 'UIPATH_ORG_ID', 'UIPATH_TENANT_ID', 'UIPATH_ACCESS_TOKEN'],
     // Required for pull command (Studio Web) — same as PUSH
-    PULL: [
-      'UIPATH_BASE_URL',
-      'UIPATH_ORG_ID',
-      'UIPATH_TENANT_ID',
-      'UIPATH_ACCESS_TOKEN'
-    ],
+    PULL: ['UIPATH_BASE_URL', 'UIPATH_ORG_ID', 'UIPATH_TENANT_ID', 'UIPATH_ACCESS_TOKEN'],
   },
   API_ENDPOINTS: {
     FOLDERS_NAVIGATION: '/Folders/GetAllForCurrentUser',
@@ -186,12 +166,7 @@ export const AUTH_CONSTANTS = {
       METHODS: 'GET, POST, OPTIONS',
       HEADERS: 'Content-Type',
     },
-    ALLOWED_ORIGINS: [
-      'http://localhost',
-      'http://127.0.0.1',
-      'https://localhost',
-      'https://127.0.0.1',
-    ],
+    ALLOWED_ORIGINS: ['http://localhost', 'http://127.0.0.1', 'https://localhost', 'https://127.0.0.1'],
   },
 } as const;
 

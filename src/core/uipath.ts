@@ -80,7 +80,7 @@ export class UiPath implements IUiPath {
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
-      scope: hasOAuthAuth ? config.scope : undefined
+      scope: hasOAuthAuth ? config.scope : undefined,
     });
 
     const executionContext = new ExecutionContext();
@@ -91,14 +91,14 @@ export class UiPath implements IUiPath {
     SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
-      tokenManager: this.#authService.getTokenManager()
+      tokenManager: this.#authService.getTokenManager(),
     });
 
     // Expose read-only config for user convenience
     (this as any).config = {
       baseUrl: internalConfig.baseUrl,
       orgName: internalConfig.orgName,
-      tenantName: internalConfig.tenantName
+      tenantName: internalConfig.tenantName,
     };
 
     // Initialize telemetry with SDK configuration
@@ -107,7 +107,7 @@ export class UiPath implements IUiPath {
       orgName: config.orgName,
       tenantName: config.tenantName,
       clientId: hasOAuthAuth ? config.clientId : undefined,
-      redirectUri: hasOAuthAuth ? config.redirectUri : undefined
+      redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
     });
 
     // Track SDK initialization
@@ -132,7 +132,7 @@ export class UiPath implements IUiPath {
     if (!isCompleteConfig(merged)) {
       throw new Error(
         'UiPath SDK configuration not found. ' +
-        'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.'
+          'Ensure @uipath/coded-apps plugin is set up in your bundler to inject configuration during development and build.',
       );
     }
 
@@ -260,5 +260,4 @@ export class UiPath implements IUiPath {
   public updateToken(tokenInfo: TokenInfo): void {
     this.#authService?.updateToken(tokenInfo);
   }
-
 }

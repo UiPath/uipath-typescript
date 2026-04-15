@@ -1,10 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect } from 'vitest';
-import {
-  MAX_PAGE_SIZE,
-  DEFAULT_PAGE_SIZE,
-  getLimitedPageSize
-} from '../../../../src/utils/pagination/constants';
+import { MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../../../../src/utils/pagination/constants';
 
 // ===== TEST SUITE =====
 describe('Pagination Constants Unit Tests', () => {

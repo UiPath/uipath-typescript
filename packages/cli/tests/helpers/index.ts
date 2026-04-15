@@ -29,12 +29,14 @@ export function createMockEnvConfig(overrides: Partial<EnvironmentConfig> = {}):
 // Fetch response factory (used by publish, deploy tests)
 // ---------------------------------------------------------------------------
 
-export function createMockFetchResponse(options: {
-  ok?: boolean;
-  status?: number;
-  json?: unknown;
-  headers?: Record<string, string>;
-} = {}) {
+export function createMockFetchResponse(
+  options: {
+    ok?: boolean;
+    status?: number;
+    json?: unknown;
+    headers?: Record<string, string>;
+  } = {},
+) {
   const { ok = true, status = 200, json = {}, headers = {} } = options;
   return {
     ok,

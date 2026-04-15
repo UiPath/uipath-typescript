@@ -4,7 +4,7 @@ import type {
   ToolCall,
   ToolCallEndEvent,
   ToolCallEvent,
-  ToolCallStartEvent
+  ToolCallStartEvent,
 } from '@/models/conversational-agent';
 
 import { ConversationEventHelperBase } from './conversation-event-helper-base';
@@ -12,7 +12,7 @@ import {
   ConversationEventValidationError,
   type ErrorEndEventOptions,
   type ErrorStartEventOptions,
-  type ToolCallEndHandler
+  type ToolCallEndHandler,
 } from './conversation-event-helper-common';
 import type { ToolCallStream } from '@/models/conversational-agent';
 import type { MessageEventHelper, MessageEventHelperImpl } from './message-event-helper';
@@ -21,11 +21,10 @@ import type { MessageEventHelper, MessageEventHelperImpl } from './message-event
  * Helper for managing tool call events within a message.
  * Handles tool call lifecycle with start/end events.
  */
-export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
-  ToolCallStartEvent,
-  ToolCallEvent
-> implements ToolCallStream {
-
+export abstract class ToolCallEventHelper
+  extends ConversationEventHelperBase<ToolCallStartEvent, ToolCallEvent>
+  implements ToolCallStream
+{
   protected readonly _endHandlers = new Array<ToolCallEndHandler>();
 
   constructor(
@@ -36,7 +35,7 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
      * ToolCallStartEvent used to initialize the ToolCallEventHelper. Will be undefined if some other sub-event was
      * received before the start event. See also `startEvent`.
      */
-    public readonly startEventMaybe: ToolCallStartEvent | undefined
+    public readonly startEventMaybe: ToolCallStartEvent | undefined,
   ) {
     super(message.manager);
     this.addStartEventTimestamp(startEventMaybe);
@@ -47,7 +46,8 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
    * other sub-event was received before the start event, which shouldn't happen under normal circumstances.
    */
   public get startEvent(): MakeRequired<ToolCallStartEvent, 'timestamp'> {
-    if (!this.startEventMaybe) throw new ConversationEventValidationError(`Tool call ${this.toolCallId} has no start event.`);
+    if (!this.startEventMaybe)
+      throw new ConversationEventValidationError(`Tool call ${this.toolCallId} has no start event.`);
     return this.startEventMaybe as MakeRequired<ToolCallStartEvent, 'timestamp'>;
   }
 
@@ -56,7 +56,7 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
    */
   public emit(toolCallEvent: Omit<ToolCallEvent, 'toolCallId'>) {
     this.message.emit({
-      toolCall: { toolCallId: this.toolCallId, ...toolCallEvent }
+      toolCall: { toolCallId: this.toolCallId, ...toolCallEvent },
     });
   }
 
@@ -116,8 +116,8 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
     this.emit({
       toolCallError: {
         errorId,
-        startError
-      }
+        startError,
+      },
     });
     this.errors.set(errorId, startError);
   }
@@ -131,8 +131,8 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
     this.emit({
       toolCallError: {
         errorId,
-        endError
-      }
+        endError,
+      },
     });
     this.errors.delete(errorId);
   }
@@ -143,31 +143,27 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
 }
 
 export class ToolCallEventHelperImpl extends ToolCallEventHelper {
-
   public static *replay(toolCall: ToolCall): Generator<ToolCallEvent> {
-
     yield {
       toolCallId: toolCall.toolCallId,
       startToolCall: {
         toolName: toolCall.name,
         input: toolCall.input,
-        timestamp: toolCall.createdTime ?? (toolCall as any).createdAt
-      }
+        timestamp: toolCall.createdTime ?? (toolCall as any).createdAt,
+      },
     };
 
     if (toolCall.result) {
-
       yield {
         toolCallId: toolCall.toolCallId,
         endToolCall: {
           cancelled: toolCall.result.cancelled,
           isError: toolCall.result.isError,
           output: toolCall.result.output,
-          timestamp: toolCall.result.timestamp
-        }
+          timestamp: toolCall.result.timestamp,
+        },
       };
     }
-
   }
 
   /**
@@ -183,7 +179,7 @@ export class ToolCallEventHelperImpl extends ToolCallEventHelper {
 
     if (toolCallEvent.metaEvent) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._metaEventHandlers.forEach(cb => cb(toolCallEvent.metaEvent!));
+      this._metaEventHandlers.forEach((cb) => cb(toolCallEvent.metaEvent!));
     }
 
     if (toolCallEvent.toolCallError?.startError) {
@@ -197,7 +193,7 @@ export class ToolCallEventHelperImpl extends ToolCallEventHelper {
     if (toolCallEvent.endToolCall) {
       this.setEnded();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._endHandlers.forEach(cb => cb(toolCallEvent.endToolCall!));
+      this._endHandlers.forEach((cb) => cb(toolCallEvent.endToolCall!));
       this.delete();
     }
   }
@@ -217,5 +213,4 @@ export class ToolCallEventHelperImpl extends ToolCallEventHelper {
   protected getSession() {
     return this.message.exchange.session;
   }
-
 }

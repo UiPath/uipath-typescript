@@ -15,9 +15,7 @@ describe('auth/services/folder', () => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
-          PageItems: [
-            { Key: 'k1', DisplayName: 'Folder1', FullyQualifiedName: 'Root/Folder1' },
-          ],
+          PageItems: [{ Key: 'k1', DisplayName: 'Folder1', FullyQualifiedName: 'Root/Folder1' }],
         }),
       });
       const folders = await getFolders('token', 'https://cloud.uipath.com', 'org', 'tenant');
@@ -28,14 +26,14 @@ describe('auth/services/folder', () => {
 
     it('should throw on 401 response', async () => {
       mockFetch.mockResolvedValue({ ok: false, status: 401, statusText: 'Unauthorized' });
-      await expect(getFolders('token', 'https://cloud.uipath.com', 'org', 'tenant'))
-        .rejects.toThrow('Unauthorized');
+      await expect(getFolders('token', 'https://cloud.uipath.com', 'org', 'tenant')).rejects.toThrow('Unauthorized');
     });
 
     it('should throw on other errors', async () => {
       mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Server Error' });
-      await expect(getFolders('token', 'https://cloud.uipath.com', 'org', 'tenant'))
-        .rejects.toThrow('Failed to fetch folders');
+      await expect(getFolders('token', 'https://cloud.uipath.com', 'org', 'tenant')).rejects.toThrow(
+        'Failed to fetch folders',
+      );
     });
 
     it('should handle value array format', async () => {

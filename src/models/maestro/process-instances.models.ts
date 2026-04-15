@@ -6,7 +6,7 @@ import type {
   ProcessInstanceExecutionHistoryResponse,
   BpmnXmlString,
   ProcessInstanceGetVariablesResponse,
-  ProcessInstanceGetVariablesOptions
+  ProcessInstanceGetVariablesOptions,
 } from './process-instances.types';
 import type { ProcessIncidentGetResponse } from './process-incidents.types';
 import { OperationResponse } from '../common/types';
@@ -31,11 +31,11 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export interface ProcessInstancesServiceModel {
   /**
    * Get all process instances with optional filtering and pagination
-   * 
+   *
    * The method returns either:
    * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param options Query parameters for filtering instances and pagination
    * @returns Promise resolving to either an array of process instances NonPaginatedResponse<ProcessInstanceGetResponse> or a PaginatedResponse<ProcessInstanceGetResponse> when pagination options are used.
    * {@link ProcessInstanceGetResponse}
@@ -66,7 +66,7 @@ export interface ProcessInstancesServiceModel {
    * ```
    */
   getAll<T extends ProcessInstanceGetAllWithPaginationOptions = ProcessInstanceGetAllWithPaginationOptions>(
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<ProcessInstanceGetResponse>
@@ -177,7 +177,11 @@ export interface ProcessInstancesServiceModel {
    * }
    * ```
    */
-  cancel(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+  cancel(
+    instanceId: string,
+    folderKey: string,
+    options?: ProcessInstanceOperationOptions,
+  ): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
   /**
    * Pause a process instance
@@ -186,7 +190,11 @@ export interface ProcessInstancesServiceModel {
    * @param options Optional pause options with comment
    * @returns Promise resolving to operation result with instance data
    */
-  pause(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>
+  pause(
+    instanceId: string,
+    folderKey: string,
+    options?: ProcessInstanceOperationOptions,
+  ): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
   /**
    * Resume a process instance
@@ -195,11 +203,15 @@ export interface ProcessInstancesServiceModel {
    * @param options Optional resume options with comment
    * @returns Promise resolving to operation result with instance data
    */
-  resume(instanceId: string, folderKey: string, options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
+  resume(
+    instanceId: string,
+    folderKey: string,
+    options?: ProcessInstanceOperationOptions,
+  ): Promise<OperationResponse<ProcessInstanceOperationResponse>>;
 
   /**
    * Get global variables for a process instance
-   * 
+   *
    * @param instanceId The ID of the instance to get variables for
    * @param folderKey The folder key for authorization
    * @param options Optional options including parentElementId to filter by parent element
@@ -232,11 +244,15 @@ export interface ProcessInstancesServiceModel {
    * );
    * ```
    */
-  getVariables(instanceId: string, folderKey: string, options?: ProcessInstanceGetVariablesOptions): Promise<ProcessInstanceGetVariablesResponse>;
+  getVariables(
+    instanceId: string,
+    folderKey: string,
+    options?: ProcessInstanceGetVariablesOptions,
+  ): Promise<ProcessInstanceGetVariablesResponse>;
 
   /**
    * Get incidents for a process instance
-   * 
+   *
    * @param instanceId The ID of the instance to get incidents for
    * @param folderKey The folder key for authorization
    * @returns Promise resolving to array of incidents for the processinstance
@@ -261,7 +277,7 @@ export interface ProcessInstancesServiceModel {
 export interface ProcessInstanceMethods {
   /**
    * Cancels this process instance
-   * 
+   *
    * @param options - Optional cancellation options with comment
    * @returns Promise resolving to operation result
    */
@@ -269,7 +285,7 @@ export interface ProcessInstanceMethods {
 
   /**
    * Pauses this process instance
-   * 
+   *
    * @param options - Optional pause options with comment
    * @returns Promise resolving to operation result
    */
@@ -277,7 +293,7 @@ export interface ProcessInstanceMethods {
 
   /**
    * Resumes this process instance
-   * 
+   *
    * @param options - Optional resume options with comment
    * @returns Promise resolving to operation result
    */
@@ -285,11 +301,11 @@ export interface ProcessInstanceMethods {
 
   /**
    * Gets incidents for this process instance
-   * 
+   *
    * @returns Promise resolving to array of incidents for this instance
    */
   getIncidents(): Promise<ProcessIncidentGetResponse[]>;
-   
+
   /**
    * Gets execution history (spans) for this process instance
    *
@@ -318,38 +334,47 @@ export type ProcessInstanceGetResponse = RawProcessInstanceGetResponse & Process
 
 /**
  * Creates methods for a process instance
- * 
+ *
  * @param instanceData - The process instance data (response from API)
  * @param service - The process instance service instance
  * @returns Object containing process instance methods
  */
-function createProcessInstanceMethods(instanceData: RawProcessInstanceGetResponse, service: ProcessInstancesServiceModel): ProcessInstanceMethods {
+function createProcessInstanceMethods(
+  instanceData: RawProcessInstanceGetResponse,
+  service: ProcessInstancesServiceModel,
+): ProcessInstanceMethods {
   return {
-    async cancel(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
+    async cancel(
+      options?: ProcessInstanceOperationOptions,
+    ): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
 
       return service.cancel(instanceData.instanceId, instanceData.folderKey, options);
     },
-    
-    async pause(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
+
+    async pause(
+      options?: ProcessInstanceOperationOptions,
+    ): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
 
       return service.pause(instanceData.instanceId, instanceData.folderKey, options);
     },
 
-    async resume(options?: ProcessInstanceOperationOptions): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
+    async resume(
+      options?: ProcessInstanceOperationOptions,
+    ): Promise<OperationResponse<ProcessInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
-      
+
       return service.resume(instanceData.instanceId, instanceData.folderKey, options);
     },
 
     async getIncidents(): Promise<ProcessIncidentGetResponse[]> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
-      
+
       return service.getIncidents(instanceData.instanceId, instanceData.folderKey);
     },
 
@@ -371,20 +396,20 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
 
       return service.getVariables(instanceData.instanceId, instanceData.folderKey, options);
-    }
+    },
   };
 }
 
 /**
  * Creates an actionable process instance by combining API process instance data with operational methods.
- * 
+ *
  * @param instanceData - The process instance data from API
  * @param service - The process instance service instance
  * @returns A process instance object with added methods
  */
 export function createProcessInstanceWithMethods(
-  instanceData: RawProcessInstanceGetResponse, 
-  service: ProcessInstancesServiceModel
+  instanceData: RawProcessInstanceGetResponse,
+  service: ProcessInstancesServiceModel,
 ): ProcessInstanceGetResponse {
   const methods = createProcessInstanceMethods(instanceData, service);
   return Object.assign({}, instanceData, methods) as ProcessInstanceGetResponse;

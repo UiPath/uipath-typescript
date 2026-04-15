@@ -6,12 +6,12 @@ export const ProcessInstanceMap: { [key: string]: string } = {
   completedTimeUtc: 'completedTime',
   expiryTimeUtc: 'expiredTime',
   createdAt: 'createdTime',
-  updatedAt: 'updatedTime'
+  updatedAt: 'updatedTime',
 };
 
 /**
  * Maps fields for Process Instance Execution History to ensure consistent naming
  */
 export const ProcessInstanceExecutionHistoryMap: { [key: string]: string } = {
-  startTime: 'startedTime'
+  startTime: 'startedTime',
 };

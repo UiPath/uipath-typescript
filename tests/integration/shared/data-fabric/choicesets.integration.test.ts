@@ -21,7 +21,7 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
       }
 
       const choiceSet = result[0];
-      
+
       expect(choiceSet.name).toBeDefined();
       expect(choiceSet.displayName).toBeDefined();
       expect(typeof choiceSet.name).toBe('string');

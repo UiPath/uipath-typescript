@@ -2,7 +2,9 @@
   "name": "@uipath/codedapp-tool",
   "version": "0.1.0",
   "description": "uipcli plugin for coded web applications",
-  "keywords": ["uipcli-tool"],
+  "keywords": [
+    "uipcli-tool"
+  ],
   "type": "module",
   "main": "./dist/tool.js",
   "exports": {
@@ -11,7 +13,9 @@
   "bin": {
     "codedapp-tool": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "bun build ./src/tool.ts --outdir dist --format esm --target node --external commander --external signal-exit && bun build ./src/index.ts --outdir dist --format esm --target node --external commander --external signal-exit",
     "build:full": "cd ../cli && npm run build && cd ../codedapp-tool && npm run build",

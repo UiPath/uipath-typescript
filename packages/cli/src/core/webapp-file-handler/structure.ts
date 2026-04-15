@@ -36,11 +36,7 @@ export function getRemoteContentRoot(bundlePath: string): string {
 /**
  * Remote path for a file under the build dir (e.g. local "dist/index.html" -> "source/dist/index.html").
  */
-export function localPathToRemotePath(
-  localPath: string,
-  bundlePath: string,
-  remoteContentRoot: string
-): string {
+export function localPathToRemotePath(localPath: string, bundlePath: string, remoteContentRoot: string): string {
   const normalized = localPath.replace(/\\/g, '/');
   const buildDirNorm = normalizeBundlePath(bundlePath);
   const prefix = buildDirNorm ? buildDirNorm + '/' : '';
@@ -66,11 +62,7 @@ export function sourceLocalPathToRemotePath(localPath: string): string {
  * - If under bundlePath: source/<buildDir>/...
  * - Otherwise: source/...
  */
-export function getRemotePathForLocalPath(
-  localPath: string,
-  bundlePath: string,
-  remoteContentRoot: string
-): string {
+export function getRemotePathForLocalPath(localPath: string, bundlePath: string, remoteContentRoot: string): string {
   const normalized = localPath.replace(/\\/g, '/');
   const buildDirNorm = normalizeBundlePath(bundlePath);
   const prefix = buildDirNorm ? buildDirNorm + '/' : '';
@@ -81,10 +73,7 @@ export function getRemotePathForLocalPath(
 }
 
 /** Keeps only entries whose key equals remoteContentRoot or starts with remoteContentRoot + '/'. */
-export function filterToSourceFolderMap<T>(
-  map: Map<string, T>,
-  remoteContentRoot: string
-): Map<string, T> {
+export function filterToSourceFolderMap<T>(map: Map<string, T>, remoteContentRoot: string): Map<string, T> {
   const prefix = remoteContentRoot + '/';
   const filtered = new Map<string, T>();
   for (const [pathKey, value] of map.entries()) {
@@ -147,10 +136,7 @@ export function isFolderEmpty(folder: ProjectFolder): boolean {
   return true;
 }
 
-export function findEmptyFolders(
-  structure: ProjectStructure,
-  rootPath?: string
-): Array<{ id: string; name: string }> {
+export function findEmptyFolders(structure: ProjectStructure, rootPath?: string): Array<{ id: string; name: string }> {
   const emptyFolders: Array<{ id: string; name: string }> = [];
 
   const checkFolder = (folder: ProjectFolder): void => {

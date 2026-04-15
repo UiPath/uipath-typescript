@@ -1,8 +1,5 @@
 import { ValidationError } from '../../../core/errors';
-import {
-  AttachmentResponse,
-  AttachmentGetByIdOptions,
-} from '../../../models/orchestrator/attachments.types';
+import { AttachmentResponse, AttachmentGetByIdOptions } from '../../../models/orchestrator/attachments.types';
 import { AttachmentServiceModel } from '../../../models/orchestrator/attachments.models';
 import { pascalToCamelCaseKeys, addPrefixToKeys, transformData } from '../../../utils/transform';
 import { ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -37,12 +34,9 @@ export class AttachmentService extends BaseService implements AttachmentServiceM
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
 
-    const response = await this.get<AttachmentResponse>(
-      ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(id),
-      {
-        params: apiOptions,
-      }
-    );
+    const response = await this.get<AttachmentResponse>(ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(id), {
+      params: apiOptions,
+    });
 
     // Transform response from PascalCase to camelCase, then apply field maps
     const camelCased = pascalToCamelCaseKeys(response.data) as AttachmentResponse;

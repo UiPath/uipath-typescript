@@ -62,7 +62,10 @@ describe.each(modes)('Orchestrator Assets - Integration Tests [%s]', (mode) => {
         pageSize: 1,
       });
 
-      expect(allAssets.items.length, 'No assets available to test getById. Create an asset in the tenant first.').toBeGreaterThan(0);
+      expect(
+        allAssets.items.length,
+        'No assets available to test getById. Create an asset in the tenant first.',
+      ).toBeGreaterThan(0);
 
       const assetId = allAssets.items[0].id;
       const folderId = config.folderId ? Number(config.folderId) : undefined;

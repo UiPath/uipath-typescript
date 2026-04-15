@@ -16,10 +16,10 @@ export const TaskMap: { [key: string]: string } = {
   deletionTime: 'deletedTime',
   lastModificationTime: 'lastModifiedTime',
   creationTime: 'createdTime',
-  organizationUnitId: 'folderId'
+  organizationUnitId: 'folderId',
 };
 
 /**
  * Default expand parameters
  */
-export const DEFAULT_TASK_EXPAND = 'AssignedToUser,CreatorUser,LastModifierUser'; 
+export const DEFAULT_TASK_EXPAND = 'AssignedToUser,CreatorUser,LastModifierUser';

@@ -14,7 +14,7 @@ export class AuthorizationError extends UiPathError {
     super(ErrorType.AUTHORIZATION, {
       message: params.message || ErrorMessages.ACCESS_DENIED,
       statusCode: params.statusCode ?? HttpStatus.FORBIDDEN,
-      requestId: params.requestId
+      requestId: params.requestId,
     });
   }
 }

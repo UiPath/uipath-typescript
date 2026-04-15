@@ -2,11 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { UserService } from '@/services/conversational-agent/user/user';
 import { ApiClient } from '@/core/http/api-client';
-import {
-  createMockError,
-  CONVERSATIONAL_AGENT_TEST_CONSTANTS,
-  TEST_CONSTANTS,
-} from '@tests/utils/mocks';
+import { createMockError, CONVERSATIONAL_AGENT_TEST_CONSTANTS, TEST_CONSTANTS } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
 
@@ -63,10 +59,7 @@ describe('UserService Unit Tests', () => {
       expect(result.timezone).toBe('America/New_York');
 
       // Verify the correct endpoint
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        USER_ENDPOINTS.SETTINGS,
-        expect.any(Object)
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(USER_ENDPOINTS.SETTINGS, expect.any(Object));
     });
 
     it('should transform createdAt -> createdTime and updatedAt -> updatedTime', async () => {
@@ -137,7 +130,7 @@ describe('UserService Unit Tests', () => {
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         USER_ENDPOINTS.SETTINGS,
         { name: 'Jane Doe', timezone: 'Europe/London' },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -164,7 +157,7 @@ describe('UserService Unit Tests', () => {
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         USER_ENDPOINTS.SETTINGS,
         { email: 'newemail@example.com' },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -185,7 +178,7 @@ describe('UserService Unit Tests', () => {
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         USER_ENDPOINTS.SETTINGS,
         { role: null, department: null },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -193,9 +186,7 @@ describe('UserService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.patch.mockRejectedValue(error);
 
-      await expect(
-        userService.updateSettings({ name: 'test' })
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(userService.updateSettings({ name: 'test' })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

@@ -73,7 +73,7 @@ describe('SessionEventHelper', () => {
         expect.objectContaining({
           conversationId: CONVERSATION_ID,
           metaEvent: { key: 'value' },
-        })
+        }),
       );
     });
   });
@@ -88,7 +88,7 @@ describe('SessionEventHelper', () => {
         expect.objectContaining({
           conversationId: CONVERSATION_ID,
           sessionStarted: {},
-        })
+        }),
       );
     });
 
@@ -111,7 +111,7 @@ describe('SessionEventHelper', () => {
         expect.objectContaining({
           conversationId: CONVERSATION_ID,
           endSession: {},
-        })
+        }),
       );
     });
 
@@ -146,7 +146,7 @@ describe('SessionEventHelper', () => {
             exchangeId: 'ex-1',
             startExchange: expect.any(Object),
           }),
-        })
+        }),
       );
     });
 
@@ -166,9 +166,7 @@ describe('SessionEventHelper', () => {
         exchange.startMessage({ role: MessageRole.User });
       });
 
-      const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.endExchange !== undefined
-      );
+      const endCall = emitSpy.mock.calls.find((call: any[]) => call[0]?.exchange?.endExchange !== undefined);
       expect(endCall).toBeDefined();
     });
 
@@ -198,9 +196,7 @@ describe('SessionEventHelper', () => {
         expect(exchange.exchangeId).toBeDefined();
       });
 
-      const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.endExchange !== undefined
-      );
+      const endCall = emitSpy.mock.calls.find((call: any[]) => call[0]?.exchange?.endExchange !== undefined);
       expect(endCall).toBeDefined();
     });
   });
@@ -246,7 +242,7 @@ describe('SessionEventHelper', () => {
             streamId: 'stream-1',
             startAsyncInputStream: expect.any(Object),
           }),
-        })
+        }),
       );
     });
 
@@ -258,7 +254,7 @@ describe('SessionEventHelper', () => {
       });
 
       const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.asyncInputStream?.endAsyncInputStream !== undefined
+        (call: any[]) => call[0]?.asyncInputStream?.endAsyncInputStream !== undefined,
       );
       expect(endCall).toBeDefined();
     });
@@ -309,7 +305,7 @@ describe('SessionEventHelper', () => {
             toolCallId: 'tc-1',
             startToolCall: expect.objectContaining({ toolName: 'search' }),
           }),
-        })
+        }),
       );
     });
 
@@ -318,9 +314,7 @@ describe('SessionEventHelper', () => {
 
       await session.startAsyncToolCall({ toolCallId: 'tc-cb', toolName: 'search' }, async () => {});
 
-      const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.asyncToolCall?.endToolCall !== undefined
-      );
+      const endCall = emitSpy.mock.calls.find((call: any[]) => call[0]?.asyncToolCall?.endToolCall !== undefined);
       expect(endCall).toBeDefined();
     });
 
@@ -476,9 +470,7 @@ describe('SessionEventHelper', () => {
         },
       });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'err-1', message: 'fail' })
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'err-1', message: 'fail' }));
     });
 
     it('should dispatch conversationError end to error handlers', () => {
@@ -495,9 +487,7 @@ describe('SessionEventHelper', () => {
         },
       });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'err-1' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'err-1' }));
     });
 
     it('should ignore events for different conversationId', () => {
@@ -784,7 +774,7 @@ describe('SessionEventHelper', () => {
         expect.objectContaining({
           conversationId: CONVERSATION_ID,
           metaEvent: { key: 'paused-emit' },
-        })
+        }),
       );
     });
   });
@@ -847,9 +837,7 @@ describe('SessionEventHelper', () => {
 
       session.sendErrorStart({ errorId: 'echo-err', message: 'echo error' });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'echo-err' })
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'echo-err' }));
     });
 
     it('should echo error end events', () => {
@@ -861,9 +849,7 @@ describe('SessionEventHelper', () => {
       session.sendErrorStart({ errorId: 'echo-err', message: 'err' });
       session.sendErrorEnd({ errorId: 'echo-err' });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'echo-err' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'echo-err' }));
     });
 
     it('should echo input stream start events', () => {
@@ -947,7 +933,7 @@ describe('SessionEventHelper', () => {
             errorId: 'se-1',
             startError: expect.objectContaining({ message: 'session error' }),
           }),
-        })
+        }),
       );
       expect(session.hasError).toBe(true);
     });
@@ -966,7 +952,7 @@ describe('SessionEventHelper', () => {
             errorId: 'se-1',
             endError: expect.any(Object),
           }),
-        })
+        }),
       );
       expect(session.hasError).toBe(false);
     });
@@ -982,7 +968,7 @@ describe('SessionEventHelper', () => {
         expect.objectContaining({
           conversationId: CONVERSATION_ID,
           metaEvent: { key: 'meta-val' },
-        })
+        }),
       );
     });
 
@@ -1041,7 +1027,7 @@ describe('SessionEventHelper', () => {
 
       session.delete();
 
-      spies.forEach(spy => expect(spy).toHaveBeenCalled());
+      spies.forEach((spy) => expect(spy).toHaveBeenCalled());
     });
   });
 
@@ -1111,9 +1097,7 @@ describe('SessionEventHelper', () => {
         conversationError: { errorId: 'se-1', startError: { message: 'session error' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'se-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'se-1' }));
     });
 
     it('should capture exchange-level errors', () => {
@@ -1127,9 +1111,7 @@ describe('SessionEventHelper', () => {
         exchangeError: { errorId: 'exe-1', startError: { message: 'exchange error' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'exe-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'exe-1' }));
     });
 
     it('should capture message-level errors', () => {
@@ -1144,9 +1126,7 @@ describe('SessionEventHelper', () => {
         messageError: { errorId: 'mse-1', startError: { message: 'message error' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'mse-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'mse-1' }));
     });
 
     it('should support multiple handlers', () => {
@@ -1196,9 +1176,7 @@ describe('SessionEventHelper', () => {
         contentPartError: { errorId: 'cpe-1', startError: { message: 'cp error' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'cpe-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'cpe-1' }));
     });
 
     it('should capture input-stream-level errors', () => {
@@ -1212,9 +1190,7 @@ describe('SessionEventHelper', () => {
         asyncInputStreamError: { errorId: 'ise-1', startError: { message: 'stream error' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'ise-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'ise-1' }));
     });
 
     it('should capture async-tool-call-level errors', () => {
@@ -1228,9 +1204,7 @@ describe('SessionEventHelper', () => {
         toolCallError: { errorId: 'atce-1', startError: { message: 'tc error' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'atce-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'atce-1' }));
     });
 
     it('should not prevent local error handlers from being called', () => {
@@ -1285,9 +1259,7 @@ describe('SessionEventHelper', () => {
         exchangeError: { errorId: 'exe-1', endError: {} },
       });
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'exe-1' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'exe-1' }));
     });
 
     it('should support cleanup', () => {
@@ -1323,9 +1295,7 @@ describe('SessionEventHelper', () => {
         messageError: { errorId: 'mse-1', endError: {} },
       });
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'mse-1' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'mse-1' }));
     });
 
     it('should capture input-stream-level error ends', () => {
@@ -1344,9 +1314,7 @@ describe('SessionEventHelper', () => {
         asyncInputStreamError: { errorId: 'ise-1', endError: {} },
       });
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'ise-1' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'ise-1' }));
     });
 
     it('should support multiple handlers', () => {
@@ -1523,15 +1491,11 @@ describe('SessionEventHelper', () => {
       const exchange = session.startExchange({ exchangeId: 'lifecycle-ex' });
       exchange.sendErrorStart({ errorId: 'lifecycle-err', message: 'started' });
 
-      expect(startSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'lifecycle-err' })
-      );
+      expect(startSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'lifecycle-err' }));
 
       exchange.sendErrorEnd({ errorId: 'lifecycle-err' });
 
-      expect(endSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'lifecycle-err' })
-      );
+      expect(endSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'lifecycle-err' }));
     });
   });
 });

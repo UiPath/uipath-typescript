@@ -3,7 +3,7 @@
  * Model classes for Maestro cases
  */
 
-import { CaseGetAllResponse} from './cases.types';
+import { CaseGetAllResponse } from './cases.types';
 
 /**
  * Service for managing UiPath Maestro Cases

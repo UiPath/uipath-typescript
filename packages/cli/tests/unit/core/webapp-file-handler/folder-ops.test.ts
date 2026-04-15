@@ -7,8 +7,18 @@ vi.mock('../../../../src/core/webapp-file-handler/api.js', () => ({
 }));
 
 import * as api from '../../../../src/core/webapp-file-handler/api.js';
-import { hasFolderByPath, buildFolderIdMap, ensureContentRootExists, ensureFoldersCreated, cleanupEmptyFolders } from '../../../../src/core/webapp-file-handler/folder-ops.js';
-import type { WebAppProjectConfig, ProjectStructure, ProjectFolder } from '../../../../src/core/webapp-file-handler/types.js';
+import {
+  hasFolderByPath,
+  buildFolderIdMap,
+  ensureContentRootExists,
+  ensureFoldersCreated,
+  cleanupEmptyFolders,
+} from '../../../../src/core/webapp-file-handler/folder-ops.js';
+import type {
+  WebAppProjectConfig,
+  ProjectStructure,
+  ProjectFolder,
+} from '../../../../src/core/webapp-file-handler/types.js';
 import { createMockLogger, createMockEnvConfig } from '../../../helpers/index.js';
 
 function createConfig(): WebAppProjectConfig {
@@ -33,16 +43,12 @@ describe('folder-ops', () => {
 
   describe('hasFolderByPath', () => {
     it('should find by exact path', () => {
-      const map = new Map<string, ProjectFolder>([
-        ['source', { id: 'f1', name: 'source', files: [], folders: [] }],
-      ]);
+      const map = new Map<string, ProjectFolder>([['source', { id: 'f1', name: 'source', files: [], folders: [] }]]);
       expect(hasFolderByPath(map, 'source')).toBe(true);
     });
 
     it('should find by normalized path (case-insensitive)', () => {
-      const map = new Map<string, ProjectFolder>([
-        ['Source', { id: 'f1', name: 'Source', files: [], folders: [] }],
-      ]);
+      const map = new Map<string, ProjectFolder>([['Source', { id: 'f1', name: 'Source', files: [], folders: [] }]]);
       expect(hasFolderByPath(map, 'source')).toBe(true);
     });
 
@@ -56,7 +62,9 @@ describe('folder-ops', () => {
     it('should build normalized path to id map', () => {
       const structure = createStructure([
         {
-          id: 'f1', name: 'Source', files: [],
+          id: 'f1',
+          name: 'Source',
+          files: [],
           folders: [{ id: 'f2', name: 'dist', files: [], folders: [] }],
         },
       ]);
@@ -66,9 +74,7 @@ describe('folder-ops', () => {
     });
 
     it('should skip folders without id', () => {
-      const structure = createStructure([
-        { id: null, name: 'noId', files: [], folders: [] },
-      ]);
+      const structure = createStructure([{ id: null, name: 'noId', files: [], folders: [] }]);
       const map = buildFolderIdMap(structure);
       expect(map.size).toBe(0);
     });
@@ -76,15 +82,15 @@ describe('folder-ops', () => {
 
   describe('ensureContentRootExists', () => {
     it('should throw when structure is null', async () => {
-      await expect(
-        ensureContentRootExists(createConfig(), null, () => null, vi.fn())
-      ).rejects.toThrow();
+      await expect(ensureContentRootExists(createConfig(), null, () => null, vi.fn())).rejects.toThrow();
     });
 
     it('should create source folder when missing', async () => {
       const structureWithSource = createStructure([
         {
-          id: 'f1', name: 'source', files: [],
+          id: 'f1',
+          name: 'source',
+          files: [],
           folders: [{ id: 'f2', name: 'dist', files: [], folders: [] }],
         },
       ]);
@@ -93,9 +99,12 @@ describe('folder-ops', () => {
 
       let structure = createStructure([]);
       await ensureContentRootExists(
-        createConfig(), 'lock',
+        createConfig(),
+        'lock',
         () => structure,
-        (s) => { structure = s; },
+        (s) => {
+          structure = s;
+        },
       );
       expect(api.createFolder).toHaveBeenCalled();
     });
@@ -103,15 +112,13 @@ describe('folder-ops', () => {
     it('should skip creation when source and content root already exist', async () => {
       const structure = createStructure([
         {
-          id: 'f1', name: 'source', files: [],
+          id: 'f1',
+          name: 'source',
+          files: [],
           folders: [{ id: 'f2', name: 'dist', files: [], folders: [] }],
         },
       ]);
-      await ensureContentRootExists(
-        createConfig(), null,
-        () => structure,
-        vi.fn(),
-      );
+      await ensureContentRootExists(createConfig(), null, () => structure, vi.fn());
       expect(api.createFolder).not.toHaveBeenCalled();
     });
   });
@@ -136,7 +143,10 @@ describe('folder-ops', () => {
         createConfig(),
         {
           createFolders: [{ path: 'source/dist/assets' }],
-          uploadFiles: [], updateFiles: [], deleteFiles: [], deleteFolders: [],
+          uploadFiles: [],
+          updateFiles: [],
+          deleteFiles: [],
+          deleteFolders: [],
         },
         folderIdMap,
         vi.fn(),
@@ -149,15 +159,8 @@ describe('folder-ops', () => {
   describe('cleanupEmptyFolders', () => {
     it('should delete empty folders', async () => {
       vi.mocked(api.deleteItem).mockResolvedValue(undefined);
-      const structure = createStructure([
-        { id: 'f1', name: 'empty', files: [], folders: [] },
-      ]);
-      await cleanupEmptyFolders(
-        createConfig(),
-        'source/dist',
-        async () => structure,
-        null,
-      );
+      const structure = createStructure([{ id: 'f1', name: 'empty', files: [], folders: [] }]);
+      await cleanupEmptyFolders(createConfig(), 'source/dist', async () => structure, null);
       // findEmptyFolders scoped to 'source/dist' won't find 'empty' at root
       expect(api.deleteItem).not.toHaveBeenCalled();
     });
@@ -167,13 +170,21 @@ describe('folder-ops', () => {
       const structure: ProjectStructure = {
         name: 'project',
         files: [],
-        folders: [{
-          id: 'f1', name: 'source', files: [],
-          folders: [{
-            id: 'f2', name: 'dist', files: [],
-            folders: [{ id: 'f3', name: 'empty', files: [], folders: [] }],
-          }],
-        }],
+        folders: [
+          {
+            id: 'f1',
+            name: 'source',
+            files: [],
+            folders: [
+              {
+                id: 'f2',
+                name: 'dist',
+                files: [],
+                folders: [{ id: 'f3', name: 'empty', files: [], folders: [] }],
+              },
+            ],
+          },
+        ],
       };
       const config = createConfig();
       await cleanupEmptyFolders(config, 'source/dist', async () => structure, null);

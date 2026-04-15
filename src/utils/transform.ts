@@ -11,7 +11,7 @@ export type FieldMapping = {
  * @param data The source data to transform
  * @param fieldMapping Object mapping source field names to target field names
  * @returns Transformed data with mapped field names
- * 
+ *
  * @example
  * ```typescript
  * // Single object transformation
@@ -19,7 +19,7 @@ export type FieldMapping = {
  * const mapping = { id: 'userId', userName: 'name' };
  * const result = transformData(data, mapping);
  * // result = { userId: '123', name: 'john' }
- * 
+ *
  * // Array transformation
  * const dataArray = [
  *   { id: '123', userName: 'john' },
@@ -32,18 +32,15 @@ export type FieldMapping = {
  * // ]
  * ```
  */
-export function transformData<T extends object>(
-  data: T | T[],
-  fieldMapping: FieldMapping
-): T {
+export function transformData<T extends object>(data: T | T[], fieldMapping: FieldMapping): T {
   // Handle array of objects
   if (Array.isArray(data)) {
-    return data.map(item => transformData(item, fieldMapping)) as unknown as T;
+    return data.map((item) => transformData(item, fieldMapping)) as unknown as T;
   }
 
   // Handle single object
   const result = { ...data };
-  
+
   for (const [sourceField, targetField] of Object.entries(fieldMapping)) {
     if (sourceField in result) {
       const value = result[sourceField as keyof T];
@@ -59,7 +56,7 @@ export function transformData<T extends object>(
  * Converts a string from PascalCase to camelCase
  * @param str The PascalCase string to convert
  * @returns The camelCase version of the string
- * 
+ *
  * @example
  * ```typescript
  * pascalToCamelCase('HelloWorld'); // 'helloWorld'
@@ -75,7 +72,7 @@ export function pascalToCamelCase(str: string): string {
  * Converts a string from camelCase to PascalCase
  * @param str The camelCase string to convert
  * @returns The PascalCase version of the string
- * 
+ *
  * @example
  * ```typescript
  * camelToPascalCase('helloWorld'); // 'HelloWorld'
@@ -93,13 +90,10 @@ export function camelToPascalCase(str: string): string {
  * @param convertCase The function to convert each key
  * @returns A new object with transformed keys
  */
-function transformCaseKeys<T extends object>(
-  data: T | T[], 
-  convertCase: (str: string) => string
-): any {
+function transformCaseKeys<T extends object>(data: T | T[], convertCase: (str: string) => string): any {
   // Handle array of objects
   if (Array.isArray(data)) {
-    return data.map(item => {
+    return data.map((item) => {
       // If the array element is a primitive (string, number, etc.), return it as is
       if (item === null || typeof item !== 'object' || typeof item === 'string') {
         return item;
@@ -110,10 +104,10 @@ function transformCaseKeys<T extends object>(
   }
 
   const result: Record<string, any> = {};
-  
+
   for (const [key, value] of Object.entries(data)) {
     const transformedKey = convertCase(key);
-    
+
     // Recursively transform nested objects and arrays
     if (value !== null && typeof value === 'object') {
       result[transformedKey] = transformCaseKeys(value, convertCase);
@@ -129,23 +123,23 @@ function transformCaseKeys<T extends object>(
  * Transforms an object's keys from PascalCase to camelCase
  * @param data The object with PascalCase keys
  * @returns A new object with all keys converted to camelCase
- * 
+ *
  * @example
  * ```typescript
  * // Simple object
  * pascalToCamelCaseKeys({ Id: "123", TaskName: "Invoice" });
  * // Result: { id: "123", taskName: "Invoice" }
- * 
+ *
  * // Nested object
- * pascalToCamelCaseKeys({ 
+ * pascalToCamelCaseKeys({
  *   TaskId: "456",
  *   TaskDetails: { AssignedUser: "John", Priority: "High" }
  * });
- * // Result: { 
+ * // Result: {
  * //   taskId: "456",
- * //   taskDetails: { assignedUser: "John", priority: "High" } 
+ * //   taskDetails: { assignedUser: "John", priority: "High" }
  * // }
- * 
+ *
  * // Array of objects
  * pascalToCamelCaseKeys([
  *   { Id: "1", IsComplete: false },
@@ -165,23 +159,23 @@ export function pascalToCamelCaseKeys<T extends object>(data: T | T[]): any {
  * Transforms an object's keys from camelCase to PascalCase
  * @param data The object with camelCase keys
  * @returns A new object with all keys converted to PascalCase
- * 
+ *
  * @example
  * ```typescript
  * // Simple object
  * camelToPascalCaseKeys({ userId: "789", isActive: true });
  * // Result: { UserId: "789", IsActive: true }
- * 
+ *
  * // Nested object
- * camelToPascalCaseKeys({ 
+ * camelToPascalCaseKeys({
  *   taskId: "ABC123",
  *   submissionData: { customerName: "XYZ Corp" }
  * });
- * // Result: { 
+ * // Result: {
  * //   TaskId: "ABC123",
- * //   SubmissionData: { CustomerName: "XYZ Corp" } 
+ * //   SubmissionData: { CustomerName: "XYZ Corp" }
  * // }
- * 
+ *
  * // Array of objects
  * camelToPascalCaseKeys([
  *   { userId: "u1", roleType: "admin" },
@@ -195,41 +189,34 @@ export function pascalToCamelCaseKeys<T extends object>(data: T | T[]): any {
  */
 export function camelToPascalCaseKeys<T extends object>(data: T | T[]): any {
   return transformCaseKeys(data, camelToPascalCase);
-} 
+}
 
 /**
  * Maps a field value in an object using a provided mapping object.
  * Returns a new object with the mapped field value.
- * 
+ *
  * @param obj The object to map
  * @param field The field name to map
  * @param valueMap The mapping object (from input value to output value)
  * @returns A new object with the mapped field value
- * 
+ *
  * @example
  * const statusMap = { 0: 'Unassigned', 1: 'Pending', 2: 'Completed' };
  * const task = { status: 1, id: 123 };
  * const mapped = mapFieldValue(task, 'status', statusMap);
  * // mapped = { status: 'Pending', id: 123 }
  */
-export function _mapFieldValue<
-  T extends object,
-  K extends keyof T,
-  M extends { [key: string]: any }
->(
+export function _mapFieldValue<T extends object, K extends keyof T, M extends { [key: string]: any }>(
   obj: T,
   field: K,
-  valueMap: M
+  valueMap: M,
 ): T {
   const lookupKey = String(obj[field]);
   return {
     ...obj,
-    [field]:
-      lookupKey in valueMap
-        ? valueMap[lookupKey as keyof M]
-        : obj[field],
+    [field]: lookupKey in valueMap ? valueMap[lookupKey as keyof M] : obj[field],
   };
-} 
+}
 
 /**
  * General API response transformer with optional field value mapping.
@@ -257,7 +244,7 @@ export function applyDataTransforms<T extends object, K extends keyof T, M exten
     field?: K;
     valueMap?: M;
     transform?: (d: T) => T;
-  }
+  },
 ): T {
   let result = data;
   if (options?.field && options?.valueMap) {
@@ -267,25 +254,21 @@ export function applyDataTransforms<T extends object, K extends keyof T, M exten
     result = options.transform(result);
   }
   return result;
-} 
+}
 
 /**
  * Adds a prefix to specified keys in an object, returning a new object.
  * Only the provided keys are prefixed; all others are left unchanged.
- * 
+ *
  * @param obj The source object
  * @param prefix The prefix to add (e.g., '$')
  * @param keys The keys to prefix (e.g., ['expand', 'filter'])
  * @returns A new object with specified keys prefixed
- * 
+ *
  * @example
  * addPrefixToKeys({ expand: 'a', foo: 1 }, '$', ['expand']) // { $expand: 'a', foo: 1 }
  */
-export function addPrefixToKeys<T extends object>(
-  obj: T,
-  prefix: string,
-  keys: string[]
-): Record<string, any> {
+export function addPrefixToKeys<T extends object>(obj: T, prefix: string, keys: string[]): Record<string, any> {
   const result: Record<string, any> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (keys.includes(key)) {
@@ -295,7 +278,7 @@ export function addPrefixToKeys<T extends object>(
     }
   }
   return result;
-} 
+}
 
 /**
  * Creates a new map with the keys and values reversed
@@ -310,10 +293,13 @@ export function addPrefixToKeys<T extends object>(
  * ```
  */
 export function reverseMap<T extends Record<string, string>>(map: T): Record<string, string> {
-  return Object.entries(map).reduce((acc, [key, value]) => {
-    acc[value] = key;
-    return acc;
-  }, {} as Record<string, string>);
+  return Object.entries(map).reduce(
+    (acc, [key, value]) => {
+      acc[value] = key;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 }
 
 /**
@@ -350,10 +336,7 @@ export function reverseMap<T extends Record<string, string>>(map: T): Record<str
  * // Result: { agentReleaseId: 123, folderId: 456, label: 'My Chat' }
  * ```
  */
-export function transformRequest<T extends object>(
-  data: T,
-  responseMap: FieldMapping
-): Record<string, unknown> {
+export function transformRequest<T extends object>(data: T, responseMap: FieldMapping): Record<string, unknown> {
   const result: Record<string, unknown> = { ...(data as Record<string, unknown>) };
   const requestMap = reverseMap(responseMap);
 
@@ -372,24 +355,21 @@ export function transformRequest<T extends object>(
  * @param obj The object to modify
  * @param fieldMappings Object mapping source field names to target field names
  * @returns The modified object (same reference as input)
- * 
+ *
  * @example
  * ```typescript
  * // Rename fields in query parameters
  * const queryParams = { limit: 10, offset: 0, filter: 'active' };
  * renameObjectFields(queryParams, { limit: 'takeHint' });
  * // queryParams = { takeHint: 10, offset: 0, filter: 'active' }
- * 
+ *
  * // Multiple field renames
  * const params = { username: 'john', password: '12345' };
  * renameObjectFields(params, { username: 'userName', password: 'pwd' });
  * // params = { userName: 'john', pwd: '12345' }
  * ```
  */
-export function renameObjectFields<T extends Record<string, any>>(
-  obj: T,
-  fieldMappings: Record<string, string>
-): T {
+export function renameObjectFields<T extends Record<string, any>>(obj: T, fieldMappings: Record<string, string>): T {
   for (const [sourceField, targetField] of Object.entries(fieldMappings)) {
     if (sourceField in obj) {
       (obj as Record<string, any>)[targetField] = obj[sourceField];
@@ -397,45 +377,43 @@ export function renameObjectFields<T extends Record<string, any>>(
     }
   }
   return obj;
-} 
+}
 
 /**
  * Transforms an array-based dictionary with separate keys and values arrays
  * into a standard JavaScript object/record
- * 
+ *
  * @param dictionary Object containing keys and values arrays
  * @returns A standard record object with direct key-value mapping
- * 
+ *
  * @example
  * ```typescript
- * const arrayDict = { 
+ * const arrayDict = {
  *   keys: ['Content-Type', 'x-ms-blob-type'],
  *   values: ['application/json', 'BlockBlob']
  * };
  * const record = arrayDictionaryToRecord(arrayDict);
- * // result = { 
- * //   'Content-Type': 'application/json', 
+ * // result = {
+ * //   'Content-Type': 'application/json',
  * //   'x-ms-blob-type': 'BlockBlob'
  * // }
  * ```
  */
-export function arrayDictionaryToRecord(
-  dictionary: { keys: string[]; values: string[] }
-): Record<string, string> {
+export function arrayDictionaryToRecord(dictionary: { keys: string[]; values: string[] }): Record<string, string> {
   if (!dictionary || !dictionary.keys || !dictionary.values) {
     return {};
   }
-  
+
   if (dictionary.keys.length !== dictionary.values.length) {
     console.warn('Keys and values arrays have different lengths');
   }
-  
+
   const record: Record<string, string> = {};
-  
+
   const length = Math.min(dictionary.keys.length, dictionary.values.length);
   for (let i = 0; i < length; i++) {
     record[dictionary.keys[i]] = dictionary.values[i];
   }
-  
+
   return record;
 }

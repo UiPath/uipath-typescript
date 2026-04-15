@@ -21,4 +21,4 @@
 export { TaskService as Tasks, TaskService } from './tasks';
 
 export * from '../../models/action-center/tasks.types';
-export * from '../../models/action-center/tasks.models'; 
+export * from '../../models/action-center/tasks.models';

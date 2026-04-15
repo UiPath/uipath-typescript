@@ -1,21 +1,21 @@
-import { PaginationOptions } from "../../utils/pagination/types";
+import { PaginationOptions } from '../../utils/pagination/types';
 
 /**
  * Entity field type names
  */
 export enum EntityFieldDataType {
-  UUID = "UUID",
-  STRING = "STRING",
-  INTEGER = "INTEGER",
-  DATETIME = "DATETIME",
-  DATETIME_WITH_TZ = "DATETIME_WITH_TZ",
-  DECIMAL = "DECIMAL",
-  FLOAT = "FLOAT",
-  DOUBLE = "DOUBLE",
-  DATE = "DATE",
-  BOOLEAN = "BOOLEAN",
-  BIG_INTEGER = "BIG_INTEGER",
-  MULTILINE_TEXT = "MULTILINE_TEXT",
+  UUID = 'UUID',
+  STRING = 'STRING',
+  INTEGER = 'INTEGER',
+  DATETIME = 'DATETIME',
+  DATETIME_WITH_TZ = 'DATETIME_WITH_TZ',
+  DECIMAL = 'DECIMAL',
+  FLOAT = 'FLOAT',
+  DOUBLE = 'DOUBLE',
+  DATE = 'DATE',
+  BOOLEAN = 'BOOLEAN',
+  BIG_INTEGER = 'BIG_INTEGER',
+  MULTILINE_TEXT = 'MULTILINE_TEXT',
 }
 
 /**
@@ -120,7 +120,6 @@ export interface EntityDeleteOptions {
  */
 export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
 
-
 /**
  * Supported file types for attachment upload
  */
@@ -195,10 +194,10 @@ export interface EntityDeleteResponse extends EntityOperationResponse {}
  * Entity type enum
  */
 export enum EntityType {
-  Entity = "Entity",
-  ChoiceSet = "ChoiceSet",
-  InternalEntity = "InternalEntity",
-  SystemEntity = "SystemEntity",
+  Entity = 'Entity',
+  ChoiceSet = 'ChoiceSet',
+  InternalEntity = 'InternalEntity',
+  SystemEntity = 'SystemEntity',
 }
 
 /**
@@ -216,34 +215,34 @@ export interface FieldDataType {
  * Reference types for fields
  */
 export enum ReferenceType {
-  ManyToOne = "ManyToOne",
+  ManyToOne = 'ManyToOne',
 }
 
 /**
  * Field display types
  */
 export enum FieldDisplayType {
-  Basic = "Basic",
-  Relationship = "Relationship",
-  File = "File",
-  ChoiceSetSingle = "ChoiceSetSingle",
-  ChoiceSetMultiple = "ChoiceSetMultiple",
-  AutoNumber = "AutoNumber",
+  Basic = 'Basic',
+  Relationship = 'Relationship',
+  File = 'File',
+  ChoiceSetSingle = 'ChoiceSetSingle',
+  ChoiceSetMultiple = 'ChoiceSetMultiple',
+  AutoNumber = 'AutoNumber',
 }
 
 /**
  * Data direction type for external fields
  */
 export enum DataDirectionType {
-  ReadOnly = "ReadOnly",
-  ReadAndWrite = "ReadAndWrite",
+  ReadOnly = 'ReadOnly',
+  ReadAndWrite = 'ReadAndWrite',
 }
 
 /**
  * Join type for source join criteria
  */
 export enum JoinType {
-  LeftJoin = "LeftJoin",
+  LeftJoin = 'LeftJoin',
 }
 
 /**

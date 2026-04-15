@@ -17,7 +17,7 @@ import { ContentPartHelper } from './content-part-helper';
  * @returns Transformed exchanges with helper classes and SDK naming conventions
  */
 export function transformExchanges(exchanges: Exchange[]): ExchangeGetResponse[] {
-  return exchanges.map(exchange => transformExchange(exchange));
+  return exchanges.map((exchange) => transformExchange(exchange));
 }
 
 /**
@@ -33,7 +33,7 @@ export function transformExchange(exchange: Exchange): ExchangeGetResponse {
   return {
     ...rest,
     id: transformed.exchangeId,
-    messages: messages.map(message => transformMessage(message))
+    messages: messages.map((message) => transformMessage(message)),
   };
 }
 
@@ -50,8 +50,8 @@ export function transformMessage(message: Message): MessageGetResponse {
   return {
     ...rest,
     id: transformed.messageId,
-    contentParts: contentParts?.map(cp => new ContentPartHelper(cp)),
-    toolCalls: (toolCalls ?? []).map(tc => ({ ...tc, id: tc.toolCallId })),
-    interrupts: (interrupts ?? []).map(i => ({ ...i, id: i.interruptId }))
+    contentParts: contentParts?.map((cp) => new ContentPartHelper(cp)),
+    toolCalls: (toolCalls ?? []).map((tc) => ({ ...tc, id: tc.toolCallId })),
+    interrupts: (interrupts ?? []).map((i) => ({ ...i, id: i.interruptId })),
   };
 }

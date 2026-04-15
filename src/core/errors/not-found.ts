@@ -14,7 +14,7 @@ export class NotFoundError extends UiPathError {
     super(ErrorType.NOT_FOUND, {
       message: params.message || ErrorMessages.RESOURCE_NOT_FOUND,
       statusCode: params.statusCode ?? HttpStatus.NOT_FOUND,
-      requestId: params.requestId
+      requestId: params.requestId,
     });
   }
 }

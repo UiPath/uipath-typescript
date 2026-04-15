@@ -52,7 +52,8 @@ export default class Auth extends Command {
       dependsOn: ['clientId'],
     }),
     scope: Flags.string({
-      description: 'OAuth scope for confidential client flow (optional, uses application configured scopes if not provided)',
+      description:
+        'OAuth scope for confidential client flow (optional, uses application configured scopes if not provided)',
     }),
   };
 

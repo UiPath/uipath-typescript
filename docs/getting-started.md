@@ -6,7 +6,6 @@
 - **npm** 8.x or higher (or yarn/pnpm)
 - **TypeScript** 4.5+ (for TypeScript projects)
 
-
 ## Install the SDK
 
 === "npm"
@@ -69,9 +68,6 @@
     added x packages in 1s
     ```
 
-
-
-
 ## **Import & Initialize**
 
 The SDK supports two import patterns. Choose based on your SDK version.
@@ -131,8 +127,6 @@ The SDK supports two import patterns. Choose based on your SDK version.
 
 To improve the developer experience, the SDK collects basic usage data about method invocations. For details on UiPath’s privacy practices, see our [privacy policy](https://www.uipath.com/legal/privacy-policy).
 
-
-
 ## **Vibe Coding**
 
 The SDK is designed for rapid prototyping and development, making it perfect for vibe coding. Here are two ways to get started:
@@ -146,6 +140,7 @@ After installing the SDK, supercharge your development with AI IDEs:
 3. **Start Prompting**: Your AI assistant now has full context of the SDK!
 
 **Works with:**
+
 - **GitHub Copilot**
 - **Cursor**
 - **Claude**
@@ -160,17 +155,17 @@ Give your AI assistant complete context by copying our documentation:
 === "Copy Full Documentation"
 
     **For Maximum Context:**
-    
+
     1. **Download Complete Documentation**: [llms-full-content.txt](/uipath-typescript/llms-full-content.txt)
-    
+
     2. **Copy and Paste**: Copy the entire content and paste it into your AI chat
-    
+
     3. **Start Prompting**: Your AI now has complete SDK knowledge!
 
 === "Copy Individual Pages"
 
     **For Specific Features:**
-    
+
     1. **Use the copy button** (📋) on any documentation page
-    2. **Paste into your AI chat** 
+    2. **Paste into your AI chat**
     3. **Ask specific questions** about that feature

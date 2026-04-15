@@ -1,7 +1,4 @@
-import {
-  AttachmentResponse,
-  AttachmentGetByIdOptions,
-} from './attachments.types';
+import { AttachmentResponse, AttachmentGetByIdOptions } from './attachments.types';
 
 /**
  * Service for managing UiPath Orchestrator Attachments.

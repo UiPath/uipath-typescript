@@ -26,24 +26,18 @@ export async function executePull(options: PullOptions): Promise<void> {
   logger.log(chalk.blue(MESSAGES.INFO.PULL_HEADER));
   logger.log('');
 
-  const envConfig = getEnvironmentConfig(
-    AUTH_CONSTANTS.REQUIRED_ENV_VARS.PULL,
-    logger,
-    {
-      baseUrl: options.baseUrl,
-      orgId: options.orgId,
-      tenantId: options.tenantId,
-      accessToken: options.accessToken,
-    }
-  );
+  const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.PULL, logger, {
+    baseUrl: options.baseUrl,
+    orgId: options.orgId,
+    tenantId: options.tenantId,
+    accessToken: options.accessToken,
+  });
   if (!envConfig) throw new Error('Missing required configuration');
 
   const projectId = options.projectId ?? process.env.UIPATH_PROJECT_ID;
   if (!projectId) throw new Error(MESSAGES.ERRORS.PULL_PROJECT_ID_REQUIRED);
 
-  const rootDir = options.targetDir
-    ? path.resolve(process.cwd(), options.targetDir)
-    : process.cwd();
+  const rootDir = options.targetDir ? path.resolve(process.cwd(), options.targetDir) : process.cwd();
 
   const targetIsCwd = !options.targetDir;
   if (targetIsCwd && !isProjectRootDirectory(rootDir)) {
@@ -82,9 +76,7 @@ export async function executePull(options: PullOptions): Promise<void> {
             .forEach((p) => logger.log(chalk.yellow(`  - ${p}`)));
           if (conflictingLocalPaths.length > PULL_OVERWRITE_LIST_MAX_DISPLAY) {
             logger.log(
-              chalk.yellow(
-                `  ... and ${conflictingLocalPaths.length - PULL_OVERWRITE_LIST_MAX_DISPLAY} more.`
-              )
+              chalk.yellow(`  ... and ${conflictingLocalPaths.length - PULL_OVERWRITE_LIST_MAX_DISPLAY} more.`),
             );
           }
           const { proceed } = await inquirer.prompt<{ proceed: boolean }>([

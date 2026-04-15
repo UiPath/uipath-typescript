@@ -16,7 +16,7 @@ import type {
   ContentPartGetResponse,
   Message,
   MessageServiceModel,
-  MessageGetResponse
+  MessageGetResponse,
 } from '@/models/conversational-agent';
 
 // Utils
@@ -73,14 +73,8 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * ```
    */
   @track('ConversationalAgent.Messages.GetById')
-  async getById(
-    conversationId: string,
-    exchangeId: string,
-    messageId: string
-  ): Promise<MessageGetResponse> {
-    const result = await this.get<Message>(
-      MESSAGE_ENDPOINTS.GET(conversationId, exchangeId, messageId)
-    );
+  async getById(conversationId: string, exchangeId: string, messageId: string): Promise<MessageGetResponse> {
+    const result = await this.get<Message>(MESSAGE_ENDPOINTS.GET(conversationId, exchangeId, messageId));
 
     return transformMessage(result.data);
   }
@@ -116,10 +110,10 @@ export class MessageService extends BaseService implements MessageServiceModel {
     conversationId: string,
     exchangeId: string,
     messageId: string,
-    contentPartId: string
+    contentPartId: string,
   ): Promise<ContentPartGetResponse> {
     const result = await this.get<ContentPart>(
-      MESSAGE_ENDPOINTS.GET_CONTENT_PART(conversationId, exchangeId, messageId, contentPartId)
+      MESSAGE_ENDPOINTS.GET_CONTENT_PART(conversationId, exchangeId, messageId, contentPartId),
     );
 
     return new ContentPartHelper(result.data);

@@ -26,7 +26,7 @@ vi.mock('@/services/conversational-agent/conversations/session/session-manager',
     setLogLevel: vi.fn(),
     setEventDispatcher: vi.fn(),
     emitEvent: vi.fn(),
-  }))
+  })),
 }));
 
 // ===== TEST SUITE =====
@@ -70,8 +70,8 @@ describe('ConversationalAgentService Unit Tests', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith(
         AGENT_ENDPOINTS.LIST,
         expect.objectContaining({
-          params: undefined
-        })
+          params: undefined,
+        }),
       );
     });
 
@@ -88,8 +88,8 @@ describe('ConversationalAgentService Unit Tests', () => {
       expect(mockApiClient.get).toHaveBeenCalledWith(
         AGENT_ENDPOINTS.LIST,
         expect.objectContaining({
-          params: { folderId: TEST_CONSTANTS.FOLDER_ID }
-        })
+          params: { folderId: TEST_CONSTANTS.FOLDER_ID },
+        }),
       );
     });
 
@@ -145,7 +145,7 @@ describe('ConversationalAgentService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(conversationalAgent.getAll()).rejects.toThrow(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.ERROR_AGENT_NOT_FOUND
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.ERROR_AGENT_NOT_FOUND,
       );
     });
   });
@@ -157,7 +157,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
       const result = await conversationalAgent.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        TEST_CONSTANTS.FOLDER_ID,
       );
 
       expect(result).toBeDefined();
@@ -169,7 +169,7 @@ describe('ConversationalAgentService Unit Tests', () => {
       // Verify the API call uses the correct endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
         AGENT_ENDPOINTS.GET(TEST_CONSTANTS.FOLDER_ID, CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -179,19 +179,15 @@ describe('ConversationalAgentService Unit Tests', () => {
 
       const result = await conversationalAgent.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        TEST_CONSTANTS.FOLDER_ID,
       );
 
       expect(result.appearance).toBeDefined();
-      expect(result.appearance?.welcomeTitle).toBe(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.WELCOME_TITLE
-      );
-      expect(result.appearance?.welcomeDescription).toBe(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.WELCOME_DESCRIPTION
-      );
+      expect(result.appearance?.welcomeTitle).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.WELCOME_TITLE);
+      expect(result.appearance?.welcomeDescription).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.WELCOME_DESCRIPTION);
       expect(result.appearance?.startingPrompts).toHaveLength(1);
       expect(result.appearance?.startingPrompts?.[0].displayPrompt).toBe(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.STARTING_PROMPT_DISPLAY
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.STARTING_PROMPT_DISPLAY,
       );
     });
 
@@ -201,7 +197,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
       const result = await conversationalAgent.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        TEST_CONSTANTS.FOLDER_ID,
       );
 
       // createdAt -> createdTime
@@ -215,7 +211,7 @@ describe('ConversationalAgentService Unit Tests', () => {
 
       const result = await conversationalAgent.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        TEST_CONSTANTS.FOLDER_ID,
       );
 
       expect(result.conversations).toBeDefined();
@@ -227,7 +223,7 @@ describe('ConversationalAgentService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(
-        conversationalAgent.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID, TEST_CONSTANTS.FOLDER_ID)
+        conversationalAgent.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID, TEST_CONSTANTS.FOLDER_ID),
       ).rejects.toThrow(CONVERSATIONAL_AGENT_TEST_CONSTANTS.ERROR_AGENT_NOT_FOUND);
     });
   });
@@ -241,14 +237,11 @@ describe('ConversationalAgentService Unit Tests', () => {
 
       expect(result).toBeDefined();
       expect(result[CONVERSATIONAL_AGENT_TEST_CONSTANTS.FEATURE_FLAG_KEY]).toBe(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.FEATURE_FLAG_VALUE
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.FEATURE_FLAG_VALUE,
       );
 
       // Verify the endpoint
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        FEATURE_ENDPOINTS.FEATURE_FLAGS,
-        expect.any(Object)
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(FEATURE_ENDPOINTS.FEATURE_FLAGS, expect.any(Object));
     });
 
     it('should handle API errors', async () => {

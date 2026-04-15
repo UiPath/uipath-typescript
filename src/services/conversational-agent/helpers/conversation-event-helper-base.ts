@@ -1,20 +1,19 @@
-import type {
-  ErrorEndEvent,
-  ErrorStartEvent
-} from '@/models/conversational-agent';
+import type { ErrorEndEvent, ErrorStartEvent } from '@/models/conversational-agent';
 
 import type {
   AnyErrorEndHandlerArgs,
   AnyErrorStartHandlerArgs,
-  ConversationEventHelperProperties, DeletedHandler,
+  ConversationEventHelperProperties,
+  DeletedHandler,
   ErrorEndHandler,
   ErrorStartHandler,
-  MetaEventHandler
+  MetaEventHandler,
 } from './conversation-event-helper-common';
-import {
-  ConversationEventInvalidOperationError
-} from './conversation-event-helper-common';
-import type { ConversationEventHelperManager, ConversationEventHelperManagerImpl } from './conversation-event-helper-manager';
+import { ConversationEventInvalidOperationError } from './conversation-event-helper-common';
+import type {
+  ConversationEventHelperManager,
+  ConversationEventHelperManagerImpl,
+} from './conversation-event-helper-manager';
 import type { SessionEventHelper, SessionEventHelperImpl } from './session-event-helper';
 
 /**
@@ -28,11 +27,7 @@ import type { SessionEventHelper, SessionEventHelperImpl } from './session-event
  * @template TStartEvent - The start event type for this helper
  * @template TEvent - The event type for this helper (used for event buffering)
  */
-export abstract class ConversationEventHelperBase<
-  TStartEvent,
-  TEvent
-> {
-
+export abstract class ConversationEventHelperBase<TStartEvent, TEvent> {
   /**
    * Can be used to store application defined properties related to this helper.
    */
@@ -58,9 +53,7 @@ export abstract class ConversationEventHelperBase<
   protected readonly _metaEventHandlers = new Array<MetaEventHandler>();
   protected readonly _deletedHandlers = new Array<DeletedHandler>();
 
-  constructor(
-    manager: ConversationEventHelperManager
-  ) {
+  constructor(manager: ConversationEventHelperManager) {
     this.manager = manager;
   }
 
@@ -107,7 +100,7 @@ export abstract class ConversationEventHelperBase<
     if (this._eventBuffer) {
       const eventBuffer = this._eventBuffer;
       this._eventBuffer = null;
-      eventBuffer.forEach(event => this.dispatch(event));
+      eventBuffer.forEach((event) => this.dispatch(event));
     }
   }
 
@@ -215,7 +208,7 @@ export abstract class ConversationEventHelperBase<
     this._deleted = true;
     this.removeFromParent();
     this.deleteChildren();
-    this._deletedHandlers.forEach(handler => handler());
+    this._deletedHandlers.forEach((handler) => handler());
   }
 
   /**
@@ -230,7 +223,7 @@ export abstract class ConversationEventHelperBase<
    */
   protected dispatchErrorStart(errorId: string, startError: ErrorStartEvent) {
     this.errors.set(errorId, startError);
-    this._errorStartHandlers.forEach(cb => cb({ errorId, ...startError }));
+    this._errorStartHandlers.forEach((cb) => cb({ errorId, ...startError }));
     let handled = this._errorStartHandlers.length > 0;
     const args: AnyErrorStartHandlerArgs = { source: this, errorId, ...startError };
     handled = (this.getSession() as SessionEventHelperImpl).dispatchAnyErrorStart(args) || handled;
@@ -245,7 +238,7 @@ export abstract class ConversationEventHelperBase<
    */
   protected dispatchErrorEnd(errorId: string, endError: ErrorEndEvent) {
     this.errors.delete(errorId);
-    this._errorEndHandlers.forEach(cb => cb({ errorId, ...endError }));
+    this._errorEndHandlers.forEach((cb) => cb({ errorId, ...endError }));
     let handled = this._errorEndHandlers.length > 0;
     const args: AnyErrorEndHandlerArgs = { source: this, errorId, ...endError };
     handled = (this.getSession() as SessionEventHelperImpl).dispatchAnyErrorEnd(args) || handled;
@@ -282,5 +275,4 @@ export abstract class ConversationEventHelperBase<
   }
 
   protected abstract getSession(): SessionEventHelper;
-
 }

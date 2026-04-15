@@ -63,8 +63,8 @@ describe('ContentPartHelper Unit Tests', () => {
             sources: [{ title: 'Source 2', number: 2 }],
             createdTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
             updatedTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
-          }
-        ]
+          },
+        ],
       });
       const helper = new ContentPartHelper(raw);
 
@@ -213,10 +213,12 @@ describe('ContentPartHelper Unit Tests', () => {
     });
 
     it('should handle application/pdf content', () => {
-      const helper = new ContentPartHelper(createMockContentPart({
-        mimeType: 'application/pdf',
-        data: { uri: 'https://example.com/file.pdf', byteCount: 54321 }
-      }));
+      const helper = new ContentPartHelper(
+        createMockContentPart({
+          mimeType: 'application/pdf',
+          data: { uri: 'https://example.com/file.pdf', byteCount: 54321 },
+        }),
+      );
       expect(helper.mimeType).toBe('application/pdf');
       expect(helper.isDataExternal).toBe(true);
     });

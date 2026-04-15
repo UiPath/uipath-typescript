@@ -15,7 +15,7 @@ import {
   EntityBatchInsertResponse,
   EntityUpdateRecordResponse,
   EntityUpdateResponse,
-  EntityDeleteResponse
+  EntityDeleteResponse,
 } from '../../../src/models/data-fabric/entities.types';
 import { createMockBaseResponse, createMockCollection } from './core';
 import { ENTITY_TEST_CONSTANTS } from '../constants/entities';
@@ -30,33 +30,36 @@ import { TEST_CONSTANTS } from '../constants/common';
  * @returns Mock FieldMetaData object as it comes from the API (before transformation)
  */
 export const createMockFieldMetaData = (overrides: Partial<any> = {}): any => {
-  return createMockBaseResponse({
-    id: ENTITY_TEST_CONSTANTS.FIELD_ID,
-    name: ENTITY_TEST_CONSTANTS.FIELD_NAME,
-    isPrimaryKey: false,
-    isForeignKey: false,
-    isExternalField: false,
-    isHiddenField: false,
-    isUnique: false,
-    referenceType: ReferenceType.ManyToOne,
-    // RAW API field name: sqlType (will be transformed to fieldDataType)
-    sqlType: {
-      name: 'NVARCHAR',  // Raw SQL type from API (will be transformed to STRING)
-      lengthLimit: 255
+  return createMockBaseResponse(
+    {
+      id: ENTITY_TEST_CONSTANTS.FIELD_ID,
+      name: ENTITY_TEST_CONSTANTS.FIELD_NAME,
+      isPrimaryKey: false,
+      isForeignKey: false,
+      isExternalField: false,
+      isHiddenField: false,
+      isUnique: false,
+      referenceType: ReferenceType.ManyToOne,
+      // RAW API field name: sqlType (will be transformed to fieldDataType)
+      sqlType: {
+        name: 'NVARCHAR', // Raw SQL type from API (will be transformed to STRING)
+        lengthLimit: 255,
+      },
+      isRequired: false,
+      displayName: 'Name',
+      description: 'Name field',
+      // RAW API field names: createTime/updateTime (will be transformed to createdTime/updatedTime)
+      createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,
+      createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
+      updateTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,
+      updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+      isSystemField: false,
+      fieldDisplayType: FieldDisplayType.Basic,
+      isAttachment: false,
+      isRbacEnabled: false,
     },
-    isRequired: false,
-    displayName: 'Name',
-    description: 'Name field',
-    // RAW API field names: createTime/updateTime (will be transformed to createdTime/updatedTime)
-    createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,
-    createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    updateTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,
-    updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    isSystemField: false,
-    fieldDisplayType: FieldDisplayType.Basic,
-    isAttachment: false,
-    isRbacEnabled: false,
-  }, overrides);
+    overrides,
+  );
 };
 
 /**
@@ -66,52 +69,58 @@ export const createMockFieldMetaData = (overrides: Partial<any> = {}): any => {
  * @returns Mock Entity response object as it comes from the API (before transformation)
  */
 export const createMockEntityResponse = (overrides: Partial<any> = {}): any => {
-  return createMockBaseResponse({
-    id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
-    name: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-    displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME,
-    entityType: EntityType.Entity,
-    description: ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION,
-    fields: [
-      createMockFieldMetaData({
-        id: ENTITY_TEST_CONSTANTS.FIELD_ID,
-        name: 'id',
-        isPrimaryKey: true,
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'UNIQUEIDENTIFIER'  // Raw SQL type (will be transformed to UUID)
-        },
-        displayName: 'ID',
-        description: 'Primary key'
-      }),
-      createMockFieldMetaData({
-        id: ENTITY_TEST_CONSTANTS.FIELD_ID_NAME,
-        name: ENTITY_TEST_CONSTANTS.FIELD_NAME,
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'NVARCHAR',  // Raw SQL type (will be transformed to STRING)
-          lengthLimit: 255
-        },
-        displayName: 'Name',
-        description: 'Customer name'
-      }),
-      createMockFieldMetaData({
-        id: ENTITY_TEST_CONSTANTS.FIELD_ID_AGE,
-        name: ENTITY_TEST_CONSTANTS.FIELD_AGE,
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'INT'  // Raw SQL type (will be transformed to INTEGER)
-        },
-        displayName: 'Age',
-        description: 'Customer age'
-      })
-    ],
-    externalFields: [],
-    sourceJoinCriterias: [],
-    isRbacEnabled: false,
-    createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    // RAW API field names: createTime/updateTime (will be transformed to createdTime/updatedTime)
-    createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,
-    updateTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,
-    updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
-  }, overrides);
+  return createMockBaseResponse(
+    {
+      id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
+      name: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+      displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME,
+      entityType: EntityType.Entity,
+      description: ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION,
+      fields: [
+        createMockFieldMetaData({
+          id: ENTITY_TEST_CONSTANTS.FIELD_ID,
+          name: 'id',
+          isPrimaryKey: true,
+          sqlType: {
+            // RAW API field name (will be transformed to fieldDataType)
+            name: 'UNIQUEIDENTIFIER', // Raw SQL type (will be transformed to UUID)
+          },
+          displayName: 'ID',
+          description: 'Primary key',
+        }),
+        createMockFieldMetaData({
+          id: ENTITY_TEST_CONSTANTS.FIELD_ID_NAME,
+          name: ENTITY_TEST_CONSTANTS.FIELD_NAME,
+          sqlType: {
+            // RAW API field name (will be transformed to fieldDataType)
+            name: 'NVARCHAR', // Raw SQL type (will be transformed to STRING)
+            lengthLimit: 255,
+          },
+          displayName: 'Name',
+          description: 'Customer name',
+        }),
+        createMockFieldMetaData({
+          id: ENTITY_TEST_CONSTANTS.FIELD_ID_AGE,
+          name: ENTITY_TEST_CONSTANTS.FIELD_AGE,
+          sqlType: {
+            // RAW API field name (will be transformed to fieldDataType)
+            name: 'INT', // Raw SQL type (will be transformed to INTEGER)
+          },
+          displayName: 'Age',
+          description: 'Customer age',
+        }),
+      ],
+      externalFields: [],
+      sourceJoinCriterias: [],
+      isRbacEnabled: false,
+      createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
+      // RAW API field names: createTime/updateTime (will be transformed to createdTime/updatedTime)
+      createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,
+      updateTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,
+      updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+    },
+    overrides,
+  );
 };
 
 /**
@@ -120,95 +129,101 @@ export const createMockEntityResponse = (overrides: Partial<any> = {}): any => {
  * @returns Basic entity response object with transformed field names
  */
 export const createBasicEntity = (overrides: Partial<RawEntityGetResponse> = {}): RawEntityGetResponse => {
-  return createMockBaseResponse({
-    id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
-    name: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
-    displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME,
-    entityType: EntityType.Entity,
-    description: ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION,
-    fields: [
-      createMockBaseResponse({
-        id: ENTITY_TEST_CONSTANTS.FIELD_ID,
-        name: 'id',
-        isPrimaryKey: true,
-        isForeignKey: false,
-        isExternalField: false,
-        isHiddenField: false,
-        isUnique: false,
-        referenceType: ReferenceType.ManyToOne,
-        fieldDataType: {  // TRANSFORMED field name (model tests need this)
-          name: EntityFieldDataType.UUID  // TRANSFORMED type (model tests need this)
-        },
-        isRequired: true,
-        displayName: 'ID',
-        description: 'Primary key',
-        createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,  // TRANSFORMED field name
-        createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-        updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,  // TRANSFORMED field name
-        updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
-        isSystemField: false,
-        fieldDisplayType: FieldDisplayType.Basic,
-        isAttachment: false,
-        isRbacEnabled: false,
-      }),
-      createMockBaseResponse({
-        id: ENTITY_TEST_CONSTANTS.FIELD_ID_NAME,
-        name: ENTITY_TEST_CONSTANTS.FIELD_NAME,
-        isPrimaryKey: false,
-        isForeignKey: false,
-        isExternalField: false,
-        isHiddenField: false,
-        isUnique: false,
-        referenceType: ReferenceType.ManyToOne,
-        fieldDataType: {  // TRANSFORMED field name (model tests need this)
-          name: EntityFieldDataType.STRING,  // TRANSFORMED type (model tests need this)
-          lengthLimit: 255
-        },
-        isRequired: false,
-        displayName: 'Name',
-        description: 'Customer name',
-        createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,  // TRANSFORMED field name
-        createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-        updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,  // TRANSFORMED field name
-        updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
-        isSystemField: false,
-        fieldDisplayType: FieldDisplayType.Basic,
-        isAttachment: false,
-        isRbacEnabled: false,
-      }),
-      createMockBaseResponse({
-        id: ENTITY_TEST_CONSTANTS.FIELD_ID_AGE,
-        name: ENTITY_TEST_CONSTANTS.FIELD_AGE,
-        isPrimaryKey: false,
-        isForeignKey: false,
-        isExternalField: false,
-        isHiddenField: false,
-        isUnique: false,
-        referenceType: ReferenceType.ManyToOne,
-        fieldDataType: {  // TRANSFORMED field name (model tests need this)
-          name: EntityFieldDataType.INTEGER  // TRANSFORMED type (model tests need this)
-        },
-        isRequired: false,
-        displayName: 'Age',
-        description: 'Customer age',
-        createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,  // TRANSFORMED field name
-        createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-        updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,  // TRANSFORMED field name
-        updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
-        isSystemField: false,
-        fieldDisplayType: FieldDisplayType.Basic,
-        isAttachment: false,
-        isRbacEnabled: false,
-      })
-    ],
-    externalFields: [],
-    sourceJoinCriterias: [],
-    isRbacEnabled: false,
-    createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,  // TRANSFORMED field name
-    updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,  // TRANSFORMED field name
-    updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
-  }, overrides);
+  return createMockBaseResponse(
+    {
+      id: ENTITY_TEST_CONSTANTS.ENTITY_ID,
+      name: ENTITY_TEST_CONSTANTS.ENTITY_NAME,
+      displayName: ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME,
+      entityType: EntityType.Entity,
+      description: ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION,
+      fields: [
+        createMockBaseResponse({
+          id: ENTITY_TEST_CONSTANTS.FIELD_ID,
+          name: 'id',
+          isPrimaryKey: true,
+          isForeignKey: false,
+          isExternalField: false,
+          isHiddenField: false,
+          isUnique: false,
+          referenceType: ReferenceType.ManyToOne,
+          fieldDataType: {
+            // TRANSFORMED field name (model tests need this)
+            name: EntityFieldDataType.UUID, // TRANSFORMED type (model tests need this)
+          },
+          isRequired: true,
+          displayName: 'ID',
+          description: 'Primary key',
+          createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME, // TRANSFORMED field name
+          createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
+          updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME, // TRANSFORMED field name
+          updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+          isSystemField: false,
+          fieldDisplayType: FieldDisplayType.Basic,
+          isAttachment: false,
+          isRbacEnabled: false,
+        }),
+        createMockBaseResponse({
+          id: ENTITY_TEST_CONSTANTS.FIELD_ID_NAME,
+          name: ENTITY_TEST_CONSTANTS.FIELD_NAME,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isExternalField: false,
+          isHiddenField: false,
+          isUnique: false,
+          referenceType: ReferenceType.ManyToOne,
+          fieldDataType: {
+            // TRANSFORMED field name (model tests need this)
+            name: EntityFieldDataType.STRING, // TRANSFORMED type (model tests need this)
+            lengthLimit: 255,
+          },
+          isRequired: false,
+          displayName: 'Name',
+          description: 'Customer name',
+          createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME, // TRANSFORMED field name
+          createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
+          updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME, // TRANSFORMED field name
+          updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+          isSystemField: false,
+          fieldDisplayType: FieldDisplayType.Basic,
+          isAttachment: false,
+          isRbacEnabled: false,
+        }),
+        createMockBaseResponse({
+          id: ENTITY_TEST_CONSTANTS.FIELD_ID_AGE,
+          name: ENTITY_TEST_CONSTANTS.FIELD_AGE,
+          isPrimaryKey: false,
+          isForeignKey: false,
+          isExternalField: false,
+          isHiddenField: false,
+          isUnique: false,
+          referenceType: ReferenceType.ManyToOne,
+          fieldDataType: {
+            // TRANSFORMED field name (model tests need this)
+            name: EntityFieldDataType.INTEGER, // TRANSFORMED type (model tests need this)
+          },
+          isRequired: false,
+          displayName: 'Age',
+          description: 'Customer age',
+          createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME, // TRANSFORMED field name
+          createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
+          updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME, // TRANSFORMED field name
+          updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+          isSystemField: false,
+          fieldDisplayType: FieldDisplayType.Basic,
+          isAttachment: false,
+          isRbacEnabled: false,
+        }),
+      ],
+      externalFields: [],
+      sourceJoinCriterias: [],
+      isRbacEnabled: false,
+      createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
+      createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME, // TRANSFORMED field name
+      updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME, // TRANSFORMED field name
+      updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+    },
+    overrides,
+  );
 };
 
 /**
@@ -217,13 +232,13 @@ export const createBasicEntity = (overrides: Partial<RawEntityGetResponse> = {})
  * @returns Array of mock entities
  */
 export const createMockEntities = (count: number): RawEntityGetResponse[] => {
-  return createMockCollection(count, (i) => 
+  return createMockCollection(count, (i) =>
     createMockEntityResponse({
       id: `e${i}234567-e89b-12d3-a456-42661417400${i}`,
       name: `Entity${i + 1}`,
       displayName: `Entity ${i + 1}`,
       description: `Test entity ${i + 1}`,
-    })
+    }),
   );
 };
 
@@ -233,15 +248,18 @@ export const createMockEntities = (count: number): RawEntityGetResponse[] => {
  * @returns Mock EntityRecord object
  */
 export const createMockEntityRecord = (overrides: Partial<EntityRecord> = {}): EntityRecord => {
-  return createMockBaseResponse({
-    Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
-    name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
-    age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
-    email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email,
-    RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-    CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
-  }, overrides);
+  return createMockBaseResponse(
+    {
+      Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+      name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
+      age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
+      email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email,
+      RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+      CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+      UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+    },
+    overrides,
+  );
 };
 
 /**
@@ -250,22 +268,19 @@ export const createMockEntityRecord = (overrides: Partial<EntityRecord> = {}): E
  * @param options - Optional: expansionLevel to expand reference fields
  * @returns Array of mock entity records
  */
-export const createMockEntityRecords = (
-  count: number,
-  options?: { expansionLevel?: number }
-): EntityRecord[] => {
-  const records = createMockCollection(count, (i) => 
+export const createMockEntityRecords = (count: number, options?: { expansionLevel?: number }): EntityRecord[] => {
+  const records = createMockCollection(count, (i) =>
     createMockEntityRecord({
       Id: `r${i}234567-e89b-12d3-a456-42661417400${i}`,
       name: `Record ${i + 1}`,
       age: 20 + i,
       email: `record${i + 1}@example.com`,
-    })
+    }),
   );
 
   // If expansionLevel is specified, expand reference fields
   if (options?.expansionLevel && options.expansionLevel > 0) {
-    return records.map(record => expandRecordReferenceFields(record));
+    return records.map((record) => expandRecordReferenceFields(record));
   }
 
   return records;
@@ -279,16 +294,16 @@ export const createMockEntityRecords = (
  */
 export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord => {
   const expanded: EntityRecord = { ...record };
-  
+
   // Expand reference fields that are typically string IDs (PascalCase as returned by the API)
   const referenceFields = ['RecordOwner', 'CreatedBy', 'UpdatedBy'];
-  
-  referenceFields.forEach(field => {
+
+  referenceFields.forEach((field) => {
     if (expanded[field] && typeof expanded[field] === 'string') {
       expanded[field] = { id: expanded[field] as string };
     }
   });
-  
+
   return expanded;
 };
 
@@ -313,11 +328,11 @@ export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord 
  */
 export const createMockSingleInsertResponse = (
   requestData: Record<string, any>,
-  options?: { expansionLevel?: number }
+  options?: { expansionLevel?: number },
 ): EntityInsertResponse => {
   let result: EntityInsertResponse = {
     ...requestData,
-    Id: 'generated-id-1'
+    Id: 'generated-id-1',
   };
 
   // If expansionLevel is specified, expand reference fields in the response
@@ -364,23 +379,23 @@ export const createMockSingleInsertResponse = (
  */
 export const createMockInsertResponse = (
   requestData: Record<string, any>[],
-  options?: { successCount?: number; expansionLevel?: number }
+  options?: { successCount?: number; expansionLevel?: number },
 ): EntityBatchInsertResponse => {
   const successCount = options?.successCount ?? requestData.length;
-  
+
   let successRecords: Record<string, any>[] = requestData.slice(0, successCount).map((record, i) => ({
     ...record,
-    Id: `generated-id-${i + 1}`
+    Id: `generated-id-${i + 1}`,
   }));
 
   // If expansionLevel is specified, expand reference fields in the response
   if (options?.expansionLevel && options.expansionLevel > 0) {
-    successRecords = successRecords.map(record => expandRecordReferenceFields(record));
+    successRecords = successRecords.map((record) => expandRecordReferenceFields(record));
   }
-  
+
   const failureRecords = requestData.slice(successCount).map((record) => ({
     error: ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_INSERT_UNIQUENESS,
-    record
+    record,
   }));
 
   return { successRecords, failureRecords };
@@ -407,7 +422,7 @@ export const createMockInsertResponse = (
  */
 export const createMockSingleUpdateResponse = (
   requestData: EntityRecord,
-  options?: { expansionLevel?: number }
+  options?: { expansionLevel?: number },
 ): EntityUpdateRecordResponse => {
   let result: EntityUpdateRecordResponse = { ...requestData };
 
@@ -424,27 +439,27 @@ export const createMockSingleUpdateResponse = (
  * @param requestData - Array of records being updated
  * @param options - Optional: successCount to control partial failures, expansionLevel to expand reference fields
  * @returns Mock EntityUpdateResponse
- * 
+ *
  * @example
  * // All records succeed
  * const response = createMockUpdateResponse([
  *   { id: '123', name: 'John Updated', age: 31 },
  *   { id: '456', name: 'Jane Updated', age: 26 }
  * ]);
- * // Returns: { 
+ * // Returns: {
  * //   successRecords: [
  * //     { id: '123', name: 'John Updated', age: 31 },
  * //     { id: '456', name: 'Jane Updated', age: 26 }
  * //   ],
  * //   failureRecords: []
  * // }
- * 
+ *
  * // Partial failure - first record succeeds, second fails
  * const response = createMockUpdateResponse(
  *   [{ id: 'valid-id', name: 'Valid' }, { id: 'invalid-id', name: 'Invalid' }],
  *   { successCount: 1 }
  * );
- * 
+ *
  * // With expansion level - reference fields are expanded
  * const response = createMockUpdateResponse(
  *   [{ id: '123', name: 'John', recordOwner: 'user-id-123' }],
@@ -453,20 +468,20 @@ export const createMockSingleUpdateResponse = (
  */
 export const createMockUpdateResponse = (
   requestData: EntityRecord[],
-  options?: { successCount?: number; expansionLevel?: number }
+  options?: { successCount?: number; expansionLevel?: number },
 ): EntityUpdateResponse => {
   const successCount = options?.successCount ?? requestData.length;
-  
+
   let successRecords = requestData.slice(0, successCount);
-  
+
   // If expansionLevel is specified, expand reference fields in the response
   if (options?.expansionLevel && options.expansionLevel > 0) {
-    successRecords = successRecords.map(record => expandRecordReferenceFields(record));
+    successRecords = successRecords.map((record) => expandRecordReferenceFields(record));
   }
-  
+
   const failureRecords = requestData.slice(successCount).map((record, i) => ({
     error: `${ENTITY_TEST_CONSTANTS.ERROR_MESSAGE} for record ${successCount + i + 1}`,
-    record
+    record,
   }));
 
   return { successRecords, failureRecords };
@@ -477,15 +492,15 @@ export const createMockUpdateResponse = (
  * @param requestIds - Array of IDs being deleted
  * @param options - Optional: successCount to control partial failures
  * @returns Mock EntityDeleteResponse
- * 
+ *
  * @example
  * // All deletions succeed
  * const response = createMockDeleteResponse(['123', '456']);
- * // Returns: { 
+ * // Returns: {
  * //   successRecords: [{ id: '123' }, { id: '456' }],
  * //   failureRecords: []
  * // }
- * 
+ *
  * // Partial failure - first deletion succeeds, second fails
  * const response = createMockDeleteResponse(
  *   ['valid-id', 'invalid-id'],
@@ -494,15 +509,15 @@ export const createMockUpdateResponse = (
  */
 export const createMockDeleteResponse = (
   requestIds: string[],
-  options?: { successCount?: number }
+  options?: { successCount?: number },
 ): EntityDeleteResponse => {
   const successCount = options?.successCount ?? requestIds.length;
-  
-  const successRecords = requestIds.slice(0, successCount).map(id => ({ Id: id }));
+
+  const successRecords = requestIds.slice(0, successCount).map((id) => ({ Id: id }));
 
   const failureRecords = requestIds.slice(successCount).map((id) => ({
     error: `${ENTITY_TEST_CONSTANTS.ERROR_MESSAGE} for id: ${id}`,
-    record: { Id: id }
+    record: { Id: id },
   }));
 
   return { successRecords, failureRecords };
@@ -522,70 +537,76 @@ export const createMockEntityWithSqlFieldTypes = (): any => {
           id: 'field-uuid-id',
           name: 'id',
           displayName: 'ID',
-          isPrimaryKey: true
+          isPrimaryKey: true,
         }),
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'UNIQUEIDENTIFIER'  // SQL type from API
-        }
+        sqlType: {
+          // RAW API field name (will be transformed to fieldDataType)
+          name: 'UNIQUEIDENTIFIER', // SQL type from API
+        },
       },
       // String field (NVARCHAR -> STRING)
       {
         ...createMockFieldMetaData({
           id: 'field-string-id',
           name: 'name',
-          displayName: 'Name'
+          displayName: 'Name',
         }),
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'NVARCHAR',  // SQL type from API
-          lengthLimit: 255
-        }
+        sqlType: {
+          // RAW API field name (will be transformed to fieldDataType)
+          name: 'NVARCHAR', // SQL type from API
+          lengthLimit: 255,
+        },
       },
       // Integer field (INT -> INTEGER)
       {
         ...createMockFieldMetaData({
           id: 'field-int-id',
           name: 'age',
-          displayName: 'Age'
+          displayName: 'Age',
         }),
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'INT'  // SQL type from API
-        }
+        sqlType: {
+          // RAW API field name (will be transformed to fieldDataType)
+          name: 'INT', // SQL type from API
+        },
       },
       // DateTime field (DATETIME2 -> DATETIME)
       {
         ...createMockFieldMetaData({
           id: 'field-datetime-id',
           name: 'createdDate',
-          displayName: 'Created Date'
+          displayName: 'Created Date',
         }),
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'DATETIME2'  // SQL type from API
-        }
+        sqlType: {
+          // RAW API field name (will be transformed to fieldDataType)
+          name: 'DATETIME2', // SQL type from API
+        },
       },
       // Boolean field (BIT -> BOOLEAN)
       {
         ...createMockFieldMetaData({
           id: 'field-bool-id',
           name: 'isActive',
-          displayName: 'Is Active'
+          displayName: 'Is Active',
         }),
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'BIT'  // SQL type from API
-        }
+        sqlType: {
+          // RAW API field name (will be transformed to fieldDataType)
+          name: 'BIT', // SQL type from API
+        },
       },
       // Decimal field (DECIMAL -> DECIMAL)
       {
         ...createMockFieldMetaData({
           id: 'field-decimal-id',
           name: 'price',
-          displayName: 'Price'
+          displayName: 'Price',
         }),
-        sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-          name: 'DECIMAL',  // SQL type from API
-          decimalPrecision: 2
-        }
-      }
-    ]
+        sqlType: {
+          // RAW API field name (will be transformed to fieldDataType)
+          name: 'DECIMAL', // SQL type from API
+          decimalPrecision: 2,
+        },
+      },
+    ],
   });
 };
 
@@ -612,8 +633,8 @@ export const createMockEntityWithNestedReferences = (): any => {
           fields: [],
           isRbacEnabled: false,
           createdBy: TEST_CONSTANTS.USER_EMAIL,
-          createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME  // RAW API field name
-        }
+          createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME, // RAW API field name
+        },
       }),
       // Field with referenceChoiceSet
       createMockFieldMetaData({
@@ -630,8 +651,8 @@ export const createMockEntityWithNestedReferences = (): any => {
           fields: [],
           isRbacEnabled: false,
           createdBy: TEST_CONSTANTS.USER_EMAIL,
-          createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME  // RAW API field name
-        }
+          createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME, // RAW API field name
+        },
       }),
       // Field with referenceField.definition
       createMockFieldMetaData({
@@ -651,21 +672,22 @@ export const createMockEntityWithNestedReferences = (): any => {
             isHiddenField: false,
             isUnique: false,
             referenceType: ReferenceType.ManyToOne,
-            sqlType: {  // RAW API field name (will be transformed to fieldDataType)
-              name: 'NVARCHAR'  // SQL type (will be transformed to STRING)
+            sqlType: {
+              // RAW API field name (will be transformed to fieldDataType)
+              name: 'NVARCHAR', // SQL type (will be transformed to STRING)
             },
             isRequired: false,
             description: 'Referenced field definition',
-            createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,  // RAW API field name
+            createTime: ENTITY_TEST_CONSTANTS.CREATED_TIME, // RAW API field name
             createdBy: TEST_CONSTANTS.USER_EMAIL,
-            updateTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,  // RAW API field name
+            updateTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME, // RAW API field name
             isSystemField: false,
             isAttachment: false,
-            isRbacEnabled: false
-          }
-        }
-      })
-    ]
+            isRbacEnabled: false,
+          },
+        },
+      }),
+    ],
   });
 };
 
@@ -685,7 +707,7 @@ export const createMockEntityWithExternalFields = (): any => {
               id: ENTITY_TEST_CONSTANTS.FIELD_ID,
               name: 'externalField',
               isExternalField: true,
-              displayName: 'External Field'
+              displayName: 'External Field',
             }),
             externalFieldMappingDetail: {
               id: ENTITY_TEST_CONSTANTS.EXTERNAL_FIELD_MAPPING_ID,
@@ -694,9 +716,9 @@ export const createMockEntityWithExternalFields = (): any => {
               externalObjectId: ENTITY_TEST_CONSTANTS.EXTERNAL_OBJECT_ID,
               externalFieldType: 'STRING',
               internalFieldId: ENTITY_TEST_CONSTANTS.FIELD_ID,
-              directionType: DataDirectionType.ReadAndWrite
-            }
-          }
+              directionType: DataDirectionType.ReadAndWrite,
+            },
+          },
         ],
         externalObjectDetail: {
           id: ENTITY_TEST_CONSTANTS.EXTERNAL_OBJECT_ID,
@@ -705,7 +727,7 @@ export const createMockEntityWithExternalFields = (): any => {
           primaryKey: 'id',
           externalConnectionId: ENTITY_TEST_CONSTANTS.EXTERNAL_CONNECTION_ID,
           entityId: ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          isPrimarySource: true
+          isPrimarySource: true,
         },
         externalConnectionDetail: {
           id: ENTITY_TEST_CONSTANTS.EXTERNAL_CONNECTION_ID,
@@ -714,10 +736,10 @@ export const createMockEntityWithExternalFields = (): any => {
           folderKey: 'test-folder',
           connectorKey: 'salesforce',
           connectorName: 'Salesforce',
-          connectionName: 'My Salesforce Connection'
-        }
-      }
-    ]
+          connectionName: 'My Salesforce Connection',
+        },
+      },
+    ],
   });
 };
 
@@ -734,10 +756,6 @@ export const createMockEntityWithExternalFields = (): any => {
  * // Image blob
  * const imageBlob = createMockBlob('image data', 'image/png');
  */
-export const createMockBlob = (
-  content: string = 'test content',
-  type: string = 'application/pdf'
-): Blob => {
+export const createMockBlob = (content: string = 'test content', type: string = 'application/pdf'): Blob => {
   return new Blob([content], { type });
 };
-

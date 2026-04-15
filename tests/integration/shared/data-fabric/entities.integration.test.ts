@@ -96,7 +96,7 @@ function getWritableFields(fields: FieldMetaData[]): FieldMetaData[] {
       f.fieldDisplayType !== FieldDisplayType.AutoNumber &&
       f.fieldDisplayType !== FieldDisplayType.Relationship &&
       f.fieldDisplayType !== FieldDisplayType.File &&
-      f.fieldDataType.name !== EntityFieldDataType.UUID
+      f.fieldDataType.name !== EntityFieldDataType.UUID,
   );
 }
 
@@ -428,9 +428,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(result.successRecords).toBeDefined();
       expect(Array.isArray(result.successRecords)).toBe(true);
 
-      const insertedIds = result.successRecords
-        .filter((r) => r.Id)
-        .map((r) => r.Id);
+      const insertedIds = result.successRecords.filter((r) => r.Id).map((r) => r.Id);
       serviceLevelRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -548,9 +546,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(result.successRecords).toBeDefined();
       expect(Array.isArray(result.successRecords)).toBe(true);
 
-      const insertedIds = result.successRecords
-        .filter((r) => r.Id)
-        .map((r) => r.Id);
+      const insertedIds = result.successRecords.filter((r) => r.Id).map((r) => r.Id);
       entityMethodRecordIds.push(...insertedIds);
       createdRecordIds.push(...insertedIds);
       registerResource('entityRecords', {
@@ -702,7 +698,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       }
 
       await expect(
-        entities.updateRecordById(entityId, 'non-existent-record-id', { description: 'No ID' })
+        entities.updateRecordById(entityId, 'non-existent-record-id', { description: 'No ID' }),
       ).rejects.toThrow();
     });
   });

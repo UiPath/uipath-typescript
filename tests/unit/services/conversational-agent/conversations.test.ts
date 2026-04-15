@@ -35,7 +35,7 @@ vi.mock('@/services/conversational-agent/conversations/session/session-manager',
     setLogLevel: vi.fn(),
     setEventDispatcher: vi.fn(),
     emitEvent: vi.fn(),
-  }))
+  })),
 }));
 
 // ===== TEST SUITE =====
@@ -66,7 +66,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.create(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        TEST_CONSTANTS.FOLDER_ID,
       );
 
       expect(result).toBeDefined();
@@ -96,9 +96,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
         // transformRequest reverses the map: agentId -> agentReleaseId, folderId stays
         expect.objectContaining({
           agentReleaseId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
-          folderId: TEST_CONSTANTS.FOLDER_ID
+          folderId: TEST_CONSTANTS.FOLDER_ID,
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -109,7 +109,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       const result = await conversationalAgent.conversations.create(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
         TEST_CONSTANTS.FOLDER_ID,
-        { label: 'Custom Label', autogenerateLabel: false }
+        { label: 'Custom Label', autogenerateLabel: false },
       );
 
       expect(result).toBeDefined();
@@ -122,7 +122,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.create(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
-        TEST_CONSTANTS.FOLDER_ID
+        TEST_CONSTANTS.FOLDER_ID,
       );
 
       // Verify methods are attached
@@ -140,7 +140,10 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(error);
 
       await expect(
-        conversationalAgent.conversations.create(CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID, TEST_CONSTANTS.FOLDER_ID)
+        conversationalAgent.conversations.create(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
+          TEST_CONSTANTS.FOLDER_ID,
+        ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -150,7 +153,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       const mockConversation = createMockRawConversation();
       mockApiClient.get.mockResolvedValue(mockConversation);
 
-      const result = await conversationalAgent.conversations.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
+      const result = await conversationalAgent.conversations.getById(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+      );
 
       expect(result).toBeDefined();
       expect(result.id).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
@@ -162,7 +167,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       // Verify the correct endpoint is called
       expect(mockApiClient.get).toHaveBeenCalledWith(
         CONVERSATION_ENDPOINTS.GET(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -170,7 +175,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       const mockConversation = createMockRawConversation();
       mockApiClient.get.mockResolvedValue(mockConversation);
 
-      const result = await conversationalAgent.conversations.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
+      const result = await conversationalAgent.conversations.getById(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+      );
 
       expect(typeof result.update).toBe('function');
       expect(typeof result.delete).toBe('function');
@@ -182,7 +189,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       const mockConversation = createMockRawConversation();
       mockApiClient.get.mockResolvedValue(mockConversation);
 
-      const result = await conversationalAgent.conversations.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
+      const result = await conversationalAgent.conversations.getById(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+      );
 
       // Original API field names should not exist
       expect((result as any).conversationId).toBeUndefined();
@@ -197,7 +206,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(
-        conversationalAgent.conversations.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID)
+        conversationalAgent.conversations.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
       ).rejects.toThrow(CONVERSATIONAL_AGENT_TEST_CONSTANTS.ERROR_CONVERSATION_NOT_FOUND);
     });
   });
@@ -215,9 +224,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.toSatisfy((fn: Function) => fn() === CONVERSATION_ENDPOINTS.LIST),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
-        undefined
+        undefined,
       );
 
       expect(result).toEqual(mockResponse);
@@ -237,8 +246,8 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
-        })
+          pageSize: TEST_CONSTANTS.PAGE_SIZE,
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -256,8 +265,8 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
-          sort: 'descending'
-        })
+          sort: 'descending',
+        }),
       );
     });
 
@@ -277,7 +286,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.updateById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { label: updatedLabel }
+        { label: updatedLabel },
       );
 
       expect(result).toBeDefined();
@@ -288,7 +297,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       expect(mockApiClient.patch).toHaveBeenCalledWith(
         CONVERSATION_ENDPOINTS.UPDATE(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
         { label: updatedLabel },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -298,7 +307,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.updateById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { autogenerateLabel: false }
+        { autogenerateLabel: false },
       );
 
       expect(result.autogenerateLabel).toBe(false);
@@ -310,7 +319,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.updateById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { label: 'test' }
+        { label: 'test' },
       );
 
       // Verify transformation happened
@@ -325,7 +334,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.updateById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { label: 'test' }
+        { label: 'test' },
       );
 
       expect(typeof result.update).toBe('function');
@@ -337,7 +346,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       mockApiClient.patch.mockRejectedValue(error);
 
       await expect(
-        conversationalAgent.conversations.updateById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, { label: 'test' })
+        conversationalAgent.conversations.updateById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, {
+          label: 'test',
+        }),
       ).rejects.toThrow(CONVERSATIONAL_AGENT_TEST_CONSTANTS.ERROR_CONVERSATION_NOT_FOUND);
     });
   });
@@ -347,14 +358,16 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       const mockConversation = createMockRawConversation();
       mockApiClient.delete.mockResolvedValue(mockConversation);
 
-      const result = await conversationalAgent.conversations.deleteById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
+      const result = await conversationalAgent.conversations.deleteById(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+      );
 
       expect(result).toBeDefined();
 
       // Verify the correct endpoint
       expect(mockApiClient.delete).toHaveBeenCalledWith(
         CONVERSATION_ENDPOINTS.DELETE(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -363,7 +376,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       mockApiClient.delete.mockRejectedValue(error);
 
       await expect(
-        conversationalAgent.conversations.deleteById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID)
+        conversationalAgent.conversations.deleteById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
       ).rejects.toThrow(CONVERSATIONAL_AGENT_TEST_CONSTANTS.ERROR_CONVERSATION_NOT_FOUND);
     });
   });
@@ -375,7 +388,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        statusText: 'OK'
+        statusText: 'OK',
       });
       global.fetch = mockFetch;
     });
@@ -388,14 +401,14 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.uploadAttachment(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        mockFile
+        mockFile,
       );
 
       // Step 1: Verify createAttachment API call
       expect(mockApiClient.post).toHaveBeenCalledWith(
         ATTACHMENT_ENDPOINTS.CREATE(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
         { name: 'document.pdf' },
-        expect.any(Object)
+        expect.any(Object),
       );
 
       // Step 2: Verify file upload to blob storage
@@ -406,16 +419,16 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
           body: mockFile,
           headers: expect.objectContaining({
             'Content-Type': 'application/pdf',
-            'x-ms-blob-type': 'BlockBlob'
-          })
-        })
+            'x-ms-blob-type': 'BlockBlob',
+          }),
+        }),
       );
 
       // Verify result
       expect(result).toEqual({
         uri: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ATTACHMENT_URI,
         name: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ATTACHMENT_NAME,
-        mimeType: 'application/pdf'
+        mimeType: 'application/pdf',
       });
     });
 
@@ -427,16 +440,16 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.uploadAttachment(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        mockFile
+        mockFile,
       );
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Content-Type': 'image/png'
-          })
-        })
+            'Content-Type': 'image/png',
+          }),
+        }),
       );
 
       expect(result.mimeType).toBe('image/png');
@@ -451,7 +464,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       await conversationalAgent.conversations.uploadAttachment(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        mockFile
+        mockFile,
       );
 
       // Verify Authorization header is included
@@ -459,9 +472,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': expect.stringContaining('Bearer ')
-          })
-        })
+            Authorization: expect.stringContaining('Bearer '),
+          }),
+        }),
       );
     });
 
@@ -471,8 +484,8 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
           url: CONVERSATIONAL_AGENT_TEST_CONSTANTS.ATTACHMENT_UPLOAD_URL,
           verb: 'PUT',
           requiresAuth: false,
-          headers: { keys: [], values: [] }
-        }
+          headers: { keys: [], values: [] },
+        },
       });
       mockApiClient.post.mockResolvedValue(mockAttachmentCreate);
 
@@ -480,7 +493,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       await conversationalAgent.conversations.uploadAttachment(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        mockFile
+        mockFile,
       );
 
       // Verify Authorization header is NOT included
@@ -495,13 +508,16 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       mockFetch.mockResolvedValue({
         ok: false,
         status: 403,
-        statusText: 'Forbidden'
+        statusText: 'Forbidden',
       });
 
       const mockFile = new File(['data'], 'doc.pdf', { type: 'application/pdf' });
 
       await expect(
-        conversationalAgent.conversations.uploadAttachment(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, mockFile)
+        conversationalAgent.conversations.uploadAttachment(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+          mockFile,
+        ),
       ).rejects.toThrow('Failed to upload to file storage: 403 Forbidden');
     });
 
@@ -513,9 +529,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
           requiresAuth: false,
           headers: {
             keys: ['x-custom-header', 'x-another-header'],
-            values: ['custom-value', 'another-value']
-          }
-        }
+            values: ['custom-value', 'another-value'],
+          },
+        },
       });
       mockApiClient.post.mockResolvedValue(mockAttachmentCreate);
 
@@ -523,7 +539,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       await conversationalAgent.conversations.uploadAttachment(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        mockFile
+        mockFile,
       );
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -533,9 +549,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
           headers: expect.objectContaining({
             'Content-Type': 'text/plain',
             'x-custom-header': 'custom-value',
-            'x-another-header': 'another-value'
-          })
-        })
+            'x-another-header': 'another-value',
+          }),
+        }),
       );
     });
   });
@@ -547,13 +563,13 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       const result = await conversationalAgent.conversations.getAttachmentUploadUri(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        'document.pdf'
+        'document.pdf',
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         ATTACHMENT_ENDPOINTS.CREATE(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
         { name: 'document.pdf' },
-        expect.any(Object)
+        expect.any(Object),
       );
 
       expect(result).toEqual({
@@ -565,9 +581,9 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
           requiresAuth: true,
           headers: {
             keys: ['x-ms-blob-type'],
-            values: ['BlockBlob']
-          }
-        }
+            values: ['BlockBlob'],
+          },
+        },
       });
     });
 
@@ -577,14 +593,10 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       await conversationalAgent.conversations.getAttachmentUploadUri(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        'report.xlsx'
+        'report.xlsx',
       );
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        expect.any(String),
-        { name: 'report.xlsx' },
-        expect.any(Object)
-      );
+      expect(mockApiClient.post).toHaveBeenCalledWith(expect.any(String), { name: 'report.xlsx' }, expect.any(Object));
     });
 
     it('should propagate API errors', async () => {
@@ -594,8 +606,8 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       await expect(
         conversationalAgent.conversations.getAttachmentUploadUri(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-          'document.pdf'
-        )
+          'document.pdf',
+        ),
       ).rejects.toThrow();
     });
   });

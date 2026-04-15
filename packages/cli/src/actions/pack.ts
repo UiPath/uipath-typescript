@@ -47,7 +47,6 @@ interface PackageConfig {
   sdkConfig: SdkConfig | null;
 }
 
-
 function validateDistDirectory(distDir: string): boolean {
   if (!fs.existsSync(distDir) || !fs.statSync(distDir).isDirectory()) return false;
   return fs.readdirSync(distDir).length > 0;
@@ -98,18 +97,16 @@ function copyConfigToDistDirectory(
   logger.log(chalk.green(MESSAGES.SUCCESS.CONFIG_FILE_INCLUDED));
 }
 
-async function validateClientId(
-  clientId: string,
-  envConfig: EnvironmentConfig,
-): Promise<void> {
+async function validateClientId(clientId: string, envConfig: EnvironmentConfig): Promise<void> {
   const spinner = ora(MESSAGES.INFO.VALIDATING_CLIENT_ID).start();
   try {
-    const url = `${envConfig.baseUrl}${API_ENDPOINTS.VALIDATE_CLIENT
-      .replace('{orgId}', envConfig.orgId)
-      .replace('{clientId}', encodeURIComponent(clientId))}`;
+    const url = `${envConfig.baseUrl}${API_ENDPOINTS.VALIDATE_CLIENT.replace('{orgId}', envConfig.orgId).replace(
+      '{clientId}',
+      encodeURIComponent(clientId),
+    )}`;
     const response = await fetch(url, {
       method: 'GET',
-      headers: createHeaders({ bearerToken: envConfig.accessToken, additionalHeaders: { 'Accept': 'application/json' } }),
+      headers: createHeaders({ bearerToken: envConfig.accessToken, additionalHeaders: { Accept: 'application/json' } }),
     });
     if (response.status === 404) {
       spinner.fail(chalk.red(MESSAGE_BUILDERS.CLIENT_ID_NOT_FOUND(clientId, envConfig.orgName)));
@@ -118,7 +115,7 @@ async function validateClientId(
     if (!response.ok) {
       await handleHttpError(response, MESSAGES.ERROR_CONTEXT.CLIENT_ID_VALIDATION);
     }
-    const data = await response.json() as { isConfidential?: boolean };
+    const data = (await response.json()) as { isConfidential?: boolean };
     if (data.isConfidential !== false) {
       spinner.fail(chalk.red(MESSAGE_BUILDERS.CLIENT_ID_CONFIDENTIAL(clientId, envConfig.orgName)));
       throw new Error(MESSAGE_BUILDERS.CLIENT_ID_CONFIDENTIAL(clientId, envConfig.orgName));
@@ -130,19 +127,13 @@ async function validateClientId(
   }
 }
 
-async function validateClientIdIfProvided(
-  sdkConfig: SdkConfig,
-  envConfig: EnvironmentConfig,
-): Promise<void> {
+async function validateClientIdIfProvided(sdkConfig: SdkConfig, envConfig: EnvironmentConfig): Promise<void> {
   if (sdkConfig.clientId?.trim()) {
     await validateClientId(sdkConfig.clientId, envConfig);
   }
 }
 
-async function checkAppNameUniqueness(
-  appName: string,
-  envConfig: EnvironmentConfig,
-): Promise<void> {
+async function checkAppNameUniqueness(appName: string, envConfig: EnvironmentConfig): Promise<void> {
   const folderKey = envConfig.folderKey || process.env.UIPATH_FOLDER_KEY || '';
   const spinner = ora(MESSAGES.INFO.CHECKING_APP_NAME_UNIQUENESS).start();
   try {
@@ -199,13 +190,15 @@ async function createEntryPointsJson(config: PackageConfig): Promise<void> {
   const entryPointsJson = {
     $schema: 'https://cloud.uipath.com/draft/2024-12/entry-point',
     $id: 'entry-points-doc-001',
-    entryPoints: [{
-      filePath: config.mainFile,
-      uniqueId: uuidv4(),
-      type: 'api',
-      input: { amount: { type: 'integer' }, id: { type: 'string' } },
-      output: { status: { type: 'string' } },
-    }],
+    entryPoints: [
+      {
+        filePath: config.mainFile,
+        uniqueId: uuidv4(),
+        type: 'api',
+        input: { amount: { type: 'integer' }, id: { type: 'string' } },
+        output: { status: { type: 'string' } },
+      },
+    ],
   };
   fs.writeFileSync(path.join(config.distDir, 'entry-points.json'), JSON.stringify(entryPointsJson, null, 2));
 }
@@ -219,7 +212,10 @@ async function createPackageDescriptorJson(config: PackageConfig): Promise<void>
       'bindings.json': 'content/bindings_v2.json',
     },
   };
-  fs.writeFileSync(path.join(config.distDir, 'package-descriptor.json'), JSON.stringify(packageDescriptorJson, null, 2));
+  fs.writeFileSync(
+    path.join(config.distDir, 'package-descriptor.json'),
+    JSON.stringify(packageDescriptorJson, null, 2),
+  );
 }
 
 async function createMetadataFiles(config: PackageConfig): Promise<void> {
@@ -266,7 +262,11 @@ async function createNupkgFile(config: PackageConfig): Promise<void> {
   zip.file(`${config.name}.nuspec`, createNuspecContent(config));
   await addDirectoryToZip(zip, path.resolve(config.distDir), 'content');
   const packagePath = path.join(config.outputDir, `${config.name}.${config.version}.nupkg`);
-  const buffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  const buffer = await zip.generateAsync({
+    type: 'nodebuffer',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 },
+  });
   fs.writeFileSync(packagePath, buffer);
 }
 
@@ -278,14 +278,18 @@ function handleMetadataJson(config: PackageConfig): void {
   } else {
     fs.writeFileSync(
       targetMetadata,
-      JSON.stringify({
-        name: config.name,
-        version: config.version,
-        description: config.description,
-        author: config.author,
-        contentType: config.contentType,
-        createdAt: new Date().toISOString(),
-      }, null, 2),
+      JSON.stringify(
+        {
+          name: config.name,
+          version: config.version,
+          description: config.description,
+          author: config.author,
+          contentType: config.contentType,
+          createdAt: new Date().toISOString(),
+        },
+        null,
+        2,
+      ),
     );
   }
 }
@@ -303,15 +307,17 @@ export async function executePack(options: PackOptions): Promise<void> {
 
   let packageName = options.name;
   if (!packageName) {
-    const response = await inquirer.prompt<{ name: string }>([{
-      type: 'input',
-      name: 'name',
-      message: MESSAGES.PROMPTS.ENTER_APP_NAME,
-      validate: (input: string) => {
-        if (!input.trim()) return MESSAGES.VALIDATIONS.PACKAGE_NAME_REQUIRED;
-        return true;
+    const response = await inquirer.prompt<{ name: string }>([
+      {
+        type: 'input',
+        name: 'name',
+        message: MESSAGES.PROMPTS.ENTER_APP_NAME,
+        validate: (input: string) => {
+          if (!input.trim()) return MESSAGES.VALIDATIONS.PACKAGE_NAME_REQUIRED;
+          return true;
+        },
       },
-    }]);
+    ]);
     packageName = response.name;
   }
 
@@ -329,18 +335,14 @@ export async function executePack(options: PackOptions): Promise<void> {
   const isVersionUpgrade = version !== DEFAULT_APP_VERSION;
 
   // Always get envConfig — needed for clientId validation and (for new apps) name uniqueness
-  const envConfig = getEnvironmentConfig(
-    AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY,
-    logger,
-    {
-      baseUrl: options.baseUrl,
-      orgId: options.orgId,
-      orgName: options.orgName,
-      tenantId: options.tenantId,
-      folderKey: options.folderKey,
-      accessToken: options.accessToken,
-    },
-  );
+  const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY, logger, {
+    baseUrl: options.baseUrl,
+    orgId: options.orgId,
+    orgName: options.orgName,
+    tenantId: options.tenantId,
+    folderKey: options.folderKey,
+    accessToken: options.accessToken,
+  });
   if (!envConfig) throw new Error('Missing required configuration');
 
   // Load or create SDK config (uipath.json)
@@ -422,7 +424,9 @@ export async function executePack(options: PackOptions): Promise<void> {
     logger.log(`  Name: ${packageConfig.name}`);
     logger.log(`  Version: ${packageConfig.version}`);
     logger.log(`  Type: ${packageConfig.contentType}`);
-    logger.log(`  Location: ${path.join(packageConfig.outputDir, `${packageConfig.name}.${packageConfig.version}.nupkg`)}`);
+    logger.log(
+      `  Location: ${path.join(packageConfig.outputDir, `${packageConfig.name}.${packageConfig.version}.nupkg`)}`,
+    );
     logger.log('');
     logger.log(chalk.blue(MESSAGES.INFO.PACKAGE_READY));
     logger.log(chalk.dim(MESSAGES.INFO.USE_PUBLISH_TO_UPLOAD));

@@ -1,6 +1,6 @@
-import { BaseOptions, RequestOptions } from "../common/types";
+import { BaseOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
-import { JobState } from "../common/types";
+import { JobState } from '../common/types';
 
 export interface UserLoginInfo {
   name: string;
@@ -27,40 +27,40 @@ export enum TaskType {
   /** A document classification task for categorizing documents */
   DocumentClassification = 'DocumentClassificationTask',
   /** A data labeling task for annotating training data */
-  DataLabeling = 'DataLabelingTask'
+  DataLabeling = 'DataLabelingTask',
 }
 
 export enum TaskPriority {
   Low = 'Low',
   Medium = 'Medium',
   High = 'High',
-  Critical = 'Critical'
+  Critical = 'Critical',
 }
 
 export enum TaskStatus {
   Unassigned = 'Unassigned',
   Pending = 'Pending',
-  Completed = 'Completed'
+  Completed = 'Completed',
 }
 
 export enum TaskSlaCriteria {
   TaskCreated = 'TaskCreated',
   TaskAssigned = 'TaskAssigned',
-  TaskCompleted = 'TaskCompleted'
+  TaskCompleted = 'TaskCompleted',
 }
 
 export enum TaskSlaStatus {
   OverdueLater = 'OverdueLater',
   OverdueSoon = 'OverdueSoon',
   Overdue = 'Overdue',
-  CompletedInTime = 'CompletedInTime'
+  CompletedInTime = 'CompletedInTime',
 }
 
 export enum TaskSourceName {
   Agent = 'Agent',
   Workflow = 'Workflow',
   Maestro = 'Maestro',
-  Default = 'Default'
+  Default = 'Default',
 }
 
 export interface TaskSource {
@@ -84,7 +84,7 @@ export enum TaskActivityType {
   Deleted = 'Deleted',
   BulkSaved = 'BulkSaved',
   BulkCompleted = 'BulkCompleted',
-  FirstOpened = 'FirstOpened'
+  FirstOpened = 'FirstOpened',
 }
 
 /**
@@ -226,38 +226,39 @@ export type TaskCompleteOptions =
   | { type: TaskType.DocumentClassification; data?: any; action?: string }
   | { type: TaskType.DataLabeling; data?: any; action?: string }
   | { type: TaskType.Form; data: any; action: string }
-  | { type: TaskType.App; data: any; action: string }
+  | { type: TaskType.App; data: any; action: string };
 
 /**
  * Options for completing a task when called from the service
  * Extends TaskCompleteOptions with the required taskId field
  */
-export type TaskCompletionOptions = TaskCompleteOptions & { taskId: number }; 
+export type TaskCompletionOptions = TaskCompleteOptions & { taskId: number };
 
 /**
  * Options for getting tasks across folders
  */
-export type TaskGetAllOptions = RequestOptions & PaginationOptions & {
-  /**
-   * Optional folder ID to filter tasks by folder
-   */
-  folderId?: number;
-  /**
-   * Optional flag to fetch tasks using admin permissions
-   * When true, fetches tasks across folders
-   * where the user has at least Task.View, Task.Edit and TaskAssignment.Create permissions
-   * When false or omitted, fetches tasks across folders
-   * where the user has at least Task.View and Task.Edit permissions
-   */
-  asTaskAdmin?: boolean;
-}
+export type TaskGetAllOptions = RequestOptions &
+  PaginationOptions & {
+    /**
+     * Optional folder ID to filter tasks by folder
+     */
+    folderId?: number;
+    /**
+     * Optional flag to fetch tasks using admin permissions
+     * When true, fetches tasks across folders
+     * where the user has at least Task.View, Task.Edit and TaskAssignment.Create permissions
+     * When false or omitted, fetches tasks across folders
+     * where the user has at least Task.View and Task.Edit permissions
+     */
+    asTaskAdmin?: boolean;
+  };
 
 /**
  * Query options for getting a task by ID
  */
 export interface TaskGetByIdOptions extends BaseOptions {
   /**
-   * Optional task type. When not provided, method will automatically identify the 
+   * Optional task type. When not provided, method will automatically identify the
    * task type and resolve accordingly, but it will be slower.
    * When provided, it will skip the step to identify the task type, so it will be faster.
    */

@@ -62,11 +62,7 @@ function extractPackageMetadata(packagePath: string): PackageMetadata {
   };
 }
 
-async function uploadPackage(
-  packagePath: string,
-  envConfig: EnvironmentConfig,
-  spinner: Ora,
-): Promise<void> {
+async function uploadPackage(packagePath: string, envConfig: EnvironmentConfig, spinner: Ora): Promise<void> {
   const form = new FormData();
   form.append('uploads[]', fs.createReadStream(packagePath));
 
@@ -120,7 +116,11 @@ async function registerCodedApp(
       actionSchema = readAndParseActionSchema();
     } catch (error) {
       logger.log('');
-      logger.log(chalk.red(`${MESSAGES.ERRORS.FAILED_TO_PARSE_ACTION_SCHEMA} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      logger.log(
+        chalk.red(
+          `${MESSAGES.ERRORS.FAILED_TO_PARSE_ACTION_SCHEMA} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`,
+        ),
+      );
       throw error;
     }
   }
@@ -164,17 +164,13 @@ export async function executePublish(options: PublishOptions): Promise<void> {
 
   logger.log(chalk.blue(MESSAGES.INFO.PUBLISHER));
 
-  const envConfig = getEnvironmentConfig(
-    AUTH_CONSTANTS.REQUIRED_ENV_VARS.PUBLISH,
-    logger,
-    {
-      baseUrl: options.baseUrl,
-      orgId: options.orgId,
-      tenantId: options.tenantId,
-      tenantName: options.tenantName,
-      accessToken: options.accessToken,
-    },
-  );
+  const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.PUBLISH, logger, {
+    baseUrl: options.baseUrl,
+    orgId: options.orgId,
+    tenantId: options.tenantId,
+    tenantName: options.tenantName,
+    accessToken: options.accessToken,
+  });
   if (!envConfig) throw new Error('Missing required configuration');
 
   const isActionApp = (options.type as AppType) === AppType.Action;
@@ -239,15 +235,17 @@ export async function executePublish(options: PublishOptions): Promise<void> {
       selectedPackage = nupkgFiles[0];
     } else {
       spinner.stop();
-      const response = await inquirer.prompt<{ package: string }>([{
-        type: 'list',
-        name: 'package',
-        message: MESSAGES.PROMPTS.SELECT_PACKAGE_TO_PUBLISH,
-        choices: nupkgFiles.map((file) => ({
-          name: path.basename(file),
-          value: file,
-        })),
-      }]);
+      const response = await inquirer.prompt<{ package: string }>([
+        {
+          type: 'list',
+          name: 'package',
+          message: MESSAGES.PROMPTS.SELECT_PACKAGE_TO_PUBLISH,
+          choices: nupkgFiles.map((file) => ({
+            name: path.basename(file),
+            value: file,
+          })),
+        },
+      ]);
       selectedPackage = response.package;
       spinner.start();
     }
@@ -275,7 +273,11 @@ export async function executePublish(options: PublishOptions): Promise<void> {
         appType: isActionApp ? AppType.Action : AppType.Web,
       });
     } catch (error) {
-      logger.log(chalk.yellow(`${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+      logger.log(
+        chalk.yellow(
+          `${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`,
+        ),
+      );
     }
 
     logger.log('');

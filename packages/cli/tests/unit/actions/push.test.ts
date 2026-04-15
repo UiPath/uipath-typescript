@@ -39,9 +39,7 @@ describe('executePush', () => {
     await executePush({ projectId: 'proj-123', logger: mockLogger });
 
     expect(Preconditions.validate).toHaveBeenCalled();
-    expect(WebAppFileHandler).toHaveBeenCalledWith(
-      expect.objectContaining({ projectId: 'proj-123' })
-    );
+    expect(WebAppFileHandler).toHaveBeenCalledWith(expect.objectContaining({ projectId: 'proj-123' }));
   });
 
   it('should use project ID from env when not in options', async () => {
@@ -49,26 +47,22 @@ describe('executePush', () => {
 
     await executePush({ logger: mockLogger });
 
-    expect(WebAppFileHandler).toHaveBeenCalledWith(
-      expect.objectContaining({ projectId: 'env-proj-456' })
-    );
+    expect(WebAppFileHandler).toHaveBeenCalledWith(expect.objectContaining({ projectId: 'env-proj-456' }));
   });
 
   it('should throw when env config is missing', async () => {
     vi.mocked(getEnvironmentConfig).mockReturnValue(null);
 
-    await expect(
-      executePush({ projectId: 'proj', logger: mockLogger })
-    ).rejects.toThrow('Missing required configuration');
+    await expect(executePush({ projectId: 'proj', logger: mockLogger })).rejects.toThrow(
+      'Missing required configuration',
+    );
   });
 
   it('should throw when no project ID and non-TTY', async () => {
     const originalIsTTY = process.stdin.isTTY;
     Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
 
-    await expect(
-      executePush({ logger: mockLogger })
-    ).rejects.toThrow(/Project ID is required/);
+    await expect(executePush({ logger: mockLogger })).rejects.toThrow(/Project ID is required/);
 
     Object.defineProperty(process.stdin, 'isTTY', { value: originalIsTTY, writable: true });
   });
@@ -78,17 +72,13 @@ describe('executePush', () => {
       throw new Error('Build directory not found');
     });
 
-    await expect(
-      executePush({ projectId: 'proj', logger: mockLogger })
-    ).rejects.toThrow('Build directory not found');
+    await expect(executePush({ projectId: 'proj', logger: mockLogger })).rejects.toThrow('Build directory not found');
   });
 
   it('should use custom buildDir when provided', async () => {
     await executePush({ projectId: 'proj-123', buildDir: 'build', logger: mockLogger });
 
-    expect(WebAppFileHandler).toHaveBeenCalledWith(
-      expect.objectContaining({ bundlePath: 'build' })
-    );
+    expect(WebAppFileHandler).toHaveBeenCalledWith(expect.objectContaining({ bundlePath: 'build' }));
   });
 
   it('should pass ignoreResources to handler', async () => {
@@ -116,7 +106,7 @@ describe('executePush', () => {
     expect(getEnvironmentConfig).toHaveBeenCalledWith(
       expect.any(Array),
       expect.any(Object),
-      expect.objectContaining(overrides)
+      expect.objectContaining(overrides),
     );
   });
 });

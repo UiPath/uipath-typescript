@@ -36,8 +36,27 @@ export function buildPushIgnoreFilter(rootDir: string): Ignore {
 
 /** Extensions treated as text: normalized (JSON + line endings) before hashing. All others use raw-byte hash. */
 const TEXT_EXTENSIONS = new Set([
-  '.html', '.htm', '.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.css', '.scss', '.less',
-  '.json', '.svg', '.txt', '.md', '.xml', '.yaml', '.yml', '.map', '.graphql', '.gql',
+  '.html',
+  '.htm',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  '.css',
+  '.scss',
+  '.less',
+  '.json',
+  '.svg',
+  '.txt',
+  '.md',
+  '.xml',
+  '.yaml',
+  '.yml',
+  '.map',
+  '.graphql',
+  '.gql',
 ]);
 
 function isTextPath(filePath: string): boolean {
@@ -76,7 +95,7 @@ function collectFilesRecursive(
   dir: string,
   rootDir: string,
   files: LocalFile[],
-  computeHashForFile: (content: Buffer, filePath: string) => string
+  computeHashForFile: (content: Buffer, filePath: string) => string,
 ): void {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
@@ -117,7 +136,7 @@ function collectSourceFilesRecursive(
   bundlePath: string,
   ig: Ignore,
   files: LocalFile[],
-  computeHashForFile: (content: Buffer, filePath: string) => string
+  computeHashForFile: (content: Buffer, filePath: string) => string,
 ): void {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
@@ -130,14 +149,7 @@ function collectSourceFilesRecursive(
       if (isPathUnderBuildDir(relPath, bundlePath)) continue;
       const relPathSlash = relPath + '/';
       if (ig.ignores(relPath) || ig.ignores(relPathSlash)) continue;
-      collectSourceFilesRecursive(
-        fullPath,
-        rootDir,
-        bundlePath,
-        ig,
-        files,
-        computeHashForFile
-      );
+      collectSourceFilesRecursive(fullPath, rootDir, bundlePath, ig, files, computeHashForFile);
     } else if (entry.isFile()) {
       if (isPathUnderBuildDir(relPath, bundlePath)) continue;
       if (ig.ignores(relPath)) continue;
@@ -158,10 +170,7 @@ function collectSourceFilesRecursive(
  * segment starts with ".", and patterns from .gitignore if present.
  * Paths are relative to rootDir (e.g. "package.json", "src/App.tsx").
  */
-export function collectSourceFiles(
-  rootDir: string,
-  bundlePath: string
-): LocalFile[] {
+export function collectSourceFiles(rootDir: string, bundlePath: string): LocalFile[] {
   const files: LocalFile[] = [];
   const ig = buildPushIgnoreFilter(rootDir);
   try {

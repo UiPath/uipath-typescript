@@ -18,7 +18,7 @@ import { addPrefixToKeys } from '../utils/transform';
 export class FolderScopedService extends BaseService {
   /**
    * Gets resources in a folder with optional query parameters
-   * 
+   *
    * @param endpoint - API endpoint to call
    * @param folderId - required folder ID
    * @param options - Query options
@@ -26,28 +26,25 @@ export class FolderScopedService extends BaseService {
    * @returns Promise resolving to an array of resources
    */
   protected async _getByFolder<T, R = T>(
-    endpoint: string, 
-    folderId: number, 
+    endpoint: string,
+    folderId: number,
     options: Record<string, any> = {},
-    transformFn?: (item: T) => R
+    transformFn?: (item: T) => R,
   ): Promise<R[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<CollectionResponse<T>>(
-      endpoint,
-      { 
-        params: apiOptions,
-        headers
-      }
-    );
+
+    const response = await this.get<CollectionResponse<T>>(endpoint, {
+      params: apiOptions,
+      headers,
+    });
 
     if (transformFn) {
       return response.data?.value.map(transformFn);
     }
-    
+
     return response.data?.value as unknown as R[];
   }
-} 
+}

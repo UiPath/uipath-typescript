@@ -32,7 +32,7 @@ export async function computeExecutionPlan(
   localFilesWithRemote: LocalFileWithRemote[],
   remoteFiles: Map<string, ProjectFile>,
   remoteFolders: Map<string, ProjectFolder>,
-  opts: PlanOptions
+  opts: PlanOptions,
 ): Promise<FileOperationPlan> {
   const { downloadRemoteFile, computeHash, logger } = opts;
   const plan: FileOperationPlan = {
@@ -52,8 +52,7 @@ export async function computeExecutionPlan(
   for (const { localFile, remotePath } of localFilesWithRemote) {
     localRemotePaths.add(remotePath);
     const remoteParentPath = path.dirname(remotePath);
-    const parentPathForPlan =
-      remoteParentPath === '.' ? REMOTE_SOURCE_FOLDER_NAME : remoteParentPath;
+    const parentPathForPlan = remoteParentPath === '.' ? REMOTE_SOURCE_FOLDER_NAME : remoteParentPath;
     const pathParts = parentPathForPlan.split('/');
     let currentPath = '';
     for (const part of pathParts) {
@@ -65,10 +64,7 @@ export async function computeExecutionPlan(
     if (remoteFile) {
       toCompare.push({ localFile, remotePath, remoteFile });
     } else {
-      if (
-        remotePath === PUSH_METADATA_REMOTE_PATH ||
-        remotePath.endsWith(REMOTE_PATH_SEP + PUSH_METADATA_FILENAME)
-      ) {
+      if (remotePath === PUSH_METADATA_REMOTE_PATH || remotePath.endsWith(REMOTE_PATH_SEP + PUSH_METADATA_FILENAME)) {
         continue;
       }
       plan.uploadFiles.push({
@@ -84,7 +80,7 @@ export async function computeExecutionPlan(
       const remoteContent = await downloadRemoteFile(remoteFile.id);
       const remoteHash = computeHash(remoteContent, localFile.path);
       return { remotePath, localFile, remoteFile, remoteHash };
-    })
+    }),
   );
 
   for (let i = 0; i < compareResults.length; i++) {
@@ -100,8 +96,8 @@ export async function computeExecutionPlan(
       if (logger) {
         logger.log(
           chalk.gray(
-            `${MESSAGES.ERRORS.PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX}${remotePath} — ${msg} (will update anyway)`
-          )
+            `${MESSAGES.ERRORS.PUSH_DOWNLOAD_REMOTE_FILE_FAILED_PREFIX}${remotePath} — ${msg} (will update anyway)`,
+          ),
         );
       }
       plan.updateFiles.push({ path: remotePath, localFile, fileId: remoteFile.id });
@@ -141,17 +137,14 @@ export async function computeExecutionPlan(
     const normalizedFolder = normalizeFolderPath(folderPath);
     if (requiredFoldersNormalized.has(normalizedFolder)) continue;
     const isUnderContentRoot =
-      normalizedFolder === sourceFolderNorm ||
-      normalizedFolder.startsWith(normalizedContentRootPrefix);
+      normalizedFolder === sourceFolderNorm || normalizedFolder.startsWith(normalizedContentRootPrefix);
     if (isUnderContentRoot && folder.id) {
       plan.deleteFolders.push({ folderId: folder.id, path: folderPath });
     }
   }
 
   plan.createFolders.sort((a, b) => a.path.split(REMOTE_PATH_SEP).length - b.path.split(REMOTE_PATH_SEP).length);
-  plan.deleteFolders.sort(
-    (a, b) => b.path.split(REMOTE_PATH_SEP).length - a.path.split(REMOTE_PATH_SEP).length
-  );
+  plan.deleteFolders.sort((a, b) => b.path.split(REMOTE_PATH_SEP).length - a.path.split(REMOTE_PATH_SEP).length);
 
   return plan;
 }
@@ -162,7 +155,7 @@ export async function computeExecutionPlan(
  */
 export function computeFirstPushPlan(
   localFilesWithRemote: LocalFileWithRemote[],
-  remoteFolders: Map<string, ProjectFolder>
+  remoteFolders: Map<string, ProjectFolder>,
 ): FileOperationPlan {
   const plan: FileOperationPlan = {
     createFolders: [],
@@ -175,15 +168,11 @@ export function computeFirstPushPlan(
   const requiredFolders = new Set<string>();
 
   for (const { localFile, remotePath } of localFilesWithRemote) {
-    if (
-      remotePath === PUSH_METADATA_REMOTE_PATH ||
-      remotePath.endsWith(REMOTE_PATH_SEP + PUSH_METADATA_FILENAME)
-    ) {
+    if (remotePath === PUSH_METADATA_REMOTE_PATH || remotePath.endsWith(REMOTE_PATH_SEP + PUSH_METADATA_FILENAME)) {
       continue;
     }
     const remoteParentPath = path.dirname(remotePath);
-    const parentPathForPlan =
-      remoteParentPath === '.' ? REMOTE_SOURCE_FOLDER_NAME : remoteParentPath;
+    const parentPathForPlan = remoteParentPath === '.' ? REMOTE_SOURCE_FOLDER_NAME : remoteParentPath;
 
     plan.uploadFiles.push({
       path: remotePath,
@@ -201,7 +190,8 @@ export function computeFirstPushPlan(
 
   for (const folderPath of requiredFolders) {
     const normPath = normalizeFolderPath(folderPath);
-    const hasFolder = remoteFolders.has(folderPath) || [...remoteFolders.keys()].some((k) => normalizeFolderPath(k) === normPath);
+    const hasFolder =
+      remoteFolders.has(folderPath) || [...remoteFolders.keys()].some((k) => normalizeFolderPath(k) === normPath);
     if (!hasFolder) {
       plan.createFolders.push({ path: folderPath });
     }

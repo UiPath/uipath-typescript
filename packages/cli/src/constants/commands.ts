@@ -5,11 +5,10 @@ export const VERSION_CONSTANTS = {
   ERROR_READING_VERSION: 'Error reading version information',
 } as const;
 
-export const VALID_NAME_REGEX = /^[a-z0-9-]+$/
+export const VALID_NAME_REGEX = /^[a-z0-9-]+$/;
 
 export const ACTION_SCHEMA_CONSTANTS = {
-  ACTION_SCHEMA_FILENAME: 'action-schema.json'
+  ACTION_SCHEMA_FILENAME: 'action-schema.json',
 } as const;
 
-export const DEFAULT_APP_VERSION = '1.0.0'
-
+export const DEFAULT_APP_VERSION = '1.0.0';

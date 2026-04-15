@@ -6,7 +6,7 @@ import { AUTH_CONSTANTS } from '../../constants/auth.js';
  * @returns Expiration timestamp in milliseconds
  */
 export const calculateExpirationTime = (expiresIn: number): number => {
-  return Date.now() + (expiresIn * AUTH_CONSTANTS.CONVERSION.SECONDS_TO_MS);
+  return Date.now() + expiresIn * AUTH_CONSTANTS.CONVERSION.SECONDS_TO_MS;
 };
 
 /**

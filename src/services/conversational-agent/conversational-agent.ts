@@ -15,12 +15,9 @@ import type {
   RawAgentGetResponse,
   RawAgentGetByIdResponse,
   AgentGetResponse,
-  AgentGetByIdResponse
+  AgentGetByIdResponse,
 } from '@/models/conversational-agent';
-import {
-  AgentMap,
-  createAgentWithMethods
-} from '@/models/conversational-agent';
+import { AgentMap, createAgentWithMethods } from '@/models/conversational-agent';
 
 // Utils
 import { FEATURE_ENDPOINTS, AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
@@ -71,7 +68,6 @@ export class ConversationalAgentService extends BaseService implements Conversat
     return this.conversations.onConnectionStatusChanged(handler);
   }
 
-
   /**
    * Gets all available conversational agents
    *
@@ -98,7 +94,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
       params: folderId !== undefined ? { folderId } : undefined,
     });
     return response.data.map((agent) =>
-      createAgentWithMethods(transformData(agent, AgentMap) as RawAgentGetResponse, this.conversations)
+      createAgentWithMethods(transformData(agent, AgentMap) as RawAgentGetResponse, this.conversations),
     );
   }
 
@@ -122,7 +118,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
     const response = await this.get<RawAgentGetByIdResponse>(AGENT_ENDPOINTS.GET(folderId, id));
     return createAgentWithMethods(
       transformData(response.data, AgentMap) as RawAgentGetByIdResponse,
-      this.conversations
+      this.conversations,
     );
   }
 
@@ -135,5 +131,4 @@ export class ConversationalAgentService extends BaseService implements Conversat
     const response = await this.get<FeatureFlags>(FEATURE_ENDPOINTS.FEATURE_FLAGS);
     return response.data;
   }
-
 }

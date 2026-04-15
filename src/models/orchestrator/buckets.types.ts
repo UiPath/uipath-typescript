@@ -1,11 +1,11 @@
-import { BaseOptions, RequestOptions } from "../common/types";
-import { PaginationOptions } from "../../utils/pagination";
+import { BaseOptions, RequestOptions } from '../common/types';
+import { PaginationOptions } from '../../utils/pagination';
 
 export enum BucketOptions {
   None = 'None',
   ReadOnly = 'ReadOnly',
   AuditReadAccess = 'AuditReadAccess',
-  AccessDataThroughOrchestrator = 'AccessDataThroughOrchestrator'
+  AccessDataThroughOrchestrator = 'AccessDataThroughOrchestrator',
 }
 
 export interface BucketGetResponse {
@@ -23,15 +23,16 @@ export interface BucketGetResponse {
   foldersCount: number;
 }
 
-export type BucketGetAllOptions = RequestOptions & PaginationOptions & {
-  folderId?: number;
-}
+export type BucketGetAllOptions = RequestOptions &
+  PaginationOptions & {
+    folderId?: number;
+  };
 
 export interface BucketGetByIdOptions extends BaseOptions {}
 
 /**
  * Maps header names to their values
- * 
+ *
  * @example
  * ```typescript
  * {
@@ -49,17 +50,17 @@ export interface BucketGetUriResponse {
    * The URI for accessing the blob file
    */
   uri: string;
-  
+
   /**
    * HTTP method to use with the URI
    */
   httpMethod: string;
-  
+
   /**
    * Whether authentication is required to access the URI
    */
   requiresAuth: boolean;
-  
+
   /**
    * Headers to be included in the request
    */
@@ -116,7 +117,7 @@ export interface BucketGetFileMetaDataResponse {
    * Array of blob items in the bucket
    */
   blobItems: BlobItem[];
-  
+
   /**
    * Token for retrieving the next set of results
    */
@@ -131,17 +132,17 @@ export interface BlobItem {
    * Full path to the blob
    */
   path: string;
-  
+
   /**
    * Content type of the blob
    */
   contentType: string;
-  
+
   /**
    * Size of the blob in bytes
    */
   size: number;
-  
+
   /**
    * Last modified timestamp
    */
@@ -168,7 +169,7 @@ export interface BucketUploadFileOptions {
   path: string;
 
   /**
-   * File content to upload 
+   * File content to upload
    */
   content: Blob | Uint8Array<ArrayBuffer> | File;
 }
@@ -181,7 +182,7 @@ export interface BucketUploadResponse {
    * Whether the upload was successful
    */
   success: boolean;
-  
+
   /**
    * HTTP status code from the upload operation
    */

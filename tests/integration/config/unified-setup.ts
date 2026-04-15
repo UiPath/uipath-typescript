@@ -150,9 +150,7 @@ export async function initializeServices(mode: InitMode): Promise<TestServices> 
  */
 export function getServices(): TestServices {
   if (!servicesInstance) {
-    throw new Error(
-      'Services not initialized. Call initializeServices() or use setupUnifiedTests() first.'
-    );
+    throw new Error('Services not initialized. Call initializeServices() or use setupUnifiedTests() first.');
   }
   return servicesInstance;
 }

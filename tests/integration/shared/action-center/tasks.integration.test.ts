@@ -1,11 +1,5 @@
 import { describe, it, expect, afterAll } from 'vitest';
-import {
-  getServices,
-  getTestConfig,
-  setupUnifiedTests,
-  cleanupTestTask,
-  InitMode,
-} from '../../config/unified-setup';
+import { getServices, getTestConfig, setupUnifiedTests, cleanupTestTask, InitMode } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { generateTestResourceName } from '../../utils/helpers';
 import { TaskPriority, TaskType } from '../../../../src/models/action-center/tasks.types';
@@ -93,7 +87,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         registerResource('tasks', { id: createdTaskId, folderId });
       } catch (error: any) {
         throw new Error(
-          `Task creation failed. This may require specific Action Center configuration: ${error.message}`
+          `Task creation failed. This may require specific Action Center configuration: ${error.message}`,
         );
       }
     });
@@ -144,7 +138,9 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const { tasks } = getServices();
 
       // Find an existing App task
-      const allTasks = await tasks.getAll({ filter: "Type eq 'AppTask' and Status eq 'Unassigned' and IsDeleted eq false" });
+      const allTasks = await tasks.getAll({
+        filter: "Type eq 'AppTask' and Status eq 'Unassigned' and IsDeleted eq false",
+      });
 
       if (allTasks.items.length === 0) {
         throw new Error('No App task available in the test environment');
@@ -278,14 +274,17 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
           });
         }
 
-        const result = await tasks.complete({
-          taskId: createdTaskId,
-          type: TaskType.External,
-          data: {
-            completed: true,
-            completedAt: new Date().toISOString(),
+        const result = await tasks.complete(
+          {
+            taskId: createdTaskId,
+            type: TaskType.External,
+            data: {
+              completed: true,
+              completedAt: new Date().toISOString(),
+            },
           },
-        }, folderId!);
+          folderId!,
+        );
 
         expect(result).toBeDefined();
         expect(result.success).toBe(true);
@@ -295,9 +294,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
         createdTaskId = null;
       } catch (error: any) {
-        throw new Error(
-          `Task completion failed. This may require specific task configuration: ${error.message}`
-        );
+        throw new Error(`Task completion failed. This may require specific task configuration: ${error.message}`);
       }
     });
   });

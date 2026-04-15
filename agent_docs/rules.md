@@ -59,6 +59,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 Run after every implementation, before committing.
 
 ```bash
+npm run format:check  # prettier — all files formatted (run `npm run format` to fix)
 npm run typecheck     # TypeScript compilation — must be clean
 npm run lint          # oxlint — 0 errors
 npm run test:unit     # All unit tests pass

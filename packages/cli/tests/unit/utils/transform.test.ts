@@ -35,14 +35,8 @@ describe('transform', () => {
     });
 
     it('should handle arrays of objects', () => {
-      const result = pascalToCamelCaseKeys([
-        { FirstName: 'John' },
-        { FirstName: 'Jane' },
-      ]);
-      expect(result).toEqual([
-        { firstName: 'John' },
-        { firstName: 'Jane' },
-      ]);
+      const result = pascalToCamelCaseKeys([{ FirstName: 'John' }, { FirstName: 'Jane' }]);
+      expect(result).toEqual([{ firstName: 'John' }, { firstName: 'Jane' }]);
     });
 
     it('should handle arrays with primitive values', () => {

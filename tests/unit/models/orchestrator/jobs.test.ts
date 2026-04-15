@@ -1,8 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  createJobWithMethods,
-  JobServiceModel
-} from '../../../../src/models/orchestrator/jobs.models';
+import { createJobWithMethods, JobServiceModel } from '../../../../src/models/orchestrator/jobs.models';
 import { createBasicJob } from '../../../utils/mocks/jobs';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';

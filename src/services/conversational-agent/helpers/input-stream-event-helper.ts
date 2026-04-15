@@ -3,7 +3,7 @@ import type {
   AsyncInputStreamEndEvent,
   AsyncInputStreamEvent,
   AsyncInputStreamStartEvent,
-  MetaEvent
+  MetaEvent,
 } from '@/models/conversational-agent';
 
 import { ConversationEventHelperBase } from './conversation-event-helper-base';
@@ -12,7 +12,7 @@ import {
   type AsyncInputStreamEndHandler,
   ConversationEventValidationError,
   type ErrorEndEventOptions,
-  type ErrorStartEventOptions
+  type ErrorStartEventOptions,
 } from './conversation-event-helper-common';
 import type { SessionEventHelper, SessionEventHelperImpl } from './session-event-helper';
 
@@ -24,7 +24,6 @@ export abstract class AsyncInputStreamEventHelper extends ConversationEventHelpe
   AsyncInputStreamStartEvent,
   AsyncInputStreamEvent
 > {
-
   protected readonly _chunkHandlers = new Array<AsyncInputStreamChunkHandler>();
   protected readonly _endHandlers = new Array<AsyncInputStreamEndHandler>();
 
@@ -36,7 +35,7 @@ export abstract class AsyncInputStreamEventHelper extends ConversationEventHelpe
      * AsyncInputStreamStartEvent used to initialize the AsyncInputStreamEventHelper. Will be undefined if some other
      * sub-event was received before the start event. Which shouldn't happen under normal circumstances.
      */
-    public readonly startEventMaybe: AsyncInputStreamStartEvent | undefined
+    public readonly startEventMaybe: AsyncInputStreamStartEvent | undefined,
   ) {
     super(session.manager);
   }
@@ -47,7 +46,8 @@ export abstract class AsyncInputStreamEventHelper extends ConversationEventHelpe
    * happen under normal circumstances.
    */
   public get startEvent(): AsyncInputStreamStartEvent {
-    if (!this.startEventMaybe) throw new ConversationEventValidationError(`Async input stream ${this.streamId} has no start event.`);
+    if (!this.startEventMaybe)
+      throw new ConversationEventValidationError(`Async input stream ${this.streamId} has no start event.`);
     return this.startEventMaybe;
   }
 
@@ -56,7 +56,7 @@ export abstract class AsyncInputStreamEventHelper extends ConversationEventHelpe
    */
   public emit(streamEvent: Omit<AsyncInputStreamEvent, 'streamId'>) {
     this.session.emit({
-      asyncInputStream: { streamId: this.streamId, ...streamEvent }
+      asyncInputStream: { streamId: this.streamId, ...streamEvent },
     });
   }
 
@@ -130,8 +130,8 @@ export abstract class AsyncInputStreamEventHelper extends ConversationEventHelpe
     this.emit({
       asyncInputStreamError: {
         errorId,
-        startError
-      }
+        startError,
+      },
     });
     this.errors.set(errorId, startError);
   }
@@ -145,8 +145,8 @@ export abstract class AsyncInputStreamEventHelper extends ConversationEventHelpe
     this.emit({
       asyncInputStreamError: {
         errorId,
-        endError
-      }
+        endError,
+      },
     });
     this.errors.delete(errorId);
   }
@@ -154,11 +154,9 @@ export abstract class AsyncInputStreamEventHelper extends ConversationEventHelpe
   public toString() {
     return `AsyncInputStreamEventHelper(${this.streamId})`;
   }
-
 }
 
 export class AsyncInputStreamEventHelperImpl extends AsyncInputStreamEventHelper {
-
   /**
    * Dispatches incoming stream events to registered handlers.
    */
@@ -172,12 +170,12 @@ export class AsyncInputStreamEventHelperImpl extends AsyncInputStreamEventHelper
 
     if (streamEvent.chunk) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._chunkHandlers.forEach(cb => cb(streamEvent.chunk!));
+      this._chunkHandlers.forEach((cb) => cb(streamEvent.chunk!));
     }
 
     if (streamEvent.metaEvent) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._metaEventHandlers.forEach(cb => cb(streamEvent.metaEvent!));
+      this._metaEventHandlers.forEach((cb) => cb(streamEvent.metaEvent!));
     }
 
     if (streamEvent.asyncInputStreamError?.startError) {
@@ -191,7 +189,7 @@ export class AsyncInputStreamEventHelperImpl extends AsyncInputStreamEventHelper
     if (streamEvent.endAsyncInputStream) {
       this.setEnded();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._endHandlers.forEach(cb => cb(streamEvent.endAsyncInputStream!));
+      this._endHandlers.forEach((cb) => cb(streamEvent.endAsyncInputStream!));
       this.delete();
     }
   }
@@ -211,5 +209,4 @@ export class AsyncInputStreamEventHelperImpl extends AsyncInputStreamEventHelper
   protected getSession() {
     return this.session;
   }
-
 }

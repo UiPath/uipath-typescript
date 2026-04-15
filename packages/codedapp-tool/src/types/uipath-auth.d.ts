@@ -1,5 +1,5 @@
-declare module "@uipath/auth" {
-  export type LoginStatusValue = "Logged in" | "Not logged in" | "Expired";
+declare module '@uipath/auth' {
+  export type LoginStatusValue = 'Logged in' | 'Not logged in' | 'Expired';
 
   export interface LoginStatus {
     loginStatus: LoginStatusValue;

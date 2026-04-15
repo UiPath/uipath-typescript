@@ -1,6 +1,6 @@
-import { BaseOptions, CollectionResponse } from "../common/types";
-import { TaskAssignmentOptions, TaskAssignmentResponse, TaskType } from "./tasks.types";
-import { TASK_ENDPOINTS } from "../../utils/constants/endpoints";
+import { BaseOptions, CollectionResponse } from '../common/types';
+import { TaskAssignmentOptions, TaskAssignmentResponse, TaskType } from './tasks.types';
+import { TASK_ENDPOINTS } from '../../utils/constants/endpoints';
 
 export const TASK_TYPE_ENDPOINTS: Record<TaskType, string> = {
   [TaskType.Form]: TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
@@ -17,21 +17,21 @@ export enum ActionCenterEventNames {
 }
 
 export type TokenWithExpiry = {
-  accessToken: string,
-  expiresAt: Date,
-}
+  accessToken: string;
+  expiresAt: Date;
+};
 
 export type ActionCenterTokenData = {
-  token: TokenWithExpiry,
-}
+  token: TokenWithExpiry;
+};
 
 export type ActionCenterEventResponsePayload = {
-  eventType: ActionCenterEventNames,
-  content: ActionCenterTokenData,
-}
+  eventType: ActionCenterEventNames;
+  content: ActionCenterTokenData;
+};
 
 export interface TasksAssignOptions {
-    taskAssignments: TaskAssignmentOptions[];
+  taskAssignments: TaskAssignmentOptions[];
 }
 
 export type TaskAssignmentResponseCollection = CollectionResponse<TaskAssignmentResponse>;

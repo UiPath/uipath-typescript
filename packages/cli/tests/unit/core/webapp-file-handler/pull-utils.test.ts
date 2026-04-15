@@ -129,18 +129,14 @@ describe('pull-utils', () => {
     it('should return paths that exist as files locally', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true } as any);
-      const filesMap = new Map<string, ProjectFile>([
-        ['source/package.json', { id: '1', name: 'package.json' }],
-      ]);
+      const filesMap = new Map<string, ProjectFile>([['source/package.json', { id: '1', name: 'package.json' }]]);
       const result = getPathsThatWouldOverwrite(filesMap, '/root');
       expect(result.length).toBe(1);
     });
 
     it('should skip paths that do not exist', () => {
       vi.mocked(fs.existsSync).mockReturnValue(false);
-      const filesMap = new Map<string, ProjectFile>([
-        ['source/new.txt', { id: '1', name: 'new.txt' }],
-      ]);
+      const filesMap = new Map<string, ProjectFile>([['source/new.txt', { id: '1', name: 'new.txt' }]]);
       const result = getPathsThatWouldOverwrite(filesMap, '/root');
       expect(result.length).toBe(0);
     });

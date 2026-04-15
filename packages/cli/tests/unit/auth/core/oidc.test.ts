@@ -89,13 +89,32 @@ describe('auth/core/oidc', () => {
     });
 
     it('should handle missing email', () => {
-      const token = createJWT({ sub: 'u', prt_id: 'p', client_id: 'c', exp: 1, iss: 'i', aud: 'a', iat: 1, auth_time: 1 });
+      const token = createJWT({
+        sub: 'u',
+        prt_id: 'p',
+        client_id: 'c',
+        exp: 1,
+        iss: 'i',
+        aud: 'a',
+        iat: 1,
+        auth_time: 1,
+      });
       const result = parseJWT(token);
       expect(result.email).toBeUndefined();
     });
 
     it('should use organization_id when present', () => {
-      const token = createJWT({ sub: 'u', prt_id: 'p', client_id: 'c', exp: 1, iss: 'i', aud: 'a', iat: 1, auth_time: 1, organization_id: 'org-1' });
+      const token = createJWT({
+        sub: 'u',
+        prt_id: 'p',
+        client_id: 'c',
+        exp: 1,
+        iss: 'i',
+        aud: 'a',
+        iat: 1,
+        auth_time: 1,
+        organization_id: 'org-1',
+      });
       const result = parseJWT(token);
       expect(result.organizationId).toBe('org-1');
     });
@@ -142,11 +161,13 @@ describe('auth/core/oidc', () => {
 
     it('should throw on failure', async () => {
       mockFetch.mockResolvedValue({ ok: false, status: 401 });
-      await expect(authenticateWithClientCredentials({
-        clientId: 'client',
-        clientSecret: 'secret',
-        domain: 'cloud',
-      })).rejects.toThrow();
+      await expect(
+        authenticateWithClientCredentials({
+          clientId: 'client',
+          clientSecret: 'secret',
+          domain: 'cloud',
+        }),
+      ).rejects.toThrow();
     });
   });
 });

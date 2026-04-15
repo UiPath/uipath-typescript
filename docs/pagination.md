@@ -17,26 +17,25 @@ All paginated methods return a [`PaginatedResponse<T>`](/uipath-typescript/api/i
 
 ```typescript
 type PaginationOptions = {
-  pageSize?: number;      // Size of the page to fetch (items per page)
-  cursor?: string;        // Opaque string containing all information needed to fetch next page
-  jumpToPage?: number;    // Direct page number navigation
-}
+  pageSize?: number; // Size of the page to fetch (items per page)
+  cursor?: string; // Opaque string containing all information needed to fetch next page
+  jumpToPage?: number; // Direct page number navigation
+};
 ```
 
 ### [PaginatedResponse](/uipath-typescript/api/interfaces/PaginatedResponse)
 
 ```typescript
 interface PaginatedResponse<T> {
-  items: T[];                           // The items in the current page
-  totalCount?: number;                  // Total count of items across all pages (if available)
-  hasNextPage: boolean;                 // Whether more pages are available
-  nextCursor?: PaginationCursor;        // Cursor to fetch the next page (if available)
-  previousCursor?: PaginationCursor;    // Cursor to fetch the previous page (if available)
-  currentPage?: number;                 // Current page number (1-based, if available)
-  totalPages?: number;                  // Total number of pages (if available)
-  supportsPageJump: boolean;            // Whether this pagination type supports jumping to arbitrary pages
+  items: T[]; // The items in the current page
+  totalCount?: number; // Total count of items across all pages (if available)
+  hasNextPage: boolean; // Whether more pages are available
+  nextCursor?: PaginationCursor; // Cursor to fetch the next page (if available)
+  previousCursor?: PaginationCursor; // Cursor to fetch the previous page (if available)
+  currentPage?: number; // Current page number (1-based, if available)
+  totalPages?: number; // Total number of pages (if available)
+  supportsPageJump: boolean; // Whether this pagination type supports jumping to arbitrary pages
 }
-
 ```
 
 ## Usage Examples
@@ -65,16 +64,16 @@ import { PaginatedResponse } from '@uipath/uipath-typescript/core';
 const assets = new Assets(sdk);
 
 // Navigate through pages using cursors
-let currentPage = await assets.getAll({ pageSize: 10 }) as PaginatedResponse<AssetGetResponse>;
+let currentPage = (await assets.getAll({ pageSize: 10 })) as PaginatedResponse<AssetGetResponse>;
 
 while (currentPage.hasNextPage) {
   // Process current page items
-  currentPage.items.forEach(item => console.log(item.name));
+  currentPage.items.forEach((item) => console.log(item.name));
 
   // Get next page using cursor
-  currentPage = await assets.getAll({
-    cursor: currentPage.nextCursor
-  }) as PaginatedResponse<AssetGetResponse>;
+  currentPage = (await assets.getAll({
+    cursor: currentPage.nextCursor,
+  })) as PaginatedResponse<AssetGetResponse>;
 }
 ```
 
@@ -88,7 +87,7 @@ const assets = new Assets(sdk);
 // Jump directly to page 5 (when supported)
 const page5 = await assets.getAll({
   jumpToPage: 5,
-  pageSize: 20
+  pageSize: 20,
 });
 
 // Check if page jumping is supported
@@ -113,20 +112,20 @@ console.log(`Total count: ${allAssets.totalCount}`);
 
 ## Quick Reference Table
 
-| Service | Method | Supports `jumpToPage`? |
-|---------|--------|------------------------|
-| Assets | `getAll()` | ✅ Yes |
-| Buckets | `getAll()` | ✅ Yes |
-| Buckets | `getFiles()` | ❌ No |
-| Jobs | `getAll()` | ✅ Yes |
-| Entities | `getAll()` | ✅ Yes |
-| Entities | `getAllRecords()` | ✅ Yes |
-| Processes | `getAll()` | ✅ Yes |
-| ProcessInstances | `getAll()` | ❌ No |
-| CaseInstances | `getAll()` | ❌ No |
-| CaseInstances | `getActionTasks()` | ✅ Yes |
-| Queues | `getAll()` | ✅ Yes |
-| Tasks | `getAll()` | ✅ Yes |
-| Tasks | `getUsers()` | ✅ Yes |
-| ConversationalAgent.conversations | `getAll()` | ❌ No |
-| ConversationalAgent.exchanges | `getAll()` | ❌ No |
+| Service                           | Method             | Supports `jumpToPage`? |
+| --------------------------------- | ------------------ | ---------------------- |
+| Assets                            | `getAll()`         | ✅ Yes                 |
+| Buckets                           | `getAll()`         | ✅ Yes                 |
+| Buckets                           | `getFiles()`       | ❌ No                  |
+| Jobs                              | `getAll()`         | ✅ Yes                 |
+| Entities                          | `getAll()`         | ✅ Yes                 |
+| Entities                          | `getAllRecords()`  | ✅ Yes                 |
+| Processes                         | `getAll()`         | ✅ Yes                 |
+| ProcessInstances                  | `getAll()`         | ❌ No                  |
+| CaseInstances                     | `getAll()`         | ❌ No                  |
+| CaseInstances                     | `getActionTasks()` | ✅ Yes                 |
+| Queues                            | `getAll()`         | ✅ Yes                 |
+| Tasks                             | `getAll()`         | ✅ Yes                 |
+| Tasks                             | `getUsers()`       | ✅ Yes                 |
+| ConversationalAgent.conversations | `getAll()`         | ❌ No                  |
+| ConversationalAgent.exchanges     | `getAll()`         | ❌ No                  |

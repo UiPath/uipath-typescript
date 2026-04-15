@@ -58,7 +58,7 @@ export type ExchangeGetAllOptions = PaginationOptions & {
   exchangeSort?: SortOrder;
   /** Sort order for messages within each exchange */
   messageSort?: SortOrder;
-}
+};
 
 export interface ExchangeGetByIdOptions {
   /** Sort order for messages within the exchange */

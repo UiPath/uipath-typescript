@@ -79,7 +79,7 @@ describe('ExchangeEventHelper', () => {
             exchangeId: EXCHANGE_ID,
             metaEvent: { key: 'val' },
           }),
-        })
+        }),
       );
     });
   });
@@ -101,7 +101,7 @@ describe('ExchangeEventHelper', () => {
               startMessage: expect.objectContaining({ role: MessageRole.User }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -117,7 +117,7 @@ describe('ExchangeEventHelper', () => {
               startMessage: expect.objectContaining({ role: MessageRole.User }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -150,9 +150,7 @@ describe('ExchangeEventHelper', () => {
         message.sendContentPart({ data: 'hello' });
       });
 
-      const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.endMessage !== undefined
-      );
+      const endCall = emitSpy.mock.calls.find((call: any[]) => call[0]?.exchange?.message?.endMessage !== undefined);
       expect(endCall).toBeDefined();
     });
 
@@ -201,13 +199,11 @@ describe('ExchangeEventHelper', () => {
 
       // Should have emitted startMessage, startContentPart, chunk, endContentPart, endMessage
       const startMsgCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.startMessage !== undefined
+        (call: any[]) => call[0]?.exchange?.message?.startMessage !== undefined,
       );
       expect(startMsgCall).toBeDefined();
 
-      const endMsgCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.endMessage !== undefined
-      );
+      const endMsgCall = emitSpy.mock.calls.find((call: any[]) => call[0]?.exchange?.message?.endMessage !== undefined);
       expect(endMsgCall).toBeDefined();
     });
   });
@@ -225,7 +221,7 @@ describe('ExchangeEventHelper', () => {
             exchangeId: EXCHANGE_ID,
             endExchange: {},
           }),
-        })
+        }),
       );
     });
 
@@ -249,7 +245,7 @@ describe('ExchangeEventHelper', () => {
             exchangeId: EXCHANGE_ID,
             metaEvent: { key: 'meta' },
           }),
-        })
+        }),
       );
     });
 
@@ -339,7 +335,7 @@ describe('ExchangeEventHelper', () => {
       });
 
       expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'ex-err-1', message: 'exchange error' })
+        expect.objectContaining({ errorId: 'ex-err-1', message: 'exchange error' }),
       );
       expect(exchange.hasError).toBe(true);
     });
@@ -359,9 +355,7 @@ describe('ExchangeEventHelper', () => {
         exchangeError: { errorId: 'ex-err-1', endError: {} },
       });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'ex-err-1' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'ex-err-1' }));
       expect(exchange.hasError).toBe(false);
     });
 
@@ -541,7 +535,7 @@ describe('ExchangeEventHelper', () => {
               startError: expect.objectContaining({ message: 'exchange fail' }),
             }),
           }),
-        })
+        }),
       );
       expect(exchange.hasError).toBe(true);
     });
@@ -561,7 +555,7 @@ describe('ExchangeEventHelper', () => {
               endError: expect.any(Object),
             }),
           }),
-        })
+        }),
       );
       expect(exchange.hasError).toBe(false);
     });
@@ -633,10 +627,8 @@ describe('ExchangeEventHelper', () => {
       expect(completedSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           messageId: 'msg-completed',
-          contentParts: expect.arrayContaining([
-            expect.objectContaining({ data: 'Hello' }),
-          ]),
-        })
+          contentParts: expect.arrayContaining([expect.objectContaining({ data: 'Hello' })]),
+        }),
       );
     });
 
@@ -672,47 +664,51 @@ describe('ExchangeEventHelper', () => {
       expect(completedSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           messageId: 'msg-tc',
-          toolCalls: expect.arrayContaining([
-            expect.objectContaining({ toolCallId: 'tc-1', toolName: 'search' }),
-          ]),
-        })
+          toolCalls: expect.arrayContaining([expect.objectContaining({ toolCallId: 'tc-1', toolName: 'search' })]),
+        }),
       );
     });
   });
 
   describe('replay', () => {
     it('should generate correct event sequence', () => {
-      const events = Array.from(ExchangeEventHelperImpl.replay({
-        exchangeId: 'replay-ex',
-        createdTime: '2024-01-01T00:00:00Z',
-        messages: [
-          {
-            messageId: 'replay-msg',
-            role: MessageRole.User,
-            createdTime: '2024-01-01T00:00:01Z',
-            contentParts: [
-              {
-                contentPartId: 'replay-cp',
-                mimeType: 'text/plain',
-                data: { inline: 'Hi' },
-                citations: [],
-                createdTime: '2024-01-01T00:00:01Z',
-              },
-            ],
-            toolCalls: [],
-          },
-        ],
-      } as any));
+      const events = Array.from(
+        ExchangeEventHelperImpl.replay({
+          exchangeId: 'replay-ex',
+          createdTime: '2024-01-01T00:00:00Z',
+          messages: [
+            {
+              messageId: 'replay-msg',
+              role: MessageRole.User,
+              createdTime: '2024-01-01T00:00:01Z',
+              contentParts: [
+                {
+                  contentPartId: 'replay-cp',
+                  mimeType: 'text/plain',
+                  data: { inline: 'Hi' },
+                  citations: [],
+                  createdTime: '2024-01-01T00:00:01Z',
+                },
+              ],
+              toolCalls: [],
+            },
+          ],
+        } as any),
+      );
 
       // Should have: startExchange, startMessage, startContentPart, chunk, endContentPart, endMessage, endExchange
-      expect(events[0]).toEqual(expect.objectContaining({
-        exchangeId: 'replay-ex',
-        startExchange: expect.any(Object),
-      }));
-      expect(events[events.length - 1]).toEqual(expect.objectContaining({
-        exchangeId: 'replay-ex',
-        endExchange: {},
-      }));
+      expect(events[0]).toEqual(
+        expect.objectContaining({
+          exchangeId: 'replay-ex',
+          startExchange: expect.any(Object),
+        }),
+      );
+      expect(events[events.length - 1]).toEqual(
+        expect.objectContaining({
+          exchangeId: 'replay-ex',
+          endExchange: {},
+        }),
+      );
     });
   });
 
@@ -750,9 +746,7 @@ describe('ExchangeEventHelper', () => {
         exchangeError: { errorId: 'exe-1', startError: { message: 'err' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'exe-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'exe-1' }));
     });
 
     it('should dispatch to unhandled when no local handler exists', () => {
@@ -765,9 +759,7 @@ describe('ExchangeEventHelper', () => {
         exchangeError: { errorId: 'exe-1', startError: { message: 'unhandled' } },
       });
 
-      expect(unhandledSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'exe-1' })
-      );
+      expect(unhandledSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'exe-1' }));
     });
 
     it('should store errors in errors map on error start', () => {
@@ -834,9 +826,7 @@ describe('ExchangeEventHelper', () => {
         exchangeError: { errorId: 'exe-1', endError: {} },
       });
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'exe-1' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'exe-1' }));
     });
 
     it('should not throw when error end occurs without any handler', () => {

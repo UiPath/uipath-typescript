@@ -11,7 +11,7 @@ export interface OperationResponse<TData> {
    * Whether the operation was successful
    */
   success: boolean;
-  
+
   /**
    * Response data (can contain error details in case of failure)
    */
@@ -30,7 +30,7 @@ export enum JobState {
   Successful = 'Successful',
   Stopped = 'Stopped',
   Suspended = 'Suspended',
-  Resumed = 'Resumed'
+  Resumed = 'Resumed',
 }
 
 export interface BaseOptions {

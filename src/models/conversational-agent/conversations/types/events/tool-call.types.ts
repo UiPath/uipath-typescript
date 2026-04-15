@@ -7,7 +7,14 @@
  */
 
 import type { MakeRequired } from '..';
-import type { ErrorEndEvent, ErrorStartEvent, MetaEvent, ToolCallEndEvent, ToolCallEvent, ToolCallStartEvent } from './protocol.types';
+import type {
+  ErrorEndEvent,
+  ErrorStartEvent,
+  MetaEvent,
+  ToolCallEndEvent,
+  ToolCallEvent,
+  ToolCallStartEvent,
+} from './protocol.types';
 
 /**
  * Aggregated data for a completed tool call
@@ -15,9 +22,10 @@ import type { ErrorEndEvent, ErrorStartEvent, MetaEvent, ToolCallEndEvent, ToolC
  * Contains the merged start and end event data
  * available after a tool call has ended.
  */
-export type CompletedToolCall = ToolCallStartEvent & ToolCallEndEvent & {
-  toolCallId: string;
-};
+export type CompletedToolCall = ToolCallStartEvent &
+  ToolCallEndEvent & {
+    toolCallId: string;
+  };
 
 /**
  * Consumer-facing model for tool call event helpers.

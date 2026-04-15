@@ -14,9 +14,10 @@ export const API_ENDPOINTS = {
   // Resource Catalog endpoints
   RESOURCE_CATALOG_ENTITIES: '/resourcecatalog_/Entities/{resourceType}',
   // Connections endpoint
-  CONNECTIONS_RETRIEVE: '/orchestrator_/odata/Connections(\'{connectionKey}\')',
+  CONNECTIONS_RETRIEVE: "/orchestrator_/odata/Connections('{connectionKey}')",
   // Referenced Resources endpoint
-  STUDIO_WEB_CREATE_REFERENCED_RESOURCE: '/studio_/backend/api/resourcebuilder/solutions/{solutionId}/resources/reference',
+  STUDIO_WEB_CREATE_REFERENCED_RESOURCE:
+    '/studio_/backend/api/resourcebuilder/solutions/{solutionId}/resources/reference',
   // Deploy endpoints
   DEPLOYED_APPS: '/apps_/default/api/v1/default/models/deployed/apps',
   DEPLOY_APP: '/apps_/default/api/v1/default/models/{systemName}/publish/versions/1/deploy',
@@ -28,7 +29,7 @@ export const API_ENDPOINTS = {
   // List all projects owned by or shared with the user
   STUDIO_WEB_LIST_PROJECTS: '/studio_/backend/api/Project',
   // Validate OAuth client exists
-  VALIDATE_CLIENT: '/identity_/api/ExternalClient/{orgId}/{clientId}'
+  VALIDATE_CLIENT: '/identity_/api/ExternalClient/{orgId}/{clientId}',
 } as const;
 
 /** Studio Web API request headers */

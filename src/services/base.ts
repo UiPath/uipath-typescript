@@ -7,7 +7,7 @@ import {
   PaginationServiceAccess,
   PaginationFieldNames,
   PaginationDetectionInfo,
-  RequestWithPaginationOptions
+  RequestWithPaginationOptions,
 } from '../utils/pagination/internal-types';
 import { PaginationManager } from '../utils/pagination/pagination-manager';
 import { PaginationHelpers } from '../utils/pagination/helpers';
@@ -91,8 +91,12 @@ export class BaseService {
     return {
       get: <T>(path: string, options?: RequestSpec) => this.get<T>(path, options || {}),
       post: <T>(path: string, body?: unknown, options?: RequestSpec) => this.post<T>(path, body, options || {}),
-      requestWithPagination: <T>(method: string, path: string, paginationOptions: PaginationOptions, options: RequestWithPaginationOptions) =>
-        this.requestWithPagination<T>(method, path, paginationOptions, options)
+      requestWithPagination: <T>(
+        method: string,
+        path: string,
+        paginationOptions: PaginationOptions,
+        options: RequestWithPaginationOptions,
+      ) => this.requestWithPagination<T>(method, path, paginationOptions, options),
     };
   }
 
@@ -152,7 +156,7 @@ export class BaseService {
     method: string,
     path: string,
     paginationOptions: PaginationOptions,
-    options: RequestWithPaginationOptions
+    options: RequestWithPaginationOptions,
   ): Promise<PaginatedResponse<T>> {
     const paginationType = options.pagination.paginationType;
 
@@ -164,17 +168,18 @@ export class BaseService {
 
     // For POST requests, merge pagination params into body; for GET, use query params
     if (method.toUpperCase() === 'POST') {
-      const existingBody = (options.body && typeof options.body === 'object') ? options.body as Record<string, unknown> : {};
+      const existingBody =
+        options.body && typeof options.body === 'object' ? (options.body as Record<string, unknown>) : {};
       options.body = {
         ...existingBody,
         ...options.params,
-        ...requestParams
+        ...requestParams,
       };
     } else {
       // Merge pagination parameters with existing parameters
       options.params = {
         ...options.params,
-        ...requestParams
+        ...requestParams,
       };
     }
 
@@ -182,16 +187,11 @@ export class BaseService {
     const response = await this.request<any>(method, path, options);
 
     // Extract data from the response and create page result
-    return this.createPaginatedResponseFromResponse<T>(
-      response,
-      params,
-      paginationType,
-      {
-        itemsField: options.pagination.itemsField,
-        totalCountField: options.pagination.totalCountField,
-        continuationTokenField: options.pagination.continuationTokenField
-      }
-    );
+    return this.createPaginatedResponseFromResponse<T>(response, params, paginationType, {
+      itemsField: options.pagination.itemsField,
+      totalCountField: options.pagination.totalCountField,
+      continuationTokenField: options.pagination.continuationTokenField,
+    });
   }
 
   /**
@@ -199,7 +199,7 @@ export class BaseService {
    */
   private validateAndPreparePaginationParams(
     paginationType: PaginationType,
-    paginationOptions: PaginationOptions
+    paginationOptions: PaginationOptions,
   ): InternalPaginationOptions {
     return PaginationHelpers.validatePaginationOptions(paginationOptions, paginationType);
   }
@@ -210,20 +210,20 @@ export class BaseService {
   private preparePaginationRequestParams(
     paginationType: PaginationType,
     params: InternalPaginationOptions,
-    paginationConfig?: RequestWithPaginationOptions['pagination']
+    paginationConfig?: RequestWithPaginationOptions['pagination'],
   ): Record<string, any> {
     const requestParams: Record<string, any> = {};
     let limitedPageSize: number;
-    
+
     const paginationParams = paginationConfig?.paginationParams;
-    
+
     switch (paginationType) {
       case PaginationType.OFFSET:
         limitedPageSize = getLimitedPageSize(params.pageSize);
         const pageSizeParam = paginationParams?.pageSizeParam || ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM;
         const offsetParam = paginationParams?.offsetParam || ODATA_OFFSET_PARAMS.OFFSET_PARAM;
         const countParam = paginationParams?.countParam || ODATA_OFFSET_PARAMS.COUNT_PARAM;
-        
+
         requestParams[pageSizeParam] = limitedPageSize;
         if (params.pageNumber && params.pageNumber > 1) {
           requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
@@ -233,11 +233,11 @@ export class BaseService {
           requestParams[countParam] = true;
         }
         break;
-        
+
       case PaginationType.TOKEN:
         const tokenPageSizeParam = paginationParams?.pageSizeParam || BUCKET_TOKEN_PARAMS.PAGE_SIZE_PARAM;
         const tokenParam = paginationParams?.tokenParam || BUCKET_TOKEN_PARAMS.TOKEN_PARAM;
-        
+
         if (params.pageSize) {
           requestParams[tokenPageSizeParam] = getLimitedPageSize(params.pageSize);
         }
@@ -257,11 +257,10 @@ export class BaseService {
     response: ApiResponse<any>,
     params: InternalPaginationOptions,
     paginationType: PaginationType,
-    fields: PaginationFieldNames
+    fields: PaginationFieldNames,
   ): PaginatedResponse<T> {
     // Extract fields from response
-    const itemsField = fields.itemsField ||
-      (paginationType === PaginationType.TOKEN ? 'items' : 'value');
+    const itemsField = fields.itemsField || (paginationType === PaginationType.TOKEN ? 'items' : 'value');
 
     const totalCountField = fields.totalCountField || 'totalRecordCount';
 
@@ -271,19 +270,16 @@ export class BaseService {
     const items = response.data[itemsField] || [];
     const totalCount = response.data[totalCountField];
     const continuationToken = response.data[continuationTokenField];
-    
+
     // Determine if there are more pages
-    const hasMore = this.determineHasMorePages(
-      paginationType,
-      {
-        totalCount,
-        pageSize: params.pageSize,
-        currentPage: params.pageNumber || 1,
-        itemsCount: items.length,
-        continuationToken
-      }
-    );
-    
+    const hasMore = this.determineHasMorePages(paginationType, {
+      totalCount,
+      pageSize: params.pageSize,
+      currentPage: params.pageNumber || 1,
+      itemsCount: items.length,
+      continuationToken,
+    });
+
     // Create and return the page result
     return PaginationManager.createPaginatedResponse<T>(
       {
@@ -292,37 +288,34 @@ export class BaseService {
           totalCount,
           currentPage: params.pageNumber,
           pageSize: params.pageSize,
-          continuationToken
+          continuationToken,
         },
         type: paginationType,
       },
-      items
+      items,
     );
   }
 
   /**
    * Determines if there are more pages based on pagination type and metadata
    */
-  private determineHasMorePages(
-    paginationType: PaginationType,
-    info: PaginationDetectionInfo
-  ): boolean {
+  private determineHasMorePages(paginationType: PaginationType, info: PaginationDetectionInfo): boolean {
     switch (paginationType) {
       case PaginationType.OFFSET:
         const effectivePageSize = info.pageSize ?? DEFAULT_PAGE_SIZE;
-        
+
         // If totalCount is available, use it for precise calculation
         if (info.totalCount !== undefined) {
-          return (info.currentPage * effectivePageSize) < info.totalCount;
+          return info.currentPage * effectivePageSize < info.totalCount;
         }
-        
+
         // Fallback when totalCount is not available
         // NOTE: This code path should rarely be executed as the APIs typically return totalCount
         return info.itemsCount === effectivePageSize;
-        
+
       case PaginationType.TOKEN:
         return !!info.continuationToken;
-        
+
       default:
         return false;
     }

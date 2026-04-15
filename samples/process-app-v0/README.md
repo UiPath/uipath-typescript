@@ -5,6 +5,7 @@ A sample React TypeScript application for managing UiPath Maestro processes with
 ## Installation
 
 To install the sdk do
+
 ```bash
 npm install @uipath/uipath-typescript
 ```
@@ -31,6 +32,7 @@ npm install @uipath/uipath-typescript
 ### 3. Environment Configuration
 
 1. Copy the environment template:
+
    ```bash
    cp .env.example .env
    ```
@@ -48,6 +50,7 @@ npm install @uipath/uipath-typescript
 ### 4. Installation and Running
 
 Update your orgName in vite.config.ts in this section:
+
 ```
  server: {
     proxy: {
@@ -60,14 +63,17 @@ Update your orgName in vite.config.ts in this section:
     },
   }
 ```
+
 This above setup is for CORS Issue for local development, it creates a local proxy using vite server config
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -102,16 +108,19 @@ src/
 ## Key Features
 
 ### Dashboard
+
 - Live process statistics (total, running, completed, failed)
 - System status indicators
 - Quick action buttons
 
 ### Process Management
+
 - View all Maestro processes with statistics
 - Start process instances
 - Real-time status updates
 
 ### Process Instances
+
 - Monitor running and completed instances
 - View execution status and duration
 - Sortable table interface

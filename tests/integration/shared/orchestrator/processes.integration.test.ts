@@ -102,7 +102,7 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
             timestamp: new Date().toISOString(),
           }),
         },
-        folderId!
+        folderId!,
       );
 
       expect(result).toBeDefined();
@@ -128,7 +128,7 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
         {
           processKey: processKey!,
         },
-        folderId!
+        folderId!,
       );
 
       expect(result).toBeDefined();

@@ -1,4 +1,7 @@
-import { ActionCenterEventNames, ActionCenterEventResponsePayload } from '../../models/action-center/tasks.internal-types';
+import {
+  ActionCenterEventNames,
+  ActionCenterEventResponsePayload,
+} from '../../models/action-center/tasks.internal-types';
 import { TokenInfo } from './types';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { Config } from '../config/config';
@@ -11,7 +14,7 @@ export class ActionCenterTokenManager {
 
   constructor(
     private readonly config: Config,
-    private readonly onTokenRefreshed: (tokenInfo: TokenInfo) => void
+    private readonly onTokenRefreshed: (tokenInfo: TokenInfo) => void,
   ) {}
 
   async refreshAccessToken(tokenInfo: TokenInfo): Promise<string> {
@@ -27,7 +30,7 @@ export class ActionCenterTokenManager {
       const content = {
         clientId: this.config.clientId,
         scope: this.config.scope,
-      }
+      };
       this.sendMessageToParent(ActionCenterEventNames.REFRESHTOKEN, content);
 
       const messageListener = (event: MessageEvent<ActionCenterEventResponsePayload>) => {
@@ -41,10 +44,12 @@ export class ActionCenterTokenManager {
           this.onTokenRefreshed({ token: accessToken, type: 'secret', expiresAt });
           resolve(accessToken);
         } else {
-          reject(new AuthenticationError({
-            message: 'Failed to fetch access token',
-            statusCode: HttpStatus.UNAUTHORIZED,
-          }));
+          reject(
+            new AuthenticationError({
+              message: 'Failed to fetch access token',
+              statusCode: HttpStatus.UNAUTHORIZED,
+            }),
+          );
         }
 
         this.refreshPromise = null;
@@ -52,10 +57,12 @@ export class ActionCenterTokenManager {
       };
 
       const timer = setTimeout(() => {
-        reject(new AuthenticationError({
-          message: 'Failed to fetch access token',
-          statusCode: HttpStatus.UNAUTHORIZED,
-        }));
+        reject(
+          new AuthenticationError({
+            message: 'Failed to fetch access token',
+            statusCode: HttpStatus.UNAUTHORIZED,
+          }),
+        );
 
         this.refreshPromise = null;
         this.cleanup(messageListener);

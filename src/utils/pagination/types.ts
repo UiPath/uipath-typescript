@@ -10,7 +10,7 @@ export interface PaginationCursor {
 /**
  * Discriminated union for pagination methods - ensures cursor and jumpToPage are mutually exclusive
  */
-export type PaginationMethodUnion = 
+export type PaginationMethodUnion =
   | { cursor?: PaginationCursor; jumpToPage?: never }
   | { cursor?: never; jumpToPage?: number }
   | { cursor?: never; jumpToPage?: never };
@@ -29,28 +29,28 @@ export type PaginationOptions = {
 export interface PaginatedResponse<T> {
   /** The items in the current page */
   items: T[];
-  
+
   /** Total count of items across all pages (if available) */
   totalCount?: number;
-  
+
   /** Whether more pages are available */
   hasNextPage: boolean;
-  
+
   /** Cursor to fetch the next page (if available) */
   nextCursor?: PaginationCursor;
-  
+
   /** Cursor to fetch the previous page (if available) */
   previousCursor?: PaginationCursor;
-  
+
   /** Current page number (1-based, if available) */
   currentPage?: number;
-  
+
   /** Total number of pages (if available) */
   totalPages?: number;
-  
+
   /** Whether this pagination type supports jumping to arbitrary pages */
   supportsPageJump: boolean;
-} 
+}
 
 /**
  * Response for non-paginated calls that includes both data and total count
@@ -64,7 +64,7 @@ export interface NonPaginatedResponse<T> {
  * Helper type for defining paginated method overloads
  * Creates a union type of all ways pagination can be triggered
  */
-export type HasPaginationOptions<T> = 
+export type HasPaginationOptions<T> =
   | (T & { pageSize: number })
   | (T & { cursor: PaginationCursor })
-  | (T & { jumpToPage: number }); 
+  | (T & { jumpToPage: number });

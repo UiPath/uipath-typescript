@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { 
+import {
   createProcessInstanceWithMethods,
-  ProcessInstancesServiceModel
+  ProcessInstancesServiceModel,
 } from '../../../../src/models/maestro/process-instances.models';
-import { 
+import {
   MAESTRO_TEST_CONSTANTS,
   TEST_CONSTANTS,
   createMockOperationResponse,
   createMockProcessInstance,
   createMockExecutionHistory,
   createMockProcessVariables,
-  createMockBpmnWithVariables
+  createMockBpmnWithVariables,
 } from '../../../utils/mocks';
-import type { 
+import type {
   ProcessInstanceOperationOptions,
   ProcessInstanceGetVariablesOptions,
 } from '../../../../src/models/maestro/process-instances.types';
@@ -31,7 +31,7 @@ describe('Process Instance Models', () => {
       cancel: vi.fn(),
       pause: vi.fn(),
       resume: vi.fn(),
-      getVariables: vi.fn()
+      getVariables: vi.fn(),
     } as any;
   });
 
@@ -44,43 +44,39 @@ describe('Process Instance Models', () => {
       it('should call processInstance.cancel with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          status: TEST_CONSTANTS.CANCELLED
+          status: TEST_CONSTANTS.CANCELLED,
         });
         mockService.cancel = vi.fn().mockResolvedValue(mockResponse);
 
-        
         await instance.cancel();
 
-        
         expect(mockService.cancel).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          undefined
+          undefined,
         );
       });
 
       it('should call processInstance.cancel with bound parameters and options', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          status: TEST_CONSTANTS.CANCELLED
+          status: TEST_CONSTANTS.CANCELLED,
         });
         const options: ProcessInstanceOperationOptions = { comment: 'Test cancellation' };
         mockService.cancel = vi.fn().mockResolvedValue(mockResponse);
 
-        
         await instance.cancel(options);
 
-        
         expect(mockService.cancel).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          options
+          options,
         );
       });
 
@@ -89,7 +85,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.cancel()).rejects.toThrow('Process instance ID is undefined');
       });
 
@@ -98,7 +93,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.cancel()).rejects.toThrow('Process instance folder key is undefined');
       });
     });
@@ -107,43 +101,39 @@ describe('Process Instance Models', () => {
       it('should call processInstance.pause with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          status: TEST_CONSTANTS.CANCELLED
+          status: TEST_CONSTANTS.CANCELLED,
         });
         mockService.pause = vi.fn().mockResolvedValue(mockResponse);
 
-        
         await instance.pause();
 
-        
         expect(mockService.pause).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          undefined
+          undefined,
         );
       });
 
       it('should call processInstance.pause with bound parameters and options', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          status: TEST_CONSTANTS.CANCELLED
+          status: TEST_CONSTANTS.CANCELLED,
         });
         const options: ProcessInstanceOperationOptions = { comment: 'Test pause' };
         mockService.pause = vi.fn().mockResolvedValue(mockResponse);
 
-        
         await instance.pause(options);
 
-        
         expect(mockService.pause).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          options
+          options,
         );
       });
 
@@ -152,7 +142,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.pause()).rejects.toThrow('Process instance ID is undefined');
       });
 
@@ -161,7 +150,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.pause()).rejects.toThrow('Process instance folder key is undefined');
       });
     });
@@ -170,43 +158,39 @@ describe('Process Instance Models', () => {
       it('should call processInstance.resume with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          status: TEST_CONSTANTS.CANCELLED
+          status: TEST_CONSTANTS.CANCELLED,
         });
         mockService.resume = vi.fn().mockResolvedValue(mockResponse);
 
-        
         await instance.resume();
 
-        
         expect(mockService.resume).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          undefined
+          undefined,
         );
       });
 
       it('should call service.resume with bound parameters and options', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          status: TEST_CONSTANTS.CANCELLED
+          status: TEST_CONSTANTS.CANCELLED,
         });
         const options: ProcessInstanceOperationOptions = { comment: 'Test resume' };
         mockService.resume = vi.fn().mockResolvedValue(mockResponse);
 
-        
         await instance.resume(options);
 
-        
         expect(mockService.resume).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          options
+          options,
         );
       });
 
@@ -215,7 +199,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.resume()).rejects.toThrow('Process instance ID is undefined');
       });
 
@@ -224,7 +207,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.resume()).rejects.toThrow('Process instance folder key is undefined');
       });
     });
@@ -233,17 +215,13 @@ describe('Process Instance Models', () => {
       it('should call processInstance.getExecutionHistory with bound instanceId', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockHistory = [createMockExecutionHistory()];
         mockService.getExecutionHistory = vi.fn().mockResolvedValue(mockHistory);
 
-        
         const result = await instance.getExecutionHistory();
 
-        
-        expect(mockService.getExecutionHistory).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.INSTANCE_ID
-        );
+        expect(mockService.getExecutionHistory).toHaveBeenCalledWith(MAESTRO_TEST_CONSTANTS.INSTANCE_ID);
         expect(result).toEqual(mockHistory);
       });
 
@@ -252,7 +230,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.getExecutionHistory()).rejects.toThrow('Process instance ID is undefined');
       });
     });
@@ -261,17 +238,15 @@ describe('Process Instance Models', () => {
       it('should call processInstance.getBpmn with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockBpmn = createMockBpmnWithVariables({ processId: 'SimpleProcess' });
         mockService.getBpmn = vi.fn().mockResolvedValue(mockBpmn);
 
-        
         const result = await instance.getBpmn();
 
-        
         expect(mockService.getBpmn).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          MAESTRO_TEST_CONSTANTS.FOLDER_KEY
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
         );
         expect(result).toBe(mockBpmn);
       });
@@ -281,7 +256,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.getBpmn()).rejects.toThrow('Process instance ID is undefined');
       });
 
@@ -290,7 +264,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.getBpmn()).rejects.toThrow('Process instance folder key is undefined');
       });
     });
@@ -299,18 +272,16 @@ describe('Process Instance Models', () => {
       it('should call processInstance.getVariables with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockVariables = createMockProcessVariables();
         mockService.getVariables = vi.fn().mockResolvedValue(mockVariables);
 
-        
         const result = await instance.getVariables();
 
-        
         expect(mockService.getVariables).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockVariables);
       });
@@ -318,24 +289,24 @@ describe('Process Instance Models', () => {
       it('should call service.getVariables with bound parameters and options', async () => {
         const mockInstanceData = createMockProcessInstance();
         const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockVariables = {
           elements: [],
           globalVariables: [],
           instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID
+          parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID,
         };
-        const options: ProcessInstanceGetVariablesOptions = { parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID };
+        const options: ProcessInstanceGetVariablesOptions = {
+          parentElementId: MAESTRO_TEST_CONSTANTS.PARENT_ELEMENT_ID,
+        };
         mockService.getVariables = vi.fn().mockResolvedValue(mockVariables);
 
-        
         const result = await instance.getVariables(options);
 
-        
         expect(mockService.getVariables).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          options
+          options,
         );
         expect(result).toEqual(mockVariables);
       });
@@ -345,7 +316,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.getVariables()).rejects.toThrow('Process instance ID is undefined');
       });
 
@@ -354,7 +324,6 @@ describe('Process Instance Models', () => {
         const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
         const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
 
-        
         await expect(invalidInstance.getVariables()).rejects.toThrow('Process instance folder key is undefined');
       });
     });
@@ -363,10 +332,9 @@ describe('Process Instance Models', () => {
   describe('createProcessInstanceWithMethods', () => {
     it('should create instance with all bound methods', () => {
       const mockInstanceData = createMockProcessInstance();
-      
+
       const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
 
-      
       expect(instance).toHaveProperty('instanceId', MAESTRO_TEST_CONSTANTS.INSTANCE_ID);
       expect(instance).toHaveProperty('folderKey', MAESTRO_TEST_CONSTANTS.FOLDER_KEY);
       expect(instance).toHaveProperty('cancel');
@@ -379,16 +347,14 @@ describe('Process Instance Models', () => {
 
     it('should preserve all original instance data', () => {
       const mockInstanceData = createMockProcessInstance();
-      
+
       const instance = createProcessInstanceWithMethods(mockInstanceData, mockService);
 
-      
       expect(instance.instanceId).toBe(mockInstanceData.instanceId);
       expect(instance.packageId).toBe(mockInstanceData.packageId);
       expect(instance.processKey).toBe(mockInstanceData.processKey);
       expect(instance.folderKey).toBe(mockInstanceData.folderKey);
       expect(instance.latestRunStatus).toBe(mockInstanceData.latestRunStatus);
     });
-
   });
 });

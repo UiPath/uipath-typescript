@@ -15,7 +15,7 @@ export class NetworkError extends UiPathError {
     super(ErrorType.NETWORK, {
       message: params.message || ErrorMessages.NETWORK_ERROR,
       statusCode: params.statusCode, // Network errors typically don't have HTTP status codes
-      requestId: params.requestId
+      requestId: params.requestId,
     });
   }
 }

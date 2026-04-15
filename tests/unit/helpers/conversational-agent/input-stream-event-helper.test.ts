@@ -18,7 +18,10 @@ const createInputStream = () => {
   const manager = new ConversationEventHelperManagerImpl({ emit: emitSpy });
   manager.onUnhandledErrorStart(vi.fn());
   const session = manager.startSession({ conversationId: CONVERSATION_ID }) as SessionEventHelperImpl;
-  const stream = session.startAsyncInputStream({ streamId: STREAM_ID, mimeType: 'audio/wav' }) as AsyncInputStreamEventHelperImpl;
+  const stream = session.startAsyncInputStream({
+    streamId: STREAM_ID,
+    mimeType: 'audio/wav',
+  }) as AsyncInputStreamEventHelperImpl;
   emitSpy.mockClear();
   return { emitSpy, manager, session, stream };
 };
@@ -70,7 +73,7 @@ describe('AsyncInputStreamEventHelper', () => {
             streamId: STREAM_ID,
             metaEvent: { key: 'val' },
           }),
-        })
+        }),
       );
     });
   });
@@ -87,7 +90,7 @@ describe('AsyncInputStreamEventHelper', () => {
             streamId: STREAM_ID,
             chunk: { data: 'audio data' },
           }),
-        })
+        }),
       );
     });
 
@@ -111,7 +114,7 @@ describe('AsyncInputStreamEventHelper', () => {
             streamId: STREAM_ID,
             metaEvent: { key: 'meta' },
           }),
-        })
+        }),
       );
     });
 
@@ -140,7 +143,7 @@ describe('AsyncInputStreamEventHelper', () => {
             streamId: STREAM_ID,
             endAsyncInputStream: {},
           }),
-        })
+        }),
       );
     });
 
@@ -227,9 +230,7 @@ describe('AsyncInputStreamEventHelper', () => {
         },
       });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'is-err-1' })
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'is-err-1' }));
     });
 
     it('should dispatch asyncInputStreamError end', () => {
@@ -246,9 +247,7 @@ describe('AsyncInputStreamEventHelper', () => {
         asyncInputStreamError: { errorId: 'is-err-1', endError: {} },
       });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'is-err-1' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'is-err-1' }));
     });
 
     it('should ignore events for different streamId', () => {
@@ -292,7 +291,7 @@ describe('AsyncInputStreamEventHelper', () => {
               startError: expect.objectContaining({ message: 'stream fail' }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -311,7 +310,7 @@ describe('AsyncInputStreamEventHelper', () => {
               endError: expect.any(Object),
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -452,9 +451,7 @@ describe('AsyncInputStreamEventHelper', () => {
         asyncInputStreamError: { errorId: 'ise-1', startError: { message: 'err' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'ise-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'ise-1' }));
     });
 
     it('should dispatch to unhandled when no local handler exists', () => {
@@ -467,9 +464,7 @@ describe('AsyncInputStreamEventHelper', () => {
         asyncInputStreamError: { errorId: 'ise-1', startError: { message: 'unhandled' } },
       });
 
-      expect(unhandledSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'ise-1' })
-      );
+      expect(unhandledSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'ise-1' }));
     });
 
     it('should store errors in errors map on error start', () => {
@@ -529,9 +524,7 @@ describe('AsyncInputStreamEventHelper', () => {
         asyncInputStreamError: { errorId: 'ise-end-1', endError: {} },
       });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'ise-end-1' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'ise-end-1' }));
     });
 
     it('should dispatch error end to manager anyErrorEnd', () => {
@@ -545,16 +538,17 @@ describe('AsyncInputStreamEventHelper', () => {
         asyncInputStreamError: { errorId: 'ise-any-end', endError: {} },
       });
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'ise-any-end' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'ise-any-end' }));
     });
 
     it('should not throw when error end occurs without any handler', () => {
       const emitSpy = vi.fn();
       const manager = new ConversationEventHelperManagerImpl({ emit: emitSpy });
       const session = manager.startSession({ conversationId: CONVERSATION_ID }) as SessionEventHelperImpl;
-      const stream = session.startAsyncInputStream({ streamId: 'no-handler-stream', mimeType: 'audio/wav' }) as AsyncInputStreamEventHelperImpl;
+      const stream = session.startAsyncInputStream({
+        streamId: 'no-handler-stream',
+        mimeType: 'audio/wav',
+      }) as AsyncInputStreamEventHelperImpl;
 
       expect(() => {
         stream.dispatch({

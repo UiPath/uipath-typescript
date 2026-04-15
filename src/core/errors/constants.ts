@@ -14,7 +14,7 @@ export const HttpStatus = {
   NOT_IMPLEMENTED: 501,
   BAD_GATEWAY: 502,
   SERVICE_UNAVAILABLE: 503,
-  GATEWAY_TIMEOUT: 504
+  GATEWAY_TIMEOUT: 504,
 } as const;
 
 /**
@@ -27,14 +27,14 @@ export const ErrorType = {
   NOT_FOUND: 'NotFoundError',
   RATE_LIMIT: 'RateLimitError',
   SERVER: 'ServerError',
-  NETWORK: 'NetworkError'
+  NETWORK: 'NetworkError',
 } as const;
 
 /**
  * HTTP header constants for error handling
  */
 export const HttpHeaders = {
-  X_REQUEST_ID: 'x-request-id'
+  X_REQUEST_ID: 'x-request-id',
 } as const;
 
 /**
@@ -43,29 +43,28 @@ export const HttpHeaders = {
 export const ErrorMessages = {
   // Authentication errors
   AUTHENTICATION_FAILED: 'Authentication failed',
-  
-  // Authorization errors  
+
+  // Authorization errors
   ACCESS_DENIED: 'Access denied',
-  
+
   // Validation errors
   VALIDATION_FAILED: 'Validation failed',
-  
+
   // Not found errors
   RESOURCE_NOT_FOUND: 'Resource not found',
   FOLDER_NOT_FOUND: 'Folder not found',
-  
+
   // Rate limit errors
   RATE_LIMIT_EXCEEDED: 'Rate limit exceeded',
   TOO_MANY_REQUESTS: 'Too many requests',
-  
+
   // Server errors
   INTERNAL_SERVER_ERROR: 'Internal Server error occurred',
-  
+
   // Network errors
   NETWORK_ERROR: 'Network error occurred',
   REQUEST_TIMEOUT: 'Request timed out',
   REQUEST_ABORTED: 'Request was aborted',
-
 } as const;
 
 /**
@@ -73,6 +72,5 @@ export const ErrorMessages = {
  */
 export const ErrorNames = {
   ABORT_ERROR: 'AbortError',
-  TIMEOUT_ERROR: 'TimeoutError'
+  TIMEOUT_ERROR: 'TimeoutError',
 } as const;
-

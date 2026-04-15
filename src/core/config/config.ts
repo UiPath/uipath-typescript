@@ -7,7 +7,7 @@ export const ConfigSchema = z.object({
   secret: z.string().optional(),
   clientId: z.string().optional(),
   redirectUri: z.string().url().optional(),
-  scope: z.string().optional()
+  scope: z.string().optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

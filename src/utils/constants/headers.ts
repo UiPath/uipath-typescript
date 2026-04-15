@@ -1,12 +1,12 @@
-export const  FOLDER_KEY = 'X-UIPATH-FolderKey';
-export const  FOLDER_PATH = 'X-UIPATH-FolderPath';
-export const  USER_AGENT = 'X-UIPATH-UserAgent';
-export const  TENANT_ID = 'X-UIPATH-Internal-TenantId';
-export const  ACCOUNT_ID = 'X-UIPATH-Internal-AccountId';
-export const  CORRELATION_ID = 'X-UIPATH-Correlation-Id';
-export const  JOB_KEY = 'X-UIPATH-JobKey';
-export const  FOLDER_ID = 'X-UIPATH-OrganizationUnitId';
-export const  INSTANCE_ID = 'X-UIPATH-InstanceId';
+export const FOLDER_KEY = 'X-UIPATH-FolderKey';
+export const FOLDER_PATH = 'X-UIPATH-FolderPath';
+export const USER_AGENT = 'X-UIPATH-UserAgent';
+export const TENANT_ID = 'X-UIPATH-Internal-TenantId';
+export const ACCOUNT_ID = 'X-UIPATH-Internal-AccountId';
+export const CORRELATION_ID = 'X-UIPATH-Correlation-Id';
+export const JOB_KEY = 'X-UIPATH-JobKey';
+export const FOLDER_ID = 'X-UIPATH-OrganizationUnitId';
+export const INSTANCE_ID = 'X-UIPATH-InstanceId';
 
 /**
  * Content type constants for HTTP requests/responses
@@ -14,7 +14,7 @@ export const  INSTANCE_ID = 'X-UIPATH-InstanceId';
 export const CONTENT_TYPES = {
   JSON: 'application/json',
   XML: 'application/xml',
-  OCTET_STREAM: 'application/octet-stream'
+  OCTET_STREAM: 'application/octet-stream',
 } as const;
 
 /**
@@ -24,7 +24,7 @@ export const RESPONSE_TYPES = {
   JSON: 'json',
   TEXT: 'text',
   BLOB: 'blob',
-  ARRAYBUFFER: 'arraybuffer'
+  ARRAYBUFFER: 'arraybuffer',
 } as const;
 
 /**
@@ -33,5 +33,5 @@ export const RESPONSE_TYPES = {
 export const WEBSOCKET_QUERY_PARAMS = {
   ORGANIZATION_ID: 'x-uipath-internal-accountid',
   TENANT_ID: 'x-uipath-internal-tenantid',
-  EXTERNAL_USER_ID: 'x-uipath-external-user-id'
+  EXTERNAL_USER_ID: 'x-uipath-external-user-id',
 } as const;

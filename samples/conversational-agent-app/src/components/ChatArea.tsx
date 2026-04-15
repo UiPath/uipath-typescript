@@ -2,12 +2,12 @@
  * ChatArea - Main chat interface composing message list and input
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { useConversationalAgent } from '../context/ConversationalAgentContext'
-import { MessageBubble } from './MessageBubble'
-import { WelcomeScreen } from './WelcomeScreen'
-import { ChatInput } from './ChatInput'
-import { Spinner } from './Spinner'
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useConversationalAgent } from '../context/ConversationalAgentContext';
+import { MessageBubble } from './MessageBubble';
+import { WelcomeScreen } from './WelcomeScreen';
+import { ChatInput } from './ChatInput';
+import { Spinner } from './Spinner';
 
 export function ChatArea() {
   const {
@@ -21,43 +21,49 @@ export function ChatArea() {
     loadMoreExchanges,
     submitFeedback,
     resolveInterrupt,
-  } = useConversationalAgent()
+  } = useConversationalAgent();
 
-  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Send pending message once conversation is created
   useEffect(() => {
     if (currentConversation && pendingMessage) {
-      sendMessage(pendingMessage)
-      setPendingMessage(null)
+      sendMessage(pendingMessage);
+      setPendingMessage(null);
     }
-  }, [currentConversation, pendingMessage, sendMessage])
+  }, [currentConversation, pendingMessage, sendMessage]);
 
-  const handleSuggestionClick = useCallback(async (suggestion: string) => {
-    if (!selectedAgent) return
-    setPendingMessage(suggestion)
-    await createConversation()
-  }, [selectedAgent, createConversation])
+  const handleSuggestionClick = useCallback(
+    async (suggestion: string) => {
+      if (!selectedAgent) return;
+      setPendingMessage(suggestion);
+      await createConversation();
+    },
+    [selectedAgent, createConversation],
+  );
 
-  const handleSubmit = useCallback(async (content: string, attachments: File[]) => {
-    await sendMessage(content, attachments)
-  }, [sendMessage])
+  const handleSubmit = useCallback(
+    async (content: string, attachments: File[]) => {
+      await sendMessage(content, attachments);
+    },
+    [sendMessage],
+  );
 
   const handleLoadMore = useCallback(async () => {
-    setIsLoadingMore(true)
+    setIsLoadingMore(true);
     try {
-      await loadMoreExchanges()
+      await loadMoreExchanges();
     } finally {
-      setIsLoadingMore(false)
+      setIsLoadingMore(false);
     }
-  }, [loadMoreExchanges])
+  }, [loadMoreExchanges]);
 
   // Welcome screen when no conversation selected
   if (!currentConversation) {
@@ -67,7 +73,7 @@ export function ChatArea() {
         onSuggestionClick={handleSuggestionClick}
         disabled={!!pendingMessage}
       />
-    )
+    );
   }
 
   return (
@@ -76,9 +82,7 @@ export function ChatArea() {
       <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
         <div>
           <h2 className="font-medium">{currentConversation.label || 'New Chat'}</h2>
-          <p className="text-sm text-gray-500">
-            {selectedAgent?.name || 'Agent'}
-          </p>
+          <p className="text-sm text-gray-500">{selectedAgent?.name || 'Agent'}</p>
         </div>
         <div className="flex items-center gap-2">
           {isStreaming && (
@@ -131,10 +135,7 @@ export function ChatArea() {
       </div>
 
       {/* Input area */}
-      <ChatInput
-        onSubmit={handleSubmit}
-        isStreaming={isStreaming}
-      />
+      <ChatInput onSubmit={handleSubmit} isStreaming={isStreaming} />
     </div>
-  )
+  );
 }

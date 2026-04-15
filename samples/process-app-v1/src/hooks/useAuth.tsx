@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
     const initializeAuth = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // Handle OAuth callback if present
         if (sdk.isInOAuthCallback()) {
@@ -39,14 +39,14 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
         setIsLoading(false);
       }
     };
-    
+
     initializeAuth();
   }, [sdk]);
 
   const login = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await sdk.initialize();
       setIsAuthenticated(sdk.isAuthenticated());

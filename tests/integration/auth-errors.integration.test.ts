@@ -17,7 +17,7 @@ function isForbiddenError(error: any, keywords: string[] = []): boolean {
     // Server may return HTML (redirect/error page) for invalid org/tenant,
     // causing a JSON parse error — this still indicates rejection
     (error instanceof SyntaxError && error.message?.includes('is not valid JSON')) ||
-    allKeywords.some(kw => error.message?.toLowerCase().includes(kw))
+    allKeywords.some((kw) => error.message?.toLowerCase().includes(kw))
   );
 }
 
@@ -31,7 +31,7 @@ function isNotFoundError(error: any, keywords: string[] = []): boolean {
   return (
     error.statusCode === 404 ||
     error.status === 404 ||
-    allKeywords.some(kw => error.message?.toLowerCase().includes(kw))
+    allKeywords.some((kw) => error.message?.toLowerCase().includes(kw))
   );
 }
 
@@ -53,7 +53,7 @@ function isConnectionError(error: any): boolean {
 async function expectApiToFail(
   apiCall: () => Promise<any>,
   errorValidator: (error: any) => boolean,
-  testDescription: string
+  testDescription: string,
 ): Promise<void> {
   try {
     await apiCall();
@@ -80,7 +80,7 @@ describe('Authentication & Authorization Errors - Integration Tests', () => {
       await expectApiToFail(
         () => sdk.queues.getAll(),
         (err) => isForbiddenError(err, ['invalid organization']),
-        'Invalid organization correctly rejected'
+        'Invalid organization correctly rejected',
       );
     });
   });
@@ -97,7 +97,7 @@ describe('Authentication & Authorization Errors - Integration Tests', () => {
       await expectApiToFail(
         () => sdk.queues.getAll(),
         (err) => isForbiddenError(err, ['invalid tenant']),
-        'Invalid tenant correctly rejected'
+        'Invalid tenant correctly rejected',
       );
     });
   });
@@ -118,11 +118,7 @@ describe('Authentication & Authorization Errors - Integration Tests', () => {
         error.status === 403 ||
         error.status === 404;
 
-      await expectApiToFail(
-        () => sdk.queues.getAll(),
-        errorValidator,
-        'Invalid base URL correctly rejected'
-      );
+      await expectApiToFail(() => sdk.queues.getAll(), errorValidator, 'Invalid base URL correctly rejected');
     });
 
     it('should receive error when requesting non-existent endpoint', async () => {
@@ -137,8 +133,7 @@ describe('Authentication & Authorization Errors - Integration Tests', () => {
         await sdk.queues.getById('00000000-0000-0000-0000-000000000000', 1);
         console.log('✓ Non-existent resource handled gracefully');
       } catch (error: any) {
-        const errorValidator = (err: any) =>
-          isNotFoundError(err) || isForbiddenError(err);
+        const errorValidator = (err: any) => isNotFoundError(err) || isForbiddenError(err);
 
         expect(error).toBeDefined();
         expect(errorValidator(error)).toBe(true);
@@ -159,7 +154,7 @@ describe('Authentication & Authorization Errors - Integration Tests', () => {
       await expectApiToFail(
         () => sdk.queues.getAll(),
         (err) => isForbiddenError(err, ['invalid token', 'authentication failed']),
-        'Invalid secret correctly rejected'
+        'Invalid secret correctly rejected',
       );
     });
   });
@@ -181,8 +176,7 @@ describe('Authentication & Authorization Errors - Integration Tests', () => {
         console.log('✓ Invalid folder ID handled (may return empty results)');
       } catch (error: any) {
         const errorValidator = (err: any) =>
-          isForbiddenError(err) ||
-          isNotFoundError(err, ['invalid folder', 'folder does not exist']);
+          isForbiddenError(err) || isNotFoundError(err, ['invalid folder', 'folder does not exist']);
 
         expect(error).toBeDefined();
         expect(errorValidator(error)).toBe(true);
@@ -235,18 +229,10 @@ describe('Authentication & Authorization Errors - Integration Tests', () => {
         expect(typeof error.message).toBe('string');
         expect(error.message.length).toBeGreaterThan(0);
 
-        return (
-          isForbiddenError(error) ||
-          error.statusCode !== undefined ||
-          error.status !== undefined
-        );
+        return isForbiddenError(error) || error.statusCode !== undefined || error.status !== undefined;
       };
 
-      await expectApiToFail(
-        () => sdk.queues.getAll(),
-        errorValidator,
-        'Error message contains useful information'
-      );
+      await expectApiToFail(() => sdk.queues.getAll(), errorValidator, 'Error message contains useful information');
     });
   });
 });

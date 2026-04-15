@@ -50,16 +50,16 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     const response = await this.get<{ processes: Omit<MaestroProcessGetAllResponse, 'name'>[] }>(
       MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
     );
-    
+
     // Extract processes array from response data and add name field
     const processes = response.data?.processes || [];
-    const processesWithName = processes.map(process => ({
+    const processesWithName = processes.map((process) => ({
       ...process,
-      name: process.packageId
+      name: process.packageId,
     }));
 
     // Add methods to each process
-    return processesWithName.map(process => createProcessWithMethods(process, this));
+    return processesWithName.map((process) => createProcessWithMethods(process, this));
   }
 
   /**
@@ -67,14 +67,11 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    */
   @track('MaestroProcesses.GetIncidents')
   async getIncidents(processKey: string, folderKey: string): Promise<ProcessIncidentGetResponse[]> {
-    const rawResponse = await this.get<any[]>(
-      MAESTRO_ENDPOINTS.INCIDENTS.GET_BY_PROCESS(processKey),
-      {
-        headers: createHeaders({ [FOLDER_KEY]: folderKey })
-      }
-    );
+    const rawResponse = await this.get<any[]>(MAESTRO_ENDPOINTS.INCIDENTS.GET_BY_PROCESS(processKey), {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+    });
 
     // Fetch BPMN XML and add element name/type to each incident
     return BpmnHelpers.enrichIncidentsWithBpmnData(rawResponse.data || [], folderKey, this.processInstancesService);
   }
-} 
+}

@@ -8,16 +8,13 @@
 export enum ConnectionStatus {
   Disconnected = 'Disconnected',
   Connecting = 'Connecting',
-  Connected = 'Connected'
+  Connected = 'Connected',
 }
 
 /**
  * Handler for connection status changes
  */
-export type ConnectionStatusChangedHandler = (
-  status: ConnectionStatus,
-  error: Error | null
-) => void;
+export type ConnectionStatusChangedHandler = (status: ConnectionStatus, error: Error | null) => void;
 
 /**
  * Log levels for WebSocket debugging
@@ -26,7 +23,7 @@ export enum LogLevel {
   Debug = 'debug',
   Info = 'info',
   Warn = 'warn',
-  Error = 'error'
+  Error = 'error',
 }
 
 /**

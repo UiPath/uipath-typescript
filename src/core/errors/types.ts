@@ -47,7 +47,7 @@ export interface EntityErrorResponse {
  *   "status": 400,
  *   "traceId": "70caeaf9b076437b8760eb9c6ba96cc4"
  * }
- * 
+ *
  * Alternative validation error format:
  * {
  *   "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
@@ -67,10 +67,9 @@ export interface PimsErrorResponse {
   traceId: string;
 }
 
-
 /**
  * Internal interface for normalized error data from different UiPath services.
- * This is used internally by error parsers to standardize responses before 
+ * This is used internally by error parsers to standardize responses before
  * creating UiPathError instances that users will interact with.
  */
 export interface ParsedErrorInfo {
@@ -80,13 +79,12 @@ export interface ParsedErrorInfo {
   requestId?: string;
 }
 
-
 /**
  * Union type for all HTTP-based errors that can be created from status codes
  */
-export type HttpError = 
+export type HttpError =
   | AuthenticationError
-  | AuthorizationError  
+  | AuthorizationError
   | ValidationError
   | NotFoundError
   | RateLimitError
@@ -104,28 +102,29 @@ export interface ErrorParams {
  * Type guards for error response types
  */
 export function isOrchestratorError(error: unknown): error is OrchestratorErrorResponse {
-  return typeof error === 'object' && 
-         error !== null &&
-         'message' in error &&
-         'errorCode' in error &&
-         typeof (error as any).message === 'string' &&
-         typeof (error as any).errorCode === 'number';
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    'errorCode' in error &&
+    typeof (error as any).message === 'string' &&
+    typeof (error as any).errorCode === 'number'
+  );
 }
 
 export function isEntityError(error: unknown): error is EntityErrorResponse {
-  return typeof error === 'object' && 
-         error !== null &&
-         'error' in error &&
-         typeof (error as any).error === 'string';
+  return typeof error === 'object' && error !== null && 'error' in error && typeof (error as any).error === 'string';
 }
 
 export function isPimsError(error: unknown): error is PimsErrorResponse {
-  return typeof error === 'object' && 
-         error !== null &&
-         'type' in error &&
-         'title' in error &&
-         'status' in error &&
-         typeof (error as any).type === 'string' &&
-         typeof (error as any).title === 'string' &&
-         typeof (error as any).status === 'number';
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    'title' in error &&
+    'status' in error &&
+    typeof (error as any).type === 'string' &&
+    typeof (error as any).title === 'string' &&
+    typeof (error as any).status === 'number'
+  );
 }

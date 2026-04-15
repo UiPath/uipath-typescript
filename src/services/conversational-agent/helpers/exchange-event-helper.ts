@@ -6,7 +6,7 @@ import type {
   MakeRequired,
   MessageRole,
   MessageStartEvent,
-  MetaEvent
+  MetaEvent,
 } from '@/models/conversational-agent';
 
 import { ConversationEventHelperBase } from './conversation-event-helper-base';
@@ -18,11 +18,9 @@ import type {
   MessageStartEventOptions,
   MessageStartHandler,
   MessageStartHandlerAsync,
-  SendMessageWithContentPartOptions
+  SendMessageWithContentPartOptions,
 } from './conversation-event-helper-common';
-import {
-  ConversationEventValidationError
-} from './conversation-event-helper-common';
+import { ConversationEventValidationError } from './conversation-event-helper-common';
 import type { MessageEventHelper } from './message-event-helper';
 import { MessageEventHelperImpl } from './message-event-helper';
 import type { ExchangeStream } from '@/models/conversational-agent';
@@ -32,11 +30,10 @@ import type { SessionEventHelper, SessionEventHelperImpl } from './session-event
  * Helper for managing exchange events within a conversation.
  * Handles exchange lifecycle including messages.
  */
-export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
-  ExchangeStartEvent,
-  ExchangeEvent
-> implements ExchangeStream {
-
+export abstract class ExchangeEventHelper
+  extends ConversationEventHelperBase<ExchangeStartEvent, ExchangeEvent>
+  implements ExchangeStream
+{
   protected readonly _messageMap = new Map<string, MessageEventHelperImpl>();
   protected readonly _messageStartHandlers = new Array<MessageStartHandler>();
   protected readonly _endHandlers = new Array<ExchangeEndHandler>();
@@ -49,7 +46,7 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
      * ExchangeStartEvent used to initialize the ExchangeEventHelper. Will be undefined if some other sub-event
      * was received before the start event. See also `startEvent`.
      */
-    public readonly startEventMaybe: ExchangeStartEvent | undefined
+    public readonly startEventMaybe: ExchangeStartEvent | undefined,
   ) {
     super(session.manager);
     this.addStartEventTimestamp(startEventMaybe);
@@ -60,7 +57,8 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
    * other sub-event was received before the start event, which shouldn't happen under normal circumstances.
    */
   public get startEvent(): MakeRequired<ExchangeStartEvent, 'timestamp'> {
-    if (!this.startEventMaybe) throw new ConversationEventValidationError(`Exchange ${this.exchangeId} has no start event.`);
+    if (!this.startEventMaybe)
+      throw new ConversationEventValidationError(`Exchange ${this.exchangeId} has no start event.`);
     return this.startEventMaybe as MakeRequired<ExchangeStartEvent, 'timestamp'>; // timestamp is set by the constructor
   }
 
@@ -79,16 +77,19 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
   public startMessage(args?: MessageStartEventOptions): MessageEventHelper;
   public startMessage(args: MessageStartEventOptions, cb: MessageStartHandlerAsync): Promise<void>;
   public startMessage(cb: MessageStartHandlerAsync): Promise<void>;
-  public startMessage(argsOrCb?: MessageStartEventOptions | MessageStartHandlerAsync, cbMaybe?: MessageStartHandlerAsync): MessageEventHelper | Promise<void> {
+  public startMessage(
+    argsOrCb?: MessageStartEventOptions | MessageStartHandlerAsync,
+    cbMaybe?: MessageStartHandlerAsync,
+  ): MessageEventHelper | Promise<void> {
     this.assertNotEnded();
 
-    const [ args, cb ] = typeof argsOrCb === 'function' ? [ undefined, argsOrCb ] : [ argsOrCb, cbMaybe ];
+    const [args, cb] = typeof argsOrCb === 'function' ? [undefined, argsOrCb] : [argsOrCb, cbMaybe];
 
     const { messageId: providedId, properties, ...startMessageWithoutDefaults } = args ?? {};
     const messageId = providedId ?? this.manager.makeId();
     const startMessage: MessageStartEvent = {
       ...startMessageWithoutDefaults,
-      role: (startMessageWithoutDefaults.role ?? 'user') as MessageRole
+      role: (startMessageWithoutDefaults.role ?? 'user') as MessageRole,
     };
 
     // shallow copy start event because helper will add timestamp property we don't need to send to the service
@@ -109,8 +110,9 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
    */
   public async sendMessageWithContentPart(options: SendMessageWithContentPartOptions) {
     const { data, exchangeSequence, timestamp, role, mimeType, messageId } = options;
-    await this.startMessage({ messageId, exchangeSequence, timestamp, role },
-      async message => await message.sendContentPart({ data, mimeType })
+    await this.startMessage(
+      { messageId, exchangeSequence, timestamp, role },
+      async (message) => await message.sendContentPart({ data, mimeType }),
     );
   }
 
@@ -184,7 +186,7 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
    * Registers a handler that receives a complete message after all the content part streams end.
    */
   public onMessageCompleted(cb: MessageCompletedHandler) {
-    this.onMessageStart(message => {
+    this.onMessageStart((message) => {
       message.onCompleted(cb);
     });
   }
@@ -199,8 +201,8 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
     this.emit({
       exchangeError: {
         errorId,
-        startError
-      }
+        startError,
+      },
     });
     this.errors.set(errorId, startError);
   }
@@ -214,8 +216,8 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
     this.emit({
       exchangeError: {
         errorId,
-        endError
-      }
+        endError,
+      },
     });
     this.errors.delete(errorId);
   }
@@ -223,34 +225,30 @@ export abstract class ExchangeEventHelper extends ConversationEventHelperBase<
   public toString() {
     return `ExchangeEventHelper(${this.exchangeId})`;
   }
-
 }
 
 export class ExchangeEventHelperImpl extends ExchangeEventHelper {
-
   public static *replay(exchange: Exchange): Generator<ExchangeEvent> {
-
     yield {
       exchangeId: exchange.exchangeId,
       startExchange: {
-        timestamp: exchange.createdTime ?? (exchange as any).createdAt
-      }
+        timestamp: exchange.createdTime ?? (exchange as any).createdAt,
+      },
     };
 
     for (const message of exchange.messages) {
       for (const messageEvent of MessageEventHelperImpl.replay(message)) {
         yield {
           exchangeId: exchange.exchangeId,
-          message: messageEvent
+          message: messageEvent,
         };
       }
     }
 
     yield {
       exchangeId: exchange.exchangeId,
-      endExchange: {}
+      endExchange: {},
     };
-
   }
 
   /**
@@ -267,21 +265,25 @@ export class ExchangeEventHelperImpl extends ExchangeEventHelper {
     if (exchangeEvent.message) {
       let messageHelper = this._messageMap.get(exchangeEvent.message.messageId);
       if (!messageHelper && this._messageStartHandlers.length > 0) {
-        messageHelper = new MessageEventHelperImpl(this, exchangeEvent.message.messageId, exchangeEvent.message.startMessage);
+        messageHelper = new MessageEventHelperImpl(
+          this,
+          exchangeEvent.message.messageId,
+          exchangeEvent.message.startMessage,
+        );
         this._messageMap.set(exchangeEvent.message.messageId, messageHelper);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._messageStartHandlers.forEach(cb => cb(messageHelper!));
+        this._messageStartHandlers.forEach((cb) => cb(messageHelper!));
       } else if (exchangeEvent.message.startMessage) {
         // when session.echo is enabled, and startMessage is used, the helper will already be in the map
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._messageStartHandlers.forEach(cb => cb(messageHelper!));
+        this._messageStartHandlers.forEach((cb) => cb(messageHelper!));
       }
       if (messageHelper) messageHelper.dispatch(exchangeEvent.message);
     }
 
     if (exchangeEvent.metaEvent) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._metaEventHandlers.forEach(cb => cb(exchangeEvent.metaEvent!));
+      this._metaEventHandlers.forEach((cb) => cb(exchangeEvent.metaEvent!));
     }
 
     if (exchangeEvent.exchangeError?.startError) {
@@ -295,7 +297,7 @@ export class ExchangeEventHelperImpl extends ExchangeEventHelper {
     if (exchangeEvent.endExchange) {
       this.setEnded();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._endHandlers.forEach(cb => cb(exchangeEvent.endExchange!));
+      this._endHandlers.forEach((cb) => cb(exchangeEvent.endExchange!));
     }
   }
 
@@ -317,11 +319,10 @@ export class ExchangeEventHelperImpl extends ExchangeEventHelper {
   }
 
   protected deleteChildren(): void {
-    Array.from(this._messageMap.values()).forEach(messageHelper => messageHelper.delete());
+    Array.from(this._messageMap.values()).forEach((messageHelper) => messageHelper.delete());
   }
 
   protected getSession() {
     return this.session;
   }
-
 }

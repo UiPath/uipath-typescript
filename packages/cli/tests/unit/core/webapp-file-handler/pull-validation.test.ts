@@ -5,7 +5,10 @@ vi.mock('../../../../src/core/webapp-file-handler/api.js', () => ({
 }));
 
 import * as api from '../../../../src/core/webapp-file-handler/api.js';
-import { findWebAppManifestPath, validateProjectType } from '../../../../src/core/webapp-file-handler/pull-validation.js';
+import {
+  findWebAppManifestPath,
+  validateProjectType,
+} from '../../../../src/core/webapp-file-handler/pull-validation.js';
 import type { WebAppProjectConfig, ProjectFile } from '../../../../src/core/webapp-file-handler/types.js';
 import { createMockLogger, createMockEnvConfig } from '../../../helpers/index.js';
 
@@ -27,9 +30,7 @@ describe('pull-validation', () => {
 
   describe('findWebAppManifestPath', () => {
     it('should return exact match', () => {
-      const map = new Map<string, ProjectFile>([
-        ['webAppManifest.json', { id: '1', name: 'webAppManifest.json' }],
-      ]);
+      const map = new Map<string, ProjectFile>([['webAppManifest.json', { id: '1', name: 'webAppManifest.json' }]]);
       expect(findWebAppManifestPath(map)).toBe('webAppManifest.json');
     });
 

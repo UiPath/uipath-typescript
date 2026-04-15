@@ -40,7 +40,16 @@ function createConfig(overrides: Partial<WebAppProjectConfig> = {}): WebAppProje
   };
 }
 
-function mockResponse(opts: { ok?: boolean; status?: number; json?: unknown; text?: string; headers?: Record<string, string>; arrayBuffer?: ArrayBuffer } = {}) {
+function mockResponse(
+  opts: {
+    ok?: boolean;
+    status?: number;
+    json?: unknown;
+    text?: string;
+    headers?: Record<string, string>;
+    arrayBuffer?: ArrayBuffer;
+  } = {},
+) {
   const { ok = true, status = 200, json = {}, text = '', headers = {}, arrayBuffer } = opts;
   return {
     ok,
@@ -169,8 +178,9 @@ describe('webapp-file-handler/api', () => {
     it('should throw FileAlreadyExistsError on 409', async () => {
       mockFetch.mockResolvedValue(mockResponse({ ok: false, status: 409 }));
       const localFile = { path: 'app.js', absPath: '/root/app.js', hash: 'h', content: Buffer.from('x') };
-      await expect(createFile(createConfig(), 'source/app.js', localFile, null, null, null))
-        .rejects.toThrow(FileAlreadyExistsError);
+      await expect(createFile(createConfig(), 'source/app.js', localFile, null, null, null)).rejects.toThrow(
+        FileAlreadyExistsError,
+      );
     });
   });
 
@@ -237,51 +247,57 @@ describe('webapp-file-handler/api', () => {
 
   describe('findResourceInCatalog', () => {
     it('should find a matching resource', async () => {
-      mockFetch.mockResolvedValue(mockResponse({
-        text: JSON.stringify({
-          value: [{
-            name: 'MyAsset',
-            entityKey: 'ek1',
-            entityType: 'asset',
-            folders: [{ key: 'fk1', fullyQualifiedName: 'fqn', path: '/Shared' }],
-          }],
+      mockFetch.mockResolvedValue(
+        mockResponse({
+          text: JSON.stringify({
+            value: [
+              {
+                name: 'MyAsset',
+                entityKey: 'ek1',
+                entityType: 'asset',
+                folders: [{ key: 'fk1', fullyQualifiedName: 'fqn', path: '/Shared' }],
+              },
+            ],
+          }),
+          headers: { 'content-type': 'application/json' },
         }),
-        headers: { 'content-type': 'application/json' },
-      }));
+      );
       const result = await findResourceInCatalog(createConfig(), 'asset', 'MyAsset', '/Shared', mapFolder);
       expect(result.resourceKey).toBe('ek1');
       expect(result.name).toBe('MyAsset');
     });
 
     it('should throw for unknown resource type', async () => {
-      await expect(
-        findResourceInCatalog(createConfig(), 'unknown_type', 'x', '', mapFolder)
-      ).rejects.toThrow('Unknown resource type');
+      await expect(findResourceInCatalog(createConfig(), 'unknown_type', 'x', '', mapFolder)).rejects.toThrow(
+        'Unknown resource type',
+      );
     });
 
     it('should throw when resource not found', async () => {
-      mockFetch.mockResolvedValue(mockResponse({
-        text: JSON.stringify({ value: [] }),
-        headers: { 'content-type': 'application/json' },
-      }));
-      await expect(
-        findResourceInCatalog(createConfig(), 'asset', 'Missing', '', mapFolder)
-      ).rejects.toThrow('not found');
+      mockFetch.mockResolvedValue(
+        mockResponse({
+          text: JSON.stringify({ value: [] }),
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+      await expect(findResourceInCatalog(createConfig(), 'asset', 'Missing', '', mapFolder)).rejects.toThrow(
+        'not found',
+      );
     });
 
     it('should throw on API error', async () => {
       mockFetch.mockResolvedValue(mockResponse({ ok: false, status: 500 }));
-      await expect(
-        findResourceInCatalog(createConfig(), 'asset', 'x', '', mapFolder)
-      ).rejects.toThrow();
+      await expect(findResourceInCatalog(createConfig(), 'asset', 'x', '', mapFolder)).rejects.toThrow();
     });
   });
 
   describe('retrieveConnection', () => {
     it('should return connection data', async () => {
-      mockFetch.mockResolvedValue(mockResponse({
-        json: { Key: 'ck1', Name: 'MyConn', Folder: { Id: 'fid', FullyQualifiedName: 'fqn', Path: '/p' } },
-      }));
+      mockFetch.mockResolvedValue(
+        mockResponse({
+          json: { Key: 'ck1', Name: 'MyConn', Folder: { Id: 'fid', FullyQualifiedName: 'fqn', Path: '/p' } },
+        }),
+      );
       const result = await retrieveConnection(createConfig(), 'conn-key');
       expect(result.key).toBe('ck1');
       expect(result.name).toBe('MyConn');
@@ -290,9 +306,11 @@ describe('webapp-file-handler/api', () => {
     });
 
     it('should handle connection without folder', async () => {
-      mockFetch.mockResolvedValue(mockResponse({
-        json: { Key: 'ck1', Name: 'MyConn' },
-      }));
+      mockFetch.mockResolvedValue(
+        mockResponse({
+          json: { Key: 'ck1', Name: 'MyConn' },
+        }),
+      );
       const result = await retrieveConnection(createConfig(), 'conn-key');
       expect(result.folder).toBeNull();
     });
@@ -317,27 +335,29 @@ describe('webapp-file-handler/api', () => {
     };
 
     it('should create resource successfully', async () => {
-      mockFetch.mockResolvedValue(mockResponse({
-        json: { status: 'Added', resource: { id: 'r1' }, saved: true },
-      }));
+      mockFetch.mockResolvedValue(
+        mockResponse({
+          json: { status: 'Added', resource: { id: 'r1' }, saved: true },
+        }),
+      );
       const result = await createReferencedResource(createConfig(), 'sol-1', request, 'lock-key');
       expect(result.status).toBe('ADDED');
       expect(result.saved).toBe(true);
     });
 
     it('should handle UNCHANGED status', async () => {
-      mockFetch.mockResolvedValue(mockResponse({
-        json: { status: 'Unchanged', resource: {}, saved: false },
-      }));
+      mockFetch.mockResolvedValue(
+        mockResponse({
+          json: { status: 'Unchanged', resource: {}, saved: false },
+        }),
+      );
       const result = await createReferencedResource(createConfig(), 'sol-1', request, null);
       expect(result.status).toBe('UNCHANGED');
     });
 
     it('should throw on API error', async () => {
       mockFetch.mockResolvedValue(mockResponse({ ok: false, status: 500, text: '{"Detail":"bad"}' }));
-      await expect(
-        createReferencedResource(createConfig(), 'sol-1', request, null)
-      ).rejects.toThrow();
+      await expect(createReferencedResource(createConfig(), 'sol-1', request, null)).rejects.toThrow();
     });
   });
 });

@@ -3,16 +3,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JobService } from '../../../../src/services/orchestrator/jobs';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
-import {
-  createMockTransformedJobCollection,
-  createMockRawJob,
-} from '../../../utils/mocks/jobs';
+import { createMockTransformedJobCollection, createMockRawJob } from '../../../utils/mocks/jobs';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
-import {
-  JobGetAllOptions,
-  JobGetByIdOptions,
-} from '../../../../src/models/orchestrator/jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions } from '../../../../src/models/orchestrator/jobs.types';
 import { JobGetResponse } from '../../../../src/models/orchestrator/jobs.models';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -65,7 +59,7 @@ describe('JobService Unit Tests', () => {
           transformFn: expect.any(Function),
           pagination: expect.any(Object),
         }),
-        undefined
+        undefined,
       );
 
       expect(result).toEqual(mockResponse);
@@ -90,7 +84,7 @@ describe('JobService Unit Tests', () => {
         }),
         expect.objectContaining({
           folderId: TEST_CONSTANTS.FOLDER_ID,
-        })
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -112,13 +106,13 @@ describe('JobService Unit Tests', () => {
         pageSize: TEST_CONSTANTS.PAGE_SIZE,
       };
 
-      const result = await jobService.getAll(options) as PaginatedResponse<JobGetResponse>;
+      const result = (await jobService.getAll(options)) as PaginatedResponse<JobGetResponse>;
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
           pageSize: TEST_CONSTANTS.PAGE_SIZE,
-        })
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -143,7 +137,7 @@ describe('JobService Unit Tests', () => {
         expect.objectContaining({
           folderId: TEST_CONSTANTS.FOLDER_ID,
           filter: "State eq 'Running'",
-        })
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -190,7 +184,7 @@ describe('JobService Unit Tests', () => {
           headers: expect.objectContaining({
             'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
           }),
-        })
+        }),
       );
 
       // Verify transformed fields
@@ -243,29 +237,27 @@ describe('JobService Unit Tests', () => {
             $expand: 'robot,machine',
             $select: 'key,state',
           },
-        })
+        }),
       );
     });
 
     it('should throw validation error when id is missing', async () => {
-      await expect(
-        jobService.getById('', TEST_CONSTANTS.FOLDER_ID)
-      ).rejects.toThrow('id is required for getById');
+      await expect(jobService.getById('', TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow('id is required for getById');
     });
 
     it('should throw validation error when folderId is missing', async () => {
-      await expect(
-        jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, 0)
-      ).rejects.toThrow('folderId is required for getById');
+      await expect(jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, 0)).rejects.toThrow(
+        'folderId is required for getById',
+      );
     });
 
     it('should handle API errors', async () => {
       const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
       mockApiClient.get.mockRejectedValueOnce(error);
 
-      await expect(
-        jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
-      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+      await expect(jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
+        JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND,
+      );
     });
   });
 
@@ -288,7 +280,7 @@ describe('JobService Unit Tests', () => {
           headers: expect.objectContaining({
             'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
           }),
-        })
+        }),
       );
     });
 
@@ -345,13 +337,13 @@ describe('JobService Unit Tests', () => {
       expect(mockApiClient.get).toHaveBeenNthCalledWith(
         2,
         ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(JOB_TEST_CONSTANTS.OUTPUT_FILE_KEY),
-        { params: {} }
+        { params: {} },
       );
       expect(mockFetch).toHaveBeenCalledWith(
         JOB_TEST_CONSTANTS.BLOB_URI,
         expect.objectContaining({
           method: 'GET',
-        })
+        }),
       );
     });
 
@@ -385,7 +377,7 @@ describe('JobService Unit Tests', () => {
           headers: expect.objectContaining({
             Authorization: `Bearer ${TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN}`,
           }),
-        })
+        }),
       );
     });
 
@@ -434,7 +426,9 @@ describe('JobService Unit Tests', () => {
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow('Forbidden');
+      await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
+        'Forbidden',
+      );
     });
 
     it('should throw ServerError when blob download returns 500', async () => {
@@ -462,13 +456,15 @@ describe('JobService Unit Tests', () => {
       });
       vi.stubGlobal('fetch', mockFetch);
 
-      await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow('Internal Server Error');
+      await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
+        'Internal Server Error',
+      );
     });
 
     it('should throw validation error when jobKey is missing', async () => {
-      await expect(
-        jobService.getOutput('', TEST_CONSTANTS.FOLDER_ID)
-      ).rejects.toThrow('jobKey is required for getOutput');
+      await expect(jobService.getOutput('', TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
+        'jobKey is required for getOutput',
+      );
     });
 
     it('should propagate API errors from job fetch', async () => {
@@ -476,7 +472,7 @@ describe('JobService Unit Tests', () => {
       mockApiClient.get.mockRejectedValueOnce(error);
 
       await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
-        TEST_CONSTANTS.ERROR_MESSAGE
+        TEST_CONSTANTS.ERROR_MESSAGE,
       );
     });
 
@@ -490,7 +486,7 @@ describe('JobService Unit Tests', () => {
       mockApiClient.get.mockRejectedValueOnce(error);
 
       await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
-        TEST_CONSTANTS.ERROR_MESSAGE
+        TEST_CONSTANTS.ERROR_MESSAGE,
       );
     });
   });

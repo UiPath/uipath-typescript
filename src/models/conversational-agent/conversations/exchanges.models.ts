@@ -7,7 +7,7 @@ import type {
   ExchangeGetByIdOptions,
   CreateFeedbackOptions,
   FeedbackCreateResponse,
-  ExchangeGetResponse
+  ExchangeGetResponse,
 } from './exchanges.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 
@@ -55,7 +55,7 @@ export interface ExchangeServiceModel {
    */
   getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
     conversationId: string,
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<ExchangeGetResponse>
@@ -79,11 +79,7 @@ export interface ExchangeServiceModel {
    * }
    * ```
    */
-  getById(
-    conversationId: string,
-    exchangeId: string,
-    options?: ExchangeGetByIdOptions
-  ): Promise<ExchangeGetResponse>;
+  getById(conversationId: string, exchangeId: string, options?: ExchangeGetByIdOptions): Promise<ExchangeGetResponse>;
 
   /**
    * Creates feedback for an exchange
@@ -105,7 +101,7 @@ export interface ExchangeServiceModel {
   createFeedback(
     conversationId: string,
     exchangeId: string,
-    options: CreateFeedbackOptions
+    options: CreateFeedbackOptions,
   ): Promise<FeedbackCreateResponse>;
 }
 
@@ -135,7 +131,7 @@ export interface ConversationExchangeServiceModel {
    * ```
    */
   getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<ExchangeGetResponse>
@@ -157,10 +153,7 @@ export interface ConversationExchangeServiceModel {
    * }
    * ```
    */
-  getById(
-    exchangeId: string,
-    options?: ExchangeGetByIdOptions
-  ): Promise<ExchangeGetResponse>;
+  getById(exchangeId: string, options?: ExchangeGetByIdOptions): Promise<ExchangeGetResponse>;
 
   /**
    * Creates feedback for an exchange
@@ -177,8 +170,5 @@ export interface ConversationExchangeServiceModel {
    * });
    * ```
    */
-  createFeedback(
-    exchangeId: string,
-    options: CreateFeedbackOptions
-  ): Promise<FeedbackCreateResponse>;
+  createFeedback(exchangeId: string, options: CreateFeedbackOptions): Promise<FeedbackCreateResponse>;
 }

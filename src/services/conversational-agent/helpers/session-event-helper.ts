@@ -5,7 +5,7 @@ import type {
   MetaEvent,
   SessionEndEvent,
   SessionStartedEvent,
-  SessionStartEvent
+  SessionStartEvent,
 } from '@/models/conversational-agent';
 
 import type { AsyncInputStreamEventHelper } from './input-stream-event-helper';
@@ -31,13 +31,14 @@ import type {
   SessionEndHandler,
   SessionEndingHandler,
   SessionStartedHandler,
-  ToolCallStartEventWithId
+  ToolCallStartEventWithId,
 } from './conversation-event-helper-common';
-import {
-  ConversationEventValidationError
-} from './conversation-event-helper-common';
+import { ConversationEventValidationError } from './conversation-event-helper-common';
 import type { SessionStream } from '@/models/conversational-agent';
-import type { ConversationEventHelperManager, ConversationEventHelperManagerImpl } from './conversation-event-helper-manager';
+import type {
+  ConversationEventHelperManager,
+  ConversationEventHelperManagerImpl,
+} from './conversation-event-helper-manager';
 import type { ExchangeEventHelper } from './exchange-event-helper';
 import { ExchangeEventHelperImpl } from './exchange-event-helper';
 
@@ -45,11 +46,10 @@ import { ExchangeEventHelperImpl } from './exchange-event-helper';
  * Helper for managing conversation session events. Handles conversation lifecycle including exchanges, input streams,
  * and async operations.
  */
-export abstract class SessionEventHelper extends ConversationEventHelperBase<
-  SessionStartEvent,
-  ConversationEvent
-> implements SessionStream {
-
+export abstract class SessionEventHelper
+  extends ConversationEventHelperBase<SessionStartEvent, ConversationEvent>
+  implements SessionStream
+{
   protected readonly _exchangeMap = new Map<string, ExchangeEventHelperImpl>();
   protected readonly _inputStreamMap = new Map<string, AsyncInputStreamEventHelperImpl>();
   protected readonly _exchangeStartHandlers = new Array<ExchangeStartHandler>();
@@ -73,7 +73,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
      * received before the start event. See also `startEvent`.
      */
     public readonly startEventMaybe: SessionStartEvent | undefined,
-    public readonly echo: boolean = false
+    public readonly echo: boolean = false,
   ) {
     super(manager);
   }
@@ -83,7 +83,8 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
    * other sub-event was received before the start event, which shouldn't happen under normal circumstances.
    */
   public get startEvent(): SessionStartEvent {
-    if (!this.startEventMaybe) throw new ConversationEventValidationError(`Session for conversation ${this.conversationId} has no start event.`);
+    if (!this.startEventMaybe)
+      throw new ConversationEventValidationError(`Session for conversation ${this.conversationId} has no start event.`);
     return this.startEventMaybe;
   }
 
@@ -108,7 +109,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
     if (this._emitBuffer === null) return;
     const emitBuffer = this._emitBuffer;
     this._emitBuffer = null;
-    emitBuffer.forEach(event => this.emitInternal(event, true));
+    emitBuffer.forEach((event) => this.emitInternal(event, true));
   }
 
   /**
@@ -143,11 +144,13 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   public startExchange(args?: ExchangeStartEventOptions): ExchangeEventHelper;
   public startExchange(cb: ExchangeStartHandlerAsync): Promise<void>;
   public startExchange(args: ExchangeStartEventOptions, cb: ExchangeStartHandlerAsync): Promise<void>;
-  public startExchange(argsOrCb?: ExchangeStartEventOptions | ExchangeStartHandlerAsync, maybeCb?: ExchangeStartHandlerAsync): ExchangeEventHelper | Promise<void> {
-
+  public startExchange(
+    argsOrCb?: ExchangeStartEventOptions | ExchangeStartHandlerAsync,
+    maybeCb?: ExchangeStartHandlerAsync,
+  ): ExchangeEventHelper | Promise<void> {
     this.assertNotEnded();
 
-    const [ args, cb ] = typeof argsOrCb === 'function' ? [ {}, argsOrCb ] : [ argsOrCb ?? {}, maybeCb ];
+    const [args, cb] = typeof argsOrCb === 'function' ? [{}, argsOrCb] : [argsOrCb ?? {}, maybeCb];
 
     const { exchangeId: providedId, properties, ...startExchange } = args;
     const exchangeId = providedId ?? this.manager.makeId();
@@ -163,7 +166,6 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
       return cb(helper).then((endEvent) => helper.sendExchangeEnd(endEvent || {}));
     }
     return helper;
-
   }
 
   /**
@@ -187,9 +189,14 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
    * @returns InputStreamEventHelper for manual control or Promise when using callback.
    */
   public startAsyncInputStream(args: InputStreamStartEventOptions): AsyncInputStreamEventHelper;
-  public startAsyncInputStream(args: InputStreamStartEventOptions, cb: (x: AsyncInputStreamEventHelperImpl) => Promise<AsyncInputStreamEndEvent | void>): Promise<void>;
-  public startAsyncInputStream(args: InputStreamStartEventOptions, cb?: (x: AsyncInputStreamEventHelperImpl) => Promise<AsyncInputStreamEndEvent | void>): AsyncInputStreamEventHelper | Promise<void> {
-
+  public startAsyncInputStream(
+    args: InputStreamStartEventOptions,
+    cb: (x: AsyncInputStreamEventHelperImpl) => Promise<AsyncInputStreamEndEvent | void>,
+  ): Promise<void>;
+  public startAsyncInputStream(
+    args: InputStreamStartEventOptions,
+    cb?: (x: AsyncInputStreamEventHelperImpl) => Promise<AsyncInputStreamEndEvent | void>,
+  ): AsyncInputStreamEventHelper | Promise<void> {
     this.assertNotEnded();
 
     const { streamId: providedId, properties, ...startAsyncInputStream } = args;
@@ -206,7 +213,6 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
       return cb(helper).then((endEvent) => helper.sendAsyncInputStreamEnd(endEvent || {}));
     }
     return helper;
-
   }
 
   /**
@@ -231,8 +237,10 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
    */
   public startAsyncToolCall(args: ToolCallStartEventWithId): AsyncToolCallEventHelper;
   public startAsyncToolCall(args: ToolCallStartEventWithId, cb: AsyncToolCallStartHandlerAsync): Promise<void>;
-  public startAsyncToolCall(args: ToolCallStartEventWithId, cb?: AsyncToolCallStartHandlerAsync): AsyncToolCallEventHelper | Promise<void> {
-
+  public startAsyncToolCall(
+    args: ToolCallStartEventWithId,
+    cb?: AsyncToolCallStartHandlerAsync,
+  ): AsyncToolCallEventHelper | Promise<void> {
     this.assertNotEnded();
 
     const { toolCallId: providedId, properties, ...startToolCall } = args;
@@ -250,7 +258,6 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
       return cb(helper).then((endEvent) => helper.sendToolCallEnd(endEvent || {}));
     }
     return helper;
-
   }
 
   /**
@@ -371,8 +378,8 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
     this.emit({
       conversationError: {
         errorId,
-        startError
-      }
+        startError,
+      },
     });
     this.errors.set(errorId, startError);
   }
@@ -386,8 +393,8 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
     this.emit({
       conversationError: {
         errorId,
-        endError
-      }
+        endError,
+      },
     });
     this.errors.delete(errorId);
   }
@@ -397,22 +404,22 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   }
 
   public replay(exchanges: Exchange[]) {
-    exchanges.forEach(exchange => {
+    exchanges.forEach((exchange) => {
       for (const exchangeEvent of ExchangeEventHelperImpl.replay(exchange)) {
         this.dispatch({
           conversationId: this.conversationId,
-          exchange: exchangeEvent
+          exchange: exchangeEvent,
         });
       }
     });
   }
 
   /**
-     * Registers a handler that will be called when an error start event is received by any nested
-     * conversation event helper object.
-     *
-     * @returns Cleanup function to remove the handler.
-     */
+   * Registers a handler that will be called when an error start event is received by any nested
+   * conversation event helper object.
+   *
+   * @returns Cleanup function to remove the handler.
+   */
   public onAnyErrorStart(cb: AnyErrorStartHandler) {
     this._anyErrorStartHandlers.push(cb);
     return () => {
@@ -422,11 +429,11 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   }
 
   /**
-     * Registers a handler that will be called when an error end event is received by any nested
-     * conversation event helper object.
-     *
-     * @returns Cleanup function to remove the handler.
-     */
+   * Registers a handler that will be called when an error end event is received by any nested
+   * conversation event helper object.
+   *
+   * @returns Cleanup function to remove the handler.
+   */
   public onAnyErrorEnd(cb: AnyErrorEndHandler) {
     this._anyErrorEndHandlers.push(cb);
     return () => {
@@ -436,7 +443,6 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
   }
 
   private emitInternal(conversationEvent: Omit<ConversationEvent, 'conversationId'>, suppressEcho = false) {
-
     // This function ensures that, when emits are paused, echoed events are dispatched when they are created (via
     // invoking helper methods), rather than when emits are unpaused. This ensures that the same helper object that is
     // created and passed to callbacks is used when dispatching echoed events. For example, suppose we  have code like
@@ -469,7 +475,7 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
 
     const eventWithId = {
       conversationId: this.conversationId,
-      ...conversationEvent
+      ...conversationEvent,
     };
     if (this.echo && !suppressEcho) {
       this.dispatch(eventWithId);
@@ -480,11 +486,9 @@ export abstract class SessionEventHelper extends ConversationEventHelperBase<
       this.manager.emitAny(eventWithId);
     }
   }
-
 }
 
 export class SessionEventHelperImpl extends SessionEventHelper {
-
   /**
    * Dispatches incoming conversation events to registered handlers.
    */
@@ -498,25 +502,29 @@ export class SessionEventHelperImpl extends SessionEventHelper {
 
     if (conversationEvent.sessionStarted) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._sessionStartedHandlers.forEach(cb => cb(conversationEvent.sessionStarted!));
+      this._sessionStartedHandlers.forEach((cb) => cb(conversationEvent.sessionStarted!));
     }
 
     if (conversationEvent.sessionEnding) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._sessionEndingHandlers.forEach(cb => cb(conversationEvent.sessionEnding!));
+      this._sessionEndingHandlers.forEach((cb) => cb(conversationEvent.sessionEnding!));
     }
 
     if (conversationEvent.exchange) {
       let exchangeHelper = this._exchangeMap.get(conversationEvent.exchange.exchangeId);
       if (!exchangeHelper) {
-        exchangeHelper = new ExchangeEventHelperImpl(this, conversationEvent.exchange.exchangeId, conversationEvent.exchange.startExchange);
+        exchangeHelper = new ExchangeEventHelperImpl(
+          this,
+          conversationEvent.exchange.exchangeId,
+          conversationEvent.exchange.startExchange,
+        );
         this._exchangeMap.set(conversationEvent.exchange.exchangeId, exchangeHelper);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._exchangeStartHandlers.forEach(cb => cb(exchangeHelper!));
+        this._exchangeStartHandlers.forEach((cb) => cb(exchangeHelper!));
       } else if (conversationEvent.exchange.startExchange) {
         // when session.echo is enabled, and startExchange is used, the helper will already be in the map
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._exchangeStartHandlers.forEach(cb => cb(exchangeHelper!));
+        this._exchangeStartHandlers.forEach((cb) => cb(exchangeHelper!));
       }
       exchangeHelper.dispatch(conversationEvent.exchange);
     }
@@ -524,14 +532,18 @@ export class SessionEventHelperImpl extends SessionEventHelper {
     if (conversationEvent.asyncInputStream) {
       let streamHelper = this._inputStreamMap.get(conversationEvent.asyncInputStream.streamId);
       if (!streamHelper && this._inputStreamStartHandlers.length > 0) {
-        streamHelper = new AsyncInputStreamEventHelperImpl(this, conversationEvent.asyncInputStream.streamId, conversationEvent.asyncInputStream.startAsyncInputStream);
+        streamHelper = new AsyncInputStreamEventHelperImpl(
+          this,
+          conversationEvent.asyncInputStream.streamId,
+          conversationEvent.asyncInputStream.startAsyncInputStream,
+        );
         this._inputStreamMap.set(conversationEvent.asyncInputStream.streamId, streamHelper);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._inputStreamStartHandlers.forEach(cb => cb(streamHelper!));
+        this._inputStreamStartHandlers.forEach((cb) => cb(streamHelper!));
       } else if (conversationEvent.asyncInputStream.startAsyncInputStream) {
         // when session.echo is enabled, and startAsyncInputStream is used, the helper will already be in the map
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._inputStreamStartHandlers.forEach(cb => cb(streamHelper!));
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this._inputStreamStartHandlers.forEach((cb) => cb(streamHelper!));
       }
       if (streamHelper) streamHelper.dispatch(conversationEvent.asyncInputStream);
     }
@@ -539,25 +551,32 @@ export class SessionEventHelperImpl extends SessionEventHelper {
     if (conversationEvent.asyncToolCall) {
       let toolCallHelper = this._asyncToolCallMap.get(conversationEvent.asyncToolCall.toolCallId);
       if (!toolCallHelper && this._asyncToolCallStartHandlers.length > 0) {
-        toolCallHelper = new AsyncToolCallEventHelperImpl(this, conversationEvent.asyncToolCall.toolCallId, conversationEvent.asyncToolCall.startToolCall);
+        toolCallHelper = new AsyncToolCallEventHelperImpl(
+          this,
+          conversationEvent.asyncToolCall.toolCallId,
+          conversationEvent.asyncToolCall.startToolCall,
+        );
         this._asyncToolCallMap.set(conversationEvent.asyncToolCall.toolCallId, toolCallHelper);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._asyncToolCallStartHandlers.forEach(cb => cb(toolCallHelper!));
+        this._asyncToolCallStartHandlers.forEach((cb) => cb(toolCallHelper!));
       } else if (conversationEvent.asyncToolCall.startToolCall) {
         // when session.echo is enabled, and startAsyncInputStream is used, the helper will already be in the map
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._asyncToolCallStartHandlers.forEach(cb => cb(toolCallHelper!));
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this._asyncToolCallStartHandlers.forEach((cb) => cb(toolCallHelper!));
       }
       if (toolCallHelper) toolCallHelper.dispatch(conversationEvent.asyncToolCall);
     }
 
     if (conversationEvent.metaEvent) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._metaEventHandlers.forEach(cb => cb(conversationEvent.metaEvent!));
+      this._metaEventHandlers.forEach((cb) => cb(conversationEvent.metaEvent!));
     }
 
     if (conversationEvent.conversationError?.startError) {
-      this.dispatchErrorStart(conversationEvent.conversationError.errorId, conversationEvent.conversationError.startError);
+      this.dispatchErrorStart(
+        conversationEvent.conversationError.errorId,
+        conversationEvent.conversationError.startError,
+      );
     }
 
     if (conversationEvent.conversationError?.endError) {
@@ -566,13 +585,13 @@ export class SessionEventHelperImpl extends SessionEventHelper {
 
     if (conversationEvent.labelUpdated) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._labelUpdatedHandlers.forEach(cb => cb(conversationEvent.labelUpdated!));
+      this._labelUpdatedHandlers.forEach((cb) => cb(conversationEvent.labelUpdated!));
     }
 
     if (conversationEvent.endSession) {
       this.setEnded();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._sessionEndHandlers.forEach(cb => cb(conversationEvent.endSession!));
+      this._sessionEndHandlers.forEach((cb) => cb(conversationEvent.endSession!));
       this.delete();
     }
   }
@@ -608,7 +627,7 @@ export class SessionEventHelperImpl extends SessionEventHelper {
    * Internal method.
    */
   public dispatchAnyErrorStart(args: AnyErrorStartHandlerArgs) {
-    this._anyErrorStartHandlers.forEach(cb => cb(args));
+    this._anyErrorStartHandlers.forEach((cb) => cb(args));
     return this._anyErrorStartHandlers.length > 0;
   }
 
@@ -616,7 +635,7 @@ export class SessionEventHelperImpl extends SessionEventHelper {
    * Internal method.
    */
   public dispatchAnyErrorEnd(args: AnyErrorEndHandlerArgs) {
-    this._anyErrorEndHandlers.forEach(cb => cb(args));
+    this._anyErrorEndHandlers.forEach((cb) => cb(args));
     return this._anyErrorEndHandlers.length > 0;
   }
 
@@ -632,13 +651,12 @@ export class SessionEventHelperImpl extends SessionEventHelper {
   }
 
   protected deleteChildren(): void {
-    Array.from(this._exchangeMap.values()).forEach(exchangeHelper => exchangeHelper.delete());
-    Array.from(this._asyncToolCallMap.values()).forEach(asyncToolCallHelper => asyncToolCallHelper.delete());
-    Array.from(this._inputStreamMap.values()).forEach(inputStreamHelper => inputStreamHelper.delete());
+    Array.from(this._exchangeMap.values()).forEach((exchangeHelper) => exchangeHelper.delete());
+    Array.from(this._asyncToolCallMap.values()).forEach((asyncToolCallHelper) => asyncToolCallHelper.delete());
+    Array.from(this._inputStreamMap.values()).forEach((inputStreamHelper) => inputStreamHelper.delete());
   }
 
   protected getSession() {
     return this;
   }
-
 }

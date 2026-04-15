@@ -13,4 +13,4 @@ export const ProcessMap: { [key: string]: string } = {
   processKey: 'packageKey',
   processVersion: 'packageVersion',
   isProcessDeleted: 'isPackageDeleted',
-}; 
+};

@@ -37,7 +37,7 @@ export function generateRandomString(length: number = 8): string {
  * @returns {Promise<void>}
  */
 export function wait(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -51,7 +51,7 @@ export function wait(ms: number): Promise<void> {
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  initialDelay: number = 1000
+  initialDelay: number = 1000,
 ): Promise<T> {
   let lastError: Error | unknown;
 
@@ -84,9 +84,9 @@ export function hasValidPagination(response: any): boolean {
     Array.isArray(response.items) &&
     (typeof response.hasNextPage === 'boolean' || response.hasNextPage === undefined) &&
     (response.nextCursor === null ||
-     response.nextCursor === undefined ||
-     typeof response.nextCursor === 'object' ||
-     typeof response.nextCursor === 'string')
+      response.nextCursor === undefined ||
+      typeof response.nextCursor === 'object' ||
+      typeof response.nextCursor === 'string')
   );
 }
 

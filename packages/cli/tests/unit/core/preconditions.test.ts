@@ -27,18 +27,14 @@ describe('Preconditions', () => {
     it('should throw when build dir does not exist', () => {
       vi.mocked(fs.existsSync).mockReturnValue(false);
 
-      expect(() => Preconditions.validate('/project', 'dist')).toThrow(
-        /Build directory not found/
-      );
+      expect(() => Preconditions.validate('/project', 'dist')).toThrow(/Build directory not found/);
     });
 
     it('should throw when path is not a directory', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.statSync).mockReturnValue({ isDirectory: () => false } as fs.Stats);
 
-      expect(() => Preconditions.validate('/project', 'dist')).toThrow(
-        /not a directory/
-      );
+      expect(() => Preconditions.validate('/project', 'dist')).toThrow(/not a directory/);
     });
 
     it('should use default bundlePath of dist', () => {

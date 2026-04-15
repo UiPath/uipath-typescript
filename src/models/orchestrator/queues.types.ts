@@ -31,11 +31,12 @@ export interface QueueGetResponse {
 /**
  * Options for getting queues across folders
  */
-export type QueueGetAllOptions = RequestOptions & PaginationOptions & {
-  /**
-   * Optional folder ID to filter queues by folder
-   */
-  folderId?: number;
-}
+export type QueueGetAllOptions = RequestOptions &
+  PaginationOptions & {
+    /**
+     * Optional folder ID to filter queues by folder
+     */
+    folderId?: number;
+  };
 
 export interface QueueGetByIdOptions extends BaseOptions {}

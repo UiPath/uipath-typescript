@@ -13,19 +13,19 @@ export const ConversationMap: { [key: string]: string } = {
   ...CommonFieldMap,
   conversationId: 'id',
   lastActivityAt: 'lastActivityTime',
-  agentReleaseId: 'agentId'
+  agentReleaseId: 'agentId',
 };
 
 /**
  * Maps fields for Exchange entity to ensure consistent SDK naming
  */
 export const ExchangeMap: { [key: string]: string } = {
-  ...CommonFieldMap
+  ...CommonFieldMap,
 };
 
 /**
  * Maps fields for Message entity to ensure consistent SDK naming
  */
 export const MessageMap: { [key: string]: string } = {
-  ...CommonFieldMap
+  ...CommonFieldMap,
 };

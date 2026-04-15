@@ -19,7 +19,6 @@ export const PAGINATION_TEST_CONSTANTS = {
   // Continuation tokens
   CONTINUATION_TOKEN: 'abc123token',
 
-
   // Cursor values
   CURSOR_VALUE_TEST: 'test-cursor',
   CURSOR_VALUE_INVALID: 'invalid-cursor',
@@ -60,11 +59,12 @@ export const PAGINATION_TEST_CONSTANTS = {
   ERROR_INVALID_CURSOR_MISSING_TYPE: 'Invalid cursor: missing pagination type',
   ERROR_PAGE_SIZE_POSITIVE: 'pageSize must be a positive number',
   ERROR_JUMP_TO_PAGE_POSITIVE: 'jumpToPage must be a positive number',
-  ERROR_JUMP_TO_PAGE_NOT_SUPPORTED: 'jumpToPage is not supported for token-based pagination. Use cursor-based navigation instead.',
+  ERROR_JUMP_TO_PAGE_NOT_SUPPORTED:
+    'jumpToPage is not supported for token-based pagination. Use cursor-based navigation instead.',
   ERROR_PAGINATION_TYPE_MISMATCH: 'Pagination type mismatch',
 
   // Total pages
   TOTAL_PAGES_1: 1,
   TOTAL_PAGES_5: 5,
-  TOTAL_PAGES: 10
+  TOTAL_PAGES: 10,
 } as const;

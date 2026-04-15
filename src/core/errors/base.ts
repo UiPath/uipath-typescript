@@ -48,7 +48,7 @@ export abstract class UiPathError extends Error {
       message: this.message,
       statusCode: this.statusCode,
       requestId: this.requestId,
-      timestamp: this.timestamp
+      timestamp: this.timestamp,
     };
   }
 
@@ -58,7 +58,7 @@ export abstract class UiPathError extends Error {
   getDebugInfo(): Record<string, unknown> {
     return {
       ...this.toJSON(),
-      stack: this.stack
+      stack: this.stack,
     };
   }
 }

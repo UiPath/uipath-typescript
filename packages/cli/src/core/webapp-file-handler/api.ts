@@ -55,19 +55,17 @@ export class FileAlreadyExistsError extends Error {
 }
 
 /** On 401, throws with auth message (run "uipath auth") so push/pull instruct user to sign in again. */
-async function throwIfUnauthorized(
-  response: Parameters<typeof handleHttpError>[0],
-  context: string
-): Promise<void> {
+async function throwIfUnauthorized(response: Parameters<typeof handleHttpError>[0], context: string): Promise<void> {
   if (response.status === 401) await handleHttpError(response, context);
 }
 
 function trackApiFailure(apiMethod: string, errorMessage: string, statusCode?: number): void {
   cliTelemetryClient.track('Cli.Push.ApiFailure', {
     api_method: apiMethod,
-    error_message: errorMessage.length > MAX_TELEMETRY_ERROR_LENGTH
-      ? `${errorMessage.slice(0, MAX_TELEMETRY_ERROR_LENGTH)}...`
-      : errorMessage,
+    error_message:
+      errorMessage.length > MAX_TELEMETRY_ERROR_LENGTH
+        ? `${errorMessage.slice(0, MAX_TELEMETRY_ERROR_LENGTH)}...`
+        : errorMessage,
     ...(statusCode !== undefined && { status_code: statusCode }),
   });
 }
@@ -76,14 +74,11 @@ function trackApiFailure(apiMethod: string, errorMessage: string, statusCode?: n
  * Throws a descriptive error for 404/403 responses that reference the project ID,
  * so callers don't have to repeat this pattern.
  */
-function throwProjectAccessError(
-  projectId: string,
-  apiMethod: string,
-  statusCode: number,
-): never {
-  const errMsg = statusCode === 404
-    ? `Project '${projectId}' not found. Verify the project ID is correct and the project exists.`
-    : `Access denied to project '${projectId}'. You don't have permission to access this project.`;
+function throwProjectAccessError(projectId: string, apiMethod: string, statusCode: number): never {
+  const errMsg =
+    statusCode === 404
+      ? `Project '${projectId}' not found. Verify the project ID is correct and the project exists.`
+      : `Access denied to project '${projectId}'. You don't have permission to access this project.`;
   trackApiFailure(apiMethod, errMsg, statusCode);
   throw new Error(errMsg);
 }
@@ -96,13 +91,8 @@ export function buildApiUrl(config: WebAppProjectConfig, endpoint: string, tenan
   return `${baseUrl}/${orgId}${endpoint}`;
 }
 
-export async function fetchRemoteStructure(
-  config: WebAppProjectConfig
-): Promise<ProjectStructure> {
-  const url = buildApiUrl(
-    config,
-    API_ENDPOINTS.STUDIO_WEB_STRUCTURE.replace('{projectId}', config.projectId)
-  );
+export async function fetchRemoteStructure(config: WebAppProjectConfig): Promise<ProjectStructure> {
+  const url = buildApiUrl(config, API_ENDPOINTS.STUDIO_WEB_STRUCTURE.replace('{projectId}', config.projectId));
   const response = await fetch(url, {
     method: 'GET',
     headers: createHeaders({
@@ -128,7 +118,7 @@ export async function fetchRemoteStructure(
 export async function releaseLock(config: WebAppProjectConfig, lockKey: string): Promise<void> {
   const url = buildApiUrl(
     config,
-    `${API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)}/${encodeURIComponent(lockKey)}?api-version=${STUDIO_WEB_API_VERSION}`
+    `${API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)}/${encodeURIComponent(lockKey)}?api-version=${STUDIO_WEB_API_VERSION}`,
   );
   const response = await fetch(url, {
     method: 'DELETE',
@@ -152,10 +142,7 @@ export async function releaseLock(config: WebAppProjectConfig, lockKey: string):
  * and then retry GET to obtain the keys. Call releaseLock when done (success or failure).
  */
 export async function retrieveLock(config: WebAppProjectConfig): Promise<LockInfo | null> {
-  const url = buildApiUrl(
-    config,
-    API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)
-  );
+  const url = buildApiUrl(config, API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId));
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -194,7 +181,8 @@ export async function retrieveLock(config: WebAppProjectConfig): Promise<LockInf
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.startsWith('Lock was acquired but retrieving') || msg.startsWith('Acquire lock failed')) throw err;
-    if (msg.startsWith('Project \'') || msg.startsWith('Access denied') || msg.startsWith('Failed to access project')) throw err;
+    if (msg.startsWith("Project '") || msg.startsWith('Access denied') || msg.startsWith('Failed to access project'))
+      throw err;
     trackApiFailure('retrieveLock', msg);
     config.logger.log(chalk.gray(`[retrieveLock] Error: ${msg}`));
     return null;
@@ -204,7 +192,7 @@ export async function retrieveLock(config: WebAppProjectConfig): Promise<LockInf
 export async function putLock(config: WebAppProjectConfig): Promise<void> {
   const url = buildApiUrl(
     config,
-    `${API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)}/${STUDIO_WEB_LOCK_ACQUIRE_PATH}?api-version=${STUDIO_WEB_API_VERSION}`
+    `${API_ENDPOINTS.STUDIO_WEB_LOCK.replace('{projectId}', config.projectId)}/${STUDIO_WEB_LOCK_ACQUIRE_PATH}?api-version=${STUDIO_WEB_API_VERSION}`,
   );
   const response = await fetch(url, {
     method: 'PUT',
@@ -230,12 +218,9 @@ export async function createFolder(
   name: string,
   lockKey: string | null,
   parentId?: string | null,
-  path?: string | null
+  path?: string | null,
 ): Promise<string | null> {
-  const url = buildApiUrl(
-    config,
-    API_ENDPOINTS.STUDIO_WEB_CREATE_FOLDER.replace('{projectId}', config.projectId)
-  );
+  const url = buildApiUrl(config, API_ENDPOINTS.STUDIO_WEB_CREATE_FOLDER.replace('{projectId}', config.projectId));
   const headers = createHeaders({
     bearerToken: config.envConfig.accessToken,
     tenantId: config.envConfig.tenantId,
@@ -273,16 +258,10 @@ export async function createFolder(
   }
 }
 
-export async function downloadRemoteFile(
-  config: WebAppProjectConfig,
-  fileId: string
-): Promise<Buffer> {
+export async function downloadRemoteFile(config: WebAppProjectConfig, fileId: string): Promise<Buffer> {
   const url = buildApiUrl(
     config,
-    API_ENDPOINTS.STUDIO_WEB_DOWNLOAD_FILE.replace('{projectId}', config.projectId).replace(
-      '{fileId}',
-      fileId
-    )
+    API_ENDPOINTS.STUDIO_WEB_DOWNLOAD_FILE.replace('{projectId}', config.projectId).replace('{fileId}', fileId),
   );
   const response = await fetch(url, {
     method: 'GET',
@@ -304,7 +283,7 @@ function buildFileUploadForm(
   config: WebAppProjectConfig,
   filePath: string,
   localFile: LocalFile,
-  lockKey: string | null
+  lockKey: string | null,
 ): { form: FormData; headers: Record<string, string> } {
   const form = new FormData();
   form.append('file', localFile.content, {
@@ -328,12 +307,9 @@ export async function createFile(
   localFile: LocalFile,
   parentId: string | null,
   parentPath: string | null,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<void> {
-  const url = buildApiUrl(
-    config,
-    API_ENDPOINTS.STUDIO_WEB_CREATE_FILE.replace('{projectId}', config.projectId)
-  );
+  const url = buildApiUrl(config, API_ENDPOINTS.STUDIO_WEB_CREATE_FILE.replace('{projectId}', config.projectId));
   const { form, headers } = buildFileUploadForm(config, filePath, localFile, lockKey);
   form.append('path', filePath); // Full remote path (e.g. source/src/App.tsx) so backend can create folder hierarchy
   if (parentId) form.append('parentId', parentId);
@@ -355,14 +331,11 @@ export async function updateFile(
   filePath: string,
   localFile: LocalFile,
   fileId: string,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<void> {
   const url = buildApiUrl(
     config,
-    API_ENDPOINTS.STUDIO_WEB_UPDATE_FILE.replace('{projectId}', config.projectId).replace(
-      '{fileId}',
-      fileId
-    )
+    API_ENDPOINTS.STUDIO_WEB_UPDATE_FILE.replace('{projectId}', config.projectId).replace('{fileId}', fileId),
   );
   const { form, headers } = buildFileUploadForm(config, filePath, localFile, lockKey);
   const response = await fetch(url, { method: 'PUT', headers, body: form });
@@ -374,17 +347,10 @@ export async function updateFile(
   }
 }
 
-export async function deleteItem(
-  config: WebAppProjectConfig,
-  itemId: string,
-  lockKey: string | null
-): Promise<void> {
+export async function deleteItem(config: WebAppProjectConfig, itemId: string, lockKey: string | null): Promise<void> {
   const url = buildApiUrl(
     config,
-    API_ENDPOINTS.STUDIO_WEB_DELETE_ITEM.replace('{projectId}', config.projectId).replace(
-      '{itemId}',
-      itemId
-    )
+    API_ENDPOINTS.STUDIO_WEB_DELETE_ITEM.replace('{projectId}', config.projectId).replace('{itemId}', itemId),
   );
   const headers = createHeaders({
     bearerToken: config.envConfig.accessToken,
@@ -401,10 +367,7 @@ export async function deleteItem(
 }
 
 export async function getSolutionId(config: WebAppProjectConfig): Promise<string> {
-  const url = buildApiUrl(
-    config,
-    API_ENDPOINTS.STUDIO_WEB_PROJECT.replace('{projectId}', config.projectId)
-  );
+  const url = buildApiUrl(config, API_ENDPOINTS.STUDIO_WEB_PROJECT.replace('{projectId}', config.projectId));
   const response = await fetch(url, {
     method: 'GET',
     headers: createHeaders({
@@ -425,7 +388,7 @@ export async function getSolutionId(config: WebAppProjectConfig): Promise<string
 function catalogItemToResource(
   item: Record<string, unknown>,
   itemFolders: Array<Record<string, unknown>>,
-  mapFolder: (f: Record<string, unknown>) => ResourceFolder
+  mapFolder: (f: Record<string, unknown>) => ResourceFolder,
 ): Resource {
   return {
     resourceKey: (item.entityKey || item.resource_key) as string,
@@ -440,7 +403,7 @@ function findMatchingResourceInItems(
   items: Array<Record<string, unknown>>,
   name: string,
   folderPath: string,
-  mapFolder: (f: Record<string, unknown>) => ResourceFolder
+  mapFolder: (f: Record<string, unknown>) => ResourceFolder,
 ): Resource | null {
   for (const item of items) {
     if (item.name !== name) continue;
@@ -457,7 +420,7 @@ function parseCatalogResponse(
   responseText: string,
   contentType: string,
   response: { status: number; statusText: string },
-  config: WebAppProjectConfig
+  config: WebAppProjectConfig,
 ): { value?: unknown[]; items?: unknown[] } {
   if (!contentType.includes(AUTH_CONSTANTS.CONTENT_TYPES.JSON) && responseText.trim().startsWith('<!DOCTYPE')) {
     const errMsg = `API returned HTML instead of JSON. Status: ${response.status}`;
@@ -479,7 +442,7 @@ export async function findResourceInCatalog(
   resourceType: string,
   name: string,
   folderPath: string,
-  mapFolder: (f: Record<string, unknown>) => ResourceFolder
+  mapFolder: (f: Record<string, unknown>) => ResourceFolder,
 ): Promise<Resource> {
   const apiResourceType = RESOURCE_CATALOG_TYPE_MAP[resourceType.toLowerCase()];
   if (!apiResourceType) throw new Error(`Unknown resource type: ${resourceType}`);
@@ -487,7 +450,7 @@ export async function findResourceInCatalog(
   const url = buildApiUrl(
     config,
     API_ENDPOINTS.RESOURCE_CATALOG_ENTITIES.replace('{resourceType}', apiResourceType),
-    true
+    true,
   );
   const params = new URLSearchParams({ name, skip: RESOURCE_CATALOG_SKIP, take: RESOURCE_CATALOG_TAKE });
   const response = await fetch(`${url}?${params.toString()}`, {
@@ -530,14 +493,8 @@ export function mapFolder(f: Record<string, unknown>): ResourceFolder {
   };
 }
 
-export async function retrieveConnection(
-  config: WebAppProjectConfig,
-  connectionKey: string
-): Promise<Connection> {
-  const url = buildApiUrl(
-    config,
-    API_ENDPOINTS.CONNECTIONS_RETRIEVE.replace('{connectionKey}', connectionKey)
-  );
+export async function retrieveConnection(config: WebAppProjectConfig, connectionKey: string): Promise<Connection> {
+  const url = buildApiUrl(config, API_ENDPOINTS.CONNECTIONS_RETRIEVE.replace('{connectionKey}', connectionKey));
   const response = await fetch(url, {
     method: 'GET',
     headers: createHeaders({
@@ -596,7 +553,7 @@ function getScopedLockKey(lockKey: string | null, fullyQualifiedName: string): s
 
 function buildCreateReferencedResourceHeaders(
   config: WebAppProjectConfig,
-  lockKeyHeader: string | null
+  lockKeyHeader: string | null,
 ): Record<string, string> {
   const headers = createHeaders({
     bearerToken: config.envConfig.accessToken,
@@ -611,7 +568,7 @@ function parseCreateReferencedResourceError(
   errorText: string,
   status: number,
   statusText: string,
-  config: WebAppProjectConfig
+  config: WebAppProjectConfig,
 ): string {
   let msg = `Failed to create referenced resource: ${status} ${statusText}`;
   try {
@@ -620,8 +577,8 @@ function parseCreateReferencedResourceError(
   } catch (parseErr) {
     config.logger.log(
       chalk.gray(
-        `[createReferencedResource] Could not parse error response body: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`
-      )
+        `[createReferencedResource] Could not parse error response body: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+      ),
     );
   }
   return msg;
@@ -645,12 +602,12 @@ export async function createReferencedResource(
   config: WebAppProjectConfig,
   solutionId: string,
   request: ReferencedResourceRequest,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<ReferencedResourceResponse> {
   const baseUrl = buildApiUrl(
     config,
     API_ENDPOINTS.STUDIO_WEB_CREATE_REFERENCED_RESOURCE.replace('{solutionId}', solutionId),
-    false
+    false,
   );
   const url = `${baseUrl}?api-version=${STUDIO_WEB_API_VERSION}&forceUpdate=${STUDIO_WEB_REFERENCED_RESOURCE_FORCE_UPDATE}`;
   const payload = buildCreateReferencedResourcePayload(request);
@@ -665,12 +622,7 @@ export async function createReferencedResource(
   if (!response.ok) {
     await throwIfUnauthorized(response, MESSAGES.ERROR_CONTEXT.PUSH_PULL_OPERATION);
     const errorText = await response.text();
-    const msg = parseCreateReferencedResourceError(
-      errorText,
-      response.status,
-      response.statusText,
-      config
-    );
+    const msg = parseCreateReferencedResourceError(errorText, response.status, response.statusText, config);
     trackApiFailure('createReferencedResource', msg, response.status);
     throw new Error(msg);
   }

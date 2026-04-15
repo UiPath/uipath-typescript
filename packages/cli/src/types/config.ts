@@ -18,7 +18,7 @@ export type EnvironmentFlags = Partial<EnvironmentConfig>;
  */
 export function buildConfigFromFlags(flags: EnvironmentFlags): Partial<EnvironmentConfig> {
   return Object.fromEntries(
-    Object.entries(flags).filter(([_, value]) => value !== undefined)
+    Object.entries(flags).filter(([_, value]) => value !== undefined),
   ) as Partial<EnvironmentConfig>;
 }
 

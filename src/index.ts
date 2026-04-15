@@ -1,6 +1,6 @@
 /**
  * UiPath TypeScript SDK
- * 
+ *
  * A TypeScript SDK that enables programmatic interaction with UiPath Platform services.
  */
 
@@ -25,5 +25,3 @@ export * from './utils/runtime';
 
 // Export telemetry
 export * from './core/telemetry';
-
-

@@ -34,7 +34,11 @@ import {
 } from '../../../../src/core/webapp-file-handler/metadata.js';
 import { parseJWT } from '../../../../src/auth/core/oidc.js';
 import * as api from '../../../../src/core/webapp-file-handler/api.js';
-import type { WebAppProjectConfig, ProjectFile, FileOperationPlan } from '../../../../src/core/webapp-file-handler/types.js';
+import type {
+  WebAppProjectConfig,
+  ProjectFile,
+  FileOperationPlan,
+} from '../../../../src/core/webapp-file-handler/types.js';
 import { createMockLogger, createMockEnvConfig } from '../../../helpers/index.js';
 
 function createConfig(): WebAppProjectConfig {
@@ -49,7 +53,11 @@ function createConfig(): WebAppProjectConfig {
 }
 
 const emptyPlan: FileOperationPlan = {
-  createFolders: [], uploadFiles: [], updateFiles: [], deleteFiles: [], deleteFolders: [],
+  createFolders: [],
+  uploadFiles: [],
+  updateFiles: [],
+  deleteFiles: [],
+  deleteFolders: [],
 };
 
 describe('metadata', () => {
@@ -67,7 +75,9 @@ describe('metadata', () => {
     });
 
     it('should return empty string when parseJWT throws', () => {
-      vi.mocked(parseJWT).mockImplementationOnce(() => { throw new Error('bad'); });
+      vi.mocked(parseJWT).mockImplementationOnce(() => {
+        throw new Error('bad');
+      });
       expect(getPushAuthorEmail('bad-token', createMockLogger())).toBe('');
     });
   });
@@ -88,17 +98,21 @@ describe('metadata', () => {
 
     it('should do nothing when no remote metadata exists', async () => {
       const remoteFiles = new Map<string, ProjectFile>();
-      await expect(ensureSchemaVersionNotBehindRemote(createConfig(), remoteFiles, mockDownload))
-        .resolves.toBeUndefined();
+      await expect(
+        ensureSchemaVersionNotBehindRemote(createConfig(), remoteFiles, mockDownload),
+      ).resolves.toBeUndefined();
     });
 
     it('should do nothing when local metadata is missing', async () => {
-      vi.mocked(fs.readFileSync).mockImplementation(() => { throw Object.assign(new Error(), { code: 'ENOENT' }); });
+      vi.mocked(fs.readFileSync).mockImplementation(() => {
+        throw Object.assign(new Error(), { code: 'ENOENT' });
+      });
       const remoteFiles = new Map<string, ProjectFile>([
         ['source/push_metadata.json', { id: 'f1', name: 'push_metadata.json' }],
       ]);
-      await expect(ensureSchemaVersionNotBehindRemote(createConfig(), remoteFiles, mockDownload))
-        .resolves.toBeUndefined();
+      await expect(
+        ensureSchemaVersionNotBehindRemote(createConfig(), remoteFiles, mockDownload),
+      ).resolves.toBeUndefined();
     });
 
     it('should throw PushBehindRemoteError when local is behind', async () => {
@@ -107,8 +121,9 @@ describe('metadata', () => {
       const remoteFiles = new Map<string, ProjectFile>([
         ['source/push_metadata.json', { id: 'f1', name: 'push_metadata.json' }],
       ]);
-      await expect(ensureSchemaVersionNotBehindRemote(createConfig(), remoteFiles, mockDownload))
-        .rejects.toThrow(PushBehindRemoteError);
+      await expect(ensureSchemaVersionNotBehindRemote(createConfig(), remoteFiles, mockDownload)).rejects.toThrow(
+        PushBehindRemoteError,
+      );
     });
 
     it('should succeed when local version equals remote', async () => {
@@ -117,8 +132,9 @@ describe('metadata', () => {
       const remoteFiles = new Map<string, ProjectFile>([
         ['source/push_metadata.json', { id: 'f1', name: 'push_metadata.json' }],
       ]);
-      await expect(ensureSchemaVersionNotBehindRemote(createConfig(), remoteFiles, mockDownload))
-        .resolves.toBeUndefined();
+      await expect(
+        ensureSchemaVersionNotBehindRemote(createConfig(), remoteFiles, mockDownload),
+      ).resolves.toBeUndefined();
     });
   });
 
@@ -136,26 +152,30 @@ describe('metadata', () => {
     });
 
     it('should update existing local metadata', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({
-        schemaVersion: '1.0.0',
-        projectId: 'proj-1',
-        description: '',
-        lastPushDate: '',
-        lastPushAuthor: '',
-      }));
+      vi.mocked(fs.readFileSync).mockReturnValue(
+        JSON.stringify({
+          schemaVersion: '1.0.0',
+          projectId: 'proj-1',
+          description: '',
+          lastPushDate: '',
+          lastPushAuthor: '',
+        }),
+      );
       const remoteFiles = new Map<string, ProjectFile>();
       await prepareMetadataFileForPlan(createConfig(), remoteFiles, mockDownload, emptyPlan);
       expect(fs.writeFileSync).toHaveBeenCalled();
     });
 
     it('should bump minor version for uploads', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({
-        schemaVersion: '1.0.0',
-        projectId: 'proj-1',
-        description: '',
-        lastPushDate: '',
-        lastPushAuthor: '',
-      }));
+      vi.mocked(fs.readFileSync).mockReturnValue(
+        JSON.stringify({
+          schemaVersion: '1.0.0',
+          projectId: 'proj-1',
+          description: '',
+          lastPushDate: '',
+          lastPushAuthor: '',
+        }),
+      );
       const plan: FileOperationPlan = {
         ...emptyPlan,
         uploadFiles: [{ path: 'x', localFile: {} as any, parentPath: null }],
@@ -167,13 +187,15 @@ describe('metadata', () => {
     });
 
     it('should bump major version for deletions', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({
-        schemaVersion: '1.0.0',
-        projectId: 'proj-1',
-        description: '',
-        lastPushDate: '',
-        lastPushAuthor: '',
-      }));
+      vi.mocked(fs.readFileSync).mockReturnValue(
+        JSON.stringify({
+          schemaVersion: '1.0.0',
+          projectId: 'proj-1',
+          description: '',
+          lastPushDate: '',
+          lastPushAuthor: '',
+        }),
+      );
       const plan: FileOperationPlan = {
         ...emptyPlan,
         deleteFiles: [{ fileId: 'f1', path: 'x' }],
@@ -188,13 +210,17 @@ describe('metadata', () => {
       vi.mocked(fs.readFileSync).mockImplementation(() => {
         throw Object.assign(new Error(), { code: 'ENOENT' });
       });
-      mockDownload.mockResolvedValue(Buffer.from(JSON.stringify({
-        schemaVersion: '3.0.0',
-        projectId: 'proj-1',
-        description: '',
-        lastPushDate: '',
-        lastPushAuthor: '',
-      })));
+      mockDownload.mockResolvedValue(
+        Buffer.from(
+          JSON.stringify({
+            schemaVersion: '3.0.0',
+            projectId: 'proj-1',
+            description: '',
+            lastPushDate: '',
+            lastPushAuthor: '',
+          }),
+        ),
+      );
       const remoteFiles = new Map<string, ProjectFile>([
         ['source/push_metadata.json', { id: 'f1', name: 'push_metadata.json' }],
       ]);
@@ -210,7 +236,13 @@ describe('metadata', () => {
       const remoteFiles = new Map<string, ProjectFile>([
         ['source/push_metadata.json', { id: 'f1', name: 'push_metadata.json' }],
       ]);
-      await uploadPushMetadataToRemote(createConfig(), '/root/.uipath/push_metadata.json', remoteFiles, new Map(), null);
+      await uploadPushMetadataToRemote(
+        createConfig(),
+        '/root/.uipath/push_metadata.json',
+        remoteFiles,
+        new Map(),
+        null,
+      );
       expect(api.updateFile).toHaveBeenCalled();
     });
 
@@ -218,7 +250,13 @@ describe('metadata', () => {
       vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from('{}'));
       vi.mocked(api.createFile).mockResolvedValue(undefined);
       const remoteFiles = new Map<string, ProjectFile>();
-      await uploadPushMetadataToRemote(createConfig(), '/root/.uipath/push_metadata.json', remoteFiles, new Map(), null);
+      await uploadPushMetadataToRemote(
+        createConfig(),
+        '/root/.uipath/push_metadata.json',
+        remoteFiles,
+        new Map(),
+        null,
+      );
       expect(api.createFile).toHaveBeenCalled();
     });
   });
@@ -231,9 +269,7 @@ describe('metadata', () => {
     });
 
     it('should update bundlePath in manifest config', async () => {
-      vi.mocked(api.downloadRemoteFile).mockResolvedValue(
-        Buffer.from(JSON.stringify({ type: 'Coded', config: {} }))
-      );
+      vi.mocked(api.downloadRemoteFile).mockResolvedValue(Buffer.from(JSON.stringify({ type: 'Coded', config: {} })));
       vi.mocked(api.updateFile).mockResolvedValue(undefined);
       const remoteFiles = new Map<string, ProjectFile>([
         ['webAppManifest.json', { id: 'f1', name: 'webAppManifest.json' }],

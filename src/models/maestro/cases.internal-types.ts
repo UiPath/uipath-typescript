@@ -7,5 +7,5 @@
  * Process type enum for filtering
  */
 export enum ProcessType {
-  CaseManagement = 'CaseManagement'
+  CaseManagement = 'CaseManagement',
 }

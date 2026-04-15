@@ -21,7 +21,13 @@ describe('auth/services/portal', () => {
     it('should fetch tenants and organization', async () => {
       vi.mocked(parseJWT).mockReturnValue({
         prtId: 'prt-1',
-        sub: 'u', clientId: 'c', exp: 1, iss: 'i', aud: 'a', iat: 1, authTime: 1,
+        sub: 'u',
+        clientId: 'c',
+        exp: 1,
+        iss: 'i',
+        aud: 'a',
+        iat: 1,
+        authTime: 1,
       });
       const responseData = {
         tenants: [{ id: 't1', name: 'Tenant1' }],
@@ -40,7 +46,13 @@ describe('auth/services/portal', () => {
     it('should use organizationId when prtId is missing', async () => {
       vi.mocked(parseJWT).mockReturnValue({
         organizationId: 'org-from-token',
-        sub: 'u', clientId: 'c', exp: 1, iss: 'i', aud: 'a', iat: 1, authTime: 1,
+        sub: 'u',
+        clientId: 'c',
+        exp: 1,
+        iss: 'i',
+        aud: 'a',
+        iat: 1,
+        authTime: 1,
       });
       mockFetch.mockResolvedValue({
         ok: true,
@@ -52,7 +64,13 @@ describe('auth/services/portal', () => {
 
     it('should throw when no organization ID in token', async () => {
       vi.mocked(parseJWT).mockReturnValue({
-        sub: 'u', clientId: 'c', exp: 1, iss: 'i', aud: 'a', iat: 1, authTime: 1,
+        sub: 'u',
+        clientId: 'c',
+        exp: 1,
+        iss: 'i',
+        aud: 'a',
+        iat: 1,
+        authTime: 1,
       });
       await expect(getTenantsAndOrganization('token', 'cloud')).rejects.toThrow('No organization ID');
     });
@@ -60,7 +78,13 @@ describe('auth/services/portal', () => {
     it('should throw on 401 response', async () => {
       vi.mocked(parseJWT).mockReturnValue({
         prtId: 'prt-1',
-        sub: 'u', clientId: 'c', exp: 1, iss: 'i', aud: 'a', iat: 1, authTime: 1,
+        sub: 'u',
+        clientId: 'c',
+        exp: 1,
+        iss: 'i',
+        aud: 'a',
+        iat: 1,
+        authTime: 1,
       });
       mockFetch.mockResolvedValue({ ok: false, status: 401, statusText: 'Unauthorized' });
       await expect(getTenantsAndOrganization('token', 'cloud')).rejects.toThrow('Unauthorized');
@@ -69,7 +93,13 @@ describe('auth/services/portal', () => {
     it('should throw on other HTTP errors', async () => {
       vi.mocked(parseJWT).mockReturnValue({
         prtId: 'prt-1',
-        sub: 'u', clientId: 'c', exp: 1, iss: 'i', aud: 'a', iat: 1, authTime: 1,
+        sub: 'u',
+        clientId: 'c',
+        exp: 1,
+        iss: 'i',
+        aud: 'a',
+        iat: 1,
+        authTime: 1,
       });
       mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Server Error' });
       await expect(getTenantsAndOrganization('token', 'cloud')).rejects.toThrow('Failed to fetch tenants');
@@ -78,14 +108,18 @@ describe('auth/services/portal', () => {
 
   describe('selectTenantInteractive', () => {
     it('should throw when no organization found', async () => {
-      await expect(selectTenantInteractive({ tenants: [], organization: null as any })).rejects.toThrow('No organization');
+      await expect(selectTenantInteractive({ tenants: [], organization: null as any })).rejects.toThrow(
+        'No organization',
+      );
     });
 
     it('should throw when no tenants found', async () => {
-      await expect(selectTenantInteractive({
-        tenants: [],
-        organization: { id: 'o', name: 'O' },
-      })).rejects.toThrow('No tenants');
+      await expect(
+        selectTenantInteractive({
+          tenants: [],
+          organization: { id: 'o', name: 'O' },
+        }),
+      ).rejects.toThrow('No tenants');
     });
 
     it('should auto-select single tenant', async () => {

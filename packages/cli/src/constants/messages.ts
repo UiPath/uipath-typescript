@@ -14,30 +14,31 @@ export const MESSAGES = {
     INVALID_DIST_DIRECTORY: 'Invalid dist directory',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
     ACTION_SCHEMA_REQUIRED: '❌ action-schema.json file not found in current working directory',
-    
+
     // Authentication & Authorization
-    AUTHENTICATION_FAILED: 'Authentication failed. Please check your UIPATH_ACCESS_TOKEN, run "uipath auth" to authenticate, or pass credentials via CLI flags',
+    AUTHENTICATION_FAILED:
+      'Authentication failed. Please check your UIPATH_ACCESS_TOKEN, run "uipath auth" to authenticate, or pass credentials via CLI flags',
     ACCESS_DENIED: 'Access denied. You may not have permission to access this tenant/organization',
     API_ENDPOINT_NOT_FOUND: 'API endpoint not found. Please check your UIPATH_BASE_URL configuration',
-    
+
     // Server errors
     SERVER_ERROR: 'Server error occurred. Please try again later or contact UiPath support',
     SERVICES_UNAVAILABLE: 'UiPath services are temporarily unavailable. Please try again later',
     RATE_LIMIT_EXCEEDED: 'Rate limit exceeded. Please wait and try again',
     PAYLOAD_TOO_LARGE: 'Request payload is too large',
-    
+
     // Generic
     UNKNOWN_ERROR: 'Unknown error occurred',
     NO_ERROR_DETAILS: 'No additional error details provided',
-    
+
     // Detailed log messages (used after spinner.fail)
     PACKAGING_ERROR_PREFIX: 'Packaging error:',
     PUBLISHING_ERROR_PREFIX: 'Publishing error:',
     DEPLOYMENT_ERROR_PREFIX: 'Deployment error:',
-    
+
     // Debug messages
     FAILED_TO_LOAD_APP_CONFIG: 'Failed to load app config:',
-    
+
     // Operation-specific
     PACKAGE_CREATION_FAILED: '❌ Package creation failed',
     PACKAGE_PUBLISHING_FAILED: '❌ Package publishing failed',
@@ -46,18 +47,19 @@ export const MESSAGES = {
     FAILED_TO_FETCH_ORG_TENANT: '❌ Failed to fetch organization/tenant information',
     APP_DEPLOYMENT_FAILED: '❌ App deployment failed',
     APP_UPGRADE_FAILED: '❌ App upgrade failed',
-    APP_NOT_PUBLISHED: '❌ App has not been published yet. Run "uipath publish" first to publish the app before deploying.',
+    APP_NOT_PUBLISHED:
+      '❌ App has not been published yet. Run "uipath publish" first to publish the app before deploying.',
     APP_NAME_ALREADY_EXISTS: '❌ This app name is already deployed in this folder. Please choose a different name.',
     CLIENT_ID_VALIDATION_FAILED: 'Failed to validate clientId',
     DEPLOY_VERSION_NOT_FOUND: '❌ Could not determine deploy version from the server. Please re-run publish first.',
     DEPLOYMENT_ID_NOT_FOUND: '❌ Could not find deployment ID for the app',
-    
+
     // Ports
     ALL_REGISTERED_PORTS_IN_USE: 'All registered ports are in use',
     ALL_PORTS_IN_USE: 'All registered ports are in use. Please free up one of the ports listed above and try again.',
     PORTS_CURRENTLY_IN_USE: 'are currently in use.',
     FREE_UP_PORTS_INSTRUCTION: 'Please free up one of these ports by stopping applications running on them:',
-    
+
     // Package-specific
     NO_NUPKG_FILES_FOUND: '❌ No .nupkg files found',
     UIPATH_DIR_NOT_FOUND: '❌ .uipath directory not found',
@@ -68,7 +70,7 @@ export const MESSAGES = {
     CONFIG_FILE_MISSING_SCOPE: `❌ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} is missing required "scope" field`,
     CONFIG_FILE_SCOPE_REQUIRED_HINT: 'The scope field is required for OAuth client creation during deployment.',
     SCOPE_VALIDATION_ERROR: 'Scope is required for OAuth client creation during deployment.',
-    
+
     // Command-specific
     UNKNOWN_FLAG: '✗ Error: Unknown flag',
     UNKNOWN_COMMAND: '✗ Error: Unknown command',
@@ -78,12 +80,12 @@ export const MESSAGES = {
       'Project ID is required. Use: uipath push <project-id> or set UIPATH_PROJECT_ID in the .env file and use uipath push directly',
     PUSH_VALIDATION_FAILED: 'Validation failed',
     /** Shown when --buildDir path does not exist. */
-    PUSH_BUILD_DIR_NOT_FOUND: "Build directory not found.",
+    PUSH_BUILD_DIR_NOT_FOUND: 'Build directory not found.',
     /** Shown when --buildDir path exists but is not a directory. */
-    PUSH_BUILD_DIR_NOT_DIRECTORY: "Build path is not a directory.",
+    PUSH_BUILD_DIR_NOT_DIRECTORY: 'Build path is not a directory.',
     /** Steps to fix buildDir / push setup; shown after build dir validation errors. */
     PUSH_BUILD_DIR_STEPS:
-      'Steps:\n  1. Build your project (e.g. npm run build or your framework\'s build command).\n  2. Run: uipath push <project-id> --buildDir <your-buildDir>\n  Example: uipath push my-project-id --buildDir dist',
+      "Steps:\n  1. Build your project (e.g. npm run build or your framework's build command).\n  2. Run: uipath push <project-id> --buildDir <your-buildDir>\n  Example: uipath push my-project-id --buildDir dist",
     PUSH_FAILED_PREFIX: 'Push failed: ',
     PUSH_FILE_OPERATION_FAILED_PREFIX: 'Failed: ',
     /** When create returns 409; we skip so push does not fail. */
@@ -122,7 +124,8 @@ export const MESSAGES = {
     /** Shown when pull fails project-type validation (unsupported project or invalid manifest). User-facing; no internal manifest details. */
     PULL_PROJECT_NOT_SUPPORTED:
       'The project you are pulling is not supported. Only Studio Web coded app projects can be pulled. Please check that you have the correct project ID.',
-    PULL_OVERWRITE_CONFLICTS: 'Pull would overwrite existing local file(s). Use --overwrite to allow overwriting, or move/back up files and try again.',
+    PULL_OVERWRITE_CONFLICTS:
+      'Pull would overwrite existing local file(s). Use --overwrite to allow overwriting, or move/back up files and try again.',
     /** Shown when user declines the overwrite prompt (says no). Avoids repeating PULL_OVERWRITE_CONFLICTS. */
     PULL_OVERWRITE_DECLINED: 'Overwrite declined. Pull cancelled.',
     PULL_FILE_DOWNLOAD_FAILED_PREFIX: 'Failed to download file: ',
@@ -146,16 +149,15 @@ export const MESSAGES = {
     INVALID_PROPERTIES_OBJECT: 'Properties must be a valid object',
     MISSING_ACTION_SCHEMA_SECTION: 'Action schema must have inputs, outputs, inOuts, and outcomes sections',
     INVALID_ACTION_SCHEMA: 'Action schema validation failed:',
-    UNSUPPORTED_JSON_DATA_TYPE: 'Unsupported JSON data type:'
-
+    UNSUPPORTED_JSON_DATA_TYPE: 'Unsupported JSON data type:',
   },
-  
+
   SUCCESS: {
     // Authentication
     ALREADY_AUTHENTICATED: '✓ Already authenticated',
     AUTHENTICATION_SUCCESS: '✓ Successfully authenticated',
     LOGOUT_SUCCESS: 'Successfully logged out',
-    
+
     // Packaging
     PACKAGE_CREATED_SUCCESS: 'NuGet package created successfully!',
     PACKAGE_CONFIG_VALIDATED: '✅ Package configuration validated',
@@ -164,7 +166,7 @@ export const MESSAGES = {
     CLIENT_ID_CLEARED: '✅ ClientId cleared - UiPath will create a new OAuth client during deployment',
     CLIENT_ID_REUSED: '✅ Existing clientId will be reused in production',
     CLIENT_ID_VALID: 'clientId is valid',
-    
+
     // Publishing
     PACKAGE_PUBLISHED_SUCCESS: '✅ Package published successfully!',
     PACKAGE_UPLOADED_SUCCESS: '✅ Package uploaded to Orchestrator',
@@ -203,7 +205,7 @@ export const MESSAGES = {
     FETCHING_ORG_TENANTS: 'Fetching organization and tenants...',
     LOGGING_OUT: 'Logging out...',
     AUTHENTICATING_WITH_CLIENT_CREDENTIALS: 'Authenticating with client credentials...',
-    
+
     // Tips
     RUN_PACK_FIRST: '💡 Run "uipath pack" first to create a package',
     RUN_WITHOUT_DRY_RUN: '💡 Run without --dry-run to create the package',
@@ -215,15 +217,16 @@ export const MESSAGES = {
     CREATED_OUTPUT_DIRECTORY: 'Created output directory:',
     CONFIG_FILE_NOT_FOUND_WARNING: `⚠️ ${AUTH_CONSTANTS.FILES.SDK_CONFIG} not found in project root.`,
     SDK_CONFIG_FILL_REQUIRED: 'Please fill in the required fields (clientId) before deploying.',
-    SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES: 'ℹ️ Scope not provided. By default, all scopes registered with this clientId will be used.',
-    
+    SCOPE_NOT_PROVIDED_USING_CLIENT_SCOPES:
+      'ℹ️ Scope not provided. By default, all scopes registered with this clientId will be used.',
+
     // Next steps instructions
     NEXT_STEPS: 'Next steps:',
     STEP_BUILD_APP: '1. Build your application: npm run build',
     STEP_PACKAGE_APP: '2. Package your application: uipath pack ./dist',
     STEP_PACKAGE_NOTE: '   (App name and version will be automatically used from registration)',
     STEP_PUBLISH_PACKAGE: '3. Publish the package: uipath publish',
-    
+
     // Headers
     PUSH_HEADER: '🚀 UiPath Push',
     PULL_HEADER: '⬇️ UiPath Pull',
@@ -240,14 +243,14 @@ export const MESSAGES = {
     PUBLISHER: '🚀 UiPath Publisher',
     PACKAGE_PREVIEW: '🔍 Package Preview',
     ACCESS_TOKEN_HEADER: 'Access Token:',
-    
+
     // Success messages
     PACKAGE_READY: '🎉 Package is ready for publishing!',
     PACKAGE_AVAILABLE: '🎉 Package is now available in UiPath Orchestrator',
     APP_DEPLOYED: '🎉 Your app is now live!',
     ACTION_APP_RUN_IN_ACTION_CENTER: 'This action app should be run inside Action Center.',
   },
-  
+
   PROMPTS: {
     PULL_OVERWRITE_CONFIRM: 'This pull will overwrite one or more local files. Do you want to continue? (Y/n)',
     PULL_CONTINUE_NOT_PROJECT_ROOT: 'Continue anyway? (y/N)',
@@ -256,20 +259,23 @@ export const MESSAGES = {
     SELECT_PACKAGE_TO_PUBLISH: 'Select package to publish:',
     REAUTH_QUESTION: 'Do you want to re-authenticate?',
     COMPLETE_AUTH_IN_BROWSER: 'Please complete the authentication in your browser',
-    BROWSER_FALLBACK_INSTRUCTION: 'If the browser didn\'t open automatically, visit:',
-    REUSE_CLIENT_ID: 'Do you want UiPath to create a new OAuth client during deployment or reuse existing from uipath.json? (Y = create new, N = reuse existing clientId)',
-    ENTER_SCOPES: 'Enter the required scopes for your app (e.g., OR.Execution OR.Folders), please refer https://uipath.github.io/uipath-typescript/oauth-scopes/ for details',
+    BROWSER_FALLBACK_INSTRUCTION: "If the browser didn't open automatically, visit:",
+    REUSE_CLIENT_ID:
+      'Do you want UiPath to create a new OAuth client during deployment or reuse existing from uipath.json? (Y = create new, N = reuse existing clientId)',
+    ENTER_SCOPES:
+      'Enter the required scopes for your app (e.g., OR.Execution OR.Folders), please refer https://uipath.github.io/uipath-typescript/oauth-scopes/ for details',
   },
-  
+
   HELP: {
     // CLI help messages
     FLAG_HELP: 'Run --help to see available options',
     COMMAND_HELP: 'Run --help to see available commands',
   },
-  
+
   VALIDATIONS: {
     APP_NAME_REQUIRED: 'App name is required',
-    APP_NAME_INVALID_CHARS: 'App name can only contain lowercase letters, numbers, and hyphens (-). Please remove invalid special characters and try again.',
+    APP_NAME_INVALID_CHARS:
+      'App name can only contain lowercase letters, numbers, and hyphens (-). Please remove invalid special characters and try again.',
     PACKAGE_NAME_REQUIRED: 'Package name is required',
     MISSING_REQUIRED_CONFIG: '❌ Missing required configuration:',
     PROVIDE_VIA_ENV_OR_FLAGS: '💡 Provide these via environment variables or CLI flags:',
@@ -298,8 +304,7 @@ export const MESSAGES = {
 export const MESSAGE_BUILDERS = {
   APP_NAME_SANITIZED: (original: string, sanitized: string) =>
     `⚠️  App name "${original}" contains invalid characters. Using sanitized name: "${sanitized}"`,
-  SDK_CONFIG_CREATED: (configPath: string) =>
-    `⚠️  uipath.json not found — created at ${configPath} with empty values.`,
+  SDK_CONFIG_CREATED: (configPath: string) => `⚠️  uipath.json not found — created at ${configPath} with empty values.`,
   CLIENT_ID_NOT_FOUND: (clientId: string, orgName: string) =>
     `❌ clientId "${clientId}" in org "${orgName}" does not exist. Please check your uipath.json and try again.`,
   CLIENT_ID_CONFIDENTIAL: (clientId: string, orgName: string) =>
@@ -314,19 +319,17 @@ export const getHttpErrorMessage = (status: number, context?: string): string =>
     case 401:
       return MESSAGES.ERRORS.AUTHENTICATION_FAILED;
     case 403:
-      return context 
+      return context
         ? `Access denied. You may not have permission to ${context.toLowerCase()} in this tenant/organization`
         : MESSAGES.ERRORS.ACCESS_DENIED;
     case 404:
       return MESSAGES.ERRORS.API_ENDPOINT_NOT_FOUND;
     case 413:
-      return context?.includes('package') 
-        ? MESSAGES.ERRORS.PACKAGE_TOO_LARGE 
-        : MESSAGES.ERRORS.PAYLOAD_TOO_LARGE;
+      return context?.includes('package') ? MESSAGES.ERRORS.PACKAGE_TOO_LARGE : MESSAGES.ERRORS.PAYLOAD_TOO_LARGE;
     case 429:
       return MESSAGES.ERRORS.RATE_LIMIT_EXCEEDED;
     case 500:
-      return context 
+      return context
         ? `Server error occurred${context ? ` during ${context.toLowerCase()}` : ''}. Please try again later or contact UiPath support`
         : MESSAGES.ERRORS.SERVER_ERROR;
     case 502:
@@ -334,7 +337,7 @@ export const getHttpErrorMessage = (status: number, context?: string): string =>
     case 504:
       return MESSAGES.ERRORS.SERVICES_UNAVAILABLE;
     default:
-      return context 
+      return context
         ? `HTTP ${status} error occurred during ${context.toLowerCase()}`
         : `HTTP ${status} error occurred`;
   }

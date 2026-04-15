@@ -61,10 +61,10 @@ export interface JobServiceModel {
    * });
    * ```
    */
-  getAll<T extends JobGetAllOptions = JobGetAllOptions>(options?: T): Promise<
-    T extends HasPaginationOptions<T>
-    ? PaginatedResponse<JobGetResponse>
-    : NonPaginatedResponse<JobGetResponse>
+  getAll<T extends JobGetAllOptions = JobGetAllOptions>(
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T> ? PaginatedResponse<JobGetResponse> : NonPaginatedResponse<JobGetResponse>
   >;
 
   /**
@@ -182,10 +182,7 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
  * @param service - The job service instance
  * @returns A job object with added methods
  */
-export function createJobWithMethods(
-  jobData: RawJobGetResponse,
-  service: JobServiceModel
-): JobGetResponse {
+export function createJobWithMethods(jobData: RawJobGetResponse, service: JobServiceModel): JobGetResponse {
   const methods = createJobMethods(jobData, service);
   return Object.assign({}, jobData, methods);
 }

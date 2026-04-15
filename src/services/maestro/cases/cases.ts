@@ -32,19 +32,19 @@ export class CasesService extends BaseService implements CasesServiceModel {
   @track('Cases.GetAll')
   async getAll(): Promise<CaseGetAllResponse[]> {
     const params = createParams({
-      processType: ProcessType.CaseManagement
+      processType: ProcessType.CaseManagement,
     });
-    
+
     const response = await this.get<{ processes: Omit<CaseGetAllResponse, 'name'>[] }>(
       MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
-      { params }
+      { params },
     );
-    
+
     // Extract processes array from response data and add name field
     const cases = response.data?.processes || [];
-    return cases.map(caseItem => ({
+    return cases.map((caseItem) => ({
       ...caseItem,
-      name: this.extractCaseName(caseItem.packageId)
+      name: this.extractCaseName(caseItem.packageId),
     }));
   }
 
@@ -57,15 +57,15 @@ export class CasesService extends BaseService implements CasesServiceModel {
   private extractCaseName(packageId: string): string {
     // Check if packageId contains "CaseManagement."
     const caseManagementIndex = packageId.indexOf('CaseManagement.');
-    
+
     if (caseManagementIndex !== -1) {
       // Extract everything after "CaseManagement."
       const afterCaseManagement = packageId.substring(caseManagementIndex + 'CaseManagement.'.length);
-      
+
       // Replace hyphens with spaces for better readability
       return afterCaseManagement.replace(/-/g, ' ');
     }
-    
+
     // If no "CaseManagement.", return the whole packageId
     return packageId;
   }

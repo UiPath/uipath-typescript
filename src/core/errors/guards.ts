@@ -70,17 +70,17 @@ export function getErrorDetails(error: unknown): { message: string; statusCode?:
   if (isUiPathError(error)) {
     return {
       message: error.message,
-      statusCode: error.statusCode
+      statusCode: error.statusCode,
     };
   }
 
   if (error instanceof Error) {
     return {
-      message: error.message
+      message: error.message,
     };
   }
 
   return {
-    message: String(error)
+    message: String(error),
   };
 }

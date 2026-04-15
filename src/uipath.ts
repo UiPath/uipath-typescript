@@ -11,7 +11,7 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService
+  AssetService,
 } from './services';
 import { PartialUiPathConfig } from './core/config/sdk-config';
 
@@ -76,7 +76,7 @@ export class UiPath extends UiPathCore {
         /**
          * Access to Process Incidents service
          */
-        incidents: this.getService(ProcessIncidentsService)
+        incidents: this.getService(ProcessIncidentsService),
       }),
       /**
        * Access to Maestro Cases service
@@ -85,8 +85,8 @@ export class UiPath extends UiPathCore {
         /**
          * Access to Case Instances service
          */
-        instances: this.getService(CaseInstancesService)
-      })
+        instances: this.getService(CaseInstancesService),
+      }),
     };
   }
 
@@ -98,7 +98,7 @@ export class UiPath extends UiPathCore {
       /**
        * Access to ChoiceSet service for managing choice sets
        */
-      choicesets: this.getService(ChoiceSetService)
+      choicesets: this.getService(ChoiceSetService),
     });
   }
 

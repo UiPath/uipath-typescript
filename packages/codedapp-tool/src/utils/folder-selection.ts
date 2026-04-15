@@ -1,5 +1,5 @@
-import inquirer from "inquirer";
-import chalk from "chalk";
+import inquirer from 'inquirer';
+import chalk from 'chalk';
 
 interface Folder {
   key: string;
@@ -23,18 +23,16 @@ async function fetchFolders(
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to fetch folders: ${response.status} ${response.statusText}`,
-    );
+    throw new Error(`Failed to fetch folders: ${response.status} ${response.statusText}`);
   }
 
   const data = (await response.json()) as Record<string, unknown>;
   const items = (data.PageItems ?? data.value ?? []) as Record<string, unknown>[];
 
   return items.map((item) => ({
-    key: String(item.Key ?? item.key ?? ""),
-    displayName: String(item.DisplayName ?? item.displayName ?? ""),
-    fullyQualifiedName: String(item.FullyQualifiedName ?? item.fullyQualifiedName ?? ""),
+    key: String(item.Key ?? item.key ?? ''),
+    displayName: String(item.DisplayName ?? item.displayName ?? ''),
+    fullyQualifiedName: String(item.FullyQualifiedName ?? item.fullyQualifiedName ?? ''),
   }));
 }
 
@@ -44,7 +42,7 @@ async function fetchFolders(
  */
 async function promptFolderSelection(folders: Folder[]): Promise<string | null> {
   if (folders.length === 0) {
-    console.log(chalk.yellow("No folders found in this tenant."));
+    console.log(chalk.yellow('No folders found in this tenant.'));
     return null;
   }
 
@@ -55,21 +53,21 @@ async function promptFolderSelection(folders: Folder[]): Promise<string | null> 
 
   const { selection } = await inquirer.prompt<{ selection: string }>([
     {
-      type: "list",
-      name: "selection",
-      message: "Select a folder:",
+      type: 'list',
+      name: 'selection',
+      message: 'Select a folder:',
       choices: [
         ...folders.map((f) => ({
           name: `${f.displayName} (${f.fullyQualifiedName})`,
           value: f.key,
         })),
-        { name: "Skip folder selection", value: "__skip__" },
+        { name: 'Skip folder selection', value: '__skip__' },
       ],
       pageSize: 10,
     },
   ]);
 
-  if (selection === "__skip__") {
+  if (selection === '__skip__') {
     return null;
   }
 
@@ -107,13 +105,7 @@ export async function ensureFolderKey(): Promise<void> {
       process.env.UIPATH_FOLDER_KEY = folderKey;
     }
   } catch (error) {
-    console.error(
-      chalk.yellow(
-        `Could not fetch folders: ${error instanceof Error ? error.message : "Unknown error"}`,
-      ),
-    );
-    console.error(
-      chalk.yellow("You can provide --folderKey manually or set UIPATH_FOLDER_KEY in your .env."),
-    );
+    console.error(chalk.yellow(`Could not fetch folders: ${error instanceof Error ? error.message : 'Unknown error'}`));
+    console.error(chalk.yellow('You can provide --folderKey manually or set UIPATH_FOLDER_KEY in your .env.'));
   }
 }

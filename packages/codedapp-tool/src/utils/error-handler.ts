@@ -15,8 +15,7 @@ export function withErrorHandling<A extends unknown[]>(
       await fn(...args);
       process.exit(0);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
       console.error(`\x1b[31mError: ${message}\x1b[0m`);
       if (process.env.DEBUG && error instanceof Error) {
         console.error(error.stack);

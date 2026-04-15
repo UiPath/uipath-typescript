@@ -25,8 +25,14 @@ const createContentPart = (mimeType = 'text/plain') => {
   manager.onUnhandledErrorStart(vi.fn());
   const session = manager.startSession({ conversationId: CONVERSATION_ID }) as SessionEventHelperImpl;
   const exchange = session.startExchange({ exchangeId: EXCHANGE_ID }) as ExchangeEventHelperImpl;
-  const message = exchange.startMessage({ messageId: MESSAGE_ID, role: MessageRole.Assistant }) as MessageEventHelperImpl;
-  const contentPart = message.startContentPart({ contentPartId: CONTENT_PART_ID, mimeType }) as ContentPartEventHelperImpl;
+  const message = exchange.startMessage({
+    messageId: MESSAGE_ID,
+    role: MessageRole.Assistant,
+  }) as MessageEventHelperImpl;
+  const contentPart = message.startContentPart({
+    contentPartId: CONTENT_PART_ID,
+    mimeType,
+  }) as ContentPartEventHelperImpl;
   emitSpy.mockClear();
   return { emitSpy, manager, session, exchange, message, contentPart };
 };
@@ -117,7 +123,7 @@ describe('ContentPartEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -138,7 +144,7 @@ describe('ContentPartEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -171,16 +177,14 @@ describe('ContentPartEventHelper', () => {
                     citationId: 'cite-1',
                     startCitation: {},
                     endCitation: expect.objectContaining({
-                      sources: expect.arrayContaining([
-                        expect.objectContaining({ title: 'Source 1' }),
-                      ]),
+                      sources: expect.arrayContaining([expect.objectContaining({ title: 'Source 1' })]),
                     }),
                   }),
                 }),
               }),
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -206,7 +210,7 @@ describe('ContentPartEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -238,7 +242,7 @@ describe('ContentPartEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -264,7 +268,7 @@ describe('ContentPartEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -292,7 +296,7 @@ describe('ContentPartEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -379,9 +383,7 @@ describe('ContentPartEventHelper', () => {
         },
       });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'cp-err-1' })
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'cp-err-1' }));
     });
 
     it('should ignore events for different contentPartId', () => {
@@ -429,7 +431,7 @@ describe('ContentPartEventHelper', () => {
           mimeType: 'text/plain',
           citations: [],
           citationErrors: [],
-        })
+        }),
       );
     });
 
@@ -471,7 +473,7 @@ describe('ContentPartEventHelper', () => {
             }),
           ]),
           citationErrors: [],
-        })
+        }),
       );
     });
 
@@ -498,7 +500,7 @@ describe('ContentPartEventHelper', () => {
               errorType: CitationErrorType.CitationNotEnded,
             }),
           ]),
-        })
+        }),
       );
     });
 
@@ -527,7 +529,7 @@ describe('ContentPartEventHelper', () => {
               errorType: CitationErrorType.CitationNotStarted,
             }),
           ]),
-        })
+        }),
       );
     });
 
@@ -551,7 +553,7 @@ describe('ContentPartEventHelper', () => {
         expect.objectContaining({
           contentPartId: 'no-start-cp',
           data: 'Hello',
-        })
+        }),
       );
     });
   });
@@ -574,7 +576,7 @@ describe('ContentPartEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -597,184 +599,212 @@ describe('ContentPartEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
   });
 
   describe('replay', () => {
     it('should generate events for inline content part without citations', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp',
-        mimeType: 'text/plain',
-        data: { inline: 'Hello World' },
-        citations: [],
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp',
+          mimeType: 'text/plain',
+          data: { inline: 'Hello World' },
+          citations: [],
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
-      expect(events[0]).toEqual(expect.objectContaining({
-        contentPartId: 'replay-cp',
-        startContentPart: expect.objectContaining({ mimeType: 'text/plain' }),
-      }));
+      expect(events[0]).toEqual(
+        expect.objectContaining({
+          contentPartId: 'replay-cp',
+          startContentPart: expect.objectContaining({ mimeType: 'text/plain' }),
+        }),
+      );
 
-      const chunkEvents = events.filter(e => e.chunk);
+      const chunkEvents = events.filter((e) => e.chunk);
       expect(chunkEvents).toHaveLength(1);
       expect(chunkEvents[0].chunk!.data).toBe('Hello World');
 
-      expect(events[events.length - 1]).toEqual(expect.objectContaining({
-        contentPartId: 'replay-cp',
-        endContentPart: {},
-      }));
+      expect(events[events.length - 1]).toEqual(
+        expect.objectContaining({
+          contentPartId: 'replay-cp',
+          endContentPart: {},
+        }),
+      );
     });
 
     it('should generate events for content part with citations', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp-cite',
-        mimeType: 'text/markdown',
-        data: { inline: 'Before cited after' },
-        citations: [
-          {
-            citationId: 'c1',
-            offset: 7,
-            length: 5,
-            sources: [{ title: 'Source 1' }],
-          },
-        ],
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp-cite',
+          mimeType: 'text/markdown',
+          data: { inline: 'Before cited after' },
+          citations: [
+            {
+              citationId: 'c1',
+              offset: 7,
+              length: 5,
+              sources: [{ title: 'Source 1' }],
+            },
+          ],
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
-      const chunkEvents = events.filter(e => e.chunk);
+      const chunkEvents = events.filter((e) => e.chunk);
       expect(chunkEvents.length).toBeGreaterThan(1);
 
       // Should have a chunk with citation
-      const citedChunk = chunkEvents.find(e => e.chunk?.citation);
+      const citedChunk = chunkEvents.find((e) => e.chunk?.citation);
       expect(citedChunk).toBeDefined();
       expect(citedChunk!.chunk!.data).toBe('cited');
       expect(citedChunk!.chunk!.citation!.citationId).toBe('c1');
     });
 
     it('should generate events for external content part', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp-ext',
-        mimeType: 'application/pdf',
-        data: { uri: 'https://example.com/doc.pdf', byteCount: 1234 },
-        citations: [],
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp-ext',
+          mimeType: 'application/pdf',
+          data: { uri: 'https://example.com/doc.pdf', byteCount: 1234 },
+          citations: [],
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
-      expect(events[0].startContentPart).toEqual(expect.objectContaining({
-        mimeType: 'application/pdf',
-        externalValue: expect.objectContaining({ uri: 'https://example.com/doc.pdf' }),
-      }));
+      expect(events[0].startContentPart).toEqual(
+        expect.objectContaining({
+          mimeType: 'application/pdf',
+          externalValue: expect.objectContaining({ uri: 'https://example.com/doc.pdf' }),
+        }),
+      );
 
       // External content should not have chunk events
-      const chunkEvents = events.filter(e => e.chunk);
+      const chunkEvents = events.filter((e) => e.chunk);
       expect(chunkEvents).toHaveLength(0);
     });
 
     it('should set interrupted flag for incomplete content parts', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp-inc',
-        mimeType: 'text/plain',
-        data: { inline: 'partial' },
-        citations: [],
-        isIncomplete: true,
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp-inc',
+          mimeType: 'text/plain',
+          data: { inline: 'partial' },
+          citations: [],
+          isIncomplete: true,
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
       const endEvent = events[events.length - 1];
       expect(endEvent.endContentPart).toEqual({ interrupted: true });
     });
 
     it('should include isTranscript metadata when present', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp-trans',
-        mimeType: 'text/plain',
-        data: { inline: 'transcript text' },
-        citations: [],
-        isTranscript: true,
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp-trans',
+          mimeType: 'text/plain',
+          data: { inline: 'transcript text' },
+          citations: [],
+          isTranscript: true,
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
-      expect(events[0].startContentPart).toEqual(expect.objectContaining({
-        metaData: { isTranscript: true },
-      }));
+      expect(events[0].startContentPart).toEqual(
+        expect.objectContaining({
+          metaData: { isTranscript: true },
+        }),
+      );
     });
 
     it('should replay inline content with citation at the start', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp-cs',
-        mimeType: 'text/plain',
-        data: { inline: 'cited rest' },
-        citations: [{ citationId: 'c1', offset: 0, length: 5, sources: [{ title: 'S1' }] }],
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp-cs',
+          mimeType: 'text/plain',
+          data: { inline: 'cited rest' },
+          citations: [{ citationId: 'c1', offset: 0, length: 5, sources: [{ title: 'S1' }] }],
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
-      const chunkEvents = events.filter(e => e.chunk);
-      const citedChunk = chunkEvents.find(e => e.chunk?.citation);
+      const chunkEvents = events.filter((e) => e.chunk);
+      const citedChunk = chunkEvents.find((e) => e.chunk?.citation);
       expect(citedChunk).toBeDefined();
       expect(citedChunk!.chunk!.data).toBe('cited');
     });
 
     it('should replay inline content with citation at the end', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp-ce',
-        mimeType: 'text/plain',
-        data: { inline: 'text cited' },
-        citations: [{ citationId: 'c1', offset: 5, length: 5, sources: [{ title: 'S1' }] }],
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp-ce',
+          mimeType: 'text/plain',
+          data: { inline: 'text cited' },
+          citations: [{ citationId: 'c1', offset: 5, length: 5, sources: [{ title: 'S1' }] }],
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
-      const chunkEvents = events.filter(e => e.chunk);
-      const citedChunk = chunkEvents.find(e => e.chunk?.citation);
+      const chunkEvents = events.filter((e) => e.chunk);
+      const citedChunk = chunkEvents.find((e) => e.chunk?.citation);
       expect(citedChunk).toBeDefined();
       expect(citedChunk!.chunk!.data).toBe('cited');
     });
 
     it('should replay inline content with multiple citations', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp-mc',
-        mimeType: 'text/plain',
-        data: { inline: 'aaa bbb ccc' },
-        citations: [
-          { citationId: 'c1', offset: 0, length: 3, sources: [{ title: 'S1' }] },
-          { citationId: 'c2', offset: 4, length: 3, sources: [{ title: 'S2' }] },
-        ],
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp-mc',
+          mimeType: 'text/plain',
+          data: { inline: 'aaa bbb ccc' },
+          citations: [
+            { citationId: 'c1', offset: 0, length: 3, sources: [{ title: 'S1' }] },
+            { citationId: 'c2', offset: 4, length: 3, sources: [{ title: 'S2' }] },
+          ],
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
-      const citedChunks = events.filter(e => e.chunk?.citation);
+      const citedChunks = events.filter((e) => e.chunk?.citation);
       expect(citedChunks.length).toBe(2);
     });
 
     it('should replay inline content with adjacent citations', () => {
-      const events = Array.from(ContentPartEventHelperImpl.replay({
-        contentPartId: 'replay-cp-adj',
-        mimeType: 'text/plain',
-        data: { inline: 'aaabbb' },
-        citations: [
-          { citationId: 'c1', offset: 0, length: 3, sources: [{ title: 'S1' }] },
-          { citationId: 'c2', offset: 3, length: 3, sources: [{ title: 'S2' }] },
-        ],
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ContentPartEventHelperImpl.replay({
+          contentPartId: 'replay-cp-adj',
+          mimeType: 'text/plain',
+          data: { inline: 'aaabbb' },
+          citations: [
+            { citationId: 'c1', offset: 0, length: 3, sources: [{ title: 'S1' }] },
+            { citationId: 'c2', offset: 3, length: 3, sources: [{ title: 'S2' }] },
+          ],
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
-      const citedChunks = events.filter(e => e.chunk?.citation);
+      const citedChunks = events.filter((e) => e.chunk?.citation);
       expect(citedChunks.length).toBe(2);
     });
 
     it('should throw error for overlapping citations in inline content', () => {
       expect(() => {
-        const _events = Array.from(ContentPartEventHelperImpl.replay({
-          contentPartId: 'replay-cp-overlap',
-          mimeType: 'text/plain',
-          data: { inline: 'Text with overlapping citations here.' },
-          citations: [
-            { citationId: 'c1', offset: 10, length: 20, sources: [{ title: 'S1' }] },
-            { citationId: 'c2', offset: 25, length: 10, sources: [{ title: 'S2' }] },
-          ],
-          createdTime: '2024-01-01T00:00:00Z',
-        } as any));
+        const _events = Array.from(
+          ContentPartEventHelperImpl.replay({
+            contentPartId: 'replay-cp-overlap',
+            mimeType: 'text/plain',
+            data: { inline: 'Text with overlapping citations here.' },
+            citations: [
+              { citationId: 'c1', offset: 10, length: 20, sources: [{ title: 'S1' }] },
+              { citationId: 'c2', offset: 25, length: 10, sources: [{ title: 'S2' }] },
+            ],
+            createdTime: '2024-01-01T00:00:00Z',
+          } as any),
+        );
       }).toThrowError(/[Oo]verlapping/);
     });
   });
@@ -907,9 +937,7 @@ describe('ContentPartEventHelper', () => {
         contentPartError: { errorId: 'cpe-1', startError: { message: 'err' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'cpe-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'cpe-1' }));
     });
 
     it('should dispatch to unhandled when no local handler exists', () => {
@@ -922,9 +950,7 @@ describe('ContentPartEventHelper', () => {
         contentPartError: { errorId: 'cpe-1', startError: { message: 'unhandled' } },
       });
 
-      expect(unhandledSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'cpe-1' })
-      );
+      expect(unhandledSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'cpe-1' }));
     });
 
     it('should store errors in errors map on error start', () => {
@@ -984,9 +1010,7 @@ describe('ContentPartEventHelper', () => {
         contentPartError: { errorId: 'cpe-end-1', endError: {} },
       });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'cpe-end-1' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'cpe-end-1' }));
     });
 
     it('should dispatch error end to manager anyErrorEnd', () => {
@@ -1000,9 +1024,7 @@ describe('ContentPartEventHelper', () => {
         contentPartError: { errorId: 'cpe-any-end', endError: {} },
       });
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'cpe-any-end' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'cpe-any-end' }));
     });
 
     it('should not throw when error end occurs without any handler', () => {
@@ -1011,7 +1033,10 @@ describe('ContentPartEventHelper', () => {
       const session = manager.startSession({ conversationId: CONVERSATION_ID }) as SessionEventHelperImpl;
       const exchange = session.startExchange({ exchangeId: EXCHANGE_ID }) as ExchangeEventHelperImpl;
       const message = exchange.startMessage({ messageId: MESSAGE_ID }) as MessageEventHelperImpl;
-      const cp = message.startContentPart({ contentPartId: 'no-handler-cp', mimeType: 'text/plain' }) as ContentPartEventHelperImpl;
+      const cp = message.startContentPart({
+        contentPartId: 'no-handler-cp',
+        mimeType: 'text/plain',
+      }) as ContentPartEventHelperImpl;
 
       expect(() => {
         cp.dispatch({

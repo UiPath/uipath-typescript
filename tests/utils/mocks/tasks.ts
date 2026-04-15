@@ -16,32 +16,35 @@ import { TEST_CONSTANTS } from '../constants/common';
  * @returns Mock Task response object
  */
 export const createMockTaskResponse = (overrides: Partial<any> = {}) => {
-  return createMockBaseResponse({
-    id: TASK_TEST_CONSTANTS.TASK_ID,
-    title: TASK_TEST_CONSTANTS.TASK_TITLE,
-    type: TaskType.External,
-    priority: TaskPriority.Medium,
-    status: TaskStatus.Unassigned,
-    organizationUnitId: TEST_CONSTANTS.FOLDER_ID,
-    key: TASK_TEST_CONSTANTS.TASK_KEY,
-    isDeleted: false,
-    creationTime: TASK_TEST_CONSTANTS.CREATION_TIME,
-    action: null,
-    externalTag: null,
-    lastAssignedTime: null,
-    completionTime: null,
-    parentOperationId: null,
-    deleterUserId: null,
-    deletionTime: null,
-    lastModificationTime: null,
-    waitJobState: null,
-    assignedToUser: null,
-    taskSlaDetails: null,
-    completedByUser: null,
-    taskAssignees: null,
-    processingTime: null,
-    data: null,
-  }, overrides);
+  return createMockBaseResponse(
+    {
+      id: TASK_TEST_CONSTANTS.TASK_ID,
+      title: TASK_TEST_CONSTANTS.TASK_TITLE,
+      type: TaskType.External,
+      priority: TaskPriority.Medium,
+      status: TaskStatus.Unassigned,
+      organizationUnitId: TEST_CONSTANTS.FOLDER_ID,
+      key: TASK_TEST_CONSTANTS.TASK_KEY,
+      isDeleted: false,
+      creationTime: TASK_TEST_CONSTANTS.CREATION_TIME,
+      action: null,
+      externalTag: null,
+      lastAssignedTime: null,
+      completionTime: null,
+      parentOperationId: null,
+      deleterUserId: null,
+      deletionTime: null,
+      lastModificationTime: null,
+      waitJobState: null,
+      assignedToUser: null,
+      taskSlaDetails: null,
+      completedByUser: null,
+      taskAssignees: null,
+      processingTime: null,
+      data: null,
+    },
+    overrides,
+  );
 };
 
 /**
@@ -50,33 +53,36 @@ export const createMockTaskResponse = (overrides: Partial<any> = {}) => {
  * @returns Mock Task GET response object
  */
 export const createMockTaskGetResponse = (overrides: Partial<any> = {}) => {
-  return createMockBaseResponse({
-    id: TASK_TEST_CONSTANTS.TASK_ID,
-    title: TASK_TEST_CONSTANTS.TASK_TITLE,
-    type: TaskType.External,
-    priority: TaskPriority.Medium,
-    status: TaskStatus.Unassigned,
-    organizationUnitId: TEST_CONSTANTS.FOLDER_ID,
-    key: TASK_TEST_CONSTANTS.TASK_KEY,
-    isDeleted: false,
-    creationTime: TASK_TEST_CONSTANTS.CREATION_TIME,
-    action: null,
-    externalTag: null,
-    lastAssignedTime: null,
-    completionTime: null,
-    parentOperationId: null,
-    deleterUserId: null,
-    deletionTime: null,
-    lastModificationTime: null,
-    isCompleted: false,
-    encrypted: false,
-    bulkFormLayoutId: null,
-    formLayoutId: null,
-    taskSlaDetail: null,
-    taskAssigneeName: null,
-    lastModifierUserId: null,
-    assignedToUser: null,
-  }, overrides);
+  return createMockBaseResponse(
+    {
+      id: TASK_TEST_CONSTANTS.TASK_ID,
+      title: TASK_TEST_CONSTANTS.TASK_TITLE,
+      type: TaskType.External,
+      priority: TaskPriority.Medium,
+      status: TaskStatus.Unassigned,
+      organizationUnitId: TEST_CONSTANTS.FOLDER_ID,
+      key: TASK_TEST_CONSTANTS.TASK_KEY,
+      isDeleted: false,
+      creationTime: TASK_TEST_CONSTANTS.CREATION_TIME,
+      action: null,
+      externalTag: null,
+      lastAssignedTime: null,
+      completionTime: null,
+      parentOperationId: null,
+      deleterUserId: null,
+      deletionTime: null,
+      lastModificationTime: null,
+      isCompleted: false,
+      encrypted: false,
+      bulkFormLayoutId: null,
+      formLayoutId: null,
+      taskSlaDetail: null,
+      taskAssigneeName: null,
+      lastModifierUserId: null,
+      assignedToUser: null,
+    },
+    overrides,
+  );
 };
 
 /**
@@ -85,33 +91,36 @@ export const createMockTaskGetResponse = (overrides: Partial<any> = {}) => {
  * @returns Basic task response object cast as RawTaskGetResponse
  */
 export const createBasicTask = (overrides: Partial<any> = {}): RawTaskGetResponse => {
-  return createMockBaseResponse({
-    id: TASK_TEST_CONSTANTS.TASK_ID,
-    title: TASK_TEST_CONSTANTS.TASK_TITLE,
-    type: TaskType.External,
-    priority: TaskPriority.Medium,
-    status: TaskStatus.Unassigned,
-    folderId: TEST_CONSTANTS.FOLDER_ID,
-    key: TASK_TEST_CONSTANTS.TASK_KEY,
-    isDeleted: false,
-    createdTime: TASK_TEST_CONSTANTS.CREATION_TIME,
-    action: null,
-    externalTag: null,
-    lastAssignedTime: null,
-    completedTime: null,
-    parentOperationId: null,
-    deleterUserId: null,
-    deletedTime: null,
-    lastModifiedTime: null,
-    isCompleted: false,
-    encrypted: false,
-    bulkFormLayoutId: null,
-    formLayoutId: null,
-    taskSlaDetail: null,
-    taskAssigneeName: null,
-    lastModifierUserId: null,
-    assignedToUser: null,
-  }, overrides) as RawTaskGetResponse;
+  return createMockBaseResponse(
+    {
+      id: TASK_TEST_CONSTANTS.TASK_ID,
+      title: TASK_TEST_CONSTANTS.TASK_TITLE,
+      type: TaskType.External,
+      priority: TaskPriority.Medium,
+      status: TaskStatus.Unassigned,
+      folderId: TEST_CONSTANTS.FOLDER_ID,
+      key: TASK_TEST_CONSTANTS.TASK_KEY,
+      isDeleted: false,
+      createdTime: TASK_TEST_CONSTANTS.CREATION_TIME,
+      action: null,
+      externalTag: null,
+      lastAssignedTime: null,
+      completedTime: null,
+      parentOperationId: null,
+      deleterUserId: null,
+      deletedTime: null,
+      lastModifiedTime: null,
+      isCompleted: false,
+      encrypted: false,
+      bulkFormLayoutId: null,
+      formLayoutId: null,
+      taskSlaDetail: null,
+      taskAssigneeName: null,
+      lastModifierUserId: null,
+      assignedToUser: null,
+    },
+    overrides,
+  ) as RawTaskGetResponse;
 };
 
 /**
@@ -120,13 +129,13 @@ export const createBasicTask = (overrides: Partial<any> = {}): RawTaskGetRespons
  * @returns Array of mock tasks
  */
 export const createMockTasks = (count: number) => {
-  return createMockCollection(count, (i) => 
+  return createMockCollection(count, (i) =>
     createMockTaskGetResponse({
       id: i + 1,
       title: `Task ${i + 1}`,
       key: `${TASK_TEST_CONSTANTS.TASK_KEY_PREFIX}${i + 1}`,
       status: TaskStatus.Pending,
-    })
+    }),
   );
 };
 
@@ -145,4 +154,3 @@ export const createMockUsers = (count: number) => {
     displayName: `${TASK_TEST_CONSTANTS.USER_DISPLAY_NAME_PREFIX}${i + 1}`,
   }));
 };
-

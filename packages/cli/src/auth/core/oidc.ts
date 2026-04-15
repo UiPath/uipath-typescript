@@ -32,16 +32,16 @@ export interface TokenResponse {
 }
 
 export interface AccessTokenData {
-  sub: string;              // Subject - The user's unique identifier
-  prtId: string;            // Portal ID - UiPath portal identifier
-  clientId: string;         // OAuth client ID
-  exp: number;              // Expiration time (Unix timestamp)
-  iss: string;              // Issuer - The entity that issued the token (e.g., https://cloud.uipath.com)
-  aud: string;              // Audience - Intended recipient of the token
-  iat: number;              // Issued At - When the token was issued (Unix timestamp)
-  authTime: number;         // Authentication time - When the user authenticated
-  organizationId?: string;  // Optional organization identifier
-  email?: string;           // Optional email claim (e.g. for push author)
+  sub: string; // Subject - The user's unique identifier
+  prtId: string; // Portal ID - UiPath portal identifier
+  clientId: string; // OAuth client ID
+  exp: number; // Expiration time (Unix timestamp)
+  iss: string; // Issuer - The entity that issued the token (e.g., https://cloud.uipath.com)
+  aud: string; // Audience - Intended recipient of the token
+  iat: number; // Issued At - When the token was issued (Unix timestamp)
+  authTime: number; // Authentication time - When the user authenticated
+  organizationId?: string; // Optional organization identifier
+  email?: string; // Optional email claim (e.g. for push author)
 }
 
 export interface ConfidentialClientConfig {
@@ -52,11 +52,7 @@ export interface ConfidentialClientConfig {
 }
 
 const base64URLEncode = (str: Buffer): string => {
-  return str
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return str.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 };
 
 export const generatePKCEChallenge = (): PKCEChallenge => {
@@ -75,7 +71,7 @@ export const generatePKCEChallenge = (): PKCEChallenge => {
 export const getAuthorizationUrl = (
   domain: string,
   pkce: PKCEChallenge,
-  port: number = AUTH_CONSTANTS.DEFAULT_PORT
+  port: number = AUTH_CONSTANTS.DEFAULT_PORT,
 ): string => {
   const authUrl = getAuthorizationBaseUrl(domain);
   const redirectUri = buildRedirectUri(port);
@@ -126,9 +122,7 @@ export const parseJWT = (token: string): AccessTokenData => {
  * in UiPath Identity, not passed in the request. If scope is not provided, we don't include it
  * in the request and let the server use the application's configured scopes.
  */
-export const authenticateWithClientCredentials = async (
-  config: ConfidentialClientConfig
-): Promise<TokenResponse> => {
+export const authenticateWithClientCredentials = async (config: ConfidentialClientConfig): Promise<TokenResponse> => {
   const tokenEndpoint = getTokenEndpointUrl(config.domain);
 
   const params = new URLSearchParams({

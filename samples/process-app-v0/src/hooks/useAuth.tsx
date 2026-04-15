@@ -1,9 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { 
-  UiPath,
-  UiPathError
-} from '@uipath/uipath-typescript';
+import { UiPath, UiPathError } from '@uipath/uipath-typescript';
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript';
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -26,7 +23,7 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
     const initializeAuth = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // Handle OAuth callback if present
         if (sdk.isInOAuthCallback()) {
@@ -42,14 +39,14 @@ export const AuthProvider: React.FC<{ children: ReactNode; config: UiPathSDKConf
         setIsLoading(false);
       }
     };
-    
+
     initializeAuth();
   }, [sdk]);
 
   const login = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await sdk.initialize();
       setIsAuthenticated(sdk.isAuthenticated());

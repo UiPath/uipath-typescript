@@ -4,15 +4,15 @@ import { ProcessIncidentMap } from '../../../models/maestro/process-incidents.co
 import type { ProcessIncidentGetResponse } from '../../../models/maestro/process-incidents.types';
 
 /**
-* Helpers for fetching BPMN XML and extracting element details used to annotate responses
-*/
+ * Helpers for fetching BPMN XML and extracting element details used to annotate responses
+ */
 export class BpmnHelpers {
   /**
    * Parse BPMN XML and extract element id → {name,type} used for incidents
    */
   static parseBpmnElementsForIncidents(bpmnXml: string): Record<string, { name: string; type: string }> {
     const elementInfo: Record<string, { name: string; type: string }> = {};
-    
+
     try {
       // Find <bpmn:...> start tags and capture the element type.
       // Then read 'id' and 'name' attributes from each tag.
@@ -37,13 +37,13 @@ export class BpmnHelpers {
 
         elementInfo[elementId] = {
           type: activityType,
-          name: activityName
+          name: activityName,
         };
       }
     } catch (error) {
       console.warn('Failed to parse BPMN XML for incidents:', error);
     }
-    
+
     return elementInfo;
   }
 
@@ -55,7 +55,7 @@ export class BpmnHelpers {
     // e.g., "serviceTask" -> "Service Task", "exclusiveGateway" -> "Exclusive Gateway"
     return elementType
       .replace(/([A-Z])/g, ' $1') // Add space before uppercase letters
-      .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
+      .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
       .trim(); // Remove any leading/trailing spaces
   }
 
@@ -63,19 +63,17 @@ export class BpmnHelpers {
    * Fetch BPMN via getBpmn and add element name/type to each incident
    */
   static async enrichIncidentsWithBpmnData(
-    incidents: any[], 
+    incidents: any[],
     folderKey: string,
-    service: any
+    service: any,
   ): Promise<ProcessIncidentGetResponse[]> {
     // Check if all incidents have the same instanceId
-    const uniqueInstanceIds = [...new Set(incidents.map(i => i.instanceId))];
+    const uniqueInstanceIds = [...new Set(incidents.map((i) => i.instanceId))];
 
     if (uniqueInstanceIds.length === 1) {
       // Single instance optimization (in case of process instance incidents)
       const elementInfo = await this.getBpmnElementInfo(uniqueInstanceIds[0], folderKey, service);
-      return incidents.map((incident: any) => 
-        this.transformIncidentWithBpmn(incident, elementInfo)
-      );
+      return incidents.map((incident: any) => this.transformIncidentWithBpmn(incident, elementInfo));
     } else {
       // Multiple instances optimization (in case of process incidents)
       return this.enrichMultipleInstanceIncidents(incidents, folderKey, service);
@@ -88,23 +86,24 @@ export class BpmnHelpers {
   private static async enrichMultipleInstanceIncidents(
     incidents: any[],
     folderKey: string,
-    service: any
+    service: any,
   ): Promise<ProcessIncidentGetResponse[]> {
-    const groups = incidents.reduce((acc, incident) => {
-      const id = incident.instanceId || NO_INSTANCE;
-      (acc[id] = acc[id] || []).push(incident);
-      return acc;
-    }, {} as Record<string, any[]>);
+    const groups = incidents.reduce(
+      (acc, incident) => {
+        const id = incident.instanceId || NO_INSTANCE;
+        (acc[id] = acc[id] || []).push(incident);
+        return acc;
+      },
+      {} as Record<string, any[]>,
+    );
 
     const results = await Promise.all(
       Object.entries(groups).map(async (entry) => {
         const [instanceId, groupIncidents] = entry;
         const elementInfo = await this.getBpmnElementInfo(instanceId, folderKey, service);
 
-        return (groupIncidents as any[]).map((incident: any) => 
-          this.transformIncidentWithBpmn(incident, elementInfo)
-        );
-      })
+        return (groupIncidents as any[]).map((incident: any) => this.transformIncidentWithBpmn(incident, elementInfo));
+      }),
     );
 
     return results.flat();
@@ -116,7 +115,7 @@ export class BpmnHelpers {
   private static async getBpmnElementInfo(
     instanceId: string,
     folderKey: string,
-    service: any
+    service: any,
   ): Promise<Record<string, { name: string; type: string }>> {
     if (!instanceId || instanceId === NO_INSTANCE) {
       return {};
@@ -136,15 +135,15 @@ export class BpmnHelpers {
    */
   private static transformIncidentWithBpmn(
     incident: any,
-    elementInfo: Record<string, { name: string; type: string }>
+    elementInfo: Record<string, { name: string; type: string }>,
   ): ProcessIncidentGetResponse {
     const element = elementInfo[incident.elementId];
     const transformed = transformData(incident, ProcessIncidentMap) as unknown as ProcessIncidentGetResponse;
-    
+
     return {
       ...transformed,
       incidentElementActivityType: element?.type || UNKNOWN,
-      incidentElementActivityName: element?.name || UNKNOWN
+      incidentElementActivityName: element?.name || UNKNOWN,
     };
   }
 }

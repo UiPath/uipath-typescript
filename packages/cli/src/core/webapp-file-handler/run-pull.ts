@@ -43,10 +43,7 @@ export interface RunPullOptions {
  * - Remote structure uses forward slashes in paths.
  * - push_metadata.json, when present, contains optional buildDir (string); invalid JSON or missing key is non-fatal (we pull all under source/).
  */
-export async function runPull(
-  config: WebAppProjectConfig,
-  options: RunPullOptions
-): Promise<void> {
+export async function runPull(config: WebAppProjectConfig, options: RunPullOptions): Promise<void> {
   const { rootDir, logger } = config;
 
   if (!fs.existsSync(rootDir)) {
@@ -119,7 +116,11 @@ export async function runPull(
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      logger.log(chalk.gray(`${MESSAGES.INFO.PULL_METADATA_READ_FALLBACK} (${msg}); excluding ${PULL_DEFAULT_BUILD_DIR}/ as fallback.`));
+      logger.log(
+        chalk.gray(
+          `${MESSAGES.INFO.PULL_METADATA_READ_FALLBACK} (${msg}); excluding ${PULL_DEFAULT_BUILD_DIR}/ as fallback.`,
+        ),
+      );
     }
   }
   if (buildDirToExclude === null) {
@@ -150,9 +151,7 @@ export async function runPull(
         }
       } else {
         logger.log(chalk.yellow(MESSAGES.ERRORS.PULL_OVERWRITE_CONFLICTS));
-        overwrites
-          .slice(0, PULL_OVERWRITE_LIST_MAX_DISPLAY)
-          .forEach((p) => logger.log(chalk.yellow(`  - ${p}`)));
+        overwrites.slice(0, PULL_OVERWRITE_LIST_MAX_DISPLAY).forEach((p) => logger.log(chalk.yellow(`  - ${p}`)));
         if (overwrites.length > PULL_OVERWRITE_LIST_MAX_DISPLAY) {
           logger.log(chalk.yellow(`  ... and ${overwrites.length - PULL_OVERWRITE_LIST_MAX_DISPLAY} more.`));
         }
@@ -176,7 +175,7 @@ export async function runPull(
   const allFolderPaths = new Set<string>([...folderPathsFromFolders, ...folderPathsFromFilesStripped]);
   allFolderPaths.delete('');
   const hasPushMetadata = [...filesMap.keys()].some(
-    (p) => getLocalRelativePath(stripSourcePrefix(p)) === PUSH_METADATA_RELATIVE_PATH
+    (p) => getLocalRelativePath(stripSourcePrefix(p)) === PUSH_METADATA_RELATIVE_PATH,
   );
   if (hasPushMetadata) allFolderPaths.add(path.dirname(PUSH_METADATA_RELATIVE_PATH));
 

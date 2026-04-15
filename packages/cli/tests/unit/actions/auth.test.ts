@@ -71,18 +71,16 @@ describe('executeAuth', () => {
       await executeAuth({ clientId: 'my-client', clientSecret: 'my-secret', logger: mockLogger });
 
       expect(authenticateWithClientCredentials).toHaveBeenCalledWith(
-        expect.objectContaining({ clientId: 'my-client', clientSecret: 'my-secret' })
+        expect.objectContaining({ clientId: 'my-client', clientSecret: 'my-secret' }),
       );
     });
 
     it('should throw when client credentials auth fails', async () => {
-      vi.mocked(authenticateWithClientCredentials).mockRejectedValue(
-        new Error('Invalid credentials')
-      );
+      vi.mocked(authenticateWithClientCredentials).mockRejectedValue(new Error('Invalid credentials'));
 
-      await expect(
-        executeAuth({ clientId: 'bad', clientSecret: 'bad', logger: mockLogger })
-      ).rejects.toThrow('Invalid credentials');
+      await expect(executeAuth({ clientId: 'bad', clientSecret: 'bad', logger: mockLogger })).rejects.toThrow(
+        'Invalid credentials',
+      );
     });
   });
 
@@ -102,9 +100,7 @@ describe('executeAuth', () => {
       await executeAuth({ logger: mockLogger });
 
       expect(loadTokens).toHaveBeenCalled();
-      expect(mockLogger.log).toHaveBeenCalledWith(
-        expect.stringContaining('Already authenticated')
-      );
+      expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Already authenticated'));
     });
   });
 
@@ -113,18 +109,14 @@ describe('executeAuth', () => {
       vi.mocked(loadTokens).mockResolvedValue(null);
       vi.mocked(isPortAvailable).mockResolvedValue(true);
 
-      await expect(
-        executeAuth({ alpha: true, force: true, logger: mockLogger })
-      ).rejects.toThrow();
+      await expect(executeAuth({ alpha: true, force: true, logger: mockLogger })).rejects.toThrow();
     });
 
     it('should attempt PKCE flow with staging domain when staging option set', async () => {
       vi.mocked(loadTokens).mockResolvedValue(null);
       vi.mocked(isPortAvailable).mockResolvedValue(true);
 
-      await expect(
-        executeAuth({ staging: true, force: true, logger: mockLogger })
-      ).rejects.toThrow();
+      await expect(executeAuth({ staging: true, force: true, logger: mockLogger })).rejects.toThrow();
     });
   });
 
@@ -133,9 +125,7 @@ describe('executeAuth', () => {
       vi.mocked(loadTokens).mockResolvedValue(null);
       vi.mocked(isPortAvailable).mockResolvedValue(false);
 
-      await expect(
-        executeAuth({ force: true, logger: mockLogger })
-      ).rejects.toThrow(/ports/i);
+      await expect(executeAuth({ force: true, logger: mockLogger })).rejects.toThrow(/ports/i);
     });
   });
 });

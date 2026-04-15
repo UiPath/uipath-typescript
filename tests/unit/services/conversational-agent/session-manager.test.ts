@@ -29,15 +29,12 @@ const mockSession = {
   },
   get connectionError() {
     return mockConnectionError;
-  }
+  },
 };
 
-vi.mock(
-  '@/services/conversational-agent/conversations/session/websocket-session',
-  () => ({
-    WebSocketSession: vi.fn().mockImplementation(() => mockSession)
-  })
-);
+vi.mock('@/services/conversational-agent/conversations/session/websocket-session', () => ({
+  WebSocketSession: vi.fn().mockImplementation(() => mockSession),
+}));
 
 // Import after mock declaration so the mock takes effect
 import { SessionManager } from '@/services/conversational-agent/conversations/session/session-manager';
@@ -47,7 +44,7 @@ import { WebSocketSession } from '@/services/conversational-agent/conversations/
 // ===== TEST SETUP =====
 
 /** Flush the microtask/promise queue so fire-and-forget emitEvent internals complete */
-const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
+const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 /** Create a minimal mock socket */
 function createMockSocket(overrides: Record<string, any> = {}) {
@@ -58,7 +55,7 @@ function createMockSocket(overrides: Record<string, any> = {}) {
     emit: vi.fn(),
     on: vi.fn(),
     disconnect: vi.fn(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -72,8 +69,8 @@ describe('SessionManager Unit Tests', () => {
       config: { baseUrl: TEST_CONSTANTS.BASE_URL } as any,
       context: {} as any,
       tokenManager: {
-        getValidToken: vi.fn().mockResolvedValue('test-token')
-      } as any
+        getValidToken: vi.fn().mockResolvedValue('test-token'),
+      } as any,
     });
 
     // Reset mutable mock state
@@ -134,17 +131,14 @@ describe('SessionManager Unit Tests', () => {
       const manager = new SessionManager(mockInstance);
       const event = {
         conversationId: 'conv-1',
-        startSession: { capabilities: {} }
+        startSession: { capabilities: {} },
       };
 
       manager.emitEvent(event);
       await flushPromises();
 
       expect(mockSession.getConnectedSocket).toHaveBeenCalled();
-      expect(mockSocket.emit).toHaveBeenCalledWith(
-        WEBSOCKET_EVENTS.CONVERSATION_EVENT,
-        event
-      );
+      expect(mockSocket.emit).toHaveBeenCalledWith(WEBSOCKET_EVENTS.CONVERSATION_EVENT, event);
     });
 
     it('should release socket when event has endSession', async () => {
@@ -194,10 +188,10 @@ describe('SessionManager Unit Tests', () => {
             errorId: 'EVENT_SEND_ERROR',
             startError: expect.objectContaining({
               message: 'Failed to send conversation event.',
-              details: { cause: TEST_CONSTANTS.ERROR_MESSAGE }
-            })
-          })
-        })
+              details: { cause: TEST_CONSTANTS.ERROR_MESSAGE },
+            }),
+          }),
+        }),
       );
     });
 
@@ -219,10 +213,10 @@ describe('SessionManager Unit Tests', () => {
             errorId: 'EVENT_SEND_ERROR',
             startError: expect.objectContaining({
               message: 'Failed to send conversation event.',
-              details: { cause: null }
-            })
-          })
-        })
+              details: { cause: null },
+            }),
+          }),
+        }),
       );
     });
   });
@@ -239,7 +233,7 @@ describe('SessionManager Unit Tests', () => {
 
       const incomingEvent = {
         conversationId: 'conv-1',
-        exchange: { exchangeId: 'ex-1', startExchange: {} }
+        exchange: { exchangeId: 'ex-1', startExchange: {} },
       };
       conversationEventHandler(incomingEvent);
 
@@ -265,7 +259,7 @@ describe('SessionManager Unit Tests', () => {
 
       const sessionEndingEvent = {
         conversationId: 'conv-1',
-        sessionEnding: { timeToLiveMS: 5000 }
+        sessionEnding: { timeToLiveMS: 5000 },
       };
       conversationEventHandler(sessionEndingEvent);
 
@@ -330,10 +324,7 @@ describe('SessionManager Unit Tests', () => {
       await flushPromises();
 
       expect(mockSession.getConnectedSocket).toHaveBeenCalledTimes(2);
-      expect(freshSocket.emit).toHaveBeenCalledWith(
-        WEBSOCKET_EVENTS.CONVERSATION_EVENT,
-        event2
-      );
+      expect(freshSocket.emit).toHaveBeenCalledWith(WEBSOCKET_EVENTS.CONVERSATION_EVENT, event2);
     });
 
     it('should register disconnect handler on new socket', async () => {
@@ -363,9 +354,7 @@ describe('SessionManager Unit Tests', () => {
       manager.emitEvent(event2);
       await flushPromises();
 
-      const disconnectCalls = mockSocket.on.mock.calls.filter(
-        (call: any[]) => call[0] === 'disconnect'
-      );
+      const disconnectCalls = mockSocket.on.mock.calls.filter((call: any[]) => call[0] === 'disconnect');
       expect(disconnectCalls).toHaveLength(1);
     });
   });
@@ -388,9 +377,7 @@ describe('SessionManager Unit Tests', () => {
       await flushPromises();
 
       // Capture the disconnect handler
-      const disconnectCall = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'disconnect'
-      );
+      const disconnectCall = mockSocket.on.mock.calls.find((call: any[]) => call[0] === 'disconnect');
       expect(disconnectCall).toBeDefined();
       const disconnectHandler = disconnectCall![1];
 
@@ -402,16 +389,10 @@ describe('SessionManager Unit Tests', () => {
 
       expect(dispatcher.dispatch).toHaveBeenCalledTimes(2);
 
-      const dispatchedEvents = (dispatcher.dispatch as any).mock.calls.map(
-        (call: any[]) => call[0]
-      );
+      const dispatchedEvents = (dispatcher.dispatch as any).mock.calls.map((call: any[]) => call[0]);
 
-      const conv1Error = dispatchedEvents.find(
-        (e: any) => e.conversationId === 'conv-1'
-      );
-      const conv2Error = dispatchedEvents.find(
-        (e: any) => e.conversationId === 'conv-2'
-      );
+      const conv1Error = dispatchedEvents.find((e: any) => e.conversationId === 'conv-1');
+      const conv2Error = dispatchedEvents.find((e: any) => e.conversationId === 'conv-2');
 
       expect(conv1Error).toBeDefined();
       expect(conv2Error).toBeDefined();
@@ -428,9 +409,7 @@ describe('SessionManager Unit Tests', () => {
       manager.emitEvent({ conversationId: 'conv-1', startSession: { capabilities: {} } });
       await flushPromises();
 
-      const disconnectCall = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'disconnect'
-      );
+      const disconnectCall = mockSocket.on.mock.calls.find((call: any[]) => call[0] === 'disconnect');
       const disconnectHandler = disconnectCall![1];
 
       dispatcher.dispatch = vi.fn();
@@ -443,10 +422,10 @@ describe('SessionManager Unit Tests', () => {
           conversationError: expect.objectContaining({
             errorId: 'WEBSOCKET_DISCONNECTED',
             startError: expect.objectContaining({
-              message: 'WebSocket disconnected: io server disconnect'
-            })
-          })
-        })
+              message: 'WebSocket disconnected: io server disconnect',
+            }),
+          }),
+        }),
       );
     });
   });
@@ -526,7 +505,7 @@ describe('SessionManager Unit Tests', () => {
       const conversationEventHandler = listenerMap[WEBSOCKET_EVENTS.CONVERSATION_EVENT];
       conversationEventHandler({
         conversationId: 'conv-1',
-        sessionEnding: { timeToLiveMS: 5000 }
+        sessionEnding: { timeToLiveMS: 5000 },
       });
 
       manager.disconnect();

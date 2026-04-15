@@ -1,10 +1,5 @@
 import { describe, it, expect, afterAll } from 'vitest';
-import {
-  getServices,
-  getTestConfig,
-  setupUnifiedTests,
-  InitMode,
-} from '../../config/unified-setup';
+import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { hasValidPagination } from '../../utils/helpers';
 
@@ -33,7 +28,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -56,7 +51,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -88,7 +83,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -178,8 +173,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         });
 
         const openInstance = instances.data.find(
-          (inst: any) =>
-            inst.status && inst.status.toLowerCase().match(/open|active|in progress/)
+          (inst: any) => inst.status && inst.status.toLowerCase().match(/open|active|in progress/),
         );
 
         if (!openInstance) {
@@ -202,7 +196,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -241,7 +235,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }

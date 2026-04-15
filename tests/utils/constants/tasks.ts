@@ -40,19 +40,19 @@ export const TASK_TEST_CONSTANTS = {
   FORM_DATA: {
     fieldName: 'John Doe',
     fieldEmail: 'john@example.com',
-    fieldNotes: 'Completed the form'
+    fieldNotes: 'Completed the form',
   },
 
   // Task Custom Data
   CUSTOM_DATA: {
     customField: 'customValue',
     nested: { key: 'value' },
-    array: [1, 2, 3]
+    array: [1, 2, 3],
   },
 
   // App Task Completion Data
   APP_TASK_DATA: {
     Content: null,
-    Comment: null
+    Comment: null,
   },
 } as const;

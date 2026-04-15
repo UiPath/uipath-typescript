@@ -49,21 +49,17 @@ export class AuthServer {
   private setupMiddleware(): void {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    
+
     // CORS middleware - restrict to localhost origins only
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const origin = req.get('origin');
-      const isAllowedOrigin = origin && AUTH_CONSTANTS.CORS.ALLOWED_ORIGINS.some(allowedOrigin => 
-        origin.startsWith(allowedOrigin)
-      );
-      
-      res.header(
-        AUTH_CONSTANTS.CORS.HEADERS.ALLOW_ORIGIN, 
-        isAllowedOrigin ? origin : 'null'
-      );
+      const isAllowedOrigin =
+        origin && AUTH_CONSTANTS.CORS.ALLOWED_ORIGINS.some((allowedOrigin) => origin.startsWith(allowedOrigin));
+
+      res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_ORIGIN, isAllowedOrigin ? origin : 'null');
       res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_METHODS, AUTH_CONSTANTS.CORS.VALUES.METHODS);
       res.header(AUTH_CONSTANTS.CORS.HEADERS.ALLOW_HEADERS, AUTH_CONSTANTS.CORS.VALUES.HEADERS);
-      
+
       if (req.method === 'OPTIONS') {
         res.sendStatus(AUTH_CONSTANTS.HTTP_STATUS.NO_CONTENT);
       } else {
@@ -82,59 +78,63 @@ export class AuthServer {
 
     // Token exchange endpoint - Rate limited for security
     // @security Rate limiting applied via tokenRateLimiter middleware
-    this.app.post(AUTH_CONSTANTS.ROUTES.TOKEN, tokenRateLimiter, async (req: Request<{}, {}, TokenExchangeRequest>, res: Response) => {
-      try {
-        const { code, state } = validateTokenExchangeRequest(req.body);
+    this.app.post(
+      AUTH_CONSTANTS.ROUTES.TOKEN,
+      tokenRateLimiter,
+      async (req: Request<{}, {}, TokenExchangeRequest>, res: Response) => {
+        try {
+          const { code, state } = validateTokenExchangeRequest(req.body);
 
-        // Validate state parameter
-        if (state !== this.expectedState) {
-          throw new Error('Invalid state parameter');
-        }
+          // Validate state parameter
+          if (state !== this.expectedState) {
+            throw new Error('Invalid state parameter');
+          }
 
-        // Exchange code for tokens
-        const tokens = await this.exchangeCodeForTokens(code);
+          // Exchange code for tokens
+          const tokens = await this.exchangeCodeForTokens(code);
 
-        res.json({ success: true });
-        
-        // Clear timeout and resolve the auth promise with tokens
-        if (this.authTimeout) {
-          clearTimeout(this.authTimeout);
-          this.authTimeout = undefined;
+          res.json({ success: true });
+
+          // Clear timeout and resolve the auth promise with tokens
+          if (this.authTimeout) {
+            clearTimeout(this.authTimeout);
+            this.authTimeout = undefined;
+          }
+          if (this.authCompleteResolve) {
+            this.authCompleteResolve(tokens);
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          res.status(AUTH_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json({ success: false, error: errorMessage });
+
+          // Clear timeout and reject
+          if (this.authTimeout) {
+            clearTimeout(this.authTimeout);
+            this.authTimeout = undefined;
+          }
+          if (this.authCompleteReject) {
+            this.authCompleteReject(error);
+          }
         }
-        if (this.authCompleteResolve) {
-          this.authCompleteResolve(tokens);
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        res.status(AUTH_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json({ success: false, error: errorMessage });
-        
-        // Clear timeout and reject
-        if (this.authTimeout) {
-          clearTimeout(this.authTimeout);
-          this.authTimeout = undefined;
-        }
-        if (this.authCompleteReject) {
-          this.authCompleteReject(error);
-        }
-      }
-    });
+      },
+    );
 
     // Error logging endpoint
     this.app.post(AUTH_CONSTANTS.ROUTES.ERROR, errorRateLimiter, async (req: Request, res: Response) => {
       const { error } = req.body;
       console.error('Client error:', error);
-      
+
       // Log to file
       const errorLogPath = path.join(process.cwd(), '.error_log');
       const timestamp = new Date().toISOString();
       const logEntry = `[${timestamp}] ${error}\n`;
-      
+
       try {
         await fs.appendFile(errorLogPath, logEntry);
       } catch (err) {
         console.error('Failed to write error log:', err);
       }
-      
+
       res.sendStatus(AUTH_CONSTANTS.HTTP_STATUS.OK);
     });
 
@@ -210,7 +210,7 @@ export class AuthServer {
       this.server.close(() => {
         console.log('Auth server stopped');
       });
-      
+
       // Destroy all active connections to force shutdown
       this.server.unref();
       this.server = null;

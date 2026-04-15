@@ -14,22 +14,25 @@ import { ATTACHMENT_TEST_CONSTANTS } from '../constants/attachments';
  * @returns Raw attachment data as it comes from the API (before transformation)
  */
 export const createMockRawAttachment = (overrides: Partial<any> = {}): any => {
-  return createMockBaseResponse({
-    Id: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
-    Name: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
-    JobKey: ATTACHMENT_TEST_CONSTANTS.JOB_KEY,
-    AttachmentCategory: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_CATEGORY,
-    // Using raw API field names that should be transformed
-    CreationTime: ATTACHMENT_TEST_CONSTANTS.CREATED_TIME,
-    LastModificationTime: ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIED_TIME,
-    CreatorUserId: ATTACHMENT_TEST_CONSTANTS.CREATOR_USER_ID,
-    LastModifierUserId: ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIER_USER_ID,
-    BlobFileAccess: {
-      Uri: ATTACHMENT_TEST_CONSTANTS.BLOB_URI,
-      Verb: ATTACHMENT_TEST_CONSTANTS.BLOB_HTTP_METHOD,
-      RequiresAuth: false,
+  return createMockBaseResponse(
+    {
+      Id: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
+      Name: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
+      JobKey: ATTACHMENT_TEST_CONSTANTS.JOB_KEY,
+      AttachmentCategory: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_CATEGORY,
+      // Using raw API field names that should be transformed
+      CreationTime: ATTACHMENT_TEST_CONSTANTS.CREATED_TIME,
+      LastModificationTime: ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIED_TIME,
+      CreatorUserId: ATTACHMENT_TEST_CONSTANTS.CREATOR_USER_ID,
+      LastModifierUserId: ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIER_USER_ID,
+      BlobFileAccess: {
+        Uri: ATTACHMENT_TEST_CONSTANTS.BLOB_URI,
+        Verb: ATTACHMENT_TEST_CONSTANTS.BLOB_HTTP_METHOD,
+        RequiresAuth: false,
+      },
     },
-  }, overrides);
+    overrides,
+  );
 };
 
 /**
@@ -39,21 +42,24 @@ export const createMockRawAttachment = (overrides: Partial<any> = {}): any => {
  * @returns Attachment with transformed field names (camelCase)
  */
 export const createBasicAttachment = (overrides: Partial<AttachmentResponse> = {}): AttachmentResponse => {
-  return createMockBaseResponse({
-    id: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
-    name: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
-    jobKey: ATTACHMENT_TEST_CONSTANTS.JOB_KEY,
-    attachmentCategory: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_CATEGORY,
-    // Using transformed field names (camelCase)
-    createdTime: ATTACHMENT_TEST_CONSTANTS.CREATED_TIME,
-    lastModifiedTime: ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIED_TIME,
-    creatorUserId: ATTACHMENT_TEST_CONSTANTS.CREATOR_USER_ID,
-    lastModifierUserId: ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIER_USER_ID,
-    blobFileAccess: {
-      uri: ATTACHMENT_TEST_CONSTANTS.BLOB_URI,
-      httpMethod: ATTACHMENT_TEST_CONSTANTS.BLOB_HTTP_METHOD,
-      requiresAuth: false,
-      headers: {}
+  return createMockBaseResponse(
+    {
+      id: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID,
+      name: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_NAME,
+      jobKey: ATTACHMENT_TEST_CONSTANTS.JOB_KEY,
+      attachmentCategory: ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_CATEGORY,
+      // Using transformed field names (camelCase)
+      createdTime: ATTACHMENT_TEST_CONSTANTS.CREATED_TIME,
+      lastModifiedTime: ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIED_TIME,
+      creatorUserId: ATTACHMENT_TEST_CONSTANTS.CREATOR_USER_ID,
+      lastModifierUserId: ATTACHMENT_TEST_CONSTANTS.LAST_MODIFIER_USER_ID,
+      blobFileAccess: {
+        uri: ATTACHMENT_TEST_CONSTANTS.BLOB_URI,
+        httpMethod: ATTACHMENT_TEST_CONSTANTS.BLOB_HTTP_METHOD,
+        requiresAuth: false,
+        headers: {},
+      },
     },
-  }, overrides);
+    overrides,
+  );
 };

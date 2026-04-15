@@ -43,26 +43,20 @@ describe('executePublish', () => {
   it('should throw when env config is missing', async () => {
     vi.mocked(getEnvironmentConfig).mockReturnValue(null);
 
-    await expect(
-      executePublish({ logger: mockLogger })
-    ).rejects.toThrow('Missing required configuration');
+    await expect(executePublish({ logger: mockLogger })).rejects.toThrow('Missing required configuration');
   });
 
   it('should throw when .uipath dir not found', async () => {
     vi.mocked(fs.existsSync).mockReturnValue(false);
 
-    await expect(
-      executePublish({ logger: mockLogger })
-    ).rejects.toThrow(/\.uipath directory not found/);
+    await expect(executePublish({ logger: mockLogger })).rejects.toThrow(/\.uipath directory not found/);
   });
 
   it('should throw when no nupkg files found', async () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readdirSync).mockReturnValue([]);
 
-    await expect(
-      executePublish({ logger: mockLogger })
-    ).rejects.toThrow(/No .nupkg files found/);
+    await expect(executePublish({ logger: mockLogger })).rejects.toThrow(/No .nupkg files found/);
   });
 
   it('should publish single package automatically', async () => {
@@ -72,9 +66,11 @@ describe('executePublish', () => {
 
     vi.mocked(fetch)
       .mockResolvedValueOnce(createMockFetchResponse() as any)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        json: { definition: { systemName: 'my-app-system' }, deployVersion: 1 },
-      }) as any);
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          json: { definition: { systemName: 'my-app-system' }, deployVersion: 1 },
+        }) as any,
+      );
 
     await executePublish({ logger: mockLogger });
 
@@ -88,9 +84,11 @@ describe('executePublish', () => {
 
     vi.mocked(fetch)
       .mockResolvedValueOnce(createMockFetchResponse() as any)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        json: { definition: { systemName: 'app-b' } },
-      }) as any);
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          json: { definition: { systemName: 'app-b' } },
+        }) as any,
+      );
 
     await executePublish({ name: 'AppB', logger: mockLogger });
 
@@ -101,9 +99,9 @@ describe('executePublish', () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readdirSync).mockReturnValue(['AppA.1.0.0.nupkg'] as any);
 
-    await expect(
-      executePublish({ name: 'NonExistent', logger: mockLogger })
-    ).rejects.toThrow(/No package found matching name/);
+    await expect(executePublish({ name: 'NonExistent', logger: mockLogger })).rejects.toThrow(
+      /No package found matching name/,
+    );
   });
 
   it('should handle 409 conflict (package already exists)', async () => {
@@ -112,12 +110,18 @@ describe('executePublish', () => {
     vi.mocked(fs.createReadStream).mockReturnValue('stream' as any);
 
     vi.mocked(fetch)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        ok: false, status: 409, json: { errorCode: 1004, message: 'already exists' },
-      }) as any)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        json: { definition: { systemName: 'my-app' } },
-      }) as any);
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          ok: false,
+          status: 409,
+          json: { errorCode: 1004, message: 'already exists' },
+        }) as any,
+      )
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          json: { definition: { systemName: 'my-app' } },
+        }) as any,
+      );
 
     await executePublish({ logger: mockLogger });
 

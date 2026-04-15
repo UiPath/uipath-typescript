@@ -106,7 +106,7 @@ describe('MessageEventHelper', () => {
               metaEvent: { key: 'val' },
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -130,22 +130,19 @@ describe('MessageEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
     it('should auto-end content part when callback is provided', async () => {
       const { emitSpy, message } = createMessage();
 
-      await message.startContentPart(
-        { contentPartId: 'cp-cb', mimeType: 'text/plain' },
-        async (cp) => {
-          cp.sendChunk({ data: 'Hello' });
-        }
-      );
+      await message.startContentPart({ contentPartId: 'cp-cb', mimeType: 'text/plain' }, async (cp) => {
+        cp.sendChunk({ data: 'Hello' });
+      });
 
       const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.contentPart?.endContentPart !== undefined
+        (call: any[]) => call[0]?.exchange?.message?.contentPart?.endContentPart !== undefined,
       );
       expect(endCall).toBeDefined();
     });
@@ -177,7 +174,7 @@ describe('MessageEventHelper', () => {
       message.sendMessageEnd();
 
       expect(() => message.startContentPart({ mimeType: 'text/plain' })).toThrow(
-        ConversationEventInvalidOperationError
+        ConversationEventInvalidOperationError,
       );
     });
   });
@@ -215,7 +212,7 @@ describe('MessageEventHelper', () => {
 
       // Should have emitted startContentPart, chunk, endContentPart
       const chunkCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.contentPart?.chunk?.data === 'Hello world'
+        (call: any[]) => call[0]?.exchange?.message?.contentPart?.chunk?.data === 'Hello world',
       );
       expect(chunkCall).toBeDefined();
     });
@@ -226,7 +223,7 @@ describe('MessageEventHelper', () => {
       await message.sendContentPart({ data: 'test' });
 
       const startCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.contentPart?.startContentPart !== undefined
+        (call: any[]) => call[0]?.exchange?.message?.contentPart?.startContentPart !== undefined,
       );
       expect(startCall![0].exchange.message.contentPart.startContentPart.mimeType).toBe('text/markdown');
     });
@@ -251,7 +248,7 @@ describe('MessageEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -261,7 +258,7 @@ describe('MessageEventHelper', () => {
       await message.startToolCall({ toolCallId: 'tc-cb', toolName: 'calc' }, async () => {});
 
       const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.toolCall?.endToolCall !== undefined
+        (call: any[]) => call[0]?.exchange?.message?.toolCall?.endToolCall !== undefined,
       );
       expect(endCall).toBeDefined();
     });
@@ -297,7 +294,7 @@ describe('MessageEventHelper', () => {
       });
 
       const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.toolCall?.endToolCall?.output === 'sunny, 20C'
+        (call: any[]) => call[0]?.exchange?.message?.toolCall?.endToolCall?.output === 'sunny, 20C',
       );
       expect(endCall).toBeDefined();
     });
@@ -310,8 +307,9 @@ describe('MessageEventHelper', () => {
       });
 
       const endCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.exchange?.message?.toolCall?.toolCallId === 'tc-void' &&
-          call[0]?.exchange?.message?.toolCall?.endToolCall !== undefined
+        (call: any[]) =>
+          call[0]?.exchange?.message?.toolCall?.toolCallId === 'tc-void' &&
+          call[0]?.exchange?.message?.toolCall?.endToolCall !== undefined,
       );
       expect(endCall).toBeDefined();
       expect(endCall![0].exchange.message.toolCall.endToolCall).toEqual({});
@@ -355,7 +353,7 @@ describe('MessageEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -374,7 +372,7 @@ describe('MessageEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -398,7 +396,7 @@ describe('MessageEventHelper', () => {
               endMessage: {},
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -424,7 +422,7 @@ describe('MessageEventHelper', () => {
               metaEvent: { key: 'meta' },
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -522,9 +520,7 @@ describe('MessageEventHelper', () => {
         },
       });
 
-      expect(intStartSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ interruptId: 'int-1' })
-      );
+      expect(intStartSpy).toHaveBeenCalledWith(expect.objectContaining({ interruptId: 'int-1' }));
     });
 
     it('should dispatch interrupt end events', () => {
@@ -540,9 +536,7 @@ describe('MessageEventHelper', () => {
         },
       });
 
-      expect(intEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ interruptId: 'int-1' })
-      );
+      expect(intEndSpy).toHaveBeenCalledWith(expect.objectContaining({ interruptId: 'int-1' }));
     });
 
     it('should dispatch endMessage and mark ended and deleted', () => {
@@ -573,9 +567,7 @@ describe('MessageEventHelper', () => {
         },
       });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'msg-err-1' })
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'msg-err-1' }));
     });
 
     it('should ignore events for different messageId', () => {
@@ -743,13 +735,9 @@ describe('MessageEventHelper', () => {
       expect(completedSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           messageId: MESSAGE_ID,
-          contentParts: expect.arrayContaining([
-            expect.objectContaining({ data: 'Hello', mimeType: 'text/plain' }),
-          ]),
-          toolCalls: expect.arrayContaining([
-            expect.objectContaining({ toolCallId: 'tc-1', toolName: 'search' }),
-          ]),
-        })
+          contentParts: expect.arrayContaining([expect.objectContaining({ data: 'Hello', mimeType: 'text/plain' })]),
+          toolCalls: expect.arrayContaining([expect.objectContaining({ toolCallId: 'tc-1', toolName: 'search' })]),
+        }),
       );
     });
   });
@@ -774,9 +762,7 @@ describe('MessageEventHelper', () => {
       });
 
       expect(cpCompletedSpy).toHaveBeenCalledTimes(1);
-      expect(cpCompletedSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ data: 'Test', mimeType: 'text/plain' })
-      );
+      expect(cpCompletedSpy).toHaveBeenCalledWith(expect.objectContaining({ data: 'Test', mimeType: 'text/plain' }));
     });
   });
 
@@ -797,7 +783,7 @@ describe('MessageEventHelper', () => {
 
       expect(tcCompletedSpy).toHaveBeenCalledTimes(1);
       expect(tcCompletedSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ toolCallId: 'tc-1', toolName: 'search', output: 'result' })
+        expect.objectContaining({ toolCallId: 'tc-1', toolName: 'search', output: 'result' }),
       );
     });
   });
@@ -868,7 +854,7 @@ describe('MessageEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
       expect(message.hasError).toBe(true);
     });
@@ -890,7 +876,7 @@ describe('MessageEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
       expect(message.hasError).toBe(false);
     });
@@ -898,44 +884,50 @@ describe('MessageEventHelper', () => {
 
   describe('replay', () => {
     it('should generate correct event sequence for message with content parts and tool calls', () => {
-      const events = Array.from(MessageEventHelperImpl.replay({
-        messageId: 'replay-msg',
-        role: 'assistant' as any,
-        createdTime: '2024-01-01T00:00:00Z',
-        contentParts: [
-          {
-            contentPartId: 'replay-cp',
-            mimeType: 'text/plain',
-            data: { inline: 'Hello' },
-            citations: [],
-            createdTime: '2024-01-01T00:00:01Z',
-          },
-        ],
-        toolCalls: [
-          {
-            toolCallId: 'replay-tc',
-            name: 'search',
-            input: { query: 'test' },
-            createdTime: '2024-01-01T00:00:02Z',
-          },
-        ],
-      } as any));
+      const events = Array.from(
+        MessageEventHelperImpl.replay({
+          messageId: 'replay-msg',
+          role: 'assistant' as any,
+          createdTime: '2024-01-01T00:00:00Z',
+          contentParts: [
+            {
+              contentPartId: 'replay-cp',
+              mimeType: 'text/plain',
+              data: { inline: 'Hello' },
+              citations: [],
+              createdTime: '2024-01-01T00:00:01Z',
+            },
+          ],
+          toolCalls: [
+            {
+              toolCallId: 'replay-tc',
+              name: 'search',
+              input: { query: 'test' },
+              createdTime: '2024-01-01T00:00:02Z',
+            },
+          ],
+        } as any),
+      );
 
-      expect(events[0]).toEqual(expect.objectContaining({
-        messageId: 'replay-msg',
-        startMessage: expect.objectContaining({ role: 'assistant' }),
-      }));
-      expect(events[events.length - 1]).toEqual(expect.objectContaining({
-        messageId: 'replay-msg',
-        endMessage: {},
-      }));
+      expect(events[0]).toEqual(
+        expect.objectContaining({
+          messageId: 'replay-msg',
+          startMessage: expect.objectContaining({ role: 'assistant' }),
+        }),
+      );
+      expect(events[events.length - 1]).toEqual(
+        expect.objectContaining({
+          messageId: 'replay-msg',
+          endMessage: {},
+        }),
+      );
 
       // Should contain contentPart events
-      const cpEvents = events.filter(e => e.contentPart);
+      const cpEvents = events.filter((e) => e.contentPart);
       expect(cpEvents.length).toBeGreaterThan(0);
 
       // Should contain toolCall events
-      const tcEvents = events.filter(e => e.toolCall);
+      const tcEvents = events.filter((e) => e.toolCall);
       expect(tcEvents.length).toBeGreaterThan(0);
     });
   });
@@ -975,9 +967,7 @@ describe('MessageEventHelper', () => {
         messageError: { errorId: 'mse-1', startError: { message: 'err' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'mse-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'mse-1' }));
     });
 
     it('should dispatch to unhandled when no local handler exists', () => {
@@ -990,9 +980,7 @@ describe('MessageEventHelper', () => {
         messageError: { errorId: 'mse-1', startError: { message: 'unhandled' } },
       });
 
-      expect(unhandledSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'mse-1' })
-      );
+      expect(unhandledSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'mse-1' }));
     });
 
     it('should store errors in errors map on error start', () => {
@@ -1058,9 +1046,7 @@ describe('MessageEventHelper', () => {
         messageError: { errorId: 'mse-1', endError: {} },
       });
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'mse-1' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'mse-1' }));
     });
 
     it('should dispatch error end to local onErrorEnd handler', () => {
@@ -1073,9 +1059,7 @@ describe('MessageEventHelper', () => {
         messageError: { errorId: 'mse-end-1', endError: {} },
       });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'mse-end-1' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'mse-end-1' }));
     });
 
     it('should not throw when error end occurs without any handler', () => {
@@ -1083,7 +1067,10 @@ describe('MessageEventHelper', () => {
       const manager = new ConversationEventHelperManagerImpl({ emit: emitSpy });
       const session = manager.startSession({ conversationId: CONVERSATION_ID }) as SessionEventHelperImpl;
       const exchange = session.startExchange({ exchangeId: EXCHANGE_ID }) as ExchangeEventHelperImpl;
-      const message = exchange.startMessage({ messageId: 'no-handler-msg', role: MessageRole.User }) as MessageEventHelperImpl;
+      const message = exchange.startMessage({
+        messageId: 'no-handler-msg',
+        role: MessageRole.User,
+      }) as MessageEventHelperImpl;
 
       expect(() => {
         message.dispatch({

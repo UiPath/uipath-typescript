@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getEnvironmentConfig, sanitizeAppName, validateEnvironment, isValidAppName, atomicWriteFileSync } from '../../../src/utils/env-config.js';
+import {
+  getEnvironmentConfig,
+  sanitizeAppName,
+  validateEnvironment,
+  isValidAppName,
+  atomicWriteFileSync,
+} from '../../../src/utils/env-config.js';
 import { createMockLogger, REQUIRED_ENV_VARS } from '../../helpers/index.js';
 import * as fs from 'node:fs';
 
@@ -173,7 +179,7 @@ describe('env-config', () => {
       atomicWriteFileSync('./test-output/test.json', { key: 'value' });
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         expect.stringContaining('.tmp'),
-        JSON.stringify({ key: 'value' }, null, 2)
+        JSON.stringify({ key: 'value' }, null, 2),
       );
     });
   });

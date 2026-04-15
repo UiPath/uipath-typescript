@@ -3,10 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AssetService } from '../../../../src/services/orchestrator/assets';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
-import { 
-  createMockRawAsset,
-  createMockTransformedAssetCollection
-} from '../../../utils/mocks/assets';
+import { createMockRawAsset, createMockTransformedAssetCollection } from '../../../utils/mocks/assets';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
 import {
@@ -14,7 +11,7 @@ import {
   AssetGetByIdOptions,
   AssetValueType,
   AssetValueScope,
-  AssetGetResponse
+  AssetGetResponse,
 } from '../../../../src/models/orchestrator/assets.types';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { ASSET_TEST_CONSTANTS } from '../../../utils/constants/assets';
@@ -62,37 +59,34 @@ describe('AssetService Unit Tests', () => {
   describe('getById', () => {
     it('should get asset by ID successfully with all fields mapped correctly', async () => {
       const mockAsset = createMockRawAsset();
-      
+
       mockApiClient.get.mockResolvedValue(mockAsset);
 
-      const result = await assetService.getById(
-        ASSET_TEST_CONSTANTS.ASSET_ID, 
-        TEST_CONSTANTS.FOLDER_ID
-      );
+      const result = await assetService.getById(ASSET_TEST_CONSTANTS.ASSET_ID, TEST_CONSTANTS.FOLDER_ID);
 
       // Verify the result
       expect(result).toBeDefined();
       expect(result.id).toBe(ASSET_TEST_CONSTANTS.ASSET_ID);
       expect(result.name).toBe(ASSET_TEST_CONSTANTS.ASSET_NAME);
       expect(result.key).toBe(ASSET_TEST_CONSTANTS.ASSET_KEY);
-      expect(result.valueType).toBe(AssetValueType.DBConnectionString,);
-      expect(result.valueScope).toBe(AssetValueScope.Global,);
+      expect(result.valueType).toBe(AssetValueType.DBConnectionString);
+      expect(result.valueScope).toBe(AssetValueScope.Global);
 
       // Verify the API call has correct endpoint and headers
       expect(mockApiClient.get).toHaveBeenCalledWith(
         ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
-          })
-        })
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
       );
 
       // Verify field transformations
       // CreationTime -> createdTime
       expect(result.createdTime).toBe(ASSET_TEST_CONSTANTS.CREATED_TIME);
       expect((result as any).CreationTime).toBeUndefined(); // Original field should be removed
-      
+
       // LastModificationTime -> lastModifiedTime
       expect(result.lastModifiedTime).toBe(ASSET_TEST_CONSTANTS.LAST_MODIFIED_TIME);
       expect((result as any).LastModificationTime).toBeUndefined(); // Original field should be removed
@@ -104,14 +98,10 @@ describe('AssetService Unit Tests', () => {
 
       const options: AssetGetByIdOptions = {
         expand: ASSET_TEST_CONSTANTS.ODATA_EXPAND_KEY_VALUE_LIST,
-        select: ASSET_TEST_CONSTANTS.ODATA_SELECT_FIELDS
+        select: ASSET_TEST_CONSTANTS.ODATA_SELECT_FIELDS,
       };
 
-      const result = await assetService.getById(
-        ASSET_TEST_CONSTANTS.ASSET_ID,
-        TEST_CONSTANTS.FOLDER_ID,
-        options
-      );
+      const result = await assetService.getById(ASSET_TEST_CONSTANTS.ASSET_ID, TEST_CONSTANTS.FOLDER_ID, options);
 
       // Verify the result
       expect(result).toBeDefined();
@@ -124,10 +114,10 @@ describe('AssetService Unit Tests', () => {
         ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
         expect.objectContaining({
           params: expect.objectContaining({
-            '$expand': ASSET_TEST_CONSTANTS.ODATA_EXPAND_KEY_VALUE_LIST,
-            '$select': ASSET_TEST_CONSTANTS.ODATA_SELECT_FIELDS
-          })
-        })
+            $expand: ASSET_TEST_CONSTANTS.ODATA_EXPAND_KEY_VALUE_LIST,
+            $select: ASSET_TEST_CONSTANTS.ODATA_SELECT_FIELDS,
+          }),
+        }),
       );
     });
 
@@ -135,17 +125,16 @@ describe('AssetService Unit Tests', () => {
       const error = createMockError(ASSET_TEST_CONSTANTS.ERROR_ASSET_NOT_FOUND);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(assetService.getById(
-        ASSET_TEST_CONSTANTS.ASSET_ID, 
-        TEST_CONSTANTS.FOLDER_ID
-      )).rejects.toThrow(ASSET_TEST_CONSTANTS.ERROR_ASSET_NOT_FOUND);
+      await expect(assetService.getById(ASSET_TEST_CONSTANTS.ASSET_ID, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
+        ASSET_TEST_CONSTANTS.ERROR_ASSET_NOT_FOUND,
+      );
     });
   });
 
   describe('getAll', () => {
     it('should return all assets without pagination options', async () => {
       const mockResponse = createMockTransformedAssetCollection();
-      
+
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const result = await assetService.getAll();
@@ -156,9 +145,9 @@ describe('AssetService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.toSatisfy((fn: Function) => fn() === ASSET_ENDPOINTS.GET_ALL),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
-        undefined
+        undefined,
       );
 
       expect(result).toEqual(mockResponse);
@@ -166,11 +155,11 @@ describe('AssetService Unit Tests', () => {
 
     it('should return assets filtered by folder ID', async () => {
       const mockResponse = createMockTransformedAssetCollection();
-      
+
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options: AssetGetAllOptions = {
-        folderId: TEST_CONSTANTS.FOLDER_ID
+        folderId: TEST_CONSTANTS.FOLDER_ID,
       };
 
       const result = await assetService.getAll(options);
@@ -179,13 +168,15 @@ describe('AssetService Unit Tests', () => {
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceAccess: expect.any(Object),
-          getEndpoint: expect.toSatisfy((fn: Function) => fn(TEST_CONSTANTS.FOLDER_ID) === ASSET_ENDPOINTS.GET_BY_FOLDER),
+          getEndpoint: expect.toSatisfy(
+            (fn: Function) => fn(TEST_CONSTANTS.FOLDER_ID) === ASSET_ENDPOINTS.GET_BY_FOLDER,
+          ),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
         expect.objectContaining({
-          folderId: TEST_CONSTANTS.FOLDER_ID
-        })
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -198,23 +189,23 @@ describe('AssetService Unit Tests', () => {
         nextCursor: TEST_CONSTANTS.NEXT_CURSOR,
         previousCursor: null,
         currentPage: 1,
-        totalPages: 10
+        totalPages: 10,
       });
-      
+
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options: AssetGetAllOptions = {
-        pageSize: TEST_CONSTANTS.PAGE_SIZE
+        pageSize: TEST_CONSTANTS.PAGE_SIZE,
       };
 
-      const result = await assetService.getAll(options) as PaginatedResponse<AssetGetResponse>;
+      const result = (await assetService.getAll(options)) as PaginatedResponse<AssetGetResponse>;
 
       // Verify PaginationHelpers.getAll was called with pagination options
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
-        })
+          pageSize: TEST_CONSTANTS.PAGE_SIZE,
+        }),
       );
 
       expect(result).toEqual(mockResponse);

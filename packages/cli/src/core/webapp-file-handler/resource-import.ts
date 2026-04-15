@@ -36,10 +36,7 @@ function transformType(type: string | null): string | null {
   return type[0].toLowerCase() + type.slice(1);
 }
 
-export async function runImportReferencedResources(
-  config: WebAppProjectConfig,
-  lockKey: string | null
-): Promise<void> {
+export async function runImportReferencedResources(config: WebAppProjectConfig, lockKey: string | null): Promise<void> {
   const bindingsPath = path.join(config.rootDir, BINDINGS_FILE_NAME);
   let bindings: Bindings;
   try {
@@ -54,7 +51,9 @@ export async function runImportReferencedResources(
 
   if (!bindings.resources || bindings.resources.length === 0) return;
 
-  config.logger.log(chalk.gray(`[resources] Processing ${bindings.resources.length} resource(s) from ${BINDINGS_FILE_NAME}...`));
+  config.logger.log(
+    chalk.gray(`[resources] Processing ${bindings.resources.length} resource(s) from ${BINDINGS_FILE_NAME}...`),
+  );
 
   let resourcesCreated = 0;
   let resourcesUnchanged = 0;
@@ -95,7 +94,9 @@ export async function runImportReferencedResources(
           };
         } catch {
           config.logger.log(
-            chalk.yellow(`${MESSAGES.ERRORS.PUSH_CONNECTION_NOT_FOUND_PREFIX}${connectionKey} (${bindingsResource.metadata?.Connector || 'unknown'})`)
+            chalk.yellow(
+              `${MESSAGES.ERRORS.PUSH_CONNECTION_NOT_FOUND_PREFIX}${connectionKey} (${bindingsResource.metadata?.Connector || 'unknown'})`,
+            ),
           );
           resourcesNotFound++;
           continue;
@@ -112,12 +113,14 @@ export async function runImportReferencedResources(
             resourceType,
             resourceName,
             folderPath,
-            api.mapFolder
+            api.mapFolder,
           );
         } catch {
           const folderInfo = folderPath ? ` at folder path '${folderPath}'` : ' (tenant-scoped)';
           config.logger.log(
-            chalk.yellow(`${MESSAGES.ERRORS.PUSH_RESOURCE_NOT_FOUND_PREFIX}${resourceName} (${resourceType})${folderInfo}`)
+            chalk.yellow(
+              `${MESSAGES.ERRORS.PUSH_RESOURCE_NOT_FOUND_PREFIX}${resourceName} (${resourceType})${folderInfo}`,
+            ),
           );
           resourcesNotFound++;
           continue;
@@ -125,7 +128,9 @@ export async function runImportReferencedResources(
       }
 
       if (!foundResource || foundResource.folders.length === 0) {
-        config.logger.log(chalk.yellow(`${MESSAGES.ERRORS.PUSH_RESOURCE_NOT_FOUND_PREFIX}${resourceName} (${resourceType})`));
+        config.logger.log(
+          chalk.yellow(`${MESSAGES.ERRORS.PUSH_RESOURCE_NOT_FOUND_PREFIX}${resourceName} (${resourceType})`),
+        );
         resourcesNotFound++;
         continue;
       }
@@ -146,28 +151,34 @@ export async function runImportReferencedResources(
         config,
         solutionId,
         request,
-        lockKey
+        lockKey,
       );
 
       switch (response.status) {
         case 'ADDED':
           resourcesCreated++;
-          config.logger.log(chalk.green(`${MESSAGES.INFO.PUSH_RESOURCE_ADDED_PREFIX}${resourceName} (${resourceType})`));
+          config.logger.log(
+            chalk.green(`${MESSAGES.INFO.PUSH_RESOURCE_ADDED_PREFIX}${resourceName} (${resourceType})`),
+          );
           break;
         case 'UNCHANGED':
           resourcesUnchanged++;
-          config.logger.log(chalk.gray(`${MESSAGES.INFO.PUSH_RESOURCE_UNCHANGED_PREFIX}${resourceName} (${resourceType})`));
+          config.logger.log(
+            chalk.gray(`${MESSAGES.INFO.PUSH_RESOURCE_UNCHANGED_PREFIX}${resourceName} (${resourceType})`),
+          );
           break;
         case 'UPDATED':
           resourcesUpdated++;
-          config.logger.log(chalk.blue(`${MESSAGES.INFO.PUSH_RESOURCE_UPDATED_PREFIX}${resourceName} (${resourceType})`));
+          config.logger.log(
+            chalk.blue(`${MESSAGES.INFO.PUSH_RESOURCE_UPDATED_PREFIX}${resourceName} (${resourceType})`),
+          );
           break;
       }
     } catch (error) {
       config.logger.log(
         chalk.red(
-          `${MESSAGES.ERRORS.PUSH_RESOURCE_PROCESSING_ERROR_PREFIX}${resourceName}: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`
-        )
+          `${MESSAGES.ERRORS.PUSH_RESOURCE_PROCESSING_ERROR_PREFIX}${resourceName}: ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`,
+        ),
       );
       resourcesNotFound++;
     }
@@ -175,7 +186,7 @@ export async function runImportReferencedResources(
 
   config.logger.log(
     chalk.gray(
-      `[resources] Summary: ${resourcesCreated} added, ${resourcesUpdated} updated, ${resourcesUnchanged} unchanged, ${resourcesNotFound} not found`
-    )
+      `[resources] Summary: ${resourcesCreated} added, ${resourcesUpdated} updated, ${resourcesUnchanged} unchanged, ${resourcesNotFound} not found`,
+    ),
   );
 }

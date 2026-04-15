@@ -27,12 +27,14 @@ npm run build
 ## Contribution Guidelines
 
 ### Code Style
+
 - Follow existing code patterns and conventions
 - Use TypeScript for type safety
 - Include JSDoc comments for public APIs
 - Ensure proper error handling
 
 ### Documentation
+
 - Update relevant documentation
 - Include code examples
 - Document breaking changes

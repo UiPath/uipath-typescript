@@ -1,7 +1,14 @@
 import { BaseService } from '../base';
 import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.models';
-import { ChoiceSetGetAllResponse, ChoiceSetGetResponse, ChoiceSetGetByIdOptions } from '../../models/data-fabric/choicesets.types';
-import { RawChoiceSetGetAllResponse, RawChoiceSetGetResponse } from '../../models/data-fabric/choicesets.internal-types';
+import {
+  ChoiceSetGetAllResponse,
+  ChoiceSetGetResponse,
+  ChoiceSetGetByIdOptions,
+} from '../../models/data-fabric/choicesets.types';
+import {
+  RawChoiceSetGetAllResponse,
+  RawChoiceSetGetResponse,
+} from '../../models/data-fabric/choicesets.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
 import { transformData, pascalToCamelCaseKeys } from '../../utils/transform';
 import { EntityMap } from '../../models/data-fabric/entities.constants';
@@ -35,15 +42,11 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    */
   @track('Choicesets.GetAll')
   async getAll(): Promise<ChoiceSetGetAllResponse[]> {
-    const rawResponse = await this.get<RawChoiceSetGetAllResponse[]>(
-      DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL
-    );
+    const rawResponse = await this.get<RawChoiceSetGetAllResponse[]>(DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL);
 
     // Transform field names
     const data = rawResponse.data || [];
-    return data.map(choiceSet =>
-      transformData(choiceSet, EntityMap) as unknown as ChoiceSetGetAllResponse
-    );
+    return data.map((choiceSet) => transformData(choiceSet, EntityMap) as unknown as ChoiceSetGetAllResponse);
   }
 
   /**
@@ -88,11 +91,11 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
   @track('Choicesets.GetById')
   async getById<T extends ChoiceSetGetByIdOptions = ChoiceSetGetByIdOptions>(
     choiceSetId: string,
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-    ? PaginatedResponse<ChoiceSetGetResponse>
-    : NonPaginatedResponse<ChoiceSetGetResponse>
+      ? PaginatedResponse<ChoiceSetGetResponse>
+      : NonPaginatedResponse<ChoiceSetGetResponse>
   > {
     // Transform a single item from PascalCase to camelCase
     const transformFn = (item: RawChoiceSetGetResponse): ChoiceSetGetResponse => {
@@ -100,22 +103,24 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
       return transformData(camelCased, EntityMap) as unknown as ChoiceSetGetResponse;
     };
 
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(choiceSetId),
-      transformFn,
-      method: HTTP_METHODS.POST,
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: CHOICESET_VALUES_PAGINATION.ITEMS_FIELD,
-        totalCountField: CHOICESET_VALUES_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
-          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
-          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
-        }
-      }
-    }, options) as any;
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(choiceSetId),
+        transformFn,
+        method: HTTP_METHODS.POST,
+        pagination: {
+          paginationType: PaginationType.OFFSET,
+          itemsField: CHOICESET_VALUES_PAGINATION.ITEMS_FIELD,
+          totalCountField: CHOICESET_VALUES_PAGINATION.TOTAL_COUNT_FIELD,
+          paginationParams: {
+            pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+            offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+            countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM,
+          },
+        },
+      },
+      options,
+    ) as any;
   }
 }
-

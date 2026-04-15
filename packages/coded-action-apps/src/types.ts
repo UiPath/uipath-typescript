@@ -10,7 +10,7 @@ export enum MessageSeverity {
 export enum TaskStatus {
   Unassigned = 'Unassigned',
   Pending = 'Pending',
-  Completed = 'Completed'
+  Completed = 'Completed',
 }
 
 /** Details of task opened in Action Center. */
@@ -47,9 +47,9 @@ export enum Theme {
 /** Response returned by Action Center after a task completion attempt. This type is used by coded-action-apps package */
 export type TaskCompleteResponse = {
   /** Whether the task was completed successfully. */
-  success: boolean,
+  success: boolean;
   /** Error code returned on failure, null when successful */
-  errorCode: number | null,
+  errorCode: number | null;
   /** Human-readable error message returned on failure, null when successful. */
-  errorMessage: string | null,
-}
+  errorMessage: string | null;
+};

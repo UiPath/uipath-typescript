@@ -3,7 +3,7 @@
  * Types and interfaces for Maestro case instance management
  */
 
-import { PaginationOptions } from "../../utils/pagination";
+import { PaginationOptions } from '../../utils/pagination';
 
 /**
  * Response for getting a single case instance
@@ -98,7 +98,7 @@ export interface CaseAppConfig {
 }
 
 /**
- * Case stage task type 
+ * Case stage task type
  */
 export enum StageTaskType {
   EXTERNAL_AGENT = 'external-agent',
@@ -106,7 +106,7 @@ export enum StageTaskType {
   AGENTIC_PROCESS = 'process',
   AGENT = 'agent',
   ACTION = 'action',
-  API_WORKFLOW = 'api-workflow'
+  API_WORKFLOW = 'api-workflow',
 }
 
 /**
@@ -126,7 +126,7 @@ export interface StageTask {
  */
 export enum EscalationRecipientScope {
   USER = 'user',
-  USER_GROUP = 'usergroup'
+  USER_GROUP = 'usergroup',
 }
 
 /**
@@ -145,7 +145,7 @@ export interface EscalationRecipient {
  * Escalation action type
  */
 export enum EscalationActionType {
-  NOTIFICATION = 'notification'
+  NOTIFICATION = 'notification',
 }
 
 /**
@@ -161,7 +161,7 @@ export interface EscalationAction {
  */
 export enum EscalationTriggerType {
   SLA_BREACHED = 'sla-breached',
-  AT_RISK = 'at-risk'
+  AT_RISK = 'at-risk',
 }
 
 /**
@@ -187,7 +187,7 @@ export enum SLADurationUnit {
   HOURS = 'h',
   DAYS = 'd',
   WEEKS = 'w',
-  MONTHS = 'm'
+  MONTHS = 'm',
 }
 
 /**

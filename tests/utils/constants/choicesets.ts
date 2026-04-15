@@ -22,4 +22,3 @@ export const CHOICESET_TEST_CONSTANTS = {
   VALUE_DISPLAY_NAME: 'Application',
   VALUE_NUMBER_ID: 3,
 } as const;
-

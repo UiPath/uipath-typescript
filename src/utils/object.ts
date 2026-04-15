@@ -2,17 +2,17 @@
  * Collection of utility functions for working with objects
  */
 
-import { OperationResponse } from "../models/common";
+import { OperationResponse } from '../models/common';
 
 /**
  * Filters out undefined values from an object
  * @param obj The source object
  * @returns A new object without undefined values
- * 
+ *
  * @example
  * ```typescript
  * // Object with undefined values
- * const options = { 
+ * const options = {
  *   name: 'test',
  *   count: 5,
  *   prefix: undefined,
@@ -24,13 +24,13 @@ import { OperationResponse } from "../models/common";
  */
 export function filterUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
   const result: Partial<T> = {};
-  
+
   for (const [key, value] of Object.entries(obj)) {
     if (value !== undefined) {
       result[key as keyof T] = value;
     }
   }
-  
+
   return result;
 }
 
@@ -41,19 +41,19 @@ export function filterUndefined<T extends Record<string, any>>(obj: T): Partial<
  */
 export function processODataArrayResponse<TData, TErrorItem = unknown>(
   oDataResponse: { value: TErrorItem[] },
-  successData: TData
+  successData: TData,
 ): OperationResponse<TData | TErrorItem[]> {
   // Empty array = success
   if (oDataResponse.value.length === 0) {
     return {
       success: true,
-      data: successData
+      data: successData,
     };
   }
-  
+
   // Non-empty array = error details
   return {
     success: false,
-    data: oDataResponse.value
+    data: oDataResponse.value,
   };
 }

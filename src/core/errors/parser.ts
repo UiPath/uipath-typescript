@@ -5,7 +5,7 @@ import {
   ParsedErrorInfo,
   isOrchestratorError,
   isEntityError,
-  isPimsError
+  isPimsError,
 } from './types';
 import { HttpHeaders } from './constants';
 
@@ -33,9 +33,9 @@ class OrchestratorErrorParser implements ErrorParsingStrategy {
       details: {
         errorCode: error.errorCode,
         traceId: error.traceId,
-        originalResponse: error
+        originalResponse: error,
       },
-      requestId: error.traceId
+      requestId: error.traceId,
     };
   }
 }
@@ -56,9 +56,9 @@ class EntityErrorParser implements ErrorParsingStrategy {
       details: {
         error: error.error,
         traceId: error.traceId,
-        originalResponse: error
+        originalResponse: error,
       },
-      requestId: error.traceId
+      requestId: error.traceId,
     };
   }
 }
@@ -74,7 +74,7 @@ class PimsErrorParser implements ErrorParsingStrategy {
   parse(errorBody: unknown, response: Response): ParsedErrorInfo {
     const error = errorBody as PimsErrorResponse;
     let message = error.title;
-    
+
     // If there are validation errors, append them to the message for better visibility
     if (error.errors && Object.keys(error.errors).length > 0) {
       const errorMessages = Object.entries(error.errors)
@@ -92,9 +92,9 @@ class PimsErrorParser implements ErrorParsingStrategy {
         status: error.status,
         errors: error.errors,
         traceId: error.traceId,
-        originalResponse: error
+        originalResponse: error,
       },
-      requestId: error.traceId
+      requestId: error.traceId,
     };
   }
 }
@@ -115,7 +115,7 @@ class GenericErrorParser implements ErrorParsingStrategy {
       message,
       code: response?.status?.toString(),
       details: {
-        originalResponse: errorBody
+        originalResponse: errorBody,
       },
     };
   }
@@ -123,16 +123,16 @@ class GenericErrorParser implements ErrorParsingStrategy {
 
 /**
  * Main error response parser using Chain of Responsibility pattern
- * 
+ *
  * This parser standardizes error responses from different UiPath services into a
  * consistent format, regardless of the original error structure.
- * 
+ *
  * Supported formats:
  * 1. Orchestrator/Task: { message, errorCode, traceId }
  * 2. Entity (Data Fabric): { error, traceId }
  * 3. PIMS/Maestro: { type, title, status, errors?, traceId? }
  * 4. Generic: Fallback for any other format
- * 
+ *
  * @example
  * const parser = new ErrorResponseParser();
  * const errorInfo = await parser.parse(response);
@@ -143,7 +143,7 @@ export class ErrorResponseParser {
     new OrchestratorErrorParser(),
     new EntityErrorParser(),
     new PimsErrorParser(),
-    new GenericErrorParser() // Must be last
+    new GenericErrorParser(), // Must be last
   ];
 
   /**
@@ -154,10 +154,10 @@ export class ErrorResponseParser {
   async parse(response: Response): Promise<ParsedErrorInfo> {
     try {
       const errorBody = await response.json();
-      
+
       // Find the first strategy that can parse this error format
-      const strategy = this.strategies.find(s => s.canParse(errorBody));
-      
+      const strategy = this.strategies.find((s) => s.canParse(errorBody));
+
       // GenericErrorParser always returns true, so this will never be null
       return strategy!.parse(errorBody, response);
     } catch {
@@ -166,11 +166,11 @@ export class ErrorResponseParser {
       return {
         message: response.statusText,
         code: response.status.toString(),
-        details: { 
+        details: {
           parseError: 'Failed to parse error response as JSON',
-          responseText 
+          responseText,
         },
-        requestId: response.headers.get(HttpHeaders.X_REQUEST_ID) || undefined
+        requestId: response.headers.get(HttpHeaders.X_REQUEST_ID) || undefined,
       };
     }
   }

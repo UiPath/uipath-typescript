@@ -5,7 +5,7 @@ import {
   ProcessGetAllOptions,
   ProcessStartRequest,
   ProcessStartResponse,
-  ProcessGetByIdOptions
+  ProcessGetByIdOptions,
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
@@ -25,14 +25,14 @@ import { track } from '../../../core/telemetry';
 export class ProcessService extends BaseService implements ProcessServiceModel {
   /**
    * Gets all processes across folders with optional filtering and folder scoping
-   * 
+   *
    * The method returns either:
    * - An array of processes (when no pagination parameters are provided)
    * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of processes or paginated result
-   * 
+   *
    * @example
    * ```typescript
    * import { Processes } from '@uipath/uipath-typescript/processes';
@@ -69,42 +69,43 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    */
   @track('Processes.GetAll')
   async getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ProcessGetResponse>
-      : NonPaginatedResponse<ProcessGetResponse>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<ProcessGetResponse> : NonPaginatedResponse<ProcessGetResponse>
   > {
     // Transformation function for processes
-    const transformProcessResponse = (process: any) => 
+    const transformProcessResponse = (process: any) =>
       transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap);
 
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => PROCESS_ENDPOINTS.GET_ALL,
-      getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL, // Processes use same endpoint for both
-      transformFn: transformProcessResponse,
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
-          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
-          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
-        }
-      }
-    }, options) as any;
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => PROCESS_ENDPOINTS.GET_ALL,
+        getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL, // Processes use same endpoint for both
+        transformFn: transformProcessResponse,
+        pagination: {
+          paginationType: PaginationType.OFFSET,
+          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+          paginationParams: {
+            pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+            offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+            countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
+          },
+        },
+      },
+      options,
+    ) as any;
   }
 
   /**
    * Starts a process execution (job)
-   * 
+   *
    * @param request - Process start request body
    * @param folderId - Required folder ID
    * @param options - Optional query parameters
    * @returns Promise resolving to the created jobs
-   * 
+   *
    * @example
    * ```typescript
    * import { Processes } from '@uipath/uipath-typescript/processes';
@@ -123,7 +124,11 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * ```
    */
   @track('Processes.Start')
-  async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
+  async start(
+    request: ProcessStartRequest,
+    folderId: number,
+    options: RequestOptions = {},
+  ): Promise<ProcessStartResponse[]> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
     // Transform SDK field names to API field names (e.g., processKey → releaseKey)
@@ -131,24 +136,24 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
 
     // Create the request object according to API spec
     const requestBody = {
-      startInfo: apiRequest
+      startInfo: apiRequest,
     };
 
     // Prefix all query parameter keys with '$' for OData
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
+
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_PROCESS,
       requestBody,
-      { 
+      {
         params: apiOptions,
-        headers
-      }
+        headers,
+      },
     );
-    
-    const transformedProcess = response.data?.value.map(process => 
-      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
+
+    const transformedProcess = response.data?.value.map((process) =>
+      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap),
     );
 
     return transformedProcess;
@@ -156,12 +161,12 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
 
   /**
    * Gets a single process by ID
-   * 
+   *
    * @param id - Process ID
    * @param folderId - Required folder ID
-   * @param options - Optional query parameters 
+   * @param options - Optional query parameters
    * @returns Promise resolving to a single process
-   * 
+   *
    * @example
    * ```typescript
    * import { Processes } from '@uipath/uipath-typescript/processes';
@@ -175,20 +180,17 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
   @track('Processes.GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<ProcessGetResponse>(
-      PROCESS_ENDPOINTS.GET_BY_ID(id),
-      { 
-        headers,
-        params: apiOptions
-      }
-    );
+
+    const response = await this.get<ProcessGetResponse>(PROCESS_ENDPOINTS.GET_BY_ID(id), {
+      headers,
+      params: apiOptions,
+    });
 
     const transformedProcess = transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
-    
+
     return transformedProcess;
   }
 }

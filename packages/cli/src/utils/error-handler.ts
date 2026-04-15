@@ -10,7 +10,7 @@ import { MESSAGES, getHttpErrorMessage } from '../constants/messages.js';
 export async function createHttpErrorMessage(response: Response, context?: string): Promise<string> {
   const errorText = await response.text();
   const userFriendlyMessage = getHttpErrorMessage(response.status, context);
-  
+
   // Combine user-friendly message with API details
   let fullMessage = userFriendlyMessage;
   if (errorText && errorText !== '{}' && errorText.trim() !== '') {
@@ -18,7 +18,7 @@ export async function createHttpErrorMessage(response: Response, context?: strin
   } else {
     fullMessage += `\nHTTP ${response.status}: ${MESSAGES.ERRORS.NO_ERROR_DETAILS}`;
   }
-  
+
   return fullMessage;
 }
 

@@ -47,7 +47,7 @@ export interface MaestroProcessesServiceModel {
 
   /**
    * Get incidents for a specific process
-   * 
+   *
    * @param processKey The key of the process to get incidents for
    * @param folderKey The folder key for authorization
    * @returns Promise resolving to array of incidents for the process
@@ -72,7 +72,7 @@ export interface MaestroProcessesServiceModel {
 export interface ProcessMethods {
   /**
    * Gets incidents for this process
-   * 
+   *
    * @returns Promise resolving to array of process incidents
    */
   getIncidents(): Promise<ProcessIncidentGetResponse[]>;
@@ -83,32 +83,35 @@ export type MaestroProcessGetAllResponse = RawMaestroProcessGetAllResponse & Pro
 
 /**
  * Creates methods for a process object
- * 
+ *
  * @param processData - The process data (response from API)
  * @param service - The process service instance
  * @returns Object containing process methods
  */
-function createProcessMethods(processData: RawMaestroProcessGetAllResponse, service: MaestroProcessesServiceModel): ProcessMethods {
+function createProcessMethods(
+  processData: RawMaestroProcessGetAllResponse,
+  service: MaestroProcessesServiceModel,
+): ProcessMethods {
   return {
     async getIncidents(): Promise<ProcessIncidentGetResponse[]> {
       if (!processData.processKey) throw new Error('Process key is undefined');
       if (!processData.folderKey) throw new Error('Folder key is undefined');
-      
+
       return service.getIncidents(processData.processKey, processData.folderKey);
-    }
+    },
   };
 }
 
 /**
  * Creates an actionable process by combining API process data with operational methods.
- * 
+ *
  * @param processData - The process data from API
  * @param service - The process service instance
  * @returns A process object with added methods
  */
 export function createProcessWithMethods(
-  processData: MaestroProcessGetAllResponse, 
-  service: MaestroProcessesServiceModel
+  processData: MaestroProcessGetAllResponse,
+  service: MaestroProcessesServiceModel,
 ): MaestroProcessGetAllResponse {
   const methods = createProcessMethods(processData, service);
   return Object.assign({}, processData, methods) as MaestroProcessGetAllResponse;

@@ -106,18 +106,18 @@ Call this once when the app loads. It sends an event to Action Center and waits 
 ```typescript
 const taskData = await service.getTask();
 
-console.log(taskData.taskId);     // number
-console.log(taskData.title);      // string
-console.log(taskData.status);     // TaskStatus enum
+console.log(taskData.taskId); // number
+console.log(taskData.title); // string
+console.log(taskData.status); // TaskStatus enum
 console.log(taskData.isReadOnly); // boolean
-console.log(taskData.data);       // the task's form data
-console.log(taskData.folderId);   // number
+console.log(taskData.data); // the task's form data
+console.log(taskData.folderId); // number
 console.log(taskData.folderName); // string
-console.log(taskData.theme);      // Theme enum — the UI theme Action Center is currently using
+console.log(taskData.theme); // Theme enum — the UI theme Action Center is currently using
 ```
 
 !!! note
-    This call will reject with an error if Action Center does not respond within 3 seconds, or if the parent origin is not trusted.
+This call will reject with an error if Action Center does not respond within 3 seconds, or if the parent origin is not trusted.
 
 ### Notify Action Center of data changes
 
@@ -140,7 +140,7 @@ if (!result.success) {
 ```
 
 !!! note
-    Only one `completeTask` call may be in flight at a time. Calling it again before the previous call resolves will throw an error: `"A completeTask call is already in progress"`.
+Only one `completeTask` call may be in flight at a time. Calling it again before the previous call resolves will throw an error: `"A completeTask call is already in progress"`.
 
 ### Display a message in Action Center
 
@@ -168,6 +168,7 @@ After installing the SDK, supercharge your development with AI IDEs:
 3. **Start Prompting**: Your AI assistant now has full context of the SDK!
 
 **Works with:**
+
 - **GitHub Copilot**
 - **Cursor**
 - **Claude**
@@ -180,17 +181,17 @@ Give your AI assistant complete context by copying our documentation:
 === "Copy Full Documentation"
 
     **For Maximum Context:**
-    
+
     1. **Download Complete Documentation**: [llms-full-content.txt](/uipath-typescript/coded-action-apps/llms.txt)
-    
+
     2. **Copy and Paste**: Copy the entire content and paste it into your AI chat
-    
+
     3. **Start Prompting**: Your AI now has complete SDK knowledge!
 
 === "Copy Individual Pages"
 
     **For Specific Features:**
-    
+
     1. **Use the copy button** (📋) on any documentation page
-    2. **Paste into your AI chat** 
+    2. **Paste into your AI chat**
     3. **Ask specific questions** about that feature

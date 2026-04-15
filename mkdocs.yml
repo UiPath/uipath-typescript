@@ -9,7 +9,6 @@ repo_url: https://github.com/UiPath/uipath-typescript
 # Copyright
 copyright: Copyright &copy; 2025 UiPath
 
-
 # Configuration
 theme:
   name: material
@@ -20,24 +19,24 @@ theme:
     dark: assets/logo-dark.svg
   favicon: assets/favicon.png
   palette:
-    - media: "(prefers-color-scheme: light)"
+    - media: '(prefers-color-scheme: light)'
       scheme: default
       primary: custom
       accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
+    - media: '(prefers-color-scheme: dark)'
       scheme: slate
       primary: custom
       accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-  
+
   icon:
     repo: fontawesome/brands/github
-    
+
   # Default values, taken from mkdocs_theme.yml
   language: en
   features:
@@ -72,13 +71,13 @@ plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - llmstxt:
-      full_output: "coded-action-apps/llms.txt"
+      full_output: 'coded-action-apps/llms.txt'
       sections:
         Coded Action Apps:
           - coded-action-apps/getting-started.md: Getting started with Coded Action Apps SDK
           - coded-action-apps/interfaces/CodedActionAppsServiceModel.md: Coded Action Apps service methods
   - llmstxt:
-      full_output: "llms-full-content.txt"
+      full_output: 'llms-full-content.txt'
       sections:
         Getting Started:
           - getting-started.md: Introduction to UiPath TypeScript SDK
@@ -109,8 +108,8 @@ plugins:
           - api/interfaces/ToolCallStream.md: Tool call streaming events
   - termynal:
       prompt_literal_start:
-        - "$"
-        - ">"
+        - '$'
+        - '>'
 
 extra:
   status:
@@ -163,7 +162,6 @@ markdown_extensions:
       title: On this page
       permalink: true
       toc_depth: 3
-  
 
 # Page tree
 nav:
@@ -176,25 +174,25 @@ nav:
   - API Reference:
       - Services:
           - Agents:
-            - Conversational Agent:
-              - conversational-agent/index.md
-              - Conversations:
-                - conversations/index.md
-              - Session: api/interfaces/SessionStream.md
-              - Exchanges: api/interfaces/ExchangeServiceModel.md
-              - Messages: api/interfaces/MessageServiceModel.md
+              - Conversational Agent:
+                  - conversational-agent/index.md
+                  - Conversations:
+                      - conversations/index.md
+                  - Session: api/interfaces/SessionStream.md
+                  - Exchanges: api/interfaces/ExchangeServiceModel.md
+                  - Messages: api/interfaces/MessageServiceModel.md
           - Attachments:
-            - api/interfaces/attachments/index.md
+              - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
           - Entities:
-            - api/interfaces/entity/index.md
-            - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
+              - api/interfaces/entity/index.md
+              - Choice Sets: api/interfaces/ChoiceSetServiceModel.md
           - Maestro:
-            - Processes: api/interfaces/MaestroProcessesServiceModel.md
-            - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
-            - Cases: api/interfaces/CasesServiceModel.md
-            - Case Instances: api/interfaces/CaseInstancesServiceModel.md
+              - Processes: api/interfaces/MaestroProcessesServiceModel.md
+              - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
+              - Cases: api/interfaces/CasesServiceModel.md
+              - Case Instances: api/interfaces/CaseInstancesServiceModel.md
           - Jobs: api/interfaces/JobServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md

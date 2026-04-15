@@ -31,7 +31,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -49,7 +49,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
 
       console.log(
         'Case CRUD tests require appropriate permissions and Maestro configuration. ' +
-          'These operations are typically performed through the UiPath UI.'
+          'These operations are typically performed through the UiPath UI.',
       );
     });
 

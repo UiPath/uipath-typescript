@@ -24,7 +24,10 @@ const createToolCall = () => {
   manager.onUnhandledErrorStart(vi.fn());
   const session = manager.startSession({ conversationId: CONVERSATION_ID }) as SessionEventHelperImpl;
   const exchange = session.startExchange({ exchangeId: EXCHANGE_ID }) as ExchangeEventHelperImpl;
-  const message = exchange.startMessage({ messageId: MESSAGE_ID, role: MessageRole.Assistant }) as MessageEventHelperImpl;
+  const message = exchange.startMessage({
+    messageId: MESSAGE_ID,
+    role: MessageRole.Assistant,
+  }) as MessageEventHelperImpl;
   const toolCall = message.startToolCall({ toolCallId: TOOL_CALL_ID, toolName: 'search' }) as ToolCallEventHelperImpl;
   emitSpy.mockClear();
   return { emitSpy, manager, session, exchange, message, toolCall };
@@ -82,7 +85,7 @@ describe('ToolCallEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -103,7 +106,7 @@ describe('ToolCallEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -136,7 +139,7 @@ describe('ToolCallEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -157,7 +160,7 @@ describe('ToolCallEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -178,7 +181,7 @@ describe('ToolCallEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -239,9 +242,7 @@ describe('ToolCallEventHelper', () => {
         toolCallError: { errorId: 'tc-err-1', startError: { message: 'fail' } },
       });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'tc-err-1' })
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'tc-err-1' }));
     });
 
     it('should dispatch toolCallError end', () => {
@@ -258,9 +259,7 @@ describe('ToolCallEventHelper', () => {
         toolCallError: { errorId: 'tc-err-1', endError: {} },
       });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'tc-err-1' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'tc-err-1' }));
     });
 
     it('should ignore events for different toolCallId', () => {
@@ -308,7 +307,7 @@ describe('ToolCallEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -331,74 +330,86 @@ describe('ToolCallEventHelper', () => {
               }),
             }),
           }),
-        })
+        }),
       );
     });
   });
 
   describe('replay', () => {
     it('should generate start and end events for tool call with result', () => {
-      const events = Array.from(ToolCallEventHelperImpl.replay({
-        toolCallId: 'replay-tc',
-        name: 'search',
-        input: { query: 'test' },
-        createdTime: '2024-01-01T00:00:00Z',
-        result: {
-          output: 'search result',
-          isError: false,
-          cancelled: false,
-          timestamp: '2024-01-01T00:00:01Z',
-        },
-      } as any));
+      const events = Array.from(
+        ToolCallEventHelperImpl.replay({
+          toolCallId: 'replay-tc',
+          name: 'search',
+          input: { query: 'test' },
+          createdTime: '2024-01-01T00:00:00Z',
+          result: {
+            output: 'search result',
+            isError: false,
+            cancelled: false,
+            timestamp: '2024-01-01T00:00:01Z',
+          },
+        } as any),
+      );
 
       expect(events).toHaveLength(2);
-      expect(events[0]).toEqual(expect.objectContaining({
-        toolCallId: 'replay-tc',
-        startToolCall: expect.objectContaining({
-          toolName: 'search',
-          input: { query: 'test' },
+      expect(events[0]).toEqual(
+        expect.objectContaining({
+          toolCallId: 'replay-tc',
+          startToolCall: expect.objectContaining({
+            toolName: 'search',
+            input: { query: 'test' },
+          }),
         }),
-      }));
-      expect(events[1]).toEqual(expect.objectContaining({
-        toolCallId: 'replay-tc',
-        endToolCall: expect.objectContaining({
-          output: 'search result',
-          isError: false,
+      );
+      expect(events[1]).toEqual(
+        expect.objectContaining({
+          toolCallId: 'replay-tc',
+          endToolCall: expect.objectContaining({
+            output: 'search result',
+            isError: false,
+          }),
         }),
-      }));
+      );
     });
 
     it('should generate only start event for tool call without result', () => {
-      const events = Array.from(ToolCallEventHelperImpl.replay({
-        toolCallId: 'replay-tc-noresult',
-        name: 'calc',
-        input: {},
-        createdTime: '2024-01-01T00:00:00Z',
-      } as any));
+      const events = Array.from(
+        ToolCallEventHelperImpl.replay({
+          toolCallId: 'replay-tc-noresult',
+          name: 'calc',
+          input: {},
+          createdTime: '2024-01-01T00:00:00Z',
+        } as any),
+      );
 
       expect(events).toHaveLength(1);
       expect(events[0].startToolCall).toBeDefined();
     });
 
     it('should set timestamp, cancelled and isError in end event', () => {
-      const events = Array.from(ToolCallEventHelperImpl.replay({
-        toolCallId: 'replay-tc-fields',
-        name: 'search',
-        input: {},
-        createdTime: '2024-01-01T00:00:00Z',
-        result: {
-          output: 'result',
+      const events = Array.from(
+        ToolCallEventHelperImpl.replay({
+          toolCallId: 'replay-tc-fields',
+          name: 'search',
+          input: {},
+          createdTime: '2024-01-01T00:00:00Z',
+          result: {
+            output: 'result',
+            isError: true,
+            cancelled: true,
+            timestamp: '2024-01-01T00:00:05Z',
+          },
+        } as any),
+      );
+
+      const endEvent = events.find((e) => e.endToolCall);
+      expect(endEvent!.endToolCall).toEqual(
+        expect.objectContaining({
           isError: true,
           cancelled: true,
-          timestamp: '2024-01-01T00:00:05Z',
-        },
-      } as any));
-
-      const endEvent = events.find(e => e.endToolCall);
-      expect(endEvent!.endToolCall).toEqual(expect.objectContaining({
-        isError: true,
-        cancelled: true,
-      }));
+        }),
+      );
     });
   });
 

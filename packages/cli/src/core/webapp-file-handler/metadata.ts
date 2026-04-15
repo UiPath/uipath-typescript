@@ -23,10 +23,7 @@ const DEFAULT_SCHEMA_VERSION = '1.0.0';
  * Get push author email from access token (JWT email claim). Returns '' if missing or decode fails.
  * Uses parseJWT from auth/core/oidc for token parsing.
  */
-export function getPushAuthorEmail(
-  accessToken?: string,
-  logger?: { log: (message: string) => void }
-): string {
+export function getPushAuthorEmail(accessToken?: string, logger?: { log: (message: string) => void }): string {
   if (!accessToken) return '';
   try {
     const claims = parseJWT(accessToken);
@@ -44,7 +41,10 @@ export function getPushAuthorEmail(
  */
 function parseSchemaVersion(version: unknown): { major: number; minor: number; patch: number } {
   const str = typeof version === 'string' ? version : DEFAULT_SCHEMA_VERSION;
-  const parts = str.trim().split('.').map((s) => parseInt(s, 10));
+  const parts = str
+    .trim()
+    .split('.')
+    .map((s) => parseInt(s, 10));
   return {
     major: Number.isFinite(parts[0]) ? parts[0] : 1,
     minor: Number.isFinite(parts[1]) ? parts[1] : 0,
@@ -68,7 +68,7 @@ function compareSchemaVersions(a: unknown, b: unknown): number {
 export class PushBehindRemoteError extends Error {
   constructor(
     public readonly localVersion: string,
-    public readonly remoteVersion: string
+    public readonly remoteVersion: string,
   ) {
     const msg = `${MESSAGES.ERRORS.PUSH_SCHEMA_VERSION_BEHIND_REMOTE} Your version: ${localVersion}. Remote version: ${remoteVersion}.`;
     super(msg);
@@ -83,14 +83,9 @@ export class PushBehindRemoteError extends Error {
  * - Minor bump (e.g. 1.0.0 → 1.1.0): when there are add or update (uploadFiles or updateFiles), and no removals.
  * - Unchanged: no add/update and no delete.
  */
-function computeNextSchemaVersion(
-  currentVersion: unknown,
-  plan: FileOperationPlan
-): string {
-  const hasRemovals =
-    plan.deleteFiles.length > 0 || plan.deleteFolders.length > 0;
-  const hasAddOrUpdate =
-    plan.uploadFiles.length > 0 || plan.updateFiles.length > 0;
+function computeNextSchemaVersion(currentVersion: unknown, plan: FileOperationPlan): string {
+  const hasRemovals = plan.deleteFiles.length > 0 || plan.deleteFolders.length > 0;
+  const hasAddOrUpdate = plan.uploadFiles.length > 0 || plan.updateFiles.length > 0;
 
   const { major, minor } = parseSchemaVersion(currentVersion);
 
@@ -122,7 +117,7 @@ function createNewMetadataPayload(config: WebAppProjectConfig): PushMetadata {
 export async function ensureSchemaVersionNotBehindRemote(
   config: WebAppProjectConfig,
   remoteFiles: Map<string, ProjectFile>,
-  downloadRemoteFile: (config: WebAppProjectConfig, fileId: string) => Promise<Buffer>
+  downloadRemoteFile: (config: WebAppProjectConfig, fileId: string) => Promise<Buffer>,
 ): Promise<void> {
   const remoteEntry = remoteFiles.get(PUSH_METADATA_REMOTE_PATH);
   if (!remoteEntry) return;
@@ -167,7 +162,7 @@ export async function prepareMetadataFileForPlan(
   config: WebAppProjectConfig,
   remoteFiles: Map<string, ProjectFile>,
   downloadRemoteFile: (config: WebAppProjectConfig, fileId: string) => Promise<Buffer>,
-  plan: FileOperationPlan
+  plan: FileOperationPlan,
 ): Promise<void> {
   const metadataPath = path.join(config.rootDir, config.manifestFile);
   const metadataDir = path.dirname(metadataPath);
@@ -200,11 +195,14 @@ export async function prepareMetadataFileForPlan(
           const msg = remoteErr instanceof Error ? remoteErr.message : String(remoteErr);
           config.logger.log(
             chalk.gray(
-              MESSAGES.ERRORS.PUSH_REMOTE_METADATA_LOAD_FALLBACK_PREFIX + msg + MESSAGES.ERRORS.PUSH_REMOTE_METADATA_LOAD_FALLBACK_SUFFIX
-            )
+              MESSAGES.ERRORS.PUSH_REMOTE_METADATA_LOAD_FALLBACK_PREFIX +
+                msg +
+                MESSAGES.ERRORS.PUSH_REMOTE_METADATA_LOAD_FALLBACK_SUFFIX,
+            ),
           );
           cliTelemetryClient.track('Cli.Push.MetadataRemoteLoadFailed', {
-            error_message: msg.length > MAX_TELEMETRY_ERROR_LENGTH ? msg.slice(0, MAX_TELEMETRY_ERROR_LENGTH) + '...' : msg,
+            error_message:
+              msg.length > MAX_TELEMETRY_ERROR_LENGTH ? msg.slice(0, MAX_TELEMETRY_ERROR_LENGTH) + '...' : msg,
           });
           metadata = createNewMetadataPayload(config);
           isNewMetadata = true;
@@ -254,7 +252,7 @@ export async function uploadPushMetadataToRemote(
   metadataPath: string,
   fullRemoteFiles: Map<string, ProjectFile>,
   folderIdMap: Map<string, string>,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<void> {
   const content = fs.readFileSync(metadataPath);
   const localFile: LocalFile = {
@@ -274,7 +272,7 @@ export async function uploadPushMetadataToRemote(
       localFile,
       sourceFolderId,
       REMOTE_SOURCE_FOLDER_NAME,
-      lockKey
+      lockKey,
     );
   }
 }
@@ -288,7 +286,7 @@ export async function updateRemoteWebAppManifest(
   config: WebAppProjectConfig,
   bundlePath: string,
   fullRemoteFiles: Map<string, ProjectFile>,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<void> {
   const remoteFile = fullRemoteFiles.get(WEB_APP_MANIFEST_FILENAME);
   if (!remoteFile) return;
@@ -312,13 +310,7 @@ export async function updateRemoteWebAppManifest(
       hash: computeHash(newContent, WEB_APP_MANIFEST_FILENAME),
       content: newContent,
     };
-    await api.updateFile(
-      config,
-      WEB_APP_MANIFEST_FILENAME,
-      localFile,
-      remoteFile.id,
-      lockKey
-    );
+    await api.updateFile(config, WEB_APP_MANIFEST_FILENAME, localFile, remoteFile.id, lockKey);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     config.logger.log(chalk.gray(MESSAGES.ERRORS.PUSH_WEB_APP_MANIFEST_UPDATE_FAILED_PREFIX + msg));

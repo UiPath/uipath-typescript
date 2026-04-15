@@ -1,6 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
-import { computeExecutionPlan, computeFirstPushPlan, convertPlanToMigration } from '../../../../src/core/webapp-file-handler/push-plan.js';
-import type { LocalFileWithRemote, ProjectFile, ProjectFolder, FileOperationPlan } from '../../../../src/core/webapp-file-handler/types.js';
+import {
+  computeExecutionPlan,
+  computeFirstPushPlan,
+  convertPlanToMigration,
+} from '../../../../src/core/webapp-file-handler/push-plan.js';
+import type {
+  LocalFileWithRemote,
+  ProjectFile,
+  ProjectFolder,
+  FileOperationPlan,
+} from '../../../../src/core/webapp-file-handler/types.js';
 
 const mockLocalFile = (remotePath: string, hash = 'hash1') => ({
   localFile: {
@@ -30,9 +39,7 @@ describe('push-plan', () => {
 
     it('should plan update for changed files', async () => {
       const localFiles: LocalFileWithRemote[] = [mockLocalFile('source/dist/app.js', 'new-hash')];
-      const remoteFiles = new Map<string, ProjectFile>([
-        ['source/dist/app.js', { id: 'f1', name: 'app.js' }],
-      ]);
+      const remoteFiles = new Map<string, ProjectFile>([['source/dist/app.js', { id: 'f1', name: 'app.js' }]]);
       const remoteFolders = new Map<string, ProjectFolder>();
       const plan = await computeExecutionPlan(localFiles, remoteFiles, remoteFolders, {
         bundlePath: 'dist',
@@ -45,9 +52,7 @@ describe('push-plan', () => {
 
     it('should skip unchanged files', async () => {
       const localFiles: LocalFileWithRemote[] = [mockLocalFile('source/dist/app.js', 'same-hash')];
-      const remoteFiles = new Map<string, ProjectFile>([
-        ['source/dist/app.js', { id: 'f1', name: 'app.js' }],
-      ]);
+      const remoteFiles = new Map<string, ProjectFile>([['source/dist/app.js', { id: 'f1', name: 'app.js' }]]);
       const plan = await computeExecutionPlan(localFiles, remoteFiles, new Map(), {
         bundlePath: 'dist',
         remoteContentRoot: 'source/dist',
@@ -60,9 +65,7 @@ describe('push-plan', () => {
 
     it('should plan delete for remote files not in local', async () => {
       const localFiles: LocalFileWithRemote[] = [];
-      const remoteFiles = new Map<string, ProjectFile>([
-        ['source/dist/old.js', { id: 'f1', name: 'old.js' }],
-      ]);
+      const remoteFiles = new Map<string, ProjectFile>([['source/dist/old.js', { id: 'f1', name: 'old.js' }]]);
       const remoteFolders = new Map<string, ProjectFolder>();
       const plan = await computeExecutionPlan(localFiles, remoteFiles, remoteFolders, {
         bundlePath: 'dist',
@@ -97,9 +100,7 @@ describe('push-plan', () => {
     });
 
     it('should collect folder paths from files', () => {
-      const localFiles: LocalFileWithRemote[] = [
-        mockLocalFile('source/dist/assets/style.css'),
-      ];
+      const localFiles: LocalFileWithRemote[] = [mockLocalFile('source/dist/assets/style.css')];
       const plan = computeFirstPushPlan(localFiles, new Map());
       expect(plan.createFolders.length).toBeGreaterThan(0);
     });
@@ -115,7 +116,13 @@ describe('push-plan', () => {
     it('should convert upload to addedResources', () => {
       const plan: FileOperationPlan = {
         createFolders: [],
-        uploadFiles: [{ path: 'source/dist/app.js', localFile: { path: 'dist/app.js', absPath: '/x', hash: 'h', content: Buffer.from('x') }, parentPath: 'source/dist' }],
+        uploadFiles: [
+          {
+            path: 'source/dist/app.js',
+            localFile: { path: 'dist/app.js', absPath: '/x', hash: 'h', content: Buffer.from('x') },
+            parentPath: 'source/dist',
+          },
+        ],
         updateFiles: [],
         deleteFiles: [],
         deleteFolders: [],
@@ -128,7 +135,13 @@ describe('push-plan', () => {
       const plan: FileOperationPlan = {
         createFolders: [],
         uploadFiles: [],
-        updateFiles: [{ path: 'source/dist/app.js', localFile: { path: 'dist/app.js', absPath: '/x', hash: 'h', content: Buffer.from('x') }, fileId: 'f1' }],
+        updateFiles: [
+          {
+            path: 'source/dist/app.js',
+            localFile: { path: 'dist/app.js', absPath: '/x', hash: 'h', content: Buffer.from('x') },
+            fileId: 'f1',
+          },
+        ],
         deleteFiles: [],
         deleteFolders: [],
       };

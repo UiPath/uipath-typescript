@@ -13,7 +13,7 @@ import type {
   ContentPartStartEvent,
   ErrorEndEvent,
   ErrorStartEvent,
-  MetaEvent
+  MetaEvent,
 } from './protocol.types';
 
 /**
@@ -29,7 +29,7 @@ export type CitationError = {
  */
 export enum CitationErrorType {
   CitationNotEnded = 'CitationNotEnded',
-  CitationNotStarted = 'CitationNotStarted'
+  CitationNotStarted = 'CitationNotStarted',
 }
 
 /**
@@ -38,12 +38,13 @@ export enum CitationErrorType {
  * Contains the full buffered text, citations, and metadata
  * available after a content part stream has ended.
  */
-export type CompletedContentPart = ContentPartStartEvent & ContentPartEndEvent & {
-  contentPartId: string;
-  data: string;
-  citations: CitationOptions[];
-  citationErrors: CitationError[];
-};
+export type CompletedContentPart = ContentPartStartEvent &
+  ContentPartEndEvent & {
+    contentPartId: string;
+    data: string;
+    citations: CitationOptions[];
+    citationErrors: CitationError[];
+  };
 
 /**
  * Model for content part event helpers.
@@ -304,7 +305,9 @@ export interface ContentPartStream {
    * @param chunk - Chunk data with citation ID and sources
    * @internal
    */
-  sendChunkWithCitationEnd(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] }): void;
+  sendChunkWithCitationEnd(
+    chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] },
+  ): void;
 
   /**
    * Sends a chunk that is a complete citation (start and end in one)
@@ -314,7 +317,9 @@ export interface ContentPartStream {
    * @param chunk - Chunk data with citation ID and sources
    * @internal
    */
-  sendChunkWithCitation(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] }): void;
+  sendChunkWithCitation(
+    chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] },
+  ): void;
 
   /**
    * Emits a raw content part event

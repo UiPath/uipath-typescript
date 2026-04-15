@@ -1,10 +1,5 @@
 import { describe, it, expect, afterAll } from 'vitest';
-import {
-  getServices,
-  getTestConfig,
-  setupUnifiedTests,
-  InitMode,
-} from '../../config/unified-setup';
+import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 
 const modes: InitMode[] = ['v0', 'v1'];
@@ -32,7 +27,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -55,7 +50,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -87,7 +82,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -132,10 +127,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         const instance = await processInstances.getById(testInstanceId, config.folderId || '');
         expect(instance.latestRunStatus).toMatch(/paused|suspended/i);
       } catch (error: any) {
-        console.log(
-          'Pause test failed. Instance may not be in a pausable state:',
-          error.message
-        );
+        console.log('Pause test failed. Instance may not be in a pausable state:', error.message);
       }
     });
 
@@ -157,10 +149,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         const instance = await processInstances.getById(testInstanceId, config.folderId || '');
         expect(instance.latestRunStatus).toMatch(/running|active|resumed/i);
       } catch (error: any) {
-        console.log(
-          'Resume test failed. Instance may not be in a resumable state:',
-          error.message
-        );
+        console.log('Resume test failed. Instance may not be in a resumable state:', error.message);
       }
     });
 
@@ -174,9 +163,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         });
 
         const runnableInstance = instances.items.find(
-          (inst: any) =>
-            inst.latestRunStatus &&
-            inst.latestRunStatus.toLowerCase().match(/running|active|pending/)
+          (inst: any) => inst.latestRunStatus && inst.latestRunStatus.toLowerCase().match(/running|active|pending/),
         );
 
         if (!runnableInstance) {
@@ -185,18 +172,12 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         }
 
         try {
-          const result = await processInstances.cancel(
-            runnableInstance.instanceId,
-            config.folderId || ''
-          );
+          const result = await processInstances.cancel(runnableInstance.instanceId, config.folderId || '');
 
           expect(result).toBeDefined();
           expect(result.success).toBe(true);
 
-          const instance = await processInstances.getById(
-            runnableInstance.instanceId,
-            config.folderId || ''
-          );
+          const instance = await processInstances.getById(runnableInstance.instanceId, config.folderId || '');
           expect(instance.latestRunStatus).toMatch(/cancel|stopped|terminated/i);
 
           registerResource('processInstances', {
@@ -210,7 +191,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -290,7 +271,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }

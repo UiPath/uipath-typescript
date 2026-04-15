@@ -1,9 +1,10 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  createConversationWithMethods,
+import { createConversationWithMethods } from '@/models/conversational-agent/conversations/conversations.models';
+import type {
+  ConversationServiceModel,
+  ConversationSessionMethods,
 } from '@/models/conversational-agent/conversations/conversations.models';
-import type { ConversationServiceModel, ConversationSessionMethods } from '@/models/conversational-agent/conversations/conversations.models';
 import type { ExchangeServiceModel } from '@/models/conversational-agent/conversations/exchanges.models';
 import { CONVERSATIONAL_AGENT_TEST_CONSTANTS, TEST_CONSTANTS } from '@tests/utils/mocks';
 import { FeedbackRating } from '@/models/conversational-agent/conversations/types/core.types';
@@ -108,10 +109,9 @@ describe('Conversation Models', () => {
 
       const result = await conversation.update({ label: 'Updated' });
 
-      expect(mockService.updateById).toHaveBeenCalledWith(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { label: 'Updated' }
-      );
+      expect(mockService.updateById).toHaveBeenCalledWith(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, {
+        label: 'Updated',
+      });
       expect(result).toEqual(mockResponse);
     });
 
@@ -124,10 +124,9 @@ describe('Conversation Models', () => {
 
       const result = await conversation.update({ autogenerateLabel: false });
 
-      expect(mockService.updateById).toHaveBeenCalledWith(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { autogenerateLabel: false }
-      );
+      expect(mockService.updateById).toHaveBeenCalledWith(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, {
+        autogenerateLabel: false,
+      });
       expect(result.autogenerateLabel).toBe(false);
     });
 
@@ -144,10 +143,10 @@ describe('Conversation Models', () => {
 
       const result = await conversation.update({ label: 'Custom Label', autogenerateLabel: false });
 
-      expect(mockService.updateById).toHaveBeenCalledWith(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { label: 'Custom Label', autogenerateLabel: false }
-      );
+      expect(mockService.updateById).toHaveBeenCalledWith(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, {
+        label: 'Custom Label',
+        autogenerateLabel: false,
+      });
       expect(result.label).toBe('Custom Label');
       expect(result.autogenerateLabel).toBe(false);
     });
@@ -170,9 +169,7 @@ describe('Conversation Models', () => {
 
       const result = await conversation.delete();
 
-      expect(mockService.deleteById).toHaveBeenCalledWith(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID
-      );
+      expect(mockService.deleteById).toHaveBeenCalledWith(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
       expect(result).toEqual(mockResponse);
     });
 
@@ -196,7 +193,7 @@ describe('Conversation Models', () => {
 
       expect(mockSessionMethods.startSession).toHaveBeenCalledWith(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        undefined
+        undefined,
       );
       expect(result).toEqual(mockSession);
     });
@@ -212,7 +209,7 @@ describe('Conversation Models', () => {
 
       expect(mockSessionMethods.startSession).toHaveBeenCalledWith(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { resumeOnReconnect: true }
+        { resumeOnReconnect: true },
       );
     });
 
@@ -241,9 +238,7 @@ describe('Conversation Models', () => {
 
       const result = conversation.getSession();
 
-      expect(mockSessionMethods.getSession).toHaveBeenCalledWith(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID
-      );
+      expect(mockSessionMethods.getSession).toHaveBeenCalledWith(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
       expect(result).toEqual(mockSession);
     });
 
@@ -278,9 +273,7 @@ describe('Conversation Models', () => {
 
       conversation.endSession();
 
-      expect(mockSessionMethods.endSession).toHaveBeenCalledWith(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID
-      );
+      expect(mockSessionMethods.endSession).toHaveBeenCalledWith(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
     });
 
     it('should throw error if conversation id is undefined', () => {
@@ -315,7 +308,7 @@ describe('Conversation Models', () => {
 
       expect(mockService.uploadAttachment).toHaveBeenCalledWith(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        mockFile
+        mockFile,
       );
       expect(result).toEqual(mockResponse);
     });
@@ -342,7 +335,7 @@ describe('Conversation Models', () => {
 
         expect(mockExchangeService.getAll).toHaveBeenCalledWith(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockResponse);
       });
@@ -356,10 +349,9 @@ describe('Conversation Models', () => {
 
         await conversation.exchanges.getAll({ pageSize: 10 } as any);
 
-        expect(mockExchangeService.getAll).toHaveBeenCalledWith(
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-          { pageSize: 10 }
-        );
+        expect(mockExchangeService.getAll).toHaveBeenCalledWith(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, {
+          pageSize: 10,
+        });
       });
 
       it('should throw error if conversation id is undefined', () => {
@@ -379,7 +371,11 @@ describe('Conversation Models', () => {
 
     describe('exchanges.getById()', () => {
       it('should delegate to exchangeService.getById with conversation id', async () => {
-        const mockResponse = { id: CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, exchangeId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, messages: [] };
+        const mockResponse = {
+          id: CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
+          exchangeId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
+          messages: [],
+        };
         (mockExchangeService.getById as any).mockResolvedValue(mockResponse);
 
         const data = createMockConversationData();
@@ -390,24 +386,30 @@ describe('Conversation Models', () => {
         expect(mockExchangeService.getById).toHaveBeenCalledWith(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockResponse);
       });
 
       it('should pass options to exchangeService.getById', async () => {
-        const mockResponse = { id: CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, exchangeId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, messages: [] };
+        const mockResponse = {
+          id: CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
+          exchangeId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
+          messages: [],
+        };
         (mockExchangeService.getById as any).mockResolvedValue(mockResponse);
 
         const data = createMockConversationData();
         const conversation = createConversationWithMethods(data, mockService, mockSessionMethods, mockExchangeService);
 
-        await conversation.exchanges.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, { messageSort: 'descending' as any });
+        await conversation.exchanges.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, {
+          messageSort: 'descending' as any,
+        });
 
         expect(mockExchangeService.getById).toHaveBeenCalledWith(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-          { messageSort: 'descending' }
+          { messageSort: 'descending' },
         );
       });
 
@@ -415,14 +417,18 @@ describe('Conversation Models', () => {
         const data = createMockConversationData({ id: undefined });
         const conversation = createConversationWithMethods(data, mockService, mockSessionMethods, mockExchangeService);
 
-        expect(() => conversation.exchanges.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID)).toThrow('Conversation ID is undefined');
+        expect(() => conversation.exchanges.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID)).toThrow(
+          'Conversation ID is undefined',
+        );
       });
 
       it('should throw error if exchange service is not available', () => {
         const data = createMockConversationData();
         const conversation = createConversationWithMethods(data, mockService, mockSessionMethods);
 
-        expect(() => conversation.exchanges.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID)).toThrow('Exchange methods are not available');
+        expect(() => conversation.exchanges.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID)).toThrow(
+          'Exchange methods are not available',
+        );
       });
     });
 
@@ -442,7 +448,7 @@ describe('Conversation Models', () => {
         expect(mockExchangeService.createFeedback).toHaveBeenCalledWith(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-          { rating: FeedbackRating.Positive, comment: 'Great!' }
+          { rating: FeedbackRating.Positive, comment: 'Great!' },
         );
         expect(result).toEqual(mockResponse);
       });
@@ -451,8 +457,10 @@ describe('Conversation Models', () => {
         const data = createMockConversationData({ id: undefined });
         const conversation = createConversationWithMethods(data, mockService, mockSessionMethods, mockExchangeService);
 
-        expect(
-          () => conversation.exchanges.createFeedback(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, { rating: FeedbackRating.Positive })
+        expect(() =>
+          conversation.exchanges.createFeedback(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, {
+            rating: FeedbackRating.Positive,
+          }),
         ).toThrow('Conversation ID is undefined');
       });
 
@@ -460,8 +468,10 @@ describe('Conversation Models', () => {
         const data = createMockConversationData();
         const conversation = createConversationWithMethods(data, mockService, mockSessionMethods);
 
-        expect(
-          () => conversation.exchanges.createFeedback(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, { rating: FeedbackRating.Positive })
+        expect(() =>
+          conversation.exchanges.createFeedback(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID, {
+            rating: FeedbackRating.Positive,
+          }),
         ).toThrow('Exchange methods are not available');
       });
     });

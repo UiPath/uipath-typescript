@@ -83,7 +83,11 @@ async function getDeployedApp(appName: string, envConfig: EnvironmentConfig): Pr
   return data.value.find((app) => app.title === appName) ?? null;
 }
 
-async function getPublishedApp(appName: string, envConfig: EnvironmentConfig, version?: string): Promise<PublishedApp | null> {
+async function getPublishedApp(
+  appName: string,
+  envConfig: EnvironmentConfig,
+  version?: string,
+): Promise<PublishedApp | null> {
   const endpoint = API_ENDPOINTS.PUBLISHED_APPS.replace('{tenantId}', envConfig.tenantId);
   const url = `${envConfig.baseUrl}/${envConfig.orgId}${endpoint}?searchText=${encodeURIComponent(appName)}&folderFeedType=tenant`;
   const response = await fetch(url, {
@@ -140,7 +144,11 @@ function updateAppConfig(deploymentId: string, logger: { log: (message: string) 
     if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
     atomicWriteFileSync(configPath, config);
   } catch (error) {
-    logger.log(chalk.yellow(`${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`));
+    logger.log(
+      chalk.yellow(
+        `${MESSAGES.ERRORS.FAILED_TO_SAVE_APP_CONFIG} ${error instanceof Error ? error.message : MESSAGES.ERRORS.UNKNOWN_ERROR}`,
+      ),
+    );
   }
 }
 
@@ -149,18 +157,14 @@ export async function executeDeploy(options: DeployOptions): Promise<void> {
 
   logger.log(chalk.blue(MESSAGES.INFO.APP_DEPLOYMENT));
 
-  const envConfig = getEnvironmentConfig(
-    AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY,
-    logger,
-    {
-      baseUrl: options.baseUrl,
-      orgId: options.orgId,
-      orgName: options.orgName,
-      tenantId: options.tenantId,
-      folderKey: options.folderKey,
-      accessToken: options.accessToken,
-    }
-  );
+  const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.DEPLOY, logger, {
+    baseUrl: options.baseUrl,
+    orgId: options.orgId,
+    orgName: options.orgName,
+    tenantId: options.tenantId,
+    folderKey: options.folderKey,
+    accessToken: options.accessToken,
+  });
   if (!envConfig) throw new Error('Missing required configuration');
 
   if (options.name) {

@@ -28,9 +28,7 @@ describe('withErrorHandling', () => {
 
     await wrapped();
 
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('something failed')
-    );
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('something failed'));
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
@@ -52,9 +50,7 @@ describe('withErrorHandling', () => {
 
     await wrapped();
 
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('string error')
-    );
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('string error'));
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 

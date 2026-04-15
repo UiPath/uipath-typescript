@@ -1,5 +1,9 @@
 import { BaseService } from '../base';
-import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
+import {
+  EntityServiceModel,
+  EntityGetResponse,
+  createEntityWithMethods,
+} from '../../models/data-fabric/entities.models';
 import {
   EntityGetRecordsByIdOptions,
   EntityGetAllRecordsOptions,
@@ -24,7 +28,7 @@ import {
   EntityFileType,
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
-  EntityDeleteAttachmentResponse
+  EntityDeleteAttachmentResponse,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -70,16 +74,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.GetById')
   async getById(id: string): Promise<EntityGetResponse> {
     // Get entity metadata
-    const response = await this.get<RawEntityGetResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id)
-    );
-    
+    const response = await this.get<RawEntityGetResponse>(DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(id));
+
     // Apply EntityMap transformations
-    const metadata = transformData(response.data as RawEntityGetResponse, EntityMap)
-    
+    const metadata = transformData(response.data as RawEntityGetResponse, EntityMap);
+
     // Transform metadata with field mappers
     this.applyFieldMappings(metadata);
-    
+
     // Return the entity metadata with methods attached
     return createEntityWithMethods(metadata, this);
   }
@@ -121,27 +123,26 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.GetAllRecords')
   async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
     entityId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  > {
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
-        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,    
-          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,         
-          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM            
-        }
+    options?: T,
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
+        pagination: {
+          paginationType: PaginationType.OFFSET,
+          itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
+          totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
+          paginationParams: {
+            pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+            offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+            countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM,
+          },
+        },
+        excludeFromPrefix: ['expansionLevel'], // Don't add ODATA prefix to expansionLevel
       },
-      excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
-    }, options);
+      options,
+    );
   }
 
   /**
@@ -167,16 +168,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
   async getRecordById(
     entityId: string,
     recordId: string,
-    options: EntityGetRecordByIdOptions = {}
+    options: EntityGetRecordByIdOptions = {},
   ): Promise<EntityRecord> {
     const params = createParams({
-      expansionLevel: options.expansionLevel
+      expansionLevel: options.expansionLevel,
     });
 
-    const response = await this.get<EntityRecord>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(entityId, recordId),
-      { params }
-    );
+    const response = await this.get<EntityRecord>(DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(entityId, recordId), {
+      params,
+    });
 
     return response.data;
   }
@@ -205,19 +205,19 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.InsertRecordById')
-  async insertRecordById(id: string, data: Record<string, any>, options: EntityInsertRecordOptions = {}): Promise<EntityInsertResponse> {
+  async insertRecordById(
+    id: string,
+    data: Record<string, any>,
+    options: EntityInsertRecordOptions = {},
+  ): Promise<EntityInsertResponse> {
     const params = createParams({
-      expansionLevel: options.expansionLevel
+      expansionLevel: options.expansionLevel,
     });
 
-    const response = await this.post<EntityInsertResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id),
-      data,
-      {
-        params,
-        ...options
-      }
-    );
+    const response = await this.post<EntityInsertResponse>(DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(id), data, {
+      params,
+      ...options,
+    });
 
     return response.data;
   }
@@ -253,10 +253,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.InsertRecordsById')
-  async insertRecordsById(id: string, data: Record<string, any>[], options: EntityInsertRecordsOptions = {}): Promise<EntityBatchInsertResponse> {
+  async insertRecordsById(
+    id: string,
+    data: Record<string, any>[],
+    options: EntityInsertRecordsOptions = {},
+  ): Promise<EntityBatchInsertResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
-      failOnFirst: options.failOnFirst
+      failOnFirst: options.failOnFirst,
     });
 
     const response = await this.post<EntityBatchInsertResponse>(
@@ -264,8 +268,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
       data,
       {
         params,
-        ...options
-      }
+        ...options,
+      },
     );
 
     return response.data;
@@ -296,9 +300,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.UpdateRecordById')
-  async updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options: EntityUpdateRecordOptions = {}): Promise<EntityUpdateRecordResponse> {
+  async updateRecordById(
+    entityId: string,
+    recordId: string,
+    data: Record<string, any>,
+    options: EntityUpdateRecordOptions = {},
+  ): Promise<EntityUpdateRecordResponse> {
     const params = createParams({
-      expansionLevel: options.expansionLevel
+      expansionLevel: options.expansionLevel,
     });
 
     const response = await this.post<EntityUpdateRecordResponse>(
@@ -306,8 +315,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
       data,
       {
         params,
-        ...options
-      }
+        ...options,
+      },
     );
 
     return response.data;
@@ -345,20 +354,20 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.UpdateRecordsById')
-  async updateRecordsById(id: string, data: EntityRecord[], options: EntityUpdateRecordsOptions = {}): Promise<EntityUpdateResponse> {
+  async updateRecordsById(
+    id: string,
+    data: EntityRecord[],
+    options: EntityUpdateRecordsOptions = {},
+  ): Promise<EntityUpdateResponse> {
     const params = createParams({
       expansionLevel: options.expansionLevel,
-      failOnFirst: options.failOnFirst
+      failOnFirst: options.failOnFirst,
     });
 
-    const response = await this.post<EntityUpdateResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(id),
-      data,
-      {
-        params,
-        ...options
-      }
-    );
+    const response = await this.post<EntityUpdateResponse>(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(id), data, {
+      params,
+      ...options,
+    });
 
     return response.data;
   }
@@ -384,19 +393,19 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.DeleteRecordsById')
-  async deleteRecordsById(id: string, recordIds: string[], options: EntityDeleteRecordsOptions = {}): Promise<EntityDeleteResponse> {
+  async deleteRecordsById(
+    id: string,
+    recordIds: string[],
+    options: EntityDeleteRecordsOptions = {},
+  ): Promise<EntityDeleteResponse> {
     const params = createParams({
-      failOnFirst: options.failOnFirst
+      failOnFirst: options.failOnFirst,
     });
 
-    const response = await this.post<EntityDeleteResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_ID(id),
-      recordIds,
-      {
-        params,
-        ...options
-      }
-    );
+    const response = await this.post<EntityDeleteResponse>(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_ID(id), recordIds, {
+      params,
+      ...options,
+    });
 
     return response.data;
   }
@@ -421,19 +430,17 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.GetAll')
   async getAll(): Promise<EntityGetResponse[]> {
-    const response = await this.get<RawEntityGetResponse[]>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL
-    );
-    
+    const response = await this.get<RawEntityGetResponse[]>(DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL);
+
     // Apply transformations
-    const entities = response.data.map(entity => {
+    const entities = response.data.map((entity) => {
       // Transform each entity
       const metadata = transformData(entity as RawEntityGetResponse, EntityMap);
       this.applyFieldMappings(metadata);
       // Attach entity methods
       return createEntityWithMethods(metadata, this);
     });
-    
+
     return entities;
   }
 
@@ -468,8 +475,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const response = await this.get<Blob>(
       DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(entityId, recordId, fieldName),
       {
-        responseType: RESPONSE_TYPES.BLOB
-      }
+        responseType: RESPONSE_TYPES.BLOB,
+      },
     );
 
     return response.data;
@@ -504,7 +511,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.UploadAttachment')
-  async uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
+  async uploadAttachment(
+    entityId: string,
+    recordId: string,
+    fieldName: string,
+    file: EntityFileType,
+    options?: EntityUploadAttachmentOptions,
+  ): Promise<EntityUploadAttachmentResponse> {
     const formData = new FormData();
     if (file instanceof Uint8Array) {
       formData.append('file', new Blob([file.buffer as ArrayBuffer]));
@@ -517,7 +530,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const response = await this.post<EntityUploadAttachmentResponse>(
       DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(entityId, recordId, fieldName),
       formData,
-      { params }
+      { params },
     );
 
     return response.data;
@@ -550,26 +563,26 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.DeleteAttachment')
-  async deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse> {
+  async deleteAttachment(
+    entityId: string,
+    recordId: string,
+    fieldName: string,
+  ): Promise<EntityDeleteAttachmentResponse> {
     const response = await this.delete<EntityDeleteAttachmentResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(entityId, recordId, fieldName)
+      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(entityId, recordId, fieldName),
     );
 
     return response.data;
   }
 
-    /**
+  /**
    * @hidden
    * @deprecated Use {@link getAllRecords} instead.
    */
   async getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
     entityId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  > {
+    options?: T,
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
     return this.getAllRecords(entityId, options);
   }
 
@@ -577,7 +590,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @hidden
    * @deprecated Use {@link insertRecordById} instead.
    */
-  async insertById(id: string, data: Record<string, any>, options: EntityInsertOptions = {}): Promise<EntityInsertResponse> {
+  async insertById(
+    id: string,
+    data: Record<string, any>,
+    options: EntityInsertOptions = {},
+  ): Promise<EntityInsertResponse> {
     return this.insertRecordById(id, data, options);
   }
 
@@ -585,7 +602,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @hidden
    * @deprecated Use {@link insertRecordsById} instead.
    */
-  async batchInsertById(id: string, data: Record<string, any>[], options: EntityBatchInsertOptions = {}): Promise<EntityBatchInsertResponse> {
+  async batchInsertById(
+    id: string,
+    data: Record<string, any>[],
+    options: EntityBatchInsertOptions = {},
+  ): Promise<EntityBatchInsertResponse> {
     return this.insertRecordsById(id, data, options);
   }
 
@@ -607,7 +628,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Orchestrates all field mapping transformations
-   * 
+   *
    * @param metadata - Entity metadata to transform
    * @private
    */
@@ -618,17 +639,17 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Maps SQL field types to friendly EntityFieldTypes
-   * 
+   *
    * @param metadata - Entity metadata with fields
    * @private
    */
   private mapFieldTypes(metadata: RawEntityGetResponse): void {
     if (!metadata.fields?.length) return;
-    
-    metadata.fields = metadata.fields.map(field => {
+
+    metadata.fields = metadata.fields.map((field) => {
       // Rename sqlType to fieldDataType
       let transformedField = transformData(field, EntityMap);
-      
+
       // Map SQL field type to friendly name
       if (transformedField.fieldDataType?.name) {
         const sqlTypeName = transformedField.fieldDataType.name as unknown as SqlFieldType;
@@ -636,9 +657,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
           transformedField.fieldDataType.name = EntityFieldTypeMap[sqlTypeName] as unknown as EntityFieldDataType;
         }
       }
-      
+
       this.transformNestedReferences(transformedField);
-      
+
       return transformedField;
     });
   }
@@ -660,16 +681,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Maps external field names to consistent naming
-   * 
+   *
    * @param metadata - Entity metadata with externalFields
    * @private
    */
   private mapExternalFields(metadata: RawEntityGetResponse): void {
     if (!metadata.externalFields?.length) return;
-    
-    metadata.externalFields = metadata.externalFields.map(externalSource => {
+
+    metadata.externalFields = metadata.externalFields.map((externalSource) => {
       if (externalSource.fields?.length) {
-        externalSource.fields = externalSource.fields.map(field => {
+        externalSource.fields = externalSource.fields.map((field) => {
           const transformedField = transformData(field, EntityMap);
           if (transformedField.fieldMetaData) {
             transformedField.fieldMetaData = transformData(transformedField.fieldMetaData, EntityMap);
