@@ -47,6 +47,36 @@ describe('ConversationalAgentService Unit Tests', () => {
     vi.clearAllMocks();
   });
 
+  describe('constructor', () => {
+    it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationalAgentService(instance, { externalUserId: 'user-123' });
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { headers: { 'x-uipath-external-user-id': 'user-123' } }
+      );
+    });
+
+    it('should not pass external user id header when externalUserId is not set', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationalAgentService(instance);
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        {}
+      );
+    });
+  });
+
   describe('getAll', () => {
     it('should get all agents successfully with fields mapped correctly', async () => {
       const mockAgents = [createMockRawAgent(), createMockRawAgent({ id: 789, name: 'Agent 2' })];

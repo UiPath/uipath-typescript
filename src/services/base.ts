@@ -48,6 +48,8 @@ export class BaseService {
    *
    * @param instance - UiPath SDK instance providing authentication and configuration.
    *                    Services receive this via dependency injection in the modular pattern.
+   * @param headers - Optional default headers to include in every request (e.g. `x-uipath-external-user-id` for
+   *                  CAS external-app auth)
    *
    * @example
    * ```typescript
@@ -67,9 +69,9 @@ export class BaseService {
    * const entities = new Entities(sdk);
    * ```
    */
-  constructor(instance: IUiPath) {
+  constructor(instance: IUiPath, headers?: Record<string, string>) {
     const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
-    this.#apiClient = new ApiClient(config, context, tokenManager);
+    this.#apiClient = new ApiClient(config, context, tokenManager, headers ? { headers } : {});
   }
 
   /**

@@ -6,12 +6,14 @@
  */
 
 // Core SDK imports
+import type { IUiPath } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 import type { QueryParams } from '@/models/common/request-spec';
 
 // Models
 import type {
+  ConversationalAgentOptions,
   CreateFeedbackOptions,
   Exchange,
   ExchangeServiceModel,
@@ -24,6 +26,7 @@ import type {
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
 import { EXCHANGE_ENDPOINTS } from '@/utils/constants/endpoints';
+import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
@@ -57,6 +60,16 @@ import { transformExchange } from '@/services/conversational-agent/helpers';
  * ```
  */
 export class ExchangeService extends BaseService implements ExchangeServiceModel {
+  /**
+   * Creates an instance of the ExchangeService.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration (e.g. externalUserId for external app auth)
+   */
+  constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
+    super(instance, options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined);
+  }
+
   /**
    * Gets all exchanges for a conversation with optional filtering and pagination
    *

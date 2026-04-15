@@ -14,11 +14,10 @@ export class ApiClient {
   private readonly config: Config;
   private readonly executionContext: ExecutionContext;
   private readonly clientConfig: ApiClientConfig;
-  private defaultHeaders: Record<string, string> = {};
   private tokenManager: TokenManager;
   constructor(
-    config: Config, 
-    executionContext: ExecutionContext, 
+    config: Config,
+    executionContext: ExecutionContext,
     tokenManager: TokenManager,
     clientConfig: ApiClientConfig = {}
   ) {
@@ -26,10 +25,6 @@ export class ApiClient {
     this.executionContext = executionContext;
     this.clientConfig = clientConfig;
     this.tokenManager = tokenManager;
-  }
-
-  public setDefaultHeaders(headers: Record<string, string>): void {
-    this.defaultHeaders = { ...this.defaultHeaders, ...headers };
   }
 
   /**
@@ -49,7 +44,6 @@ export class ApiClient {
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': CONTENT_TYPES.JSON,
-      ...this.defaultHeaders,
       ...this.clientConfig.headers
     };
   }
