@@ -10,6 +10,7 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
+  ConversationalAgentOptions,
   ConversationalAgentServiceModel,
   FeatureFlags,
   RawAgentGetResponse,
@@ -24,6 +25,7 @@ import {
 
 // Utils
 import { FEATURE_ENDPOINTS, AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
+import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
 import { transformData } from '@/utils/transform';
 
 // Local imports
@@ -40,12 +42,13 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * Creates an instance of the ConversationalAgent service.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
-  constructor(instance: IUiPath) {
-    super(instance);
+  constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
+    super(instance, options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined);
 
     // Create conversation service with WebSocket support
-    this.conversations = new ConversationService(instance);
+    this.conversations = new ConversationService(instance, options);
   }
 
   /**

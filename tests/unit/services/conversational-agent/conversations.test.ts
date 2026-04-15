@@ -1,6 +1,7 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ConversationalAgentService } from '@/services/conversational-agent/conversational-agent';
+import { ConversationService } from '@/services/conversational-agent/conversations';
 import { ApiClient } from '@/core/http/api-client';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import {
@@ -57,6 +58,36 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('constructor', () => {
+    it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationService(instance, { externalUserId: 'user-123' });
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { headers: { 'x-uipath-external-user-id': 'user-123' } }
+      );
+    });
+
+    it('should not pass external user id header when externalUserId is not set', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationService(instance);
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        {}
+      );
+    });
   });
 
   describe('create', () => {
