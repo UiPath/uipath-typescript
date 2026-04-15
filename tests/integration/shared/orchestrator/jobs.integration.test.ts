@@ -199,7 +199,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       // Find a running job to stop
       const runningJobs = await jobs.getAll({
         folderId,
-        filter: "State eq 'Running'",
+        filter: "state eq 'Running'",
         pageSize: 1,
       });
 
