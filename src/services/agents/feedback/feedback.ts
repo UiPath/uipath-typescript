@@ -2,8 +2,8 @@ import { BaseService } from '../../base';
 import {
   FeedbackGetResponse,
   FeedbackGetAllOptions,
-} from '../../../models/conversational-agent/feedback/feedback.types';
-import { FeedbackServiceModel } from '../../../models/conversational-agent/feedback/feedback.models';
+} from '../../../models/agents/feedback/feedback.types';
+import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FEEDBACK_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { FEEDBACK_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';

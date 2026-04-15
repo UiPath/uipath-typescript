@@ -10,7 +10,7 @@ import {
   CasesService,
   CaseInstancesService,
 } from '../../../src/services/maestro';
-import { Feedback } from '../../../src/services/conversational-agent/feedback';
+import { Feedback } from '../../../src/services/agents/feedback';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';

@@ -20,5 +20,5 @@
 
 export { FeedbackService as Feedback, FeedbackService } from './feedback';
 
-export * from '../../../models/conversational-agent/feedback/feedback.types';
-export * from '../../../models/conversational-agent/feedback/feedback.models';
+export * from '../../../models/agents/feedback/feedback.types';
+export * from '../../../models/agents/feedback/feedback.models';

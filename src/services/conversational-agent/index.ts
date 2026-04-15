@@ -42,9 +42,6 @@ export * from '@/models/conversational-agent';
 
 export { LogLevel } from '@/core/websocket';
 
-// ==================== Feedback ====================
-// Feedback service and types
-export { FeedbackService as Feedback, FeedbackService } from './feedback/feedback';
 
 // ==================== Event Helpers ====================
 // Re-export all helpers: event helper classes, handler types, error types, etc.
