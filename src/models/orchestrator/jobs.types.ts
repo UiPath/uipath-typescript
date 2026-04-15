@@ -1,4 +1,4 @@
-import { JobState, RequestOptions } from '../common/types';
+import { JobState, BaseOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 import {
   JobPriority,
@@ -41,7 +41,7 @@ export enum ServerlessJobType {
 /**
  * Interface for process metadata associated with a job.
  * Represents a lightweight summary of the process (release) linked to a job.
- * Available when using 'expand: "Release"' in the query.
+ * Available when using 'expand: "release"' in the query.
  */
 export interface ProcessMetadata {
   /** The unique key of the release */
@@ -146,11 +146,11 @@ export interface RawJobGetResponse extends FolderProperties {
   parentSpanId: string | null;
   /** The error code associated with a failed job */
   errorCode: string | null;
-  /** The machine associated with the job (available when using expand=Machine) */
+  /** The machine associated with the job (available when using expand=machine) */
   machine?: Machine;
-  /** The robot associated with the job (available when using expand=Robot) */
+  /** The robot associated with the job (available when using expand=robot) */
   robot?: RobotMetadata;
-  /** The process metadata associated with the job (available when using expand=Release) */
+  /** The process metadata associated with the job */
   process?: ProcessMetadata | null;
   /** Error details for the job, or null if the job has no errors */
   jobError: JobError | null;
@@ -165,4 +165,9 @@ export type JobGetAllOptions = RequestOptions & PaginationOptions & {
    */
   folderId?: number;
 }
+
+/**
+ * Options for getting a job by ID
+ */
+export interface JobGetByIdOptions extends BaseOptions {}
 

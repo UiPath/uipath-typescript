@@ -71,7 +71,7 @@ Use the appropriate checklist based on the ticket type detected in Step 1. You m
 - Swagger/OpenAPI URL + endpoint paths → use directly
 - Missing either → stop and ask
 
-**If Jira ticket:** Parse description for URLs ending in `.json`/`.yaml`/`swagger.json`/`openapi.json`, HTTP method + path patterns, scope strings (e.g., `OR.Jobs`). If Swagger URL missing, stop and report.
+**If Jira ticket:** Parse description for URLs ending in `.json`/`.yaml`/`swagger.json`/`openapi.json`, HTTP method + path patterns, scope strings (e.g., `OR.Jobs`), and whether each endpoint requires a `folderId` or `folderKey`. If Swagger URL missing, stop and report.
 
 **Ticket type detection:**
 - `API:` field present → **Direct API** (existing workflow)
@@ -88,7 +88,7 @@ Log detected type in the summary.
 3. Check if the requested work is **already implemented**. If the work is already done (even on a feature branch), **stop and tell the user** instead of adding unrequested work.
 4. If the work is already implemented and the ticket is effectively complete, ask the user what they'd like done instead of inventing new work.
 
-**Log summary**, then create feature branch:
+**Log summary** — present all collected input (Swagger URL, endpoints, OAuth scope, ticket type, folderId requirements) to the user. If any information is missing — including whether endpoints require a `folderId` — ask the user in this summary before creating the branch. Then create feature branch:
 - Jira: `feat/sdk-<ticket-key-lowered>`
 - Direct: `feat/<service>-<method-name>`
 - Already on feature branch → skip, note it

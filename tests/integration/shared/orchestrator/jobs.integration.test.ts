@@ -62,6 +62,103 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('getById', () => {
+    it('should retrieve a job by key with bound methods', async () => {
+      const { jobs, folderId } = getJobsService();
+
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getById tests.');
+      }
+
+      const allJobs = await jobs.getAll({
+        folderId,
+        pageSize: 1,
+      });
+
+      if (allJobs.items.length === 0) {
+        throw new Error('No jobs available in the test environment to test getById.');
+      }
+
+      const jobKey = allJobs.items[0].key;
+      const job = await jobs.getById(jobKey, folderId);
+
+      // Core fields
+      expect(job).toBeDefined();
+      expect(job.id).toBeDefined();
+      expect(job.key).toBe(jobKey);
+      expect(job.state).toBeDefined();
+      expect(typeof job.id).toBe('number');
+
+      // Bound methods
+      expect(job.getOutput).toBeDefined();
+      expect(typeof job.getOutput).toBe('function');
+    });
+
+    it('should apply transform pipeline correctly', async () => {
+      const { jobs, folderId } = getJobsService();
+
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getById tests.');
+      }
+
+      const allJobs = await jobs.getAll({
+        folderId,
+        pageSize: 1,
+      });
+
+      if (allJobs.items.length === 0) {
+        throw new Error('No jobs available in the test environment to test getById.');
+      }
+
+      const jobKey = allJobs.items[0].key;
+      const job = await jobs.getById(jobKey, folderId);
+
+      // Verify transformed camelCase fields exist
+      expect(job.createdTime).toBeDefined();
+      expect(job.processName).toBeDefined();
+      expect(job.folderId).toBeDefined();
+
+      // Verify original PascalCase API fields are absent
+      expect((job as any).CreationTime).toBeUndefined();
+      expect((job as any).ReleaseName).toBeUndefined();
+      expect((job as any).OrganizationUnitId).toBeUndefined();
+    });
+
+    it('should retrieve a job with expand options', async () => {
+      const { jobs, folderId } = getJobsService();
+
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for getById tests.');
+      }
+
+      const allJobs = await jobs.getAll({
+        folderId,
+        pageSize: 1,
+      });
+
+      if (allJobs.items.length === 0) {
+        throw new Error('No jobs available in the test environment to test getById with expand.');
+      }
+
+      const jobKey = allJobs.items[0].key;
+      const job = await jobs.getById(jobKey, folderId, {
+        expand: 'robot,machine',
+      });
+
+      expect(job).toBeDefined();
+      expect(job.key).toBe(jobKey);
+
+      // Verify expand affected the response — expanded entities may not be
+      // present in all test environments, so guard assertions.
+      if (job.robot) {
+        expect(job.robot.id).toBeDefined();
+      }
+      if (job.machine) {
+        expect(job.machine.id).toBeDefined();
+      }
+    });
+  });
+
   describe('getOutput', () => {
     it('should return parsed output or null for a completed job', async () => {
       const { jobs, folderId } = getJobsService();
@@ -78,7 +175,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (result.items.length === 0) {
-        throw new Error('No successful jobs found to test getOutput.');
+        throw new Error('No successful jobs found in the test environment to test getOutput.');
       }
 
       const job = result.items[0];
@@ -101,7 +198,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (result.items.length === 0) {
-        throw new Error('No jobs available to validate structure');
+        throw new Error('No jobs available to validate structure.');
       }
 
       const job = result.items[0];

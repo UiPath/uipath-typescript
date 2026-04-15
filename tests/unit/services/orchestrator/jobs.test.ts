@@ -11,6 +11,7 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { createMockError } from '../../../utils/mocks/core';
 import {
   JobGetAllOptions,
+  JobGetByIdOptions,
 } from '../../../../src/models/orchestrator/jobs.types';
 import { JobGetResponse } from '../../../../src/models/orchestrator/jobs.models';
 import { PaginatedResponse } from '../../../../src/utils/pagination';
@@ -175,6 +176,99 @@ describe('JobService Unit Tests', () => {
     });
   });
 
+  describe('getById', () => {
+    it('should return a job by key with transformed fields', async () => {
+      const mockRawJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
+        expect.objectContaining({
+          params: {},
+          headers: expect.objectContaining({
+            'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
+          }),
+        })
+      );
+
+      // Verify transformed fields
+      expect(result.id).toBe(JOB_TEST_CONSTANTS.JOB_ID);
+      expect(result.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+      expect(result.processName).toBe(JOB_TEST_CONSTANTS.PROCESS_NAME);
+      expect(result.createdTime).toBe(JOB_TEST_CONSTANTS.CREATED_TIME);
+      expect(result.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect(result.folderName).toBe(TEST_CONSTANTS.FOLDER_NAME);
+    });
+
+    it('should verify original PascalCase fields are absent after transform', async () => {
+      const mockRawJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect((result as any).CreationTime).toBeUndefined();
+      expect((result as any).ReleaseName).toBeUndefined();
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+      expect((result as any).OrganizationUnitFullyQualifiedName).toBeUndefined();
+      expect((result as any).LastModificationTime).toBeUndefined();
+    });
+
+    it('should attach getOutput method to result', async () => {
+      const mockRawJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(result.getOutput).toBeDefined();
+      expect(typeof result.getOutput).toBe('function');
+    });
+
+    it('should pass expand and select options with OData prefix', async () => {
+      const mockRawJob = createMockRawJob();
+      mockApiClient.get.mockResolvedValueOnce(mockRawJob);
+
+      const options: JobGetByIdOptions = {
+        expand: 'robot,machine',
+        select: 'key,state',
+      };
+
+      await jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, options);
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
+        expect.objectContaining({
+          params: {
+            $expand: 'robot,machine',
+            $select: 'key,state',
+          },
+        })
+      );
+    });
+
+    it('should throw validation error when id is missing', async () => {
+      await expect(
+        jobService.getById('', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow('id is required for getById');
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, 0)
+      ).rejects.toThrow('folderId is required for getById');
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+      mockApiClient.get.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.getById(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+    });
+  });
+
   describe('getOutput', () => {
     it('should return parsed inline output when OutputArguments is set', async () => {
       mockApiClient.get.mockResolvedValueOnce({
@@ -189,7 +283,7 @@ describe('JobService Unit Tests', () => {
         JOB_ENDPOINTS.GET_BY_KEY(JOB_TEST_CONSTANTS.JOB_KEY),
         expect.objectContaining({
           params: {
-            $select: 'OutputArguments,OutputFile',
+            $select: 'outputArguments,outputFile',
           },
           headers: expect.objectContaining({
             'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),

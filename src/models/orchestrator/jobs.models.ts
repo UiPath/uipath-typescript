@@ -1,7 +1,7 @@
-import { JobGetAllOptions, RawJobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
-// Combined type for job data with methods
+/** Combined response type for job data with bound methods. */
 export type JobGetResponse = RawJobGetResponse & JobMethods;
 
 /**
@@ -66,6 +66,35 @@ export interface JobServiceModel {
     ? PaginatedResponse<JobGetResponse>
     : NonPaginatedResponse<JobGetResponse>
   >;
+
+  /**
+   * Gets a job by its unique key (GUID).
+   *
+   * Returns the full job details including state, timing, input/output arguments, and error information.
+   * Use `expand` to include related entities like `robot`, or `machine`.
+   *
+   * @param id - The unique key (GUID) of the job to retrieve
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional query options for expanding or selecting fields
+   * @returns Promise resolving to a {@link JobGetResponse} with full job details and bound methods
+   *
+   * @example
+   * ```typescript
+   * // Get a job by key
+   * const job = await jobs.getById(<id>, <folderId>);
+   * console.log(job.state, job.processName);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With expanded related entities
+   * const job = await jobs.getById(<id>, <folderId>, {
+   *   expand: 'robot,machine'
+   * });
+   * console.log(job.robot?.name, job.machine?.name);
+   * ```
+   */
+  getById(id: string, folderId: number, options?: JobGetByIdOptions): Promise<JobGetResponse>;
 
   /**
    * Gets the output of a completed job.

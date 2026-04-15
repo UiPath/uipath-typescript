@@ -24,7 +24,6 @@
 
 Every new method must also have an integration test in `tests/integration/shared/{domain}/`. These run against a live API and catch issues unit tests miss — wrong endpoints, broken transforms, auth/header problems.
 
-- Use `console.warn()` + skip (not `throw`) for `beforeAll` setup preconditions that are outside the test's control (e.g., no test data available). `throw` is for test body guards where missing config means the test can't run at all. **NEVER** use `console.log` + `return` for integration test guards — silent skips hide missing test configuration.
 - Use `getServices()` and `getTestConfig()` from `tests/integration/config/unified-setup.ts`
 - Use `registerResource()` from `tests/integration/utils/cleanup.ts` for cleanup tracking
 - Use `generateRandomString()` from `tests/integration/utils/helpers.ts` for unique test data
@@ -48,6 +47,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - Use `<paramName>` placeholder convention for IDs in examples.
 - Use camelCase in examples, matching SDK response format. **NEVER** use PascalCase in JSDoc examples — users will write broken code.
 - Keep JSDoc in sync with method names.
+- **Keep JSDoc on service class methods in sync with `{Entity}ServiceModel`** — both the models file and the service implementation file must have identical JSDoc for each public method. `ServiceModel` is the source of truth for docs, but the service class copy aids developer navigation and IDE tooltips. When updating JSDoc on one, update the other.
 - **When a method supports `expand`**, show multiple expandable entities in the `@example` (e.g., `expand: 'Robot,Machine,Release'`) so users see the comma-separated pattern.
 - **Add a one-line description of what the response includes** beyond the method signature (e.g., "Returns the full job details including state, timing, and input/output arguments. Use `expand` to include related entities like Robot, Machine, or Release").
 - **NEVER** reference unrelated parameters in JSDoc examples — keep examples focused on the method being documented. If `getOutput()` doesn't accept `folderId`, don't show `folderId` in its example.

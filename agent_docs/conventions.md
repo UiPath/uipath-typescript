@@ -33,7 +33,9 @@
 - **Use "Options" not "Request"** for parameter types — the entire SDK uses `{Entity}{Operation}Options`.
 - **Required parameters are always positional; Options objects are reserved for optional parameters only.** Required values (IDs, keys, data) are positional arguments. Options objects are always the last parameter, always marked `?`, and contain only optional fields. E.g., `getOutput(jobKey: string)` not `getOutput(options: { jobKey: string })`, `close(instanceId, folderKey, options?)` not `close(options: { instanceId, folderKey })`.
 - **NEVER** duplicate fields across option types — extend existing ones. If `CaseInstanceOperationOptions` already has `comment`, extend it instead of re-declaring. When the shape is identical, use `extends` (e.g., `export interface EntityUpdateRecordByIdOptions extends EntityGetRecordByIdOptions {}`).
-- **NEVER** use type aliases for response types — even when the shape matches an existing one, use an `extends` interface. Type aliases (e.g., `export type EntityUpdateRecordResponse = EntityRecord`) break TypeDoc docs generation by not rendering as standalone types. Use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
+- **Always use `type` for response types** (intersections, unions, composed types). The only place `interface extends` is required is single-type aliases (`type X = Y`), which break TypeDoc — use `export interface EntityUpdateRecordResponse extends EntityRecord {}` instead.
+
+**ID parameter types**: New methods must use `string` (GUID) for entity identifiers, not `string | number`. Legacy methods may still accept `string | number` for backward compatibility, but all new `getById`, `getOutput`, etc. should type their ID parameter as `string`.
 
 Method names: **singular** for single-item ops (`insertRecordById`), **plural** for batch (`insertRecordsById`). **NEVER** use `batch` prefix — the SDK convention is singular/plural to distinguish cardinality.
 
@@ -159,6 +161,15 @@ OData APIs require `$` prefix on query params. The SDK accepts clean camelCase k
 
 **Apply manually in:** `getById()` methods accepting `BaseOptions` — `const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, Object.keys(options))`.
 
+### Case for OData query values
+
+OData is case-insensitive, so the server accepts either case. Convention: `filter`, `select`, `expand`, `orderby` values use the field case shown in the SDK response (camelCase for services that transform, else as-is) — not the raw API. Applies within JSDoc examples, tests, and internal calls.
+
+```ts
+filter: "state eq 'Running'"            // not "State eq ..."
+select: "outputArguments,outputFile"    // not "OutputArguments,..."
+```
+
 ## Headers utility
 
 `createHeaders()` from `src/utils/http/headers.ts` builds headers from key-value pairs, filtering undefined.
@@ -197,26 +208,12 @@ If the constructor only calls `super()` with no additional setup, omit it entire
 
 ## Folder-scoped services
 
-Some Orchestrator services (Assets, Queues, Buckets) require a `folderId` for operations. These services handle it inline:
+Some Orchestrator services (Assets, Queues, Buckets, Jobs) require a `folderId` for operations. These services handle it inline:
 
 - **`getById(id, folderId, ...)`** — sets the `X-UIPATH-OrganizationUnitId` header via `createHeaders({ [FOLDER_ID]: folderId })`
 - **`getAll(options?)`** — passes `getByFolderEndpoint` to `PaginationHelpers.getAll()`, which switches endpoints based on whether `folderId` is in options
 
-### Required vs optional folderId
-
-**Required folderId** (Assets, Queues, Buckets): `folderId` is a positional parameter — `getById(id, folderId, options?)`. The API requires folder scoping.
-
-**Optional folderId** (Jobs): `folderId` is in the options object — `getById(id, options?)`. The API works across folders without a header.
-
-**In both cases, use the same `createHeaders` call** — the utility filters `undefined` values automatically, so there's no need for conditional creation:
-
-```typescript
-// CORRECT — consistent with all services in the codebase. createHeaders filters undefined.
-const headers = createHeaders({ [FOLDER_ID]: folderId });
-
-// WRONG — unnecessary conditional. Breaks codebase consistency.
-const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : undefined;
-```
+Always pass `folderId` directly to `createHeaders` — the utility filters `undefined` values, so no conditional is needed.
 
 ## OperationResponse pattern
 
