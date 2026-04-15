@@ -205,8 +205,8 @@ export const createBasicEntity = (overrides: Partial<RawEntityGetResponse> = {})
     sourceJoinCriterias: [],
     isRbacEnabled: false,
     createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,  // TRANSFORMED field name
-    updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,  // TRANSFORMED field name
+    createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,
+    updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,
     updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
   }, overrides);
 };
@@ -586,6 +586,47 @@ export const createMockEntityWithSqlFieldTypes = (): any => {
         }
       }
     ]
+  });
+};
+
+/**
+ * Creates a mock entity with special display-type fields (File, ChoiceSetSingle, ChoiceSetMultiple, AutoNumber)
+ * to test that fieldDisplayType takes precedence over SQL type during read-side mapping.
+ */
+export const createMockEntityWithDisplayTypeFields = (): { data: RawEntityGetResponse } => {
+  return createMockEntityResponse({
+    fields: [
+      // File field: sqlType=UNIQUEIDENTIFIER, displayType=File → EntityFieldDataType.File
+      {
+        ...createMockFieldMetaData({ id: 'field-file-id', name: 'attachment', displayName: 'Attachment' }),
+        sqlType: { name: 'UNIQUEIDENTIFIER' },
+        fieldDisplayType: FieldDisplayType.File,
+      },
+      // ChoiceSetSingle field: sqlType=INT, displayType=ChoiceSetSingle → EntityFieldDataType.ChoiceSetSingle
+      {
+        ...createMockFieldMetaData({ id: 'field-cs-single-id', name: 'category', displayName: 'Category' }),
+        sqlType: { name: 'INT' },
+        fieldDisplayType: FieldDisplayType.ChoiceSetSingle,
+      },
+      // ChoiceSetMultiple field: sqlType=NVARCHAR, displayType=ChoiceSetMultiple → EntityFieldDataType.ChoiceSetMultiple
+      {
+        ...createMockFieldMetaData({ id: 'field-cs-multi-id', name: 'tags', displayName: 'Tags' }),
+        sqlType: { name: 'NVARCHAR' },
+        fieldDisplayType: FieldDisplayType.ChoiceSetMultiple,
+      },
+      // AutoNumber field: sqlType=DECIMAL, displayType=AutoNumber → EntityFieldDataType.AutoNumber
+      {
+        ...createMockFieldMetaData({ id: 'field-autonumber-id', name: 'seq_no', displayName: 'Seq No' }),
+        sqlType: { name: 'DECIMAL' },
+        fieldDisplayType: FieldDisplayType.AutoNumber,
+      },
+      // Relationship field: sqlType=UNIQUEIDENTIFIER, displayType=Relationship → EntityFieldDataType.Relationship
+      {
+        ...createMockFieldMetaData({ id: 'field-rel-id', name: 'customer_id', displayName: 'Customer' }),
+        sqlType: { name: 'UNIQUEIDENTIFIER' },
+        fieldDisplayType: FieldDisplayType.Relationship,
+      },
+    ],
   });
 };
 

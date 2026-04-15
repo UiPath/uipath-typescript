@@ -1,12 +1,23 @@
 // ===== IMPORTS =====
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createEntityWithMethods } from '../../../../src/models/data-fabric/entities.models';
-import type { EntityServiceModel } from '../../../../src/models/data-fabric/entities.models';
-import { createBasicEntity, createMockEntityRecord, createMockEntityRecords, createMockSingleInsertResponse, createMockInsertResponse, createMockSingleUpdateResponse, createMockUpdateResponse, createMockDeleteResponse, createMockBlob } from '../../../utils/mocks/entities';
-import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { createEntityWithMethods } from "../../../../src/models/data-fabric/entities.models";
+import type { EntityServiceModel } from "../../../../src/models/data-fabric/entities.models";
+import {
+  createBasicEntity,
+  createMockEntityRecord,
+  createMockEntityRecords,
+  createMockSingleInsertResponse,
+  createMockInsertResponse,
+  createMockSingleUpdateResponse,
+  createMockUpdateResponse,
+  createMockDeleteResponse,
+  createMockBlob,
+} from "../../../utils/mocks/entities";
+import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
+import type { EntityUpdateByIdOptions } from "../../../../src/models/data-fabric/entities.types";
 
 // ===== TEST SUITE =====
-describe('Entity Models', () => {
+describe("Entity Models", () => {
   let mockService: EntityServiceModel;
 
   beforeEach(() => {
@@ -15,23 +26,33 @@ describe('Entity Models', () => {
       getAll: vi.fn(),
       getById: vi.fn(),
       getAllRecords: vi.fn(),
+      getRecordsById: vi.fn(),
       getRecordById: vi.fn(),
       insertRecordById: vi.fn(),
+      insertById: vi.fn(),
       insertRecordsById: vi.fn(),
+      batchInsertById: vi.fn(),
       updateRecordById: vi.fn(),
       updateRecordsById: vi.fn(),
       deleteRecordsById: vi.fn(),
+      queryRecordsById: vi.fn(),
+      importRecordsById: vi.fn(),
       downloadAttachment: vi.fn(),
-    } as any;
+      uploadAttachment: vi.fn(),
+      deleteAttachment: vi.fn(),
+      create: vi.fn(),
+      deleteById: vi.fn(),
+      updateById: vi.fn(),
+    } as EntityServiceModel;
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('bound methods on entity', () => {
-    describe('entity.insertRecord()', () => {
-      it('should call entity.insertRecord with entity id and single record', async () => {
+  describe("bound methods on entity", () => {
+    describe("entity.insertRecord()", () => {
+      it("should call entity.insertRecord with entity id and single record", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -44,22 +65,33 @@ describe('Entity Models', () => {
         expect(mockService.insertRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockResponse);
         expect(result.Id).toBeDefined();
       });
 
-      it('should call entity.insertRecord with options', async () => {
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.insertRecord(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA),
+        ).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+        );
+      });
+
+      it("should call entity.insertRecord with options", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA;
         const options = {
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         };
         const mockResponse = createMockSingleInsertResponse(testData, {
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         });
         mockService.insertRecordById = vi.fn().mockResolvedValue(mockResponse);
 
@@ -68,27 +100,20 @@ describe('Entity Models', () => {
         expect(mockService.insertRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
-          options
+          options,
         );
         expect(result).toEqual(mockResponse);
       });
-
-      it('should throw error if entity id is undefined', async () => {
-        const entityData = createBasicEntity({ id: undefined as any });
-        const entity = createEntityWithMethods(entityData, mockService);
-
-        await expect(entity.insertRecord(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA)).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
-      });
     });
 
-    describe('entity.insertRecords()', () => {
-      it('should call entity.insertRecords with entity id and data array', async () => {
+    describe("entity.insertRecords()", () => {
+      it("should call entity.insertRecords with entity id and data array", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = [
           ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
-          ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2
+          ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2,
         ];
         const mockResponse = createMockInsertResponse(testData);
         mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
@@ -98,24 +123,35 @@ describe('Entity Models', () => {
         expect(mockService.insertRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockResponse);
         expect(result.successRecords).toHaveLength(2);
         expect(result.failureRecords).toHaveLength(0);
       });
 
-      it('should call entity.insertRecords with options', async () => {
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.insertRecords([ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA]),
+        ).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+        );
+      });
+
+      it("should call entity.insertRecords with options", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = [ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA];
         const options = {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-          failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
+          failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
         };
         const mockResponse = createMockInsertResponse(testData, {
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         });
         mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
@@ -124,27 +160,22 @@ describe('Entity Models', () => {
         expect(mockService.insertRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
-          options
+          options,
         );
         expect(result).toEqual(mockResponse);
       });
 
-      it('should throw error if entity id is undefined', async () => {
-        const entityData = createBasicEntity({ id: undefined as any });
-        const entity = createEntityWithMethods(entityData, mockService);
-
-        await expect(entity.insertRecords([ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
-      });
-
-      it('should handle partial failures in insertRecords', async () => {
+      it("should handle partial failures in insertRecords", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = [
           ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
-          { name: ENTITY_TEST_CONSTANTS.TEST_INVALID_RECORD_NAME, age: null } // Missing required field
+          { name: ENTITY_TEST_CONSTANTS.TEST_INVALID_RECORD_NAME, age: null }, // Missing required field
         ];
-        const mockResponse = createMockInsertResponse(testData, { successCount: 1 });
+        const mockResponse = createMockInsertResponse(testData, {
+          successCount: 1,
+        });
         mockService.insertRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.insertRecords(testData);
@@ -153,95 +184,123 @@ describe('Entity Models', () => {
         expect(result.failureRecords).toHaveLength(1);
 
         // Validate successful record data
-        expect(result.successRecords[0]).toHaveProperty('Id');
+        expect(result.successRecords[0]).toHaveProperty("Id");
         expect(result.successRecords[0].name).toBe(testData[0].name);
         expect(result.successRecords[0].age).toBe(testData[0].age);
 
         // Validate failure record structure
-        expect(result.failureRecords[0]).toHaveProperty('error');
-        expect(result.failureRecords[0]).toHaveProperty('record');
+        expect(result.failureRecords[0]).toHaveProperty("error");
+        expect(result.failureRecords[0]).toHaveProperty("record");
         expect(result.failureRecords[0].record).toEqual(testData[1]);
-        expect(typeof result.failureRecords[0].error).toBe('string');
+        expect(typeof result.failureRecords[0].error).toBe("string");
       });
     });
 
-    describe('entity.updateRecord()', () => {
-      it('should call entity.updateRecord with entity id, record id, and data', async () => {
-        const entityData = createBasicEntity();
-        const entity = createEntityWithMethods(entityData, mockService);
-
-        const testData = { name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE };
-        const mockResponse = createMockSingleUpdateResponse({ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData });
-        mockService.updateRecordById = vi.fn().mockResolvedValue(mockResponse);
-
-        const result = await entity.updateRecord(ENTITY_TEST_CONSTANTS.RECORD_ID, testData);
-
-        expect(mockService.updateRecordById).toHaveBeenCalledWith(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          testData,
-          undefined
-        );
-        expect(result).toEqual(mockResponse);
-        expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
-      });
-
-      it('should call entity.updateRecord with options', async () => {
+    describe("entity.updateRecord()", () => {
+      it("should call entity.updateRecord with entity id, record id, and data", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = {
           name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
-          age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE
+          age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
         };
-        const options = {
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-        };
-        const mockResponse = createMockSingleUpdateResponse({ id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData }, {
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        const mockResponse = createMockSingleUpdateResponse({
+          Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ...testData,
         });
         mockService.updateRecordById = vi.fn().mockResolvedValue(mockResponse);
 
-        const result = await entity.updateRecord(ENTITY_TEST_CONSTANTS.RECORD_ID, testData, options);
+        const result = await entity.updateRecord(
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          testData,
+        );
 
         expect(mockService.updateRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           testData,
-          options
+          undefined,
+        );
+        expect(result).toEqual(mockResponse);
+        expect(result.Id).toBe(ENTITY_TEST_CONSTANTS.RECORD_ID);
+      });
+
+      it("should call entity.updateRecord with options", async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const testData = {
+          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+          age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
+        };
+        const options = {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+        };
+        const mockResponse = createMockSingleUpdateResponse(
+          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData },
+          {
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+          },
+        );
+        mockService.updateRecordById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.updateRecord(
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          testData,
+          options,
+        );
+
+        expect(mockService.updateRecordById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          testData,
+          options,
         );
         expect(result).toEqual(mockResponse);
       });
 
-      it('should throw error if entity id is undefined', async () => {
-        const entityData = createBasicEntity({ id: undefined as any });
-        const entity = createEntityWithMethods(entityData, mockService);
-
-        await expect(entity.updateRecord(
-          ENTITY_TEST_CONSTANTS.RECORD_ID,
-          { name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
-        )).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
-      });
-
-      it('should throw error if record id is undefined', async () => {
+      it("should throw error if record id is undefined", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        await expect(entity.updateRecord(
-          undefined as any,
-          { name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
-        )).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED);
+        await expect(
+          entity.updateRecord(undefined as any, {
+            name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME,
+          }),
+        ).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED,
+        );
       });
     });
 
-    describe('entity.updateRecords()', () => {
-      it('should call entity.updateRecords with entity id and data', async () => {
+    describe("entity.updateRecords()", () => {
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.updateRecords([{ Id: ENTITY_TEST_CONSTANTS.RECORD_ID }]),
+        ).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+        );
+      });
+
+      it("should call entity.updateRecords with entity id and data", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = [
-          { id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE },
-          { id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_AGE }
+          {
+            Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+            name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+            age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
+          },
+          {
+            Id: ENTITY_TEST_CONSTANTS.RECORD_ID_2,
+            name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME,
+            age: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_AGE,
+          },
         ];
         const mockResponse = createMockUpdateResponse(testData);
         mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
@@ -251,26 +310,30 @@ describe('Entity Models', () => {
         expect(mockService.updateRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockResponse);
         expect(result.successRecords).toHaveLength(2);
         expect(result.failureRecords).toHaveLength(0);
       });
 
-      it('should call entity.updateRecords with options', async () => {
+      it("should call entity.updateRecords with options", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = [
-          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE }
+          {
+            Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+            name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+            age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
+          },
         ];
         const options = {
           expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-          failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
+          failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
         };
-        const mockResponse = createMockUpdateResponse(testData, { 
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
+        const mockResponse = createMockUpdateResponse(testData, {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         });
         mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
@@ -279,69 +342,79 @@ describe('Entity Models', () => {
         expect(mockService.updateRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           testData,
-          options
+          options,
         );
         expect(result).toEqual(mockResponse);
-        
+
         // Validate response structure and data
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(0);
         expect(result.successRecords[0].Id).toBe(testData[0].Id);
         expect(result.successRecords[0].name).toBe(testData[0].name);
         expect(result.successRecords[0].age).toBe(testData[0].age);
-        
+
         // Verify expansion level affected the data (reference fields should be objects)
         if (result.successRecords[0].updatedBy) {
-          expect(typeof result.successRecords[0].updatedBy).toBe('object');
-          expect(result.successRecords[0].updatedBy).toHaveProperty('id');
+          expect(typeof result.successRecords[0].updatedBy).toBe("object");
+          expect(result.successRecords[0].updatedBy).toHaveProperty("id");
         }
       });
 
-      it('should throw error if entity id is undefined', async () => {
-        const entityData = createBasicEntity({ id: undefined as any });
-        const entity = createEntityWithMethods(entityData, mockService);
-
-        await expect(entity.updateRecords([
-          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
-        ])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
-      });
-
-      it('should handle partial failures in update', async () => {
+      it("should handle partial failures in update", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const testData = [
-          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_VALID_UPDATE_NAME },
-          { Id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME }
+          {
+            Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+            name: ENTITY_TEST_CONSTANTS.TEST_VALID_UPDATE_NAME,
+          },
+          {
+            Id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID,
+            name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME,
+          },
         ];
-        const mockResponse = createMockUpdateResponse(testData, { successCount: 1 });
+        const mockResponse = createMockUpdateResponse(testData, {
+          successCount: 1,
+        });
         mockService.updateRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.updateRecords(testData);
 
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(1);
-        
+
         // Validate successful record data
         expect(result.successRecords[0].Id).toBe(testData[0].Id);
         expect(result.successRecords[0].name).toBe(testData[0].name);
-        
+
         // Validate failure record structure
-        expect(result.failureRecords[0]).toHaveProperty('error');
-        expect(result.failureRecords[0]).toHaveProperty('record');
+        expect(result.failureRecords[0]).toHaveProperty("error");
+        expect(result.failureRecords[0]).toHaveProperty("record");
         expect(result.failureRecords[0].record).toEqual(testData[1]);
-        expect(typeof result.failureRecords[0].error).toBe('string');
+        expect(typeof result.failureRecords[0].error).toBe("string");
       });
     });
 
-    describe('entity.deleteRecords()', () => {
-      it('should call entity.deleteRecords with entity id and record ids', async () => {
+    describe("entity.deleteRecords()", () => {
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(
+          entity.deleteRecords([ENTITY_TEST_CONSTANTS.RECORD_ID]),
+        ).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+        );
+      });
+
+      it("should call entity.deleteRecords with entity id and record ids", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const recordIds = [
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID_2
+          ENTITY_TEST_CONSTANTS.RECORD_ID_2,
         ];
         const mockResponse = createMockDeleteResponse(recordIds);
         mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
@@ -351,20 +424,20 @@ describe('Entity Models', () => {
         expect(mockService.deleteRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           recordIds,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockResponse);
         expect(result.successRecords).toHaveLength(2);
         expect(result.failureRecords).toHaveLength(0);
       });
 
-      it('should call entity.deleteRecords with options', async () => {
+      it("should call entity.deleteRecords with options", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const recordIds = [ENTITY_TEST_CONSTANTS.RECORD_ID];
         const options = {
-          failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
+          failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
         };
         const mockResponse = createMockDeleteResponse(recordIds);
         mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
@@ -374,33 +447,28 @@ describe('Entity Models', () => {
         expect(mockService.deleteRecordsById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           recordIds,
-          options
+          options,
         );
         expect(result).toEqual(mockResponse);
-        
+
         // Validate response structure and data
         expect(result.successRecords).toHaveLength(1);
         expect(result.failureRecords).toHaveLength(0);
-        expect(result.successRecords[0]).toHaveProperty('Id');
+        expect(result.successRecords[0]).toHaveProperty("Id");
         expect(result.successRecords[0].Id).toBe(recordIds[0]);
       });
 
-      it('should throw error if entity id is undefined', async () => {
-        const entityData = createBasicEntity({ id: undefined as any });
-        const entity = createEntityWithMethods(entityData, mockService);
-
-        await expect(entity.deleteRecords([ENTITY_TEST_CONSTANTS.RECORD_ID])).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
-      });
-
-      it('should handle partial failures in delete', async () => {
+      it("should handle partial failures in delete", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const recordIds = [
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.TEST_INVALID_ID
+          ENTITY_TEST_CONSTANTS.TEST_INVALID_ID,
         ];
-        const mockResponse = createMockDeleteResponse(recordIds, { successCount: 1 });
+        const mockResponse = createMockDeleteResponse(recordIds, {
+          successCount: 1,
+        });
         mockService.deleteRecordsById = vi.fn().mockResolvedValue(mockResponse);
 
         const result = await entity.deleteRecords(recordIds);
@@ -409,26 +477,26 @@ describe('Entity Models', () => {
         expect(result.failureRecords).toHaveLength(1);
 
         // Validate successful deletion
-        expect(result.successRecords[0]).toHaveProperty('Id');
+        expect(result.successRecords[0]).toHaveProperty("Id");
         expect(result.successRecords[0].Id).toBe(recordIds[0]);
 
         // Validate failure record structure
-        expect(result.failureRecords[0]).toHaveProperty('error');
-        expect(result.failureRecords[0]).toHaveProperty('record');
+        expect(result.failureRecords[0]).toHaveProperty("error");
+        expect(result.failureRecords[0]).toHaveProperty("record");
         expect(result.failureRecords[0].record?.Id).toBe(recordIds[1]);
-        expect(typeof result.failureRecords[0].error).toBe('string');
+        expect(typeof result.failureRecords[0].error).toBe("string");
       });
     });
 
-    describe('entity.getAllRecords()', () => {
-      it('should call entity.getAllRecords without options', async () => {
+    describe("entity.getAllRecords()", () => {
+      it("should call entity.getAllRecords without options", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const mockRecords = createMockEntityRecords(5);
         const mockResponse = {
           items: mockRecords,
-          totalCount: 5
+          totalCount: 5,
         };
         mockService.getAllRecords = vi.fn().mockResolvedValue(mockResponse);
 
@@ -436,25 +504,34 @@ describe('Entity Models', () => {
 
         expect(mockService.getAllRecords).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockResponse);
         expect(result.items).toHaveLength(5);
       });
 
-      it('should call entity.getAllRecords with expansion level', async () => {
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.getAllRecords()).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+        );
+      });
+
+      it("should call entity.getAllRecords with expansion level", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         const options = {
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         };
-        const mockRecords = createMockEntityRecords(3, { 
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
+        const mockRecords = createMockEntityRecords(3, {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
         });
         const mockResponse = {
           items: mockRecords,
-          totalCount: 3
+          totalCount: 3,
         };
         mockService.getAllRecords = vi.fn().mockResolvedValue(mockResponse);
 
@@ -462,34 +539,27 @@ describe('Entity Models', () => {
 
         expect(mockService.getAllRecords).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          options
+          options,
         );
         expect(result).toEqual(mockResponse);
-        
+
         // Validate response structure and data
         expect(result.items).toHaveLength(3);
         expect(result.totalCount).toBe(3);
-        
+
         // Verify expansion level affected the data (reference fields should be objects)
-        result.items.forEach(record => {
-          expect(record).toHaveProperty('Id');
+        result.items.forEach((record) => {
+          expect(record).toHaveProperty("Id");
           if (record.RecordOwner) {
-            expect(typeof record.RecordOwner).toBe('object');
-            expect(record.RecordOwner).toHaveProperty('id');
+            expect(typeof record.RecordOwner).toBe("object");
+            expect(record.RecordOwner).toHaveProperty("id");
           }
         });
       });
-
-      it('should throw error if entity id is undefined', async () => {
-        const entityData = createBasicEntity({ id: undefined as any });
-        const entity = createEntityWithMethods(entityData, mockService);
-
-        await expect(entity.getAllRecords()).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
-      });
     });
 
-    describe('entity.getRecord()', () => {
-      it('should call getRecordById with entity id, recordId, and no options', async () => {
+    describe("entity.getRecord()", () => {
+      it("should call getRecordById with entity id, recordId, and no options", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -501,51 +571,47 @@ describe('Entity Models', () => {
         expect(mockService.getRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          undefined
+          undefined,
         );
         expect(result).toEqual(mockRecord);
       });
 
-      it('should call getRecordById with entity id, recordId, and options', async () => {
+      it("should call getRecordById with entity id, recordId, and options", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        const options = { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL };
-        const mockRecord = createMockEntityRecord({ name: 'Expanded Record' });
+        const options = {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+        };
+        const mockRecord = createMockEntityRecord({ name: "Expanded Record" });
         mockService.getRecordById = vi.fn().mockResolvedValue(mockRecord);
 
-        const result = await entity.getRecord(ENTITY_TEST_CONSTANTS.RECORD_ID, options);
+        const result = await entity.getRecord(
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          options,
+        );
 
         expect(mockService.getRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          options
+          options,
         );
         expect(result).toEqual(mockRecord);
-        expect(result.name).toBe('Expanded Record');
+        expect(result.name).toBe("Expanded Record");
       });
 
-      it('should throw error if entity id is undefined', async () => {
-        const entityData = createBasicEntity({ id: undefined as any });
-        const entity = createEntityWithMethods(entityData, mockService);
-
-        await expect(entity.getRecord(ENTITY_TEST_CONSTANTS.RECORD_ID)).rejects.toThrow(
-          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED
-        );
-      });
-
-      it('should throw error if record id is undefined', async () => {
+      it("should throw error if record id is undefined", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
         await expect(entity.getRecord(undefined as any)).rejects.toThrow(
-          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED,
         );
       });
     });
 
-    describe('entity.downloadAttachment()', () => {
-      it('should call downloadAttachment with entity id, recordId, and fieldName', async () => {
+    describe("entity.downloadAttachment()", () => {
+      it("should call downloadAttachment with entity id, recordId, and fieldName", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
@@ -554,70 +620,208 @@ describe('Entity Models', () => {
 
         const result = await entity.downloadAttachment(
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         );
 
         expect(mockService.downloadAttachment).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         );
         expect(result).toBe(mockBlob);
       });
 
-      it('should return blob with correct content type', async () => {
+      it("should return blob with correct content type", async () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        const mockBlob = createMockBlob('image data', 'image/png');
+        const mockBlob = createMockBlob("image data", "image/png");
         mockService.downloadAttachment = vi.fn().mockResolvedValue(mockBlob);
 
         const result = await entity.downloadAttachment(
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          'ImageField'
+          "ImageField",
         );
 
         expect(result).toBeInstanceOf(Blob);
-        expect(result.type).toBe('image/png');
+        expect(result.type).toBe("image/png");
       });
 
-      it('should throw error if entity id is undefined', async () => {
+      it("should throw error if entity id is undefined", async () => {
         const entityData = createBasicEntity({ id: undefined as any });
         const entity = createEntityWithMethods(entityData, mockService);
 
         await expect(
-          entity.downloadAttachment(ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME)
-        ).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+          entity.downloadAttachment(
+            ENTITY_TEST_CONSTANTS.RECORD_ID,
+            ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+          ),
+        ).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+        );
       });
     });
   });
 
-  describe('Entity data and methods are combined correctly', () => {
-    it('should preserve all entity properties', () => {
+  describe("entity.uploadAttachment()", () => {
+    it("should call uploadAttachment with entity id, recordId, fieldName, and file", async () => {
+      const entityData = createBasicEntity();
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      const file = new Blob(["file content"], { type: "application/pdf" });
+      const mockResponse = { id: ENTITY_TEST_CONSTANTS.RECORD_ID };
+      mockService.uploadAttachment = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await entity.uploadAttachment(
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file,
+      );
+
+      expect(mockService.uploadAttachment).toHaveBeenCalledWith(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        file,
+        undefined,
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("should throw error if entity id is undefined", async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(
+        entity.uploadAttachment(
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+          new Blob(),
+        ),
+      ).rejects.toThrow(
+        ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+      );
+    });
+  });
+
+  describe("entity.deleteAttachment()", () => {
+    it("should call deleteAttachment with entity id, recordId, and fieldName", async () => {
+      const entityData = createBasicEntity();
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      const mockResponse = {};
+      mockService.deleteAttachment = vi.fn().mockResolvedValue(mockResponse);
+
+      const result = await entity.deleteAttachment(
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+      );
+
+      expect(mockService.deleteAttachment).toHaveBeenCalledWith(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("should throw error if entity id is undefined", async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(
+        entity.deleteAttachment(
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+      ).rejects.toThrow(
+        ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+      );
+    });
+  });
+
+  describe("Entity data and methods are combined correctly", () => {
+    it("should preserve all entity properties", () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
 
       expect(entity.id).toBe(ENTITY_TEST_CONSTANTS.ENTITY_ID);
       expect(entity.name).toBe(ENTITY_TEST_CONSTANTS.ENTITY_NAME);
-      expect(entity.displayName).toBe(ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME);
+      expect(entity.displayName).toBe(
+        ENTITY_TEST_CONSTANTS.ENTITY_DISPLAY_NAME,
+      );
       expect(entity.description).toBe(ENTITY_TEST_CONSTANTS.ENTITY_DESCRIPTION);
       expect(entity.fields).toBeDefined();
       expect(entity.fields.length).toBeGreaterThan(0);
     });
 
-    it('should have all methods available', () => {
+    it("should have all methods available", () => {
       const entityData = createBasicEntity();
       const entity = createEntityWithMethods(entityData, mockService);
 
-      expect(typeof entity.insertRecord).toBe('function');
-      expect(typeof entity.insertRecords).toBe('function');
-      expect(typeof entity.updateRecord).toBe('function');
-      expect(typeof entity.updateRecords).toBe('function');
-      expect(typeof entity.deleteRecords).toBe('function');
-      expect(typeof entity.getAllRecords).toBe('function');
-      expect(typeof entity.getRecord).toBe('function');
-      expect(typeof entity.downloadAttachment).toBe('function');
+      // Data methods
+      expect(typeof entity.insertRecord).toBe("function");
+      expect(typeof entity.insertRecords).toBe("function");
+      expect(typeof entity.updateRecord).toBe("function");
+      expect(typeof entity.updateRecords).toBe("function");
+      expect(typeof entity.deleteRecords).toBe("function");
+      expect(typeof entity.getAllRecords).toBe("function");
+      expect(typeof entity.getRecord).toBe("function");
+      expect(typeof entity.downloadAttachment).toBe("function");
+
+      // Schema methods
+      expect(typeof entity.delete).toBe("function");
+      expect(typeof entity.update).toBe("function");
+    });
+  });
+
+  describe("bound schema methods on entity", () => {
+    it("entity.delete() should delegate to service.deleteById using entity's own id", async () => {
+      const entityData = createBasicEntity();
+      const entity = createEntityWithMethods(entityData, mockService);
+      mockService.deleteById = vi.fn().mockResolvedValue(undefined);
+
+      await entity.delete();
+
+      expect(mockService.deleteById).toHaveBeenCalledWith(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+      );
+    });
+
+    it("entity.delete() should throw if entity id is undefined", async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(entity.delete()).rejects.toThrow(
+        ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+      );
+    });
+
+    it("entity.updateById() should delegate to service.updateById using entity's own id", async () => {
+      const entityData = createBasicEntity();
+      const entity = createEntityWithMethods(entityData, mockService);
+      const options: EntityUpdateByIdOptions = {
+        addFields: [{ fieldName: "notes" }],
+      };
+      mockService.updateById = vi.fn().mockResolvedValue(undefined);
+
+      await entity.update(options);
+
+      expect(mockService.updateById).toHaveBeenCalledWith(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        options,
+      );
+    });
+
+    it("entity.updateById() should throw if entity id is undefined", async () => {
+      const entityData = createBasicEntity({ id: undefined as any });
+      const entity = createEntityWithMethods(entityData, mockService);
+
+      await expect(
+        entity.update({ addFields: [{ fieldName: "notes" }] }),
+      ).rejects.toThrow(
+        ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+      );
     });
   });
 });
-

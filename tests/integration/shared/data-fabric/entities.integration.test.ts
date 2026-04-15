@@ -7,7 +7,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { generateRandomString, generateRandomInt, generateRandomFloat } from '../../utils/helpers';
+import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination } from '../../utils/helpers';
 import {
   EntityFieldDataType,
   EntityRecord,
@@ -39,6 +39,8 @@ async function getChoiceSetValues(choiceSetId: string): Promise<any[]> {
  */
 function generateFieldValue(field: FieldMetaData): any {
   const { fieldDataType } = field;
+
+  if (!fieldDataType) return `Test_${generateRandomString(6)}`;
 
   switch (fieldDataType.name) {
     case EntityFieldDataType.STRING:
@@ -72,7 +74,6 @@ function generateFieldValue(field: FieldMetaData): any {
     case EntityFieldDataType.DATE:
       return new Date().toISOString().split('T')[0];
     case EntityFieldDataType.DATETIME:
-      return new Date().toISOString();
     case EntityFieldDataType.DATETIME_WITH_TZ:
       return new Date().toISOString();
     case EntityFieldDataType.UUID:
@@ -96,7 +97,7 @@ function getWritableFields(fields: FieldMetaData[]): FieldMetaData[] {
       f.fieldDisplayType !== FieldDisplayType.AutoNumber &&
       f.fieldDisplayType !== FieldDisplayType.Relationship &&
       f.fieldDisplayType !== FieldDisplayType.File &&
-      f.fieldDataType.name !== EntityFieldDataType.UUID
+      f.fieldDataType?.name !== EntityFieldDataType.UUID
   );
 }
 
@@ -144,6 +145,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   let testEntityId: string | null = null;
   let entityMetadata: RawEntityGetResponse | null = null;
   const createdRecordIds: string[] = [];
+  const createdEntityIds: string[] = [];
 
   describe('getAll', () => {
     it('should retrieve all entities', async () => {
@@ -235,7 +237,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const field = result.fields[0];
       expect(field.name).toBeDefined();
       expect(field.fieldDataType).toBeDefined();
-      expect(field.fieldDataType.name).toBeDefined();
+      expect(field.fieldDataType?.name).toBeDefined();
       expect(typeof field.isSystemField).toBe('boolean');
       expect(typeof field.isRequired).toBe('boolean');
 
@@ -707,10 +709,282 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
+  describe('queryRecordsById', () => {
+    it('should query records with no filters', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecordsById(entityId);
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(typeof result.totalCount).toBe('number');
+    });
+
+    it('should return paginated records when pageSize is provided', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecordsById(entityId, { pageSize: 2 });
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeLessThanOrEqual(2);
+      expect(hasValidPagination(result)).toBe(true);
+    });
+  });
+
+  // Bulk import requires DataFabric.Data.Write scope — not supported via PAT token yet
+  describe.skip('importRecordsById', () => {
+    it('should import records from a CSV blob', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
+      }
+
+      if (entityMetadata?.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
+      }
+
+      // Build CSV from writable string fields
+      const writableFields = getWritableFields(entityMetadata.fields).filter(
+        f => f.fieldDataType?.name === EntityFieldDataType.STRING
+      );
+
+      if (writableFields.length === 0) {
+        throw new Error('No string fields available for bulk import test');
+      }
+
+      const fieldName = writableFields[0].name;
+      const csvContent = `${fieldName}\nBulkImport_${generateRandomString(8)}\nBulkImport_${generateRandomString(8)}`;
+      const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+      const result = await entities.importRecordsById(entityId, csvBlob);
+
+      expect(result).toBeDefined();
+      expect(typeof result.totalRecords).toBe('number');
+      expect(typeof result.insertedRecords).toBe('number');
+      expect(result.totalRecords).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+
+  // ─── Schema Management ────────────────────────────────────────────────────
+
+  // Entity schema write operations require write-schema PAT scope — not supported yet
+  describe.skip('create', () => {
+    it('should create a new entity and return its ID', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+
+      const entityId = await entities.create(name, [
+        { fieldName: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
+        { fieldName: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
+      ], { displayName: `SDK Test Entity ${name}`, description: 'Created by integration test' });
+
+      expect(typeof entityId).toBe('string');
+      expect(entityId.length).toBeGreaterThan(0);
+      createdEntityIds.push(entityId);
+    });
+
+    it('should reject an invalid entity name', async () => {
+      const { entities } = getServices();
+
+      await expect(
+        entities.create('Invalid Name', [])
+      ).rejects.toThrow(/Invalid entity name/);
+    });
+
+    it('should reject an invalid field name', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+
+      await expect(
+        entities.create(name, [
+          { fieldName: 'Invalid Field', type: EntityFieldDataType.STRING },
+        ])
+      ).rejects.toThrow(/Invalid field name/);
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('updateById', () => {
+    it('should update entity display name and description', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [], { displayName: `Original ${name}`, description: 'Original description' });
+      createdEntityIds.push(entityId);
+
+      const newDisplayName = `Updated ${name}`;
+      await entities.updateById(entityId, {
+        displayName: newDisplayName,
+        description: 'Updated description',
+      });
+
+      const updated = await entities.getById(entityId);
+      expect(updated.displayName).toBe(newDisplayName);
+      expect(updated.description).toBe('Updated description');
+    });
+
+    it('should add a new field to an existing entity', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'base_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      await entities.updateById(entityId, {
+        addFields: [{ fieldName: 'new_field', type: EntityFieldDataType.INTEGER }],
+      });
+
+      const updated = await entities.getById(entityId);
+      const fieldNames = updated.fields.map(f => f.name);
+      expect(fieldNames).toContain('new_field');
+    });
+
+    it('should remove a field from an existing entity', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'keep_field', type: EntityFieldDataType.STRING },
+        { fieldName: 'remove_me', type: EntityFieldDataType.INTEGER },
+      ]);
+      createdEntityIds.push(entityId);
+
+      await entities.updateById(entityId, {
+        removeFields: [{ fieldName: 'remove_me' }],
+      });
+
+      const updated = await entities.getById(entityId);
+      const fieldNames = updated.fields.map(f => f.name);
+      expect(fieldNames).not.toContain('remove_me');
+      expect(fieldNames).toContain('keep_field');
+    });
+
+    it('should update an existing field metadata', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'updatable_field', displayName: 'Original Name', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      // Get the raw entity to find the field ID (transformData renames sqlType but preserves id)
+      const before = await entities.getById(entityId);
+      const field = before.fields.find(f => f.name === 'updatable_field');
+      if (!field?.id) {
+        throw new Error('Could not find updatable_field id in entity schema');
+      }
+
+      await entities.updateById(entityId, {
+        updateFields: [{ id: field.id, displayName: 'Updated Name', isRequired: true }],
+      });
+
+      const after = await entities.getById(entityId);
+      const updatedField = after.fields.find(f => f.name === 'updatable_field');
+      expect(updatedField).toBeDefined();
+      expect(updatedField?.displayName).toBe('Updated Name');
+      expect(updatedField?.isRequired).toBe(true);
+    });
+
+    it('should add, update, and remove fields in a single call', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'to_update', displayName: 'Before Update', type: EntityFieldDataType.STRING },
+        { fieldName: 'to_remove', type: EntityFieldDataType.INTEGER },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const before = await entities.getById(entityId);
+      const fieldToUpdate = before.fields.find(f => f.name === 'to_update');
+      if (!fieldToUpdate?.id) {
+        throw new Error('Could not find to_update field id');
+      }
+
+      await entities.updateById(entityId, {
+        addFields: [{ fieldName: 'new_addition', type: EntityFieldDataType.BOOLEAN }],
+        updateFields: [{ id: fieldToUpdate.id, displayName: 'After Update' }],
+        removeFields: [{ fieldName: 'to_remove' }],
+      });
+
+      const after = await entities.getById(entityId);
+      const fieldNames = after.fields.map(f => f.name);
+
+      // new field was added
+      expect(fieldNames).toContain('new_addition');
+      // removed field is gone
+      expect(fieldNames).not.toContain('to_remove');
+      // updated field has new display name
+      const updated = after.fields.find(f => f.name === 'to_update');
+      expect(updated?.displayName).toBe('After Update');
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('deleteById', () => {
+    it('should delete an entity created for this test', async () => {
+      const { entities } = getServices();
+
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, []);
+
+      // Delete it immediately (not added to createdEntityIds so afterAll won't double-delete)
+      await entities.deleteById(entityId);
+
+      // Verify it no longer appears in getAll
+      const all = await entities.getAll();
+      const found = all.find(e => e.id === entityId);
+      expect(found).toBeUndefined();
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('entity schema methods (bound)', () => {
+    it('should call deleteById via bound method on entity', async () => {
+      const { entities } = getServices();
+
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, []);
+
+      const entity = await entities.getById(entityId);
+      expect(typeof entity.delete).toBe('function');
+      expect(typeof entity.update).toBe('function');
+
+      // Delete via bound method — do NOT add to createdEntityIds
+      await entity.delete();
+
+      const all = await entities.getAll();
+      expect(all.find(e => e.id === entityId)).toBeUndefined();
+    });
+  });
+
+  // ─── Cleanup ──────────────────────────────────────────────────────────────
+
   afterAll(async () => {
     const config = getTestConfig();
-    if (!config.skipCleanup && createdRecordIds.length > 0 && testEntityId) {
-      await cleanupTestEntityRecords(testEntityId, createdRecordIds);
+    if (!config.skipCleanup) {
+      if (createdRecordIds.length > 0 && testEntityId) {
+        await cleanupTestEntityRecords(testEntityId, createdRecordIds);
+      }
+      // Clean up any entities created by schema management tests (no-op when those tests are skipped)
+      if (createdEntityIds.length > 0) {
+        const { entities } = getServices();
+        for (const entityId of createdEntityIds) {
+          try {
+            await entities.deleteById(entityId);
+          } catch {
+            // Best-effort cleanup — entity may have already been deleted
+          }
+        }
+      }
     }
   });
 });
