@@ -3,15 +3,15 @@ import { useAuth } from '../hooks/useAuth';
 import { InstanceList } from './InstanceList';
 import { InstanceDetails } from './InstanceDetails';
 import { formatProcessName } from '../utils/formatters';
-import type { 
-  ProcessInstanceGetResponse, 
+import type {
+  ProcessInstanceGetResponse,
   MaestroProcessGetAllResponse,
   PaginatedResponse,
   ProcessInstanceGetVariablesResponse,
   EntityRecord,
   ProcessInstanceExecutionHistoryResponse,
   BpmnXmlString,
-  EntityGetResponse
+  EntityGetResponse,
 } from '@uipath/uipath-typescript';
 
 export const ProcessInstances = () => {
@@ -21,7 +21,7 @@ export const ProcessInstances = () => {
   const [selectedProcess, setSelectedProcess] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -43,7 +43,6 @@ export const ProcessInstances = () => {
     error?: string;
   }>({ loading: false });
 
-
   useEffect(() => {
     if (isAuthenticated && sdk) {
       fetchData();
@@ -62,42 +61,41 @@ export const ProcessInstances = () => {
 
   const fetchInstancesPage = async (cursor?: { value: string }) => {
     if (!sdk) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Build options with filtering and pagination
       const options = {
         pageSize,
         ...(cursor && { cursor }),
-        ...(selectedProcess !== 'all' && { packageId: selectedProcess })
+        ...(selectedProcess !== 'all' && { packageId: selectedProcess }),
       };
-          
+
       // The SDK method is overloaded, but since we always pass pageSize, it will return PaginatedResponse
       const response = await sdk.maestro.processes.instances.getAll(options);
       const paginatedResponse = response as PaginatedResponse<ProcessInstanceGetResponse>;
-      
+
       // Set instances for current page only
       setInstances(paginatedResponse.items);
-      
+
       // Update pagination state
       setHasNextPage(paginatedResponse.hasNextPage);
       setNextCursor(paginatedResponse.nextCursor);
       setPreviousCursor(paginatedResponse.previousCursor);
       setHasPreviousPage(!!paginatedResponse.previousCursor);
-      
+
       // Update total count if available
       if (paginatedResponse.totalCount) {
         setTotalCount(paginatedResponse.totalCount);
         setTotalPages(Math.ceil(paginatedResponse.totalCount / pageSize));
       }
-      
+
       // Update current page if available
       if (paginatedResponse.currentPage) {
         setCurrentPage(paginatedResponse.currentPage);
       }
-        
     } catch (err) {
       console.error('Error fetching instances page:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch instances');
@@ -109,15 +107,14 @@ export const ProcessInstances = () => {
 
   const fetchData = async () => {
     if (!sdk) return;
-    
+
     try {
       // Fetch processes - returns MaestroProcessGetAllResponse[] directly
       const processesResponse = await sdk.maestro.processes.getAll();
       setProcesses(processesResponse);
-      
+
       // Fetch first page of instances
       await fetchInstancesPage();
-      
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -129,19 +126,17 @@ export const ProcessInstances = () => {
   // Pagination navigation functions
   const goToNextPage = () => {
     if (hasNextPage && nextCursor) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
       fetchInstancesPage(nextCursor);
     }
   };
 
   const goToPreviousPage = () => {
     if (hasPreviousPage && previousCursor) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage((prev) => prev - 1);
       fetchInstancesPage(previousCursor);
     }
   };
-
-
 
   const fetchInstanceDetails = async (instance: ProcessInstanceGetResponse) => {
     if (!sdk) return;
@@ -167,7 +162,10 @@ export const ProcessInstances = () => {
     // Fetch variables (with error handling)
     let elementId: string | undefined;
     try {
-      const variables: ProcessInstanceGetVariablesResponse = await sdk.maestro.processes.instances.getVariables(instance.instanceId, instance.folderKey);
+      const variables: ProcessInstanceGetVariablesResponse = await sdk.maestro.processes.instances.getVariables(
+        instance.instanceId,
+        instance.folderKey,
+      );
       console.log('Variables:', variables);
       const lastElement = variables.elements[variables.elements.length - 1];
       elementId = lastElement?.elementId;
@@ -176,21 +174,23 @@ export const ProcessInstances = () => {
       const groupedVariables: Record<string, Array<{ name: string; value: string; type: string }>> = {};
 
       variables.globalVariables
-        .filter(variable => {
+        .filter((variable) => {
           // Filter out variables with unwanted types
           const type = variable.type?.toLowerCase();
           return type !== 'any' && type !== 'jsonschema' && type !== 'object';
         })
-        .filter(variable => {
+        .filter((variable) => {
           // Filter out variables with null, empty, or 'null' string values
           const value = String(variable.value).trim().toLowerCase();
-          return variable.value !== null &&
-                 variable.value !== undefined &&
-                 value !== '' &&
-                 value !== 'null' &&
-                 value !== 'undefined';
+          return (
+            variable.value !== null &&
+            variable.value !== undefined &&
+            value !== '' &&
+            value !== 'null' &&
+            value !== 'undefined'
+          );
         })
-        .forEach(variable => {
+        .forEach((variable) => {
           const source = variable.source || 'Unknown';
           if (!groupedVariables[source]) {
             groupedVariables[source] = [];
@@ -198,12 +198,12 @@ export const ProcessInstances = () => {
           groupedVariables[source].push({
             name: variable.name,
             value: String(variable.value),
-            type: variable.type
+            type: variable.type,
           });
         });
 
       // Remove sources that have no valid variables after filtering
-      Object.keys(groupedVariables).forEach(source => {
+      Object.keys(groupedVariables).forEach((source) => {
         if (groupedVariables[source].length === 0) {
           delete groupedVariables[source];
         }
@@ -249,16 +249,13 @@ export const ProcessInstances = () => {
           console.log('Execution History:', executionHistory);
           const taskEntry = executionHistory.find((entry: ProcessInstanceExecutionHistoryResponse) => {
             // Parse attributes JSON if it's a string
-            const attributes = typeof entry.attributes === 'string'
-              ? JSON.parse(entry.attributes)
-              : entry.attributes;
+            const attributes = typeof entry.attributes === 'string' ? JSON.parse(entry.attributes) : entry.attributes;
             return attributes?.elementId === elementId;
           });
 
           if (taskEntry) {
-            const attributes = typeof taskEntry.attributes === 'string'
-              ? JSON.parse(taskEntry.attributes)
-              : taskEntry.attributes;
+            const attributes =
+              typeof taskEntry.attributes === 'string' ? JSON.parse(taskEntry.attributes) : taskEntry.attributes;
             taskLink = attributes?.actionCenterTaskLink;
             console.log('Found task link:', taskLink);
           }
@@ -275,7 +272,7 @@ export const ProcessInstances = () => {
     if (entityId) {
       try {
         const entity: EntityGetResponse = await sdk.entities.getById(entityId);
-        const entityRecords = await entity.getRecords({expansionLevel: 2});
+        const entityRecords = await entity.getRecords({ expansionLevel: 2 });
 
         if (entityRecords?.items && entityRecords.items.length > 0) {
           // Find the first record with an attachment
@@ -285,7 +282,7 @@ export const ProcessInstances = () => {
           if (recordWithAttachment?.attatchments) {
             result.attachment = {
               name: recordWithAttachment.attatchments.name,
-              url: recordWithAttachment.attatchments.path
+              url: recordWithAttachment.attatchments.path,
             };
           }
         }
@@ -298,7 +295,6 @@ export const ProcessInstances = () => {
     setSelectedInstanceDetails(result);
   };
 
-
   return (
     <div className="space-y-4 p-4 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
       {/* Header */}
@@ -307,7 +303,12 @@ export const ProcessInstances = () => {
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
               </svg>
             </div>
             Process Instances
@@ -320,7 +321,12 @@ export const ProcessInstances = () => {
           disabled={loading}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           {loading ? 'Refreshing...' : 'Refresh'}
         </button>
@@ -331,7 +337,12 @@ export const ProcessInstances = () => {
           <div className="flex items-start">
             <div className="p-2 bg-red-100 rounded-lg">
               <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
             <div className="ml-4">
@@ -348,7 +359,12 @@ export const ProcessInstances = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
+                />
               </svg>
               <label htmlFor="process-filter" className="text-sm font-semibold text-gray-700">
                 Filter by Process:
@@ -364,9 +380,9 @@ export const ProcessInstances = () => {
               <option value="all">All Processes</option>
               {processes.map((process) => {
                 return (
-                <option key={process.processKey} value={process.packageId}>
-                  {formatProcessName(process.packageId)}
-                </option>
+                  <option key={process.processKey} value={process.packageId}>
+                    {formatProcessName(process.packageId)}
+                  </option>
                 );
               })}
             </select>
@@ -374,19 +390,22 @@ export const ProcessInstances = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
               <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
               </svg>
               <span className="text-sm font-semibold text-blue-900">
-                {totalCount > 0 ? `${totalCount} total` : `${instances.length} instance${instances.length !== 1 ? 's' : ''}`}
+                {totalCount > 0
+                  ? `${totalCount} total`
+                  : `${instances.length} instance${instances.length !== 1 ? 's' : ''}`}
               </span>
             </div>
-            
+
             {/* Pagination Info */}
-            {totalPages > 1 && (
-              <div className="text-sm text-gray-600">
-                Total Pages: {totalPages}
-              </div>
-            )}
+            {totalPages > 1 && <div className="text-sm text-gray-600">Total Pages: {totalPages}</div>}
           </div>
         </div>
       </div>
@@ -397,11 +416,16 @@ export const ProcessInstances = () => {
         <div className="w-[35%] space-y-4 overflow-y-auto bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
             </svg>
             <h3 className="font-semibold text-gray-900">Process Instances</h3>
           </div>
-          
+
           <InstanceList
             instances={instances}
             loading={loading}

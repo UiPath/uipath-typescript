@@ -54,9 +54,7 @@ export class SDKInternalsRegistry {
   static get(instance: object): PrivateSDK {
     const internals = this.store.get(instance);
     if (!internals) {
-      throw new Error(
-        'Invalid SDK instance. Make sure to pass a valid UiPath instance to the service constructor.'
-      );
+      throw new Error('Invalid SDK instance. Make sure to pass a valid UiPath instance to the service constructor.');
     }
     return internals;
   }

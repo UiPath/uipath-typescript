@@ -5,10 +5,10 @@ The UiPath TypeScript SDK is under rapid development, following semantic version
 - **X** (major version): X = 1
 - **Y** (minor version) increases indicate breaking changes for public interfaces not marked as beta
 - **Z** (patch version) increases indicate:
-    - Bug fixes
-    - New features
-    - Changes to private interfaces
-    - Changes to beta features
+  - Bug fixes
+  - New features
+  - Changes to private interfaces
+  - Changes to beta features
 
 ### Version Number Format
 
@@ -23,6 +23,7 @@ The version format is `X.Y.Z` where:
 From time to time, we will version packages as release candidates. These are versions that are intended to be released as stable versions, but we want to get feedback from the community before doing so.
 
 Release candidates are versioned as `X.Y.ZrcN`. For example:
+
 - `1.2.0rc1`
 
 If no issues are found, the release candidate will be released as a stable version with the same version number. If issues are found, we will release a new release candidate with an incremented N value (e.g., `1.2.0rc2`).
@@ -47,6 +48,7 @@ When upgrading between minor versions, users should review the list of breaking 
 ## API Stability
 
 ### Public API
+
 The following components are considered part of the public API:
 
 - All classes and methods in the `src` directory
@@ -70,20 +72,20 @@ Breaking changes are introduced in minor releases (X.Y.0) and follow these guide
 ## Release Process
 
 1. **Development**:
-    - Features and fixes are developed in feature branches
-    - All changes require tests and documentation
-    - Code must pass all CI checks
+   - Features and fixes are developed in feature branches
+   - All changes require tests and documentation
+   - Code must pass all CI checks
 
 2. **Release Candidate**:
-    - Minor releases include an RC phase
-    - RCs are versioned as `X.Y.ZrcN`
-    - Community feedback is collected during RC phase
+   - Minor releases include an RC phase
+   - RCs are versioned as `X.Y.ZrcN`
+   - Community feedback is collected during RC phase
 
 3. **Release**:
-    - Version number is updated in `package.json`
-    - Release notes are prepared
-    - Package is published to npm
-    - Documentation is updated
+   - Version number is updated in `package.json`
+   - Release notes are prepared
+   - Package is published to npm
+   - Documentation is updated
 
 ## Support Policy
 

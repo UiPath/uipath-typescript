@@ -7,7 +7,7 @@ import {
   createMockChoiceSetResponse,
   createMockChoiceSets,
   createMockChoiceSetValueResponse,
-  createMockChoiceSetValues
+  createMockChoiceSetValues,
 } from '../../../utils/mocks/choicesets';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
@@ -77,10 +77,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result[0].updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
 
       // Verify the API call has correct endpoint
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-        {}
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL, {});
     });
 
     it('should return multiple choice sets', async () => {
@@ -106,10 +103,7 @@ describe('ChoiceSetService Unit Tests', () => {
       });
 
       // Verify the API call
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-        {}
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL, {});
     });
 
     it('should apply EntityMap transformations correctly (createTime -> createdTime, updateTime -> updatedTime)', async () => {
@@ -121,7 +115,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result.length).toBe(2);
 
-      result.forEach(choiceSet => {
+      result.forEach((choiceSet) => {
         // Verify transformed fields are exposed
         expect(choiceSet.createdTime).toBeDefined();
         expect(choiceSet.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
@@ -150,7 +144,6 @@ describe('ChoiceSetService Unit Tests', () => {
 
       await expect(choiceSetService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
-
   });
 
   describe('getById', () => {
@@ -166,9 +159,9 @@ describe('ChoiceSetService Unit Tests', () => {
           updatedTime: v.UpdateTime,
           createdBy: v.CreatedBy,
           updatedBy: v.UpdatedBy,
-          recordOwner: v.RecordOwner
+          recordOwner: v.RecordOwner,
         })),
-        totalCount: 4
+        totalCount: 4,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
@@ -184,16 +177,16 @@ describe('ChoiceSetService Unit Tests', () => {
           method: 'POST',
           pagination: expect.objectContaining({
             itemsField: 'jsonValue',
-            totalCountField: 'totalRecordCount'
-          })
+            totalCountField: 'totalRecordCount',
+          }),
         }),
-        undefined
+        undefined,
       );
 
       // Verify the endpoint function returns correct URL
       const config = vi.mocked(PaginationHelpers.getAll).mock.calls[0][0];
       expect(config.getEndpoint()).toBe(
-        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(CHOICESET_TEST_CONSTANTS.CHOICESET_ID)
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
       );
 
       // Verify result structure
@@ -205,18 +198,20 @@ describe('ChoiceSetService Unit Tests', () => {
     it('should transform PascalCase API response to camelCase', async () => {
       const mockRawValue = createMockChoiceSetValueResponse();
       const mockResponse = {
-        items: [{
-          id: mockRawValue.Id,
-          name: mockRawValue.Name,
-          displayName: mockRawValue.DisplayName,
-          numberId: mockRawValue.NumberId,
-          createdTime: mockRawValue.CreateTime,
-          updatedTime: mockRawValue.UpdateTime,
-          createdBy: mockRawValue.CreatedBy,
-          updatedBy: mockRawValue.UpdatedBy,
-          recordOwner: mockRawValue.RecordOwner
-        }],
-        totalCount: 1
+        items: [
+          {
+            id: mockRawValue.Id,
+            name: mockRawValue.Name,
+            displayName: mockRawValue.DisplayName,
+            numberId: mockRawValue.NumberId,
+            createdTime: mockRawValue.CreateTime,
+            updatedTime: mockRawValue.UpdateTime,
+            createdBy: mockRawValue.CreatedBy,
+            updatedBy: mockRawValue.UpdatedBy,
+            recordOwner: mockRawValue.RecordOwner,
+          },
+        ],
+        totalCount: 1,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
@@ -258,7 +253,7 @@ describe('ChoiceSetService Unit Tests', () => {
           updatedTime: v.UpdateTime,
           createdBy: v.CreatedBy,
           updatedBy: v.UpdatedBy,
-          recordOwner: v.RecordOwner
+          recordOwner: v.RecordOwner,
         })),
         totalCount: 10,
         hasNextPage: true,
@@ -266,21 +261,21 @@ describe('ChoiceSetService Unit Tests', () => {
         previousCursor: undefined,
         currentPage: 1,
         totalPages: 5,
-        supportsPageJump: true
+        supportsPageJump: true,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const result = await choiceSetService.getById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
-        pageSize: 2
-      }) as PaginatedResponse<ChoiceSetGetResponse>;
+      const result = (await choiceSetService.getById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
+        pageSize: 2,
+      })) as PaginatedResponse<ChoiceSetGetResponse>;
 
       // Verify pagination options were passed
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
-          pageSize: 2
-        })
+          pageSize: 2,
+        }),
       );
 
       // Verify paginated response structure
@@ -294,15 +289,15 @@ describe('ChoiceSetService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
-      await expect(
-        choiceSetService.getById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID)
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(choiceSetService.getById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
     });
 
     it('should handle empty results gracefully', async () => {
       const mockResponse = {
         items: [],
-        totalCount: 0
+        totalCount: 0,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);

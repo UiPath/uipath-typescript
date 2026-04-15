@@ -12,12 +12,10 @@ import {
   CaseGetStageResponse,
   StageTask,
   ElementExecutionMetadata,
-  CaseInstanceExecutionHistoryResponse
+  CaseInstanceExecutionHistoryResponse,
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
-import {
-  CaseJsonResponse
-} from '../../../models/maestro/case-instances.internal-types';
+import { CaseJsonResponse } from '../../../models/maestro/case-instances.internal-types';
 import { OperationResponse } from '../../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { transformData } from '../../../utils/transform';
@@ -28,7 +26,7 @@ import {
   CASE_STAGE_CONSTANTS,
   TimeFieldTransformMap,
   CASE_INSTANCE_TASK_FILTER,
-  CASE_INSTANCE_TASK_EXPAND
+  CASE_INSTANCE_TASK_EXPAND,
 } from '../../../models/maestro/case-instances.constants';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
@@ -96,7 +94,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    */
   @track('CaseInstances.GetAll')
   async getAll<T extends CaseInstanceGetAllWithPaginationOptions = CaseInstanceGetAllWithPaginationOptions>(
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<CaseInstanceGetResponse>
@@ -105,7 +103,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     // Add processType filter to only get case management instances
     const enhancedOptions = {
       ...options,
-      processType: ProcessType.CaseManagement
+      processType: ProcessType.CaseManagement,
     };
 
     // Base transformation function for case instances (synchronous)
@@ -115,31 +113,34 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     };
 
     // Get the paginated result with basic transformation
-    const result = await PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => MAESTRO_ENDPOINTS.INSTANCES.GET_ALL,
-      transformFn: transformCaseInstance,
-      pagination: {
-        paginationType: PaginationType.TOKEN,
-        itemsField: PROCESS_INSTANCE_PAGINATION.ITEMS_FIELD,
-        continuationTokenField: PROCESS_INSTANCE_PAGINATION.CONTINUATION_TOKEN_FIELD,
-        paginationParams: {
-          pageSizeParam: PROCESS_INSTANCE_TOKEN_PARAMS.PAGE_SIZE_PARAM,
-          tokenParam: PROCESS_INSTANCE_TOKEN_PARAMS.TOKEN_PARAM
-        }
+    const result = await PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => MAESTRO_ENDPOINTS.INSTANCES.GET_ALL,
+        transformFn: transformCaseInstance,
+        pagination: {
+          paginationType: PaginationType.TOKEN,
+          itemsField: PROCESS_INSTANCE_PAGINATION.ITEMS_FIELD,
+          continuationTokenField: PROCESS_INSTANCE_PAGINATION.CONTINUATION_TOKEN_FIELD,
+          paginationParams: {
+            pageSizeParam: PROCESS_INSTANCE_TOKEN_PARAMS.PAGE_SIZE_PARAM,
+            tokenParam: PROCESS_INSTANCE_TOKEN_PARAMS.TOKEN_PARAM,
+          },
+        },
+        excludeFromPrefix: Object.keys(enhancedOptions || {}),
       },
-      excludeFromPrefix: Object.keys(enhancedOptions || {})
-    }, enhancedOptions);
+      enhancedOptions,
+    );
 
     // Enhance instances with case JSON data if requested
     if (result.items && result.items.length > 0) {
       const enhancedItems = await this.enhanceInstancesWithCaseJson(result.items);
       return {
         ...result,
-        items: enhancedItems
+        items: enhancedItems,
       } as any;
     }
-    
+
     return result as any;
   }
 
@@ -151,16 +152,13 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    */
   @track('CaseInstances.GetById')
   async getById(instanceId: string, folderKey: string): Promise<CaseInstanceGetResponse> {
-    const response = await this.get<RawCaseInstanceGetResponse>(
-      MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(instanceId),
-      {
-        headers: createHeaders({ [FOLDER_KEY]: folderKey })
-      }
-    );
-    
+    const response = await this.get<RawCaseInstanceGetResponse>(MAESTRO_ENDPOINTS.INSTANCES.GET_BY_ID(instanceId), {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+    });
+
     const transformedInstance = transformData(response.data, CaseInstanceMap);
     const instanceWithMethods = createCaseInstanceWithMethods(transformedInstance, this);
-    
+
     // Enhance with case JSON data
     return this.enhanceInstanceWithCaseJson(instanceWithMethods);
   }
@@ -180,26 +178,28 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
       const caseJson = await this.getCaseJson(instance.instanceId, instance.folderKey);
       if (caseJson && caseJson.root) {
         // Transform caseAppConfig
-        const transformedCaseAppConfig = caseJson.root.caseAppConfig ? (() => {
-          const transformed = transformData(caseJson.root.caseAppConfig, CaseAppConfigMap) as any;
-          // Remove id field from each overview item
-          if (transformed.overview) {
-            transformed.overview = transformed.overview.map(({ id: _, ...rest }: any) => rest);
-          }
-          return transformed;
-        })() : undefined;
+        const transformedCaseAppConfig = caseJson.root.caseAppConfig
+          ? (() => {
+              const transformed = transformData(caseJson.root.caseAppConfig, CaseAppConfigMap) as any;
+              // Remove id field from each overview item
+              if (transformed.overview) {
+                transformed.overview = transformed.overview.map(({ id: _, ...rest }: any) => rest);
+              }
+              return transformed;
+            })()
+          : undefined;
 
         return {
           ...instance,
           ...(transformedCaseAppConfig && { caseAppConfig: transformedCaseAppConfig }),
           ...(caseJson.root.name && { caseType: caseJson.root.name }),
-          ...(caseJson.root.description && { caseTitle: caseJson.root.description })
+          ...(caseJson.root.description && { caseTitle: caseJson.root.description }),
         };
       }
     } catch (error) {
       console.debug(`Failed to fetch case JSON for instance ${instance.instanceId}:`, error);
     }
-    
+
     return instance;
   }
 
@@ -210,9 +210,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @private
    */
   private async enhanceInstancesWithCaseJson(instances: CaseInstanceGetResponse[]): Promise<CaseInstanceGetResponse[]> {
-    return Promise.all(
-      instances.map(instance => this.enhanceInstanceWithCaseJson(instance))
-    );
+    return Promise.all(instances.map((instance) => this.enhanceInstanceWithCaseJson(instance)));
   }
 
   /**
@@ -224,12 +222,9 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    */
   private async getCaseJson(instanceId: string, folderKey: string): Promise<CaseJsonResponse | null> {
     try {
-      const response = await this.get<CaseJsonResponse>(
-        MAESTRO_ENDPOINTS.CASES.GET_CASE_JSON(instanceId),
-        {
-          headers: createHeaders({ [FOLDER_KEY]: folderKey })
-        }
-      );
+      const response = await this.get<CaseJsonResponse>(MAESTRO_ENDPOINTS.CASES.GET_CASE_JSON(instanceId), {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      });
       return response.data;
     } catch {
       // Return null if the case JSON is not available
@@ -245,14 +240,22 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @returns Promise resolving to operation result with updated instance data
    */
   @track('CaseInstances.Close')
-  async close(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
-    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId), options || {}, {
-      headers: createHeaders({ [FOLDER_KEY]: folderKey })
-    });
-    
+  async close(
+    instanceId: string,
+    folderKey: string,
+    options?: CaseInstanceOperationOptions,
+  ): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+    const response = await this.post<CaseInstanceOperationResponse>(
+      MAESTRO_ENDPOINTS.INSTANCES.CANCEL(instanceId),
+      options || {},
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      },
+    );
+
     return {
       success: true,
-      data: response.data
+      data: response.data,
     };
   }
 
@@ -264,14 +267,22 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @returns Promise resolving to operation result with updated instance data
    */
   @track('CaseInstances.Pause')
-  async pause(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
-    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId), options || {}, {
-      headers: createHeaders({ [FOLDER_KEY]: folderKey })
-    });
+  async pause(
+    instanceId: string,
+    folderKey: string,
+    options?: CaseInstanceOperationOptions,
+  ): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+    const response = await this.post<CaseInstanceOperationResponse>(
+      MAESTRO_ENDPOINTS.INSTANCES.PAUSE(instanceId),
+      options || {},
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      },
+    );
 
     return {
       success: true,
-      data: response.data
+      data: response.data,
     };
   }
 
@@ -283,20 +294,28 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @returns Promise resolving to operation result with updated instance data
    */
   @track('CaseInstances.Reopen')
-  async reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+  async reopen(
+    instanceId: string,
+    folderKey: string,
+    options: CaseInstanceReopenOptions,
+  ): Promise<OperationResponse<CaseInstanceOperationResponse>> {
     // Transform SDK options to API request format
     const requestBody = {
       StartElementId: options.stageId,
-      ...(options.comment && { Comment: options.comment })
+      ...(options.comment && { Comment: options.comment }),
     };
 
-    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.CASES.REOPEN(instanceId), requestBody, {
-      headers: createHeaders({ [FOLDER_KEY]: folderKey })
-    });
+    const response = await this.post<CaseInstanceOperationResponse>(
+      MAESTRO_ENDPOINTS.CASES.REOPEN(instanceId),
+      requestBody,
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      },
+    );
 
     return {
       success: true,
-      data: response.data
+      data: response.data,
     };
   }
 
@@ -308,14 +327,22 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @returns Promise resolving to operation result with updated instance data
    */
   @track('CaseInstances.Resume')
-  async resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
-    const response = await this.post<CaseInstanceOperationResponse>(MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId), options || {}, {
-      headers: createHeaders({ [FOLDER_KEY]: folderKey })
-    });
+  async resume(
+    instanceId: string,
+    folderKey: string,
+    options?: CaseInstanceOperationOptions,
+  ): Promise<OperationResponse<CaseInstanceOperationResponse>> {
+    const response = await this.post<CaseInstanceOperationResponse>(
+      MAESTRO_ENDPOINTS.INSTANCES.RESUME(instanceId),
+      options || {},
+      {
+        headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+      },
+    );
 
     return {
       success: true,
-      data: response.data
+      data: response.data,
     };
   }
 
@@ -336,37 +363,31 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * ```
    */
   @track('CaseInstances.GetExecutionHistory')
-  async getExecutionHistory(
-    instanceId: string, 
-    folderKey: string
-  ): Promise<CaseInstanceExecutionHistoryResponse> {
-    const response = await this.get<any>(
-      MAESTRO_ENDPOINTS.CASES.GET_ELEMENT_EXECUTIONS(instanceId),
-      {
-        headers: createHeaders({ [FOLDER_KEY]: folderKey })
-      }
-    );
-    
+  async getExecutionHistory(instanceId: string, folderKey: string): Promise<CaseInstanceExecutionHistoryResponse> {
+    const response = await this.get<any>(MAESTRO_ENDPOINTS.CASES.GET_ELEMENT_EXECUTIONS(instanceId), {
+      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
+    });
+
     // Transform the main response
     const transformedResponse = transformData(response.data, TimeFieldTransformMap);
-    
+
     // Transform each element execution and its nested element runs
     if (transformedResponse.elementExecutions && Array.isArray(transformedResponse.elementExecutions)) {
       transformedResponse.elementExecutions = transformedResponse.elementExecutions.map((execution: any) => {
         // Transform the element execution itself
         const transformedExecution = transformData(execution, TimeFieldTransformMap);
-        
+
         // Transform nested element runs if they exist
         if (transformedExecution.elementRuns && Array.isArray(transformedExecution.elementRuns)) {
-          transformedExecution.elementRuns = transformedExecution.elementRuns.map((run: any) => 
-            transformData(run, TimeFieldTransformMap)
+          transformedExecution.elementRuns = transformedExecution.elementRuns.map((run: any) =>
+            transformData(run, TimeFieldTransformMap),
           );
         }
-        
+
         return transformedExecution;
       });
     }
-    
+
     return transformedResponse as CaseInstanceExecutionHistoryResponse;
   }
 
@@ -381,19 +402,15 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     // Fetch both execution history and case JSON in parallel, but handle execution failures gracefully
     const [executionHistoryResponse, caseJsonResponse] = await Promise.allSettled([
       this.getExecutionHistory(caseInstanceId, folderKey),
-      this.getCaseJson(caseInstanceId, folderKey)
+      this.getCaseJson(caseInstanceId, folderKey),
     ]);
 
     // Extract execution history if successful, otherwise use null
-    const executionHistory = executionHistoryResponse.status === 'fulfilled' 
-      ? executionHistoryResponse.value 
-      : null;
+    const executionHistory = executionHistoryResponse.status === 'fulfilled' ? executionHistoryResponse.value : null;
 
     // Extract case JSON - the null check below will handle failures
-    const caseJson = caseJsonResponse.status === 'fulfilled' 
-      ? caseJsonResponse.value 
-      : null;
-    
+    const caseJson = caseJsonResponse.status === 'fulfilled' ? caseJsonResponse.value : null;
+
     if (!caseJson || !caseJson.nodes) {
       return [];
     }
@@ -411,7 +428,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   }
 
   /**
-   * Create a map of element ID to execution data 
+   * Create a map of element ID to execution data
    * @param executionHistory - The execution history response
    * @returns Map of elementId to execution metadata
    * @private
@@ -427,7 +444,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   }
 
   /**
-   * Create a map of binding IDs to their values 
+   * Create a map of binding IDs to their values
    * @param caseJsonResponse - The case JSON response
    * @returns Map of binding ID to binding object
    * @private
@@ -469,9 +486,9 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @private
    */
   private processTasks(
-    node: any, 
-    executionMap: Map<string, ElementExecutionMetadata>, 
-    bindingsMap: Map<string, any>
+    node: any,
+    executionMap: Map<string, ElementExecutionMetadata>,
+    bindingsMap: Map<string, any>,
   ): StageTask[][] {
     if (!node.data?.tasks || !Array.isArray(node.data.tasks)) {
       return [];
@@ -481,25 +498,25 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
       if (Array.isArray(taskGroup)) {
         return taskGroup.map((task: any) => {
           const taskId = task.id;
-          
+
           // Find the execution data using the task's id
           const taskExecution = taskId ? executionMap.get(taskId) : undefined;
-          
+
           // Resolve task name from bindings
           let taskName = task.displayName;
           if (!taskName && task.data?.name) {
             taskName = this.resolveBinding(task.data.name, bindingsMap);
           }
-          
+
           const stageTask: StageTask = {
             id: taskId || task.elementId || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
             name: taskName || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
             completedTime: taskExecution?.completedTime || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
             startedTime: taskExecution?.startedTime || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
             status: taskExecution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
-            type: task.type || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE
+            type: task.type || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
           };
-          
+
           return stageTask;
         });
       }
@@ -518,16 +535,16 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   private createStageFromNode(
     node: any,
     executionMap: Map<string, ElementExecutionMetadata>,
-    bindingsMap: Map<string, any>
+    bindingsMap: Map<string, any>,
   ): CaseGetStageResponse {
     const execution = executionMap.get(node.id);
-    
+
     const stage: CaseGetStageResponse = {
       id: node.id,
       name: node.data?.label || CASE_STAGE_CONSTANTS.UNDEFINED_VALUE,
       sla: node.data?.sla ? transformData(node.data.sla, StageSLAMap) : undefined,
       status: execution?.status || CASE_STAGE_CONSTANTS.NOT_STARTED_STATUS,
-      tasks: this.processTasks(node, executionMap, bindingsMap)
+      tasks: this.processTasks(node, executionMap, bindingsMap),
     };
 
     return stage;
@@ -538,34 +555,30 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @param caseInstanceId - The ID of the case instance
    * @param options - Optional filtering and pagination options
    * @returns Promise resolving to human in the loop tasks associated with the case instance
-   */ 
+   */
   @track('CaseInstances.GetActionTasks')
   async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
     caseInstanceId: string,
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<TaskGetResponse>
-      : NonPaginatedResponse<TaskGetResponse>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>
   > {
     // Build filter to match tasks by case instance ID using tags
     const tagFilter = CASE_INSTANCE_TASK_FILTER(caseInstanceId);
-    
+
     // Combine with any existing filter
-    const filter = options?.filter 
-      ? `(${tagFilter}) and (${options.filter})`
-      : tagFilter;
+    const filter = options?.filter ? `(${tagFilter}) and (${options.filter})` : tagFilter;
 
     // Add expand to include AssignedToUser and Activities
     const expand = CASE_INSTANCE_TASK_EXPAND;
-    
+
     // Prepare the enhanced options with proper typing
     const enhancedOptions: T = {
       ...options,
       filter,
-      expand
+      expand,
     } as T;
-  
-    return await this.taskService.getAll(enhancedOptions) as any;
+
+    return (await this.taskService.getAll(enhancedOptions)) as any;
   }
 }

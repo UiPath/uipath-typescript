@@ -73,7 +73,7 @@ export interface ConversationUpdateOptions {
 export type ConversationGetAllOptions = PaginationOptions & {
   /** Sort order for conversations */
   sort?: SortOrder;
-}
+};
 
 // ==================== Attachment Types ====================
 

@@ -7,9 +7,11 @@ The SDK provides a comprehensive error handling system that helps you handle dif
 The SDK defines several specific error types that inherit from a base [`UiPathError`](/uipath-typescript/api/classes/UiPathError) class:
 
 ### [`AuthenticationError`](/uipath-typescript/api/classes/AuthenticationError)
+
 Thrown when authentication fails (401 status codes).
 
 **Common scenarios:**
+
 - Invalid credentials
 - Expired token
 - Missing authentication
@@ -30,9 +32,11 @@ try {
 ```
 
 ### [`AuthorizationError`](/uipath-typescript/api/classes/AuthorizationError)
+
 Thrown when access is denied (403 status codes).
 
 **Common scenarios:**
+
 - Insufficient permissions
 - Access denied to specific folder
 - Scope limitations
@@ -56,9 +60,11 @@ try {
 ```
 
 ### [`ValidationError`](/uipath-typescript/api/classes/ValidationError)
+
 Thrown when validation fails (400 status codes).
 
 **Common scenarios:**
+
 - Invalid input parameters
 - Missing required fields
 - Invalid data format
@@ -72,9 +78,12 @@ await sdk.initialize();
 const processes = new Processes(sdk);
 
 try {
-  await processes.start({
-    releaseKey: 'invalid-key'
-  }, folderId);
+  await processes.start(
+    {
+      releaseKey: 'invalid-key',
+    },
+    folderId,
+  );
 } catch (error) {
   if (isValidationError(error)) {
     console.log('Validation failed:', error.message);
@@ -84,9 +93,11 @@ try {
 ```
 
 ### [`NotFoundError`](/uipath-typescript/api/classes/NotFoundError)
+
 Thrown when requested resources are not found (404 status codes).
 
 **Common scenarios:**
+
 - Resource doesn't exist
 - Folder not found
 - Process not found
@@ -110,9 +121,11 @@ try {
 ```
 
 ### [`RateLimitError`](/uipath-typescript/api/classes/RateLimitError)
+
 Thrown when rate limits are exceeded (429 status codes).
 
 **Common scenarios:**
+
 - Too many requests
 - API rate limiting
 
@@ -135,9 +148,11 @@ try {
 ```
 
 ### [`ServerError`](/uipath-typescript/api/classes/ServerError)
+
 Thrown when server errors occur (5xx status codes).
 
 **Common scenarios:**
+
 - Internal server error
 - Service unavailable
 - Gateway timeout
@@ -161,9 +176,11 @@ try {
 ```
 
 ### [`NetworkError`](/uipath-typescript/api/classes/NetworkError)
+
 Thrown when network-related errors occur.
 
 **Common scenarios:**
+
 - Connection timeout
 - Request aborted
 - DNS resolution failure
@@ -190,6 +207,7 @@ try {
 ## Error Information
 
 ### Getting Error Details
+
 ```typescript
 import { UiPath, getErrorDetails } from '@uipath/uipath-typescript/core';
 import { Assets } from '@uipath/uipath-typescript/assets';
@@ -208,6 +226,7 @@ try {
 ```
 
 ### Accessing All Error Properties
+
 ```typescript
 import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
 import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
@@ -235,6 +254,7 @@ try {
 ```
 
 ### Debug Information
+
 ```typescript
 import { UiPath, UiPathError } from '@uipath/uipath-typescript/core';
 import { Processes } from '@uipath/uipath-typescript/processes';

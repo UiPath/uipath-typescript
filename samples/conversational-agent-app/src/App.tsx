@@ -1,9 +1,9 @@
-import { ConversationalAgentProvider } from './context/ConversationalAgentContext'
-import { AuthProvider, useAuth } from './context/AuthContext'
-import { ChatLayout } from './components/ChatLayout'
-import { LoginScreen } from './components/LoginScreen'
-import { Spinner } from './components/Spinner'
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core'
+import { ConversationalAgentProvider } from './context/ConversationalAgentContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ChatLayout } from './components/ChatLayout';
+import { LoginScreen } from './components/LoginScreen';
+import { Spinner } from './components/Spinner';
+import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 
 const authConfig: UiPathSDKConfig = {
   clientId: import.meta.env.VITE_UIPATH_CLIENT_ID || 'your-client-id',
@@ -12,10 +12,10 @@ const authConfig: UiPathSDKConfig = {
   baseUrl: import.meta.env.VITE_UIPATH_BASE_URL,
   redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI || window.location.origin + window.location.pathname,
   scope: import.meta.env.VITE_UIPATH_SCOPE,
-}
+};
 
 function AppContent() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -25,18 +25,18 @@ function AppContent() {
           <p className="text-gray-400">Initializing...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return <LoginScreen />
+    return <LoginScreen />;
   }
 
   return (
     <ConversationalAgentProvider>
       <ChatLayout />
     </ConversationalAgentProvider>
-  )
+  );
 }
 
 function App() {
@@ -44,7 +44,7 @@ function App() {
     <AuthProvider config={authConfig}>
       <AppContent />
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

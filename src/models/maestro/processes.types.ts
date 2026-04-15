@@ -42,4 +42,3 @@ export interface RawMaestroProcessGetAllResponse {
   /** Process instance count - canceling */
   cancelingCount: number;
 }
-

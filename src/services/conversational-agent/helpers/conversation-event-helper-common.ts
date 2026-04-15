@@ -24,11 +24,16 @@ import type {
   SessionStartEvent,
   Simplify,
   ToolCallEndEvent,
-  ToolCallStartEvent
+  ToolCallStartEvent,
 } from '@/models/conversational-agent';
 
 // Import and re-export completed types from model layer
-import type { CitationError, CompletedContentPart, CompletedToolCall, CompletedMessage } from '@/models/conversational-agent';
+import type {
+  CitationError,
+  CompletedContentPart,
+  CompletedToolCall,
+  CompletedMessage,
+} from '@/models/conversational-agent';
 export type { CitationError, CompletedContentPart, CompletedToolCall, CompletedMessage };
 export { CitationErrorType } from '@/models/conversational-agent';
 
@@ -94,15 +99,29 @@ export type SessionStartEventOptions = {
   echo?: boolean;
 
   properties?: ConversationEventHelperProperties;
-
 } & SessionStartEvent;
 export type ErrorEndEventOptions = { errorId: string } & ErrorEndEvent;
 export type ErrorStartEventOptions = { errorId?: string } & ErrorStartEvent;
-export type ExchangeStartEventOptions = { exchangeId?: string; properties?: ConversationEventHelperProperties } & ExchangeStartEvent;
-export type InputStreamStartEventOptions = { streamId?: string; properties?: ConversationEventHelperProperties } & AsyncInputStreamStartEvent;
-export type MessageStartEventOptions = { messageId?: string; properties?: ConversationEventHelperProperties } & MakeOptional<MessageStartEvent, 'role'>;
-export type ToolCallStartEventWithId = { toolCallId?: string; properties?: ConversationEventHelperProperties } & ToolCallStartEvent;
-export type ContentPartStartEventOptions = { contentPartId?: string; properties?: ConversationEventHelperProperties } & ContentPartStartEvent;
+export type ExchangeStartEventOptions = {
+  exchangeId?: string;
+  properties?: ConversationEventHelperProperties;
+} & ExchangeStartEvent;
+export type InputStreamStartEventOptions = {
+  streamId?: string;
+  properties?: ConversationEventHelperProperties;
+} & AsyncInputStreamStartEvent;
+export type MessageStartEventOptions = {
+  messageId?: string;
+  properties?: ConversationEventHelperProperties;
+} & MakeOptional<MessageStartEvent, 'role'>;
+export type ToolCallStartEventWithId = {
+  toolCallId?: string;
+  properties?: ConversationEventHelperProperties;
+} & ToolCallStartEvent;
+export type ContentPartStartEventOptions = {
+  contentPartId?: string;
+  properties?: ConversationEventHelperProperties;
+} & ContentPartStartEvent;
 
 export type ConversationEventHelperProperties = Record<string, unknown>;
 
@@ -117,16 +136,18 @@ export type UnhandledErrorEndHandlerArgs = AnyErrorEndHandlerArgs;
 
 export type InterruptStartHandlerArgs = { interruptId: string; startEvent: InterruptStartEvent };
 export type InterruptEndHandlerArgs = { interruptId: string; endEvent: InterruptEndEvent };
-export type InterruptCompletedHandlerArgs = { interruptId: string; startEvent: InterruptStartEvent; endEvent: InterruptEndEvent };
+export type InterruptCompletedHandlerArgs = {
+  interruptId: string;
+  startEvent: InterruptStartEvent;
+  endEvent: InterruptEndEvent;
+};
 
 export type ConversationEventErrorSource = ConversationEventHelperBase<any, any>;
 
-
 export type SendMessageWithContentPartOptions = Simplify<
-MakeRequired<
-  Omit<ContentPartChunkEvent, 'contentPartSequence'>,
-  'data'
-> & MessageStartEventOptions & MakeOptional<ContentPartStartEvent, 'mimeType'>
+  MakeRequired<Omit<ContentPartChunkEvent, 'contentPartSequence'>, 'data'> &
+    MessageStartEventOptions &
+    MakeOptional<ContentPartStartEvent, 'mimeType'>
 >;
 
 export type ConversationEventHelperManagerConfig = {
@@ -137,17 +158,13 @@ export type ConversationEventHelperManagerConfig = {
  * Thrown by conversation event helper classes when invalid event content is detected. This error can be returned to
  * clients to inform them of the invalid input.
  */
-export class ConversationEventValidationError extends Error {
-
-}
+export class ConversationEventValidationError extends Error {}
 
 /**
  * Thrown by conversation event helper classes when an operation was performed while the helper is in state that doesn't
  * allow that operation. This error should be treated as an internal error and not returned to clients.
  */
-export class ConversationEventInvalidOperationError extends Error {
-
-}
+export class ConversationEventInvalidOperationError extends Error {}
 
 export enum EventErrorId {
   AGENT_COULD_NOT_BE_STARTED = 'AGENT_COULD_NOT_BE_STARTED',
@@ -172,5 +189,5 @@ export enum EventErrorId {
   COULD_NOT_CREATE_INTERRUPT = 'COULD_NOT_CREATE_INTERRUPT',
   COULD_NOT_END_INTERRUPT = 'COULD_NOT_END_INTERRUPT',
   TEXT_CONTENT_PART_PROCESSING_FAILED = 'TEXT_CONTENT_PART_PROCESSING_FAILED',
-  EXTERNAL_CONTENT_PART_PROCESSING_FAILED = 'EXTERNAL_CONTENT_PART_PROCESSING_FAILED'
+  EXTERNAL_CONTENT_PART_PROCESSING_FAILED = 'EXTERNAL_CONTENT_PART_PROCESSING_FAILED',
 }

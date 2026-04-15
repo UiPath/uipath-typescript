@@ -2,15 +2,8 @@
  * Pagination mock utilities - Mocks for pagination testing
  */
 import { vi } from 'vitest';
-import {
-  PaginationType,
-  CursorData,
-  PaginationServiceAccess
-} from '../../../src/utils/pagination/internal-types';
-import {
-  PaginatedResponse,
-  PaginationCursor
-} from '../../../src/utils/pagination/types';
+import { PaginationType, CursorData, PaginationServiceAccess } from '../../../src/utils/pagination/internal-types';
+import { PaginatedResponse, PaginationCursor } from '../../../src/utils/pagination/types';
 import { encodeBase64 } from '../../../src/utils/encoding/base64';
 import { PAGINATION_TEST_CONSTANTS } from '../constants/pagination';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from '../../../src/utils/pagination/constants';
@@ -26,9 +19,7 @@ import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from '../../../src/uti
  * const cursorData = createMockOffsetCursorData({ pageNumber: 3, pageSize: 20 });
  * ```
  */
-export const createMockOffsetCursorData = (
-  overrides?: Partial<CursorData>
-): CursorData => {
+export const createMockOffsetCursorData = (overrides?: Partial<CursorData>): CursorData => {
   return {
     type: PaginationType.OFFSET,
     pageNumber: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER,
@@ -48,9 +39,7 @@ export const createMockOffsetCursorData = (
  * const cursorData = createMockTokenCursorData({ continuationToken: 'custom-token' });
  * ```
  */
-export const createMockTokenCursorData = (
-  overrides?: Partial<CursorData>
-): CursorData => {
+export const createMockTokenCursorData = (overrides?: Partial<CursorData>): CursorData => {
   return {
     type: PaginationType.TOKEN,
     continuationToken: PAGINATION_TEST_CONSTANTS.CONTINUATION_TOKEN,
@@ -87,12 +76,10 @@ export const createMockEncodedCursor = (cursorData: CursorData): string => {
  * const customCursor = createMockPaginationCursor({ type: PaginationType.TOKEN, continuationToken: 'abc' });
  * ```
  */
-export const createMockPaginationCursor = (
-  cursorData?: CursorData
-): PaginationCursor => {
+export const createMockPaginationCursor = (cursorData?: CursorData): PaginationCursor => {
   const data = cursorData || createMockOffsetCursorData();
   return {
-    value: createMockEncodedCursor(data)
+    value: createMockEncodedCursor(data),
   };
 };
 
@@ -110,7 +97,7 @@ export const createMockPaginationCursor = (
  */
 export const createMockRawItem = (id: number, name: string) => ({
   Id: id,
-  Name: name
+  Name: name,
 });
 
 /**
@@ -127,7 +114,7 @@ export const createMockRawItem = (id: number, name: string) => ({
  */
 export const createMockTransformedItem = (id: number, name: string) => ({
   id,
-  name
+  name,
 });
 
 /**
@@ -138,7 +125,7 @@ export const createMockTransformedItem = (id: number, name: string) => ({
  */
 export const mockTransformFunction = (item: any) => ({
   id: item.Id,
-  name: item.Name
+  name: item.Name,
 });
 
 /**
@@ -158,7 +145,7 @@ export const mockTransformFunction = (item: any) => ({
  */
 export const createMockPaginatedResponse = <T>(
   items: T[],
-  overrides?: Partial<PaginatedResponse<T>>
+  overrides?: Partial<PaginatedResponse<T>>,
 ): PaginatedResponse<T> => {
   return {
     items,
@@ -188,8 +175,8 @@ export const createMockPaginatedResponse = <T>(
 export const createMockApiResponse = (items: any[], totalCount?: number) => ({
   data: {
     [DEFAULT_ITEMS_FIELD]: items,
-    [DEFAULT_TOTAL_COUNT_FIELD]: totalCount
-  }
+    [DEFAULT_TOTAL_COUNT_FIELD]: totalCount,
+  },
 });
 
 /**
@@ -207,7 +194,7 @@ export const createMockPaginationServiceAccess = (): PaginationServiceAccess => 
   return {
     get: vi.fn(),
     post: vi.fn(),
-    requestWithPagination: vi.fn()
+    requestWithPagination: vi.fn(),
   };
 };
 

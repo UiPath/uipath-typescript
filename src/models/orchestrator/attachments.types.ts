@@ -1,5 +1,5 @@
-import { BaseOptions } from "../common/types";
-import type { BucketGetUriResponse } from "./buckets.types";
+import { BaseOptions } from '../common/types';
+import type { BucketGetUriResponse } from './buckets.types';
 
 /**
  * Attachment response from the API
@@ -9,7 +9,7 @@ export interface AttachmentResponse {
    * UUID of the attachment
    */
   id: string;
-  
+
   /**
    * Name of the attachment
    */
@@ -51,4 +51,4 @@ export interface AttachmentResponse {
 /**
  * Options for getting an attachment by ID
  */
-export interface AttachmentGetByIdOptions extends BaseOptions {};
+export interface AttachmentGetByIdOptions extends BaseOptions {}

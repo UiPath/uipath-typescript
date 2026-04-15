@@ -5,6 +5,7 @@ This directory contains integration tests that make actual API calls to UiPath s
 ## Overview
 
 Integration tests validate the SDK by:
+
 - Making real API calls to UiPath services
 - Testing actual authentication and authorization
 - Creating, reading, updating, and deleting real resources
@@ -17,10 +18,10 @@ Integration tests validate the SDK by:
 
 All integration tests run against both SDK initialization modes:
 
-| Mode | SDK Version | Description |
-|------|-------------|-------------|
-| `v0` | Legacy (1.0-preview) | Services accessed via SDK properties: `sdk.tasks`, `sdk.entities` |
-| `v1` | Modular (1.0 GA) | Services instantiated directly: `new Tasks(sdk)`, `new Entities(sdk)` |
+| Mode | SDK Version          | Description                                                           |
+| ---- | -------------------- | --------------------------------------------------------------------- |
+| `v0` | Legacy (1.0-preview) | Services accessed via SDK properties: `sdk.tasks`, `sdk.entities`     |
+| `v1` | Modular (1.0 GA)     | Services instantiated directly: `new Tasks(sdk)`, `new Entities(sdk)` |
 
 This ensures backward compatibility and validates both usage patterns.
 
@@ -80,11 +81,13 @@ tests/integration/
 ### 3. Configure Environment
 
 1. Copy the example configuration file:
+
    ```bash
    cp tests/.env.integration.example tests/.env.integration
    ```
 
 2. Edit `tests/.env.integration` and fill in your values:
+
    ```env
    # Required Configuration
    UIPATH_BASE_URL=https://cloud.uipath.com
@@ -165,7 +168,9 @@ npm run test:integration -- --reporter=verbose
 ## Test Categories
 
 ### Smoke Tests
+
 Located in `shared/smoke.integration.test.ts`
+
 - Basic SDK initialization (both v0 and v1 modes)
 - Configuration validation
 - Authentication verification
@@ -173,7 +178,9 @@ Located in `shared/smoke.integration.test.ts`
 - Basic API connectivity to all services
 
 ### Authentication & Authorization Error Tests
+
 Located in `auth-errors.integration.test.ts`
+
 - **Invalid Organization**: Verifies 403 Forbidden when using non-existent organization
 - **Invalid Tenant**: Verifies 403 Forbidden when using non-existent tenant
 - **Invalid Base URL**: Verifies proper error handling for invalid URLs
@@ -187,27 +194,34 @@ These tests intentionally create SDK instances with invalid credentials to verif
 ### Service Tests
 
 #### Orchestrator Services (Read-Only)
+
 These services do not support create/update/delete via SDK:
+
 - **Queues**: List, get by ID, pagination, filtering
 - **Assets**: List, get by ID, asset type detection
 - **Buckets**: List, get by ID, file upload/download operations
 - **Processes**: List, get by ID, start execution
 
 #### Data Fabric Services (Full CRUD)
+
 - **Entities**: Complete CRUD operations for entity records
 - **ChoiceSets**: Read operations for choice sets
 
 #### Action Center Services
+
 - **Tasks**: Create, list, get by ID, assign, unassign, complete
 
 #### Maestro Services
+
 - **Processes**: List processes, get incidents
 - **Process Instances**: List, control (pause/resume/cancel), get variables/history
 - **Cases**: Read case definitions
 - **Case Instances**: List, get stages, close cases
 
 ### Graceful Skipping
+
 Tests skip gracefully when:
+
 - Required configuration is missing (e.g., `INTEGRATION_TEST_FOLDER_ID`)
 - PAT token lacks necessary permissions (e.g., Maestro scope)
 - Pre-existing resources don't exist in tenant
@@ -217,29 +231,30 @@ Tests skip gracefully when:
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `UIPATH_BASE_URL` | UiPath Cloud URL | `https://cloud.uipath.com` |
-| `UIPATH_ORG_NAME` | Organization name | `MyOrganization` |
-| `UIPATH_TENANT_NAME` | Tenant name | `MyTenant` |
-| `UIPATH_SECRET` | Personal Access Token | `your-pat-token` |
+| Variable             | Description           | Example                    |
+| -------------------- | --------------------- | -------------------------- |
+| `UIPATH_BASE_URL`    | UiPath Cloud URL      | `https://cloud.uipath.com` |
+| `UIPATH_ORG_NAME`    | Organization name     | `MyOrganization`           |
+| `UIPATH_TENANT_NAME` | Tenant name           | `MyTenant`                 |
+| `UIPATH_SECRET`      | Personal Access Token | `your-pat-token`           |
 
 ### Optional Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `INTEGRATION_TEST_TIMEOUT` | Test timeout in milliseconds | `30000` |
-| `INTEGRATION_TEST_SKIP_CLEANUP` | Skip cleanup after tests (useful for debugging) | `false` |
-| `INTEGRATION_TEST_FOLDER_ID` | Default folder ID for tests | (uses default folder) |
-| `MAESTRO_TEST_PROCESS_KEY` | Pre-existing Maestro process for read-only tests | (optional) |
-| `ORCHESTRATOR_TEST_PROCESS_KEY` | Pre-existing Orchestrator process for start tests | (optional) |
-| `DATA_FABRIC_TEST_ENTITY_ID` | Pre-existing Data Fabric entity for record tests | (optional) |
+| Variable                        | Description                                       | Default               |
+| ------------------------------- | ------------------------------------------------- | --------------------- |
+| `INTEGRATION_TEST_TIMEOUT`      | Test timeout in milliseconds                      | `30000`               |
+| `INTEGRATION_TEST_SKIP_CLEANUP` | Skip cleanup after tests (useful for debugging)   | `false`               |
+| `INTEGRATION_TEST_FOLDER_ID`    | Default folder ID for tests                       | (uses default folder) |
+| `MAESTRO_TEST_PROCESS_KEY`      | Pre-existing Maestro process for read-only tests  | (optional)            |
+| `ORCHESTRATOR_TEST_PROCESS_KEY` | Pre-existing Orchestrator process for start tests | (optional)            |
+| `DATA_FABRIC_TEST_ENTITY_ID`    | Pre-existing Data Fabric entity for record tests  | (optional)            |
 
 ## Test Data Management
 
 ### Resource Naming Convention
 
 All test resources are created with unique names following this pattern:
+
 ```
 IntegrationTest_{ServiceName}_{Timestamp}_{RandomId}
 ```
@@ -249,6 +264,7 @@ Example: `IntegrationTest_Queue_1234567890_a7f2k3`
 ### Automatic Cleanup
 
 Tests automatically clean up created resources in `afterAll` hooks. Cleanup can be disabled by setting:
+
 ```env
 INTEGRATION_TEST_SKIP_CLEANUP=true
 ```
@@ -262,17 +278,14 @@ If tests fail before cleanup, manually delete resources with names starting with
 ### Writing Integration Tests
 
 1. **Use unified setup**: Import from `config/unified-setup` for v0/v1 mode support
+
    ```typescript
-   import {
-     getServices,
-     getTestConfig,
-     setupUnifiedTests,
-     InitMode
-   } from '../../config/unified-setup';
+   import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
    import { generateTestResourceName } from '../../utils/helpers';
    ```
 
 2. **Test both SDK modes**: Use `describe.each` to run tests against v0 and v1
+
    ```typescript
    const modes: InitMode[] = ['v0', 'v1'];
 
@@ -287,6 +300,7 @@ If tests fail before cleanup, manually delete resources with names starting with
    ```
 
 3. **Track created resources**: Register resources for cleanup
+
    ```typescript
    import { registerResource } from '../../utils/cleanup';
 
@@ -296,6 +310,7 @@ If tests fail before cleanup, manually delete resources with names starting with
    ```
 
 4. **Clean up in afterAll**: Always implement cleanup
+
    ```typescript
    import { cleanupTestTask } from '../../config/unified-setup';
 
@@ -363,6 +378,7 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
 **Error**: `SDK initialization failed: Authentication unsuccessful`
 
 **Solutions**:
+
 1. Verify your PAT token is valid and not expired
 2. Check token has required scopes (Orchestrator, Maestro, etc.)
 3. Ensure org and tenant names are correct
@@ -379,6 +395,7 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
 **Cause**: Running `npx vitest` or `vitest` directly without specifying the integration config.
 
 **Solutions**:
+
 1. **Always use the npm scripts**:
    ```bash
    npm run test:integration        # ✅ Correct - runs all tests (v0 and v1)
@@ -391,6 +408,7 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
    npx vitest --config vitest.integration.config.ts
    ```
 3. Verify configuration is working:
+
    ```bash
    # Should find unit tests
    npx vitest list | grep -c "tests/unit"
@@ -404,6 +422,7 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
 **Error**: `Integration test configuration is invalid`
 
 **Solutions**:
+
 1. Ensure `.env.integration` file exists in `tests/` directory
 2. Verify all required fields are filled in
 3. Check for typos in variable names
@@ -414,6 +433,7 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
 **Error**: `403 Forbidden` or `401 Unauthorized`
 
 **Solutions**:
+
 1. Regenerate PAT with appropriate scopes
 2. Check folder permissions if using custom folder
 3. Verify user has required roles in UiPath
@@ -423,6 +443,7 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
 **Error**: `Test timeout of 30000ms exceeded`
 
 **Solutions**:
+
 1. Increase timeout in `.env.integration`:
    ```env
    INTEGRATION_TEST_TIMEOUT=60000
@@ -435,6 +456,7 @@ npm run test:integration -- --reporter=verbose --reporter=json --outputFile=test
 **Error**: Various errors when creating test resources
 
 **Solutions**:
+
 1. Check if resource limits are reached (queues, assets, etc.)
 2. Verify folder exists and is accessible
 3. Ensure unique names are being used
@@ -451,6 +473,7 @@ These integration tests are designed for local execution. To run in CI/CD:
 5. Consider test parallelization carefully (resource conflicts)
 
 Example GitHub Actions workflow:
+
 ```yaml
 - name: Run Integration Tests
   env:
@@ -478,6 +501,7 @@ When adding new integration tests:
 ## Support
 
 For issues or questions:
+
 - Check existing tests for examples
 - Review SDK documentation
 - Check UiPath API documentation

@@ -23,7 +23,7 @@ export function findWebAppManifestPath(filesMap: Map<string, ProjectFile>): stri
 async function downloadAndParseRemoteJson(
   config: WebAppProjectConfig,
   file: ProjectFile,
-  invalidMessage: string
+  invalidMessage: string,
 ): Promise<Record<string, unknown>> {
   const content = await api.downloadRemoteFile(config, file.id);
   try {
@@ -40,7 +40,7 @@ async function downloadAndParseRemoteJson(
  */
 export async function validateProjectType(
   config: WebAppProjectConfig,
-  filesMap: Map<string, ProjectFile>
+  filesMap: Map<string, ProjectFile>,
 ): Promise<void> {
   const webAppPath = findWebAppManifestPath(filesMap);
   if (!webAppPath) {
@@ -49,11 +49,7 @@ export async function validateProjectType(
 
   // findWebAppManifestPath only returns a path that is a key in filesMap, so get() is defined.
   const file = filesMap.get(webAppPath)!;
-  const parsed = await downloadAndParseRemoteJson(
-    config,
-    file,
-    MESSAGES.ERRORS.PULL_PROJECT_NOT_SUPPORTED
-  );
+  const parsed = await downloadAndParseRemoteJson(config, file, MESSAGES.ERRORS.PULL_PROJECT_NOT_SUPPORTED);
   if (parsed['type'] !== PULL_WEB_APP_MANIFEST_TYPE) {
     throw new Error(MESSAGES.ERRORS.PULL_PROJECT_NOT_SUPPORTED);
   }

@@ -15,10 +15,7 @@ import * as api from './api.js';
  * Returns true if folderPath exists in the map (by exact or normalized key).
  * Used for "folder exists on remote" checks; backend may return different casing (e.g. Source vs source).
  */
-export function hasFolderByPath(
-  foldersMap: Map<string, ProjectFolder>,
-  folderPath: string
-): boolean {
+export function hasFolderByPath(foldersMap: Map<string, ProjectFolder>, folderPath: string): boolean {
   const norm = normalizeFolderPath(folderPath);
   return (
     foldersMap.has(folderPath) ||
@@ -55,7 +52,7 @@ export async function ensureContentRootExists(
   config: WebAppProjectConfig,
   lockKey: string | null,
   getStructure: () => ProjectStructure | null,
-  setStructure: (s: ProjectStructure) => void
+  setStructure: (s: ProjectStructure) => void,
 ): Promise<void> {
   const structure = getStructure();
   if (!structure) {
@@ -100,7 +97,7 @@ export async function ensureContentRootExists(
 async function refetchAndMergeFolderIds(
   config: WebAppProjectConfig,
   folderIdMap: Map<string, string>,
-  setStructure: (s: ProjectStructure) => void
+  setStructure: (s: ProjectStructure) => void,
 ): Promise<Map<string, ProjectFolder>> {
   const next = await api.fetchRemoteStructure(config);
   setStructure(next);
@@ -117,7 +114,7 @@ async function refetchAndMergeFolderIds(
 function resolveFolderIdAfterCreate(
   afterCreate: Map<string, ProjectFolder>,
   folderPath: string,
-  folderName: string
+  folderName: string,
 ): string | undefined {
   const norm = normalizeFolderPath(folderPath);
   const byPath = afterCreate.get(folderPath) ?? afterCreate.get(norm);
@@ -151,7 +148,7 @@ export async function ensureFoldersCreated(
   plan: FileOperationPlan,
   folderIdMap: Map<string, string>,
   setStructure: (s: ProjectStructure) => void,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<void> {
   if (plan.createFolders.length === 0) return;
   const norm = (p: string) => normalizeFolderPath(p);
@@ -168,10 +165,10 @@ export async function ensureFoldersCreated(
         const pathParts = folder.path.split('/').filter(Boolean);
         const folderName = pathParts.pop()!;
         const parentPath = pathParts.length > 0 ? pathParts.join('/') : '';
-        const parentId = parentPath ? folderIdMap.get(norm(parentPath)) ?? null : null;
+        const parentId = parentPath ? (folderIdMap.get(norm(parentPath)) ?? null) : null;
         const id = await api.createFolder(config, folderName, lockKey, parentId, folder.path);
         return { folder, folderName, id };
-      })
+      }),
     );
 
     for (const { folder, id } of results) {
@@ -208,7 +205,7 @@ export async function cleanupEmptyFolders(
   config: WebAppProjectConfig,
   remoteContentRoot: string,
   fetchStructure: () => Promise<ProjectStructure>,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<void> {
   const structure = await fetchStructure();
   const emptyFolders = findEmptyFolders(structure, remoteContentRoot);

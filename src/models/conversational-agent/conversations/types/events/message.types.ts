@@ -17,7 +17,7 @@ import type {
   MessageEvent,
   MessageStartEvent,
   MetaEvent,
-  ToolCallStartEvent
+  ToolCallStartEvent,
 } from './protocol.types';
 import type { CompletedContentPart, ContentPartStream } from './content-part.types';
 import type { CompletedToolCall, ToolCallStream } from './tool-call.types';
@@ -33,9 +33,8 @@ export type CompletedMessage = Simplify<
     messageId: string;
     contentParts: Array<CompletedContentPart>;
     toolCalls: Array<CompletedToolCall>;
-  }
-  & Partial<MessageStartEvent>
-  & MessageEndEvent
+  } & Partial<MessageStartEvent> &
+    MessageEndEvent
 >;
 
 /**

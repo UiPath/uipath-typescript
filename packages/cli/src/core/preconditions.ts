@@ -2,9 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { MESSAGES } from '../constants/index.js';
 
-function buildDirErrorMessage(
-  reason: string
-): string {
+function buildDirErrorMessage(reason: string): string {
   return `${reason}\n\n${MESSAGES.ERRORS.PUSH_BUILD_DIR_STEPS}`;
 }
 

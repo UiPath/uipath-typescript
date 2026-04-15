@@ -13,7 +13,7 @@ import type {
   AsyncInputStreamStartEvent,
   ErrorEndEvent,
   ErrorStartEvent,
-  MetaEvent
+  MetaEvent,
 } from './protocol.types';
 
 /**

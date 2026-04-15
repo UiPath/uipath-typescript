@@ -4,21 +4,21 @@ import { ProcessService } from '../../../../src/services/orchestrator/processes'
 import { PROCESS_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
-import { 
-  createMockRawOrchestratorProcess, 
+import {
+  createMockRawOrchestratorProcess,
   createMockProcessStartResponse,
   createMockProcessStartApiResponse,
-  createMockOrchestratorProcesses
+  createMockOrchestratorProcesses,
 } from '../../../utils/mocks/processes';
-import { 
-  createMockError, 
-  TEST_CONSTANTS
-} from '../../../utils/mocks';
-import { 
-  PROCESS_TEST_CONSTANTS
-} from '../../../utils/constants';
+import { createMockError, TEST_CONSTANTS } from '../../../utils/mocks';
+import { PROCESS_TEST_CONSTANTS } from '../../../utils/constants';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
-import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
+import {
+  JobPriority,
+  ProcessGetAllOptions,
+  ProcessGetByIdOptions,
+  ProcessStartRequest,
+} from '../../../../src/models/orchestrator/processes.types';
 import { FOLDER_ID } from '../../../../src/utils/constants/headers';
 import { RequestOptions } from '../../../../src/models/common';
 
@@ -69,7 +69,7 @@ describe('ProcessService Unit Tests', () => {
         nextCursor: TEST_CONSTANTS.NEXT_CURSOR,
         previousCursor: null,
         currentPage: 1,
-        totalPages: 1
+        totalPages: 1,
       };
 
       // Mock PaginationHelpers.getAll
@@ -84,11 +84,11 @@ describe('ProcessService Unit Tests', () => {
           getEndpoint: expect.any(Function),
           getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL,
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
         expect.objectContaining({
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
-        })
+          pageSize: TEST_CONSTANTS.PAGE_SIZE,
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -99,7 +99,7 @@ describe('ProcessService Unit Tests', () => {
       const mockProcesses = createMockOrchestratorProcesses(2);
       const mockResponse = {
         items: mockProcesses,
-        totalCount: 2
+        totalCount: 2,
       };
 
       // Mock PaginationHelpers.getAll
@@ -114,9 +114,9 @@ describe('ProcessService Unit Tests', () => {
           getEndpoint: expect.any(Function),
           getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL,
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
-        undefined
+        undefined,
       );
 
       expect(result).toEqual(mockResponse);
@@ -126,7 +126,7 @@ describe('ProcessService Unit Tests', () => {
     it('should handle folderId filter', async () => {
       const mockResponse = {
         items: createMockOrchestratorProcesses(1),
-        totalCount: 1
+        totalCount: 1,
       };
 
       // Mock PaginationHelpers.getAll
@@ -142,21 +142,20 @@ describe('ProcessService Unit Tests', () => {
           getEndpoint: expect.any(Function),
           getByFolderEndpoint: PROCESS_ENDPOINTS.GET_ALL,
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
-        expect.objectContaining({ folderId: TEST_CONSTANTS.FOLDER_ID })
+        expect.objectContaining({ folderId: TEST_CONSTANTS.FOLDER_ID }),
       );
     });
 
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      
+
       // Mock PaginationHelpers.getAll to throw error
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(service.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
-
   });
 
   describe('getById', () => {
@@ -164,11 +163,8 @@ describe('ProcessService Unit Tests', () => {
       const mockProcess = createMockRawOrchestratorProcess();
       mockApiClient.get.mockResolvedValue(mockProcess);
 
-      const result = await service.getById(
-        PROCESS_TEST_CONSTANTS.PROCESS_ID, 
-        TEST_CONSTANTS.FOLDER_ID
-      );
-      
+      const result = await service.getById(PROCESS_TEST_CONSTANTS.PROCESS_ID, TEST_CONSTANTS.FOLDER_ID);
+
       // Verify the result (after transformation)
       expect(result).toBeDefined();
       expect(result.id).toBe(PROCESS_TEST_CONSTANTS.PROCESS_ID);
@@ -183,10 +179,10 @@ describe('ProcessService Unit Tests', () => {
         PROCESS_ENDPOINTS.GET_BY_ID(PROCESS_TEST_CONSTANTS.PROCESS_ID),
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
           }),
-          params: expect.any(Object)
-        })
+          params: expect.any(Object),
+        }),
       );
     });
 
@@ -195,23 +191,19 @@ describe('ProcessService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue(mockProcess);
 
       const options: ProcessGetByIdOptions = { expand: PROCESS_TEST_CONSTANTS.EXPAND_ARGUMENTS };
-      await service.getById(
-        PROCESS_TEST_CONSTANTS.PROCESS_ID, 
-        TEST_CONSTANTS.FOLDER_ID,
-        options
-      );
+      await service.getById(PROCESS_TEST_CONSTANTS.PROCESS_ID, TEST_CONSTANTS.FOLDER_ID, options);
 
       // Verify options are passed in params with $ prefix
       expect(mockApiClient.get).toHaveBeenCalledWith(
         PROCESS_ENDPOINTS.GET_BY_ID(PROCESS_TEST_CONSTANTS.PROCESS_ID),
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
           }),
           params: expect.objectContaining({
-            '$expand': PROCESS_TEST_CONSTANTS.EXPAND_ARGUMENTS
-          })
-        })
+            $expand: PROCESS_TEST_CONSTANTS.EXPAND_ARGUMENTS,
+          }),
+        }),
       );
     });
 
@@ -219,10 +211,9 @@ describe('ProcessService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(service.getById(
-        PROCESS_TEST_CONSTANTS.PROCESS_ID, 
-        TEST_CONSTANTS.FOLDER_ID
-      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(service.getById(PROCESS_TEST_CONSTANTS.PROCESS_ID, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
     });
   });
 
@@ -250,15 +241,15 @@ describe('ProcessService Unit Tests', () => {
           startInfo: expect.objectContaining({
             releaseKey: PROCESS_TEST_CONSTANTS.PROCESS_KEY,
             jobPriority: JobPriority.Normal,
-            inputArguments: PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST.inputArguments
-          })
+            inputArguments: PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST.inputArguments,
+          }),
         }),
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
           }),
-          params: expect.any(Object)
-        })
+          params: expect.any(Object),
+        }),
       );
     });
 
@@ -282,10 +273,10 @@ describe('ProcessService Unit Tests', () => {
           startInfo: expect.objectContaining({
             releaseName: PROCESS_TEST_CONSTANTS.PROCESS_NAME,
             jobPriority: JobPriority.High,
-            inputArguments: PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST_WITH_NAME.inputArguments
-          })
+            inputArguments: PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST_WITH_NAME.inputArguments,
+          }),
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -304,22 +295,22 @@ describe('ProcessService Unit Tests', () => {
         expect.any(Object),
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
           }),
           params: expect.objectContaining({
-            '$expand': PROCESS_TEST_CONSTANTS.EXPAND_ROBOT
-          })
-        })
+            $expand: PROCESS_TEST_CONSTANTS.EXPAND_ROBOT,
+          }),
+        }),
       );
     });
 
     it('should handle multiple jobs returned from start', async () => {
       const mockJobs = [
         createMockProcessStartResponse(),
-        createMockProcessStartResponse({ 
+        createMockProcessStartResponse({
           key: PROCESS_TEST_CONSTANTS.JOB_KEY,
-          id: 2
-        })
+          id: 2,
+        }),
       ];
       const mockResponse = createMockProcessStartApiResponse(mockJobs);
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -338,8 +329,7 @@ describe('ProcessService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(error);
 
       const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
-      await expect(service.start(request, TEST_CONSTANTS.FOLDER_ID))
-        .rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(service.start(request, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

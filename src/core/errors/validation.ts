@@ -14,7 +14,7 @@ export class ValidationError extends UiPathError {
     super(ErrorType.VALIDATION, {
       message: params.message || ErrorMessages.VALIDATION_FAILED,
       statusCode: params.statusCode ?? HttpStatus.BAD_REQUEST,
-      requestId: params.requestId
+      requestId: params.requestId,
     });
   }
 }

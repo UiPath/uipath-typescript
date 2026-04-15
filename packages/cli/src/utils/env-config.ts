@@ -15,22 +15,22 @@ interface ValidationResult {
 const ENV_CONFIG = AUTH_CONSTANTS.ENV_CONFIG;
 
 const ENV_VAR_TO_CONFIG_KEY = Object.fromEntries(
-  Object.values(ENV_CONFIG).map(cfg => [cfg.envVar, cfg.configKey])
+  Object.values(ENV_CONFIG).map((cfg) => [cfg.envVar, cfg.configKey]),
 ) as Record<string, keyof EnvironmentConfig>;
 
 const ENV_VAR_TO_EXAMPLE = Object.fromEntries(
-  Object.values(ENV_CONFIG).map(cfg => [cfg.envVar, `${cfg.envVar}=${cfg.example}`])
+  Object.values(ENV_CONFIG).map((cfg) => [cfg.envVar, `${cfg.envVar}=${cfg.example}`]),
 ) as Record<string, string>;
 
 const ENV_VAR_TO_FLAG = Object.fromEntries(
-  Object.values(ENV_CONFIG).map(cfg => [cfg.envVar, `${cfg.flag} ${cfg.example}`])
+  Object.values(ENV_CONFIG).map((cfg) => [cfg.envVar, `${cfg.flag} ${cfg.example}`]),
 ) as Record<string, string>;
 
 // Maps primary env var name to auth package's canonical name (e.g. UIPATH_BASE_URL → UIPATH_URL)
 const ENV_VAR_ALT = Object.fromEntries(
   Object.values(ENV_CONFIG)
     .filter((cfg): cfg is typeof cfg & { altEnvVar: string } => 'altEnvVar' in cfg)
-    .map(cfg => [cfg.envVar, cfg.altEnvVar])
+    .map((cfg) => [cfg.envVar, cfg.altEnvVar]),
 ) as Record<string, string>;
 
 /**
@@ -73,7 +73,7 @@ export function sanitizeAppName(name: string): { sanitized: string; isModified: 
  */
 function mergeConfigValues(
   requiredVars: readonly string[],
-  flagConfig?: Partial<EnvironmentConfig>
+  flagConfig?: Partial<EnvironmentConfig>,
 ): Record<string, string | undefined> {
   const merged: Record<string, string | undefined> = {};
 
@@ -89,11 +89,8 @@ function mergeConfigValues(
 /**
  * Finds missing required environment variables (excludes BASE_URL which has a default)
  */
-function findMissingVars(
-  requiredVars: readonly string[],
-  mergedValues: Record<string, string | undefined>
-): string[] {
-  return requiredVars.filter(envVar => {
+function findMissingVars(requiredVars: readonly string[], mergedValues: Record<string, string | undefined>): string[] {
+  return requiredVars.filter((envVar) => {
     if (envVar === ENV_CONFIG.BASE_URL.envVar) return false; // Has default
     return !mergedValues[envVar];
   });
@@ -102,12 +99,9 @@ function findMissingVars(
 /**
  * Logs helpful error messages for missing configuration
  */
-function logMissingConfigError(
-  missing: string[],
-  logger: { log: (message: string) => void }
-): void {
+function logMissingConfigError(missing: string[], logger: { log: (message: string) => void }): void {
   logger.log(chalk.red(MESSAGES.VALIDATIONS.MISSING_REQUIRED_CONFIG));
-  missing.forEach(envVar => logger.log(chalk.red(`  - ${envVar}`)));
+  missing.forEach((envVar) => logger.log(chalk.red(`  - ${envVar}`)));
 
   logger.log('');
   logger.log(chalk.yellow(MESSAGES.VALIDATIONS.PROVIDE_VIA_ENV_OR_FLAGS));
@@ -115,7 +109,7 @@ function logMissingConfigError(
   // Show env var examples
   logger.log('');
   logger.log(chalk.dim(MESSAGES.VALIDATIONS.ENV_VARIABLES_HEADER));
-  missing.forEach(envVar => {
+  missing.forEach((envVar) => {
     if (ENV_VAR_TO_EXAMPLE[envVar]) {
       logger.log(chalk.dim(`  ${ENV_VAR_TO_EXAMPLE[envVar]}`));
     }
@@ -124,7 +118,7 @@ function logMissingConfigError(
   // Show flag examples
   logger.log('');
   logger.log(chalk.dim(MESSAGES.VALIDATIONS.ARGUMENTS_HEADER));
-  missing.forEach(envVar => {
+  missing.forEach((envVar) => {
     if (ENV_VAR_TO_FLAG[envVar]) {
       logger.log(chalk.dim(`  ${ENV_VAR_TO_FLAG[envVar]}`));
     }
@@ -145,9 +139,7 @@ function normalizeBaseUrl(url: string | undefined): string {
 /**
  * Builds EnvironmentConfig from merged values
  */
-function buildConfig(
-  mergedValues: Record<string, string | undefined>,
-): EnvironmentConfig {
+function buildConfig(mergedValues: Record<string, string | undefined>): EnvironmentConfig {
   return {
     baseUrl: normalizeBaseUrl(mergedValues[ENV_CONFIG.BASE_URL.envVar]),
     orgId: mergedValues[ENV_CONFIG.ORG_ID.envVar]!,
@@ -166,7 +158,7 @@ function buildConfig(
 export function validateEnvironment(
   requiredVars: readonly string[],
   logger: { log: (message: string) => void },
-  flagConfig?: Partial<EnvironmentConfig>
+  flagConfig?: Partial<EnvironmentConfig>,
 ): ValidationResult {
   const mergedValues = mergeConfigValues(requiredVars, flagConfig);
   const missing = findMissingVars(requiredVars, mergedValues);
@@ -186,7 +178,7 @@ export function validateEnvironment(
 export function getEnvironmentConfig(
   requiredVars: readonly string[],
   logger: { log: (message: string) => void },
-  flags: Partial<EnvironmentConfig>
+  flags: Partial<EnvironmentConfig>,
 ): EnvironmentConfig | null {
   const result = validateEnvironment(requiredVars, logger, flags);
   return result.isValid ? result.config! : null;

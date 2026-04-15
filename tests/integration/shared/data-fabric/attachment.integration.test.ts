@@ -21,10 +21,7 @@ const ATTACHMENT_CONFIG = {
   fieldName: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || '',
 };
 
-const hasAttachmentConfig = !!(
-  ATTACHMENT_CONFIG.entityId &&
-  ATTACHMENT_CONFIG.fieldName
-);
+const hasAttachmentConfig = !!(ATTACHMENT_CONFIG.entityId && ATTACHMENT_CONFIG.fieldName);
 
 const modes: InitMode[] = ['v1'];
 
@@ -80,11 +77,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
         const file = new Blob(['Hello from entity method upload test!'], { type: 'text/plain' });
 
-        const result = await entity.uploadAttachment(
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-          file,
-        );
+        const result = await entity.uploadAttachment(recordId, ATTACHMENT_CONFIG.fieldName, file);
 
         expect(result).toBeDefined();
       });
@@ -96,12 +89,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
 
         const file = new Blob(['Temporary file for delete attachment test'], { type: 'text/plain' });
 
-        await entities.uploadAttachment(
-          ATTACHMENT_CONFIG.entityId,
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-          file,
-        );
+        await entities.uploadAttachment(ATTACHMENT_CONFIG.entityId, recordId, ATTACHMENT_CONFIG.fieldName, file);
 
         const result = await entities.deleteAttachment(
           ATTACHMENT_CONFIG.entityId,
@@ -118,16 +106,9 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
         const file = new Blob(['Temporary file for entity method delete test'], { type: 'text/plain' });
 
-        await entity.uploadAttachment(
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-          file,
-        );
+        await entity.uploadAttachment(recordId, ATTACHMENT_CONFIG.fieldName, file);
 
-        const result = await entity.deleteAttachment(
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-        );
+        const result = await entity.deleteAttachment(recordId, ATTACHMENT_CONFIG.fieldName);
 
         expect(result).toBeDefined();
       });
@@ -139,12 +120,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
 
         const file = new Blob(['Temporary file for download attachment test'], { type: 'text/plain' });
 
-        await entities.uploadAttachment(
-          ATTACHMENT_CONFIG.entityId,
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-          file,
-        );
+        await entities.uploadAttachment(ATTACHMENT_CONFIG.entityId, recordId, ATTACHMENT_CONFIG.fieldName, file);
 
         const downloadedFile = await entities.downloadAttachment(
           ATTACHMENT_CONFIG.entityId,
@@ -161,20 +137,13 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
         const entity = await entities.getById(ATTACHMENT_CONFIG.entityId);
         const file = new Blob(['Temporary file for entity method download test'], { type: 'text/plain' });
 
-        await entity.uploadAttachment(
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-          file,
-        );
+        await entity.uploadAttachment(recordId, ATTACHMENT_CONFIG.fieldName, file);
 
-        const downloadedFile = await entity.downloadAttachment(
-          recordId,
-          ATTACHMENT_CONFIG.fieldName,
-        );
+        const downloadedFile = await entity.downloadAttachment(recordId, ATTACHMENT_CONFIG.fieldName);
 
         expect(downloadedFile).toBeDefined();
       });
     });
   },
-  { timeout: 30000 }
+  { timeout: 30000 },
 );

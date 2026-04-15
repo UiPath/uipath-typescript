@@ -58,5 +58,5 @@ export const DEFAULT_WEBSOCKET_CONFIG = {
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 200,
-  reconnectionDelayMax: 30000
+  reconnectionDelayMax: 30000,
 };

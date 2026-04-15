@@ -18,8 +18,7 @@ export default class Pull extends Command {
 
   static override args = {
     'project-id': Args.string({
-      description:
-        'WebApp Project ID (solution ID). Can also be set via UIPATH_PROJECT_ID environment variable.',
+      description: 'WebApp Project ID (solution ID). Can also be set via UIPATH_PROJECT_ID environment variable.',
       required: false,
     }),
   };

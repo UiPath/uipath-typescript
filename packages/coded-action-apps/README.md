@@ -44,14 +44,14 @@ Call this once when the app loads. It sends an `AC.init` event to Action Center 
 ```ts
 const taskData = await service.getTask();
 
-console.log(taskData.taskId);     // number
-console.log(taskData.title);      // string
-console.log(taskData.status);     // TaskStatus enum
+console.log(taskData.taskId); // number
+console.log(taskData.title); // string
+console.log(taskData.status); // TaskStatus enum
 console.log(taskData.isReadOnly); // boolean
-console.log(taskData.data);       // the task's form data
-console.log(taskData.folderId);   // number
+console.log(taskData.data); // the task's form data
+console.log(taskData.folderId); // number
 console.log(taskData.folderName); // string
-console.log(taskData.theme);      // Theme enum — the UI theme Action Center is currently using
+console.log(taskData.theme); // Theme enum — the UI theme Action Center is currently using
 ```
 
 > **Note:** This call will reject with an error if Action Center does not respond within 3 seconds, or if the parent origin is not trusted.
@@ -103,12 +103,12 @@ service.showMessage('User information', MessageSeverity.Info);
 
 ### `CodedActionAppsService`
 
-| Method | Description |
-|---|---|
-| `getTask()` | Returns a `Promise<Task>` with the current task's metadata and form data. |
-| `setTaskData(data)` | Sends updated data to Action Center to signal that the form has changed. |
+| Method                            | Description                                                                                                                                              |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getTask()`                       | Returns a `Promise<Task>` with the current task's metadata and form data.                                                                                |
+| `setTaskData(data)`               | Sends updated data to Action Center to signal that the form has changed.                                                                                 |
 | `completeTask(actionTaken, data)` | Marks the task as complete with the given action label and final data. Returns `Promise<TaskCompleteResponse>`. Throws if a call is already in progress. |
-| `showMessage(msg, type)` | Displays a toast message in Action Center with the given severity. |
+| `showMessage(msg, type)`          | Displays a toast message in Action Center with the given severity.                                                                                       |
 
 ---
 
@@ -135,8 +135,8 @@ type Task = {
 ```ts
 enum TaskStatus {
   Unassigned = 'Unassigned',
-  Pending    = 'Pending',
-  Completed  = 'Completed',
+  Pending = 'Pending',
+  Completed = 'Completed',
 }
 ```
 
@@ -148,11 +148,11 @@ The UI theme that Action Center is currently using, passed to the coded action a
 
 ```ts
 enum Theme {
-  AutoTheme         = 'autoTheme',
-  Light             = 'light',
-  Dark              = 'dark',
+  AutoTheme = 'autoTheme',
+  Light = 'light',
+  Dark = 'dark',
   LightHighContrast = 'light-hc',
-  DarkHighContrast  = 'dark-hc',
+  DarkHighContrast = 'dark-hc',
 }
 ```
 
@@ -176,9 +176,9 @@ type TaskCompleteResponse = {
 
 ```ts
 enum MessageSeverity {
-  Info    = 'info',
+  Info = 'info',
   Success = 'success',
   Warning = 'warning',
-  Error   = 'error',
+  Error = 'error',
 }
 ```

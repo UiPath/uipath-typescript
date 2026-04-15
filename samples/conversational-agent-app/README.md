@@ -33,6 +33,7 @@ npm install @uipath/uipath-typescript
 ### 3. Environment Configuration
 
 1. Copy the environment template:
+
    ```bash
    cp .env.example .env
    ```
@@ -50,11 +51,13 @@ npm install @uipath/uipath-typescript
 ### 4. Installation and Running
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -98,27 +101,32 @@ src/
 ## Key Features
 
 ### Real-Time Chat
+
 - WebSocket streaming with chunked markdown rendering
 - Multi-turn conversations with shared context
 - Connection status monitoring and error handling
 
 ### Content Types
+
 - Markdown with syntax highlighting
 - HTML content rendering
 - Image display
 - Citations with source links
 
 ### Conversation Management
+
 - Create, rename, and delete conversations
 - Conversation history with pagination
 - Auto-generated conversation labels
 
 ### Agent Interactions
+
 - Tool call visualization (name, input, output)
 - Interrupt handling (tool call confirmation prompts)
 - Exchange-level feedback (thumbs up/down)
 
 ### File Attachments
+
 - Upload files to conversations
 - Attach files to messages
 

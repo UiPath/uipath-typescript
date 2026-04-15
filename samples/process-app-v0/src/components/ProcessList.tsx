@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import type { 
-  MaestroProcessGetAllResponse,
-  ProcessInstanceGetResponse
-} from '@uipath/uipath-typescript';
+import type { MaestroProcessGetAllResponse, ProcessInstanceGetResponse } from '@uipath/uipath-typescript';
 
 interface DashboardStats {
   totalProcesses: number;
@@ -32,14 +29,14 @@ export const ProcessList = () => {
 
   const fetchProcesses = async () => {
     if (!sdk) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const [processesResponse, instancesResponse] = await Promise.all([
         sdk.maestro.processes.getAll(),
-        sdk.maestro.processes.instances.getAll()
+        sdk.maestro.processes.instances.getAll(),
       ]);
 
       console.log('Processes response:', processesResponse);
@@ -47,7 +44,7 @@ export const ProcessList = () => {
 
       // processesResponse is already MaestroProcessGetAllResponse[] from the SDK
       const processes: MaestroProcessGetAllResponse[] = processesResponse;
-      
+
       // instancesResponse can be either PaginatedResponse or NonPaginatedResponse
       let instances: ProcessInstanceGetResponse[];
       if ('items' in instancesResponse) {
@@ -55,30 +52,31 @@ export const ProcessList = () => {
       } else {
         instances = [];
       }
-      
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const todayInstances = instances.filter((instance: any) => 
-        new Date(instance.startedTime) >= today
-      );
+
+      const todayInstances = instances.filter((instance: any) => new Date(instance.startedTime) >= today);
 
       setStats({
         totalProcesses: processes.length,
-        runningInstances: instances.filter((i: any) => 
-          (i.latestRunStatus || '').toLowerCase() === 'running' || 
-          (i.latestRunStatus || '').toLowerCase() === 'in progress'
+        runningInstances: instances.filter(
+          (i: any) =>
+            (i.latestRunStatus || '').toLowerCase() === 'running' ||
+            (i.latestRunStatus || '').toLowerCase() === 'in progress',
         ).length,
-        completedToday: todayInstances.filter((i: any) => 
-          (i.latestRunStatus || '').toLowerCase() === 'completed' || 
-          (i.latestRunStatus || '').toLowerCase() === 'successful'
+        completedToday: todayInstances.filter(
+          (i: any) =>
+            (i.latestRunStatus || '').toLowerCase() === 'completed' ||
+            (i.latestRunStatus || '').toLowerCase() === 'successful',
         ).length,
-        failedToday: todayInstances.filter((i: any) => 
-          (i.latestRunStatus || '').toLowerCase() === 'failed' || 
-          (i.latestRunStatus || '').toLowerCase() === 'faulted'
+        failedToday: todayInstances.filter(
+          (i: any) =>
+            (i.latestRunStatus || '').toLowerCase() === 'failed' ||
+            (i.latestRunStatus || '').toLowerCase() === 'faulted',
         ).length,
       });
-      
+
       setProcesses(processes);
     } catch (err) {
       console.error('Failed to fetch processes:', err);
@@ -104,7 +102,12 @@ export const ProcessList = () => {
         <div className="flex">
           <div className="text-red-400">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -122,7 +125,12 @@ export const ProcessList = () => {
       value: stats.totalProcesses,
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+          />
         </svg>
       ),
       color: 'bg-blue-500',
@@ -134,7 +142,12 @@ export const ProcessList = () => {
       value: stats.runningInstances,
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
@@ -147,7 +160,12 @@ export const ProcessList = () => {
       value: stats.completedToday,
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       ),
       color: 'bg-green-500',
@@ -159,7 +177,12 @@ export const ProcessList = () => {
       value: stats.failedToday,
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       ),
       color: 'bg-red-500',
@@ -180,7 +203,12 @@ export const ProcessList = () => {
           className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           Refresh
         </button>
@@ -207,7 +235,12 @@ export const ProcessList = () => {
         <div className="text-center py-12">
           <div className="p-6 bg-gray-50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
             <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+              />
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No processes found</h3>
@@ -220,7 +253,7 @@ export const ProcessList = () => {
               // Sort by faulted count (descending), then by total activity (descending)
               const aTotal = a.runningCount + a.completedCount + a.faultedCount + a.pendingCount;
               const bTotal = b.runningCount + b.completedCount + b.faultedCount + b.pendingCount;
-              
+
               if (b.faultedCount !== a.faultedCount) {
                 return b.faultedCount - a.faultedCount;
               }
@@ -249,19 +282,24 @@ export const ProcessList = () => {
                           .replace(/_/g, ' ')
                           .replace(/([a-z])([A-Z])/g, '$1 $2')
                           .split(' ')
-                          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                          .join(' ')
-                        }
+                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                          .join(' ')}
                       </h3>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 text-xs text-slate-500">
                           <span className="flex items-center gap-1">
                             <svg className="w-3 h-3 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+                              <path
+                                fillRule="evenodd"
+                                d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                             {process.folderName}
                           </span>
-                          <span className="text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded text-xs">v{process.versionCount}</span>
+                          <span className="text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded text-xs">
+                            v{process.versionCount}
+                          </span>
                         </div>
                         <div className="flex items-center gap-3 text-xs">
                           {process.completedCount > 0 && (
@@ -294,32 +332,32 @@ export const ProcessList = () => {
                           )}
                         </div>
                       </div>
-                      
+
                       {/* Progress Bar */}
                       <div className="mt-3">
                         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden shadow-inner">
                           <div className="h-full flex rounded-full">
                             {process.completedCount > 0 && (
-                              <div 
-                                className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-300" 
+                              <div
+                                className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-300"
                                 style={{ width: `${(process.completedCount / total) * 100}%` }}
                               />
                             )}
                             {process.runningCount > 0 && (
-                              <div 
-                                className="bg-gradient-to-r from-orange-400 to-orange-500 transition-all duration-300" 
+                              <div
+                                className="bg-gradient-to-r from-orange-400 to-orange-500 transition-all duration-300"
                                 style={{ width: `${(process.runningCount / total) * 100}%` }}
                               />
                             )}
                             {process.faultedCount > 0 && (
-                              <div 
-                                className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-300" 
+                              <div
+                                className="bg-gradient-to-r from-red-400 to-red-500 transition-all duration-300"
                                 style={{ width: `${(process.faultedCount / total) * 100}%` }}
                               />
                             )}
                             {process.pendingCount > 0 && (
-                              <div 
-                                className="bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-300" 
+                              <div
+                                className="bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-300"
                                 style={{ width: `${(process.pendingCount / total) * 100}%` }}
                               />
                             )}

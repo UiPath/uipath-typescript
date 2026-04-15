@@ -19,7 +19,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -46,7 +46,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -69,7 +69,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -88,7 +88,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
       if (!processKey) {
         console.log(
           'Skipping incidents test: MAESTRO_TEST_PROCESS_KEY not configured. ' +
-            'Set this environment variable to test incident retrieval.'
+            'Set this environment variable to test incident retrieval.',
         );
         return;
       }
@@ -125,7 +125,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }
@@ -160,7 +160,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
             'Skipping test: PAT token does not have Maestro permissions. ' +
-              'Grant Maestro (Read) scope when creating the token.'
+              'Grant Maestro (Read) scope when creating the token.',
           );
           return;
         }

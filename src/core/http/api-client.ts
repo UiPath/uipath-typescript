@@ -17,10 +17,10 @@ export class ApiClient {
   private defaultHeaders: Record<string, string> = {};
   private tokenManager: TokenManager;
   constructor(
-    config: Config, 
-    executionContext: ExecutionContext, 
+    config: Config,
+    executionContext: ExecutionContext,
     tokenManager: TokenManager,
-    clientConfig: ApiClientConfig = {}
+    clientConfig: ApiClientConfig = {},
   ) {
     this.config = config;
     this.executionContext = executionContext;
@@ -47,22 +47,21 @@ export class ApiClient {
     const token = await this.getValidToken();
 
     return {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': CONTENT_TYPES.JSON,
       ...this.defaultHeaders,
-      ...this.clientConfig.headers
+      ...this.clientConfig.headers,
     };
   }
-
 
   private async request<T>(method: string, path: string, options: RequestSpec = {}): Promise<T> {
     // Ensure path starts with a forward slash
     const normalizedPath = path.startsWith('/') ? path.substring(1) : path;
-    
+
     // Construct URL with org and tenant names
     const url = new URL(
       `${this.config.orgName}/${this.config.tenantName}/${normalizedPath}`,
-      this.config.baseUrl
+      this.config.baseUrl,
     ).toString();
 
     const isFormData = options.body instanceof FormData;
@@ -72,7 +71,7 @@ export class ApiClient {
     }
     const headers = {
       ...defaultHeaders,
-      ...options.headers
+      ...options.headers,
     };
 
     // Convert params to URLSearchParams
@@ -85,9 +84,9 @@ export class ApiClient {
     const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
 
     let body = undefined;
-    
-    if(options.body) {
-      body = isFormData ? (options.body as FormData) : JSON.stringify(options.body)
+
+    if (options.body) {
+      body = isFormData ? (options.body as FormData) : JSON.stringify(options.body);
     }
 
     try {
@@ -95,7 +94,7 @@ export class ApiClient {
         method,
         headers,
         body,
-        signal: options.signal
+        signal: options.signal,
       });
 
       if (!response.ok) {
@@ -126,11 +125,10 @@ export class ApiClient {
       if (error.type && error.type.includes('Error')) {
         throw error;
       }
-      
+
       // Otherwise, it's likely a network error
       throw ErrorFactory.createNetworkError(error);
     }
-
   }
 
   async get<T>(path: string, options: RequestSpec = {}): Promise<T> {

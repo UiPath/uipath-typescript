@@ -3,7 +3,7 @@
  */
 export enum ProcessIncidentStatus {
   Open = 'Open',
-  Closed = 'Closed'
+  Closed = 'Closed',
 }
 
 /**
@@ -12,7 +12,7 @@ export enum ProcessIncidentStatus {
 export enum ProcessIncidentType {
   System = 'System',
   User = 'User',
-  Deployment = 'Deployment'
+  Deployment = 'Deployment',
 }
 
 /**
@@ -20,7 +20,7 @@ export enum ProcessIncidentType {
  */
 export enum ProcessIncidentSeverity {
   Error = 'Error',
-  Warning = 'Warning'
+  Warning = 'Warning',
 }
 
 /**
@@ -30,7 +30,7 @@ export enum DebugMode {
   None = 'None',
   Default = 'Default',
   StepByStep = 'StepByStep',
-  SingleStep = 'SingleStep'
+  SingleStep = 'SingleStep',
 }
 
 /**

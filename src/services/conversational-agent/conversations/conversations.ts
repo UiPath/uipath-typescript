@@ -27,7 +27,7 @@ import type {
   ConversationGetAllOptions,
   ConversationUpdateOptions,
   RawConversationGetResponse,
-  SessionStream
+  SessionStream,
 } from '@/models/conversational-agent';
 import { ConversationMap, createConversationWithMethods } from '@/models/conversational-agent';
 
@@ -40,10 +40,7 @@ import { PaginationType } from '@/utils/pagination/internal-types';
 import { transformData, transformRequest, arrayDictionaryToRecord } from '@/utils/transform';
 
 // Local imports
-import {
-  ConversationEventHelperManagerImpl,
-  type ConversationEventHelperManager
-} from '../helpers';
+import { ConversationEventHelperManagerImpl, type ConversationEventHelperManager } from '../helpers';
 import { ExchangeService } from './exchanges';
 import { SessionManager } from './session';
 
@@ -114,7 +111,11 @@ export class ConversationService extends BaseService implements ConversationServ
    * @returns Promise resolving to the created conversation
    */
   @track('ConversationalAgent.Conversations.Create')
-  async create(agentId: number, folderId: number, options?: ConversationCreateOptions): Promise<ConversationCreateResponse> {
+  async create(
+    agentId: number,
+    folderId: number,
+    options?: ConversationCreateOptions,
+  ): Promise<ConversationCreateResponse> {
     // Transform SDK field names to API field names (e.g., agentId → agentReleaseId)
     const apiPayload = transformRequest({ agentId, folderId, ...options }, ConversationMap);
 
@@ -173,7 +174,7 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   @track('ConversationalAgent.Conversations.GetAll')
   async getAll<T extends ConversationGetAllOptions = ConversationGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<ConversationGetResponse>
@@ -185,21 +186,24 @@ export class ConversationService extends BaseService implements ConversationServ
       return createConversationWithMethods(transformedData, this, this, this._exchangeService);
     };
 
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => CONVERSATION_ENDPOINTS.LIST,
-      transformFn,
-      pagination: {
-        paginationType: PaginationType.TOKEN,
-        itemsField: CONVERSATIONAL_PAGINATION.ITEMS_FIELD,
-        continuationTokenField: CONVERSATIONAL_PAGINATION.CONTINUATION_TOKEN_FIELD,
-        paginationParams: {
-          pageSizeParam: CONVERSATIONAL_TOKEN_PARAMS.PAGE_SIZE_PARAM,
-          tokenParam: CONVERSATIONAL_TOKEN_PARAMS.TOKEN_PARAM
-        }
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => CONVERSATION_ENDPOINTS.LIST,
+        transformFn,
+        pagination: {
+          paginationType: PaginationType.TOKEN,
+          itemsField: CONVERSATIONAL_PAGINATION.ITEMS_FIELD,
+          continuationTokenField: CONVERSATIONAL_PAGINATION.CONTINUATION_TOKEN_FIELD,
+          paginationParams: {
+            pageSizeParam: CONVERSATIONAL_TOKEN_PARAMS.PAGE_SIZE_PARAM,
+            tokenParam: CONVERSATIONAL_TOKEN_PARAMS.TOKEN_PARAM,
+          },
+        },
+        excludeFromPrefix: Object.keys(options || {}), // Conversational params are not OData
       },
-      excludeFromPrefix: Object.keys(options || {}) // Conversational params are not OData
-    }, options) as any;
+      options,
+    ) as any;
   }
 
   /**
@@ -217,14 +221,8 @@ export class ConversationService extends BaseService implements ConversationServ
    * ```
    */
   @track('ConversationalAgent.Conversations.UpdateById')
-  async updateById(
-    id: string,
-    options: ConversationUpdateOptions
-  ): Promise<ConversationUpdateResponse> {
-    const response = await this.patch<RawConversationGetResponse>(
-      CONVERSATION_ENDPOINTS.UPDATE(id),
-      options
-    );
+  async updateById(id: string, options: ConversationUpdateOptions): Promise<ConversationUpdateResponse> {
+    const response = await this.patch<RawConversationGetResponse>(CONVERSATION_ENDPOINTS.UPDATE(id), options);
     const transformedData = transformData(response.data, ConversationMap) as RawConversationGetResponse;
     return createConversationWithMethods(transformedData, this, this, this._exchangeService);
   }
@@ -242,9 +240,7 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   @track('ConversationalAgent.Conversations.DeleteById')
   async deleteById(id: string): Promise<ConversationDeleteResponse> {
-    const response = await this.delete<ConversationDeleteResponse>(
-      CONVERSATION_ENDPOINTS.DELETE(id)
-    );
+    const response = await this.delete<ConversationDeleteResponse>(CONVERSATION_ENDPOINTS.DELETE(id));
     return response.data;
   }
 
@@ -265,10 +261,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * ```
    */
   @track('ConversationalAgent.Conversations.UploadAttachment')
-  async uploadAttachment(
-    id: string,
-    file: File
-  ): Promise<ConversationAttachmentUploadResponse> {
+  async uploadAttachment(id: string, file: File): Promise<ConversationAttachmentUploadResponse> {
     // Step 1: Create attachment entry and get upload URL
     const { fileUploadAccess, uri, name } = await this.getAttachmentUploadUri(id, file.name);
 
@@ -276,7 +269,7 @@ export class ConversationService extends BaseService implements ConversationServ
     const uploadHeaders: Record<string, string> = {
       'Content-Type': file.type,
       'x-ms-blob-type': 'BlockBlob',
-      ...arrayDictionaryToRecord(fileUploadAccess.headers)
+      ...arrayDictionaryToRecord(fileUploadAccess.headers),
     };
 
     // Add auth header if required by the storage endpoint
@@ -288,20 +281,20 @@ export class ConversationService extends BaseService implements ConversationServ
     const uploadResponse = await fetch(fileUploadAccess.url, {
       method: fileUploadAccess.verb,
       body: file,
-      headers: uploadHeaders
+      headers: uploadHeaders,
     });
 
     if (!uploadResponse.ok) {
       throw new NetworkError({
         message: `Failed to upload to file storage: ${uploadResponse.status} ${uploadResponse.statusText}`,
-        statusCode: uploadResponse.status
+        statusCode: uploadResponse.status,
       });
     }
 
     return {
       uri,
       name,
-      mimeType: file.type
+      mimeType: file.type,
     };
   }
 
@@ -338,11 +331,11 @@ export class ConversationService extends BaseService implements ConversationServ
   @track('ConversationalAgent.Conversations.CreateAttachment')
   public async getAttachmentUploadUri(
     conversationId: string,
-    fileName: string
+    fileName: string,
   ): Promise<ConversationAttachmentCreateResponse> {
     const response = await this.post<ConversationAttachmentCreateResponse>(
       ATTACHMENT_ENDPOINTS.CREATE(conversationId),
-      { name: fileName }
+      { name: fileName },
     );
     return response.data;
   }
@@ -474,7 +467,7 @@ export class ConversationService extends BaseService implements ConversationServ
       this._eventHelper = new ConversationEventHelperManagerImpl({
         emit: (event) => {
           this._sessionManager.emitEvent(event);
-        }
+        },
       });
 
       // Connect event dispatcher to session manager
@@ -482,5 +475,4 @@ export class ConversationService extends BaseService implements ConversationServ
     }
     return this._eventHelper;
   }
-
 }

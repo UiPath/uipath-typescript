@@ -8,5 +8,5 @@
  */
 export const CommonFieldMap: { [key: string]: string } = {
   createdAt: 'createdTime',
-  updatedAt: 'updatedTime'
+  updatedAt: 'updatedTime',
 };

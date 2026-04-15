@@ -27,11 +27,11 @@ export class WebSocketSession extends BaseWebSocket {
     super(
       {
         ...config,
-        logLevel: options?.logLevel
+        logLevel: options?.logLevel,
       },
       context,
       tokenManager,
-      WEBSOCKET_LOGGER_PREFIX
+      WEBSOCKET_LOGGER_PREFIX,
     );
 
     this._externalUserId = options?.externalUserId;

@@ -10,7 +10,7 @@ import {
   MessageRole,
   Simplify,
   ToolCallInputValue,
-  ToolCallOutputValue
+  ToolCallOutputValue,
 } from './common.types';
 
 /**
@@ -18,9 +18,8 @@ import {
  */
 export enum SortOrder {
   Ascending = 'ascending',
-  Descending = 'descending'
+  Descending = 'descending',
 }
-
 
 /**
  * Represents a citation or reference to an external source within a content part.
@@ -266,7 +265,7 @@ export interface Message {
  */
 export enum FeedbackRating {
   Positive = 'positive',
-  Negative = 'negative'
+  Negative = 'negative',
 }
 
 /**
@@ -384,4 +383,3 @@ export interface RawConversationGetResponse {
    */
   isLocalJobExecution?: boolean;
 }
-

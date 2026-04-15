@@ -53,19 +53,23 @@ describe('resource-import', () => {
     it('should process connection resources', async () => {
       const bindings = {
         version: '1',
-        resources: [{
-          resource: 'connection',
-          key: 'conn-1',
-          value: {
-            name: { defaultValue: 'MyConn', isExpression: false, displayName: 'Name' },
-            ConnectionId: { defaultValue: 'conn-id', isExpression: false, displayName: 'Connection' },
+        resources: [
+          {
+            resource: 'connection',
+            key: 'conn-1',
+            value: {
+              name: { defaultValue: 'MyConn', isExpression: false, displayName: 'Name' },
+              ConnectionId: { defaultValue: 'conn-id', isExpression: false, displayName: 'Connection' },
+            },
+            metadata: { Connector: 'http' },
           },
-          metadata: { Connector: 'http' },
-        }],
+        ],
       };
       vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(bindings));
       vi.mocked(api.retrieveConnection).mockResolvedValue({
-        key: 'conn-key', name: 'MyConn', folder: { folderKey: 'fk', fullyQualifiedName: 'fqn', path: '/p' },
+        key: 'conn-key',
+        name: 'MyConn',
+        folder: { folderKey: 'fk', fullyQualifiedName: 'fqn', path: '/p' },
       });
       vi.mocked(api.createReferencedResource).mockResolvedValue({ status: 'ADDED', resource: {}, saved: true });
       await runImportReferencedResources(createConfig(), 'lock');
@@ -76,18 +80,23 @@ describe('resource-import', () => {
     it('should process catalog resources (asset, bucket, etc.)', async () => {
       const bindings = {
         version: '1',
-        resources: [{
-          resource: 'asset',
-          key: 'asset-1',
-          value: {
-            name: { defaultValue: 'MyAsset', isExpression: false, displayName: 'Name' },
-            folderPath: { defaultValue: '/Shared', isExpression: false, displayName: 'Folder' },
+        resources: [
+          {
+            resource: 'asset',
+            key: 'asset-1',
+            value: {
+              name: { defaultValue: 'MyAsset', isExpression: false, displayName: 'Name' },
+              folderPath: { defaultValue: '/Shared', isExpression: false, displayName: 'Folder' },
+            },
           },
-        }],
+        ],
       };
       vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(bindings));
       vi.mocked(api.findResourceInCatalog).mockResolvedValue({
-        resourceKey: 'rk', name: 'MyAsset', resourceType: 'asset', resourceSubType: null,
+        resourceKey: 'rk',
+        name: 'MyAsset',
+        resourceType: 'asset',
+        resourceSubType: null,
         folders: [{ folderKey: 'fk', fullyQualifiedName: 'fqn', path: '/Shared' }],
       });
       vi.mocked(api.createReferencedResource).mockResolvedValue({ status: 'ADDED', resource: {}, saved: true });

@@ -20,7 +20,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export interface AssetServiceModel {
   /**
    * Gets all assets across folders with optional filtering
-   * 
+   *
    * @param options Query options including optional folderId and pagination options
    * @returns Promise resolving to either an array of assets NonPaginatedResponse<AssetGetResponse> or a PaginatedResponse<AssetGetResponse> when pagination options are used.
    * {@link AssetGetResponse}
@@ -29,15 +29,15 @@ export interface AssetServiceModel {
    * // Standard array return
    * // With folder
    * const folderAssets = await assets.getAll({ folderId: <folderId> });
-   * 
+   *
    * // First page with pagination
    * const page1 = await assets.getAll({ pageSize: 10 });
-   * 
+   *
    * // Navigate using cursor
    * if (page1.hasNextPage) {
    *   const page2 = await assets.getAll({ cursor: page1.nextCursor });
    * }
-   * 
+   *
    * // Jump to specific page
    * const page5 = await assets.getAll({
    *   jumpToPage: 5,
@@ -45,15 +45,15 @@ export interface AssetServiceModel {
    * });
    * ```
    */
-  getAll<T extends AssetGetAllOptions = AssetGetAllOptions>(options?: T): Promise<
-    T extends HasPaginationOptions<T>
-    ? PaginatedResponse<AssetGetResponse>
-    : NonPaginatedResponse<AssetGetResponse>
+  getAll<T extends AssetGetAllOptions = AssetGetAllOptions>(
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T> ? PaginatedResponse<AssetGetResponse> : NonPaginatedResponse<AssetGetResponse>
   >;
 
   /**
    * Gets a single asset by ID
-   * 
+   *
    * @param id - Asset ID
    * @param folderId - Required folder ID
    * @param options - Optional query parameters (expand, select)
@@ -66,4 +66,4 @@ export interface AssetServiceModel {
    * ```
    */
   getById(id: number, folderId: number, options?: AssetGetByIdOptions): Promise<AssetGetResponse>;
-} 
+}

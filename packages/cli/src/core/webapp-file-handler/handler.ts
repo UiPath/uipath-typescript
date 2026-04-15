@@ -1,11 +1,7 @@
 import path from 'node:path';
 import chalk from 'chalk';
 import { MESSAGES } from '../../constants/index.js';
-import type {
-  WebAppProjectConfig,
-  FileOperationPlan,
-  ProjectStructure,
-} from './types.js';
+import type { WebAppProjectConfig, FileOperationPlan, ProjectStructure } from './types.js';
 import type { LocalFileWithRemote } from './types.js';
 import {
   getRemoteContentRoot,
@@ -32,27 +28,29 @@ import {
   cleanupEmptyFolders,
   hasFolderByPath,
 } from './folder-ops.js';
-import {
-  executeFileOperations,
-  deleteFiles,
-  deleteFolders,
-} from './file-ops.js';
+import { executeFileOperations, deleteFiles, deleteFolders } from './file-ops.js';
 import { runImportReferencedResources } from './resource-import.js';
 
 /** Builds combined list of local files with their remote path (build then source) and counts. */
 function buildLocalFilesWithRemote(
   rootDir: string,
-  bundlePath: string
+  bundlePath: string,
 ): { localFilesWithRemote: LocalFileWithRemote[]; buildCount: number; sourceCount: number } {
   const remoteContentRoot = getRemoteContentRoot(bundlePath);
   const buildFiles = collectLocalFiles(rootDir, bundlePath);
   const sourceFiles = collectSourceFiles(rootDir, bundlePath);
   const localFilesWithRemote: LocalFileWithRemote[] = [];
   for (const f of buildFiles) {
-    localFilesWithRemote.push({ localFile: f, remotePath: getRemotePathForLocalPath(f.path, bundlePath, remoteContentRoot) });
+    localFilesWithRemote.push({
+      localFile: f,
+      remotePath: getRemotePathForLocalPath(f.path, bundlePath, remoteContentRoot),
+    });
   }
   for (const f of sourceFiles) {
-    localFilesWithRemote.push({ localFile: f, remotePath: getRemotePathForLocalPath(f.path, bundlePath, remoteContentRoot) });
+    localFilesWithRemote.push({
+      localFile: f,
+      remotePath: getRemotePathForLocalPath(f.path, bundlePath, remoteContentRoot),
+    });
   }
   return { localFilesWithRemote, buildCount: buildFiles.length, sourceCount: sourceFiles.length };
 }
@@ -81,8 +79,7 @@ export class WebAppFileHandler {
   async push(): Promise<void> {
     this.config.logger.log(chalk.gray('[push] Acquiring lock...'));
     const lockInfo = await api.retrieveLock(this.config);
-    const hasLock =
-      lockInfo && (lockInfo.projectLockKey ?? lockInfo.solutionLockKey);
+    const hasLock = lockInfo && (lockInfo.projectLockKey ?? lockInfo.solutionLockKey);
     if (!hasLock) {
       throw new Error(MESSAGES.ERRORS.PUSH_LOCK_NOT_ACQUIRED);
     }
@@ -110,10 +107,10 @@ export class WebAppFileHandler {
     this.projectStructure = await api.fetchRemoteStructure(this.config);
     const { localFilesWithRemote, buildCount, sourceCount } = buildLocalFilesWithRemote(
       this.config.rootDir,
-      this.config.bundlePath
+      this.config.bundlePath,
     );
     this.config.logger.log(
-      chalk.gray(`[push] Local files: ${buildCount} build + ${sourceCount} source = ${localFilesWithRemote.length}`)
+      chalk.gray(`[push] Local files: ${buildCount} build + ${sourceCount} source = ${localFilesWithRemote.length}`),
     );
 
     const fullRemoteFiles = getRemoteFilesMap(this.projectStructure);
@@ -122,10 +119,8 @@ export class WebAppFileHandler {
     const contentRootExists = hasFolderByPath(fullRemoteFolders, remoteContentRoot);
 
     this.config.logger.log(chalk.gray('[push] Checking code version (local vs remote)...'));
-    await ensureSchemaVersionNotBehindRemote(
-      this.config,
-      fullRemoteFiles,
-      (cfg, fileId) => api.downloadRemoteFile(cfg, fileId)
+    await ensureSchemaVersionNotBehindRemote(this.config, fullRemoteFiles, (cfg, fileId) =>
+      api.downloadRemoteFile(cfg, fileId),
     );
 
     let plan: FileOperationPlan;
@@ -137,33 +132,30 @@ export class WebAppFileHandler {
         () => this.projectStructure!,
         (s) => {
           this.projectStructure = s;
-        }
+        },
       );
       const remoteFolders = getRemoteFoldersMap(this.projectStructure!);
       plan = computeFirstPushPlan(localFilesWithRemote, remoteFolders);
       this.config.logger.log(
-        chalk.gray(`[push] Plan: ${plan.uploadFiles.length} to upload, ${plan.createFolders.length} folders to create.`)
+        chalk.gray(
+          `[push] Plan: ${plan.uploadFiles.length} to upload, ${plan.createFolders.length} folders to create.`,
+        ),
       );
     } else {
       this.config.logger.log(chalk.gray('[push] Computing diff (scoped to source/)...'));
       const remoteFiles = filterToSourceFolderMap(fullRemoteFiles, REMOTE_SOURCE_FOLDER_NAME);
       const remoteFolders = filterToSourceFolderMap(fullRemoteFolders, REMOTE_SOURCE_FOLDER_NAME);
-      plan = await computeExecutionPlan(
-        localFilesWithRemote,
-        remoteFiles,
-        remoteFolders,
-        {
-          bundlePath: this.config.bundlePath,
-          remoteContentRoot,
-          downloadRemoteFile: (fileId) => api.downloadRemoteFile(this.config, fileId),
-          computeHash,
-          logger: this.config.logger,
-        }
-      );
+      plan = await computeExecutionPlan(localFilesWithRemote, remoteFiles, remoteFolders, {
+        bundlePath: this.config.bundlePath,
+        remoteContentRoot,
+        downloadRemoteFile: (fileId) => api.downloadRemoteFile(this.config, fileId),
+        computeHash,
+        logger: this.config.logger,
+      });
       this.config.logger.log(
         chalk.gray(
-          `[push] Plan: ${plan.uploadFiles.length} add, ${plan.updateFiles.length} update, ${plan.deleteFiles.length} delete, ${plan.deleteFolders.length} folders to delete.`
-        )
+          `[push] Plan: ${plan.uploadFiles.length} add, ${plan.updateFiles.length} update, ${plan.deleteFiles.length} delete, ${plan.deleteFolders.length} folders to delete.`,
+        ),
       );
     }
 
@@ -172,7 +164,7 @@ export class WebAppFileHandler {
       this.config,
       fullRemoteFiles,
       (config, fileId) => api.downloadRemoteFile(config, fileId),
-      plan
+      plan,
     );
 
     const folderIdMap = buildFolderIdMap(this.projectStructure!);
@@ -186,7 +178,7 @@ export class WebAppFileHandler {
       (s) => {
         this.projectStructure = s;
       },
-      this.lockKey
+      this.lockKey,
     );
 
     for (const fileOp of plan.uploadFiles) {
@@ -195,10 +187,7 @@ export class WebAppFileHandler {
       }
     }
 
-    const hasFileOps =
-      plan.uploadFiles.length > 0 ||
-      plan.updateFiles.length > 0 ||
-      plan.deleteFiles.length > 0;
+    const hasFileOps = plan.uploadFiles.length > 0 || plan.updateFiles.length > 0 || plan.deleteFiles.length > 0;
     let totalFailed = 0;
     if (hasFileOps) {
       const total = plan.uploadFiles.length + plan.updateFiles.length;
@@ -225,30 +214,19 @@ export class WebAppFileHandler {
       this.config,
       REMOTE_SOURCE_FOLDER_NAME,
       () => api.fetchRemoteStructure(this.config),
-      this.lockKey
+      this.lockKey,
     );
 
     this.config.logger.log(chalk.gray('[push] Uploading metadata to remote...'));
     const metadataPath = path.join(this.config.rootDir, this.config.manifestFile);
     try {
-      await uploadPushMetadataToRemote(
-        this.config,
-        metadataPath,
-        fullRemoteFiles,
-        folderIdMap,
-        this.lockKey
-      );
+      await uploadPushMetadataToRemote(this.config, metadataPath, fullRemoteFiles, folderIdMap, this.lockKey);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       this.config.logger.log(chalk.yellow(MESSAGES.ERRORS.PUSH_METADATA_UPLOAD_FAILED_PREFIX + msg));
     }
     this.config.logger.log(chalk.gray('[push] Updating web app manifest...'));
-    await updateRemoteWebAppManifest(
-      this.config,
-      this.config.bundlePath,
-      fullRemoteFiles,
-      this.lockKey
-    );
+    await updateRemoteWebAppManifest(this.config, this.config.bundlePath, fullRemoteFiles, this.lockKey);
     this.config.logger.log(chalk.gray('[push] Done.'));
   }
 

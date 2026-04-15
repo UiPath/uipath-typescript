@@ -14,13 +14,10 @@ export function pascalToCamelCase(str: string): string {
  * @param convertCase The function to convert each key
  * @returns A new object with transformed keys
  */
-function transformCaseKeys<T extends object>(
-  data: T | T[], 
-  convertCase: (str: string) => string
-): any {
+function transformCaseKeys<T extends object>(data: T | T[], convertCase: (str: string) => string): any {
   // Handle array of objects
   if (Array.isArray(data)) {
-    return data.map(item => {
+    return data.map((item) => {
       // If the array element is a primitive (string, number, etc.), return it as is
       if (item === null || typeof item !== 'object' || typeof item === 'string') {
         return item;
@@ -31,10 +28,10 @@ function transformCaseKeys<T extends object>(
   }
 
   const result: Record<string, any> = {};
-  
+
   for (const [key, value] of Object.entries(data)) {
     const transformedKey = convertCase(key);
-    
+
     // Recursively transform nested objects and arrays
     if (value !== null && typeof value === 'object') {
       result[transformedKey] = transformCaseKeys(value, convertCase);
@@ -50,21 +47,21 @@ function transformCaseKeys<T extends object>(
  * Transforms an object's keys from PascalCase to camelCase
  * @param data The object with PascalCase keys
  * @returns A new object with all keys converted to camelCase
- * 
+ *
  * @example
  * ```typescript
  * // Simple object
  * pascalToCamelCaseKeys({ Id: "123", TaskName: "Invoice" });
  * // Result: { id: "123", taskName: "Invoice" }
- * 
+ *
  * // Nested object
- * pascalToCamelCaseKeys({ 
+ * pascalToCamelCaseKeys({
  *   TaskId: "456",
  *   TaskDetails: { AssignedUser: "John", Priority: "High" }
  * });
- * // Result: { 
+ * // Result: {
  * //   taskId: "456",
- * //   taskDetails: { assignedUser: "John", priority: "High" } 
+ * //   taskDetails: { assignedUser: "John", priority: "High" }
  * // }
  * ```
  */

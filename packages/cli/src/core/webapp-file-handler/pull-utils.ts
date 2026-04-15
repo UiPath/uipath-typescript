@@ -7,11 +7,7 @@ import * as path from 'node:path';
 import { PUSH_METADATA_RELATIVE_PATH, PUSH_METADATA_FILENAME } from '../../constants/api.js';
 import { AUTH_CONSTANTS } from '../../constants/index.js';
 import { PULL_WEB_APP_MANIFEST, PACKAGE_JSON_FILENAME } from '../../constants/pull.js';
-import {
-  REMOTE_SOURCE_FOLDER_NAME,
-  normalizePathToForwardSlashes,
-  normalizeBundlePath,
-} from './structure.js';
+import { REMOTE_SOURCE_FOLDER_NAME, normalizePathToForwardSlashes, normalizeBundlePath } from './structure.js';
 import type { ProjectFile } from './types.js';
 
 /** Markers that indicate a directory is likely the root of an app project (for pull target-dir soft check). */
@@ -97,10 +93,7 @@ export function isPathUnderBuildDir(relativePath: string, buildDir: string | nul
  * Returns local absolute paths that would be overwritten by pull (existing files that match remote paths).
  * Uses getLocalRelativePath so push_metadata.json is checked at .uipath/push_metadata.json.
  */
-export function getPathsThatWouldOverwrite(
-  filesMap: Map<string, ProjectFile>,
-  rootDir: string
-): string[] {
+export function getPathsThatWouldOverwrite(filesMap: Map<string, ProjectFile>, rootDir: string): string[] {
   const overwrites: string[] = [];
   for (const remotePath of filesMap.keys()) {
     const relativePath = getLocalRelativePath(stripSourcePrefix(remotePath));

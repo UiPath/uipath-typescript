@@ -1,23 +1,23 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TaskService } from '../../../../src/services/action-center/tasks';
-import { 
-  TaskType, 
-  TaskPriority, 
+import {
+  TaskType,
+  TaskPriority,
   TaskAssignmentOptions,
   TaskCompletionOptions,
   TaskCreateOptions,
   TaskGetAllOptions,
-  TaskGetUsersOptions
+  TaskGetUsersOptions,
 } from '../../../../src/models/action-center/tasks.types';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
-import { 
-  createMockTaskResponse, 
-  createMockTaskGetResponse, 
-  createMockTasks, 
-  createMockUsers 
+import {
+  createMockTaskResponse,
+  createMockTaskGetResponse,
+  createMockTasks,
+  createMockUsers,
 } from '../../../utils/mocks/tasks';
 import { createMockError } from '../../../utils/mocks/core';
 import { DEFAULT_TASK_EXPAND } from '../../../../src/models/action-center/tasks.constants';
@@ -68,12 +68,12 @@ describe('TaskService Unit Tests', () => {
     it('should create a task successfully with all fields mapped correctly', async () => {
       const taskInput = {
         title: TASK_TEST_CONSTANTS.TASK_TITLE,
-        priority: TaskPriority.High
+        priority: TaskPriority.High,
       } as TaskCreateOptions;
 
       const mockResponse = createMockTaskResponse({
         title: TASK_TEST_CONSTANTS.TASK_TITLE,
-        priority: TaskPriority.High
+        priority: TaskPriority.High,
       });
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -91,13 +91,13 @@ describe('TaskService Unit Tests', () => {
         expect.objectContaining({
           title: TASK_TEST_CONSTANTS.TASK_TITLE,
           priority: TaskPriority.High,
-          type: TaskType.External // SDK adds this automatically
+          type: TaskType.External, // SDK adds this automatically
         }),
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString()
-          })
-        })
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
       );
     });
 
@@ -105,12 +105,12 @@ describe('TaskService Unit Tests', () => {
       const taskInput = {
         title: TASK_TEST_CONSTANTS.TASK_TITLE_COMPLEX,
         priority: TaskPriority.Critical,
-        data: TASK_TEST_CONSTANTS.CUSTOM_DATA
+        data: TASK_TEST_CONSTANTS.CUSTOM_DATA,
       } as TaskCreateOptions;
 
       const mockResponse = createMockTaskResponse({
         priority: TaskPriority.Critical,
-        data: taskInput.data
+        data: taskInput.data,
       });
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -121,22 +121,24 @@ describe('TaskService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          data: TASK_TEST_CONSTANTS.CUSTOM_DATA
+          data: TASK_TEST_CONSTANTS.CUSTOM_DATA,
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should handle API errors', async () => {
       const taskInput = {
         title: TASK_TEST_CONSTANTS.TASK_TITLE,
-        priority: TaskPriority.High
+        priority: TaskPriority.High,
       } as TaskCreateOptions;
 
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(taskService.create(taskInput, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(taskService.create(taskInput, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
     });
   });
 
@@ -144,11 +146,11 @@ describe('TaskService Unit Tests', () => {
     it('should assign a single task successfully', async () => {
       const assignment = {
         taskId: TASK_TEST_CONSTANTS.TASK_ID,
-        userId: TASK_TEST_CONSTANTS.USER_ID
+        userId: TASK_TEST_CONSTANTS.USER_ID,
       } as TaskAssignmentOptions;
 
       const mockResponse = {
-        value: [] // Empty array means success
+        value: [], // Empty array means success
       };
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -157,29 +159,29 @@ describe('TaskService Unit Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual([assignment]);
-      
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         TASK_ENDPOINTS.ASSIGN_TASKS,
         expect.objectContaining({
           taskAssignments: expect.arrayContaining([
             expect.objectContaining({
               taskId: assignment.taskId,
-              userId: assignment.userId
-            })
-          ])
+              userId: assignment.userId,
+            }),
+          ]),
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should assign multiple tasks successfully', async () => {
       const assignments = [
         { taskId: TASK_TEST_CONSTANTS.TASK_ID, userId: TASK_TEST_CONSTANTS.USER_ID },
-        { taskId: TASK_TEST_CONSTANTS.TASK_ID_2, userId: TASK_TEST_CONSTANTS.USER_ID_2 }
+        { taskId: TASK_TEST_CONSTANTS.TASK_ID_2, userId: TASK_TEST_CONSTANTS.USER_ID_2 },
       ] as TaskAssignmentOptions[];
 
       const mockResponse = {
-        value: []
+        value: [],
       };
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -188,27 +190,27 @@ describe('TaskService Unit Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(assignments);
-      
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           taskAssignments: expect.arrayContaining([
             expect.objectContaining({ taskId: TASK_TEST_CONSTANTS.TASK_ID, userId: TASK_TEST_CONSTANTS.USER_ID }),
-            expect.objectContaining({ taskId: TASK_TEST_CONSTANTS.TASK_ID_2, userId: TASK_TEST_CONSTANTS.USER_ID_2 })
-          ])
+            expect.objectContaining({ taskId: TASK_TEST_CONSTANTS.TASK_ID_2, userId: TASK_TEST_CONSTANTS.USER_ID_2 }),
+          ]),
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should support assignment with email', async () => {
       const assignment = {
         taskId: TASK_TEST_CONSTANTS.TASK_ID,
-        userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL
+        userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL,
       } as TaskAssignmentOptions;
 
       const mockResponse = {
-        value: []
+        value: [],
       };
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -217,18 +219,18 @@ describe('TaskService Unit Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual([assignment]);
-      
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           taskAssignments: expect.arrayContaining([
             expect.objectContaining({
               taskId: TASK_TEST_CONSTANTS.TASK_ID,
-              userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL
-            })
-          ])
+              userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL,
+            }),
+          ]),
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -237,11 +239,11 @@ describe('TaskService Unit Tests', () => {
     it('should reassign a single task successfully', async () => {
       const assignment = {
         taskId: TASK_TEST_CONSTANTS.TASK_ID,
-        userId: TASK_TEST_CONSTANTS.USER_ID
+        userId: TASK_TEST_CONSTANTS.USER_ID,
       } as TaskAssignmentOptions;
 
       const mockResponse = {
-        value: []
+        value: [],
       };
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -250,29 +252,29 @@ describe('TaskService Unit Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual([assignment]);
-      
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         TASK_ENDPOINTS.REASSIGN_TASKS,
         expect.objectContaining({
           taskAssignments: expect.arrayContaining([
             expect.objectContaining({
               taskId: assignment.taskId,
-              userId: assignment.userId
-            })
-          ])
+              userId: assignment.userId,
+            }),
+          ]),
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should reassign multiple tasks successfully', async () => {
       const assignments = [
         { taskId: TASK_TEST_CONSTANTS.TASK_ID, userId: TASK_TEST_CONSTANTS.USER_ID },
-        { taskId: TASK_TEST_CONSTANTS.TASK_ID_2, userId: TASK_TEST_CONSTANTS.USER_ID_2 }
+        { taskId: TASK_TEST_CONSTANTS.TASK_ID_2, userId: TASK_TEST_CONSTANTS.USER_ID_2 },
       ] as TaskAssignmentOptions[];
 
       const mockResponse = {
-        value: []
+        value: [],
       };
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -289,21 +291,21 @@ describe('TaskService Unit Tests', () => {
         expect.objectContaining({
           taskAssignments: expect.arrayContaining([
             expect.objectContaining({ taskId: TASK_TEST_CONSTANTS.TASK_ID, userId: TASK_TEST_CONSTANTS.USER_ID }),
-            expect.objectContaining({ taskId: TASK_TEST_CONSTANTS.TASK_ID_2, userId: TASK_TEST_CONSTANTS.USER_ID_2 })
-          ])
+            expect.objectContaining({ taskId: TASK_TEST_CONSTANTS.TASK_ID_2, userId: TASK_TEST_CONSTANTS.USER_ID_2 }),
+          ]),
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should reassign task with email address', async () => {
       const assignment = {
         taskId: TASK_TEST_CONSTANTS.TASK_ID,
-        userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL
+        userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL,
       } as TaskAssignmentOptions;
 
       const mockResponse = {
-        value: []
+        value: [],
       };
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -320,11 +322,11 @@ describe('TaskService Unit Tests', () => {
           taskAssignments: expect.arrayContaining([
             expect.objectContaining({
               taskId: TASK_TEST_CONSTANTS.TASK_ID,
-              userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL
-            })
-          ])
+              userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL,
+            }),
+          ]),
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -334,7 +336,7 @@ describe('TaskService Unit Tests', () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
 
       const mockResponse = {
-        value: []
+        value: [],
       };
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -343,13 +345,13 @@ describe('TaskService Unit Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual([{ taskId: taskId }]);
-      
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         TASK_ENDPOINTS.UNASSIGN_TASKS,
         expect.objectContaining({
-          taskIds: [taskId]
+          taskIds: [taskId],
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -357,7 +359,7 @@ describe('TaskService Unit Tests', () => {
       const taskIds = [TASK_TEST_CONSTANTS.TASK_ID, TASK_TEST_CONSTANTS.TASK_ID_2, TASK_TEST_CONSTANTS.TASK_ID_3];
 
       const mockResponse = {
-        value: []
+        value: [],
       };
 
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -365,14 +367,14 @@ describe('TaskService Unit Tests', () => {
       const result = await taskService.unassign(taskIds);
 
       expect(result.success).toBe(true);
-      expect(result.data).toEqual(taskIds.map(taskId => ({ taskId })));
-      
+      expect(result.data).toEqual(taskIds.map((taskId) => ({ taskId })));
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         TASK_ENDPOINTS.UNASSIGN_TASKS,
         expect.objectContaining({
-          taskIds
+          taskIds,
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -380,13 +382,15 @@ describe('TaskService Unit Tests', () => {
       const invalidTaskId = 9999;
 
       const mockErrorResponse = {
-        value: [{
-          taskId: invalidTaskId,
-          userId: null,
-          errorCode: 1002,
-          errorMessage: 'Action does not exist.',
-          userNameOrEmail: null
-        }]
+        value: [
+          {
+            taskId: invalidTaskId,
+            userId: null,
+            errorCode: 1002,
+            errorMessage: 'Action does not exist.',
+            userNameOrEmail: null,
+          },
+        ],
       };
 
       mockApiClient.post.mockResolvedValue(mockErrorResponse);
@@ -405,9 +409,9 @@ describe('TaskService Unit Tests', () => {
     it('should complete a generic task successfully', async () => {
       const completionOptions = {
         type: TaskType.External,
-        taskId: TASK_TEST_CONSTANTS.TASK_ID
+        taskId: TASK_TEST_CONSTANTS.TASK_ID,
       } as TaskCompletionOptions;
-      
+
       const folderId = TEST_CONSTANTS.FOLDER_ID;
 
       mockApiClient.post.mockResolvedValue(undefined);
@@ -420,8 +424,8 @@ describe('TaskService Unit Tests', () => {
         TASK_ENDPOINTS.COMPLETE_GENERIC_TASK,
         completionOptions,
         expect.objectContaining({
-          headers: expect.any(Object)
-        })
+          headers: expect.any(Object),
+        }),
       );
     });
 
@@ -430,9 +434,9 @@ describe('TaskService Unit Tests', () => {
         type: TaskType.Form,
         taskId: TASK_TEST_CONSTANTS.TASK_ID,
         data: TASK_TEST_CONSTANTS.FORM_DATA,
-        action: TASK_TEST_CONSTANTS.ACTION_SUBMIT
+        action: TASK_TEST_CONSTANTS.ACTION_SUBMIT,
       } as TaskCompletionOptions;
-      
+
       const folderId = TEST_CONSTANTS.FOLDER_ID;
 
       mockApiClient.post.mockResolvedValue(undefined);
@@ -441,11 +445,11 @@ describe('TaskService Unit Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(completionOptions);
-      
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         TASK_ENDPOINTS.COMPLETE_FORM_TASK,
         completionOptions,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -454,9 +458,9 @@ describe('TaskService Unit Tests', () => {
         type: TaskType.App,
         taskId: TASK_TEST_CONSTANTS.TASK_ID,
         action: TASK_TEST_CONSTANTS.ACTION_APPROVE,
-        data: TASK_TEST_CONSTANTS.APP_TASK_DATA
+        data: TASK_TEST_CONSTANTS.APP_TASK_DATA,
       } as TaskCompletionOptions;
-      
+
       const folderId = TEST_CONSTANTS.FOLDER_ID;
 
       mockApiClient.post.mockResolvedValue(undefined);
@@ -465,20 +469,20 @@ describe('TaskService Unit Tests', () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(completionOptions);
-      
+
       expect(mockApiClient.post).toHaveBeenCalledWith(
         TASK_ENDPOINTS.COMPLETE_APP_TASK,
         completionOptions,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should include folderId in headers', async () => {
       const completionOptions = {
         type: TaskType.External,
-        taskId: TASK_TEST_CONSTANTS.TASK_ID
+        taskId: TASK_TEST_CONSTANTS.TASK_ID,
       } as TaskCompletionOptions;
-      
+
       const folderId = TEST_CONSTANTS.FOLDER_ID;
 
       mockApiClient.post.mockResolvedValue(undefined);
@@ -490,9 +494,9 @@ describe('TaskService Unit Tests', () => {
         expect.any(Object),
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: folderId.toString()
-          })
-        })
+            [FOLDER_ID]: folderId.toString(),
+          }),
+        }),
       );
     });
   });
@@ -503,7 +507,7 @@ describe('TaskService Unit Tests', () => {
       const folderId = TEST_CONSTANTS.FOLDER_ID;
       const mockResponse = createMockTaskGetResponse({
         id: taskId,
-        title: TASK_TEST_CONSTANTS.TASK_TITLE
+        title: TASK_TEST_CONSTANTS.TASK_TITLE,
       });
 
       mockApiClient.get.mockResolvedValue(mockResponse);
@@ -512,10 +516,7 @@ describe('TaskService Unit Tests', () => {
 
       expect(result.id).toBe(taskId);
       expect(result.title).toBe(TASK_TEST_CONSTANTS.TASK_TITLE);
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining(taskId.toString()),
-        expect.any(Object)
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(expect.stringContaining(taskId.toString()), expect.any(Object));
     });
 
     it('should include folderId in headers', async () => {
@@ -523,7 +524,7 @@ describe('TaskService Unit Tests', () => {
       const folderId = TEST_CONSTANTS.FOLDER_ID;
       const mockResponse = createMockTaskGetResponse({
         id: taskId,
-        folderId: folderId
+        folderId: folderId,
       });
 
       mockApiClient.get.mockResolvedValue(mockResponse);
@@ -534,9 +535,9 @@ describe('TaskService Unit Tests', () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: folderId.toString()
-          })
-        })
+            [FOLDER_ID]: folderId.toString(),
+          }),
+        }),
       );
     });
 
@@ -548,7 +549,7 @@ describe('TaskService Unit Tests', () => {
         id: taskId,
         title: TASK_TEST_CONSTANTS.TASK_TITLE_FORM,
         type: TaskType.Form,
-        folderId: folderId
+        folderId: folderId,
       });
 
       const mockFormTaskResponse = createMockTaskGetResponse({
@@ -556,22 +557,18 @@ describe('TaskService Unit Tests', () => {
         title: TASK_TEST_CONSTANTS.TASK_TITLE_FORM,
         type: TaskType.Form,
         folderId: folderId,
-        formLayout: { /* form-specific data */ },
-        actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT
+        formLayout: {
+          /* form-specific data */
+        },
+        actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT,
       });
 
-      mockApiClient.get
-        .mockResolvedValueOnce(mockTaskResponse)
-        .mockResolvedValueOnce(mockFormTaskResponse);
+      mockApiClient.get.mockResolvedValueOnce(mockTaskResponse).mockResolvedValueOnce(mockFormTaskResponse);
 
       await taskService.getById(taskId, {}, folderId);
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(2);
-      expect(mockApiClient.get).toHaveBeenNthCalledWith(
-        2,
-        TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
-        expect.any(Object)
-      );
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(2, TASK_ENDPOINTS.GET_TASK_FORM_BY_ID, expect.any(Object));
     });
 
     it('should skip GET_BY_ID and call getFormTaskById directly when taskType is Form', async () => {
@@ -584,7 +581,7 @@ describe('TaskService Unit Tests', () => {
         type: TaskType.Form,
         folderId: folderId,
         formLayout: {},
-        actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT
+        actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT,
       });
 
       mockApiClient.get.mockResolvedValueOnce(mockFormTaskResponse);
@@ -593,10 +590,7 @@ describe('TaskService Unit Tests', () => {
 
       // Should only call GET once (getFormTaskById), not GET_BY_ID first
       expect(mockApiClient.get).toHaveBeenCalledTimes(1);
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        TASK_ENDPOINTS.GET_TASK_FORM_BY_ID,
-        expect.any(Object)
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(TASK_ENDPOINTS.GET_TASK_FORM_BY_ID, expect.any(Object));
     });
 
     it('should skip GET_BY_ID and call getByTaskType directly when taskType is DocumentValidation', async () => {
@@ -607,7 +601,7 @@ describe('TaskService Unit Tests', () => {
         id: taskId,
         title: 'Document Validation Task',
         type: TaskType.DocumentValidation,
-        folderId: folderId
+        folderId: folderId,
       });
 
       mockApiClient.get.mockResolvedValueOnce(mockDocValidationResponse);
@@ -623,9 +617,9 @@ describe('TaskService Unit Tests', () => {
             taskId: taskId,
           }),
           headers: expect.objectContaining({
-            [FOLDER_ID]: folderId.toString()
-          })
-        })
+            [FOLDER_ID]: folderId.toString(),
+          }),
+        }),
       );
     });
 
@@ -637,28 +631,22 @@ describe('TaskService Unit Tests', () => {
         id: taskId,
         title: 'Document Validation Task',
         type: TaskType.DocumentValidation,
-        folderId: folderId
+        folderId: folderId,
       });
 
       const mockDocValidationResponse = createMockTaskGetResponse({
         id: taskId,
         title: 'Document Validation Task',
         type: TaskType.DocumentValidation,
-        folderId: folderId
+        folderId: folderId,
       });
 
-      mockApiClient.get
-        .mockResolvedValueOnce(mockTaskResponse)
-        .mockResolvedValueOnce(mockDocValidationResponse);
+      mockApiClient.get.mockResolvedValueOnce(mockTaskResponse).mockResolvedValueOnce(mockDocValidationResponse);
 
       await taskService.getById(taskId, {}, folderId);
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(2);
-      expect(mockApiClient.get).toHaveBeenNthCalledWith(
-        2,
-        TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
-        expect.any(Object)
-      );
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(2, TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID, expect.any(Object));
     });
 
     it('should skip GET_BY_ID and call getAppTaskById directly when taskType is App', async () => {
@@ -669,7 +657,7 @@ describe('TaskService Unit Tests', () => {
         id: taskId,
         title: 'App Task',
         type: TaskType.App,
-        folderId: folderId
+        folderId: folderId,
       });
 
       mockApiClient.get.mockResolvedValueOnce(mockAppTaskResponse);
@@ -685,9 +673,9 @@ describe('TaskService Unit Tests', () => {
             taskId: taskId,
           }),
           headers: expect.objectContaining({
-            [FOLDER_ID]: folderId.toString()
-          })
-        })
+            [FOLDER_ID]: folderId.toString(),
+          }),
+        }),
       );
     });
 
@@ -699,28 +687,22 @@ describe('TaskService Unit Tests', () => {
         id: taskId,
         title: 'App Task',
         type: TaskType.App,
-        folderId: folderId
+        folderId: folderId,
       });
 
       const mockAppTaskResponse = createMockTaskGetResponse({
         id: taskId,
         title: 'App Task',
         type: TaskType.App,
-        folderId: folderId
+        folderId: folderId,
       });
 
-      mockApiClient.get
-        .mockResolvedValueOnce(mockTaskResponse)
-        .mockResolvedValueOnce(mockAppTaskResponse);
+      mockApiClient.get.mockResolvedValueOnce(mockTaskResponse).mockResolvedValueOnce(mockAppTaskResponse);
 
       await taskService.getById(taskId, {}, folderId);
 
       expect(mockApiClient.get).toHaveBeenCalledTimes(2);
-      expect(mockApiClient.get).toHaveBeenNthCalledWith(
-        2,
-        TASK_ENDPOINTS.GET_APP_TASK_BY_ID,
-        expect.any(Object)
-      );
+      expect(mockApiClient.get).toHaveBeenNthCalledWith(2, TASK_ENDPOINTS.GET_APP_TASK_BY_ID, expect.any(Object));
     });
 
     it('should skip GET_BY_ID and call getGenericTaskById directly when taskType is External', async () => {
@@ -731,7 +713,7 @@ describe('TaskService Unit Tests', () => {
         id: taskId,
         title: 'External Task',
         type: TaskType.External,
-        folderId: folderId
+        folderId: folderId,
       });
 
       mockApiClient.get.mockResolvedValueOnce(mockResponse);
@@ -746,9 +728,9 @@ describe('TaskService Unit Tests', () => {
             taskId: taskId,
           }),
           headers: expect.objectContaining({
-            [FOLDER_ID]: folderId.toString()
-          })
-        })
+            [FOLDER_ID]: folderId.toString(),
+          }),
+        }),
       );
     });
 
@@ -762,7 +744,7 @@ describe('TaskService Unit Tests', () => {
         type: TaskType.Form,
         folderId: folderId,
         formLayout: {},
-        actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT
+        actionLabel: TASK_TEST_CONSTANTS.ACTION_SUBMIT,
       });
 
       mockApiClient.get.mockResolvedValueOnce(mockFormTaskResponse);
@@ -774,9 +756,9 @@ describe('TaskService Unit Tests', () => {
         expect.objectContaining({
           params: expect.objectContaining({
             taskId: taskId,
-            expandOnFormLayout: true
-          })
-        })
+            expandOnFormLayout: true,
+          }),
+        }),
       );
     });
 
@@ -788,19 +770,17 @@ describe('TaskService Unit Tests', () => {
         id: taskId,
         title: 'App Task',
         type: TaskType.App,
-        folderId: taskFolderId
+        folderId: taskFolderId,
       });
 
       const mockAppTaskResponse = createMockTaskGetResponse({
         id: taskId,
         title: 'App Task',
         type: TaskType.App,
-        folderId: taskFolderId
+        folderId: taskFolderId,
       });
 
-      mockApiClient.get
-        .mockResolvedValueOnce(mockTaskResponse)
-        .mockResolvedValueOnce(mockAppTaskResponse);
+      mockApiClient.get.mockResolvedValueOnce(mockTaskResponse).mockResolvedValueOnce(mockAppTaskResponse);
 
       // Call without folderId — should resolve from response
       await taskService.getById(taskId);
@@ -811,18 +791,16 @@ describe('TaskService Unit Tests', () => {
         TASK_ENDPOINTS.GET_APP_TASK_BY_ID,
         expect.objectContaining({
           headers: expect.objectContaining({
-            [FOLDER_ID]: taskFolderId.toString()
-          })
-        })
+            [FOLDER_ID]: taskFolderId.toString(),
+          }),
+        }),
       );
     });
 
     it('should throw ValidationError when taskType is provided without folderId', async () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
 
-      await expect(
-        taskService.getById(taskId, { taskType: TaskType.External })
-      ).rejects.toThrow(ValidationError);
+      await expect(taskService.getById(taskId, { taskType: TaskType.External })).rejects.toThrow(ValidationError);
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
@@ -831,7 +809,7 @@ describe('TaskService Unit Tests', () => {
       const taskId = TASK_TEST_CONSTANTS.TASK_ID;
       const mockResponse = createMockTaskGetResponse({
         id: taskId,
-        title: TASK_TEST_CONSTANTS.TASK_TITLE
+        title: TASK_TEST_CONSTANTS.TASK_TITLE,
       });
 
       mockApiClient.get.mockResolvedValue(mockResponse);
@@ -843,9 +821,9 @@ describe('TaskService Unit Tests', () => {
         expect.stringContaining(taskId.toString()),
         expect.objectContaining({
           params: expect.objectContaining({
-            expand: `${DEFAULT_TASK_EXPAND},CustomField`
-          })
-        })
+            expand: `${DEFAULT_TASK_EXPAND},CustomField`,
+          }),
+        }),
       );
     });
   });
@@ -861,7 +839,7 @@ describe('TaskService Unit Tests', () => {
       const mockTasks = createMockTasks(3);
       const mockResponse = {
         items: mockTasks,
-        totalCount: 3
+        totalCount: 3,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
@@ -874,9 +852,9 @@ describe('TaskService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
-        undefined
+        undefined,
       );
 
       expect(result).toEqual(mockResponse);
@@ -892,14 +870,14 @@ describe('TaskService Unit Tests', () => {
         nextCursor: TASK_TEST_CONSTANTS.CURSOR_NEXT,
         previousCursor: null,
         currentPage: 1,
-        totalPages: 10
+        totalPages: 10,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options = {
         pageSize: TEST_CONSTANTS.PAGE_SIZE,
-        jumpToPage: 1
+        jumpToPage: 1,
       } as TaskGetAllOptions;
 
       const result = await taskService.getAll(options);
@@ -910,12 +888,12 @@ describe('TaskService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
         expect.objectContaining({
           pageSize: TEST_CONSTANTS.PAGE_SIZE,
-          jumpToPage: 1
-        })
+          jumpToPage: 1,
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -926,13 +904,13 @@ describe('TaskService Unit Tests', () => {
       const mockTasks = createMockTasks(2);
       const mockResponse = {
         items: mockTasks,
-        totalCount: 2
+        totalCount: 2,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options = {
-        filter: "status eq 'Pending'"
+        filter: "status eq 'Pending'",
       } as TaskGetAllOptions;
 
       await taskService.getAll(options);
@@ -943,11 +921,11 @@ describe('TaskService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
         expect.objectContaining({
-          filter: "status eq 'Pending'"
-        })
+          filter: "status eq 'Pending'",
+        }),
       );
     });
 
@@ -955,7 +933,7 @@ describe('TaskService Unit Tests', () => {
       const mockTasks = createMockTasks(1);
       const mockResponse = {
         items: mockTasks,
-        totalCount: 1
+        totalCount: 1,
       };
 
       // Mock PaginationHelpers.getAll and capture the processParametersFn
@@ -979,7 +957,9 @@ describe('TaskService Unit Tests', () => {
       // Test processParametersFn with folderId and existing filter
       const optionsWithFilter = { filter: 'status eq "Pending"' };
       const processedWithFilter = capturedProcessParametersFn!(optionsWithFilter, TEST_CONSTANTS.FOLDER_ID);
-      expect(processedWithFilter.filter).toBe(`status eq "Pending" and organizationUnitId eq ${TEST_CONSTANTS.FOLDER_ID}`);
+      expect(processedWithFilter.filter).toBe(
+        `status eq "Pending" and organizationUnitId eq ${TEST_CONSTANTS.FOLDER_ID}`,
+      );
 
       // Test processParametersFn without folderId
       const optionsNoFolder = { select: 'id' };
@@ -991,7 +971,7 @@ describe('TaskService Unit Tests', () => {
       const mockTasks = createMockTasks(2);
       const mockResponse = {
         items: mockTasks,
-        totalCount: 2
+        totalCount: 2,
       };
 
       // Mock PaginationHelpers.getAll and capture the getEndpoint function
@@ -1011,7 +991,7 @@ describe('TaskService Unit Tests', () => {
       const mockTasks = createMockTasks(2);
       const mockResponse = {
         items: mockTasks,
-        totalCount: 2
+        totalCount: 2,
       };
 
       // Mock PaginationHelpers.getAll and capture the getEndpoint function
@@ -1040,7 +1020,7 @@ describe('TaskService Unit Tests', () => {
       const mockUsers = createMockUsers(3);
       const mockResponse = {
         items: mockUsers,
-        totalCount: 3
+        totalCount: 3,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
@@ -1053,11 +1033,11 @@ describe('TaskService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
         expect.objectContaining({
-          folderId: folderId
-        })
+          folderId: folderId,
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -1074,13 +1054,13 @@ describe('TaskService Unit Tests', () => {
         nextCursor: TASK_TEST_CONSTANTS.CURSOR_NEXT,
         previousCursor: null,
         currentPage: 1,
-        totalPages: 5
+        totalPages: 5,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options = {
-        pageSize: TEST_CONSTANTS.PAGE_SIZE
+        pageSize: TEST_CONSTANTS.PAGE_SIZE,
       } as TaskGetUsersOptions;
 
       const result = await taskService.getUsers(folderId, options);
@@ -1091,12 +1071,12 @@ describe('TaskService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
         expect.objectContaining({
           folderId: folderId,
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
-        })
+          pageSize: TEST_CONSTANTS.PAGE_SIZE,
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -1108,13 +1088,13 @@ describe('TaskService Unit Tests', () => {
       const mockUsers = createMockUsers(1);
       const mockResponse = {
         items: mockUsers,
-        totalCount: 1
+        totalCount: 1,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options = {
-        filter: "name eq 'abc'"
+        filter: "name eq 'abc'",
       } as TaskGetUsersOptions;
 
       await taskService.getUsers(folderId, options);
@@ -1125,12 +1105,12 @@ describe('TaskService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
         expect.objectContaining({
           folderId: folderId,
-          filter: "name eq 'abc'"
-        })
+          filter: "name eq 'abc'",
+        }),
       );
     });
 

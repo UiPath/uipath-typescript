@@ -1,8 +1,4 @@
-import {
-  Task,
-  MessageSeverity,
-  TaskCompleteResponse,
-} from './types';
+import { Task, MessageSeverity, TaskCompleteResponse } from './types';
 import { CodedActionAppsServiceModel } from './coded-action-apps.models';
 import { ActionCenterEventNames, ActionCenterEventResponsePayload } from './types.internal';
 
@@ -32,7 +28,7 @@ export class CodedActionAppsService implements CodedActionAppsServiceModel {
    *
    * @param actionTaken - A string identifying the action the user performed (e.g. `"Approve"`, `"Reject"`).
    * @param data - The final data payload to submit alongside the completion event.
-   * 
+   *
    * @returns A promise that resolves with a {@link TaskCompleteResponse} object
    *   containing success and error message if any.
    * @throws {Error} If called from an untrusted origin.
@@ -77,7 +73,7 @@ export class CodedActionAppsService implements CodedActionAppsServiceModel {
     const content = {
       msg,
       type,
-    }
+    };
     this.sendMessageToParent(ActionCenterEventNames.DISPLAYMESSAGE, content);
   }
 
@@ -116,7 +112,7 @@ export class CodedActionAppsService implements CodedActionAppsServiceModel {
     });
   }
 
-  /** 
+  /**
    * Removes the message event listener once a response is received or the timeout fires,
    * preventing memory leaks and duplicate handler invocations.
    */
@@ -124,7 +120,7 @@ export class CodedActionAppsService implements CodedActionAppsServiceModel {
     window.removeEventListener('message', messageListener);
   }
 
-  /** 
+  /**
    * Posts a structured message to the parent (Action Center) frame.
    * Skips the call if the parent origin is not trusted.
    * On serialisation errors, forwards an error event which displays an error toast in Action Center
@@ -135,25 +131,22 @@ export class CodedActionAppsService implements CodedActionAppsServiceModel {
   private sendMessageToParent(eventType: string, content?: unknown): void {
     if (window.parent && this.isValidOrigin(this.parentOrigin)) {
       try {
-        window.parent.postMessage(
-          { eventType, content },
-          this.parentOrigin!,
-        );
+        window.parent.postMessage({ eventType, content }, this.parentOrigin!);
       } catch (error) {
         window.parent.postMessage(
           {
             eventType: ActionCenterEventNames.ERROR,
             content: {
               errorData: error,
-            }
+            },
           },
-          this.parentOrigin!
+          this.parentOrigin!,
         );
       }
     }
   }
 
-  /** 
+  /**
    * Validates that the given origin is a known UiPath environment or a local development server,
    * guarding against cross-origin message spoofing.
    *

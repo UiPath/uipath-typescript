@@ -9,7 +9,7 @@ import type {
   MessageRole,
   MetaData,
   ToolCallInputValue,
-  ToolCallOutputValue
+  ToolCallOutputValue,
 } from '../common.types';
 import { InterruptType } from '../common.types';
 
@@ -23,7 +23,7 @@ import { InterruptType } from '../common.types';
 export enum InputStreamSpeechSensitivity {
   Unspecified = 'UNSPECIFIED',
   High = 'HIGH',
-  Low = 'LOW'
+  Low = 'LOW',
 }
 
 /**

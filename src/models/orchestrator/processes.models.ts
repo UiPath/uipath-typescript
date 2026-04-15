@@ -1,5 +1,11 @@
 import { RequestOptions } from '../common/types';
-import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions } from './processes.types';
+import {
+  ProcessGetAllOptions,
+  ProcessGetResponse,
+  ProcessStartRequest,
+  ProcessStartResponse,
+  ProcessGetByIdOptions,
+} from './processes.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -23,7 +29,7 @@ export interface ProcessServiceModel {
    * Gets all processes across folders with optional filtering
    * Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided,
    * or a PaginatedResponse when any pagination parameter is provided
-   * 
+   *
    * @param options - Query options including optional folderId and pagination options
    * @returns Promise resolving to either an array of processes NonPaginatedResponse<ProcessGetResponse> or a PaginatedResponse<ProcessGetResponse> when pagination options are used.
    * {@link ProcessGetResponse}
@@ -57,15 +63,15 @@ export interface ProcessServiceModel {
    * });
    * ```
    */
-  getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(options?: T): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ProcessGetResponse>
-      : NonPaginatedResponse<ProcessGetResponse>
+  getAll<T extends ProcessGetAllOptions = ProcessGetAllOptions>(
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T> ? PaginatedResponse<ProcessGetResponse> : NonPaginatedResponse<ProcessGetResponse>
   >;
-  
+
   /**
    * Gets a single process by ID
-   * 
+   *
    * @param id - Process ID
    * @param folderId - Required folder ID
    * @param options - Optional query parameters
@@ -78,10 +84,10 @@ export interface ProcessServiceModel {
    * ```
    */
   getById(id: number, folderId: number, options?: ProcessGetByIdOptions): Promise<ProcessGetResponse>;
-  
+
   /**
    * Starts a process with the specified configuration
-   * 
+   *
    * @param request - Process start configuration
    * @param folderId - Required folder ID
    * @param options - Optional request options
@@ -101,4 +107,4 @@ export interface ProcessServiceModel {
    * ```
    */
   start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
-} 
+}

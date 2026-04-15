@@ -3,7 +3,7 @@
  * Types and interfaces for Maestro process instance management
  */
 
-import { PaginationOptions } from "../../utils/pagination";
+import { PaginationOptions } from '../../utils/pagination';
 
 /**
  * Response for getting a single process instance
@@ -26,7 +26,6 @@ export interface RawProcessInstanceGetResponse {
   completedTime: string | null;
   instanceRuns: ProcessInstanceRun[];
 }
-
 
 /**
  * Query options for getting process instances
@@ -105,7 +104,7 @@ export interface ElementMetaData {
 export interface GlobalVariableMetaData {
   id: string;
   name: string;
-  /** 
+  /**
    * Common values: "integer", "string", "boolean"
    * May also contain custom types or "any" when type cannot be determined
    */

@@ -75,33 +75,34 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    */
   @track('Jobs.GetAll')
   async getAll<T extends JobGetAllOptions = JobGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<JobGetResponse>
-      : NonPaginatedResponse<JobGetResponse>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<JobGetResponse> : NonPaginatedResponse<JobGetResponse>
   > {
     const transformJobResponse = (job: Record<string, unknown>) => {
       const rawJob = transformData(pascalToCamelCaseKeys(job) as RawJobGetResponse, JobMap);
       return createJobWithMethods(rawJob, this);
     };
 
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => JOB_ENDPOINTS.GET_ALL,
-      getByFolderEndpoint: JOB_ENDPOINTS.GET_ALL,
-      transformFn: transformJobResponse,
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
-          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
-          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => JOB_ENDPOINTS.GET_ALL,
+        getByFolderEndpoint: JOB_ENDPOINTS.GET_ALL,
+        transformFn: transformJobResponse,
+        pagination: {
+          paginationType: PaginationType.OFFSET,
+          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+          paginationParams: {
+            pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+            offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+            countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
+          },
         },
       },
-    }, options) as any;
+      options,
+    ) as any;
   }
 
   /**
@@ -144,13 +145,10 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     const keysToPrefix = Object.keys(options ?? {});
     const apiOptions = options ? addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix) : {};
 
-    const response = await this.get<Record<string, unknown>>(
-      JOB_ENDPOINTS.GET_BY_KEY(id),
-      {
-        params: apiOptions,
-        headers,
-      }
-    );
+    const response = await this.get<Record<string, unknown>>(JOB_ENDPOINTS.GET_BY_KEY(id), {
+      params: apiOptions,
+      headers,
+    });
 
     const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
     return createJobWithMethods(rawJob, this);
@@ -217,9 +215,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * 2. Downloads content from the presigned blob URI
    * 3. Parses and returns the JSON content
    */
-  private async downloadOutputFile(
-    outputFileKey: string
-  ): Promise<Record<string, unknown> | null> {
+  private async downloadOutputFile(outputFileKey: string): Promise<Record<string, unknown> | null> {
     const attachment = await this.attachmentService.getById(outputFileKey);
 
     const blobAccess = attachment.blobFileAccess;

@@ -5,14 +5,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 let mockSocketInstance: any;
 
 vi.mock('socket.io-client', () => ({
-  io: vi.fn(() => mockSocketInstance)
+  io: vi.fn(() => mockSocketInstance),
 }));
 
 import { BaseWebSocket } from '@/core/websocket/base';
 import { ConnectionStatus, LogLevel } from '@/core/websocket/types';
-import type {
-  BaseWebSocketConfig,
-} from '@/core/websocket/types';
+import type { BaseWebSocketConfig } from '@/core/websocket/types';
 import { NetworkError } from '@/core/errors/network';
 import { TEST_CONSTANTS } from '@tests/utils/mocks';
 
@@ -32,7 +30,7 @@ class TestWebSocket extends BaseWebSocket {
 // ===== TEST SETUP =====
 const mockConfig: BaseWebSocketConfig = {
   baseUrl: TEST_CONSTANTS.BASE_URL,
-  logLevel: LogLevel.Error // suppress logs in tests
+  logLevel: LogLevel.Error, // suppress logs in tests
 };
 
 const mockExecutionContext = {} as any;
@@ -47,9 +45,7 @@ function createTestWebSocket(): TestWebSocket {
  * Helper: find a registered socket.on handler by event name
  */
 function getSocketHandler(eventName: string): ((...args: any[]) => void) | undefined {
-  const call = mockSocketInstance.on.mock.calls.find(
-    (c: any[]) => c[0] === eventName
-  );
+  const call = mockSocketInstance.on.mock.calls.find((c: any[]) => c[0] === eventName);
   return call?.[1];
 }
 
@@ -85,11 +81,11 @@ describe('BaseWebSocket Unit Tests', () => {
       off: vi.fn(),
       emit: vi.fn(),
       onAny: vi.fn(),
-      onAnyOutgoing: vi.fn()
+      onAnyOutgoing: vi.fn(),
     };
 
     mockTokenManager = {
-      getValidToken: vi.fn().mockResolvedValue('test-token')
+      getValidToken: vi.fn().mockResolvedValue('test-token'),
     };
   });
 
@@ -187,7 +183,7 @@ describe('BaseWebSocket Unit Tests', () => {
 
       const promise = ws.getConnectedSocket();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(ws.connectionStatus).toBe(ConnectionStatus.Connecting);
 
@@ -217,17 +213,23 @@ describe('BaseWebSocket Unit Tests', () => {
       let resolved = false;
       let rejected = false;
 
-      promise.then(() => { resolved = true; }).catch(() => { rejected = true; });
+      promise
+        .then(() => {
+          resolved = true;
+        })
+        .catch(() => {
+          rejected = true;
+        });
 
       simulateConnectError('Temporary failure');
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(resolved).toBe(false);
       expect(rejected).toBe(false);
       expect(ws.connectionStatus).toBe(ConnectionStatus.Connecting);
 
       simulateConnect();
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(resolved).toBe(true);
       expect(rejected).toBe(false);
@@ -244,8 +246,7 @@ describe('BaseWebSocket Unit Tests', () => {
       ws.connect();
       simulateConnect();
 
-      const onAnyCallback = mockSocketInstance.onAny.mock.calls[0]?.[1]
-        ?? mockSocketInstance.onAny.mock.calls[0]?.[0];
+      const onAnyCallback = mockSocketInstance.onAny.mock.calls[0]?.[1] ?? mockSocketInstance.onAny.mock.calls[0]?.[0];
 
       onAnyCallback('test-event', { message: 'hello' });
 
@@ -261,8 +262,7 @@ describe('BaseWebSocket Unit Tests', () => {
       ws.connect();
       simulateConnect();
 
-      const onAnyCallback = mockSocketInstance.onAny.mock.calls[0]?.[1]
-        ?? mockSocketInstance.onAny.mock.calls[0]?.[0];
+      const onAnyCallback = mockSocketInstance.onAny.mock.calls[0]?.[1] ?? mockSocketInstance.onAny.mock.calls[0]?.[0];
 
       onAnyCallback('test-event', { data: 'payload' });
 
@@ -281,8 +281,7 @@ describe('BaseWebSocket Unit Tests', () => {
       ws.connect();
       simulateConnect();
 
-      const onAnyCallback = mockSocketInstance.onAny.mock.calls[0]?.[1]
-        ?? mockSocketInstance.onAny.mock.calls[0]?.[0];
+      const onAnyCallback = mockSocketInstance.onAny.mock.calls[0]?.[1] ?? mockSocketInstance.onAny.mock.calls[0]?.[0];
 
       onAnyCallback('test-event', { data: 'payload' });
 
@@ -297,7 +296,7 @@ describe('BaseWebSocket Unit Tests', () => {
 
       ws.addEventListeners({
         'event-a': handler1,
-        'event-b': handler2
+        'event-b': handler2,
       });
 
       ws.clearEventListeners();
@@ -305,8 +304,7 @@ describe('BaseWebSocket Unit Tests', () => {
       ws.connect();
       simulateConnect();
 
-      const onAnyCallback = mockSocketInstance.onAny.mock.calls[0]?.[1]
-        ?? mockSocketInstance.onAny.mock.calls[0]?.[0];
+      const onAnyCallback = mockSocketInstance.onAny.mock.calls[0]?.[1] ?? mockSocketInstance.onAny.mock.calls[0]?.[0];
 
       onAnyCallback('event-a', {});
       onAnyCallback('event-b', {});
@@ -339,10 +337,7 @@ describe('BaseWebSocket Unit Tests', () => {
 
       simulateConnectError('Auth failed');
 
-      expect(handler).toHaveBeenCalledWith(
-        ConnectionStatus.Connecting,
-        expect.any(NetworkError)
-      );
+      expect(handler).toHaveBeenCalledWith(ConnectionStatus.Connecting, expect.any(NetworkError));
       const errorArg = handler.mock.calls[0][1] as NetworkError;
       expect(errorArg.message).toContain('Auth failed');
     });

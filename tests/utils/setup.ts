@@ -31,7 +31,7 @@ global.console = {
   error: vi.fn(),
   log: vi.fn(),
   info: vi.fn(),
-  debug: vi.fn()
+  debug: vi.fn(),
 };
 
 // Mock environment variables
@@ -82,7 +82,7 @@ export const createMockApiClient = () => ({
   put: vi.fn(),
   patch: vi.fn(),
   delete: vi.fn(),
-  getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN)
+  getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN),
 });
 
 /**
@@ -99,7 +99,7 @@ export const createMockApiClient = () => ({
  */
 export const createMockUiPath = (
   configOverrides?: Partial<UiPathConfig>,
-  tokenManagerOverrides?: Partial<TokenManager>
+  tokenManagerOverrides?: Partial<TokenManager>,
 ): UiPath => {
   const config = createMockConfig(configOverrides);
   const executionContext = createMockExecutionContext();
@@ -109,7 +109,7 @@ export const createMockUiPath = (
     config: {
       baseUrl: config.baseUrl,
       orgName: config.orgName,
-      tenantName: config.tenantName
+      tenantName: config.tenantName,
     },
     isAuthenticated: () => true,
     isInitialized: () => true,
@@ -119,7 +119,7 @@ export const createMockUiPath = (
   SDKInternalsRegistry.set(mockInstance, {
     config,
     context: executionContext,
-    tokenManager
+    tokenManager,
   });
 
   return mockInstance;
@@ -143,7 +143,7 @@ export const createMockUiPath = (
  */
 export const createServiceTestDependencies = (
   configOverrides?: Partial<UiPathConfig>,
-  tokenManagerOverrides?: Partial<MockableTokenManager>
+  tokenManagerOverrides?: Partial<MockableTokenManager>,
 ) => {
   const config = createMockConfig(configOverrides);
   const executionContext = createMockExecutionContext();
@@ -154,7 +154,7 @@ export const createServiceTestDependencies = (
     config: {
       baseUrl: config.baseUrl,
       orgName: config.orgName,
-      tenantName: config.tenantName
+      tenantName: config.tenantName,
     },
     isAuthenticated: () => true,
     isInitialized: () => true,
@@ -167,7 +167,7 @@ export const createServiceTestDependencies = (
   SDKInternalsRegistry.set(mockInstance, {
     config,
     context: executionContext,
-    tokenManager
+    tokenManager,
   });
 
   return {

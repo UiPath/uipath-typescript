@@ -19,7 +19,7 @@ import type {
   SessionEndingEvent,
   SessionStartedEvent,
   SessionStartEvent,
-  ToolCallStartEvent
+  ToolCallStartEvent,
 } from './protocol.types';
 
 import type { AsyncInputStream } from './input-stream.types';

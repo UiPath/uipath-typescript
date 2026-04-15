@@ -19,11 +19,11 @@ import { track } from '../../../core/telemetry';
 export class AssetService extends FolderScopedService implements AssetServiceModel {
   /**
    * Gets all assets across folders with optional filtering and folder scoping
-   * 
+   *
    * @signature getAll(options?) -> Promise<AssetGetResponse[]>
    * @param options Query options including optional folderId and pagination options
    * @returns Promise resolving to array of assets or paginated response
-   * 
+   *
    * @example
    * ```typescript
    * import { Assets } from '@uipath/uipath-typescript/assets';
@@ -53,42 +53,43 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    */
   @track('Assets.GetAll')
   async getAll<T extends AssetGetAllOptions = AssetGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<AssetGetResponse>
-      : NonPaginatedResponse<AssetGetResponse>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<AssetGetResponse> : NonPaginatedResponse<AssetGetResponse>
   > {
     // Transformation function for assets
-    const transformAssetResponse = (asset: any) => 
+    const transformAssetResponse = (asset: any) =>
       transformData(pascalToCamelCaseKeys(asset) as AssetGetResponse, AssetMap);
 
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: (folderId) => folderId ? ASSET_ENDPOINTS.GET_BY_FOLDER : ASSET_ENDPOINTS.GET_ALL,
-      getByFolderEndpoint: ASSET_ENDPOINTS.GET_BY_FOLDER,
-      transformFn: transformAssetResponse,
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
-        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,     
-          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
-          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
-        }
-      }
-    }, options) as any;
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: (folderId) => (folderId ? ASSET_ENDPOINTS.GET_BY_FOLDER : ASSET_ENDPOINTS.GET_ALL),
+        getByFolderEndpoint: ASSET_ENDPOINTS.GET_BY_FOLDER,
+        transformFn: transformAssetResponse,
+        pagination: {
+          paginationType: PaginationType.OFFSET,
+          itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+          totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+          paginationParams: {
+            pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+            offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+            countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
+          },
+        },
+      },
+      options,
+    ) as any;
   }
 
   /**
    * Gets a single asset by ID
-   * 
+   *
    * @param id - Asset ID
    * @param folderId - Required folder ID
    * @param options - Optional query parameters (expand, select)
    * @returns Promise resolving to a single asset
-   * 
+   *
    * @example
    * ```typescript
    * import { Assets } from '@uipath/uipath-typescript/assets';
@@ -102,20 +103,17 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
   @track('Assets.GetById')
   async getById(id: number, folderId: number, options: AssetGetByIdOptions = {}): Promise<AssetGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.get<AssetGetResponse>(
-      ASSET_ENDPOINTS.GET_BY_ID(id),
-      { 
-        headers,
-        params: apiOptions
-      }
-    );
+
+    const response = await this.get<AssetGetResponse>(ASSET_ENDPOINTS.GET_BY_ID(id), {
+      headers,
+      params: apiOptions,
+    });
 
     const transformedAsset = transformData(pascalToCamelCaseKeys(response.data) as AssetGetResponse, AssetMap);
-    
+
     return transformedAsset;
   }
 }

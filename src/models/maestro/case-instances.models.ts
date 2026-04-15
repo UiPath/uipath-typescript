@@ -5,7 +5,7 @@ import {
   CaseInstanceOperationResponse,
   CaseInstanceReopenOptions,
   CaseGetStageResponse,
-  CaseInstanceExecutionHistoryResponse
+  CaseInstanceExecutionHistoryResponse,
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -30,7 +30,7 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
 export interface CaseInstancesServiceModel {
   /**
    * Get all case instances with optional filtering and pagination
-   * 
+   *
    * @param options Query parameters for filtering instances and pagination
    * @returns Promise resolving to either an array of case instances NonPaginatedResponse<CaseInstanceGetResponse> or a PaginatedResponse<CaseInstanceGetResponse> when pagination options are used.
    * {@link CaseInstanceGetResponse}
@@ -61,7 +61,7 @@ export interface CaseInstancesServiceModel {
    * ```
    */
   getAll<T extends CaseInstanceGetAllWithPaginationOptions = CaseInstanceGetAllWithPaginationOptions>(
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<CaseInstanceGetResponse>
@@ -121,7 +121,11 @@ export interface CaseInstancesServiceModel {
    * }
    * ```
    */
-  close(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+  close(
+    instanceId: string,
+    folderKey: string,
+    options?: CaseInstanceOperationOptions,
+  ): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
    * Pause a case instance
@@ -130,7 +134,11 @@ export interface CaseInstancesServiceModel {
    * @param options - Optional pause options with comment
    * @returns Promise resolving to operation result with instance data
    */
-  pause(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+  pause(
+    instanceId: string,
+    folderKey: string,
+    options?: CaseInstanceOperationOptions,
+  ): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
    * Reopen a case instance from a specified element
@@ -169,7 +177,11 @@ export interface CaseInstancesServiceModel {
    * const result = await instance.reopen({ stageId: stages[0].id });
    * ```
    */
-  reopen(instanceId: string, folderKey: string, options: CaseInstanceReopenOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+  reopen(
+    instanceId: string,
+    folderKey: string,
+    options: CaseInstanceReopenOptions,
+  ): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
    * Resume a case instance
@@ -178,12 +190,16 @@ export interface CaseInstancesServiceModel {
    * @param options - Optional resume options with comment
    * @returns Promise resolving to operation result with instance data
    */
-  resume(instanceId: string, folderKey: string, options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>>;
+  resume(
+    instanceId: string,
+    folderKey: string,
+    options?: CaseInstanceOperationOptions,
+  ): Promise<OperationResponse<CaseInstanceOperationResponse>>;
 
   /**
    * Get execution history for a case instance
    * @param instanceId - The ID of the case instance
-   * @param folderKey - Required folder key 
+   * @param folderKey - Required folder key
    * @returns Promise resolving to instance execution history
    * {@link CaseInstanceExecutionHistoryResponse}
    * @example
@@ -202,13 +218,10 @@ export interface CaseInstancesServiceModel {
    * }
    * ```
    */
-  getExecutionHistory(
-    instanceId: string, 
-    folderKey: string
-  ): Promise<CaseInstanceExecutionHistoryResponse>;
+  getExecutionHistory(instanceId: string, folderKey: string): Promise<CaseInstanceExecutionHistoryResponse>;
 
   /**
-   * Get stages and its associated tasks information for a case instance 
+   * Get stages and its associated tasks information for a case instance
    * @param caseInstanceId - The ID of the case instance
    * @param folderKey - Required folder key
    * @returns Promise resolving to an array of case stages with their tasks and status
@@ -237,11 +250,11 @@ export interface CaseInstancesServiceModel {
 
   /**
    * Get human in the loop tasks associated with a case instance
-   * 
+   *
    * The method returns either:
    * - An array of tasks (when no pagination parameters are provided)
    * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param caseInstanceId - The ID of the case instance
    * @param options - Optional filtering and pagination options
    * @returns Promise resolving to human in the loop tasks associated with the case instance
@@ -275,11 +288,9 @@ export interface CaseInstancesServiceModel {
    */
   getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
     caseInstanceId: string,
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<TaskGetResponse>
-      : NonPaginatedResponse<TaskGetResponse>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>
   >;
 }
 
@@ -287,7 +298,7 @@ export interface CaseInstancesServiceModel {
 export interface CaseInstanceMethods {
   /**
    * Closes/cancels this case instance
-   * 
+   *
    * @param options - Optional close options with comment
    * @returns Promise resolving to operation result
    */
@@ -338,11 +349,9 @@ export interface CaseInstanceMethods {
    * @returns Promise resolving to human in the loop tasks associated with the case instance
    */
   getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<TaskGetResponse>
-      : NonPaginatedResponse<TaskGetResponse>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>
   >;
 }
 
@@ -351,20 +360,23 @@ export type CaseInstanceGetResponse = RawCaseInstanceGetResponse & CaseInstanceM
 
 /**
  * Creates methods for a case instance
- * 
+ *
  * @param instanceData - The case instance data (response from API)
  * @param service - The case instance service instance
  * @returns Object containing case instance methods
  */
-function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, service: CaseInstancesServiceModel): CaseInstanceMethods {
+function createCaseInstanceMethods(
+  instanceData: RawCaseInstanceGetResponse,
+  service: CaseInstancesServiceModel,
+): CaseInstanceMethods {
   return {
     async close(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
-      
+
       return service.close(instanceData.instanceId, instanceData.folderKey, options);
     },
-    
+
     async pause(options?: CaseInstanceOperationOptions): Promise<OperationResponse<CaseInstanceOperationResponse>> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Case instance folder key is undefined');
@@ -401,29 +413,27 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
     },
 
     async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
-      options?: T
+      options?: T,
     ): Promise<
-      T extends HasPaginationOptions<T>
-        ? PaginatedResponse<TaskGetResponse>
-        : NonPaginatedResponse<TaskGetResponse>
+      T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>
     > {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
 
       return service.getActionTasks(instanceData.instanceId, options);
-    }
+    },
   };
 }
 
 /**
  * Creates an actionable case instance by combining API case instance data with operational methods.
- * 
+ *
  * @param instanceData - The case instance data from API
  * @param service - The case instance service instance
  * @returns A case instance object with added methods
  */
 export function createCaseInstanceWithMethods(
-  instanceData: RawCaseInstanceGetResponse, 
-  service: CaseInstancesServiceModel
+  instanceData: RawCaseInstanceGetResponse,
+  service: CaseInstancesServiceModel,
 ): CaseInstanceGetResponse {
   const methods = createCaseInstanceMethods(instanceData, service);
   return Object.assign({}, instanceData, methods) as CaseInstanceGetResponse;

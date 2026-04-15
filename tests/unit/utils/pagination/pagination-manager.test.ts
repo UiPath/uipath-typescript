@@ -3,9 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { PaginationManager } from '../../../../src/utils/pagination/pagination-manager';
 import { PaginationType, PaginationInfo } from '../../../../src/utils/pagination/internal-types';
 import { PAGINATION_TEST_CONSTANTS } from '../../../utils/constants';
-import {
-  createMockRawItem
-} from '../../../utils/mocks/pagination';
+import { createMockRawItem } from '../../../utils/mocks/pagination';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
 
 // ===== TEST SUITE =====
@@ -17,9 +15,9 @@ describe('PaginationManager Unit Tests', () => {
           pageInfo: {
             hasMore: true,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER_1,
-            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
+            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const cursor = PaginationManager.createCursor(paginationInfo);
@@ -39,9 +37,9 @@ describe('PaginationManager Unit Tests', () => {
           pageInfo: {
             hasMore: false,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER_1,
-            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
+            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const cursor = PaginationManager.createCursor(paginationInfo);
@@ -53,9 +51,9 @@ describe('PaginationManager Unit Tests', () => {
         const paginationInfo: PaginationInfo = {
           pageInfo: {
             hasMore: true,
-            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
+            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const cursor = PaginationManager.createCursor(paginationInfo);
@@ -73,9 +71,9 @@ describe('PaginationManager Unit Tests', () => {
           pageInfo: {
             hasMore: true,
             continuationToken: PAGINATION_TEST_CONSTANTS.CONTINUATION_TOKEN,
-            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
+            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
           },
-          type: PaginationType.TOKEN
+          type: PaginationType.TOKEN,
         };
 
         const cursor = PaginationManager.createCursor(paginationInfo);
@@ -92,9 +90,9 @@ describe('PaginationManager Unit Tests', () => {
           pageInfo: {
             hasMore: false,
             continuationToken: PAGINATION_TEST_CONSTANTS.CONTINUATION_TOKEN,
-            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
+            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
           },
-          type: PaginationType.TOKEN
+          type: PaginationType.TOKEN,
         };
 
         const cursor = PaginationManager.createCursor(paginationInfo);
@@ -106,9 +104,9 @@ describe('PaginationManager Unit Tests', () => {
         const paginationInfo: PaginationInfo = {
           pageInfo: {
             hasMore: true,
-            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
+            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
           },
-          type: PaginationType.TOKEN
+          type: PaginationType.TOKEN,
         };
 
         const cursor = PaginationManager.createCursor(paginationInfo);
@@ -122,9 +120,11 @@ describe('PaginationManager Unit Tests', () => {
     describe('OFFSET pagination', () => {
       // Mock items - creates an array of 10 items
       const MOCK_PAGE_ITEMS = Array.from({ length: PAGINATION_TEST_CONSTANTS.PAGE_SIZE }, (_, i) =>
-        createMockRawItem(i + 1, `Item${i + 1}`)
+        createMockRawItem(i + 1, `Item${i + 1}`),
       );
-      const MOCK_SINGLE_ITEM = [createMockRawItem(PAGINATION_TEST_CONSTANTS.ITEM_ID_1, PAGINATION_TEST_CONSTANTS.ITEM_NAME_1)];
+      const MOCK_SINGLE_ITEM = [
+        createMockRawItem(PAGINATION_TEST_CONSTANTS.ITEM_ID_1, PAGINATION_TEST_CONSTANTS.ITEM_NAME_1),
+      ];
 
       it('should create paginated response with all fields for middle page', () => {
         const items = MOCK_PAGE_ITEMS;
@@ -134,9 +134,9 @@ describe('PaginationManager Unit Tests', () => {
             hasMore: true,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER,
             pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -167,9 +167,9 @@ describe('PaginationManager Unit Tests', () => {
             hasMore: true,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER_1,
             pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -190,9 +190,9 @@ describe('PaginationManager Unit Tests', () => {
             hasMore: false,
             currentPage: PAGINATION_TEST_CONSTANTS.TOTAL_PAGES,
             pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100,
           },
-          type:  PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -212,9 +212,9 @@ describe('PaginationManager Unit Tests', () => {
             hasMore: false,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER_1,
             pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_1
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_1,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -230,7 +230,7 @@ describe('PaginationManager Unit Tests', () => {
       it('should calculate total pages with remainder', () => {
         // Create 15 items to match the page size
         const items = Array.from({ length: PAGINATION_TEST_CONSTANTS.PAGE_SIZE_15 }, (_, i) =>
-          createMockRawItem(i + 1, `Item${i + 1}`)
+          createMockRawItem(i + 1, `Item${i + 1}`),
         );
 
         const paginationInfo: PaginationInfo = {
@@ -238,9 +238,9 @@ describe('PaginationManager Unit Tests', () => {
             hasMore: true,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER_1,
             pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE_15,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -256,9 +256,9 @@ describe('PaginationManager Unit Tests', () => {
           pageInfo: {
             hasMore: true,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER_1,
-            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE
+            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -275,9 +275,9 @@ describe('PaginationManager Unit Tests', () => {
           pageInfo: {
             hasMore: true,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER_1,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -294,9 +294,9 @@ describe('PaginationManager Unit Tests', () => {
             hasMore: false,
             currentPage: PAGINATION_TEST_CONSTANTS.PAGE_NUMBER_1,
             pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_0
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_0,
           },
-          type: PaginationType.OFFSET
+          type: PaginationType.OFFSET,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -314,7 +314,7 @@ describe('PaginationManager Unit Tests', () => {
     describe('TOKEN pagination', () => {
       // Mock items for token pagination - creates 20 items
       const MOCK_TOKEN_PAGE_ITEMS = Array.from({ length: PAGINATION_TEST_CONSTANTS.PAGE_SIZE_20 }, (_, i) =>
-        createMockRawItem(i + 1, `Item${i + 1}`)
+        createMockRawItem(i + 1, `Item${i + 1}`),
       );
 
       it('should create paginated response with token pagination', () => {
@@ -325,9 +325,9 @@ describe('PaginationManager Unit Tests', () => {
             hasMore: true,
             continuationToken: PAGINATION_TEST_CONSTANTS.CONTINUATION_TOKEN,
             pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE_20,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100,
           },
-          type: PaginationType.TOKEN
+          type: PaginationType.TOKEN,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -353,9 +353,9 @@ describe('PaginationManager Unit Tests', () => {
           pageInfo: {
             hasMore: false,
             pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE_20,
-            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100
+            totalCount: PAGINATION_TEST_CONSTANTS.TOTAL_COUNT_100,
           },
-          type: PaginationType.TOKEN
+          type: PaginationType.TOKEN,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);
@@ -372,9 +372,9 @@ describe('PaginationManager Unit Tests', () => {
         const paginationInfo: PaginationInfo = {
           pageInfo: {
             hasMore: true,
-            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE_20
+            pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE_20,
           },
-          type: PaginationType.TOKEN
+          type: PaginationType.TOKEN,
         };
 
         const response = PaginationManager.createPaginatedResponse(paginationInfo, items);

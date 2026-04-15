@@ -13,7 +13,10 @@ export type ResponseType = 'json' | 'text' | 'blob' | 'arraybuffer' | 'stream';
 /**
  * Query parameters type with support for arrays and nested objects
  */
-export type QueryParams = Record<string, string | number | boolean | Array<string | number | boolean> | null | undefined>;
+export type QueryParams = Record<
+  string,
+  string | number | boolean | Array<string | number | boolean> | null | undefined
+>;
 
 /**
  * Standard HTTP headers type
@@ -74,31 +77,31 @@ export interface PaginationMetadata {
 export interface RequestSpec {
   /** HTTP method for the request */
   method?: HttpMethod;
-  
+
   /** URL endpoint for the request */
   url?: string;
-  
+
   /** Query parameters to be appended to the URL */
   params?: QueryParams;
-  
+
   /** HTTP headers to include with the request */
   headers?: Headers;
-  
+
   /** Raw body content (takes precedence over data) */
   body?: unknown;
-  
+
   /** Expected response type */
   responseType?: ResponseType;
-  
+
   /** Request timeout options */
   timeoutOptions?: TimeoutOptions;
-  
+
   /** Retry behavior options */
   retryOptions?: RetryOptions;
-  
+
   /** Body transformation options */
   bodyOptions?: BodyOptions;
-  
+
   /** AbortSignal for cancelling the request */
   signal?: AbortSignal;
 

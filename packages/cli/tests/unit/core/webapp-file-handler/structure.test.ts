@@ -114,12 +114,21 @@ describe('structure', () => {
       const structure: ProjectStructure = {
         name: 'project',
         files: [{ id: '1', name: 'root.txt' }],
-        folders: [{
-          id: 'f1', name: 'source', files: [{ id: '2', name: 'app.js' }],
-          folders: [{
-            id: 'f2', name: 'dist', files: [{ id: '3', name: 'index.html' }], folders: [],
-          }],
-        }],
+        folders: [
+          {
+            id: 'f1',
+            name: 'source',
+            files: [{ id: '2', name: 'app.js' }],
+            folders: [
+              {
+                id: 'f2',
+                name: 'dist',
+                files: [{ id: '3', name: 'index.html' }],
+                folders: [],
+              },
+            ],
+          },
+        ],
       };
       const map = getRemoteFilesMap(structure);
       expect(map.get('root.txt')?.id).toBe('1');
@@ -133,10 +142,14 @@ describe('structure', () => {
       const structure: ProjectStructure = {
         name: 'project',
         files: [],
-        folders: [{
-          id: 'f1', name: 'source', files: [],
-          folders: [{ id: 'f2', name: 'dist', files: [], folders: [] }],
-        }],
+        folders: [
+          {
+            id: 'f1',
+            name: 'source',
+            files: [],
+            folders: [{ id: 'f2', name: 'dist', files: [], folders: [] }],
+          },
+        ],
       };
       const map = getRemoteFoldersMap(structure);
       expect(map.has('source')).toBe(true);
@@ -153,14 +166,18 @@ describe('structure', () => {
     });
     it('should return true for folder with only empty subfolders', () => {
       const folder: ProjectFolder = {
-        id: '1', name: 'parent', files: [],
+        id: '1',
+        name: 'parent',
+        files: [],
         folders: [{ id: '2', name: 'child', files: [], folders: [] }],
       };
       expect(isFolderEmpty(folder)).toBe(true);
     });
     it('should return false if nested subfolder has files', () => {
       const folder: ProjectFolder = {
-        id: '1', name: 'parent', files: [],
+        id: '1',
+        name: 'parent',
+        files: [],
         folders: [{ id: '2', name: 'child', files: [{ id: '3', name: 'f.txt' }], folders: [] }],
       };
       expect(isFolderEmpty(folder)).toBe(false);
@@ -185,13 +202,17 @@ describe('structure', () => {
       const structure: ProjectStructure = {
         name: 'project',
         files: [],
-        folders: [{
-          id: 'f1', name: 'source', files: [],
-          folders: [
-            { id: 'f2', name: 'empty', files: [], folders: [] },
-            { id: 'f3', name: 'full', files: [{ id: '1', name: 'a.txt' }], folders: [] },
-          ],
-        }],
+        folders: [
+          {
+            id: 'f1',
+            name: 'source',
+            files: [],
+            folders: [
+              { id: 'f2', name: 'empty', files: [], folders: [] },
+              { id: 'f3', name: 'full', files: [{ id: '1', name: 'a.txt' }], folders: [] },
+            ],
+          },
+        ],
       };
       const result = findEmptyFolders(structure, 'source');
       expect(result.length).toBe(1); // only 'empty' subfolder (source itself has 'full' sibling)

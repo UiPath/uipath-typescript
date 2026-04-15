@@ -7,4 +7,5 @@
  */
 export const isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
-export const isInActionCenter = isBrowser && window.self != window.top && window.location.href.includes('source=ActionCenter');
+export const isInActionCenter =
+  isBrowser && window.self != window.top && window.location.href.includes('source=ActionCenter');

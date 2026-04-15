@@ -6,11 +6,7 @@ import {
   transformMessage,
 } from '@/services/conversational-agent/helpers/transformers';
 import { ContentPartHelper } from '@/services/conversational-agent/helpers/content-part-helper';
-import {
-  createMockRawMessage,
-  createMockRawExchange,
-  CONVERSATIONAL_AGENT_TEST_CONSTANTS,
-} from '@tests/utils/mocks';
+import { createMockRawMessage, createMockRawExchange, CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '@tests/utils/mocks';
 
 // ===== TEST SUITE =====
 describe('Transformer Functions', () => {
@@ -59,8 +55,8 @@ describe('Transformer Functions', () => {
             input: { query: 'test' },
             createdTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
             updatedTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
-          }
-        ]
+          },
+        ],
       });
       const result = transformMessage(raw);
 
@@ -79,8 +75,8 @@ describe('Transformer Functions', () => {
             interruptValue: { toolName: 'search' },
             createdTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
             updatedTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
-          }
-        ]
+          },
+        ],
       });
       const result = transformMessage(raw);
 
@@ -137,7 +133,7 @@ describe('Transformer Functions', () => {
         messages: [
           createMockRawMessage({ messageId: 'msg-1', role: 'user' }),
           createMockRawMessage({ messageId: 'msg-2', role: 'assistant' }),
-        ]
+        ],
       });
       const result = transformExchange(raw);
 
@@ -197,10 +193,7 @@ describe('Transformer Functions', () => {
       const exchanges = [
         createMockRawExchange({
           exchangeId: 'ex-1',
-          messages: [
-            createMockRawMessage({ messageId: 'msg-1' }),
-            createMockRawMessage({ messageId: 'msg-2' }),
-          ]
+          messages: [createMockRawMessage({ messageId: 'msg-1' }), createMockRawMessage({ messageId: 'msg-2' })],
         }),
       ];
       const result = transformExchanges(exchanges);

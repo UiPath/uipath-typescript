@@ -41,65 +41,85 @@ export enum VBDataType {
 }
 
 export const JsonSchemaPropertySchema: z.ZodType<JsonSchemaProperty> = z.lazy(() =>
-  z.object({
-    type: z.enum([
-      JsonDataType.string,
-      JsonDataType.integer,
-      JsonDataType.number,
-      JsonDataType.boolean,
-      JsonDataType.array,
-      JsonDataType.object,
-      JsonDataType.file,
-    ], { message: MESSAGES.ERRORS.INVALID_PROPERTY_TYPE }),
-    required: z.boolean().optional(),
-    description: z.string().optional(),
-    format: z.enum([JsonFormatType.uuid, JsonFormatType.date], {
-      message: MESSAGES.ERRORS.INVALID_PROPERTY_FORMAT
-    }).optional(),
-    items: JsonSchemaPropertySchema.optional(),
-    properties: z.record(z.string(), JsonSchemaPropertySchema).optional(),
-  })
-  .refine((data) => {
-    if (data.type === JsonDataType.array) {
-      return !!data.items;
-    }
-    return true;
-  }, {
-    message: MESSAGES.ERRORS.MISSING_ITEMS_ARRAY
-  })
-  .refine((data) => {
-    if (data.format && data.type!== JsonDataType.string) {   // for preventing format being used with non string type
-      return false;
-    }
-    return true;
-  }, {
-    message: MESSAGES.ERRORS.INVALID_TYPE_FOR_FORMAT,
-  })
-  .refine((data) => {
-    if (data.type === JsonDataType.array && data.items) {   // for preventing nested arrays
-      return data.items.type !== JsonDataType.array;
-    }
-    return true;
-  }, {
-    message: MESSAGES.ERRORS.NESTED_ARRAYS_NOT_SUPPORTED,
-  })
+  z
+    .object({
+      type: z.enum(
+        [
+          JsonDataType.string,
+          JsonDataType.integer,
+          JsonDataType.number,
+          JsonDataType.boolean,
+          JsonDataType.array,
+          JsonDataType.object,
+          JsonDataType.file,
+        ],
+        { message: MESSAGES.ERRORS.INVALID_PROPERTY_TYPE },
+      ),
+      required: z.boolean().optional(),
+      description: z.string().optional(),
+      format: z
+        .enum([JsonFormatType.uuid, JsonFormatType.date], {
+          message: MESSAGES.ERRORS.INVALID_PROPERTY_FORMAT,
+        })
+        .optional(),
+      items: JsonSchemaPropertySchema.optional(),
+      properties: z.record(z.string(), JsonSchemaPropertySchema).optional(),
+    })
+    .refine(
+      (data) => {
+        if (data.type === JsonDataType.array) {
+          return !!data.items;
+        }
+        return true;
+      },
+      {
+        message: MESSAGES.ERRORS.MISSING_ITEMS_ARRAY,
+      },
+    )
+    .refine(
+      (data) => {
+        if (data.format && data.type !== JsonDataType.string) {
+          // for preventing format being used with non string type
+          return false;
+        }
+        return true;
+      },
+      {
+        message: MESSAGES.ERRORS.INVALID_TYPE_FOR_FORMAT,
+      },
+    )
+    .refine(
+      (data) => {
+        if (data.type === JsonDataType.array && data.items) {
+          // for preventing nested arrays
+          return data.items.type !== JsonDataType.array;
+        }
+        return true;
+      },
+      {
+        message: MESSAGES.ERRORS.NESTED_ARRAYS_NOT_SUPPORTED,
+      },
+    ),
 );
 
 const JsonSchemaObjectSchema = z.object({
   type: z.literal('object', { message: MESSAGES.ERRORS.SECTION_TYPE_INVALID }),
   properties: z.record(z.string(), JsonSchemaPropertySchema, {
-    message: MESSAGES.ERRORS.INVALID_PROPERTIES_OBJECT
+    message: MESSAGES.ERRORS.INVALID_PROPERTIES_OBJECT,
   }),
 });
 
-export const JsonActionSchemaValidator = z.object({
-  inputs: JsonSchemaObjectSchema,
-  outputs: JsonSchemaObjectSchema,
-  inOuts: JsonSchemaObjectSchema,
-  outcomes: JsonSchemaObjectSchema,
-}, {
-  message: MESSAGES.ERRORS.MISSING_ACTION_SCHEMA_SECTION
-});
+export const JsonActionSchemaValidator = z.object(
+  {
+    inputs: JsonSchemaObjectSchema,
+    outputs: JsonSchemaObjectSchema,
+    inOuts: JsonSchemaObjectSchema,
+    outcomes: JsonSchemaObjectSchema,
+  },
+  {
+    message: MESSAGES.ERRORS.MISSING_ACTION_SCHEMA_SECTION,
+  },
+);
 
 export type JsonSchemaProperty = {
   type: JsonDataType;
@@ -132,7 +152,7 @@ export const ParsedActionPropertySchema: z.ZodType<ParsedActionPropertySchema> =
     properties: z.array(ParsedActionPropertySchema).optional(),
     collectionDataType: z.enum([VbArgumentCollectionType.array]).nullable().optional(),
     description: z.string().optional(),
-  })
+  }),
 );
 
 export const ParsedActionSchemaValidator = z.object({

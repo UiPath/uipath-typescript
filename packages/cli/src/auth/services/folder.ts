@@ -21,9 +21,14 @@ export const getFolders = async (
   accessToken: string,
   baseUrl: string,
   orgName: string,
-  tenantName: string
+  tenantName: string,
 ): Promise<Folder[]> => {
-  const url = getOrchestratorApiUrl(baseUrl.replace(/https?:\/\//, '').replace('.uipath.com', ''), orgName, tenantName, AUTH_CONSTANTS.API_ENDPOINTS.FOLDERS_NAVIGATION);
+  const url = getOrchestratorApiUrl(
+    baseUrl.replace(/https?:\/\//, '').replace('.uipath.com', ''),
+    orgName,
+    tenantName,
+    AUTH_CONSTANTS.API_ENDPOINTS.FOLDERS_NAVIGATION,
+  );
 
   const response = await fetch(url.toString(), {
     headers: createHeaders({ bearerToken: accessToken }),
@@ -36,12 +41,12 @@ export const getFolders = async (
     throw new Error(`Failed to fetch folders: ${response.status} ${response.statusText}`);
   }
 
-  const data = await response.json() as Record<string, unknown>;
-  
+  const data = (await response.json()) as Record<string, unknown>;
+
   if (!validateFolderResponse(data)) {
     console.warn('Unexpected folder response format');
   }
-  
+
   // Get folders array and transform to camelCase
   const folders = data.PageItems || data.value || [];
   return pascalToCamelCaseKeys(folders) as Folder[];
@@ -51,12 +56,12 @@ export const selectFolderInteractive = async (
   accessToken: string,
   baseUrl: string,
   orgName: string,
-  tenantName: string
+  tenantName: string,
 ): Promise<string | null> => {
   try {
     // Fetch folders
     const folders = await getFolders(accessToken, baseUrl, orgName, tenantName);
-    
+
     if (folders.length === 0) {
       console.log('No folders found in this tenant.');
       return null;
@@ -64,11 +69,11 @@ export const selectFolderInteractive = async (
 
     // Create choices for inquirer
     const choices = [
-      ...folders.map(folder => ({
+      ...folders.map((folder) => ({
         name: `${folder.displayName} (${folder.fullyQualifiedName})`,
         value: folder.key,
       })),
-      { name: AUTH_CONSTANTS.UI.SKIP_LABEL, value: AUTH_CONSTANTS.UI.SKIP_SELECTION }
+      { name: AUTH_CONSTANTS.UI.SKIP_LABEL, value: AUTH_CONSTANTS.UI.SKIP_SELECTION },
     ];
 
     const { selection } = await inquirer.prompt([

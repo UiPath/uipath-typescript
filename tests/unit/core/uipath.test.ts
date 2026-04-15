@@ -9,7 +9,7 @@ import { TEST_CONSTANTS } from '../../utils/constants/common';
 // ===== MOCKING =====
 const mockTokenManager = {
   getToken: () => 'mock-access-token',
-  hasValidToken: () => true
+  hasValidToken: () => true,
 };
 
 const mockLogout = vi.fn();
@@ -21,7 +21,7 @@ vi.mock('../../../src/core/auth/service', () => {
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
     authenticate: vi.fn().mockResolvedValue(true),
-    logout: mockLogout
+    logout: mockLogout,
   }));
 
   AuthService.isInOAuthCallback = vi.fn(() => false);
@@ -42,7 +42,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       expect(sdk).toBeInstanceOf(UiPath);
@@ -56,7 +56,7 @@ describe('UiPath Core', () => {
         tenantName: TEST_CONSTANTS.TENANT_ID,
         clientId: TEST_CONSTANTS.CLIENT_ID,
         redirectUri: 'http://localhost:3000/callback',
-        scope: 'offline_access'
+        scope: 'offline_access',
       });
 
       expect(sdk).toBeInstanceOf(UiPath);
@@ -68,7 +68,7 @@ describe('UiPath Core', () => {
         baseUrl: '',
         orgName: '',
         tenantName: '',
-        secret: ''
+        secret: '',
       } as any);
       await expect(sdk.initialize()).rejects.toThrow();
     });
@@ -78,7 +78,7 @@ describe('UiPath Core', () => {
         baseUrl: 'https://cloud.uipath.com/',
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const config = getConfig(sdk);
@@ -94,7 +94,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
     });
 
@@ -126,7 +126,7 @@ describe('UiPath Core', () => {
         tenantName: TEST_CONSTANTS.TENANT_ID,
         clientId: TEST_CONSTANTS.CLIENT_ID,
         redirectUri: 'http://localhost:3000/callback',
-        scope: 'offline_access'
+        scope: 'offline_access',
       });
     });
 
@@ -146,7 +146,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const config = getConfig(sdk);
@@ -162,7 +162,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const config = getConfig(sdk);
@@ -177,7 +177,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const context = getContext(sdk);
@@ -191,7 +191,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const context1 = getContext(sdk);
@@ -207,7 +207,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const tokenManager = getTokenManager(sdk);
@@ -222,7 +222,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const tokenManager1 = getTokenManager(sdk);
@@ -236,7 +236,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const tokenManager = getTokenManager(sdk);
@@ -252,7 +252,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       // Services access these via the __PRIVATE__ symbol
@@ -268,7 +268,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const config = getConfig(sdk);
@@ -286,7 +286,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       expect(sdk.isAuthenticated()).toBe(true);
@@ -297,7 +297,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       const oauthSdk = new UiPath({
@@ -306,7 +306,7 @@ describe('UiPath Core', () => {
         tenantName: TEST_CONSTANTS.TENANT_ID,
         clientId: TEST_CONSTANTS.CLIENT_ID,
         redirectUri: 'http://localhost:3000/callback',
-        scope: 'offline_access'
+        scope: 'offline_access',
       });
 
       expect(secretSdk.isInitialized()).toBe(true);
@@ -324,7 +324,7 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       expect(sdk.isInitialized()).toBe(true);
@@ -342,7 +342,7 @@ describe('UiPath Core', () => {
         tenantName: TEST_CONSTANTS.TENANT_ID,
         clientId: TEST_CONSTANTS.CLIENT_ID,
         redirectUri: 'http://localhost:3000/callback',
-        scope: 'offline_access'
+        scope: 'offline_access',
       });
 
       sdk.logout();
@@ -358,14 +358,14 @@ describe('UiPath Core', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: 'org1',
         tenantName: 'tenant1',
-        secret: 'secret1'
+        secret: 'secret1',
       });
 
       const sdk2 = new UiPath({
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: 'org2',
         tenantName: 'tenant2',
-        secret: 'secret2'
+        secret: 'secret2',
       });
 
       expect(getConfig(sdk1).orgName).toBe('org1');

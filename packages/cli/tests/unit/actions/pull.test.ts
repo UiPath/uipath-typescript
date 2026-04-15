@@ -30,10 +30,7 @@ describe('executePull', () => {
   it('should pull successfully with project ID from options', async () => {
     await executePull({ projectId: 'proj-123', logger: mockLogger });
 
-    expect(runPull).toHaveBeenCalledWith(
-      expect.objectContaining({ projectId: 'proj-123' }),
-      expect.any(Object)
-    );
+    expect(runPull).toHaveBeenCalledWith(expect.objectContaining({ projectId: 'proj-123' }), expect.any(Object));
   });
 
   it('should use project ID from env', async () => {
@@ -41,33 +38,25 @@ describe('executePull', () => {
 
     await executePull({ logger: mockLogger });
 
-    expect(runPull).toHaveBeenCalledWith(
-      expect.objectContaining({ projectId: 'env-proj' }),
-      expect.any(Object)
-    );
+    expect(runPull).toHaveBeenCalledWith(expect.objectContaining({ projectId: 'env-proj' }), expect.any(Object));
   });
 
   it('should throw when no project ID available', async () => {
-    await expect(
-      executePull({ logger: mockLogger })
-    ).rejects.toThrow(/Project ID is required/);
+    await expect(executePull({ logger: mockLogger })).rejects.toThrow(/Project ID is required/);
   });
 
   it('should throw when env config is missing', async () => {
     vi.mocked(getEnvironmentConfig).mockReturnValue(null);
 
-    await expect(
-      executePull({ projectId: 'proj', logger: mockLogger })
-    ).rejects.toThrow('Missing required configuration');
+    await expect(executePull({ projectId: 'proj', logger: mockLogger })).rejects.toThrow(
+      'Missing required configuration',
+    );
   });
 
   it('should pass overwrite option', async () => {
     await executePull({ projectId: 'proj', overwrite: true, logger: mockLogger });
 
-    expect(runPull).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({ overwrite: true })
-    );
+    expect(runPull).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ overwrite: true }));
   });
 
   it('should pass flag overrides to getEnvironmentConfig', async () => {
@@ -83,7 +72,7 @@ describe('executePull', () => {
     expect(getEnvironmentConfig).toHaveBeenCalledWith(
       expect.any(Array),
       expect.any(Object),
-      expect.objectContaining(overrides)
+      expect.objectContaining(overrides),
     );
   });
 
@@ -92,7 +81,7 @@ describe('executePull', () => {
 
     expect(runPull).toHaveBeenCalledWith(
       expect.objectContaining({ rootDir: expect.stringContaining('output') }),
-      expect.any(Object)
+      expect.any(Object),
     );
   });
 });

@@ -1,16 +1,14 @@
-import type {
-  ProcessIncidentGetAllResponse
-} from './process-incidents.types';
+import type { ProcessIncidentGetAllResponse } from './process-incidents.types';
 
 /**
  * Service for managing UiPath Maestro Process incidents
- * 
+ *
  * Maestro Process incidents helps you identify, investigate, and resolve errors that occur during process execution. [UiPath Maestro Process Incidents Guide](https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/all-incidents-view)
  */
 export interface ProcessIncidentsServiceModel {
   /**
    * Get all process incidents across all folders
-   * 
+   *
    * @returns Promise resolving to array of process incident
    * {@link ProcessIncidentGetAllResponse}
    * @example

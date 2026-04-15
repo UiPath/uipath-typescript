@@ -52,9 +52,9 @@ describe('executePack', () => {
   it('should throw when dist directory does not exist', async () => {
     vi.mocked(fs.existsSync).mockReturnValue(false);
 
-    await expect(
-      executePack({ dist: './dist', name: 'test-app', logger: mockLogger })
-    ).rejects.toThrow(/Invalid dist directory/);
+    await expect(executePack({ dist: './dist', name: 'test-app', logger: mockLogger })).rejects.toThrow(
+      /Invalid dist directory/,
+    );
   });
 
   it('should throw when dist directory is empty', async () => {
@@ -62,9 +62,9 @@ describe('executePack', () => {
     vi.mocked(fs.statSync).mockReturnValue({ isDirectory: () => true } as fs.Stats);
     vi.mocked(fs.readdirSync).mockReturnValue([]);
 
-    await expect(
-      executePack({ dist: './dist', name: 'test-app', logger: mockLogger })
-    ).rejects.toThrow(/Invalid dist directory/);
+    await expect(executePack({ dist: './dist', name: 'test-app', logger: mockLogger })).rejects.toThrow(
+      /Invalid dist directory/,
+    );
   });
 
   it('should throw when env config is missing', async () => {
@@ -73,24 +73,29 @@ describe('executePack', () => {
     vi.mocked(fs.readdirSync).mockReturnValue(['index.html'] as any);
     vi.mocked(getEnvironmentConfig).mockReturnValue(null);
 
-    await expect(
-      executePack({ dist: './dist', name: 'test-app', logger: mockLogger })
-    ).rejects.toThrow('Missing required configuration');
+    await expect(executePack({ dist: './dist', name: 'test-app', logger: mockLogger })).rejects.toThrow(
+      'Missing required configuration',
+    );
   });
 
   it('should handle dry-run mode without creating files', async () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.statSync).mockReturnValue({ isDirectory: () => true } as fs.Stats);
     vi.mocked(fs.readdirSync).mockReturnValue(['index.html'] as any);
-    vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({
-      clientId: '', scope: '', orgName: '', tenantName: '', baseUrl: '', redirectUri: '',
-    }));
+    vi.mocked(fs.readFileSync).mockReturnValue(
+      JSON.stringify({
+        clientId: '',
+        scope: '',
+        orgName: '',
+        tenantName: '',
+        baseUrl: '',
+        redirectUri: '',
+      }),
+    );
 
     await executePack({ dist: './dist', name: 'test-app', dryRun: true, logger: mockLogger });
 
-    expect(mockLogger.log).toHaveBeenCalledWith(
-      expect.stringContaining('Package Preview')
-    );
+    expect(mockLogger.log).toHaveBeenCalledWith(expect.stringContaining('Package Preview'));
   });
 
   it('should throw when package name is required but not provided (non-TTY)', async () => {
@@ -103,9 +108,7 @@ describe('executePack', () => {
     Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
 
     try {
-      await expect(
-        executePack({ dist: './dist', logger: mockLogger })
-      ).rejects.toThrow(/Package name is required/);
+      await expect(executePack({ dist: './dist', logger: mockLogger })).rejects.toThrow(/Package name is required/);
     } finally {
       Object.defineProperty(process.stdin, 'isTTY', { value: originalIsTTY, writable: true });
     }
@@ -142,9 +145,16 @@ describe('executePack', () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.statSync).mockReturnValue({ isDirectory: () => true } as fs.Stats);
     vi.mocked(fs.readdirSync).mockReturnValue(['index.html'] as any);
-    vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify({
-      clientId: 'cid', scope: '', orgName: '', tenantName: '', baseUrl: '', redirectUri: '',
-    }));
+    vi.mocked(fs.readFileSync).mockReturnValue(
+      JSON.stringify({
+        clientId: 'cid',
+        scope: '',
+        orgName: '',
+        tenantName: '',
+        baseUrl: '',
+        redirectUri: '',
+      }),
+    );
 
     // Mock fetch to return non-confidential client
     const fetchMod = await import('node-fetch');

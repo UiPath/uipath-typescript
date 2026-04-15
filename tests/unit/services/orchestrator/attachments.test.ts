@@ -49,7 +49,7 @@ describe('AttachmentService Unit Tests', () => {
         ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
         expect.objectContaining({
           params: expect.any(Object),
-        })
+        }),
       );
 
       // Verify transform: CreationTime -> createdTime
@@ -79,9 +79,9 @@ describe('AttachmentService Unit Tests', () => {
         ORCHESTRATOR_ATTACHMENT_ENDPOINTS.GET_BY_ID(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID),
         expect.objectContaining({
           params: expect.objectContaining({
-            '$select': ATTACHMENT_TEST_CONSTANTS.ODATA_SELECT_FIELDS,
+            $select: ATTACHMENT_TEST_CONSTANTS.ODATA_SELECT_FIELDS,
           }),
-        })
+        }),
       );
     });
 
@@ -98,9 +98,7 @@ describe('AttachmentService Unit Tests', () => {
     });
 
     it('should throw ValidationError when id is empty string', async () => {
-      await expect(attachmentService.getById('')).rejects.toThrow(
-        ATTACHMENT_TEST_CONSTANTS.ERROR_ID_REQUIRED
-      );
+      await expect(attachmentService.getById('')).rejects.toThrow(ATTACHMENT_TEST_CONSTANTS.ERROR_ID_REQUIRED);
 
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
@@ -109,9 +107,9 @@ describe('AttachmentService Unit Tests', () => {
       const error = createMockError(ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(
-        attachmentService.getById(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID)
-      ).rejects.toThrow(ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND);
+      await expect(attachmentService.getById(ATTACHMENT_TEST_CONSTANTS.ATTACHMENT_ID)).rejects.toThrow(
+        ATTACHMENT_TEST_CONSTANTS.ERROR_ATTACHMENT_NOT_FOUND,
+      );
     });
   });
 });

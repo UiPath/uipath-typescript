@@ -6,7 +6,7 @@ import type {
   Citation,
   ContentPart,
   ContentPartGetResponse,
-  InlineOrExternalValue
+  InlineOrExternalValue,
 } from '@/models/conversational-agent';
 import { isExternalValue, isInlineValue } from './conversation-type-util';
 
@@ -41,7 +41,7 @@ export class ContentPartHelper implements ContentPartGetResponse {
     this.contentPartId = contentPart.contentPartId;
     this.mimeType = contentPart.mimeType;
     this.data = contentPart.data;
-    this.citations = (contentPart.citations ?? []).map(c => ({ ...c, id: c.citationId }));
+    this.citations = (contentPart.citations ?? []).map((c) => ({ ...c, id: c.citationId }));
     this.isTranscript = contentPart.isTranscript;
     this.isIncomplete = contentPart.isIncomplete;
     this.name = contentPart.name;

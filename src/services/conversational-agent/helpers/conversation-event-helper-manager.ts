@@ -1,6 +1,4 @@
-import type {
-  ConversationEvent
-} from '@/models/conversational-agent';
+import type { ConversationEvent } from '@/models/conversational-agent';
 
 import type {
   AnyErrorEndHandler,
@@ -18,7 +16,7 @@ import type {
   UnhandledErrorEndHandler,
   UnhandledErrorEndHandlerArgs,
   UnhandledErrorStartHandler,
-  UnhandledErrorStartHandlerArgs
+  UnhandledErrorStartHandlerArgs,
 } from './conversation-event-helper-common';
 import type { SessionEventHelper } from './session-event-helper';
 import { SessionEventHelperImpl } from './session-event-helper';
@@ -27,7 +25,6 @@ import { SessionEventHelperImpl } from './session-event-helper';
  * Provides functions for sending and receiving conversation events.
  */
 export abstract class ConversationEventHelperManager {
-
   // This abstract class is used as the public interface while ConversationEventHelperManagerImpl extends this class to
   // define the dispatch and removeSession methods, which are used internally but aren't expected to be called by end
   // users of the SDK.
@@ -42,10 +39,10 @@ export abstract class ConversationEventHelperManager {
   protected readonly _unhandledErrorStartHandlers = new Array<UnhandledErrorStartHandler>();
   protected readonly _unhandledErrorEndHandlers = new Array<UnhandledErrorEndHandler>();
 
-  constructor(private readonly config: ConversationEventHelperManagerConfig) {};
+  constructor(private readonly config: ConversationEventHelperManagerConfig) {}
 
   public makeId() {
-    return (crypto.randomUUID().toUpperCase());
+    return crypto.randomUUID().toUpperCase();
   }
 
   /**
@@ -108,7 +105,10 @@ export abstract class ConversationEventHelperManager {
   /**
    * @ignore
    */
-  public startSession(args: SessionStartEventOptions, cb?: SessionStartHandlerAsync): SessionEventHelper | Promise<void> {
+  public startSession(
+    args: SessionStartEventOptions,
+    cb?: SessionStartHandlerAsync,
+  ): SessionEventHelper | Promise<void> {
     const { conversationId, echo, properties, ...startSession } = args;
 
     const existingHelper = this._sessionMap.get(conversationId);
@@ -158,8 +158,8 @@ export abstract class ConversationEventHelperManager {
       conversationId,
       conversationError: {
         errorId,
-        startError
-      }
+        startError,
+      },
     });
   }
 
@@ -173,8 +173,8 @@ export abstract class ConversationEventHelperManager {
       conversationId,
       conversationError: {
         errorId,
-        endError
-      }
+        endError,
+      },
     });
   }
 
@@ -238,18 +238,15 @@ export abstract class ConversationEventHelperManager {
       if (index >= 0) this._unhandledErrorEndHandlers.splice(index, 1);
     };
   }
-
 }
 
 export class ConversationEventHelperManagerImpl extends ConversationEventHelperManager {
-
   /**
    * Internal method.
    */
   public dispatch(conversationEvent: ConversationEvent) {
-
     // Dispatch to any event handlers.
-    this._anyEventHandlers.forEach(cb => cb(conversationEvent));
+    this._anyEventHandlers.forEach((cb) => cb(conversationEvent));
 
     // dispatch to session helper, creating if necessary
     const conversationId = conversationEvent.conversationId;
@@ -258,7 +255,7 @@ export class ConversationEventHelperManagerImpl extends ConversationEventHelperM
       sessionHelper = new SessionEventHelperImpl(this, conversationId, conversationEvent.startSession);
       this._sessionMap.set(conversationId, sessionHelper);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._sessionStartHandlers.forEach(cb => cb(sessionHelper!));
+      this._sessionStartHandlers.forEach((cb) => cb(sessionHelper!));
     }
     sessionHelper.dispatch(conversationEvent);
   }
@@ -276,7 +273,7 @@ export class ConversationEventHelperManagerImpl extends ConversationEventHelperM
    * Internal method.
    */
   public dispatchAnyErrorStart(args: AnyErrorStartHandlerArgs) {
-    this._anyErrorStartHandlers.forEach(cb => cb(args));
+    this._anyErrorStartHandlers.forEach((cb) => cb(args));
     return this._anyErrorStartHandlers.length > 0;
   }
 
@@ -284,7 +281,7 @@ export class ConversationEventHelperManagerImpl extends ConversationEventHelperM
    * Internal method.
    */
   public dispatchAnyErrorEnd(args: AnyErrorEndHandlerArgs) {
-    this._anyErrorEndHandlers.forEach(cb => cb(args));
+    this._anyErrorEndHandlers.forEach((cb) => cb(args));
     return this._anyErrorEndHandlers.length > 0;
   }
 
@@ -292,31 +289,24 @@ export class ConversationEventHelperManagerImpl extends ConversationEventHelperM
    * Internal method.
    */
   public dispatchUnhandledErrorStart(args: UnhandledErrorStartHandlerArgs) {
-
     const { source, errorId, ...startEvent } = args;
 
     // If there is an unhandled error handler, don't throw
     if (this._unhandledErrorStartHandlers.length > 0) {
-
-      this._unhandledErrorStartHandlers.forEach(cb => cb(args));
-
+      this._unhandledErrorStartHandlers.forEach((cb) => cb(args));
     } else {
-
       // Cause an unhandled rejection error to be emitted. We don't want to throw back up the call chain.
       const throwAsync = async () => {
         throw new Error(`Unhandled Conversation Event Error ${errorId} on ${source}: ${JSON.stringify(startEvent)}`);
       };
       throwAsync();
-
     }
-
   }
 
   /**
    * Internal method.
    */
   public dispatchUnhandledErrorEnd(args: UnhandledErrorEndHandlerArgs) {
-    this._unhandledErrorEndHandlers.forEach(cb => cb(args));
+    this._unhandledErrorEndHandlers.forEach((cb) => cb(args));
   }
-
 }

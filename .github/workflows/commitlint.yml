@@ -4,10 +4,10 @@ on:
   pull_request:
     branches: [main, feat/*]
     types:
-      - opened           # a PR is opened
-      - edited           # PR title or description is edited
-      - synchronize      # new commits are pushed to PR branch
-      - reopened         # a previously closed PR is reopened
+      - opened # a PR is opened
+      - edited # PR title or description is edited
+      - synchronize # new commits are pushed to PR branch
+      - reopened # a previously closed PR is reopened
       - ready_for_review # a draft PR is marked ready for review
 
 jobs:
@@ -44,10 +44,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24.x"
-          cache: "npm"
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@uipath"
+          node-version: '24.x'
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@uipath'
 
       - name: Install commitlint
         run: npm install @commitlint/cli @commitlint/config-conventional

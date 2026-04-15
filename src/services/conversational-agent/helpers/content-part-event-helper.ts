@@ -11,7 +11,7 @@ import type {
   MakeOptional,
   MakeRequired,
   MetaEvent,
-  Simplify
+  Simplify,
 } from '@/models/conversational-agent';
 
 import { ConversationEventHelperBase } from './conversation-event-helper-base';
@@ -21,12 +21,9 @@ import type {
   CompletedContentPart,
   ContentPartEndHandler,
   ErrorEndEventOptions,
-  ErrorStartEventOptions
+  ErrorStartEventOptions,
 } from './conversation-event-helper-common';
-import {
-  CitationErrorType,
-  ConversationEventValidationError
-} from './conversation-event-helper-common';
+import { CitationErrorType, ConversationEventValidationError } from './conversation-event-helper-common';
 import { isExternalValue } from './conversation-type-util';
 import type { ContentPartStream } from '@/models/conversational-agent';
 import type { MessageEventHelper, MessageEventHelperImpl } from './message-event-helper';
@@ -34,19 +31,17 @@ import type { MessageEventHelper, MessageEventHelperImpl } from './message-event
 export type ContentPartStartEventWithData = Simplify<
   {
     data?: string;
-  }
-  & MakeOptional<ContentPartStartEvent, 'mimeType'>
+  } & MakeOptional<ContentPartStartEvent, 'mimeType'>
 >;
 
 /**
  * Helper for managing content part events within a message.
  * Handles streaming content parts with start/chunk/end lifecycle.
  */
-export abstract class ContentPartEventHelper extends ConversationEventHelperBase<
-  ContentPartStartEvent,
-  ContentPartEvent
-> implements ContentPartStream {
-
+export abstract class ContentPartEventHelper
+  extends ConversationEventHelperBase<ContentPartStartEvent, ContentPartEvent>
+  implements ContentPartStream
+{
   protected readonly _chunkHandlers = new Array<ChunkHandler>();
   protected readonly _endHandlers = new Array<ContentPartEndHandler>();
 
@@ -58,7 +53,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
      * ContentPartStartEvent used to initialize the ContentPartEventHelper. Will be undefined if some other sub-event
      * was received before the start event. See also `startEvent`.
      */
-    public readonly startEventMaybe: ContentPartStartEvent | undefined
+    public readonly startEventMaybe: ContentPartStartEvent | undefined,
   ) {
     super(message.manager);
     this.addStartEventTimestamp(startEventMaybe);
@@ -69,7 +64,8 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
    * some other sub-event was received before the start event, which shouldn't happen under normal circumstances.
    */
   public get startEvent(): MakeRequired<ContentPartStartEvent, 'timestamp'> {
-    if (!this.startEventMaybe) throw new ConversationEventValidationError(`Content part ${this.contentPartId} has no start event.`);
+    if (!this.startEventMaybe)
+      throw new ConversationEventValidationError(`Content part ${this.contentPartId} has no start event.`);
     return this.startEventMaybe as MakeRequired<ContentPartStartEvent, 'timestamp'>; // timestamp is set in the constructor
   }
 
@@ -139,7 +135,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
    */
   public emit(contentPartEvent: Omit<ContentPartEvent, 'contentPartId'>) {
     this.message.emit({
-      contentPart: { contentPartId: this.contentPartId, ...contentPartEvent }
+      contentPart: { contentPartId: this.contentPartId, ...contentPartEvent },
     });
   }
 
@@ -150,7 +146,7 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
   public sendChunk(chunk: ContentPartChunkEvent) {
     this.assertNotEnded();
     this.emit({
-      chunk
+      chunk,
     });
   }
 
@@ -175,9 +171,9 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
         ...rest,
         citation: {
           citationId,
-          startCitation: {}
-        }
-      }
+          startCitation: {},
+        },
+      },
     });
   }
 
@@ -185,7 +181,9 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
    * Sends a chunk with citation end event.
    * @throws Error if content part stream has already ended.
    */
-  public sendChunkWithCitationEnd(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] }) {
+  public sendChunkWithCitationEnd(
+    chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] },
+  ) {
     this.assertNotEnded();
     const { citationId, sources, ...rest } = chunk;
     this.emit({
@@ -193,9 +191,9 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
         ...rest,
         citation: {
           citationId,
-          endCitation: { sources }
-        }
-      }
+          endCitation: { sources },
+        },
+      },
     });
   }
 
@@ -203,7 +201,9 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
    * Sends a chunk with citation start and end event.
    * @throws Error if content part stream has already ended.
    */
-  public sendChunkWithCitation(chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] }) {
+  public sendChunkWithCitation(
+    chunk: Omit<ContentPartChunkEvent, 'citation'> & { citationId: string; sources: CitationSource[] },
+  ) {
     this.assertNotEnded();
     const { citationId, sources, ...rest } = chunk;
     this.emit({
@@ -212,9 +212,9 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
         citation: {
           citationId,
           startCitation: {},
-          endCitation: { sources }
-        }
-      }
+          endCitation: { sources },
+        },
+      },
     });
   }
 
@@ -271,8 +271,8 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
     this.emit({
       contentPartError: {
         errorId,
-        startError
-      }
+        startError,
+      },
     });
     this.errors.set(errorId, startError);
   }
@@ -286,21 +286,19 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
     this.emit({
       contentPartError: {
         errorId,
-        endError
-      }
+        endError,
+      },
     });
     this.errors.delete(errorId);
   }
 
   public onCompleted(cb: (completedContentPart: CompletedContentPart) => void) {
-
     let data = '';
     const citationOffsets = new Map<string, number>();
     const citations = new Array<CitationOptions>();
     const citationErrors = new Array<CitationError>();
 
-    this.onChunk(chunk => {
-
+    this.onChunk((chunk) => {
       if (chunk.citation?.startCitation) {
         citationOffsets.set(chunk.citation.citationId, data.length);
       }
@@ -315,25 +313,26 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
         if (offset === undefined) {
           citationErrors.push({
             citationId,
-            errorType: CitationErrorType.CitationNotStarted
+            errorType: CitationErrorType.CitationNotStarted,
           });
         } else {
           citations.push({
             citationId,
             offset,
             length: data.length - offset,
-            sources: chunk.citation?.endCitation.sources
+            sources: chunk.citation?.endCitation.sources,
           });
           citationOffsets.delete(citationId);
         }
       }
     });
 
-    this.onContentPartEnd(endContentPart => {
-
+    this.onContentPartEnd((endContentPart) => {
       citationErrors.push(
-        ...Array.from(citationOffsets.keys())
-          .map(citationId => ({ citationId, errorType: CitationErrorType.CitationNotEnded }))
+        ...Array.from(citationOffsets.keys()).map((citationId) => ({
+          citationId,
+          errorType: CitationErrorType.CitationNotEnded,
+        })),
       );
 
       // default to text/plain in cases where a start content part event wasn't received.
@@ -346,46 +345,41 @@ export abstract class ContentPartEventHelper extends ConversationEventHelperBase
         citationErrors,
         ...this.startEventMaybe,
         ...endContentPart,
-        mimeType
+        mimeType,
       });
     });
-
   }
 
   public toString() {
     return `ContentPartEventHelper(${this.contentPartId})`;
   }
-
 }
 
 export class ContentPartEventHelperImpl extends ContentPartEventHelper {
-
   public static *replay(contentPart: ContentPart): Generator<ContentPartEvent> {
-
     yield {
       contentPartId: contentPart.contentPartId,
       startContentPart: {
         mimeType: contentPart.mimeType,
         ...(contentPart.isTranscript !== undefined ? { metaData: { isTranscript: contentPart.isTranscript } } : {}),
         timestamp: contentPart.createdTime ?? (contentPart as any).createdAt,
-        ...(isExternalValue(contentPart.data) ? { externalValue: contentPart.data } : {})
-      }
+        ...(isExternalValue(contentPart.data) ? { externalValue: contentPart.data } : {}),
+      },
     };
 
     if (!isExternalValue(contentPart.data)) {
       for (const chunkEvent of this.replayChunks(contentPart.data, contentPart.citations)) {
         yield {
           contentPartId: contentPart.contentPartId,
-          chunk: chunkEvent
+          chunk: chunkEvent,
         };
       }
     }
 
     yield {
       contentPartId: contentPart.contentPartId,
-      endContentPart: contentPart.isIncomplete ? { interrupted: true } : {}
+      endContentPart: contentPart.isIncomplete ? { interrupted: true } : {},
     };
-
   }
 
   /**
@@ -401,12 +395,12 @@ export class ContentPartEventHelperImpl extends ContentPartEventHelper {
 
     if (contentPartEvent.chunk) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._chunkHandlers.forEach(cb => cb(contentPartEvent.chunk!));
+      this._chunkHandlers.forEach((cb) => cb(contentPartEvent.chunk!));
     }
 
     if (contentPartEvent.metaEvent) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._metaEventHandlers.forEach(cb => cb(contentPartEvent.metaEvent!));
+      this._metaEventHandlers.forEach((cb) => cb(contentPartEvent.metaEvent!));
     }
 
     if (contentPartEvent.contentPartError?.startError) {
@@ -420,7 +414,7 @@ export class ContentPartEventHelperImpl extends ContentPartEventHelper {
     if (contentPartEvent.endContentPart) {
       this.setEnded();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._endHandlers.forEach(cb => cb(contentPartEvent.endContentPart!));
+      this._endHandlers.forEach((cb) => cb(contentPartEvent.endContentPart!));
       this.delete();
     }
   }
@@ -442,11 +436,9 @@ export class ContentPartEventHelperImpl extends ContentPartEventHelper {
   }
 
   private static *replayChunks(data: InlineValue<string>, citations: Citation[]): Generator<ContentPartChunkEvent> {
-
     if (citations.length === 0) {
       yield { data: data.inline };
     } else {
-
       // Process citations from first to last.
       citations.sort((a, b) => a.offset - b.offset);
 
@@ -454,18 +446,19 @@ export class ContentPartEventHelperImpl extends ContentPartEventHelper {
       citations.forEach((citation, index) => {
         if (index + 1 === citations.length) return; // last one can't overlap
         if (citation.offset + citation.length > citations[index + 1].offset) {
-          throw new Error(`Overlapping citations are not supported. Citation ${citation.citationId} starts at offset ${citation.offset} and has length ${citation.length} but the next citation, ${citations[index + 1].citationId}, has offset ${citations[index + 1].offset}`);
+          throw new Error(
+            `Overlapping citations are not supported. Citation ${citation.citationId} starts at offset ${citation.offset} and has length ${citation.length} but the next citation, ${citations[index + 1].citationId}, has offset ${citations[index + 1].offset}`,
+          );
         }
       });
 
       let offset = 0;
 
       for (const citation of citations) {
-
         // dispatch chunk with data after end of last citation and before current citation, or chunk before first citation
         if (citation.offset > offset) {
           yield {
-            data: data.inline.substring(offset, citation.offset)
+            data: data.inline.substring(offset, citation.offset),
           };
           offset = citation.offset;
         }
@@ -475,24 +468,21 @@ export class ContentPartEventHelperImpl extends ContentPartEventHelper {
           data: data.inline.substring(offset, offset + citation.length),
           citation: {
             citationId: citation.citationId,
-            startCitation: { },
+            startCitation: {},
             endCitation: {
-              sources: citation.sources
-            }
-          }
+              sources: citation.sources,
+            },
+          },
         };
         offset += citation.length;
-
       }
 
       // dispatch chunk with data following the last citation
       if (offset < data.inline.length) {
         yield {
-          data: data.inline.substring(offset)
+          data: data.inline.substring(offset),
         };
       }
-
     }
   }
-
 }

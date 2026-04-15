@@ -19,7 +19,7 @@
   "sort": ["alphabetical"],
   "kindSortOrder": [
     "Document",
-    "Project", 
+    "Project",
     "Module",
     "Namespace",
     "Enum",
@@ -28,7 +28,7 @@
     "Interface",
     "TypeAlias",
     "Constructor",
-    "Property", 
+    "Property",
     "Variable",
     "Function",
     "Method",
@@ -39,7 +39,7 @@
     "ConstructorSignature"
   ],
   "gitRevision": "main",
-  "gitRemote": "origin", 
+  "gitRemote": "origin",
   "includeVersion": true,
   "categorizeByGroup": false,
   "searchInComments": true,

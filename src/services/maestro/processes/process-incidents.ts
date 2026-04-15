@@ -35,15 +35,12 @@ export class ProcessIncidentsService extends BaseService implements ProcessIncid
    */
   @track('ProcessIncidents.getAll')
   async getAll(): Promise<ProcessIncidentGetAllResponse[]> {
-    const rawResponse = await this.get<RawIncidentGetAllResponse[]>(
-      MAESTRO_ENDPOINTS.INCIDENTS.GET_ALL
-    );
+    const rawResponse = await this.get<RawIncidentGetAllResponse[]>(MAESTRO_ENDPOINTS.INCIDENTS.GET_ALL);
 
-    // Transform field names  
+    // Transform field names
     const data = rawResponse.data || [];
-    return data.map(incident => 
-      transformData(incident, ProcessIncidentSummaryMap) as unknown as ProcessIncidentGetAllResponse
+    return data.map(
+      (incident) => transformData(incident, ProcessIncidentSummaryMap) as unknown as ProcessIncidentGetAllResponse,
     );
   }
-
 }

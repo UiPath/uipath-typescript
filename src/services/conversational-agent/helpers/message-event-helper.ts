@@ -7,7 +7,7 @@ import {
   type MessageEndEvent,
   type MessageEvent,
   type MessageStartEvent,
-  type MetaEvent
+  type MetaEvent,
 } from '@/models/conversational-agent';
 
 import type { ContentPartEventHelper, ContentPartStartEventWithData } from './content-part-event-helper';
@@ -29,11 +29,9 @@ import type {
   ToolCallCompletedHandler,
   ToolCallStartEventWithId,
   ToolCallStartHandler,
-  ToolCallStartHandlerAsync
+  ToolCallStartHandlerAsync,
 } from './conversation-event-helper-common';
-import {
-  ConversationEventValidationError
-} from './conversation-event-helper-common';
+import { ConversationEventValidationError } from './conversation-event-helper-common';
 import type { MessageStream } from '@/models/conversational-agent';
 import type { ExchangeEventHelper, ExchangeEventHelperImpl } from './exchange-event-helper';
 import type { ToolCallEventHelper } from './tool-call-event-helper';
@@ -43,11 +41,10 @@ import { ToolCallEventHelperImpl } from './tool-call-event-helper';
  * Helper for managing message events within an exchange.
  * Handles message lifecycle including content, tool calls, and citations.
  */
-export abstract class MessageEventHelper extends ConversationEventHelperBase<
-  MessageStartEvent,
-  MessageEvent
-> implements MessageStream {
-
+export abstract class MessageEventHelper
+  extends ConversationEventHelperBase<MessageStartEvent, MessageEvent>
+  implements MessageStream
+{
   protected readonly _contentPartMap = new Map<string, ContentPartEventHelperImpl>();
   protected readonly _contentPartStartHandlers = new Array<ContentPartStartHandler>();
   protected readonly _endHandlers = new Array<MessageEndHandler>();
@@ -64,7 +61,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
      * MessageStartEvent used to initialize the MessageEventHelper. Will be undefined if some other sub-event was
      * received before the start event. See also `startEvent`.
      */
-    public readonly startEventMaybe: MessageStartEvent | undefined
+    public readonly startEventMaybe: MessageStartEvent | undefined,
   ) {
     super(exchange.manager);
     this.addStartEventTimestamp(startEventMaybe);
@@ -75,7 +72,8 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    * other sub-event was received before the start event, which shouldn't happen under normal circumstances.
    */
   public get startEvent(): MakeRequired<MessageStartEvent, 'timestamp'> {
-    if (!this.startEventMaybe) throw new ConversationEventValidationError(`Message ${this.messageId} has no start event.`);
+    if (!this.startEventMaybe)
+      throw new ConversationEventValidationError(`Message ${this.messageId} has no start event.`);
     return this.startEventMaybe as MakeRequired<MessageStartEvent, 'timestamp'>; // timestamp is set by the constructor
   }
 
@@ -133,7 +131,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    */
   public emit(messageEvent: Omit<MessageEvent, 'messageId'>) {
     this.exchange.emit({
-      message: { messageId: this.messageId, ...messageEvent }
+      message: { messageId: this.messageId, ...messageEvent },
     });
   }
 
@@ -144,7 +142,10 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    */
   public startContentPart(args: ContentPartStartEventOptions): ContentPartEventHelper;
   public startContentPart(args: ContentPartStartEventOptions, cb: ContentPartStartHandlerAsync): Promise<void>;
-  public startContentPart(args: ContentPartStartEventOptions, cb?: ContentPartStartHandlerAsync): ContentPartEventHelper | Promise<void> {
+  public startContentPart(
+    args: ContentPartStartEventOptions,
+    cb?: ContentPartStartHandlerAsync,
+  ): ContentPartEventHelper | Promise<void> {
     this.assertNotEnded();
 
     const { contentPartId: providedId, properties, ...startContentPart } = args;
@@ -185,12 +186,17 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    */
   public async sendContentPart(args: ContentPartStartEventWithData) {
     const { data, mimeType, ...startContentPart } = args;
-    await this.startContentPart({ mimeType: mimeType ?? 'text/markdown', ...startContentPart }, async contentPart => contentPart.sendChunk({ data }));
+    await this.startContentPart({ mimeType: mimeType ?? 'text/markdown', ...startContentPart }, async (contentPart) =>
+      contentPart.sendChunk({ data }),
+    );
   }
 
   public startToolCall(args: ToolCallStartEventWithId): ToolCallEventHelper;
   public startToolCall(args: ToolCallStartEventWithId, cb: ToolCallStartHandlerAsync): Promise<void>;
-  public startToolCall(args: ToolCallStartEventWithId, cb?: ToolCallStartHandlerAsync): ToolCallEventHelper | Promise<void> {
+  public startToolCall(
+    args: ToolCallStartEventWithId,
+    cb?: ToolCallStartHandlerAsync,
+  ): ToolCallEventHelper | Promise<void> {
     this.assertNotEnded();
 
     const { toolCallId: providedId, properties, ...startToolCall } = args;
@@ -233,7 +239,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   public sendMetaEvent(metaEvent: MetaEvent) {
     this.assertNotEnded();
     this.emit({
-      metaEvent
+      metaEvent,
     });
   }
 
@@ -290,7 +296,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    * Registers a handler that receives complete content parts after a content part stream ends.
    */
   public onContentPartCompleted(cb: ContentPartCompletedHandler) {
-    this.onContentPartStart(contentPart => {
+    this.onContentPartStart((contentPart) => {
       contentPart.onCompleted(cb);
     });
   }
@@ -308,8 +314,8 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   }
 
   public onToolCallCompleted(cb: ToolCallCompletedHandler) {
-    this.onToolCallStart(toolCall => {
-      toolCall.onToolCallEnd(endEvent => {
+    this.onToolCallStart((toolCall) => {
+      toolCall.onToolCallEnd((endEvent) => {
         cb({ toolCallId: toolCall.toolCallId, ...toolCall.startEvent, ...endEvent });
       });
     });
@@ -347,8 +353,8 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
     this.emit({
       interrupt: {
         interruptId,
-        startInterrupt
-      }
+        startInterrupt,
+      },
     });
   }
 
@@ -360,8 +366,8 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
     this.emit({
       interrupt: {
         interruptId,
-        endInterrupt
-      }
+        endInterrupt,
+      },
     });
   }
 
@@ -375,8 +381,8 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
     this.emit({
       messageError: {
         errorId,
-        startError
-      }
+        startError,
+      },
     });
     this.errors.set(errorId, startError);
   }
@@ -390,52 +396,48 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
     this.emit({
       messageError: {
         errorId,
-        endError
-      }
+        endError,
+      },
     });
     this.errors.delete(errorId);
   }
 
   public onCompleted(cb: MessageCompletedHandler) {
     const contentParts = new Array<CompletedContentPart>();
-    this.onContentPartCompleted(completedContentPart => {
+    this.onContentPartCompleted((completedContentPart) => {
       contentParts.push(completedContentPart);
     });
 
     const toolCalls = new Array<CompletedToolCall>();
-    this.onToolCallCompleted(completedToolCall => {
+    this.onToolCallCompleted((completedToolCall) => {
       toolCalls.push(completedToolCall);
     });
 
-    this.onMessageEnd(endMessage => {
+    this.onMessageEnd((endMessage) => {
       cb({ messageId: this.messageId, contentParts, toolCalls, ...this.startEventMaybe, ...endMessage });
     });
-
   }
 
   public toString() {
     return `MessageEventHelper(${this.messageId})`;
   }
-
 }
 
 export class MessageEventHelperImpl extends MessageEventHelper {
-
   public static *replay(message: Message): Generator<MessageEvent> {
-
     yield {
       messageId: message.messageId,
       startMessage: {
         role: message.role,
-        timestamp: message.createdTime ?? (message as any).createdAt
-      }
+        timestamp: message.createdTime ?? (message as any).createdAt,
+      },
     };
 
     for (const contentPart of message.contentParts) {
       for (const contentPartEvent of ContentPartEventHelperImpl.replay(contentPart)) {
         yield {
           messageId: message.messageId,
-          contentPart: contentPartEvent
+          contentPart: contentPartEvent,
         };
       }
     }
@@ -444,16 +446,15 @@ export class MessageEventHelperImpl extends MessageEventHelper {
       for (const toolCallEvent of ToolCallEventHelperImpl.replay(toolCall)) {
         yield {
           messageId: message.messageId,
-          toolCall: toolCallEvent
+          toolCall: toolCallEvent,
         };
       }
     }
 
     yield {
       messageId: message.messageId,
-      endMessage: {}
+      endMessage: {},
     };
-
   }
 
   /**
@@ -470,14 +471,18 @@ export class MessageEventHelperImpl extends MessageEventHelper {
     if (messageEvent.contentPart) {
       let contentPartHelper = this._contentPartMap.get(messageEvent.contentPart.contentPartId);
       if (!contentPartHelper && this._contentPartStartHandlers.length > 0) {
-        contentPartHelper = new ContentPartEventHelperImpl(this, messageEvent.contentPart.contentPartId, messageEvent.contentPart.startContentPart);
+        contentPartHelper = new ContentPartEventHelperImpl(
+          this,
+          messageEvent.contentPart.contentPartId,
+          messageEvent.contentPart.startContentPart,
+        );
         this._contentPartMap.set(messageEvent.contentPart.contentPartId, contentPartHelper);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._contentPartStartHandlers.forEach(cb => cb(contentPartHelper!));
+        this._contentPartStartHandlers.forEach((cb) => cb(contentPartHelper!));
       } else if (messageEvent.contentPart.startContentPart) {
         // when session.echo is enabled, and startContentPart is used, the helper will already be in the map
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._contentPartStartHandlers.forEach(cb => cb(contentPartHelper!));
+        this._contentPartStartHandlers.forEach((cb) => cb(contentPartHelper!));
       }
       if (contentPartHelper) contentPartHelper.dispatch(messageEvent.contentPart);
     }
@@ -485,14 +490,18 @@ export class MessageEventHelperImpl extends MessageEventHelper {
     if (messageEvent.toolCall) {
       let toolCallHelper = this._toolCallMap.get(messageEvent.toolCall.toolCallId);
       if (!toolCallHelper && this._toolCallStartHandlers.length > 0) {
-        toolCallHelper = new ToolCallEventHelperImpl(this, messageEvent.toolCall.toolCallId, messageEvent.toolCall.startToolCall);
+        toolCallHelper = new ToolCallEventHelperImpl(
+          this,
+          messageEvent.toolCall.toolCallId,
+          messageEvent.toolCall.startToolCall,
+        );
         this._toolCallMap.set(messageEvent.toolCall.toolCallId, toolCallHelper);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._toolCallStartHandlers.forEach(cb => cb(toolCallHelper!));
+        this._toolCallStartHandlers.forEach((cb) => cb(toolCallHelper!));
       } else if (messageEvent.toolCall.startToolCall) {
         // when session.echo is enabled, and startToolCall is used, the helper will already be in the map
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._toolCallStartHandlers.forEach(cb => cb(toolCallHelper!));
+        this._toolCallStartHandlers.forEach((cb) => cb(toolCallHelper!));
       }
       if (toolCallHelper) toolCallHelper.dispatch(messageEvent.toolCall);
     }
@@ -500,17 +509,21 @@ export class MessageEventHelperImpl extends MessageEventHelper {
     if (messageEvent.interrupt) {
       if (messageEvent.interrupt.startInterrupt) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._interruptStartHandlers.forEach(cb => cb({ interruptId: messageEvent.interrupt!.interruptId, startEvent: messageEvent.interrupt!.startInterrupt! }));
+        this._interruptStartHandlers.forEach((cb) =>
+          cb({ interruptId: messageEvent.interrupt!.interruptId, startEvent: messageEvent.interrupt!.startInterrupt! }),
+        );
       }
       if (messageEvent.interrupt.endInterrupt) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this._interruptEndHandlers.forEach(cb => cb({ interruptId: messageEvent.interrupt!.interruptId, endEvent: messageEvent.interrupt!.endInterrupt! }));
+        this._interruptEndHandlers.forEach((cb) =>
+          cb({ interruptId: messageEvent.interrupt!.interruptId, endEvent: messageEvent.interrupt!.endInterrupt! }),
+        );
       }
     }
 
     if (messageEvent.metaEvent) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._metaEventHandlers.forEach(cb => cb(messageEvent.metaEvent!));
+      this._metaEventHandlers.forEach((cb) => cb(messageEvent.metaEvent!));
     }
 
     if (messageEvent.messageError?.startError) {
@@ -524,7 +537,7 @@ export class MessageEventHelperImpl extends MessageEventHelper {
     if (messageEvent.endMessage) {
       this.setEnded();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._endHandlers.forEach(cb => cb(messageEvent.endMessage!));
+      this._endHandlers.forEach((cb) => cb(messageEvent.endMessage!));
       this.delete();
     }
   }
@@ -552,8 +565,8 @@ export class MessageEventHelperImpl extends MessageEventHelper {
   }
 
   protected deleteChildren(): void {
-    Array.from(this._contentPartMap.values()).forEach(contentPartHelper => contentPartHelper.delete());
-    Array.from(this._toolCallMap.values()).forEach(toolCallHelper => toolCallHelper.delete());
+    Array.from(this._contentPartMap.values()).forEach((contentPartHelper) => contentPartHelper.delete());
+    Array.from(this._toolCallMap.values()).forEach((toolCallHelper) => toolCallHelper.delete());
   }
 
   protected getParentErrorScope(): boolean {
@@ -563,5 +576,4 @@ export class MessageEventHelperImpl extends MessageEventHelper {
   protected getSession() {
     return this.exchange.session;
   }
-
 }

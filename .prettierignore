@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+**/dist
+build
+**/build
+lib
+**/lib
+*.tsbuildinfo
+
+# Test coverage
+coverage
+**/coverage
+
+# Generated docs site
+site
+**/site
+
+# Cache
+.cache
+.eslintcache
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Logs
+*.log
+
+# Packaged artifacts
+*.tgz
+
+# Minified
+*.min.js
+*.min.css
+
+# Claude / agent prompt files — written by Claude in the format it finds best.
+# Reformatting can interfere with inference and the knowledge base.
+.claude
+agent_docs
+CLAUDE.md
+Agents.md

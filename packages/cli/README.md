@@ -95,6 +95,7 @@ uipath register app \
 | `--accessToken` | | UiPath access token |
 
 This command will:
+
 - Register the app with UiPath
 - Return the app URL for OAuth redirect URI
 - Save app configuration to `.uipath/app.config.json`
@@ -182,6 +183,7 @@ uipath deploy \
 | `--accessToken` | | UiPath access token |
 
 This command will:
+
 - Check if the app is already deployed
 - If deployed: upgrade to the latest published version
 - If not deployed: perform initial deployment
@@ -192,6 +194,7 @@ This command will:
 Push your local web app build to a Studio Web project. Syncs files under a build directory to the remote project and optionally imports referenced resources (assets, processes, connections, etc.) from `bindings.json`.
 
 **Prerequisites:**
+
 - Environment variables set (see [Prerequisites](#prerequisites)), or pass `--orgId`, `--tenantId`, `--accessToken` (and optionally `--baseUrl`, `--tenantName`) for non-interactive use. `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
 - A built app (e.g. `dist/`, `build/`, or `out/`) at the project root.
 - Optional: `bindings.json` at the project root for resource import; `.uipath/push_metadata.json` for push metadata (created/updated on push). Optional: `.uipathignore` to exclude additional files or folders from push (see [Ignoring files from push](#ignoring-files-from-push)).
@@ -217,7 +220,7 @@ uipath push <project-id> --buildDir out --ignoreResources --orgId <org-id> --ten
 ```
 
 **Arguments:**
-| Argument     | Description |
+| Argument | Description |
 |-------------|-------------|
 | `project-id` | WebApp Project ID (solution ID). Optional if `UIPATH_PROJECT_ID` is set in `.env`. |
 
@@ -232,6 +235,7 @@ uipath push <project-id> --buildDir out --ignoreResources --orgId <org-id> --ten
 | `--accessToken` | UiPath bearer token for authentication. Overrides env. |
 
 This command will:
+
 - Validate the build directory exists and required files are present
 - Acquire a lock on the remote project, then sync your build files (add/update/delete) under the project’s content root
 - Optionally import resources referenced in `bindings.json` into the solution
@@ -257,6 +261,7 @@ src/drafts/
 Pull project files from a Studio Web project into your local workspace. Syncs only files under the remote `source/` folder and writes them at the target directory root. Build output (`buildDir` from remote `push_metadata.json`, e.g. `output/` or `dist/`) is excluded so you get source code only.
 
 **Prerequisites:**
+
 - Environment variables set (see [Prerequisites](#prerequisites)), or pass `--orgId`, `--tenantId`, `--accessToken` (and optionally `--baseUrl`, `--tenantName`) for non-interactive use. `UIPATH_PROJECT_ID` can be used instead of passing `<project-id>`.
 - The remote project must be a Studio Web coded app (project has `webAppManifest.json` with `type: "App_ProCode"`).
 
@@ -278,7 +283,7 @@ uipath pull <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <
 ```
 
 **Arguments:**
-| Argument     | Description |
+| Argument | Description |
 |-------------|-------------|
 | `project-id` | WebApp Project ID (solution ID). Optional if `UIPATH_PROJECT_ID` is set in `.env`. |
 
@@ -293,8 +298,9 @@ uipath pull <project-id> --orgId <org-id> --tenantId <tenant-id> --accessToken <
 | `--accessToken` | UiPath bearer token for authentication. Overrides env. |
 
 This command will:
+
 - Validate the target directory exists and the remote project type (webAppManifest.json)
-- Fetch remote structure and filter to files under `source/` only; exclude the build output folder 
+- Fetch remote structure and filter to files under `source/` only; exclude the build output folder
 - If local files would be overwritten and `--overwrite` is not set: in an interactive terminal, prompt "Do you want to continue? (Y/n)"; otherwise fail with a message to use `--overwrite` or move files
 - Recreate the folder hierarchy and download files in parallel
 
@@ -310,10 +316,10 @@ This command will:
 - [`uipath push`](#push-studio-web) - Push local build to Studio Web project (atomic sync)
 - [`uipath pull`](#pull-studio-web) - Pull project files from Studio Web into local workspace
 
-
 ## Workflow
 
 **Pack → Publish → Deploy:**
+
 1. **Register the app**: `uipath register app --name MyApp` (gets app URL for OAuth)
 2. **Build your application**: Use your framework's build command (e.g., `npm run build`, `ng build`)
 3. **Pack the application**: `uipath pack ./dist` (uses saved app config)
@@ -321,10 +327,12 @@ This command will:
 5. **Deploy the app**: `uipath deploy` (deploys or upgrades the app)
 
 **Push (Studio Web):**
+
 1. **Build your application**: Use your framework's build command.
 2. **Push to Studio Web**: `uipath push <project-id>` from the project root. Use `--buildDir build` (or `out`, etc.) if your framework uses a different output folder than `dist`.
 
 **Pull (Studio Web):**
+
 1. **Pull from Studio Web**: `uipath pull <project-id>` from the directory where you want the project files (or use `--targetDir`). Only files under remote `source/` are downloaded; build output is excluded.
 2. **Edit locally** and run builds/tests as needed.
 3. **Push changes back**: `uipath push <project-id>` when ready (ensure you have pulled latest first if others contribute).
@@ -332,6 +340,7 @@ This command will:
 ## Framework Support
 
 This CLI works with any web framework that produces a static build:
+
 - Angular (`ng build`) — default output: `dist/`
 - React / Create React App (`npm run build`) — use `--buildDir build` with push
 - Vite, Vue, static HTML/CSS/JS — default `dist/` or use `--buildDir` for custom output
@@ -339,6 +348,7 @@ This CLI works with any web framework that produces a static build:
 ## Development
 
 This CLI is built using:
+
 - [oclif](https://oclif.io/) - CLI framework for TypeScript
 - [JSZip](https://stuk.github.io/jszip/) - Pure JavaScript ZIP file creation
 - [Inquirer](https://www.npmjs.com/package/inquirer) - Interactive command line prompts

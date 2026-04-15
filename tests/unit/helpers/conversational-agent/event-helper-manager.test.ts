@@ -39,7 +39,7 @@ describe('ConversationEventHelperManager', () => {
         expect.objectContaining({
           conversationId: CONVERSATION_ID,
           startSession: expect.any(Object),
-        })
+        }),
       );
     });
 
@@ -71,26 +71,18 @@ describe('ConversationEventHelperManager', () => {
     it('should auto-end session when callback is provided', async () => {
       const { emitSpy, manager } = createManager();
 
-      await manager.startSession(
-        { conversationId: CONVERSATION_ID },
-        async (session) => {
-          session.startExchange();
-        }
-      );
+      await manager.startSession({ conversationId: CONVERSATION_ID }, async (session) => {
+        session.startExchange();
+      });
 
-      const endSessionCall = emitSpy.mock.calls.find(
-        (call: any[]) => call[0]?.endSession !== undefined
-      );
+      const endSessionCall = emitSpy.mock.calls.find((call: any[]) => call[0]?.endSession !== undefined);
       expect(endSessionCall).toBeDefined();
     });
 
     it('should return a promise when callback is provided', () => {
       const { manager } = createManager();
 
-      const result = manager.startSession(
-        { conversationId: CONVERSATION_ID },
-        async () => {}
-      );
+      const result = manager.startSession({ conversationId: CONVERSATION_ID }, async () => {});
 
       expect(result).toBeInstanceOf(Promise);
     });
@@ -228,7 +220,7 @@ describe('ConversationEventHelperManager', () => {
             errorId: 'err-1',
             startError: expect.objectContaining({ message: 'Something failed' }),
           }),
-        })
+        }),
       );
     });
 
@@ -247,7 +239,7 @@ describe('ConversationEventHelperManager', () => {
             errorId: 'err-1',
             endError: expect.any(Object),
           }),
-        })
+        }),
       );
     });
 
@@ -279,9 +271,7 @@ describe('ConversationEventHelperManager', () => {
       exchange.onErrorStart(vi.fn()); // local handler
       (exchange as any).dispatchErrorStart('err-1', { message: 'test error' });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'err-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'err-1' }));
     });
 
     it('should call onUnhandledErrorStart when no local or any handler', () => {
@@ -292,9 +282,7 @@ describe('ConversationEventHelperManager', () => {
       const exchange = session.startExchange({ exchangeId: 'ex-1' });
       (exchange as any).dispatchErrorStart('err-1', { message: 'unhandled' });
 
-      expect(unhandledSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'err-1' })
-      );
+      expect(unhandledSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'err-1' }));
     });
 
     it('should unregister onAnyErrorStart handler', () => {
@@ -334,9 +322,7 @@ describe('ConversationEventHelperManager', () => {
       const exchange = session.startExchange({ exchangeId: 'ex-1' });
       (exchange as any).dispatchErrorEnd('err-1', {});
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'err-1' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'err-1' }));
     });
 
     it('should unregister onAnyErrorEnd handler', () => {

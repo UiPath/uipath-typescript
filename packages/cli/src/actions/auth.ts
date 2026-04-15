@@ -9,17 +9,8 @@ import {
   authenticateWithClientCredentials,
 } from '../auth/core/oidc.js';
 import { AuthServer } from '../auth/server/auth-server.js';
-import {
-  loadTokens,
-  clearTokens,
-  isTokenExpired,
-  saveTokensWithTenant,
-} from '../auth/core/token-manager.js';
-import {
-  getTenantsAndOrganization,
-  selectTenantInteractive,
-  type SelectedTenant,
-} from '../auth/services/portal.js';
+import { loadTokens, clearTokens, isTokenExpired, saveTokensWithTenant } from '../auth/core/token-manager.js';
+import { getTenantsAndOrganization, selectTenantInteractive, type SelectedTenant } from '../auth/services/portal.js';
 import { selectFolderInteractive } from '../auth/services/folder.js';
 import { getBaseUrl } from '../auth/utils/url.js';
 import { getFormattedExpirationDate } from '../auth/utils/date.js';
@@ -95,7 +86,7 @@ async function executeClientCredentialsAuth(
   clientId: string,
   clientSecret: string,
   scope: string | undefined,
-  logger: { log: (message: string) => void }
+  logger: { log: (message: string) => void },
 ): Promise<void> {
   const spinner = ora(MESSAGES.INFO.AUTHENTICATING_WITH_CLIENT_CREDENTIALS).start();
   try {
@@ -120,10 +111,18 @@ async function executePkceAuth(domain: string, logger: { log: (message: string) 
   }
   if (!availablePort) {
     spinner.fail(MESSAGES.ERRORS.ALL_REGISTERED_PORTS_IN_USE);
-    logger.log(chalk.red(`\nAll registered ports (${AUTH_CONSTANTS.ALTERNATIVE_PORTS.join(', ')}) ${MESSAGES.ERRORS.PORTS_CURRENTLY_IN_USE}`));
+    logger.log(
+      chalk.red(
+        `\nAll registered ports (${AUTH_CONSTANTS.ALTERNATIVE_PORTS.join(', ')}) ${MESSAGES.ERRORS.PORTS_CURRENTLY_IN_USE}`,
+      ),
+    );
     logger.log(chalk.gray(`\n${MESSAGES.ERRORS.FREE_UP_PORTS_INSTRUCTION}`));
     for (const port of AUTH_CONSTANTS.ALTERNATIVE_PORTS) {
-      logger.log(chalk.gray(`  • Port ${port}: ${chalk.cyan(`lsof -i :${port}`)} (macOS/Linux) or ${chalk.cyan(`netstat -ano | findstr :${port}`)} (Windows)`));
+      logger.log(
+        chalk.gray(
+          `  • Port ${port}: ${chalk.cyan(`lsof -i :${port}`)} (macOS/Linux) or ${chalk.cyan(`netstat -ano | findstr :${port}`)} (Windows)`,
+        ),
+      );
     }
     throw new Error(MESSAGES.ERRORS.ALL_PORTS_IN_USE);
   }
@@ -148,7 +147,7 @@ async function startAuthenticationFlow(
   domain: string,
   port: number,
   spinner: Ora,
-  logger: { log: (message: string) => void }
+  logger: { log: (message: string) => void },
 ): Promise<{ authServer: AuthServer; authPromise: Promise<TokenResponse> }> {
   const pkce = generatePKCEChallenge();
   const authServer = new AuthServer({
@@ -168,9 +167,7 @@ async function startAuthenticationFlow(
   return { authServer, authPromise };
 }
 
-async function waitForBrowserAuth(
-  authPromise: Promise<TokenResponse>,
-): Promise<TokenResponse> {
+async function waitForBrowserAuth(authPromise: Promise<TokenResponse>): Promise<TokenResponse> {
   const spinner = ora(MESSAGES.INFO.WAITING_FOR_AUTH).start();
   try {
     const tokens = await authPromise;
@@ -185,7 +182,7 @@ async function waitForBrowserAuth(
 async function configureTenantAndFolder(
   tokens: TokenResponse,
   domain: string,
-  logger: { log: (message: string) => void }
+  logger: { log: (message: string) => void },
 ): Promise<SelectedTenant & { folderKey?: string | null }> {
   const orgSpinner = ora(MESSAGES.INFO.FETCHING_ORG_TENANTS).start();
   try {
@@ -197,7 +194,7 @@ async function configureTenantAndFolder(
       tokens.accessToken,
       baseUrl,
       selectedTenant.organizationName,
-      selectedTenant.tenantName
+      selectedTenant.tenantName,
     );
     return { ...selectedTenant, folderKey };
   } catch (error) {
@@ -211,11 +208,13 @@ async function saveCredentialsAndFinish(
   tokens: TokenResponse,
   domain: string,
   selectedTenant: SelectedTenant & { folderKey?: string | null },
-  logger: { log: (message: string) => void }
+  logger: { log: (message: string) => void },
 ): Promise<void> {
   await saveTokensWithTenant(tokens, domain, selectedTenant, selectedTenant.folderKey);
   logger.log(chalk.green(`\n${MESSAGES.SUCCESS.AUTHENTICATION_SUCCESS}`));
-  logger.log(chalk.gray(`Organization: ${selectedTenant.organizationDisplayName} (${selectedTenant.organizationName})`));
+  logger.log(
+    chalk.gray(`Organization: ${selectedTenant.organizationDisplayName} (${selectedTenant.organizationName})`),
+  );
   logger.log(chalk.gray(`Tenant: ${selectedTenant.tenantDisplayName} (${selectedTenant.tenantName})`));
   if (selectedTenant.folderKey) logger.log(chalk.gray(`Folder Key: ${selectedTenant.folderKey}`));
   logger.log(chalk.gray(`Domain: ${domain}`));

@@ -6,7 +6,7 @@ import { PaginationOptions } from '../../utils/pagination';
  */
 export enum AssetValueScope {
   Global = 'Global',
-  PerRobot = 'PerRobot'
+  PerRobot = 'PerRobot',
 }
 
 /**
@@ -21,7 +21,7 @@ export enum AssetValueType {
   Credential = 'Credential',
   WindowsCredential = 'WindowsCredential',
   KeyValueList = 'KeyValueList',
-  Secret = 'Secret'
+  Secret = 'Secret',
 }
 
 /**
@@ -57,12 +57,13 @@ export interface AssetGetResponse {
 /**
  * Options for getting assets across folders
  */
-export type AssetGetAllOptions = RequestOptions & PaginationOptions & {
-  /**
-   * Optional folder ID to filter assets by folder
-   */
-  folderId?: number;
-}
+export type AssetGetAllOptions = RequestOptions &
+  PaginationOptions & {
+    /**
+     * Optional folder ID to filter assets by folder
+     */
+    folderId?: number;
+  };
 
 /**
  * Options for getting a single asset by ID

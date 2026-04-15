@@ -72,7 +72,9 @@ describe('local-files', () => {
 
   describe('buildPushIgnoreFilter', () => {
     it('should build filter with default patterns', () => {
-      vi.mocked(fs.readFileSync).mockImplementation(() => { throw new Error('ENOENT'); });
+      vi.mocked(fs.readFileSync).mockImplementation(() => {
+        throw new Error('ENOENT');
+      });
       const ig = buildPushIgnoreFilter('/root');
       expect(ig.ignores('node_modules/package.json')).toBe(true);
     });
@@ -120,7 +122,9 @@ describe('local-files', () => {
 
   describe('collectSourceFiles', () => {
     it('should return empty array when root dir does not exist', () => {
-      vi.mocked(fs.readFileSync).mockImplementation(() => { throw new Error('ENOENT'); });
+      vi.mocked(fs.readFileSync).mockImplementation(() => {
+        throw new Error('ENOENT');
+      });
       vi.mocked(fs.readdirSync).mockImplementation(() => {
         const err = new Error('ENOENT') as NodeJS.ErrnoException;
         err.code = 'ENOENT';

@@ -3,7 +3,7 @@
 **Coded Apps** is a static-site hosting service through which one can build and deploy standard browser-based web application (React, Vue, Angular, etc.) to UiPath. The platform offers uipath-typescript sdk using which one can handle OAuth and integration with UiPath artifacts.
 
 !!! warning "Cloud only"
-    Coded Apps are currently available on **UiPath Automation Cloud** only. Automation Suite and Dedicated deployments are not supported at this time.
+Coded Apps are currently available on **UiPath Automation Cloud** only. Automation Suite and Dedicated deployments are not supported at this time.
 
 ---
 
@@ -23,7 +23,7 @@ $ uip tools install codedapp
 ```
 
 !!! info "Minimum versions"
-    Coded Apps requires **CLI version >= 0.1.21** and **codedapp tool version >= 0.1.14**.
+Coded Apps requires **CLI version >= 0.1.21** and **codedapp tool version >= 0.1.14**.
 
     Check your installed CLI version:
 
@@ -60,17 +60,17 @@ Create a `uipath.json` at the root of your project. This file holds SDK and OAut
 }
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `clientId` | **Yes** | A **non-confidential** OAuth client ID registered in your UiPath org |
-| `scope` | No | OAuth scopes your app needs. Defaults to all scopes registered with the provided `clientId` |
-| `orgName` | No | Your UiPath organization name or ID |
-| `tenantName` | No | Your UiPath tenant name or ID |
-| `baseUrl` | No | UiPath platform base URL (defaults to `https://api.uipath.com`) |
-| `redirectUri` | No | OAuth redirect URI (only needed for local dev) |
+| Field         | Required | Description                                                                                 |
+| ------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `clientId`    | **Yes**  | A **non-confidential** OAuth client ID registered in your UiPath org                        |
+| `scope`       | No       | OAuth scopes your app needs. Defaults to all scopes registered with the provided `clientId` |
+| `orgName`     | No       | Your UiPath organization name or ID                                                         |
+| `tenantName`  | No       | Your UiPath tenant name or ID                                                               |
+| `baseUrl`     | No       | UiPath platform base URL (defaults to `https://api.uipath.com`)                             |
+| `redirectUri` | No       | OAuth redirect URI (only needed for local dev)                                              |
 
 !!! tip
-    If `uipath.json` doesn't exist, `uip codedapp pack` creates it with empty values and warns you to fill in the required fields.
+If `uipath.json` doesn't exist, `uip codedapp pack` creates it with empty values and warns you to fill in the required fields.
 
 ---
 
@@ -153,19 +153,18 @@ Then add the plugin to your bundler config:
 The plugin reads `uipath.json` and injects the following `<meta>` tags into your `index.html` during local development:
 
 ```html
-<meta name="uipath:client-id"    content="your-oauth-client-id">
-<meta name="uipath:scope"        content="OR.Execution OR.Folders">
-<meta name="uipath:org-name"     content="your-org">
-<meta name="uipath:tenant-name"  content="your-tenant">
-<meta name="uipath:base-url"     content="https://api.uipath.com">
-<meta name="uipath:redirect-uri" content="http://localhost:5173">
+<meta name="uipath:client-id" content="your-oauth-client-id" />
+<meta name="uipath:scope" content="OR.Execution OR.Folders" />
+<meta name="uipath:org-name" content="your-org" />
+<meta name="uipath:tenant-name" content="your-tenant" />
+<meta name="uipath:base-url" content="https://api.uipath.com" />
+<meta name="uipath:redirect-uri" content="http://localhost:5173" />
 ```
 
 When deployed, the platform injects these config tags automatically — the plugin is only needed for local development. At deployment, the platform also injects:
 
 ```html
-<meta name="uipath:app-base"  content="/your-app-name/">
-<base href="/your-app-name/">
+<meta name="uipath:app-base" content="/your-app-name/" /> <base href="/your-app-name/" />
 ```
 
 ---
@@ -196,7 +195,7 @@ Your bundler must output relative asset paths so they resolve correctly via the 
     ```
 
 !!! note "Vite: asset references in JS/TS code"
-    With `base: './'`, Vite rewrites paths in HTML and CSS automatically. For JS/TS code, import assets as ES modules or use `import.meta.env.BASE_URL` for files in the public folder:
+With `base: './'`, Vite rewrites paths in HTML and CSS automatically. For JS/TS code, import assets as ES modules or use `import.meta.env.BASE_URL` for files in the public folder:
 
     ```typescript
     // ✅ ES module import — Vite handles the path
@@ -254,10 +253,10 @@ If your app uses client-side routing, use `getAppBase()` as the router `basename
 For all apps using `@uipath/uipath-typescript`, no constructor arguments are needed for initialization — the SDK reads its configuration from the platform meta tags automatically.
 
 ```typescript
-import { UiPath } from '@uipath/uipath-typescript/core'
+import { UiPath } from '@uipath/uipath-typescript/core';
 
-const sdk = new UiPath()
-await sdk.initialize()
+const sdk = new UiPath();
+await sdk.initialize();
 ```
 
 ---
@@ -279,11 +278,11 @@ Once deployed, your app is accessible at:
 ```
 https://<orgName>.uipath.host/<appName>
 ```
+
 Refer to [CLI Reference](cli-reference.md) for details.
 
 !!! info "Coded apps deployment domain"
-    Coded Apps uses `uipath.host` domain (for example, <orgname>.uipath.host) because Coded Apps is a static-site hosting service separate from the main UiPath application site. Key reasons are:
+Coded Apps uses `uipath.host` domain (for example, <orgname>.uipath.host) because Coded Apps is a static-site hosting service separate from the main UiPath application site. Key reasons are:
 
-    - Separation of concerns: Coded Apps publishes static HTML/CSS/JS from your package and exposes it at a dedicated site URL under uipath.host rather than the UiPath product domain. 
+    - Separation of concerns: Coded Apps publishes static HTML/CSS/JS from your package and exposes it at a dedicated site URL under uipath.host rather than the UiPath product domain.
     - Site types and naming: Coded app sites are published under https://<orgname>.uipath.host/<appname>. This provides a predictable, account-scoped URL scheme.
-

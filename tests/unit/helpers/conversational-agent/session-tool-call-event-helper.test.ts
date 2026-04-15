@@ -18,7 +18,10 @@ const createAsyncToolCall = () => {
   const manager = new ConversationEventHelperManagerImpl({ emit: emitSpy });
   manager.onUnhandledErrorStart(vi.fn());
   const session = manager.startSession({ conversationId: CONVERSATION_ID }) as SessionEventHelperImpl;
-  const toolCall = session.startAsyncToolCall({ toolCallId: TOOL_CALL_ID, toolName: 'search' }) as AsyncToolCallEventHelperImpl;
+  const toolCall = session.startAsyncToolCall({
+    toolCallId: TOOL_CALL_ID,
+    toolName: 'search',
+  }) as AsyncToolCallEventHelperImpl;
   emitSpy.mockClear();
   return { emitSpy, manager, session, toolCall };
 };
@@ -72,7 +75,7 @@ describe('AsyncToolCallEventHelper', () => {
             toolCallId: TOOL_CALL_ID,
             metaEvent: { key: 'val' },
           }),
-        })
+        }),
       );
     });
   });
@@ -94,7 +97,7 @@ describe('AsyncToolCallEventHelper', () => {
             toolCallId: TOOL_CALL_ID,
             endToolCall: {},
           }),
-        })
+        }),
       );
     });
 
@@ -108,7 +111,7 @@ describe('AsyncToolCallEventHelper', () => {
           asyncToolCall: expect.objectContaining({
             endToolCall: expect.objectContaining({ output: 'async result' }),
           }),
-        })
+        }),
       );
     });
 
@@ -122,7 +125,7 @@ describe('AsyncToolCallEventHelper', () => {
           asyncToolCall: expect.objectContaining({
             endToolCall: expect.objectContaining({ isError: true }),
           }),
-        })
+        }),
       );
     });
 
@@ -146,7 +149,7 @@ describe('AsyncToolCallEventHelper', () => {
             toolCallId: TOOL_CALL_ID,
             metaEvent: { key: 'meta' },
           }),
-        })
+        }),
       );
     });
 
@@ -215,9 +218,7 @@ describe('AsyncToolCallEventHelper', () => {
         toolCallError: { errorId: 'atc-err-1', startError: { message: 'fail' } },
       });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'atc-err-1' })
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'atc-err-1' }));
     });
 
     it('should ignore events for different toolCallId', () => {
@@ -258,7 +259,7 @@ describe('AsyncToolCallEventHelper', () => {
               startError: expect.objectContaining({ message: 'async fail' }),
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -277,7 +278,7 @@ describe('AsyncToolCallEventHelper', () => {
               endError: expect.any(Object),
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -416,9 +417,7 @@ describe('AsyncToolCallEventHelper', () => {
         toolCallError: { errorId: 'atce-1', startError: { message: 'err' } },
       });
 
-      expect(anyErrorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'atce-1' })
-      );
+      expect(anyErrorSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'atce-1' }));
     });
 
     it('should dispatch to unhandled when no local handler exists', () => {
@@ -431,9 +430,7 @@ describe('AsyncToolCallEventHelper', () => {
         toolCallError: { errorId: 'atce-1', startError: { message: 'unhandled' } },
       });
 
-      expect(unhandledSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'atce-1' })
-      );
+      expect(unhandledSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'atce-1' }));
     });
 
     it('should store errors in errors map on error start', () => {
@@ -493,9 +490,7 @@ describe('AsyncToolCallEventHelper', () => {
         toolCallError: { errorId: 'atce-end-1', endError: {} },
       });
 
-      expect(errorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'atce-end-1' })
-      );
+      expect(errorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'atce-end-1' }));
     });
 
     it('should dispatch error end to manager anyErrorEnd', () => {
@@ -509,16 +504,17 @@ describe('AsyncToolCallEventHelper', () => {
         toolCallError: { errorId: 'atce-any-end', endError: {} },
       });
 
-      expect(anyErrorEndSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ errorId: 'atce-any-end' })
-      );
+      expect(anyErrorEndSpy).toHaveBeenCalledWith(expect.objectContaining({ errorId: 'atce-any-end' }));
     });
 
     it('should not throw when error end occurs without any handler', () => {
       const emitSpy = vi.fn();
       const manager = new ConversationEventHelperManagerImpl({ emit: emitSpy });
       const session = manager.startSession({ conversationId: CONVERSATION_ID }) as SessionEventHelperImpl;
-      const toolCall = session.startAsyncToolCall({ toolCallId: 'no-handler-tc', toolName: 'search' }) as AsyncToolCallEventHelperImpl;
+      const toolCall = session.startAsyncToolCall({
+        toolCallId: 'no-handler-tc',
+        toolName: 'search',
+      }) as AsyncToolCallEventHelperImpl;
 
       expect(() => {
         toolCall.dispatch({

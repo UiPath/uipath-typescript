@@ -9,7 +9,4 @@ export { BaseWebSocket } from './base';
 
 // Public types
 export { ConnectionStatus, LogLevel } from './types';
-export type {
-  ConnectionStatusChangedHandler,
-  SocketEventHandler
-} from './types';
+export type { ConnectionStatusChangedHandler, SocketEventHandler } from './types';

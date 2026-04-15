@@ -61,7 +61,7 @@ export class SessionManager {
    *
    * @param level - Log level to set
    */
-    setLogLevel(level: LogLevel): void {
+  setLogLevel(level: LogLevel): void {
     this._session.setLogLevel(level);
   }
 
@@ -80,7 +80,7 @@ export class SessionManager {
 
         // Dispatch the event to registered handlers
         this._eventDispatcher?.dispatch(data);
-      }
+      },
     });
   }
 
@@ -108,9 +108,9 @@ export class SessionManager {
             errorId: 'EVENT_SEND_ERROR',
             startError: {
               message: 'Failed to send conversation event.',
-              details: { cause: error instanceof Error ? error.message : null }
-            }
-          }
+              details: { cause: error instanceof Error ? error.message : null },
+            },
+          },
         });
       }
     };
@@ -170,9 +170,9 @@ export class SessionManager {
                 conversationError: {
                   errorId: 'WEBSOCKET_DISCONNECTED',
                   startError: {
-                    message: `WebSocket disconnected: ${reason}`
-                  }
-                }
+                    message: `WebSocket disconnected: ${reason}`,
+                  },
+                },
               });
             }
           }

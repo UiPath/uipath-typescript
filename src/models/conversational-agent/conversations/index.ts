@@ -21,5 +21,3 @@ export * from './exchanges.models';
 
 // Message service types
 export * from './messages.models';
-
-

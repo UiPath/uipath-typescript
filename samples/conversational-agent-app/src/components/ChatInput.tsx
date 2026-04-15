@@ -2,60 +2,63 @@
  * ChatInput - Message input area with attachments
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface ChatInputProps {
-  onSubmit: (content: string, attachments: File[]) => void
-  isStreaming: boolean
+  onSubmit: (content: string, attachments: File[]) => void;
+  isStreaming: boolean;
 }
 
-export function ChatInput({
-  onSubmit,
-  isStreaming,
-}: ChatInputProps) {
-  const [input, setInput] = useState('')
-  const [attachments, setAttachments] = useState<File[]>([])
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+export function ChatInput({ onSubmit, isStreaming }: ChatInputProps) {
+  const [input, setInput] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
-  }, [input])
+  }, [input]);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault()
-    const hasText = input.trim().length > 0
-    const hasAttachments = attachments.length > 0
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const hasText = input.trim().length > 0;
+      const hasAttachments = attachments.length > 0;
 
-    if ((!hasText && !hasAttachments) || isStreaming) return
+      if ((!hasText && !hasAttachments) || isStreaming) return;
 
-    onSubmit(input.trim(), [...attachments])
-    setInput('')
-    setAttachments([])
-  }, [input, attachments, isStreaming, onSubmit])
+      onSubmit(input.trim(), [...attachments]);
+      setInput('');
+      setAttachments([]);
+    },
+    [input, attachments, isStreaming, onSubmit],
+  );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(e)
-    }
-  }, [handleSubmit])
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmit(e);
+      }
+    },
+    [handleSubmit],
+  );
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    setAttachments(prev => [...prev, ...files])
+    const files = Array.from(e.target.files || []);
+    setAttachments((prev) => [...prev, ...files]);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = '';
     }
-  }, [])
+  }, []);
 
   const removeAttachment = useCallback((file: File) => {
-    setAttachments(prev => prev.filter(f => f !== file))
-  }, [])
+    setAttachments((prev) => prev.filter((f) => f !== file));
+  }, []);
 
   return (
     <div className="border-t border-white/10 p-4">
@@ -69,13 +72,15 @@ export function ChatInput({
                 className="flex items-center gap-2 bg-chat-input px-3 py-1.5 rounded-lg text-sm"
               >
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                  />
                 </svg>
                 <span className="truncate max-w-[150px]">{file.name}</span>
-                <button
-                  onClick={() => removeAttachment(file)}
-                  className="text-gray-400 hover:text-white"
-                >
+                <button onClick={() => removeAttachment(file)} className="text-gray-400 hover:text-white">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -95,16 +100,15 @@ export function ChatInput({
               title="Add attachment"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                />
               </svg>
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileSelect}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} className="hidden" />
 
             {/* Text input */}
             <textarea
@@ -131,10 +135,8 @@ export function ChatInput({
           </div>
         </form>
 
-        <p className="text-xs text-gray-500 text-center mt-2">
-          Press Enter to send, Shift+Enter for new line
-        </p>
+        <p className="text-xs text-gray-500 text-center mt-2">Press Enter to send, Shift+Enter for new line</p>
       </div>
     </div>
-  )
+  );
 }

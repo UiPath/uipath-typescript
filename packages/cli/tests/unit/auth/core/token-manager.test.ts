@@ -24,7 +24,12 @@ vi.mock('../../../../src/auth/utils/url.js', () => ({
 }));
 
 import fs from 'fs-extra';
-import { saveTokensWithTenant, loadTokens, clearTokens, isTokenExpired } from '../../../../src/auth/core/token-manager.js';
+import {
+  saveTokensWithTenant,
+  loadTokens,
+  clearTokens,
+  isTokenExpired,
+} from '../../../../src/auth/core/token-manager.js';
 import type { StoredAuth } from '../../../../src/auth/core/token-manager.js';
 
 const mockTokens = {

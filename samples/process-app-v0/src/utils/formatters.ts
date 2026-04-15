@@ -23,12 +23,12 @@ export const formatDuration = (startTime: string, endTime?: string) => {
   const start = new Date(startTime);
   const end = endTime ? new Date(endTime) : new Date();
   const durationMs = end.getTime() - start.getTime();
-  
+
   const seconds = Math.floor(durationMs / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   if (days > 0) {
     return `${days}d ${hours % 24}h ${minutes % 60}m`;
   } else if (hours > 0) {
@@ -46,7 +46,7 @@ export const formatProcessName = (packageId: string) => {
     .replace(/_/g, ' ')
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 };
 
@@ -58,7 +58,7 @@ export const getEmbedTaskUrl = (taskUrl: string) => {
     const orgId = parts[1];
     const tenantId = parts[2];
     const taskId = parts[parts.length - 1];
-    
+
     // Construct the embed URL
     return `${url.origin}/embed_/${orgId}/${tenantId}/actions_/current-task/tasks/${taskId}`;
   } catch (e) {

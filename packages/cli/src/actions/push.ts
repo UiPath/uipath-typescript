@@ -39,12 +39,12 @@ async function createCodedAppProject(
   form.append('createDefaultProjectCommand[isApp]', 'false');
   form.append('createDefaultProjectCommand[context][expressionLanguage]', 'VB');
   const webAppManifest = JSON.stringify({ type: 'App_ProCode', config: { isCompiled: true } });
-  form.append(
-    'createDefaultProjectCommand[context][serializedWebAppManifest]',
-    webAppManifest,
-  );
+  form.append('createDefaultProjectCommand[context][serializedWebAppManifest]', webAppManifest);
   form.append('createDefaultProjectCommand[isWindows]', 'false');
-  form.append('createDefaultProjectCommand.file', Buffer.from(webAppManifest), { filename: 'webAppManifest.json', contentType: 'application/octet-stream' });
+  form.append('createDefaultProjectCommand.file', Buffer.from(webAppManifest), {
+    filename: 'webAppManifest.json',
+    contentType: 'application/octet-stream',
+  });
   form.append('createDefaultProjectCommand.IsMain', 'false');
   form.append('name', 'Solution');
 
@@ -84,16 +84,12 @@ export async function executePush(options: PushOptions): Promise<void> {
   logger.log(chalk.blue(MESSAGES.INFO.PUSH_HEADER));
   logger.log('');
 
-  const envConfig = getEnvironmentConfig(
-    AUTH_CONSTANTS.REQUIRED_ENV_VARS.PUSH,
-    logger,
-    {
-      baseUrl: options.baseUrl,
-      orgId: options.orgId,
-      tenantId: options.tenantId,
-      accessToken: options.accessToken,
-    }
-  );
+  const envConfig = getEnvironmentConfig(AUTH_CONSTANTS.REQUIRED_ENV_VARS.PUSH, logger, {
+    baseUrl: options.baseUrl,
+    orgId: options.orgId,
+    tenantId: options.tenantId,
+    accessToken: options.accessToken,
+  });
   if (!envConfig) throw new Error('Missing required configuration');
 
   let projectId = options.projectId ?? process.env.UIPATH_PROJECT_ID;
@@ -103,23 +99,27 @@ export async function executePush(options: PushOptions): Promise<void> {
       throw new Error(MESSAGES.ERRORS.PUSH_PROJECT_ID_REQUIRED);
     }
 
-    const { shouldCreate } = await inquirer.prompt<{ shouldCreate: boolean }>([{
-      type: 'confirm',
-      name: 'shouldCreate',
-      message: 'No project ID found. Create a new Coded App project?',
-      default: true,
-    }]);
+    const { shouldCreate } = await inquirer.prompt<{ shouldCreate: boolean }>([
+      {
+        type: 'confirm',
+        name: 'shouldCreate',
+        message: 'No project ID found. Create a new Coded App project?',
+        default: true,
+      },
+    ]);
 
     if (!shouldCreate) {
       throw new Error(MESSAGES.ERRORS.PUSH_PROJECT_ID_REQUIRED);
     }
 
-    const { appName } = await inquirer.prompt<{ appName: string }>([{
-      type: 'input',
-      name: 'appName',
-      message: 'Enter a name for the new Coded App:',
-      default: 'App',
-    }]);
+    const { appName } = await inquirer.prompt<{ appName: string }>([
+      {
+        type: 'input',
+        name: 'appName',
+        message: 'Enter a name for the new Coded App:',
+        default: 'App',
+      },
+    ]);
     projectId = await createCodedAppProject(envConfig, appName, logger);
   }
 
@@ -129,9 +129,7 @@ export async function executePush(options: PushOptions): Promise<void> {
   try {
     Preconditions.validate(rootDir, bundlePath);
   } catch (error) {
-    throw new Error(
-      error instanceof Error ? error.message : MESSAGES.ERRORS.PUSH_VALIDATION_FAILED
-    );
+    throw new Error(error instanceof Error ? error.message : MESSAGES.ERRORS.PUSH_VALIDATION_FAILED);
   }
 
   const handler = new WebAppFileHandler({

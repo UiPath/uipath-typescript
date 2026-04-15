@@ -28,11 +28,15 @@ export function validateConfig(config: UiPathSDKConfig): void {
   const hasOAuth = hasOAuthConfig(config);
 
   if (hasSecret && hasOAuth) {
-    throw new Error('Invalid configuration: cannot provide both secret and OAuth credentials. Choose one authentication method.');
+    throw new Error(
+      'Invalid configuration: cannot provide both secret and OAuth credentials. Choose one authentication method.',
+    );
   }
 
   if (!hasSecret && !hasOAuth) {
-    throw new Error('Invalid configuration: must provide either secret or OAuth credentials (clientId, redirectUri, and scope)');
+    throw new Error(
+      'Invalid configuration: must provide either secret or OAuth credentials (clientId, redirectUri, and scope)',
+    );
   }
 }
 
@@ -46,4 +50,4 @@ export function isCompleteConfig(config: PartialUiPathConfig): config is UiPathS
 
 export function normalizeBaseUrl(url: string): string {
   return url.endsWith('/') ? url.slice(0, -1) : url;
-} 
+}

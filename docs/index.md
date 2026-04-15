@@ -1,4 +1,3 @@
-
 # Getting Started
 
 UiPath TS SDK is a lightweight and versatile toolkit for building modern frontend applications with your favorite Node.js framework. It enables you to create process portals, monitoring dashboards, and other interactive apps that connect seamlessly with UiPath services.
@@ -8,6 +7,6 @@ Designed to run in both Node.js and browser environments, the SDK makes it simpl
 ### Get started building:
 
 1. **[Install the SDK](getting-started.md)** - Add to your project with npm/yarn
-2. **[Set up Authentication](authentication.md)** - Connect to UiPath Cloud  
+2. **[Set up Authentication](authentication.md)** - Connect to UiPath Cloud
 3. **[Start Building](getting-started.md/#quick-examples)** - Jump into examples and guides
 4. **[Deploy App](/uipath-typescript/coded-apps/getting-started/)** - Deploy your coded app to UiPath

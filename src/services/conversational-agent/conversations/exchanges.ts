@@ -18,7 +18,7 @@ import type {
   FeedbackCreateResponse,
   ExchangeGetAllOptions,
   ExchangeGetByIdOptions,
-  ExchangeGetResponse
+  ExchangeGetResponse,
 } from '@/models/conversational-agent';
 
 // Utils
@@ -85,7 +85,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   @track('ConversationalAgent.Exchanges.GetAll')
   async getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
     conversationId: string,
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<ExchangeGetResponse>
@@ -93,21 +93,24 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   > {
     const transformFn = transformExchange;
 
-    return PaginationHelpers.getAll({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => EXCHANGE_ENDPOINTS.LIST(conversationId),
-      transformFn,
-      pagination: {
-        paginationType: PaginationType.TOKEN,
-        itemsField: CONVERSATIONAL_PAGINATION.ITEMS_FIELD,
-        continuationTokenField: CONVERSATIONAL_PAGINATION.CONTINUATION_TOKEN_FIELD,
-        paginationParams: {
-          pageSizeParam: CONVERSATIONAL_TOKEN_PARAMS.PAGE_SIZE_PARAM,
-          tokenParam: CONVERSATIONAL_TOKEN_PARAMS.TOKEN_PARAM
-        }
+    return PaginationHelpers.getAll(
+      {
+        serviceAccess: this.createPaginationServiceAccess(),
+        getEndpoint: () => EXCHANGE_ENDPOINTS.LIST(conversationId),
+        transformFn,
+        pagination: {
+          paginationType: PaginationType.TOKEN,
+          itemsField: CONVERSATIONAL_PAGINATION.ITEMS_FIELD,
+          continuationTokenField: CONVERSATIONAL_PAGINATION.CONTINUATION_TOKEN_FIELD,
+          paginationParams: {
+            pageSizeParam: CONVERSATIONAL_TOKEN_PARAMS.PAGE_SIZE_PARAM,
+            tokenParam: CONVERSATIONAL_TOKEN_PARAMS.TOKEN_PARAM,
+          },
+        },
+        excludeFromPrefix: Object.keys(options || {}), // Conversational params are not OData
       },
-      excludeFromPrefix: Object.keys(options || {}) // Conversational params are not OData
-    }, options) as any;
+      options,
+    ) as any;
   }
 
   /**
@@ -132,7 +135,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   async getById(
     conversationId: string,
     exchangeId: string,
-    options?: ExchangeGetByIdOptions
+    options?: ExchangeGetByIdOptions,
   ): Promise<ExchangeGetResponse> {
     const params: QueryParams = {};
 
@@ -140,10 +143,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
       params.messageSort = options.messageSort;
     }
 
-    const result = await this.get<Exchange>(
-      EXCHANGE_ENDPOINTS.GET(conversationId, exchangeId),
-      { params }
-    );
+    const result = await this.get<Exchange>(EXCHANGE_ENDPOINTS.GET(conversationId, exchangeId), { params });
 
     return transformExchange(result.data);
   }
@@ -180,11 +180,11 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   async createFeedback(
     conversationId: string,
     exchangeId: string,
-    options: CreateFeedbackOptions
+    options: CreateFeedbackOptions,
   ): Promise<FeedbackCreateResponse> {
     const response = await this.post<FeedbackCreateResponse>(
       EXCHANGE_ENDPOINTS.CREATE_FEEDBACK(conversationId, exchangeId),
-      options
+      options,
     );
     return response.data;
   }

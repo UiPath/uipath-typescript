@@ -5,13 +5,24 @@ vi.mock('../../../../src/core/webapp-file-handler/api.js', () => ({
   updateFile: vi.fn(),
   deleteItem: vi.fn(),
   FileAlreadyExistsError: class FileAlreadyExistsError extends Error {
-    constructor(msg: string) { super(msg); this.name = 'FileAlreadyExistsError'; }
+    constructor(msg: string) {
+      super(msg);
+      this.name = 'FileAlreadyExistsError';
+    }
   },
 }));
 
 import * as api from '../../../../src/core/webapp-file-handler/api.js';
-import { executeFileOperations, deleteFiles, deleteFolders } from '../../../../src/core/webapp-file-handler/file-ops.js';
-import type { WebAppProjectConfig, FileOperationPlan, LocalFile } from '../../../../src/core/webapp-file-handler/types.js';
+import {
+  executeFileOperations,
+  deleteFiles,
+  deleteFolders,
+} from '../../../../src/core/webapp-file-handler/file-ops.js';
+import type {
+  WebAppProjectConfig,
+  FileOperationPlan,
+  LocalFile,
+} from '../../../../src/core/webapp-file-handler/types.js';
 import { createMockLogger, createMockEnvConfig } from '../../../helpers/index.js';
 
 function createConfig(): WebAppProjectConfig {
@@ -41,7 +52,11 @@ describe('file-ops', () => {
     it('should return zero counts for empty plan', async () => {
       const config = createConfig();
       const plan: FileOperationPlan = {
-        createFolders: [], uploadFiles: [], updateFiles: [], deleteFiles: [], deleteFolders: [],
+        createFolders: [],
+        uploadFiles: [],
+        updateFiles: [],
+        deleteFiles: [],
+        deleteFolders: [],
       };
       const result = await executeFileOperations(config, plan, null);
       expect(result.succeededCount).toBe(0);
@@ -53,7 +68,9 @@ describe('file-ops', () => {
       const config = createConfig();
       const plan: FileOperationPlan = {
         createFolders: [],
-        uploadFiles: [{ path: 'source/dist/app.js', localFile: mockLocalFile, parentPath: 'source/dist', parentId: 'f1' }],
+        uploadFiles: [
+          { path: 'source/dist/app.js', localFile: mockLocalFile, parentPath: 'source/dist', parentId: 'f1' },
+        ],
         updateFiles: [],
         deleteFiles: [],
         deleteFolders: [],
@@ -135,7 +152,10 @@ describe('file-ops', () => {
       const config = createConfig();
       const result = await deleteFolders(
         config,
-        [{ folderId: 'f1', path: 'a' }, { folderId: 'f2', path: 'b' }],
+        [
+          { folderId: 'f1', path: 'a' },
+          { folderId: 'f2', path: 'b' },
+        ],
         null,
       );
       expect(result.succeededCount).toBe(2);

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   createCaseInstanceWithMethods,
-  CaseInstancesServiceModel
+  CaseInstancesServiceModel,
 } from '../../../../src/models/maestro/case-instances.models';
 import {
   MAESTRO_TEST_CONSTANTS,
@@ -9,7 +9,7 @@ import {
   createMockOperationResponse,
   createMockCaseInstance,
   createMockCaseInstanceExecutionHistory,
-  createMockCaseStage
+  createMockCaseStage,
 } from '../../../utils/mocks';
 import type {
   CaseInstanceOperationOptions,
@@ -31,7 +31,7 @@ describe('Case Instance Models', () => {
       reopen: vi.fn(),
       getExecutionHistory: vi.fn(),
       getStages: vi.fn(),
-      getActionTasks: vi.fn()
+      getActionTasks: vi.fn(),
     } as any;
   });
 
@@ -44,10 +44,10 @@ describe('Case Instance Models', () => {
       it('should call caseInstance.close with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          status: TEST_CONSTANTS.CANCELLED
+          status: TEST_CONSTANTS.CANCELLED,
         });
         mockService.close = vi.fn().mockResolvedValue(mockResponse);
 
@@ -56,17 +56,17 @@ describe('Case Instance Models', () => {
         expect(mockService.close).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          undefined
+          undefined,
         );
       });
 
       it('should call caseInstance.close with bound parameters and options', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          status: TEST_CONSTANTS.CANCELLED
+          status: TEST_CONSTANTS.CANCELLED,
         });
         const options: CaseInstanceOperationOptions = { comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT };
         mockService.close = vi.fn().mockResolvedValue(mockResponse);
@@ -76,7 +76,7 @@ describe('Case Instance Models', () => {
         expect(mockService.close).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          options
+          options,
         );
       });
 
@@ -84,7 +84,7 @@ describe('Case Instance Models', () => {
         const mockInstanceData = createMockCaseInstance();
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
-        
+
         await expect(invalidInstance.close()).rejects.toThrow('Case instance ID is undefined');
       });
 
@@ -92,7 +92,7 @@ describe('Case Instance Models', () => {
         const mockInstanceData = createMockCaseInstance();
         const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
-        
+
         await expect(invalidInstance.close()).rejects.toThrow('Case instance folder key is undefined');
       });
     });
@@ -101,39 +101,39 @@ describe('Case Instance Models', () => {
       it('should call caseInstance.pause with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          status: MAESTRO_TEST_CONSTANTS.TASK_STATUS_PAUSED
+          status: MAESTRO_TEST_CONSTANTS.TASK_STATUS_PAUSED,
         });
         mockService.pause = vi.fn().mockResolvedValue(mockResponse);
-        
+
         await instance.pause();
-        
+
         expect(mockService.pause).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          undefined
+          undefined,
         );
       });
 
       it('should call caseInstance.pause with bound parameters and options', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          status: MAESTRO_TEST_CONSTANTS.TASK_STATUS_PAUSED
+          status: MAESTRO_TEST_CONSTANTS.TASK_STATUS_PAUSED,
         });
         const options: CaseInstanceOperationOptions = { comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT };
         mockService.pause = vi.fn().mockResolvedValue(mockResponse);
-        
+
         await instance.pause(options);
 
         expect(mockService.pause).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          options
+          options,
         );
       });
 
@@ -141,7 +141,7 @@ describe('Case Instance Models', () => {
         const mockInstanceData = createMockCaseInstance();
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
-        
+
         await expect(invalidInstance.pause()).rejects.toThrow('Case instance ID is undefined');
       });
 
@@ -149,7 +149,7 @@ describe('Case Instance Models', () => {
         const mockInstanceData = createMockCaseInstance();
         const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
-        
+
         await expect(invalidInstance.pause()).rejects.toThrow('Case instance folder key is undefined');
       });
     });
@@ -161,7 +161,7 @@ describe('Case Instance Models', () => {
 
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          status: TEST_CONSTANTS.RUNNING
+          status: TEST_CONSTANTS.RUNNING,
         });
         mockService.resume = vi.fn().mockResolvedValue(mockResponse);
 
@@ -170,7 +170,7 @@ describe('Case Instance Models', () => {
         expect(mockService.resume).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          undefined
+          undefined,
         );
       });
 
@@ -180,7 +180,7 @@ describe('Case Instance Models', () => {
 
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          status: TEST_CONSTANTS.RUNNING
+          status: TEST_CONSTANTS.RUNNING,
         });
         const options: CaseInstanceOperationOptions = { comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT };
         mockService.resume = vi.fn().mockResolvedValue(mockResponse);
@@ -190,7 +190,7 @@ describe('Case Instance Models', () => {
         expect(mockService.resume).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          options
+          options,
         );
       });
 
@@ -218,11 +218,11 @@ describe('Case Instance Models', () => {
 
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          status: TEST_CONSTANTS.RUNNING
+          status: TEST_CONSTANTS.RUNNING,
         });
         const request: CaseInstanceReopenOptions = {
           stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
-          comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT
+          comment: MAESTRO_TEST_CONSTANTS.TEST_COMMENT,
         };
         mockService.reopen = vi.fn().mockResolvedValue(mockResponse);
 
@@ -231,7 +231,7 @@ describe('Case Instance Models', () => {
         expect(mockService.reopen).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          request
+          request,
         );
       });
 
@@ -241,10 +241,10 @@ describe('Case Instance Models', () => {
 
         const mockResponse = createMockOperationResponse({
           instanceId: MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          status: TEST_CONSTANTS.RUNNING
+          status: TEST_CONSTANTS.RUNNING,
         });
         const request: CaseInstanceReopenOptions = {
-          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
         };
         mockService.reopen = vi.fn().mockResolvedValue(mockResponse);
 
@@ -253,7 +253,7 @@ describe('Case Instance Models', () => {
         expect(mockService.reopen).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
           MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
-          request
+          request,
         );
         expect(result).toEqual(mockResponse);
       });
@@ -264,7 +264,7 @@ describe('Case Instance Models', () => {
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
 
         const request: CaseInstanceReopenOptions = {
-          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
         };
 
         await expect(invalidInstance.reopen(request)).rejects.toThrow('Case instance ID is undefined');
@@ -276,7 +276,7 @@ describe('Case Instance Models', () => {
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
 
         const request: CaseInstanceReopenOptions = {
-          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID
+          stageId: MAESTRO_TEST_CONSTANTS.CASE_STAGE_ID,
         };
 
         await expect(invalidInstance.reopen(request)).rejects.toThrow('Case instance folder key is undefined');
@@ -287,15 +287,15 @@ describe('Case Instance Models', () => {
       it('should call caseInstance.getExecutionHistory with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockHistory = createMockCaseInstanceExecutionHistory();
         mockService.getExecutionHistory = vi.fn().mockResolvedValue(mockHistory);
-        
+
         const result = await instance.getExecutionHistory();
 
         expect(mockService.getExecutionHistory).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          MAESTRO_TEST_CONSTANTS.FOLDER_KEY
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
         );
         expect(result).toEqual(mockHistory);
       });
@@ -304,7 +304,7 @@ describe('Case Instance Models', () => {
         const mockInstanceData = createMockCaseInstance();
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
-        
+
         await expect(invalidInstance.getExecutionHistory()).rejects.toThrow('Case instance ID is undefined');
       });
 
@@ -321,15 +321,15 @@ describe('Case Instance Models', () => {
       it('should call caseInstance.getStages with bound instanceId and folderKey', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockStages = [createMockCaseStage()];
         mockService.getStages = vi.fn().mockResolvedValue(mockStages);
-        
+
         const result = await instance.getStages();
 
         expect(mockService.getStages).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          MAESTRO_TEST_CONSTANTS.FOLDER_KEY
+          MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
         );
         expect(result).toEqual(mockStages);
       });
@@ -355,39 +355,33 @@ describe('Case Instance Models', () => {
       it('should call caseInstance.getActionTasks with bound instanceId', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockTasks = {
           items: [],
-          totalCount: 0
+          totalCount: 0,
         };
         mockService.getActionTasks = vi.fn().mockResolvedValue(mockTasks);
-        
+
         const result = await instance.getActionTasks();
 
-        expect(mockService.getActionTasks).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          undefined
-        );
+        expect(mockService.getActionTasks).toHaveBeenCalledWith(MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID, undefined);
         expect(result).toEqual(mockTasks);
       });
 
       it('should call caseInstance.getActionTasks with bound parameters and options', async () => {
         const mockInstanceData = createMockCaseInstance();
         const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
-        
+
         const mockTasks = {
           items: [],
-          totalCount: 0
+          totalCount: 0,
         };
         const options = { pageSize: 10 };
         mockService.getActionTasks = vi.fn().mockResolvedValue(mockTasks);
-        
+
         const result = await instance.getActionTasks(options);
 
-        expect(mockService.getActionTasks).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID,
-          options
-        );
+        expect(mockService.getActionTasks).toHaveBeenCalledWith(MAESTRO_TEST_CONSTANTS.CASE_INSTANCE_ID, options);
         expect(result).toEqual(mockTasks);
       });
 
@@ -395,7 +389,7 @@ describe('Case Instance Models', () => {
         const mockInstanceData = createMockCaseInstance();
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
-        
+
         await expect(invalidInstance.getActionTasks()).rejects.toThrow('Case instance ID is undefined');
       });
     });
@@ -420,7 +414,7 @@ describe('Case Instance Models', () => {
 
     it('should preserve all original instance data', () => {
       const mockInstanceData = createMockCaseInstance();
-      
+
       const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
 
       expect(instance.instanceId).toBe(mockInstanceData.instanceId);
@@ -428,6 +422,5 @@ describe('Case Instance Models', () => {
       expect(instance.caseType).toBe(mockInstanceData.caseType);
       expect(instance.caseTitle).toBe(mockInstanceData.caseTitle);
     });
-
   });
 });

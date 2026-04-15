@@ -38,17 +38,19 @@ describe('executeDeploy', () => {
   it('should throw when env config is missing', async () => {
     vi.mocked(getEnvironmentConfig).mockReturnValue(null);
 
-    await expect(
-      executeDeploy({ name: 'my-app', logger: mockLogger })
-    ).rejects.toThrow('Missing required configuration');
+    await expect(executeDeploy({ name: 'my-app', logger: mockLogger })).rejects.toThrow(
+      'Missing required configuration',
+    );
   });
 
   it('should deploy a new app when not already deployed', async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(createMockFetchResponse({ json: { value: [] } }) as any)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        json: { value: [{ systemName: 'my-app-system', title: 'my-app', appVersion: '1.0.0', deployVersion: 1 }] },
-      }) as any)
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          json: { value: [{ systemName: 'my-app-system', title: 'my-app', appVersion: '1.0.0', deployVersion: 1 }] },
+        }) as any,
+      )
       .mockResolvedValueOnce(createMockFetchResponse({ json: { id: 'deploy-id-123' } }) as any);
 
     vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -60,12 +62,18 @@ describe('executeDeploy', () => {
 
   it('should upgrade when app is already deployed', async () => {
     vi.mocked(fetch)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        json: { value: [{ id: 'app-id', title: 'my-app', systemName: 'my-app', semVersion: '1.0.0', deployVersion: 1 }] },
-      }) as any)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        json: { value: [{ systemName: 'my-app', title: 'my-app', appVersion: '2.0.0', deployVersion: 2 }] },
-      }) as any)
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          json: {
+            value: [{ id: 'app-id', title: 'my-app', systemName: 'my-app', semVersion: '1.0.0', deployVersion: 1 }],
+          },
+        }) as any,
+      )
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          json: { value: [{ systemName: 'my-app', title: 'my-app', appVersion: '2.0.0', deployVersion: 2 }] },
+        }) as any,
+      )
       .mockResolvedValueOnce(createMockFetchResponse() as any);
 
     vi.mocked(fs.existsSync).mockReturnValue(false);
@@ -75,7 +83,7 @@ describe('executeDeploy', () => {
     expect(fetch).toHaveBeenCalledTimes(3);
     expect(fetch).toHaveBeenLastCalledWith(
       expect.stringContaining('/apps/'),
-      expect.objectContaining({ method: 'PATCH' })
+      expect.objectContaining({ method: 'PATCH' }),
     );
   });
 
@@ -84,22 +92,22 @@ describe('executeDeploy', () => {
       .mockResolvedValueOnce(createMockFetchResponse({ json: { value: [] } }) as any)
       .mockResolvedValueOnce(createMockFetchResponse({ json: { value: [] } }) as any);
 
-    await expect(
-      executeDeploy({ name: 'my-app', logger: mockLogger })
-    ).rejects.toThrow(/not been published/);
+    await expect(executeDeploy({ name: 'my-app', logger: mockLogger })).rejects.toThrow(/not been published/);
   });
 
   it('should throw when deployed app has no deploy version during upgrade', async () => {
     vi.mocked(fetch)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        json: { value: [{ id: 'app-id', title: 'my-app', systemName: 'my-app', semVersion: '1.0.0' }] },
-      }) as any)
-      .mockResolvedValueOnce(createMockFetchResponse({
-        json: { value: [{ systemName: 'my-app', title: 'my-app', appVersion: '2.0.0' }] },
-      }) as any);
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          json: { value: [{ id: 'app-id', title: 'my-app', systemName: 'my-app', semVersion: '1.0.0' }] },
+        }) as any,
+      )
+      .mockResolvedValueOnce(
+        createMockFetchResponse({
+          json: { value: [{ systemName: 'my-app', title: 'my-app', appVersion: '2.0.0' }] },
+        }) as any,
+      );
 
-    await expect(
-      executeDeploy({ name: 'my-app', logger: mockLogger })
-    ).rejects.toThrow(/deploy version/i);
+    await expect(executeDeploy({ name: 'my-app', logger: mockLogger })).rejects.toThrow(/deploy version/i);
   });
 });

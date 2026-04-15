@@ -62,7 +62,10 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
         pageSize: 1,
       });
 
-      expect(allQueues.items.length, 'No queues available to test getById. Create a queue in the tenant first.').toBeGreaterThan(0);
+      expect(
+        allQueues.items.length,
+        'No queues available to test getById. Create a queue in the tenant first.',
+      ).toBeGreaterThan(0);
 
       const queueId = allQueues.items[0].id;
       const folderId = config.folderId ? Number(config.folderId) : undefined;

@@ -31,7 +31,7 @@ export const validateTokenResponse = (data: unknown): TokenResponse => {
   }
 
   if (errors.length > 0) {
-    const errorMessage = errors.map(e => `${e.field}: ${e.message}`).join(', ');
+    const errorMessage = errors.map((e) => `${e.field}: ${e.message}`).join(', ');
     throw new Error(`Token validation failed: ${errorMessage}`);
   }
 
@@ -86,9 +86,9 @@ export const validateFolderResponse = (data: unknown): boolean => {
   }
 
   const obj = data as Record<string, unknown>;
-  
+
   const hasPageItems = obj.PageItems && Array.isArray(obj.PageItems);
   const hasValue = obj.value && Array.isArray(obj.value);
-  
+
   return !!(hasPageItems || hasValue);
 };

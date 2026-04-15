@@ -16,28 +16,20 @@ function createFileOpsResult(): FileOpsResult {
 export async function executeFileOperations(
   config: WebAppProjectConfig,
   plan: FileOperationPlan,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<FileOpsResult> {
   const allOperations: Array<{ execute: () => Promise<void>; path: string }> = [];
 
   for (const fileOp of plan.uploadFiles) {
     allOperations.push({
       execute: () =>
-        api.createFile(
-          config,
-          fileOp.path,
-          fileOp.localFile,
-          fileOp.parentId ?? null,
-          fileOp.parentPath,
-          lockKey
-        ),
+        api.createFile(config, fileOp.path, fileOp.localFile, fileOp.parentId ?? null, fileOp.parentPath, lockKey),
       path: fileOp.path,
     });
   }
   for (const fileOp of plan.updateFiles) {
     allOperations.push({
-      execute: () =>
-        api.updateFile(config, fileOp.path, fileOp.localFile, fileOp.fileId, lockKey),
+      execute: () => api.updateFile(config, fileOp.path, fileOp.localFile, fileOp.fileId, lockKey),
       path: fileOp.path,
     });
   }
@@ -62,11 +54,15 @@ export async function executeFileOperations(
         result.failedCount += 1;
         const errorMsg = reason instanceof Error ? reason.message : String(reason);
         result.failedPaths.push({ path: operation.path, error: errorMsg });
-        config.logger.log(chalk.red(`${MESSAGES.ERRORS.PUSH_FILE_OPERATION_FAILED_PREFIX}${operation.path} — ${errorMsg}`));
+        config.logger.log(
+          chalk.red(`${MESSAGES.ERRORS.PUSH_FILE_OPERATION_FAILED_PREFIX}${operation.path} — ${errorMsg}`),
+        );
       }
     }
   }
-  config.logger.log(chalk.gray(`[push] Processed ${result.succeededCount + result.failedCount}/${total} file operation(s).`));
+  config.logger.log(
+    chalk.gray(`[push] Processed ${result.succeededCount + result.failedCount}/${total} file operation(s).`),
+  );
   return result;
 }
 
@@ -74,14 +70,12 @@ export async function executeFileOperations(
 export async function deleteFiles(
   config: WebAppProjectConfig,
   files: Array<{ fileId: string; path: string }>,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<FileOpsResult> {
   const result = createFileOpsResult();
   if (files.length === 0) return result;
   const total = files.length;
-  const settled = await Promise.allSettled(
-    files.map((file) => api.deleteItem(config, file.fileId, lockKey))
-  );
+  const settled = await Promise.allSettled(files.map((file) => api.deleteItem(config, file.fileId, lockKey)));
   for (let j = 0; j < settled.length; j++) {
     const s = settled[j];
     const file = files[j];
@@ -102,7 +96,7 @@ export async function deleteFiles(
 export async function deleteFolders(
   config: WebAppProjectConfig,
   folders: Array<{ folderId: string; path: string }>,
-  lockKey: string | null
+  lockKey: string | null,
 ): Promise<FileOpsResult> {
   const result = createFileOpsResult();
   const total = folders.length;

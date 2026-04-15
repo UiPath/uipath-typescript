@@ -15,7 +15,10 @@ import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 
 // Maestro Processes service
 import { MaestroProcesses, ProcessInstances } from '@uipath/uipath-typescript/maestro-processes';
-import type { ProcessInstanceGetResponse, MaestroProcessGetAllResponse } from '@uipath/uipath-typescript/maestro-processes';
+import type {
+  ProcessInstanceGetResponse,
+  MaestroProcessGetAllResponse,
+} from '@uipath/uipath-typescript/maestro-processes';
 
 // Entities service
 import { Entities } from '@uipath/uipath-typescript/entities';
@@ -68,6 +71,7 @@ npm install @uipath/uipath-typescript
 ### 3. Environment Configuration
 
 1. Copy the environment template:
+
    ```bash
    cp .env.example .env
    ```
@@ -85,6 +89,7 @@ npm install @uipath/uipath-typescript
 ### 4. Installation and Running
 
 Update your orgName in vite.config.ts in this section:
+
 ```
  server: {
     proxy: {
@@ -97,14 +102,17 @@ Update your orgName in vite.config.ts in this section:
     },
   }
 ```
+
 This above setup is for CORS Issue for local development, it creates a local proxy using vite server config
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Start the development server:
+
    ```bash
    npm run dev
    ```
@@ -141,12 +149,14 @@ src/
 ## Key Features
 
 ### Process Overview (ProcessList)
+
 - Dashboard statistics (total processes, running, completed today, failed today)
 - List all Maestro processes with instance counts (completed, running, faulted, pending)
 - Visual progress bar for each process status distribution
 - Refresh data on demand
 
 ### Process Instances (ProcessInstances)
+
 - Paginated list of all process instances
 - Filter instances by process
 - View instance details including:

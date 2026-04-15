@@ -48,8 +48,8 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
   if (errors.length > 0) {
     throw new Error(
       `Integration test configuration is invalid:\n${errors.join('\n')}\n\n` +
-      `Please ensure you have created a .env.integration file based on .env.integration.example ` +
-      `and filled in all required values.`
+        `Please ensure you have created a .env.integration file based on .env.integration.example ` +
+        `and filled in all required values.`,
     );
   }
 
@@ -61,12 +61,18 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
     folderId: typeof rawConfig.folderId === 'string' ? rawConfig.folderId : undefined,
-    maestroTestProcessKey: typeof rawConfig.maestroTestProcessKey === 'string' ? rawConfig.maestroTestProcessKey : undefined,
-    orchestratorTestProcessKey: typeof rawConfig.orchestratorTestProcessKey === 'string' ? rawConfig.orchestratorTestProcessKey : undefined,
-    dataFabricTestEntityId: typeof rawConfig.dataFabricTestEntityId === 'string' ? rawConfig.dataFabricTestEntityId : undefined,
-    dataFabricTestChoiceSetId: typeof rawConfig.dataFabricTestChoiceSetId === 'string' ? rawConfig.dataFabricTestChoiceSetId : undefined,
-    dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
-    orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
+    maestroTestProcessKey:
+      typeof rawConfig.maestroTestProcessKey === 'string' ? rawConfig.maestroTestProcessKey : undefined,
+    orchestratorTestProcessKey:
+      typeof rawConfig.orchestratorTestProcessKey === 'string' ? rawConfig.orchestratorTestProcessKey : undefined,
+    dataFabricTestEntityId:
+      typeof rawConfig.dataFabricTestEntityId === 'string' ? rawConfig.dataFabricTestEntityId : undefined,
+    dataFabricTestChoiceSetId:
+      typeof rawConfig.dataFabricTestChoiceSetId === 'string' ? rawConfig.dataFabricTestChoiceSetId : undefined,
+    dataFabricTestAttachmentField:
+      typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
+    orchestratorAttachmentId:
+      typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
   };
 }
 
@@ -89,9 +95,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     orgName: process.env.UIPATH_ORG_NAME,
     tenantName: process.env.UIPATH_TENANT_NAME,
     secret: process.env.UIPATH_SECRET,
-    timeout: process.env.INTEGRATION_TEST_TIMEOUT
-      ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10)
-      : 30000,
+    timeout: process.env.INTEGRATION_TEST_TIMEOUT ? parseInt(process.env.INTEGRATION_TEST_TIMEOUT, 10) : 30000,
     skipCleanup: process.env.INTEGRATION_TEST_SKIP_CLEANUP === 'true',
     folderId: process.env.INTEGRATION_TEST_FOLDER_ID || undefined,
     maestroTestProcessKey: process.env.MAESTRO_TEST_PROCESS_KEY || undefined,

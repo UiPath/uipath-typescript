@@ -12,7 +12,6 @@ import { Task, MessageSeverity, TaskCompleteResponse } from './types';
  * ```
  */
 export interface CodedActionAppsServiceModel {
-
   /**
    * Notifies Action Center that the task data has been changed by the user.
    * This is needed to enable the save button in Action Center when the task data has changed

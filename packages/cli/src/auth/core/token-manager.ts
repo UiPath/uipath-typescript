@@ -29,7 +29,7 @@ export const saveTokensWithTenant = async (
   tokens: TokenResponse,
   domain: string,
   tenant: SelectedTenant,
-  folderKey?: string | null
+  folderKey?: string | null,
 ): Promise<void> => {
   // Ensure .uipath directory exists
   await fs.ensureDir(UIPATH_DIR);
@@ -112,7 +112,7 @@ export const isTokenExpired = (auth: StoredAuth): boolean => {
 
 const updateEnvFile = async (vars: Record<string, string>): Promise<void> => {
   let envContent = '';
-  
+
   // Read existing .env file if it exists
   if (await fs.pathExists(ENV_FILE)) {
     envContent = await fs.readFile(ENV_FILE, 'utf-8');
@@ -137,17 +137,18 @@ const updateEnvFile = async (vars: Record<string, string>): Promise<void> => {
 
   // Build new content
   const newLines: string[] = [];
-  
+
   // Add other lines first (comments, etc.)
   newLines.push(...otherLines);
-  
+
   if (otherLines.length > 0 && Object.keys(existingVars).length > 0) {
     newLines.push(''); // Add blank line separator
   }
 
   // Add all environment variables
   for (const [key, value] of Object.entries(existingVars)) {
-    if (value) { // Only add non-empty values
+    if (value) {
+      // Only add non-empty values
       newLines.push(`${key}=${value}`);
     }
   }
@@ -155,4 +156,3 @@ const updateEnvFile = async (vars: Record<string, string>): Promise<void> => {
   // Write back to file
   await fs.writeFile(ENV_FILE, newLines.join('\n') + '\n', 'utf-8');
 };
-

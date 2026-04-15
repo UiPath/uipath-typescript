@@ -58,18 +58,15 @@ for (const { source, dest, header, removeSource } of sections) {
   let content = readFileSync(sourcePath, 'utf-8');
 
   // Rewrite relative markdown links so they resolve from the new location
-  content = content.replace(
-    /\]\(([^)]+\.md(?:#[^)]*)?)\)/g,
-    (_match, link) => {
-      if (link.startsWith('/') || link.startsWith('http')) return _match;
+  content = content.replace(/\]\(([^)]+\.md(?:#[^)]*)?)\)/g, (_match, link) => {
+    if (link.startsWith('/') || link.startsWith('http')) return _match;
 
-      const [linkPath, anchor] = link.split('#');
-      const resolved = join(sourceDir, linkPath);
-      const rewritten = relative(destDir, resolved).split(sep).join('/');
+    const [linkPath, anchor] = link.split('#');
+    const resolved = join(sourceDir, linkPath);
+    const rewritten = relative(destDir, resolved).split(sep).join('/');
 
-      return `](${anchor ? `${rewritten}#${anchor}` : rewritten})`;
-    },
-  );
+    return `](${anchor ? `${rewritten}#${anchor}` : rewritten})`;
+  });
 
   content = `${header}${content}`;
 

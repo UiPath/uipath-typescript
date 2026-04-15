@@ -57,13 +57,13 @@ describe('ExchangeService Unit Tests', () => {
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceAccess: expect.any(Object),
-          getEndpoint: expect.toSatisfy((fn: Function) =>
-            fn() === EXCHANGE_ENDPOINTS.LIST(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID)
+          getEndpoint: expect.toSatisfy(
+            (fn: Function) => fn() === EXCHANGE_ENDPOINTS.LIST(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
           ),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
-        undefined
+        undefined,
       );
 
       expect(result).toEqual(mockResponse);
@@ -77,16 +77,15 @@ describe('ExchangeService Unit Tests', () => {
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const result = await exchanges.getAll(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { pageSize: TEST_CONSTANTS.PAGE_SIZE }
-      );
+      const result = await exchanges.getAll(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, {
+        pageSize: TEST_CONSTANTS.PAGE_SIZE,
+      });
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
-        })
+          pageSize: TEST_CONSTANTS.PAGE_SIZE,
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -99,17 +98,17 @@ describe('ExchangeService Unit Tests', () => {
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      await exchanges.getAll(
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        { exchangeSort: 'descending' as any, messageSort: 'ascending' as any }
-      );
+      await exchanges.getAll(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, {
+        exchangeSort: 'descending' as any,
+        messageSort: 'ascending' as any,
+      });
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
           exchangeSort: 'descending',
-          messageSort: 'ascending'
-        })
+          messageSort: 'ascending',
+        }),
       );
     });
 
@@ -117,9 +116,9 @@ describe('ExchangeService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
-      await expect(
-        exchanges.getAll(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID)
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(exchanges.getAll(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
     });
   });
 
@@ -130,7 +129,7 @@ describe('ExchangeService Unit Tests', () => {
 
       const result = await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
       );
 
       expect(result).toBeDefined();
@@ -139,8 +138,11 @@ describe('ExchangeService Unit Tests', () => {
 
       // Verify the correct endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        EXCHANGE_ENDPOINTS.GET(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID),
-        expect.any(Object)
+        EXCHANGE_ENDPOINTS.GET(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
+        ),
+        expect.any(Object),
       );
     });
 
@@ -150,7 +152,7 @@ describe('ExchangeService Unit Tests', () => {
 
       const result = await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
       );
 
       expect(result.messages).toHaveLength(2);
@@ -173,7 +175,7 @@ describe('ExchangeService Unit Tests', () => {
 
       const result = await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
       );
 
       const userMessage = result.messages[0];
@@ -196,7 +198,7 @@ describe('ExchangeService Unit Tests', () => {
 
       const result = await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
       );
 
       const assistantMessage = result.messages[1];
@@ -212,7 +214,7 @@ describe('ExchangeService Unit Tests', () => {
 
       const result = await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
       );
 
       const assistantMessage = result.messages[1];
@@ -227,7 +229,7 @@ describe('ExchangeService Unit Tests', () => {
 
       const result = await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
       );
 
       const assistantMessage = result.messages[1];
@@ -246,14 +248,17 @@ describe('ExchangeService Unit Tests', () => {
       await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        { messageSort: 'descending' as any }
+        { messageSort: 'descending' as any },
       );
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        EXCHANGE_ENDPOINTS.GET(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID),
+        EXCHANGE_ENDPOINTS.GET(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
+        ),
         expect.objectContaining({
-          params: { messageSort: 'descending' }
-        })
+          params: { messageSort: 'descending' },
+        }),
       );
     });
 
@@ -263,14 +268,17 @@ describe('ExchangeService Unit Tests', () => {
 
       await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
       );
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        EXCHANGE_ENDPOINTS.GET(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID),
+        EXCHANGE_ENDPOINTS.GET(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
+        ),
         expect.objectContaining({
-          params: {}
-        })
+          params: {},
+        }),
       );
     });
 
@@ -280,7 +288,7 @@ describe('ExchangeService Unit Tests', () => {
 
       const result = await exchanges.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
       );
 
       expect(result.messages).toHaveLength(0);
@@ -291,7 +299,10 @@ describe('ExchangeService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(
-        exchanges.getById(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID, CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID)
+        exchanges.getById(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
+        ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -304,7 +315,7 @@ describe('ExchangeService Unit Tests', () => {
       const result = await exchanges.createFeedback(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        { rating: FeedbackRating.Positive }
+        { rating: FeedbackRating.Positive },
       );
 
       expect(result).toEqual(mockResponse);
@@ -312,10 +323,10 @@ describe('ExchangeService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         EXCHANGE_ENDPOINTS.CREATE_FEEDBACK(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         ),
         { rating: FeedbackRating.Positive },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -326,16 +337,16 @@ describe('ExchangeService Unit Tests', () => {
       await exchanges.createFeedback(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        { rating: FeedbackRating.Positive, comment: 'Great response!' }
+        { rating: FeedbackRating.Positive, comment: 'Great response!' },
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         EXCHANGE_ENDPOINTS.CREATE_FEEDBACK(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         ),
         { rating: FeedbackRating.Positive, comment: 'Great response!' },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -346,16 +357,16 @@ describe('ExchangeService Unit Tests', () => {
       await exchanges.createFeedback(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        { rating: FeedbackRating.Negative }
+        { rating: FeedbackRating.Negative },
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         EXCHANGE_ENDPOINTS.CREATE_FEEDBACK(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         ),
         { rating: FeedbackRating.Negative },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -366,16 +377,16 @@ describe('ExchangeService Unit Tests', () => {
       await exchanges.createFeedback(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        { rating: FeedbackRating.Negative, comment: 'Not accurate' }
+        { rating: FeedbackRating.Negative, comment: 'Not accurate' },
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         EXCHANGE_ENDPOINTS.CREATE_FEEDBACK(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         ),
         { rating: FeedbackRating.Negative, comment: 'Not accurate' },
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -387,8 +398,8 @@ describe('ExchangeService Unit Tests', () => {
         exchanges.createFeedback(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-          { rating: FeedbackRating.Positive }
-        )
+          { rating: FeedbackRating.Positive },
+        ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

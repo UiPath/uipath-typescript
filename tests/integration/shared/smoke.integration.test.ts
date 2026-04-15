@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  getServices,
-  getTestConfig,
-  setupUnifiedTests,
-  InitMode,
-} from '../config/unified-setup';
+import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../config/unified-setup';
 
 const modes: InitMode[] = ['v0', 'v1'];
 

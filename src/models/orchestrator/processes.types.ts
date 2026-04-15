@@ -25,7 +25,7 @@ export enum PackageType {
 export enum JobPriority {
   Low = 'Low',
   Normal = 'Normal',
-  High = 'High'
+  High = 'High',
 }
 
 /**
@@ -34,7 +34,7 @@ export enum JobPriority {
 export enum TargetFramework {
   Legacy = 'Legacy',
   Windows = 'Windows',
-  Portable = 'Portable'
+  Portable = 'Portable',
 }
 
 /**
@@ -44,7 +44,7 @@ export enum RobotSize {
   Small = 'Small',
   Standard = 'Standard',
   Medium = 'Medium',
-  Large = 'Large'
+  Large = 'Large',
 }
 
 /**
@@ -53,7 +53,7 @@ export enum RobotSize {
 export enum RemoteControlAccess {
   None = 'None',
   ReadOnly = 'ReadOnly',
-  Full = 'Full'
+  Full = 'Full',
 }
 
 /**
@@ -64,7 +64,7 @@ export enum StartStrategy {
   Specific = 'Specific',
   RobotCount = 'RobotCount',
   JobsCount = 'JobsCount',
-  ModernJobsCount = 'ModernJobsCount'
+  ModernJobsCount = 'ModernJobsCount',
 }
 
 /**
@@ -93,7 +93,7 @@ export enum PackageSourceType {
   PluginEcosystem = 'PluginEcosystem',
   PerformanceTesting = 'PerformanceTesting',
   AgentHub = 'AgentHub',
-  ApiWorkflow = 'ApiWorkflow'
+  ApiWorkflow = 'ApiWorkflow',
 }
 
 /**
@@ -131,7 +131,7 @@ export enum JobSourceType {
  */
 export enum StopStrategy {
   SoftStop = 'SoftStop',
-  Kill = 'Kill'
+  Kill = 'Kill',
 }
 
 /**
@@ -167,7 +167,6 @@ export enum RuntimeType {
   Flow = 'Flow',
 }
 
-
 /**
  * Interface for Job Attachment
  */
@@ -184,7 +183,7 @@ export interface JobAttachment {
 export interface ProcessProperties {
   jobPriority?: JobPriority | null;
   specificPriorityValue?: number | null;
-  inputArguments?: string| null;
+  inputArguments?: string | null;
   environmentVariables?: string | null;
   entryPointPath?: string | null;
   remoteControlAccess?: RemoteControlAccess | null;
@@ -282,7 +281,7 @@ export interface JobError {
 export enum JobType {
   Unattended = 'Unattended',
   Attended = 'Attended',
-  ServerlessGeneric = 'ServerlessGeneric'
+  ServerlessGeneric = 'ServerlessGeneric',
 }
 
 /**
@@ -305,7 +304,7 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   sourceType: JobSourceType;
   batchExecutionKey: string;
   info: string | null;
-  createdTime: string; 
+  createdTime: string;
   startingScheduleId: number | null;
   processName: string;
   type: JobType;
@@ -328,7 +327,7 @@ export interface ProcessStartResponse extends ProcessProperties, FolderPropertie
   maxExpectedRunningTimeSeconds: number | null;
   parentJobKey: string | null;
   resumeTime: string | null;
-  lastModifiedTime: string | null;  
+  lastModifiedTime: string | null;
   jobError: JobError | null;
   errorCode: string | null;
   robot?: RobotMetadata;
@@ -359,9 +358,9 @@ export interface ProcessGetResponse extends ProcessProperties, FolderProperties 
   folderKey: string;
   targetFramework: TargetFramework;
   robotSize: RobotSize | null;
-  lastModifiedTime: string | null;  
+  lastModifiedTime: string | null;
   lastModifierUserId: number | null;
-  createdTime: string;              
+  createdTime: string;
   creatorUserId: number;
   id: number;
 }
@@ -369,12 +368,13 @@ export interface ProcessGetResponse extends ProcessProperties, FolderProperties 
 /**
  * Options for getting processes across folders
  */
-export type ProcessGetAllOptions = RequestOptions & PaginationOptions & {
-  /**
-   * Optional folder ID to filter processes by folder
-   */
-  folderId?: number;
-}
+export type ProcessGetAllOptions = RequestOptions &
+  PaginationOptions & {
+    /**
+     * Optional folder ID to filter processes by folder
+     */
+    folderId?: number;
+  };
 
 /**
  * Options for getting a single process by ID

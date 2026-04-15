@@ -13,7 +13,7 @@ import {
   ProcessService,
   BucketService,
   QueueService,
-  AssetService
+  AssetService,
 } from '../../../src/services';
 import { ApiClient } from '../../../src/core/http/api-client';
 import { createMockApiClient, getPrivateSDK, getConfig } from '../../utils/setup';
@@ -24,7 +24,7 @@ vi.mock('../../../src/core/http/api-client');
 
 const mockTokenManager = {
   getToken: () => 'mock-access-token',
-  hasValidToken: () => true
+  hasValidToken: () => true,
 };
 
 vi.mock('../../../src/core/auth/service', () => {
@@ -33,7 +33,7 @@ vi.mock('../../../src/core/auth/service', () => {
     hasValidToken: () => true,
     getToken: () => 'mock-access-token',
     authenticateWithSecret: vi.fn(),
-    authenticate: vi.fn().mockResolvedValue(true)
+    authenticate: vi.fn().mockResolvedValue(true),
   }));
 
   AuthService.isInOAuthCallback = vi.fn(() => false);
@@ -57,7 +57,7 @@ describe('UiPath Legacy Pattern', () => {
       baseUrl: TEST_CONSTANTS.BASE_URL,
       orgName: TEST_CONSTANTS.ORGANIZATION_ID,
       tenantName: TEST_CONSTANTS.TENANT_ID,
-      secret: TEST_CONSTANTS.CLIENT_SECRET
+      secret: TEST_CONSTANTS.CLIENT_SECRET,
     });
   });
 
@@ -262,7 +262,7 @@ describe('UiPath Legacy Pattern', () => {
         baseUrl: TEST_CONSTANTS.BASE_URL,
         orgName: TEST_CONSTANTS.ORGANIZATION_ID,
         tenantName: TEST_CONSTANTS.TENANT_ID,
-        secret: TEST_CONSTANTS.CLIENT_SECRET
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
       });
 
       expect(instance).toBeInstanceOf(UiPath);
@@ -307,7 +307,7 @@ describe('UiPath Legacy Pattern', () => {
         baseUrl: '',
         orgName: '',
         tenantName: '',
-        secret: ''
+        secret: '',
       } as any);
       await expect(sdk.initialize()).rejects.toThrow();
     });

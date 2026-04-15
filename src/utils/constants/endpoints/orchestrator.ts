@@ -9,7 +9,8 @@ import { ORCHESTRATOR_BASE } from './base';
  */
 export const TASK_ENDPOINTS = {
   CREATE_GENERIC_TASK: `${ORCHESTRATOR_BASE}/tasks/GenericTasks/CreateTask`,
-  GET_TASK_USERS: (folderId: number) => `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId=${folderId})`,
+  GET_TASK_USERS: (folderId: number) =>
+    `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId=${folderId})`,
   GET_TASKS_ACROSS_FOLDERS: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders`,
   GET_TASKS_ACROSS_FOLDERS_ADMIN: `${ORCHESTRATOR_BASE}/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFoldersForAdmin`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Tasks(${id})`,
@@ -32,8 +33,10 @@ export const BUCKET_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders`,
   GET_BY_ID: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})`,
   GET_FILE_META_DATA: (id: number) => `${ORCHESTRATOR_BASE}/api/Buckets/${id}/ListFiles`,
-  GET_READ_URI: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetReadUri`,
-  GET_WRITE_URI: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetWriteUri`,
+  GET_READ_URI: (id: number) =>
+    `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetReadUri`,
+  GET_WRITE_URI: (id: number) =>
+    `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetWriteUri`,
 } as const;
 
 /**
@@ -59,7 +62,8 @@ export const QUEUE_ENDPOINTS = {
  */
 export const JOB_ENDPOINTS = {
   GET_ALL: `${ORCHESTRATOR_BASE}/odata/Jobs`,
-  GET_BY_KEY: (identifier: string) => `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.GetByKey(identifier=${identifier})`,
+  GET_BY_KEY: (identifier: string) =>
+    `${ORCHESTRATOR_BASE}/odata/Jobs/UiPath.Server.Configuration.OData.GetByKey(identifier=${identifier})`,
 } as const;
 
 /**

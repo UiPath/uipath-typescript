@@ -159,15 +159,15 @@ export interface RawJobGetResponse extends FolderProperties {
 /**
  * Options for getting all jobs
  */
-export type JobGetAllOptions = RequestOptions & PaginationOptions & {
-  /**
-   * Optional folder ID to filter jobs by folder
-   */
-  folderId?: number;
-}
+export type JobGetAllOptions = RequestOptions &
+  PaginationOptions & {
+    /**
+     * Optional folder ID to filter jobs by folder
+     */
+    folderId?: number;
+  };
 
 /**
  * Options for getting a job by ID
  */
 export interface JobGetByIdOptions extends BaseOptions {}
-

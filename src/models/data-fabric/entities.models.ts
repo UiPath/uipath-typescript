@@ -21,7 +21,7 @@ import {
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
   EntityGetAllRecordsOptions,
-  EntityInsertRecordOptions
+  EntityInsertRecordOptions,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -44,7 +44,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export interface EntityServiceModel {
   /**
    * Gets all entities in the system
-   * 
+   *
    * @returns Promise resolving to either an array of entities NonPaginatedResponse<EntityGetResponse> or a PaginatedResponse<EntityGetResponse> when pagination options are used.
    * {@link EntityGetResponse}
    * @example
@@ -146,21 +146,19 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(entityId: string, options?: T): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  >;
+  getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
+    entityId: string,
+    options?: T,
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>>;
 
   /**
    * @deprecated Use {@link getAllRecords} instead.
    * @hidden
    */
-  getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  >;
+  getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+    entityId: string,
+    options?: T,
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>>;
 
   /**
    * Gets a single entity record by entity ID and record ID
@@ -178,7 +176,7 @@ export interface EntityServiceModel {
    * const recordId = records.items[0].Id;
    * // Get the record
    * const record = await entities.getRecordById(<entityId>, recordId);
-   * 
+   *
    * // With expansion level
    * const record = await entities.getRecordById(<entityId>, recordId, {
    *   expansionLevel: 1
@@ -209,7 +207,11 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  insertRecordById(id: string, data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse>;
+  insertRecordById(
+    id: string,
+    data: Record<string, any>,
+    options?: EntityInsertRecordOptions,
+  ): Promise<EntityInsertResponse>;
 
   /**
    * @deprecated Use {@link insertRecordById} instead.
@@ -246,13 +248,21 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  insertRecordsById(id: string, data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse>;
+  insertRecordsById(
+    id: string,
+    data: Record<string, any>[],
+    options?: EntityInsertRecordsOptions,
+  ): Promise<EntityBatchInsertResponse>;
 
   /**
    * @deprecated Use {@link insertRecordsById} instead.
    * @hidden
    */
-  batchInsertById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
+  batchInsertById(
+    id: string,
+    data: Record<string, any>[],
+    options?: EntityBatchInsertOptions,
+  ): Promise<EntityBatchInsertResponse>;
 
   /**
    * Updates a single record in an entity by entity ID
@@ -277,7 +287,12 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse>;
+  updateRecordById(
+    entityId: string,
+    recordId: string,
+    data: Record<string, any>,
+    options?: EntityUpdateRecordOptions,
+  ): Promise<EntityUpdateRecordResponse>;
 
   /**
    * Updates data in an entity by entity ID
@@ -307,7 +322,11 @@ export interface EntityServiceModel {
    * });
    * ```
    */
-  updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
+  updateRecordsById(
+    id: string,
+    data: EntityRecord[],
+    options?: EntityUpdateRecordsOptions,
+  ): Promise<EntityUpdateResponse>;
 
   /**
    * @deprecated Use {@link updateRecordsById} instead.
@@ -331,7 +350,11 @@ export interface EntityServiceModel {
    * ]);
    * ```
    */
-  deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
+  deleteRecordsById(
+    id: string,
+    recordIds: string[],
+    options?: EntityDeleteRecordsOptions,
+  ): Promise<EntityDeleteResponse>;
 
   /**
    * @deprecated Use {@link deleteRecordsById} instead.
@@ -429,7 +452,13 @@ export interface EntityServiceModel {
    * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', blob);
    * ```
    */
-  uploadAttachment(entityId: string, recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
+  uploadAttachment(
+    entityId: string,
+    recordId: string,
+    fieldName: string,
+    file: EntityFileType,
+    options?: EntityUploadAttachmentOptions,
+  ): Promise<EntityUploadAttachmentResponse>;
 
   /**
    * Removes an attachment from a File-type field of an entity record.
@@ -502,7 +531,11 @@ export interface EntityMethods {
    * @param options - Update options
    * @returns Promise resolving to the updated record
    */
-  updateRecord(recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse>;
+  updateRecord(
+    recordId: string,
+    data: Record<string, any>,
+    options?: EntityUpdateRecordOptions,
+  ): Promise<EntityUpdateRecordResponse>;
 
   /**
    * Update data in this entity
@@ -519,7 +552,7 @@ export interface EntityMethods {
 
   /**
    * Delete data from this entity
-   * 
+   *
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
    * @returns Promise resolving to delete response
@@ -532,11 +565,9 @@ export interface EntityMethods {
    * @param options - Query options
    * @returns Promise resolving to query response
    */
-  getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  >;
+  getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
+    options?: T,
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>>;
 
   /**
    * Gets a single record from this entity by record ID
@@ -565,7 +596,12 @@ export interface EntityMethods {
    * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. expansionLevel)
    * @returns Promise resolving to {@link EntityUploadAttachmentResponse}
    */
-  uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
+  uploadAttachment(
+    recordId: string,
+    fieldName: string,
+    file: EntityFileType,
+    options?: EntityUploadAttachmentOptions,
+  ): Promise<EntityUploadAttachmentResponse>;
 
   /**
    * Deletes an attachment from a File-type field of an entity record
@@ -588,7 +624,7 @@ export interface EntityMethods {
    */
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
-    /**
+  /**
    * @deprecated Use {@link updateRecords} instead.
    * @hidden
    */
@@ -604,11 +640,9 @@ export interface EntityMethods {
    * @deprecated Use {@link getAllRecords} instead.
    * @hidden
    */
-  getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<EntityRecord>
-      : NonPaginatedResponse<EntityRecord>
-  >;
+  getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+    options?: T,
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>>;
 }
 
 /**
@@ -618,7 +652,7 @@ export type EntityGetResponse = RawEntityGetResponse & EntityMethods;
 
 /**
  * Creates entity methods that can be attached to entity data
- * 
+ *
  * @param entityData - The entity metadata
  * @param service - The entity service instance
  * @returns Object containing entity methods
@@ -631,13 +665,20 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.insertRecordById(entityData.id, data, options);
     },
 
-    async insertRecords(data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse> {
+    async insertRecords(
+      data: Record<string, any>[],
+      options?: EntityInsertRecordsOptions,
+    ): Promise<EntityBatchInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.insertRecordsById(entityData.id, data, options);
     },
 
-    async updateRecord(recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse> {
+    async updateRecord(
+      recordId: string,
+      data: Record<string, any>,
+      options?: EntityUpdateRecordOptions,
+    ): Promise<EntityUpdateRecordResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
 
@@ -656,10 +697,10 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.deleteRecordsById(entityData.id, recordIds, options);
     },
 
-    async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<
-      T extends HasPaginationOptions<T>
-        ? PaginatedResponse<EntityRecord>
-        : NonPaginatedResponse<EntityRecord>
+    async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(
+      options?: T,
+    ): Promise<
+      T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>
     > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
@@ -679,7 +720,12 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.downloadAttachment(entityData.id, recordId, fieldName);
     },
 
-    async uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
+    async uploadAttachment(
+      recordId: string,
+      fieldName: string,
+      file: EntityFileType,
+      options?: EntityUploadAttachmentOptions,
+    ): Promise<EntityUploadAttachmentResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.uploadAttachment(entityData.id, recordId, fieldName, file, options);
@@ -695,7 +741,10 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.insertRecord(data, options);
     },
 
-    async batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse> {
+    async batchInsert(
+      data: Record<string, any>[],
+      options?: EntityBatchInsertOptions,
+    ): Promise<EntityBatchInsertResponse> {
       return this.insertRecords(data, options);
     },
 
@@ -707,26 +756,26 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.deleteRecords(recordIds, options);
     },
 
-    async getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
-      T extends HasPaginationOptions<T>
-        ? PaginatedResponse<EntityRecord>
-        : NonPaginatedResponse<EntityRecord>
+    async getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(
+      options?: T,
+    ): Promise<
+      T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>
     > {
       return this.getAllRecords(options);
-    }
+    },
   };
 }
 
 /**
  * Creates an actionable entity metadata by combining entity with operational methods
- * 
+ *
  * @param entityData - Entity metadata
  * @param service - The entity service instance
  * @returns Entity metadata with added methods
  */
 export function createEntityWithMethods(
-  entityData: RawEntityGetResponse, 
-  service: EntityServiceModel
+  entityData: RawEntityGetResponse,
+  service: EntityServiceModel,
 ): EntityGetResponse {
   const methods = createEntityMethods(entityData, service);
   return Object.assign({}, entityData, methods) as EntityGetResponse;

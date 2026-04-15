@@ -1,9 +1,15 @@
-import { PaginatedResponse, PaginationCursor, PaginationOptions, HasPaginationOptions, NonPaginatedResponse } from './types';
-import { 
-  InternalPaginationOptions, 
-  CursorData, 
-  PaginationType, 
-  GetAllPaginatedParams, 
+import {
+  PaginatedResponse,
+  PaginationCursor,
+  PaginationOptions,
+  HasPaginationOptions,
+  NonPaginatedResponse,
+} from './types';
+import {
+  InternalPaginationOptions,
+  CursorData,
+  PaginationType,
+  GetAllPaginatedParams,
   GetAllNonPaginatedParams,
   GetAllConfig,
 } from './internal-types';
@@ -21,7 +27,7 @@ import { decodeBase64 } from '../encoding/base64';
 export class PaginationHelpers {
   /**
    * Checks if any pagination parameters are provided
-   * 
+   *
    * @param options - The options object to check
    * @returns True if any pagination parameter is defined, false otherwise
    */
@@ -35,9 +41,7 @@ export class PaginationHelpers {
    */
   static parseCursor(cursorString: string): CursorData {
     try {
-      const cursorData: CursorData = JSON.parse(
-        decodeBase64(cursorString)
-      );
+      const cursorData: CursorData = JSON.parse(decodeBase64(cursorString));
       return cursorData;
     } catch {
       throw new Error('Invalid pagination cursor');
@@ -46,39 +50,41 @@ export class PaginationHelpers {
 
   /**
    * Validates cursor format and structure
-   * 
+   *
    * @param paginationOptions - The pagination options containing the cursor
    * @param paginationType - Optional pagination type to validate against
    */
-  static validateCursor(
-    paginationOptions: { cursor?: PaginationCursor }, 
-    paginationType?: PaginationType
-  ): void {
+  static validateCursor(paginationOptions: { cursor?: PaginationCursor }, paginationType?: PaginationType): void {
     if (paginationOptions.cursor !== undefined) {
-      if (!paginationOptions.cursor || typeof paginationOptions.cursor.value !== 'string' || !paginationOptions.cursor.value) {
+      if (
+        !paginationOptions.cursor ||
+        typeof paginationOptions.cursor.value !== 'string' ||
+        !paginationOptions.cursor.value
+      ) {
         throw new Error('cursor must contain a valid cursor string');
       }
-      
+
       try {
         // Try to parse the cursor to validate it
         const cursorData = PaginationHelpers.parseCursor(paginationOptions.cursor.value);
-        
+
         // If type is provided, validate cursor contains expected type information
         if (paginationType) {
           if (!cursorData.type) {
             throw new Error('Invalid cursor: missing pagination type');
           }
-          
+
           // Check pagination type compatibility
           if (cursorData.type !== paginationType) {
-            throw new Error(`Pagination type mismatch: cursor is for ${cursorData.type} but service uses ${paginationType}`);
+            throw new Error(
+              `Pagination type mismatch: cursor is for ${cursorData.type} but service uses ${paginationType}`,
+            );
           }
         }
       } catch (error) {
         if (error instanceof Error) {
           // If it's already our error with specific message, pass it through
-          if (error.message.startsWith('Invalid cursor') || 
-              error.message.startsWith('Pagination type mismatch')) {
+          if (error.message.startsWith('Invalid cursor') || error.message.startsWith('Pagination type mismatch')) {
             throw error;
           }
         }
@@ -89,67 +95,64 @@ export class PaginationHelpers {
 
   /**
    * Comprehensive validation for pagination options
-   * 
+   *
    * @param options - The pagination options to validate
    * @param paginationType - The pagination type these options will be used with
    * @returns Processed pagination parameters ready for use
    */
   static validatePaginationOptions(
     options: PaginationOptions,
-    paginationType: PaginationType
+    paginationType: PaginationType,
   ): InternalPaginationOptions {
     // Validate pageSize
     if (options.pageSize !== undefined && options.pageSize <= 0) {
       throw new Error('pageSize must be a positive number');
     }
-    
+
     // Validate jumpToPage
     if (options.jumpToPage !== undefined && options.jumpToPage <= 0) {
       throw new Error('jumpToPage must be a positive number');
     }
-    
+
     // Validate cursor
     PaginationHelpers.validateCursor(options, paginationType);
-    
+
     // Validate service compatibility
     if (options.jumpToPage !== undefined && paginationType === PaginationType.TOKEN) {
       throw new Error('jumpToPage is not supported for token-based pagination. Use cursor-based navigation instead.');
     }
-    
+
     // Get processed parameters
     return PaginationHelpers.getRequestParameters(options, paginationType);
   }
-  
+
   /**
    * Convert a unified pagination options to service-specific parameters
    */
-  static getRequestParameters(
-    options: PaginationOptions,
-    paginationType?: PaginationType
-  ): InternalPaginationOptions {
+  static getRequestParameters(options: PaginationOptions, paginationType?: PaginationType): InternalPaginationOptions {
     // Handle jumpToPage
     if (options.jumpToPage !== undefined) {
       const jumpToPageOptions: InternalPaginationOptions = {
         pageSize: options.pageSize,
-        pageNumber: options.jumpToPage
+        pageNumber: options.jumpToPage,
       };
       return filterUndefined(jumpToPageOptions);
     }
-    
+
     // If no cursor is provided, it's a first page request
     if (!options.cursor) {
       const firstPageOptions: InternalPaginationOptions = {
         pageSize: options.pageSize,
         // Only set pageNumber for OFFSET pagination
-        pageNumber: paginationType === PaginationType.OFFSET ? 1 : undefined
+        pageNumber: paginationType === PaginationType.OFFSET ? 1 : undefined,
       };
       return filterUndefined(firstPageOptions);
     }
-    
+
     // Parse the cursor
     try {
       const cursorData = PaginationHelpers.parseCursor(options.cursor.value);
-      
+
       const cursorBasedOptions: InternalPaginationOptions = {
         pageSize: cursorData.pageSize || options.pageSize,
         pageNumber: cursorData.pageNumber,
@@ -168,9 +171,7 @@ export class PaginationHelpers {
    * @param params - Parameters for pagination
    * @returns Promise resolving to a paginated result
    */
-  static async getAllPaginated<T, R = T>(
-    params: GetAllPaginatedParams<T, R>
-  ): Promise<PaginatedResponse<R>> {
+  static async getAllPaginated<T, R = T>(params: GetAllPaginatedParams<T, R>): Promise<PaginatedResponse<R>> {
     const {
       serviceAccess,
       getEndpoint,
@@ -179,37 +180,32 @@ export class PaginationHelpers {
       additionalParams,
       transformFn,
       method = HTTP_METHODS.GET,
-      options = {}
+      options = {},
     } = params;
 
     const endpoint = getEndpoint(folderId);
     const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
 
-    const paginatedResponse = await serviceAccess.requestWithPagination<T>(
-      method,
-      endpoint,
-      paginationParams,
-      {
-        headers,
-        params: additionalParams,
-        pagination: {
-          paginationType: options.paginationType || PaginationType.OFFSET,
-          itemsField: options.itemsField || DEFAULT_ITEMS_FIELD,
-          totalCountField: options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD,
-          continuationTokenField: options.continuationTokenField,
-          paginationParams: options.paginationParams
-        }
-      }
-    );
+    const paginatedResponse = await serviceAccess.requestWithPagination<T>(method, endpoint, paginationParams, {
+      headers,
+      params: additionalParams,
+      pagination: {
+        paginationType: options.paginationType || PaginationType.OFFSET,
+        itemsField: options.itemsField || DEFAULT_ITEMS_FIELD,
+        totalCountField: options.totalCountField || DEFAULT_TOTAL_COUNT_FIELD,
+        continuationTokenField: options.continuationTokenField,
+        paginationParams: options.paginationParams,
+      },
+    });
 
     // Parse items - automatically handle JSON string responses
     const rawItems = paginatedResponse.items;
-    const parsedItems: T[] = typeof rawItems === 'string' ? JSON.parse(rawItems) : (rawItems || []);
-    const transformedItems = transformFn ? parsedItems.map(transformFn) : parsedItems as unknown as R[];
+    const parsedItems: T[] = typeof rawItems === 'string' ? JSON.parse(rawItems) : rawItems || [];
+    const transformedItems = transformFn ? parsedItems.map(transformFn) : (parsedItems as unknown as R[]);
 
     return {
       ...paginatedResponse,
-      items: transformedItems
+      items: transformedItems,
     };
   }
 
@@ -219,9 +215,7 @@ export class PaginationHelpers {
    * @param params - Parameters for non-paginated resource retrieval
    * @returns Promise resolving to an object with data and totalCount
    */
-  static async getAllNonPaginated<T, R = T>(
-    params: GetAllNonPaginatedParams<T, R>
-  ): Promise<NonPaginatedResponse<R>> {
+  static async getAllNonPaginated<T, R = T>(params: GetAllNonPaginatedParams<T, R>): Promise<NonPaginatedResponse<R>> {
     const {
       serviceAccess,
       getAllEndpoint,
@@ -230,7 +224,7 @@ export class PaginationHelpers {
       additionalParams,
       transformFn,
       method = HTTP_METHODS.GET,
-      options = {}
+      options = {},
     } = params;
 
     // Set default field names
@@ -244,19 +238,12 @@ export class PaginationHelpers {
     // Make the API call based on method
     let response: { data: any };
     if (method === HTTP_METHODS.POST) {
-      response = await serviceAccess.post<any>(
-        endpoint,
-        additionalParams,
-        { headers }
-      );
+      response = await serviceAccess.post<any>(endpoint, additionalParams, { headers });
     } else {
-      response = await serviceAccess.get<any>(
-        endpoint,
-        {
-          params: additionalParams,
-          headers
-        }
-      );
+      response = await serviceAccess.get<any>(endpoint, {
+        params: additionalParams,
+        headers,
+      });
     }
 
     // Extract and transform items from response
@@ -264,55 +251,55 @@ export class PaginationHelpers {
     const totalCount = response.data?.[totalCountField];
 
     // Parse items - automatically handle JSON string responses
-    const parsedItems: T[] = typeof rawItems === 'string' ? JSON.parse(rawItems) : (rawItems || []);
-    const items = transformFn ? parsedItems.map(transformFn) : parsedItems as unknown as R[];
+    const parsedItems: T[] = typeof rawItems === 'string' ? JSON.parse(rawItems) : rawItems || [];
+    const items = transformFn ? parsedItems.map(transformFn) : (parsedItems as unknown as R[]);
 
     return {
       items,
-      totalCount
+      totalCount,
     };
   }
 
   /**
    * Centralized getAll implementation that handles both paginated and non-paginated requests
-   * 
+   *
    * @param config - Configuration for the getAll operation
    * @param options - Request options including pagination parameters
    * @returns Promise resolving to either paginated or non-paginated response based on options
    */
   static async getAll<TOptions extends Record<string, any>, TRaw, TTransformed = TRaw>(
     config: GetAllConfig<TRaw, TTransformed>,
-    options?: TOptions
+    options?: TOptions,
   ): Promise<
     TOptions extends HasPaginationOptions<TOptions>
       ? PaginatedResponse<TTransformed>
       : NonPaginatedResponse<TTransformed>
   > {
-    const optionsWithDefaults = options || {} as any;
+    const optionsWithDefaults = options || ({} as any);
     const { folderId, pageSize, cursor, jumpToPage, ...restOptions } = optionsWithDefaults;
-    
+
     // Determine if pagination is requested
     const isPaginationRequested = PaginationHelpers.hasPaginationParameters(options || {});
-    
+
     // Process parameters (custom processing if provided, otherwise default)
     let processedOptions = restOptions;
     if (config.processParametersFn) {
       processedOptions = config.processParametersFn(restOptions, folderId);
     }
-    
+
     // Apply ODATA prefix to keys (excluding specified keys)
     const excludeKeys = config.excludeFromPrefix || [];
-    const keysToPrefix = Object.keys(processedOptions).filter(k => !excludeKeys.includes(k));
+    const keysToPrefix = Object.keys(processedOptions).filter((k) => !excludeKeys.includes(k));
     const prefixedOptions = addPrefixToKeys(processedOptions, ODATA_PREFIX, keysToPrefix);
-    
+
     // Default pagination options
     const paginationOptions = {
       paginationType: PaginationType.OFFSET,
       itemsField: DEFAULT_ITEMS_FIELD,
       totalCountField: DEFAULT_TOTAL_COUNT_FIELD,
-      ...config.pagination
+      ...config.pagination,
     };
-    
+
     // Paginated flow
     if (isPaginationRequested) {
       return PaginationHelpers.getAllPaginated<TRaw, TTransformed>({
@@ -325,8 +312,8 @@ export class PaginationHelpers {
         method: config.method,
         options: {
           ...paginationOptions,
-          paginationParams: config.pagination?.paginationParams
-        }
+          paginationParams: config.pagination?.paginationParams,
+        },
       }) as any; // Type assertion needed due to conditional return
     }
 
@@ -342,8 +329,8 @@ export class PaginationHelpers {
       method: config.method,
       options: {
         itemsField: paginationOptions.itemsField,
-        totalCountField: paginationOptions.totalCountField
-      }
+        totalCountField: paginationOptions.totalCountField,
+      },
     }) as any;
   }
-} 
+}

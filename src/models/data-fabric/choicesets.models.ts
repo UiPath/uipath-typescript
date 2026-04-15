@@ -1,8 +1,4 @@
-import {
-  ChoiceSetGetAllResponse,
-  ChoiceSetGetResponse,
-  ChoiceSetGetByIdOptions
-} from './choicesets.types';
+import { ChoiceSetGetAllResponse, ChoiceSetGetResponse, ChoiceSetGetByIdOptions } from './choicesets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
 /**
@@ -88,11 +84,10 @@ export interface ChoiceSetServiceModel {
    */
   getById<T extends ChoiceSetGetByIdOptions = ChoiceSetGetByIdOptions>(
     choiceSetId: string,
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<ChoiceSetGetResponse>
       : NonPaginatedResponse<ChoiceSetGetResponse>
   >;
 }
-

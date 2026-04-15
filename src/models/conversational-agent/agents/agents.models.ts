@@ -7,11 +7,7 @@
 import type { ConnectionStatus } from '@/core/websocket';
 
 import type { RawAgentGetResponse, RawAgentGetByIdResponse } from './agents.types';
-import type {
-  ConversationServiceModel,
-  ConversationCreateResponse,
-  ConversationCreateOptions
-} from '../conversations';
+import type { ConversationServiceModel, ConversationCreateResponse, ConversationCreateOptions } from '../conversations';
 
 /**
  * Options for creating a conversation from an agent
@@ -75,29 +71,33 @@ export type AgentGetByIdResponse = RawAgentGetByIdResponse & AgentMethods;
  */
 function createAgentMethods(
   agentData: RawAgentGetResponse,
-  conversationService: ConversationServiceModel
+  conversationService: ConversationServiceModel,
 ): AgentMethods {
   const agentConversations: AgentConversationServiceModel = {
     async create(options: AgentCreateConversationOptions = {}): Promise<ConversationCreateResponse> {
       return conversationService.create(agentData.id, agentData.folderId, options);
-    }
+    },
   };
 
   return {
     conversations: agentConversations,
-    get connectionStatus() { return conversationService.connectionStatus; },
-    get isConnected() { return conversationService.isConnected; },
-    get connectionError() { return conversationService.connectionError; }
+    get connectionStatus() {
+      return conversationService.connectionStatus;
+    },
+    get isConnected() {
+      return conversationService.isConnected;
+    },
+    get connectionError() {
+      return conversationService.connectionError;
+    },
   };
 }
 
 export function createAgentWithMethods<T extends RawAgentGetResponse>(
   agentData: T,
-  conversationService: ConversationServiceModel
+  conversationService: ConversationServiceModel,
 ): T & AgentMethods {
   const methods = createAgentMethods(agentData, conversationService);
-  return Object.defineProperties(
-    Object.assign({}, agentData),
-    Object.getOwnPropertyDescriptors(methods)
-  ) as T & AgentMethods;
+  return Object.defineProperties(Object.assign({}, agentData), Object.getOwnPropertyDescriptors(methods)) as T &
+    AgentMethods;
 }

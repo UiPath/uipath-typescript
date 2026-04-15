@@ -32,7 +32,7 @@ jobs:
           # Get versions from respective package.json files
           CLI_VERSION=$(node -p "require('./packages/cli/package.json').version")
           SDK_VERSION=$(node -p "require('./package.json').version")
-          
+
           # Replace placeholders in both telemetry constants files
           # CLI constants - uses CLI_VERSION from CLI package.json
           sed -i 's|\$CONNECTION_STRING|${{ secrets.CONNECTION_STRING }}|g' packages/cli/src/telemetry/constants.ts
@@ -41,7 +41,7 @@ jobs:
           # SDK core constants - uses SDK_VERSION from root package.json
           sed -i 's|\$CONNECTION_STRING|${{ secrets.CONNECTION_STRING }}|g' src/core/telemetry/constants.ts
           sed -i "s|\$SDK_VERSION|$SDK_VERSION|g" src/core/telemetry/constants.ts
-          
+
           echo "Updated telemetry constants with:"
           echo "CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}"
           echo "- CLI_VERSION (from CLI package): $CLI_VERSION"

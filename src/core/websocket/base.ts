@@ -17,7 +17,7 @@ import {
   type ConnectionStatusChangedHandler,
   type SocketEventHandler,
   type BaseWebSocketConfig,
-  type WebSocketConnectOptions
+  type WebSocketConnectOptions,
 } from './types';
 import { WebSocketLogger } from './logger';
 import { parseWebSocketUrl, DEFAULT_WEBSOCKET_CONFIG } from './utils';
@@ -98,11 +98,11 @@ export abstract class BaseWebSocket {
     config: BaseWebSocketConfig,
     executionContext: ExecutionContext,
     tokenManager: TokenManager,
-    loggerPrefix: string = 'WebSocket'
+    loggerPrefix: string = 'WebSocket',
   ) {
     this._config = {
       ...DEFAULT_WEBSOCKET_CONFIG,
-      ...config
+      ...config,
     };
     this._executionContext = executionContext;
     this._tokenManager = tokenManager;
@@ -129,8 +129,7 @@ export abstract class BaseWebSocket {
    * Whether the WebSocket is currently connected
    */
   get isConnected(): boolean {
-    return this._connectionStatus === ConnectionStatus.Connected &&
-           this._socket?.connected === true;
+    return this._connectionStatus === ConnectionStatus.Connected && this._socket?.connected === true;
   }
 
   // ==================== Configuration ====================
@@ -178,8 +177,8 @@ export abstract class BaseWebSocket {
     // This ensures fresh tokens are used after expiry/refresh
     const auth = (cb: (data: { token: string }) => void) => {
       this.getValidToken()
-        .then(token => cb({ token }))
-        .catch(error => {
+        .then((token) => cb({ token }))
+        .catch((error) => {
           this._logger.error('Failed to get token for WebSocket auth:', error);
           // Pass empty token - server will reject and trigger connect_error
           cb({ token: '' });
@@ -196,7 +195,7 @@ export abstract class BaseWebSocket {
       reconnection: this._config.reconnection,
       reconnectionAttempts: this._config.reconnectionAttempts,
       reconnectionDelay: this._config.reconnectionDelay,
-      reconnectionDelayMax: this._config.reconnectionDelayMax
+      reconnectionDelayMax: this._config.reconnectionDelayMax,
     });
 
     // Debug logging for outgoing events
@@ -250,7 +249,7 @@ export abstract class BaseWebSocket {
         socket.disconnect();
       } else {
         const connectionError = new NetworkError({
-          message: `WebSocket connection failed: ${error.message}`
+          message: `WebSocket connection failed: ${error.message}`,
         });
         this._setConnectionStatus(ConnectionStatus.Connecting, connectionError);
       }
@@ -352,7 +351,9 @@ export abstract class BaseWebSocket {
    */
   protected onDisconnectedWhileWaiting(): void {
     // Subclasses should override to call connect with appropriate options
-    this._logger.warn('getConnectedSocket called while disconnected. Subclass should override onDisconnectedWhileWaiting.');
+    this._logger.warn(
+      'getConnectedSocket called while disconnected. Subclass should override onDisconnectedWhileWaiting.',
+    );
   }
 
   // ==================== Event Handling ====================
@@ -392,7 +393,7 @@ export abstract class BaseWebSocket {
       const existing = this._eventHandlers.get(event);
       if (existing) {
         const toRemove = Array.isArray(handlers) ? handlers : [handlers];
-        const filtered = existing.filter(h => !toRemove.includes(h));
+        const filtered = existing.filter((h) => !toRemove.includes(h));
         if (filtered.length > 0) {
           this._eventHandlers.set(event, filtered);
         } else {
@@ -418,7 +419,7 @@ export abstract class BaseWebSocket {
     this._connectionStatus = status;
     this._connectionError = error;
 
-    this._connectionStatusHandlers.forEach(handler => {
+    this._connectionStatusHandlers.forEach((handler) => {
       try {
         handler(status, error);
       } catch (err) {

@@ -51,4 +51,3 @@ export interface ChoiceSetGetResponse {
  * Options for getting choice set values by choice set ID
  */
 export type ChoiceSetGetByIdOptions = PaginationOptions;
-

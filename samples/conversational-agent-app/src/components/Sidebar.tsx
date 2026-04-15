@@ -2,11 +2,11 @@
  * Sidebar - Conversation history and agent selection
  */
 
-import { memo, useState, useCallback } from 'react'
-import type { ConversationGetResponse } from '@uipath/uipath-typescript/conversational-agent'
-import { useConversationalAgent } from '../context/ConversationalAgentContext'
-import { AgentSelector } from './AgentSelector'
-import { Spinner } from './Spinner'
+import { memo, useState, useCallback } from 'react';
+import type { ConversationGetResponse } from '@uipath/uipath-typescript/conversational-agent';
+import { useConversationalAgent } from '../context/ConversationalAgentContext';
+import { AgentSelector } from './AgentSelector';
+import { Spinner } from './Spinner';
 
 export function Sidebar() {
   const {
@@ -21,21 +21,24 @@ export function Sidebar() {
     deleteConversation,
     renameConversation,
     selectedAgent,
-    connectionStatus
-  } = useConversationalAgent()
+    connectionStatus,
+  } = useConversationalAgent();
 
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleDelete = useCallback(async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    setDeletingId(id)
-    try {
-      await deleteConversation(id)
-    } finally {
-      setDeletingId(null)
-    }
-  }, [deleteConversation])
+  const handleDelete = useCallback(
+    async (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      setDeletingId(id);
+      try {
+        await deleteConversation(id);
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [deleteConversation],
+  );
 
   if (isCollapsed) {
     return (
@@ -60,7 +63,7 @@ export function Sidebar() {
           </svg>
         </button>
       </div>
-    )
+    );
   }
 
   return (
@@ -159,18 +162,18 @@ export function Sidebar() {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── ConversationItem sub-component (memoized) ───
 
 interface ConversationItemProps {
-  conversation: ConversationGetResponse
-  isActive: boolean
-  isDeleting: boolean
-  onSelect: () => void
-  onDelete: (e: React.MouseEvent) => void
-  onRename: (newLabel: string) => void
+  conversation: ConversationGetResponse;
+  isActive: boolean;
+  isDeleting: boolean;
+  onSelect: () => void;
+  onDelete: (e: React.MouseEvent) => void;
+  onRename: (newLabel: string) => void;
 }
 
 const ConversationItem = memo(function ConversationItem({
@@ -179,40 +182,51 @@ const ConversationItem = memo(function ConversationItem({
   isDeleting,
   onSelect,
   onDelete,
-  onRename
+  onRename,
 }: ConversationItemProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState('')
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
 
-  const startEditing = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    setEditValue(conversation.label || '')
-    setIsEditing(true)
-  }, [conversation.label])
+  const startEditing = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setEditValue(conversation.label || '');
+      setIsEditing(true);
+    },
+    [conversation.label],
+  );
 
   const commitRename = useCallback(() => {
-    const trimmed = editValue.trim()
+    const trimmed = editValue.trim();
     if (trimmed && trimmed !== conversation.label) {
-      onRename(trimmed)
+      onRename(trimmed);
     }
-    setIsEditing(false)
-  }, [editValue, conversation.label, onRename])
+    setIsEditing(false);
+  }, [editValue, conversation.label, onRename]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      commitRename()
-    } else if (e.key === 'Escape') {
-      setIsEditing(false)
-    }
-  }, [commitRename])
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commitRename();
+      } else if (e.key === 'Escape') {
+        setIsEditing(false);
+      }
+    },
+    [commitRename],
+  );
 
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={onSelect}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
       className={`group p-3 rounded-lg cursor-pointer mb-1 transition-colors ${
         isActive ? 'bg-white/10' : 'hover:bg-white/5'
       }`}
@@ -231,13 +245,9 @@ const ConversationItem = memo(function ConversationItem({
               className="w-full text-sm font-medium bg-white/10 border border-white/20 rounded px-1.5 py-0.5 focus:outline-none focus:border-accent"
             />
           ) : (
-            <p className="text-sm font-medium truncate">
-              {conversation.label || 'Untitled Chat'}
-            </p>
+            <p className="text-sm font-medium truncate">{conversation.label || 'Untitled Chat'}</p>
           )}
-          <p className="text-xs text-gray-500 mt-1">
-            {formatDate(conversation.createdTime)}
-          </p>
+          <p className="text-xs text-gray-500 mt-1">{formatDate(conversation.createdTime)}</p>
         </div>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
           {/* Rename button */}
@@ -247,8 +257,18 @@ const ConversationItem = memo(function ConversationItem({
               className="p-1 hover:bg-white/10 rounded transition-colors"
               title="Rename conversation"
             >
-              <svg className="w-3.5 h-3.5 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              <svg
+                className="w-3.5 h-3.5 text-gray-400 hover:text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
               </svg>
             </button>
           )}
@@ -262,34 +282,44 @@ const ConversationItem = memo(function ConversationItem({
             {isDeleting ? (
               <Spinner className="w-3.5 h-3.5 border-gray-400" />
             ) : (
-              <svg className="w-3.5 h-3.5 text-gray-400 hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <svg
+                className="w-3.5 h-3.5 text-gray-400 hover:text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
             )}
           </button>
         </div>
       </div>
     </div>
-  )
-})
+  );
+});
 
 // ─── Utilities ───
 
 function getConnectionDotClass(status: string): string {
-  if (status === 'Connected') return 'bg-green-500'
-  if (status === 'Connecting') return 'bg-yellow-500 animate-pulse'
-  return 'bg-gray-500'
+  if (status === 'Connected') return 'bg-green-500';
+  if (status === 'Connecting') return 'bg-yellow-500 animate-pulse';
+  return 'bg-gray-500';
 }
 
 function formatDate(date: string | Date | undefined) {
-  if (!date) return ''
-  const d = new Date(date)
-  const now = new Date()
-  const diff = now.getTime() - d.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  if (!date) return '';
+  const d = new Date(date);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-  if (days === 0) return 'Today'
-  if (days === 1) return 'Yesterday'
-  if (days < 7) return `${days} days ago`
-  return d.toLocaleDateString()
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  return d.toLocaleDateString();
 }

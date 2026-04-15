@@ -8,7 +8,8 @@ import { executePack } from '../actions/pack.js';
 import { COMMON_FLAGS } from '../utils/flags.js';
 
 export default class Pack extends Command {
-  static override description = 'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
+  static override description =
+    'Package UiPath projects as NuGet packages with metadata files (no external dependencies required)';
 
   static override examples = [
     '<%= config.bin %> <%= command.id %> ./dist',
@@ -17,8 +18,8 @@ export default class Pack extends Command {
     '<%= config.bin %> <%= command.id %> ./dist --name MyApp --type Action',
     '<%= config.bin %> <%= command.id %> ./dist --output ./.uipath',
     '<%= config.bin %> <%= command.id %> ./dist --dry-run',
-    '<%= config.bin %> <%= command.id %> ./dist --name MyApp --orgId \'xxxx\' --tenantId \'xxxx\' --folderKey \'xxxx\' --accessToken \'your_token\'',
-    '<%= config.bin %> <%= command.id %> ./dist --name MyActionApp --type Action --orgId \'xxxx\' --tenantId \'xxxx\' --folderKey \'xxxx\' --accessToken \'your_token\'',
+    "<%= config.bin %> <%= command.id %> ./dist --name MyApp --orgId 'xxxx' --tenantId 'xxxx' --folderKey 'xxxx' --accessToken 'your_token'",
+    "<%= config.bin %> <%= command.id %> ./dist --name MyActionApp --type Action --orgId 'xxxx' --tenantId 'xxxx' --folderKey 'xxxx' --accessToken 'your_token'",
   ];
 
   static override args = {

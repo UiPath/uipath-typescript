@@ -55,9 +55,7 @@ describe('error-handler', () => {
 
   describe('handleHttpError', () => {
     it('should throw an error with the message', async () => {
-      await expect(
-        handleHttpError(makeMockResponse(401))
-      ).rejects.toThrow('Authentication failed');
+      await expect(handleHttpError(makeMockResponse(401))).rejects.toThrow('Authentication failed');
     });
   });
 });

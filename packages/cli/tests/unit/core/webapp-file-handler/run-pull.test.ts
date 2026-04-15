@@ -79,9 +79,7 @@ describe('run-pull', () => {
     vi.mocked(api.fetchRemoteStructure).mockResolvedValue({
       name: 'my-project',
       files: [],
-      folders: [
-        { id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] },
-      ],
+      folders: [{ id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] }],
     });
     vi.mocked(api.downloadRemoteFile).mockResolvedValue(Buffer.from('file content'));
 
@@ -97,14 +95,13 @@ describe('run-pull', () => {
       files: [],
       folders: [
         {
-          id: 'd1', name: 'source',
+          id: 'd1',
+          name: 'source',
           files: [
             { id: 'meta', name: 'push_metadata.json' },
             { id: 'f1', name: 'app.tsx' },
           ],
-          folders: [
-            { id: 'd2', name: 'build', files: [{ id: 'f2', name: 'bundle.js' }], folders: [] },
-          ],
+          folders: [{ id: 'd2', name: 'build', files: [{ id: 'f2', name: 'bundle.js' }], folders: [] }],
         },
       ],
     });
@@ -118,7 +115,7 @@ describe('run-pull', () => {
     const config = createConfig();
     await runPull(config, { overwrite: true });
     const downloadCalls = vi.mocked(api.downloadRemoteFile).mock.calls;
-    const downloadedFileIds = downloadCalls.map(c => c[1]);
+    const downloadedFileIds = downloadCalls.map((c) => c[1]);
     expect(downloadedFileIds).toContain('meta');
     expect(downloadedFileIds).toContain('f1');
   });
@@ -127,9 +124,7 @@ describe('run-pull', () => {
     vi.mocked(api.fetchRemoteStructure).mockResolvedValue({
       name: 'proj',
       files: [],
-      folders: [
-        { id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] },
-      ],
+      folders: [{ id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] }],
     });
     vi.mocked(fs.existsSync).mockReturnValue(true);
 
@@ -140,9 +135,7 @@ describe('run-pull', () => {
     vi.mocked(api.fetchRemoteStructure).mockResolvedValue({
       name: 'proj',
       files: [],
-      folders: [
-        { id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] },
-      ],
+      folders: [{ id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] }],
     });
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(api.downloadRemoteFile).mockResolvedValue(Buffer.from('data'));
@@ -157,25 +150,19 @@ describe('run-pull', () => {
     vi.mocked(api.fetchRemoteStructure).mockResolvedValue({
       name: 'proj',
       files: [],
-      folders: [
-        { id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] },
-      ],
+      folders: [{ id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] }],
     });
     vi.mocked(fs.existsSync).mockReturnValue(true);
 
     const promptOverwrite = vi.fn().mockResolvedValue(false);
-    await expect(
-      runPull(createConfig(), { overwrite: false, promptOverwrite })
-    ).rejects.toThrow();
+    await expect(runPull(createConfig(), { overwrite: false, promptOverwrite })).rejects.toThrow();
   });
 
   it('should throw when file download fails', async () => {
     vi.mocked(api.fetchRemoteStructure).mockResolvedValue({
       name: 'proj',
       files: [],
-      folders: [
-        { id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] },
-      ],
+      folders: [{ id: 'd1', name: 'source', files: [{ id: 'f1', name: 'app.tsx' }], folders: [] }],
     });
     vi.mocked(fs.existsSync).mockImplementation((p: any) => {
       return p === '/root';

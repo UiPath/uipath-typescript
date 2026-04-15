@@ -13,7 +13,7 @@ export class RateLimitError extends UiPathError {
     super(ErrorType.RATE_LIMIT, {
       message: params.message || ErrorMessages.RATE_LIMIT_EXCEEDED,
       statusCode: params.statusCode ?? HttpStatus.TOO_MANY_REQUESTS,
-      requestId: params.requestId
+      requestId: params.requestId,
     });
   }
 }

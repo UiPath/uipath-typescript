@@ -2,10 +2,7 @@
  * Message Service Model
  */
 
-import type {
-  MessageGetResponse,
-  ContentPartGetResponse
-} from './exchanges.types';
+import type { MessageGetResponse, ContentPartGetResponse } from './exchanges.types';
 
 /**
  * Service for retrieving individual messages within an {@link ExchangeServiceModel | Exchange}
@@ -46,11 +43,7 @@ export interface MessageServiceModel {
    * console.log(message.toolCalls);
    * ```
    */
-  getById(
-    conversationId: string,
-    exchangeId: string,
-    messageId: string
-  ): Promise<MessageGetResponse>;
+  getById(conversationId: string, exchangeId: string, messageId: string): Promise<MessageGetResponse>;
 
   /**
    * Gets an external content part by ID
@@ -74,6 +67,6 @@ export interface MessageServiceModel {
     conversationId: string,
     exchangeId: string,
     messageId: string,
-    contentPartId: string
+    contentPartId: string,
   ): Promise<ContentPartGetResponse>;
 }

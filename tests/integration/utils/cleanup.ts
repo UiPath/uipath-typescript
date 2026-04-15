@@ -23,10 +23,7 @@ const resourceRegistry: ResourceRegistry = {
 /**
  * Registers a resource for potential emergency cleanup.
  */
-export function registerResource(
-  type: keyof ResourceRegistry,
-  resource: any
-): void {
+export function registerResource(type: keyof ResourceRegistry, resource: any): void {
   resourceRegistry[type].push(resource);
 }
 
@@ -37,10 +34,7 @@ export function registerResource(
  * @param taskId - ID of the task to cleanup
  * @param _folderId - Optional folder ID
  */
-export async function cleanupTestTask(
-  taskId: number,
-  _folderId?: number
-): Promise<void> {
+export async function cleanupTestTask(taskId: number, _folderId?: number): Promise<void> {
   try {
     const { tasks } = getServices();
     // Tasks might need to be unassigned
@@ -64,10 +58,7 @@ export async function cleanupTestTask(
  * @param entityId - ID of the entity
  * @param recordIds - Array of record IDs to delete
  */
-export async function cleanupTestEntityRecords(
-  entityId: string,
-  recordIds: string[]
-): Promise<void> {
+export async function cleanupTestEntityRecords(entityId: string, recordIds: string[]): Promise<void> {
   if (!recordIds || recordIds.length === 0) {
     return;
   }
@@ -89,10 +80,7 @@ export async function cleanupTestEntityRecords(
  * @param instanceId - ID of the process instance
  * @param folderKey - Optional folder key
  */
-export async function cleanupTestProcessInstance(
-  instanceId: string,
-  folderKey?: string
-): Promise<void> {
+export async function cleanupTestProcessInstance(instanceId: string, folderKey?: string): Promise<void> {
   try {
     const { processInstances } = getServices();
     await retryWithBackoff(async () => {
@@ -110,10 +98,7 @@ export async function cleanupTestProcessInstance(
  * @param caseId - ID of the case instance
  * @param folderKey - Optional folder key
  */
-export async function cleanupTestCaseInstance(
-  caseId: string,
-  folderKey?: string
-): Promise<void> {
+export async function cleanupTestCaseInstance(caseId: string, folderKey?: string): Promise<void> {
   try {
     const { caseInstances } = getServices();
     await retryWithBackoff(async () => {

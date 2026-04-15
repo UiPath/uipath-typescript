@@ -111,12 +111,16 @@ describe('Conversation Type Utility Functions', () => {
 
   describe('assertCitationSourceUrl', () => {
     it('should not throw for citation source with url', () => {
-      expect(() => assertCitationSourceUrl({ title: 'Source', number: 1, url: 'https://example.com' } as any)).not.toThrow();
+      expect(() =>
+        assertCitationSourceUrl({ title: 'Source', number: 1, url: 'https://example.com' } as any),
+      ).not.toThrow();
     });
 
     it('should throw TypeError for citation source without url', () => {
       expect(() => assertCitationSourceUrl({ title: 'Source', number: 1 } as any)).toThrow(TypeError);
-      expect(() => assertCitationSourceUrl({ title: 'Source', number: 1 } as any)).toThrow('Object is not a CitationSourceUrl');
+      expect(() => assertCitationSourceUrl({ title: 'Source', number: 1 } as any)).toThrow(
+        'Object is not a CitationSourceUrl',
+      );
     });
   });
 
@@ -136,8 +140,12 @@ describe('Conversation Type Utility Functions', () => {
     });
 
     it('should throw TypeError for citation source with url', () => {
-      expect(() => assertCitationSourceMedia({ title: 'Source', number: 1, url: 'https://example.com' } as any)).toThrow(TypeError);
-      expect(() => assertCitationSourceMedia({ title: 'Source', number: 1, url: 'https://example.com' } as any)).toThrow('Object is not a CitationSourceMedia');
+      expect(() =>
+        assertCitationSourceMedia({ title: 'Source', number: 1, url: 'https://example.com' } as any),
+      ).toThrow(TypeError);
+      expect(() =>
+        assertCitationSourceMedia({ title: 'Source', number: 1, url: 'https://example.com' } as any),
+      ).toThrow('Object is not a CitationSourceMedia');
     });
   });
 });

@@ -14,7 +14,7 @@ import {
   createMockDeleteResponse,
   createMockEntityWithExternalFields,
   createMockEntityWithNestedReferences,
-  createMockEntityWithSqlFieldTypes
+  createMockEntityWithSqlFieldTypes,
 } from '../../../utils/mocks/entities';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { createMockError } from '../../../utils/mocks/core';
@@ -26,7 +26,7 @@ import type {
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
   EntityRecord,
-  EntityGetAllRecordsOptions
+  EntityGetAllRecordsOptions,
 } from '../../../../src/models/data-fabric/entities.types';
 import { ENTITY_TEST_CONSTANTS } from '../../../utils/constants/entities';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
@@ -87,7 +87,7 @@ describe('EntityService Unit Tests', () => {
       // Verify the API call has correct endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
-        {}
+        {},
       );
 
       // Verify entity has methods attached
@@ -110,18 +110,18 @@ describe('EntityService Unit Tests', () => {
       expect(result.externalFields?.length).toBeGreaterThan(0);
       expect(result.externalFields![0].externalObjectDetail).toBeDefined();
       expect(result.externalFields![0].externalConnectionDetail).toBeDefined();
-      
+
       // Verify external field metadata field name transformation (fieldDefinition → fieldMetaData)
       const externalField = result.externalFields![0].fields![0];
       expect(externalField.fieldMetaData).toBeDefined();
       expect(externalField.fieldMetaData.id).toBe(ENTITY_TEST_CONSTANTS.FIELD_ID);
       expect(externalField.fieldMetaData.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_EXTERNAL_FIELD);
-      
+
       // NOTE: External fields currently do NOT transform SQL types to friendly names
       // They only transform field names (sqlType → fieldDataType, createTime → createdTime)
       // This tests the ACTUAL current behavior
       expect(externalField.fieldMetaData.fieldDataType).toBeDefined();
-      expect(externalField.fieldMetaData.fieldDataType.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_TYPE_NVARCHAR);  // Stays as SQL type
+      expect(externalField.fieldMetaData.fieldDataType.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_TYPE_NVARCHAR); // Stays as SQL type
     });
 
     it('should transform nested reference fields correctly', async () => {
@@ -135,21 +135,21 @@ describe('EntityService Unit Tests', () => {
       expect(result.fields.length).toBe(3);
 
       // Verify referenceEntity field is transformed
-      const refEntityField = result.fields.find(f => f.name === 'customerId');
+      const refEntityField = result.fields.find((f) => f.name === 'customerId');
       expect(refEntityField).toBeDefined();
       expect(refEntityField?.referenceEntity).toBeDefined();
       expect(refEntityField?.referenceEntity?.id).toBe('ref-entity-id');
       expect(refEntityField?.referenceEntity?.name).toBe(ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_CUSTOMER);
 
       // Verify referenceChoiceSet field is transformed
-      const refChoiceSetField = result.fields.find(f => f.name === 'status');
+      const refChoiceSetField = result.fields.find((f) => f.name === 'status');
       expect(refChoiceSetField).toBeDefined();
       expect(refChoiceSetField?.referenceChoiceSet).toBeDefined();
       expect(refChoiceSetField?.referenceChoiceSet?.id).toBe('ref-choiceset-id');
       expect(refChoiceSetField?.referenceChoiceSet?.name).toBe(ENTITY_TEST_CONSTANTS.REFERENCE_CHOICESET_STATUS);
 
       // Verify referenceField.definition is transformed
-      const refFieldField = result.fields.find(f => f.name === 'relatedField');
+      const refFieldField = result.fields.find((f) => f.name === 'relatedField');
       expect(refFieldField).toBeDefined();
       expect(refFieldField?.referenceField).toBeDefined();
       expect(refFieldField?.referenceField?.definition).toBeDefined();
@@ -168,28 +168,28 @@ describe('EntityService Unit Tests', () => {
       expect(result.fields.length).toBe(6);
 
       // Verify UNIQUEIDENTIFIER -> UUID
-      const uuidField = result.fields.find(f => f.name === 'id');
+      const uuidField = result.fields.find((f) => f.name === 'id');
       expect(uuidField?.fieldDataType.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_TYPE_UUID);
 
       // Verify NVARCHAR -> STRING
-      const stringField = result.fields.find(f => f.name === 'name');
+      const stringField = result.fields.find((f) => f.name === 'name');
       expect(stringField?.fieldDataType.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_TYPE_STRING);
       expect(stringField?.fieldDataType.lengthLimit).toBe(255);
 
       // Verify INT -> INTEGER
-      const intField = result.fields.find(f => f.name === 'age');
+      const intField = result.fields.find((f) => f.name === 'age');
       expect(intField?.fieldDataType.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_TYPE_INTEGER);
 
       // Verify DATETIME2 -> DATETIME
-      const datetimeField = result.fields.find(f => f.name === 'createdDate');
+      const datetimeField = result.fields.find((f) => f.name === 'createdDate');
       expect(datetimeField?.fieldDataType.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_TYPE_DATETIME);
 
       // Verify BIT -> BOOLEAN
-      const boolField = result.fields.find(f => f.name === 'isActive');
+      const boolField = result.fields.find((f) => f.name === 'isActive');
       expect(boolField?.fieldDataType.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_TYPE_BOOLEAN);
 
       // Verify DECIMAL -> DECIMAL (stays the same)
-      const decimalField = result.fields.find(f => f.name === 'price');
+      const decimalField = result.fields.find((f) => f.name === 'price');
       expect(decimalField?.fieldDataType.name).toBe(ENTITY_TEST_CONSTANTS.FIELD_TYPE_DECIMAL);
       expect(decimalField?.fieldDataType.decimalPrecision).toBe(2);
     });
@@ -198,7 +198,9 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(entityService.getById(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(entityService.getById(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
     });
   });
 
@@ -212,9 +214,9 @@ describe('EntityService Unit Tests', () => {
       // Verify the result
       expect(result).toBeDefined();
       expect(result.length).toBe(3);
-      
+
       // Verify each entity has methods
-      result.forEach(entity => {
+      result.forEach((entity) => {
         expect(typeof entity.insertRecord).toBe('function');
         expect(typeof entity.insertRecords).toBe('function');
         expect(typeof entity.updateRecords).toBe('function');
@@ -223,10 +225,7 @@ describe('EntityService Unit Tests', () => {
       });
 
       // Verify the API call
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        {}
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL, {});
 
       expect(result[0].fields).toBeDefined();
       expect(result[0].fields.length).toBe(3);
@@ -248,7 +247,7 @@ describe('EntityService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result.length).toBe(2);
 
-      result.forEach(entity => {
+      result.forEach((entity) => {
         // Verify EntityMap transformations on entity level
         // createTime -> createdTime
         expect(entity.createdTime).toBeDefined();
@@ -261,7 +260,7 @@ describe('EntityService Unit Tests', () => {
         expect(entity).not.toHaveProperty('updateTime'); // Raw field should not exist
 
         // Verify field-level transformations
-        entity.fields.forEach(field => {
+        entity.fields.forEach((field) => {
           // sqlType -> fieldDataType
           expect(field.fieldDataType).toBeDefined();
           expect(field.fieldDataType.name).toBeDefined();
@@ -270,16 +269,13 @@ describe('EntityService Unit Tests', () => {
           // Use type assertion to check for any remaining raw field names
           const fieldAsAny = field as any;
           expect(fieldAsAny.fieldDefinition).toBeUndefined(); // Raw field should not exist
-          expect(fieldAsAny.createTime).toBeUndefined(); // Raw field should not exist  
+          expect(fieldAsAny.createTime).toBeUndefined(); // Raw field should not exist
           expect(fieldAsAny.updateTime).toBeUndefined(); // Raw field should not exist
         });
       });
 
       // Verify the API call
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        {}
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith(DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL, {});
     });
 
     it('should handle API errors', async () => {
@@ -300,7 +296,7 @@ describe('EntityService Unit Tests', () => {
       const mockRecords = createMockEntityRecords(5);
       const mockResponse = {
         items: mockRecords,
-        totalCount: 5
+        totalCount: 5,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
@@ -313,9 +309,9 @@ describe('EntityService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           pagination: expect.any(Object),
-          excludeFromPrefix: ['expansionLevel']
+          excludeFromPrefix: ['expansionLevel'],
         }),
-        undefined
+        undefined,
       );
 
       expect(result).toEqual(mockResponse);
@@ -331,27 +327,27 @@ describe('EntityService Unit Tests', () => {
         nextCursor: TEST_CONSTANTS.NEXT_CURSOR,
         previousCursor: null,
         currentPage: 1,
-        totalPages: 10
+        totalPages: 10,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options: EntityGetAllRecordsOptions = {
-        pageSize: TEST_CONSTANTS.PAGE_SIZE
+        pageSize: TEST_CONSTANTS.PAGE_SIZE,
       } as EntityGetAllRecordsOptions;
 
-      const result = await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options) as any;
+      const result = (await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options)) as any;
 
       // Verify PaginationHelpers.getAll was called with correct parameters
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
-          pagination: expect.any(Object)
+          pagination: expect.any(Object),
         }),
         expect.objectContaining({
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
-        })
+          pageSize: TEST_CONSTANTS.PAGE_SIZE,
+        }),
       );
 
       expect(result).toEqual(mockResponse);
@@ -360,18 +356,18 @@ describe('EntityService Unit Tests', () => {
 
     it('should handle expansion level option', async () => {
       // With expansionLevel, reference fields should be expanded to objects
-      const mockRecords = createMockEntityRecords(3, { 
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL 
+      const mockRecords = createMockEntityRecords(3, {
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       });
       const mockResponse = {
         items: mockRecords,
-        totalCount: 3
+        totalCount: 3,
       };
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options: EntityGetAllRecordsOptions = {
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       } as EntityGetAllRecordsOptions;
 
       await entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
@@ -382,11 +378,11 @@ describe('EntityService Unit Tests', () => {
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           pagination: expect.any(Object),
-          excludeFromPrefix: ['expansionLevel']
+          excludeFromPrefix: ['expansionLevel'],
         }),
         expect.objectContaining({
-          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-        })
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+        }),
       );
     });
 
@@ -394,7 +390,9 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
-      await expect(entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(entityService.getAllRecords(ENTITY_TEST_CONSTANTS.ENTITY_ID)).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
     });
   });
 
@@ -404,13 +402,13 @@ describe('EntityService Unit Tests', () => {
         Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
         name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
         age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
-        email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email
+        email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email,
       };
       mockApiClient.get.mockResolvedValue(mockRecord);
 
       const result = await entityService.getRecordById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ENTITY_TEST_CONSTANTS.RECORD_ID
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
       );
 
       expect(result).toBeDefined();
@@ -420,29 +418,26 @@ describe('EntityService Unit Tests', () => {
       expect(result.email).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID
-        ),
-        { params: {} }
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID),
+        { params: {} },
       );
     });
 
     it('should get a record with expansion level option', async () => {
       const mockRecord = {
         Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
-        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name
+        name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
       };
       mockApiClient.get.mockResolvedValue(mockRecord);
 
       const options: EntityGetRecordByIdOptions = {
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       };
 
       const result = await entityService.getRecordById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
-        options
+        options,
       );
 
       expect(result).toBeDefined();
@@ -450,15 +445,12 @@ describe('EntityService Unit Tests', () => {
       expect(result.name).toBe(ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID
-        ),
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_RECORD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID),
         {
           params: expect.objectContaining({
-            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-          })
-        }
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+          }),
+        },
       );
     });
 
@@ -467,10 +459,7 @@ describe('EntityService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(error);
 
       await expect(
-        entityService.getRecordById(
-          ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID
-        )
+        entityService.getRecordById(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -495,8 +484,8 @@ describe('EntityService Unit Tests', () => {
         DATA_FABRIC_ENDPOINTS.ENTITY.INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         testData,
         expect.objectContaining({
-          params: expect.any(Object)
-        })
+          params: expect.any(Object),
+        }),
       );
     });
 
@@ -504,15 +493,15 @@ describe('EntityService Unit Tests', () => {
       const testData = {
         ...ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
         RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-        CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID
+        CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
       };
       const options: EntityInsertRecordOptions = {
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       };
 
       // With expansionLevel, reference fields should be expanded in the response
       const mockResponse = createMockSingleInsertResponse(testData, {
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
@@ -524,9 +513,9 @@ describe('EntityService Unit Tests', () => {
         testData,
         expect.objectContaining({
           params: expect.objectContaining({
-            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-          })
-        })
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+          }),
+        }),
       );
 
       // Verify reference fields are expanded in the response
@@ -538,19 +527,15 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.insertRecordById(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA
-      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        entityService.insertRecordById(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('insertRecordsById', () => {
     it('should insert records successfully', async () => {
-      const testData = [
-        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
-        ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2
-      ];
+      const testData = [ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA, ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA_2];
 
       const mockResponse = createMockInsertResponse(testData);
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -573,25 +558,27 @@ describe('EntityService Unit Tests', () => {
         DATA_FABRIC_ENDPOINTS.ENTITY.BATCH_INSERT_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         testData,
         expect.objectContaining({
-          params: expect.any(Object)
-        })
+          params: expect.any(Object),
+        }),
       );
     });
 
     it('should insert records with options', async () => {
-      const testData = [{
-        ...ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
-        RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-        CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID
-      }];
+      const testData = [
+        {
+          ...ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
+          RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+          CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+        },
+      ];
       const options: EntityInsertRecordsOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-        failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
+        failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
       };
 
       // With expansionLevel, reference fields should be expanded in the response
       const mockResponse = createMockInsertResponse(testData, {
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
@@ -604,9 +591,9 @@ describe('EntityService Unit Tests', () => {
         expect.objectContaining({
           params: expect.objectContaining({
             expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-            failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
-          })
-        })
+            failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
+          }),
+        }),
       );
 
       // Verify reference fields are expanded in the response
@@ -617,7 +604,7 @@ describe('EntityService Unit Tests', () => {
     it('should handle partial insert failures', async () => {
       const testData = [
         ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA,
-        { name: ENTITY_TEST_CONSTANTS.TEST_INVALID_RECORD_NAME, age: null } // Invalid data
+        { name: ENTITY_TEST_CONSTANTS.TEST_INVALID_RECORD_NAME, age: null }, // Invalid data
       ];
 
       // First record succeeds, second fails (1 success, 1 failure from testData)
@@ -642,10 +629,9 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.insertRecordsById(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        [ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA]
-      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        entityService.insertRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, [ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA]),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -653,13 +639,17 @@ describe('EntityService Unit Tests', () => {
     it('should update a single record successfully', async () => {
       const testData = {
         name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
-        age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE
+        age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
       };
 
       const mockResponse = createMockSingleUpdateResponse({ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.updateRecordById(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID, testData);
+      const result = await entityService.updateRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        testData,
+      );
 
       // Verify the result is the updated record
       expect(result).toBeDefined();
@@ -669,11 +659,14 @@ describe('EntityService Unit Tests', () => {
 
       // Verify the API call has correct endpoint and body without record ID
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID),
+        DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_RECORD_BY_ID(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+        ),
         { name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE },
         expect.objectContaining({
-          params: expect.any(Object)
-        })
+          params: expect.any(Object),
+        }),
       );
     });
 
@@ -682,19 +675,27 @@ describe('EntityService Unit Tests', () => {
         name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
         age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
         RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-        UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID
+        UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
       };
       const options: EntityUpdateRecordOptions = {
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       };
 
       // With expansionLevel, reference fields should be expanded in the response
-      const mockResponse = createMockSingleUpdateResponse({ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData }, {
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-      });
+      const mockResponse = createMockSingleUpdateResponse(
+        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, ...testData },
+        {
+          expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+        },
+      );
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await entityService.updateRecordById(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID, testData, options);
+      const result = await entityService.updateRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID,
+        testData,
+        options,
+      );
 
       // Verify options are passed in params
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -702,9 +703,9 @@ describe('EntityService Unit Tests', () => {
         testData,
         expect.objectContaining({
           params: expect.objectContaining({
-            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
-          })
-        })
+            expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
+          }),
+        }),
       );
 
       // Verify reference fields are expanded in the response
@@ -716,19 +717,27 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.updateRecordById(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        { name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }
-      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        entityService.updateRecordById(ENTITY_TEST_CONSTANTS.ENTITY_ID, ENTITY_TEST_CONSTANTS.RECORD_ID, {
+          name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME,
+        }),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('updateRecordsById', () => {
     it('should update records successfully', async () => {
       const testData: EntityRecord[] = [
-        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE },
-        { Id: ENTITY_TEST_CONSTANTS.RECORD_ID_2, name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME, age: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_AGE }
+        {
+          Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+          name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
+          age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
+        },
+        {
+          Id: ENTITY_TEST_CONSTANTS.RECORD_ID_2,
+          name: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_NAME,
+          age: ENTITY_TEST_CONSTANTS.TEST_JANE_UPDATED_AGE,
+        },
       ];
 
       const mockResponse = createMockUpdateResponse(testData);
@@ -748,8 +757,8 @@ describe('EntityService Unit Tests', () => {
         DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         testData,
         expect.objectContaining({
-          params: expect.any(Object)
-        })
+          params: expect.any(Object),
+        }),
       );
     });
 
@@ -760,17 +769,17 @@ describe('EntityService Unit Tests', () => {
           name: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_NAME,
           age: ENTITY_TEST_CONSTANTS.TEST_JOHN_UPDATED_AGE,
           RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-          UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID
-        }
+          UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+        },
       ];
       const options: EntityUpdateRecordsOptions = {
         expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-        failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
+        failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
       } as EntityUpdateRecordsOptions;
 
       // With expansionLevel, reference fields should be expanded in the response
       const mockResponse = createMockUpdateResponse(testData, {
-        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL
+        expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
       });
       mockApiClient.post.mockResolvedValue(mockResponse);
 
@@ -783,9 +792,9 @@ describe('EntityService Unit Tests', () => {
         expect.objectContaining({
           params: expect.objectContaining({
             expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL,
-            failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
-          })
-        })
+            failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
+          }),
+        }),
       );
 
       // Verify reference fields are expanded in the response
@@ -796,7 +805,7 @@ describe('EntityService Unit Tests', () => {
     it('should handle partial update failures', async () => {
       const testData: EntityRecord[] = [
         { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_VALID_UPDATE_NAME },
-        { Id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME }
+        { Id: ENTITY_TEST_CONSTANTS.TEST_INVALID_ID, name: ENTITY_TEST_CONSTANTS.TEST_INVALID_UPDATE_NAME },
       ];
 
       // First record succeeds, second fails (1 success, 1 failure from testData)
@@ -818,19 +827,17 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.updateRecordsById(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        [{ Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME }]
-      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        entityService.updateRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, [
+          { Id: ENTITY_TEST_CONSTANTS.RECORD_ID, name: ENTITY_TEST_CONSTANTS.TEST_UPDATED_NAME },
+        ]),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('deleteRecordsById', () => {
     it('should delete records successfully', async () => {
-      const recordIds = [
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.RECORD_ID_2
-      ];
+      const recordIds = [ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.RECORD_ID_2];
 
       const mockResponse = createMockDeleteResponse(recordIds);
       mockApiClient.post.mockResolvedValue(mockResponse);
@@ -850,15 +857,15 @@ describe('EntityService Unit Tests', () => {
         DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_BY_ID(ENTITY_TEST_CONSTANTS.ENTITY_ID),
         recordIds,
         expect.objectContaining({
-          params: expect.any(Object)
-        })
+          params: expect.any(Object),
+        }),
       );
     });
 
     it('should delete records with options', async () => {
       const recordIds = [ENTITY_TEST_CONSTANTS.RECORD_ID];
       const options: EntityDeleteRecordsOptions = {
-        failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
+        failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
       } as EntityDeleteRecordsOptions;
 
       const mockResponse = createMockDeleteResponse(recordIds);
@@ -872,17 +879,14 @@ describe('EntityService Unit Tests', () => {
         expect.any(Array),
         expect.objectContaining({
           params: expect.objectContaining({
-            failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST
-          })
-        })
+            failOnFirst: ENTITY_TEST_CONSTANTS.FAIL_ON_FIRST,
+          }),
+        }),
       );
     });
 
     it('should handle partial delete failures', async () => {
-      const recordIds = [
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.TEST_INVALID_ID
-      ];
+      const recordIds = [ENTITY_TEST_CONSTANTS.RECORD_ID, ENTITY_TEST_CONSTANTS.TEST_INVALID_ID];
 
       // First record deleted successfully, second fails (1 success, 1 failure from recordIds)
       const mockResponse = createMockDeleteResponse(recordIds, { successCount: 1 });
@@ -903,10 +907,9 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(entityService.deleteRecordsById(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        [ENTITY_TEST_CONSTANTS.RECORD_ID]
-      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        entityService.deleteRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, [ENTITY_TEST_CONSTANTS.RECORD_ID]),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -918,7 +921,7 @@ describe('EntityService Unit Tests', () => {
       const result = await entityService.downloadAttachment(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
       );
 
       // Verify the result is a Blob
@@ -931,9 +934,9 @@ describe('EntityService Unit Tests', () => {
         DATA_FABRIC_ENDPOINTS.ENTITY.DOWNLOAD_ATTACHMENT(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
-        { responseType: 'blob' }
+        { responseType: 'blob' },
       );
     });
 
@@ -941,18 +944,28 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(entityService.downloadAttachment(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
-      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(
+        entityService.downloadAttachment(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
   describe('uploadAttachment', () => {
     it.each([
-      { type: 'Blob', file: new Blob(['test file content'], { type: 'application/pdf' }), response: { id: ENTITY_TEST_CONSTANTS.RECORD_ID, status: 'uploaded' } },
-      { type: 'Uint8Array', file: new Uint8Array([72, 101, 108, 108, 111]), response: { id: ENTITY_TEST_CONSTANTS.RECORD_ID } },
+      {
+        type: 'Blob',
+        file: new Blob(['test file content'], { type: 'application/pdf' }),
+        response: { id: ENTITY_TEST_CONSTANTS.RECORD_ID, status: 'uploaded' },
+      },
+      {
+        type: 'Uint8Array',
+        file: new Uint8Array([72, 101, 108, 108, 111]),
+        response: { id: ENTITY_TEST_CONSTANTS.RECORD_ID },
+      },
     ])('should upload attachment successfully with $type', async ({ file, response }) => {
       mockApiClient.post.mockResolvedValue(response);
 
@@ -960,7 +973,7 @@ describe('EntityService Unit Tests', () => {
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        file
+        file,
       );
 
       expect(result).toEqual(response);
@@ -968,10 +981,10 @@ describe('EntityService Unit Tests', () => {
         DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
         expect.any(FormData),
-        { params: {} }
+        { params: {} },
       );
     });
 
@@ -986,17 +999,17 @@ describe('EntityService Unit Tests', () => {
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         file,
-        { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL }
+        { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL },
       );
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.UPLOAD_ATTACHMENT(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
         expect.any(FormData),
-        { params: { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL } }
+        { params: { expansionLevel: ENTITY_TEST_CONSTANTS.EXPANSION_LEVEL } },
       );
     });
 
@@ -1006,14 +1019,14 @@ describe('EntityService Unit Tests', () => {
 
       const file = new Blob(['test']);
 
-      await expect(entityService.uploadAttachment(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
-        file
-      )).rejects.toThrow(
-        TEST_CONSTANTS.ERROR_MESSAGE
-      );
+      await expect(
+        entityService.uploadAttachment(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+          file,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -1024,16 +1037,16 @@ describe('EntityService Unit Tests', () => {
       await entityService.deleteAttachment(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
       );
 
       expect(mockApiClient.delete).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_ATTACHMENT(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
-          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
         ),
-        {}
+        {},
       );
     });
 
@@ -1041,14 +1054,13 @@ describe('EntityService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.delete.mockRejectedValue(error);
 
-      await expect(entityService.deleteAttachment(
-        ENTITY_TEST_CONSTANTS.ENTITY_ID,
-        ENTITY_TEST_CONSTANTS.RECORD_ID,
-        ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME
-      )).rejects.toThrow(
-        TEST_CONSTANTS.ERROR_MESSAGE
-      );
+      await expect(
+        entityService.deleteAttachment(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });
-

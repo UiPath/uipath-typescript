@@ -89,7 +89,7 @@ describe('Agent Models', () => {
       expect(mockConversationService.create).toHaveBeenCalledWith(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
         TEST_CONSTANTS.FOLDER_ID,
-        {}
+        {},
       );
       expect(result).toEqual(mockConversation);
     });
@@ -109,7 +109,7 @@ describe('Agent Models', () => {
       expect(mockConversationService.create).toHaveBeenCalledWith(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
         TEST_CONSTANTS.FOLDER_ID,
-        { label: 'Custom Label' }
+        { label: 'Custom Label' },
       );
       expect(result.label).toBe('Custom Label');
     });
@@ -133,7 +133,7 @@ describe('Agent Models', () => {
       expect(mockConversationService.create).toHaveBeenCalledWith(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
         TEST_CONSTANTS.FOLDER_ID,
-        { label: 'Manual Label', autogenerateLabel: false }
+        { label: 'Manual Label', autogenerateLabel: false },
       );
       expect(result.autogenerateLabel).toBe(false);
     });

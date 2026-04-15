@@ -1,4 +1,4 @@
-import { EntityFieldDataType } from "./entities.types";
+import { EntityFieldDataType } from './entities.types';
 
 /**
  * Entity field data types (SQL types from API)
@@ -15,7 +15,7 @@ export enum SqlFieldType {
   DATE = 'DATE',
   BIT = 'BIT',
   DECIMAL = 'DECIMAL',
-  MULTILINE = 'MULTILINE'
+  MULTILINE = 'MULTILINE',
 }
 
 /**
@@ -25,7 +25,7 @@ export const EntityMap = {
   createTime: 'createdTime',
   updateTime: 'updatedTime',
   sqlType: 'fieldDataType',
-  fieldDefinition: 'fieldMetaData' 
+  fieldDefinition: 'fieldMetaData',
 };
 
 /**
@@ -43,5 +43,5 @@ export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldDataType> = {
   [SqlFieldType.DATE]: EntityFieldDataType.DATE,
   [SqlFieldType.BIT]: EntityFieldDataType.BOOLEAN,
   [SqlFieldType.DECIMAL]: EntityFieldDataType.DECIMAL,
-  [SqlFieldType.MULTILINE]: EntityFieldDataType.MULTILINE_TEXT
-}; 
+  [SqlFieldType.MULTILINE]: EntityFieldDataType.MULTILINE_TEXT,
+};

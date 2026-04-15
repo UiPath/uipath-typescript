@@ -31,19 +31,19 @@ const checkConnection = (port: number, host: string): Promise<boolean> => {
 const tryBindToPort = (port: number): Promise<boolean> => {
   return new Promise((resolve) => {
     const server = createServer();
-    
+
     server.once('error', () => {
       // Can't bind - port is in use
       resolve(false);
     });
-    
+
     server.once('listening', () => {
       // Successfully bound to port, it's available
       server.close(() => {
         resolve(true);
       });
     });
-    
+
     // Try to listen on all interfaces (same as Express default)
     server.listen(port);
   });
@@ -52,11 +52,11 @@ const tryBindToPort = (port: number): Promise<boolean> => {
 export const isPortAvailable = async (port: number): Promise<boolean> => {
   // Check multiple interfaces using constants
   const connectionChecks = await Promise.all(
-    AUTH_CONSTANTS.PORT_CHECK_HOSTS.map(host => checkConnection(port, host))
+    AUTH_CONSTANTS.PORT_CHECK_HOSTS.map((host) => checkConnection(port, host)),
   );
-  
+
   // If any host shows the port is in use, return false
-  if (connectionChecks.some(isInUse => isInUse)) {
+  if (connectionChecks.some((isInUse) => isInUse)) {
     return false;
   }
 

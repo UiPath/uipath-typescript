@@ -14,7 +14,7 @@ export class AuthenticationError extends UiPathError {
     super(ErrorType.AUTHENTICATION, {
       message: params.message || ErrorMessages.AUTHENTICATION_FAILED,
       statusCode: params.statusCode ?? HttpStatus.UNAUTHORIZED,
-      requestId: params.requestId
+      requestId: params.requestId,
     });
   }
 }

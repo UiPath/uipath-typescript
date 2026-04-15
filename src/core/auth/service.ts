@@ -39,11 +39,11 @@ export class AuthService {
    */
   public static isInOAuthCallback(): boolean {
     if (!isBrowser) return false;
-    
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const hasCodeVerifier = sessionStorage.getItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
-    
+
     return !!(code && hasCodeVerifier);
   }
 
@@ -54,22 +54,21 @@ export class AuthService {
     if (!isBrowser) {
       return null;
     }
-    
+
     try {
       const stored = sessionStorage.getItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
       if (!stored) {
         return null;
       }
-      
+
       const context = JSON.parse(stored) as OAuthContext;
-      
+
       // Validate required fields
-      if (!context.codeVerifier || !context.clientId || !context.redirectUri || 
-          !context.baseUrl || !context.orgName) {
+      if (!context.codeVerifier || !context.clientId || !context.redirectUri || !context.baseUrl || !context.orgName) {
         sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
         return null;
       }
-      
+
       return context;
     } catch (error) {
       sessionStorage.removeItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT);
@@ -104,7 +103,7 @@ export class AuthService {
       tenantName: context.tenantName,
       clientId: context.clientId,
       redirectUri: context.redirectUri,
-      scope: context.scope
+      scope: context.scope,
     };
   }
 
@@ -127,12 +126,12 @@ export class AuthService {
     if (!isBrowser) {
       return false;
     }
-    
+
     // First priority: Complete OAuth callback if we detect it
     if (AuthService.isInOAuthCallback()) {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
-      
+
       if (!code) {
         throw new Error('Authorization code missing in OAuth callback');
       }
@@ -140,24 +139,26 @@ export class AuthService {
       if (this.tokenManager.hasValidToken()) {
         return true;
       }
-      
+
       // Ensure we have OAuth config for callback completion
       if (!hasOAuthConfig(config)) {
-        throw new Error('OAuth configuration incomplete: clientId, redirectUri, and scope are required for OAuth callback');
+        throw new Error(
+          'OAuth configuration incomplete: clientId, redirectUri, and scope are required for OAuth callback',
+        );
       }
-      
+
       const result = await this._authenticateWithOAuth(config.clientId, config.redirectUri, config.scope);
       return result;
     }
-    
+
     // Secondly: Try to load existing valid token from storage
     const loadedFromStorage = this.tokenManager.loadFromStorage();
-    
+
     // If we have a valid token from storage, return true
     if (loadedFromStorage && this.tokenManager.hasValidToken()) {
       return true;
     }
-    
+
     // Start new OAuth flow if config has OAuth fields
     if (hasOAuthConfig(config)) {
       return await this._authenticateWithOAuth(config.clientId, config.redirectUri, config.scope);
@@ -165,7 +166,6 @@ export class AuthService {
 
     return false;
   }
-  
 
   /**
    * Authenticate using OAuth flow
@@ -190,7 +190,7 @@ export class AuthService {
         sessionStorage.removeItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
         throw new Error('Authorization code missing in OAuth callback');
       }
-      
+
       // Validate the authorization code format before using it
       // OAuth authorization codes should be alphanumeric with some special characters
       const codePattern = /^[A-Za-z0-9\-._~+/]+=*$/;
@@ -199,7 +199,7 @@ export class AuthService {
         sessionStorage.removeItem(AUTH_STORAGE_KEYS.CODE_VERIFIER);
         throw new Error('Invalid authorization code format');
       }
-      
+
       // Authorization code is present and validated, so we can exchange it for a token.
       await this._handleOAuthCallback(code, clientId, redirectUri);
       return this.hasValidToken();
@@ -281,14 +281,10 @@ export class AuthService {
     } else {
       // In Node.js environment
       try {
-      const crypto = require('crypto');
-      return crypto.randomBytes(32)
-        .toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+        const crypto = require('crypto');
+        return crypto.randomBytes(32).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
       } catch {
-        throw new Error("crypto not available in browser")
+        throw new Error('crypto not available in browser');
       }
     }
   }
@@ -305,15 +301,16 @@ export class AuthService {
     } else {
       // In Node.js environment
       try {
-      const crypto = require('crypto');
-      return crypto.createHash('sha256')
-        .update(codeVerifier)
-        .digest('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+        const crypto = require('crypto');
+        return crypto
+          .createHash('sha256')
+          .update(codeVerifier)
+          .digest('base64')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=/g, '');
       } catch {
-        throw new Error("crypto not available in browser")
+        throw new Error('crypto not available in browser');
       }
     }
   }
@@ -329,7 +326,7 @@ export class AuthService {
     state?: string;
   }): string {
     const orgName = this.config.orgName;
-    
+
     const queryParams = new URLSearchParams({
       response_type: 'code',
       client_id: params.clientId,
@@ -337,7 +334,7 @@ export class AuthService {
       code_challenge: params.codeChallenge,
       code_challenge_method: 'S256',
       scope: params.scope + ' offline_access',
-      state: params.state || this.generateCodeVerifier().slice(0, 16)
+      state: params.state || this.generateCodeVerifier().slice(0, 16),
     });
 
     return `${this.config.baseUrl}/${orgName}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
@@ -353,35 +350,35 @@ export class AuthService {
     codeVerifier: string;
   }): Promise<AuthToken> {
     const orgName = this.config.orgName;
-    
+
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: params.clientId,
       code: params.code,
       redirect_uri: params.redirectUri,
-      code_verifier: params.codeVerifier
+      code_verifier: params.codeVerifier,
     });
 
     const response = await fetch(`${this.config.baseUrl}/${orgName}/${IDENTITY_ENDPOINTS.TOKEN}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: body.toString()
+      body: body.toString(),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      console.error("OAuth error:", errorData);
+      console.error('OAuth error:', errorData);
       throw new Error(`Failed to get access token: ${JSON.stringify(errorData)}`);
     }
 
-    const token = await response.json() as AuthToken;
+    const token = (await response.json()) as AuthToken;
     this.updateToken({
       token: token.access_token,
       type: 'oauth',
       expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : undefined,
-      refreshToken: token.refresh_token
+      refreshToken: token.refresh_token,
     });
 
     return token;
@@ -392,10 +389,7 @@ export class AuthService {
    */
   private _base64URLEncode(buffer: Uint8Array): string {
     const base64 = btoa(String.fromCharCode(...buffer));
-    return base64
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 
   private async _initiateOAuthFlow(clientId: string, redirectUri: string, scope: string): Promise<void> {
@@ -410,9 +404,9 @@ export class AuthService {
       baseUrl: this.config.baseUrl,
       orgName: this.config.orgName,
       tenantName: this.config.tenantName,
-      scope
+      scope,
     };
-    
+
     sessionStorage.setItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, JSON.stringify(oauthContext));
     sessionStorage.setItem(AUTH_STORAGE_KEYS.CODE_VERIFIER, codeVerifier);
 
@@ -420,9 +414,9 @@ export class AuthService {
       clientId,
       redirectUri,
       codeChallenge,
-      scope
+      scope,
     });
-    
+
     window.location.href = authUrl;
   }
 
@@ -436,7 +430,7 @@ export class AuthService {
       clientId,
       redirectUri,
       code,
-      codeVerifier
+      codeVerifier,
     });
 
     // Clear OAuth context and code verifier after successful token exchange
@@ -448,4 +442,4 @@ export class AuthService {
     url.searchParams.delete('state');
     window.history.replaceState({}, '', url.toString());
   }
-} 
+}

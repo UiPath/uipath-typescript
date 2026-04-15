@@ -5,7 +5,7 @@ import { HTTP_METHODS } from '../constants/common';
 /**
  * Type for HTTP methods derived from HTTP_METHODS constant
  */
-export type HttpMethodType = typeof HTTP_METHODS[keyof typeof HTTP_METHODS];
+export type HttpMethodType = (typeof HTTP_METHODS)[keyof typeof HTTP_METHODS];
 
 /**
  * Cursor data structure for tracking pagination state
@@ -13,13 +13,13 @@ export type HttpMethodType = typeof HTTP_METHODS[keyof typeof HTTP_METHODS];
 export interface CursorData {
   /** The type of pagination used by this service */
   type: PaginationType;
-  
+
   /** For OData and Entity pagination */
   pageNumber?: number;
-  
+
   /** For token-based pagination */
   continuationToken?: string;
-  
+
   /** Common parameters */
   pageSize?: number;
 }
@@ -30,13 +30,13 @@ export interface CursorData {
 export type InternalPaginationOptions = {
   /** Size of the page to fetch (items per page) */
   pageSize?: number;
-  
+
   /** Current page number (1-based) */
   pageNumber?: number;
-  
+
   /** Token for continuing pagination */
   continuationToken?: string;
-  
+
   /** Pagination type */
   type?: any; // Will be properly typed in the pagination service
 } & PaginationMethodUnion;
@@ -46,7 +46,7 @@ export type InternalPaginationOptions = {
  */
 export enum PaginationType {
   OFFSET = 'offset',
-  TOKEN = 'token'
+  TOKEN = 'token',
 }
 
 /**
@@ -59,7 +59,7 @@ export interface PaginationServiceAccess {
     method: string,
     path: string,
     paginationOptions: PaginationOptions,
-    options: RequestWithPaginationOptions
+    options: RequestWithPaginationOptions,
   ): Promise<PaginatedResponse<T>>;
 }
 
@@ -180,7 +180,7 @@ export interface PaginationConfig {
   itemsField?: string;
   totalCountField?: string;
   continuationTokenField?: string;
-  
+
   /** Parameter names for different pagination types */
   paginationParams?: {
     /** Parameter name for page size */
@@ -223,4 +223,4 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
 
   /** HTTP method to use for the request (default: 'GET') */
   method?: HttpMethodType;
-} 
+}

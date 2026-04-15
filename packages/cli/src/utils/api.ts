@@ -19,12 +19,12 @@ export function createHeaders(options: HeaderOptions = {}): Record<string, strin
     bearerToken,
     tenantId,
     folderKey,
-    additionalHeaders = {}
+    additionalHeaders = {},
   } = options;
 
   const headers: Record<string, string> = {
     'Content-Type': contentType,
-    ...additionalHeaders
+    ...additionalHeaders,
   };
 
   if (bearerToken) {
@@ -42,11 +42,7 @@ export function createHeaders(options: HeaderOptions = {}): Record<string, strin
   return headers;
 }
 
-export function buildAppUrl(
-  baseUrl: string,
-  orgName: string,
-  routingName: string
-): string {
+export function buildAppUrl(baseUrl: string, orgName: string, routingName: string): string {
   // Extract environment from baseUrl (e.g., "staging" from "https://staging.uipath.com/")
   // Remove protocol (http:// or https://) and trailing slash
   const urlWithoutProtocol = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');

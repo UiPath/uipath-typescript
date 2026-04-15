@@ -3,24 +3,21 @@
  * Contains IDs, primitives, and utility types used across conversation types.
  */
 
-
 /**
  * Identifies the origin of a message in the conversation.
  */
 export enum MessageRole {
   System = 'system',
   User = 'user',
-  Assistant = 'assistant'
+  Assistant = 'assistant',
 }
-
 
 /**
  * Identifies the type of an interrupt.
  */
 export enum InterruptType {
-  ToolCallConfirmation = 'uipath_cas_tool_call_confirmation'
+  ToolCallConfirmation = 'uipath_cas_tool_call_confirmation',
 }
-
 
 /**
  * Base interface for citation sources.
@@ -47,7 +44,6 @@ export interface CitationSourceUrl extends CitationSourceBase {
   url: string;
 }
 
-
 /**
  * Used when the citation references media, such as a PDF document.
  */
@@ -65,7 +61,6 @@ export interface CitationSourceMedia extends CitationSourceBase {
  * Repeated citation sources within a content part are identified by the same title and number.
  */
 export type CitationSource = CitationSourceUrl | CitationSourceMedia;
-
 
 /**
  * JSON compatible primitive type.
@@ -109,8 +104,8 @@ export type MakeRequired<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K
 export type Simplify<T> = T extends any[] | Date
   ? T
   : {
-    [K in keyof T]: T[K];
-  } & {};
+      [K in keyof T]: T[K];
+    } & {};
 
 /**
  * Inline value - used when a value is small enough to be returned inline with an API result.
@@ -143,4 +138,3 @@ export type ToolCallInputValue = JSONObject;
  * Tool call output value type.
  */
 export type ToolCallOutputValue = JSONValue;
-

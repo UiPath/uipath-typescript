@@ -1,6 +1,6 @@
-import type { 
+import type {
   RawTaskCreateResponse,
-  RawTaskGetResponse, 
+  RawTaskGetResponse,
   TaskAssignmentOptions,
   TaskAssignmentResponse,
   TaskCompletionOptions,
@@ -10,7 +10,7 @@ import type {
   TaskGetByIdOptions,
   TaskCreateOptions,
   TaskGetUsersOptions,
-  UserLoginInfo
+  UserLoginInfo,
 } from './tasks.types';
 import { OperationResponse } from '../common/types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
@@ -34,7 +34,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 export interface TaskServiceModel {
   /**
    * Gets all tasks across folders with optional filtering
-   * 
+   *
    * @param options - Query options including optional folderId, asTaskAdmin flag and pagination options
    * @returns Promise resolving to either an array of tasks NonPaginatedResponse<TaskGetResponse> or a PaginatedResponse<TaskGetResponse> when pagination options are used.
    * {@link TaskGetResponse}
@@ -76,11 +76,9 @@ export interface TaskServiceModel {
    * ```
    */
   getAll<T extends TaskGetAllOptions = TaskGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<TaskGetResponse>
-      : NonPaginatedResponse<TaskGetResponse>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<TaskGetResponse> : NonPaginatedResponse<TaskGetResponse>
   >;
 
   /**
@@ -109,7 +107,7 @@ export interface TaskServiceModel {
 
   /**
    * Creates a new task
-   * 
+   *
    * @param options - The task to be created
    * @param folderId - Required folder ID
    * @returns Promise resolving to the created task
@@ -127,7 +125,7 @@ export interface TaskServiceModel {
 
   /**
    * Assigns tasks to users
-   * 
+   *
    * @param options - Single task assignment or array of task assignments
    * @returns Promise resolving to array of task assignment results
    * {@link TaskAssignmentResponse}
@@ -158,11 +156,13 @@ export interface TaskServiceModel {
    * ]);
    * ```
    */
-  assign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
-  
+  assign(
+    options: TaskAssignmentOptions | TaskAssignmentOptions[],
+  ): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
+
   /**
    * Reassigns tasks to new users
-   * 
+   *
    * @param options - Single task assignment or array of task assignments
    * @returns Promise resolving to array of task assignment results
    * {@link TaskAssignmentResponse}
@@ -193,11 +193,13 @@ export interface TaskServiceModel {
    * ]);
    * ```
    */
-  reassign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
-  
+  reassign(
+    options: TaskAssignmentOptions | TaskAssignmentOptions[],
+  ): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
+
   /**
    * Unassigns tasks (removes current assignees)
-   * 
+   *
    * @param taskId - Single task ID or array of task IDs to unassign
    * @returns Promise resolving to array of task assignment results
    * {@link TaskAssignmentResponse}
@@ -215,7 +217,7 @@ export interface TaskServiceModel {
    * ```
    */
   unassign(taskId: number | number[]): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>>;
-  
+
   /**
    * Completes a task with the specified type and data
    *
@@ -240,19 +242,16 @@ export interface TaskServiceModel {
    * }, <folderId>); // folderId is required
    * ```
    */
-  complete(
-    options: TaskCompletionOptions,
-    folderId: number
-  ): Promise<OperationResponse<TaskCompletionOptions>>;
+  complete(options: TaskCompletionOptions, folderId: number): Promise<OperationResponse<TaskCompletionOptions>>;
 
   /**
    * Gets users in the given folder who have Tasks.View and Tasks.Edit permissions
    * Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided,
    * or a PaginatedResponse when any pagination parameter is provided
-   * 
+   *
    * @param folderId - The folder ID to get users from
    * @param options - Optional query and pagination parameters
-   * @returns Promise resolving to either an array of users NonPaginatedResponse<UserLoginInfo> or a PaginatedResponse<UserLoginInfo> when pagination options are used. 
+   * @returns Promise resolving to either an array of users NonPaginatedResponse<UserLoginInfo> or a PaginatedResponse<UserLoginInfo> when pagination options are used.
    * {@link UserLoginInfo}
    * @example
    * ```typescript
@@ -266,11 +265,9 @@ export interface TaskServiceModel {
    */
   getUsers<T extends TaskGetUsersOptions = TaskGetUsersOptions>(
     folderId: number,
-    options?: T
+    options?: T,
   ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<UserLoginInfo>
-      : NonPaginatedResponse<UserLoginInfo>
+    T extends HasPaginationOptions<T> ? PaginatedResponse<UserLoginInfo> : NonPaginatedResponse<UserLoginInfo>
   >;
 }
 
@@ -278,7 +275,7 @@ export interface TaskServiceModel {
 export interface TaskMethods {
   /**
    * Assigns this task to a user or users
-   * 
+   *
    * @param options - Assignment options (requires at least one of: userId, userNameOrEmail)
    * @returns Promise resolving to task assignment results
    */
@@ -286,7 +283,7 @@ export interface TaskMethods {
 
   /**
    * Reassigns this task to a new user
-   * 
+   *
    * @param options - Assignment options (requires at least one of: userId, userNameOrEmail)
    * @returns Promise resolving to task assignment results
    */
@@ -294,14 +291,14 @@ export interface TaskMethods {
 
   /**
    * Unassigns this task (removes current assignee)
-   * 
+   *
    * @returns Promise resolving to task assignment results
    */
   unassign(): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>>;
 
   /**
    * Completes this task with optional data and action
-   * 
+   *
    * @param options - Completion options
    * @returns Promise resolving to completion result
    */
@@ -314,36 +311,45 @@ export type TaskCreateResponse = RawTaskCreateResponse & TaskMethods;
 
 /**
  * Creates methods for a task
- * 
+ *
  * @param taskData - The task data (response from API)
  * @param service - The task service instance
  * @returns Object containing task methods
  */
-function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse, service: TaskServiceModel): TaskMethods {
+function createTaskMethods(
+  taskData: RawTaskGetResponse | RawTaskCreateResponse,
+  service: TaskServiceModel,
+): TaskMethods {
   return {
-    async assign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
+    async assign(
+      options: TaskAssignOptions,
+    ): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
 
-      const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
-        ? { taskId: taskData.id, userId: options.userId }
-        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
+      const assignmentOptions: TaskAssignmentOptions =
+        'userId' in options && options.userId !== undefined
+          ? { taskId: taskData.id, userId: options.userId }
+          : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
 
       return service.assign(assignmentOptions);
     },
-    
-    async reassign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
+
+    async reassign(
+      options: TaskAssignOptions,
+    ): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
 
-      const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
-        ? { taskId: taskData.id, userId: options.userId }
-        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
+      const assignmentOptions: TaskAssignmentOptions =
+        'userId' in options && options.userId !== undefined
+          ? { taskId: taskData.id, userId: options.userId }
+          : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
 
       return service.reassign(assignmentOptions);
     },
 
     async unassign(): Promise<OperationResponse<{ taskId: number }[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
-      
+
       return service.unassign(taskData.id);
     },
 
@@ -351,31 +357,31 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
       if (!taskData.id) throw new Error('Task ID is undefined');
       const folderId = taskData.folderId;
       if (!folderId) throw new Error('Folder ID is required');
-      
+
       return service.complete(
         {
           type: options.type,
           taskId: taskData.id,
           data: options.data,
-          action: options.action
+          action: options.action,
         } as TaskCompletionOptions,
-        folderId
+        folderId,
       );
-    }
+    },
   };
 }
 
 /**
  * Creates an actionable task by combining API task data with operational methods.
- * 
+ *
  * @param taskData - The task data from API
  * @param service - The task service instance
  * @returns A task object with added methods
  */
 export function createTaskWithMethods(
-  taskData: RawTaskGetResponse | RawTaskCreateResponse, 
-  service: TaskServiceModel
+  taskData: RawTaskGetResponse | RawTaskCreateResponse,
+  service: TaskServiceModel,
 ): TaskGetResponse | TaskCreateResponse {
   const methods = createTaskMethods(taskData, service);
   return Object.assign({}, taskData, methods) as TaskGetResponse | TaskCreateResponse;
-} 
+}

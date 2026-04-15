@@ -3,7 +3,7 @@ import type {
   MetaEvent,
   ToolCallEndEvent,
   ToolCallEvent,
-  ToolCallStartEvent
+  ToolCallStartEvent,
 } from '@/models/conversational-agent';
 
 import { ConversationEventHelperBase } from './conversation-event-helper-base';
@@ -11,7 +11,7 @@ import {
   ConversationEventValidationError,
   type ErrorEndEventOptions,
   type ErrorStartEventOptions,
-  type ToolCallEndHandler
+  type ToolCallEndHandler,
 } from './conversation-event-helper-common';
 import type { SessionEventHelper, SessionEventHelperImpl } from './session-event-helper';
 
@@ -19,11 +19,7 @@ import type { SessionEventHelper, SessionEventHelperImpl } from './session-event
  * Helper for managing async tool call events within a conversation.
  * Handles tool call lifecycle with start/end events at the conversation level.
  */
-export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBase<
-  ToolCallStartEvent,
-  ToolCallEvent
-> {
-
+export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBase<ToolCallStartEvent, ToolCallEvent> {
   protected readonly _endHandlers = new Array<ToolCallEndHandler>();
 
   constructor(
@@ -34,7 +30,7 @@ export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBa
      * ToolCallStartEvent used to initialize the ToolCallEventHelper. Will be undefined if some other sub-event was
      * received before the start event. See also `startEvent`.
      */
-    public readonly startEventMaybe: ToolCallStartEvent | undefined
+    public readonly startEventMaybe: ToolCallStartEvent | undefined,
   ) {
     super(session.manager);
     this.addStartEventTimestamp(this.startEventMaybe);
@@ -45,7 +41,8 @@ export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBa
    * some other sub-event was received before the start event, which shouldn't happen under normal circumstances.
    */
   public get startEvent(): MakeRequired<ToolCallStartEvent, 'timestamp'> {
-    if (!this.startEventMaybe) throw new ConversationEventValidationError(`Async Tool call ${this.toolCallId} has no start event.`);
+    if (!this.startEventMaybe)
+      throw new ConversationEventValidationError(`Async Tool call ${this.toolCallId} has no start event.`);
     return this.startEventMaybe as MakeRequired<ToolCallStartEvent, 'timestamp'>; // timestamp is set in the constructor
   }
 
@@ -54,7 +51,7 @@ export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBa
    */
   public emit(toolCallEvent: Omit<ToolCallEvent, 'toolCallId'>) {
     this.session.emit({
-      asyncToolCall: { toolCallId: this.toolCallId, ...toolCallEvent }
+      asyncToolCall: { toolCallId: this.toolCallId, ...toolCallEvent },
     });
   }
 
@@ -107,8 +104,8 @@ export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBa
     this.emit({
       toolCallError: {
         errorId,
-        startError
-      }
+        startError,
+      },
     });
     this.errors.set(errorId, startError);
   }
@@ -122,8 +119,8 @@ export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBa
     this.emit({
       toolCallError: {
         errorId,
-        endError
-      }
+        endError,
+      },
     });
     this.errors.delete(errorId);
   }
@@ -131,11 +128,9 @@ export abstract class AsyncToolCallEventHelper extends ConversationEventHelperBa
   public toString() {
     return `AsyncToolCallEventHelper(${this.toolCallId})`;
   }
-
 }
 
 export class AsyncToolCallEventHelperImpl extends AsyncToolCallEventHelper {
-
   /**
    * Dispatches incoming tool call events to registered handlers.
    */
@@ -149,7 +144,7 @@ export class AsyncToolCallEventHelperImpl extends AsyncToolCallEventHelper {
 
     if (toolCallEvent.metaEvent) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._metaEventHandlers.forEach(cb => cb(toolCallEvent.metaEvent!));
+      this._metaEventHandlers.forEach((cb) => cb(toolCallEvent.metaEvent!));
     }
 
     if (toolCallEvent.toolCallError?.startError) {
@@ -163,10 +158,9 @@ export class AsyncToolCallEventHelperImpl extends AsyncToolCallEventHelper {
     if (toolCallEvent.endToolCall) {
       this.setEnded();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this._endHandlers.forEach(cb => cb(toolCallEvent.endToolCall!));
+      this._endHandlers.forEach((cb) => cb(toolCallEvent.endToolCall!));
       this.delete();
     }
-
   }
 
   protected getParentErrorScope(): boolean {
@@ -184,5 +178,4 @@ export class AsyncToolCallEventHelperImpl extends AsyncToolCallEventHelper {
   protected getSession() {
     return this.session;
   }
-
 }

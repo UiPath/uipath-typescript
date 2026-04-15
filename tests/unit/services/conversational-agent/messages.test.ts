@@ -42,7 +42,7 @@ describe('MessageService Unit Tests', () => {
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
       );
 
       expect(result).toBeDefined();
@@ -55,9 +55,9 @@ describe('MessageService Unit Tests', () => {
         MESSAGE_ENDPOINTS.GET(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
         ),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -68,7 +68,7 @@ describe('MessageService Unit Tests', () => {
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
       );
 
       expect(result.contentParts).toHaveLength(1);
@@ -96,15 +96,15 @@ describe('MessageService Unit Tests', () => {
             citations: [],
             createdTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
             updatedTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
-          }
-        ]
+          },
+        ],
       });
       mockApiClient.get.mockResolvedValue(mockMessage);
 
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
       );
 
       const contentPart = result.contentParts![0];
@@ -119,7 +119,7 @@ describe('MessageService Unit Tests', () => {
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.ASSISTANT_MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.ASSISTANT_MESSAGE_ID,
       );
 
       expect(result.role).toBe('assistant');
@@ -138,7 +138,7 @@ describe('MessageService Unit Tests', () => {
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.ASSISTANT_MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.ASSISTANT_MESSAGE_ID,
       );
 
       expect(result.interrupts).toHaveLength(1);
@@ -154,7 +154,7 @@ describe('MessageService Unit Tests', () => {
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.ASSISTANT_MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.ASSISTANT_MESSAGE_ID,
       );
 
       const contentPart = result.contentParts![0];
@@ -172,7 +172,7 @@ describe('MessageService Unit Tests', () => {
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
       );
 
       expect(result.contentParts).toBeUndefined();
@@ -181,14 +181,14 @@ describe('MessageService Unit Tests', () => {
     it('should handle message with empty tool calls and interrupts', async () => {
       const mockMessage = createMockRawMessage({
         toolCalls: [],
-        interrupts: []
+        interrupts: [],
       });
       mockApiClient.get.mockResolvedValue(mockMessage);
 
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
       );
 
       expect(result.toolCalls).toHaveLength(0);
@@ -198,14 +198,14 @@ describe('MessageService Unit Tests', () => {
     it('should handle message with null tool calls and interrupts', async () => {
       const mockMessage = createMockRawMessage({
         toolCalls: null,
-        interrupts: null
+        interrupts: null,
       });
       mockApiClient.get.mockResolvedValue(mockMessage);
 
       const result = await messages.getById(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
       );
 
       // null should be coerced to empty arrays by the transformer
@@ -221,8 +221,8 @@ describe('MessageService Unit Tests', () => {
         messages.getById(
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID
-        )
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
+        ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
@@ -236,7 +236,7 @@ describe('MessageService Unit Tests', () => {
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID,
       );
 
       expect(result).toBeDefined();
@@ -256,16 +256,16 @@ describe('MessageService Unit Tests', () => {
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID,
         ),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
     it('should get content part with external data', async () => {
       const mockContentPart = createMockRawContentPart({
         mimeType: 'application/pdf',
-        data: { uri: 'https://example.com/document.pdf', byteCount: 54321 }
+        data: { uri: 'https://example.com/document.pdf', byteCount: 54321 },
       });
       mockApiClient.get.mockResolvedValue(mockContentPart);
 
@@ -273,7 +273,7 @@ describe('MessageService Unit Tests', () => {
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID,
       );
 
       expect(result.isDataInline).toBe(false);
@@ -287,7 +287,7 @@ describe('MessageService Unit Tests', () => {
       global.fetch = mockFetch;
 
       const mockContentPart = createMockRawContentPart({
-        data: { uri: 'https://example.com/content.txt' }
+        data: { uri: 'https://example.com/content.txt' },
       });
       mockApiClient.get.mockResolvedValue(mockContentPart);
 
@@ -295,7 +295,7 @@ describe('MessageService Unit Tests', () => {
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID,
       );
 
       const data = await result.getData();
@@ -313,8 +313,8 @@ describe('MessageService Unit Tests', () => {
             sources: [{ title: 'Doc', number: 1, url: 'https://example.com/doc' }],
             createdTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
             updatedTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
-          }
-        ]
+          },
+        ],
       });
       mockApiClient.get.mockResolvedValue(mockContentPart);
 
@@ -322,7 +322,7 @@ describe('MessageService Unit Tests', () => {
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID,
       );
 
       expect(result.citations).toHaveLength(1);
@@ -334,7 +334,7 @@ describe('MessageService Unit Tests', () => {
       const mockContentPart = createMockRawContentPart({
         isTranscript: true,
         isIncomplete: false,
-        name: 'transcript.txt'
+        name: 'transcript.txt',
       });
       mockApiClient.get.mockResolvedValue(mockContentPart);
 
@@ -342,7 +342,7 @@ describe('MessageService Unit Tests', () => {
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
-        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID,
       );
 
       expect(result.isTranscript).toBe(true);
@@ -359,8 +359,8 @@ describe('MessageService Unit Tests', () => {
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID,
           CONVERSATIONAL_AGENT_TEST_CONSTANTS.MESSAGE_ID,
-          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID
-        )
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONTENT_PART_ID,
+        ),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

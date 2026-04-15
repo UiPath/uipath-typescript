@@ -3,7 +3,6 @@
  * These types are used internally by the SDK and should not be exposed to users
  */
 
-
 /**
  * Raw Case App Overview from API response
  */

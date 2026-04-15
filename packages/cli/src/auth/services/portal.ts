@@ -40,21 +40,20 @@ interface TenantsAndOrganizationResponse {
   organization: Organization;
 }
 
-
 export const getTenantsAndOrganization = async (
   accessToken: string,
-  domain: string
+  domain: string,
 ): Promise<TenantsAndOrganizationResponse> => {
   // Parse JWT to get prt_id
   const tokenData = parseJWT(accessToken);
   const prtId = tokenData.prtId || tokenData.organizationId;
-  
+
   if (!prtId) {
     throw new Error('No organization ID found in token');
   }
 
   const url = getPortalApiUrl(domain, prtId, AUTH_CONSTANTS.API_ENDPOINTS.TENANTS_AND_ORG);
-  
+
   const response = await fetch(url, {
     headers: createHeaders({ bearerToken: accessToken }),
   });
@@ -66,13 +65,11 @@ export const getTenantsAndOrganization = async (
     throw new Error(`Failed to fetch tenants and organization: ${response.statusText}`);
   }
 
-  const data = await response.json() as TenantsAndOrganizationResponse;
+  const data = (await response.json()) as TenantsAndOrganizationResponse;
   return data;
 };
 
-export const selectTenantInteractive = async (
-  data: TenantsAndOrganizationResponse,
-): Promise<SelectedTenant> => {
+export const selectTenantInteractive = async (data: TenantsAndOrganizationResponse): Promise<SelectedTenant> => {
   if (!data.organization) {
     throw new Error('No organization found');
   }
@@ -93,14 +90,14 @@ export const selectTenantInteractive = async (
         type: 'list',
         name: 'tenantId',
         message: 'Select a tenant',
-        choices: data.tenants.map(tenant => ({
+        choices: data.tenants.map((tenant) => ({
           name: tenant.displayName || tenant.name,
           value: tenant.id,
         })),
       },
     ]);
 
-    selectedTenant = data.tenants.find(t => t.id === tenantId) || data.tenants[0];
+    selectedTenant = data.tenants.find((t) => t.id === tenantId) || data.tenants[0];
   }
 
   return {

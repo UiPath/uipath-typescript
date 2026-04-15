@@ -15,7 +15,7 @@ import type {
   ConversationCreateOptions,
   ConversationUpdateOptions,
   ConversationAttachmentUploadResponse,
-  ConversationAttachmentCreateResponse
+  ConversationAttachmentCreateResponse,
 } from './conversations.types';
 import type { ExchangeServiceModel, ConversationExchangeServiceModel } from './exchanges.models';
 import type { ExchangeGetByIdOptions, CreateFeedbackOptions } from './exchanges.types';
@@ -139,7 +139,7 @@ export interface ConversationServiceModel {
    * ```
    */
   getAll<T extends ConversationGetAllOptions = ConversationGetAllOptions>(
-    options?: T
+    options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<ConversationGetResponse>
@@ -188,10 +188,7 @@ export interface ConversationServiceModel {
    * });
    * ```
    */
-  updateById(
-    id: string,
-    options: ConversationUpdateOptions
-  ): Promise<ConversationUpdateResponse>;
+  updateById(id: string, options: ConversationUpdateOptions): Promise<ConversationUpdateResponse>;
 
   /**
    * Deletes a conversation by ID
@@ -254,7 +251,6 @@ export interface ConversationServiceModel {
    * ```
    */
   getAttachmentUploadUri(conversationId: string, fileName: string): Promise<ConversationAttachmentCreateResponse>;
-
 
   // ==================== Real-time Event Handling ====================
 
@@ -492,7 +488,7 @@ function createConversationMethods(
   conversationData: RawConversationGetResponse,
   service: ConversationServiceModel,
   sessionMethods?: ConversationSessionMethods,
-  exchangeService?: ExchangeServiceModel
+  exchangeService?: ExchangeServiceModel,
 ): ConversationMethods {
   return {
     exchanges: {
@@ -510,7 +506,7 @@ function createConversationMethods(
         if (!conversationData.id) throw new Error('Conversation ID is undefined');
         if (!exchangeService) throw new Error('Exchange methods are not available.');
         return exchangeService.createFeedback(conversationData.id, exchangeId, options);
-      }
+      },
     },
 
     async update(options: ConversationUpdateOptions): Promise<ConversationUpdateResponse> {
@@ -528,7 +524,9 @@ function createConversationMethods(
     startSession(options?: ConversationSessionOptions): SessionStream {
       if (!conversationData.id) throw new Error('Conversation ID is undefined');
       if (!sessionMethods) {
-        throw new Error('Session methods are not available. Use ConversationService to create conversations with session support.');
+        throw new Error(
+          'Session methods are not available. Use ConversationService to create conversations with session support.',
+        );
       }
 
       return sessionMethods.startSession(conversationData.id, options);
@@ -537,7 +535,9 @@ function createConversationMethods(
     getSession(): SessionStream | undefined {
       if (!conversationData.id) throw new Error('Conversation ID is undefined');
       if (!sessionMethods) {
-        throw new Error('Session methods are not available. Use ConversationService to create conversations with session support.');
+        throw new Error(
+          'Session methods are not available. Use ConversationService to create conversations with session support.',
+        );
       }
 
       return sessionMethods.getSession(conversationData.id);
@@ -546,7 +546,9 @@ function createConversationMethods(
     endSession(): void {
       if (!conversationData.id) throw new Error('Conversation ID is undefined');
       if (!sessionMethods) {
-        throw new Error('Session methods are not available. Use ConversationService to create conversations with session support.');
+        throw new Error(
+          'Session methods are not available. Use ConversationService to create conversations with session support.',
+        );
       }
 
       sessionMethods.endSession(conversationData.id);
@@ -555,7 +557,7 @@ function createConversationMethods(
     async uploadAttachment(file: File): Promise<ConversationAttachmentUploadResponse> {
       if (!conversationData.id) throw new Error('Conversation ID is undefined');
       return service.uploadAttachment(conversationData.id, file);
-    }
+    },
   };
 }
 
@@ -572,7 +574,7 @@ export function createConversationWithMethods(
   conversationData: RawConversationGetResponse,
   service: ConversationServiceModel,
   sessionMethods?: ConversationSessionMethods,
-  exchangeService?: ExchangeServiceModel
+  exchangeService?: ExchangeServiceModel,
 ): ConversationGetResponse {
   const methods = createConversationMethods(conversationData, service, sessionMethods, exchangeService);
   return Object.assign({}, conversationData, methods) as ConversationGetResponse;

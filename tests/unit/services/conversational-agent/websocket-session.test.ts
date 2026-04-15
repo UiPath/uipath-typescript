@@ -13,20 +13,20 @@ import { TEST_CONSTANTS } from '@tests/utils/mocks';
 let mockSocketInstance: any;
 
 vi.mock('socket.io-client', () => ({
-  io: vi.fn(() => mockSocketInstance)
+  io: vi.fn(() => mockSocketInstance),
 }));
 
 // ===== TEST SETUP =====
 const mockConfig = {
   baseUrl: TEST_CONSTANTS.BASE_URL,
   orgName: TEST_CONSTANTS.ORGANIZATION_ID,
-  tenantName: TEST_CONSTANTS.TENANT_ID
+  tenantName: TEST_CONSTANTS.TENANT_ID,
 };
 
 const mockContext = {};
 
 const mockTokenManager = {
-  getValidToken: vi.fn().mockResolvedValue('test-token')
+  getValidToken: vi.fn().mockResolvedValue('test-token'),
 };
 
 let mockInstance: any;
@@ -45,14 +45,14 @@ describe('WebSocketSession Unit Tests', () => {
       off: vi.fn(),
       emit: vi.fn(),
       onAny: vi.fn(),
-      onAnyOutgoing: vi.fn()
+      onAnyOutgoing: vi.fn(),
     };
 
     mockInstance = {};
     SDKInternalsRegistry.set(mockInstance, {
       config: mockConfig as any,
       context: mockContext as any,
-      tokenManager: mockTokenManager as any
+      tokenManager: mockTokenManager as any,
     });
   });
 
@@ -72,7 +72,7 @@ describe('WebSocketSession Unit Tests', () => {
 
     it('should use WEBSOCKET_LOGGER_PREFIX and merge logLevel from options', () => {
       const session = new WebSocketSession(mockInstance, {
-        logLevel: LogLevel.Debug
+        logLevel: LogLevel.Debug,
       });
 
       expect(session).toBeInstanceOf(WebSocketSession);
@@ -93,13 +93,13 @@ describe('WebSocketSession Unit Tests', () => {
 
       expect(options.query).toEqual({
         [WEBSOCKET_QUERY_PARAMS.ORGANIZATION_ID]: TEST_CONSTANTS.ORGANIZATION_ID,
-        [WEBSOCKET_QUERY_PARAMS.TENANT_ID]: TEST_CONSTANTS.TENANT_ID
+        [WEBSOCKET_QUERY_PARAMS.TENANT_ID]: TEST_CONSTANTS.TENANT_ID,
       });
     });
 
     it('should include externalUserId when provided in options', () => {
       const session = new WebSocketSession(mockInstance, {
-        externalUserId: 'user-123'
+        externalUserId: 'user-123',
       });
 
       session.connect();
@@ -111,20 +111,20 @@ describe('WebSocketSession Unit Tests', () => {
       expect(options.query).toEqual({
         [WEBSOCKET_QUERY_PARAMS.ORGANIZATION_ID]: TEST_CONSTANTS.ORGANIZATION_ID,
         [WEBSOCKET_QUERY_PARAMS.TENANT_ID]: TEST_CONSTANTS.TENANT_ID,
-        [WEBSOCKET_QUERY_PARAMS.EXTERNAL_USER_ID]: 'user-123'
+        [WEBSOCKET_QUERY_PARAMS.EXTERNAL_USER_ID]: 'user-123',
       });
     });
 
     it('should omit empty query params when orgName and tenantName are not set', () => {
       const emptyConfig = {
-        baseUrl: TEST_CONSTANTS.BASE_URL
+        baseUrl: TEST_CONSTANTS.BASE_URL,
       };
 
       const emptyInstance = {};
       SDKInternalsRegistry.set(emptyInstance, {
         config: emptyConfig as any,
         context: mockContext as any,
-        tokenManager: mockTokenManager as any
+        tokenManager: mockTokenManager as any,
       });
 
       const session = new WebSocketSession(emptyInstance as any);

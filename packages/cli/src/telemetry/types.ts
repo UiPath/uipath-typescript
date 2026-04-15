@@ -3,10 +3,10 @@
  */
 
 export interface TelemetryAttributes {
-    [key: string]: string | number | boolean;
+  [key: string]: string | number | boolean;
 }
 
 export interface TrackOptions {
-    condition?: boolean | ((...args: any[]) => boolean);
-    attributes?: TelemetryAttributes;
+  condition?: boolean | ((...args: any[]) => boolean);
+  attributes?: TelemetryAttributes;
 }
