@@ -52,16 +52,20 @@ if TYPE_CHECKING:
 
 
 _PREREQUISITES_PREFIX = "Prerequisites: Initialize the SDK first"
+_PARAM_HEADINGS = ("Parameters", "Type Parameters")
 
 
-def preprocess(soup: BeautifulSoup, output: str) -> None:
+def preprocess(soup: BeautifulSoup, _output: str) -> None:
     """Entry point called by mkdocs-llmstxt for each page included in any output.
 
-    `output` is the path of the per-page markdown file being generated
-    (e.g. `.../AssetServiceModel/index.md`), NOT the aggregated llms*.txt
-    filename. The plugin calls this once per included page per llmstxt block;
-    we apply the same transformations to every page — the shrink is a
-    non-destructive win for both the coded-action-apps and the large output.
+    The plugin calls this once per included page per llmstxt block; we apply
+    the same transformations to every page — the shrink is non-destructive
+    and benefits both the coded-action-apps and the large llms-full-content
+    outputs.
+
+    The second parameter (the per-page markdown output path) is required by
+    the plugin's calling convention. We don't need it here — the underscore
+    prefix marks it intentionally unused.
     """
     _remove_hrs(soup)
     _collapse_nested_void_returns(soup)
@@ -120,37 +124,46 @@ def _collapse_param_tables(soup: BeautifulSoup) -> None:
         - `cursor?`: `string` — Pagination cursor from a previous response
     """
     for heading in soup.find_all("h4"):
-        label = _heading_text(heading)
-        if label not in ("Parameters", "Type Parameters"):
+        table = _find_param_table(heading)
+        if table is None:
             continue
-        table = heading.find_next_sibling()
-        if table is None or table.name != "table":
-            continue
-        tbody = table.find("tbody")
-        if tbody is None:
-            continue
-        rows = tbody.find_all("tr", recursive=False)
-        if not rows:
-            continue
-        ul = soup.new_tag("ul")
-        for row in rows:
-            cells = row.find_all(["td", "th"], recursive=False)
-            if len(cells) < 2:
-                continue
-            li = _render_param_row(soup, cells, kind=label)
-            if li is not None:
-                ul.append(li)
-        # Only replace if at least one row rendered successfully; otherwise
-        # leave the original table alone so nothing disappears silently.
+        kind = _heading_text(heading)
+        ul = _build_param_list(soup, table, kind)
+        # Skip replacement if no rows rendered — leaves the original table
+        # intact so malformed input never silently disappears.
         if ul.find("li") is not None:
             table.replace_with(ul)
+
+
+def _find_param_table(heading: Tag) -> Tag | None:
+    """Return the <table> sibling if `heading` introduces a Parameters or
+    Type Parameters table with a populated <tbody>; otherwise None."""
+    if _heading_text(heading) not in _PARAM_HEADINGS:
+        return None
+    table = heading.find_next_sibling()
+    if table is None or table.name != "table" or table.find("tbody") is None:
+        return None
+    return table
+
+
+def _build_param_list(soup: BeautifulSoup, table: Tag, kind: str) -> Tag:
+    """Build a <ul> bullet list with one <li> per row in `table`'s <tbody>.
+    Rows with fewer than two cells are skipped (defensive — shouldn't happen
+    in valid TypeDoc output)."""
+    ul = soup.new_tag("ul")
+    rows = table.find("tbody").find_all("tr", recursive=False)
+    for row in rows:
+        cells = row.find_all(["td", "th"], recursive=False)
+        if len(cells) >= 2:
+            ul.append(_render_param_row(soup, cells, kind=kind))
+    return ul
 
 
 def _render_param_row(
     soup: BeautifulSoup,
     cells: list[Tag],
     kind: str,
-) -> Tag | None:
+) -> Tag:
     """Render one parameter row as a single `<li>` element.
 
     Format B:
@@ -162,30 +175,45 @@ def _render_param_row(
     skipping the default when absent or identical to the type param.
     """
     li = soup.new_tag("li")
-
-    # Column 0 — parameter name or type parameter. Moving child nodes (rather
-    # than copying text) preserves inner <code>/<a> formatting without a
-    # re-parse step.
-    for child in list(cells[0].contents):
-        li.append(child)
-
+    # Column 0 — parameter name (or type parameter). Move children (rather than
+    # copy text) so inner <code>/<a> formatting is preserved.
+    _move_children(li, cells[0])
     if kind == "Type Parameters":
-        default_text = cells[1].get_text(strip=True)
-        param_text = cells[0].get_text(strip=True)
-        if default_text and default_text != "-" and default_text != param_text:
-            li.append(NavigableString(" = "))
-            for child in list(cells[1].contents):
-                li.append(child)
-    else:  # Parameters — three columns: name | type | description
-        li.append(NavigableString(": "))
-        for child in list(cells[1].contents):
-            li.append(child)
-        if len(cells) >= 3 and cells[2].get_text(strip=True):
-            li.append(NavigableString(" — "))
-            for child in list(cells[2].contents):
-                li.append(child)
-
+        _append_type_parameter_default(li, cells)
+    else:
+        _append_parameter_type_and_description(li, cells)
     return li
+
+
+def _append_type_parameter_default(li: Tag, cells: list[Tag]) -> None:
+    """Append `= default` for a Type Parameters row, skipping the default
+    when it's absent, a dash placeholder, or identical to the type param."""
+    default_text = cells[1].get_text(strip=True)
+    param_text = cells[0].get_text(strip=True)
+    if default_text and default_text != "-" and default_text != param_text:
+        li.append(NavigableString(" = "))
+        _move_children(li, cells[1])
+
+
+def _append_parameter_type_and_description(li: Tag, cells: list[Tag]) -> None:
+    """Append `: type` and optional ` — description` for a Parameters row."""
+    li.append(NavigableString(": "))
+    _move_children(li, cells[1])
+    if len(cells) >= 3 and cells[2].get_text(strip=True):
+        li.append(NavigableString(" — "))
+        _move_children(li, cells[2])
+
+
+def _move_children(destination: Tag, source: Tag) -> None:
+    """Move all child nodes from `source` into `destination`, preserving order.
+
+    BeautifulSoup's `.append()` re-parents a node (removes it from the source's
+    `.contents`). Popping from `source.contents[0]` in a while loop keeps the
+    iteration correct despite that mutation — we repeatedly grab the current
+    first child until there are none left.
+    """
+    while source.contents:
+        destination.append(source.contents[0])
 
 
 def _strip_prerequisites_paragraphs(soup: BeautifulSoup) -> None:
@@ -219,9 +247,8 @@ def _unwrap_type_cross_reference_links(soup: BeautifulSoup) -> None:
     <code> tag.
     """
     for a in soup.find_all("a"):
-        if not _has_single_code_child(a):
-            continue
-        a.unwrap()
+        if _has_single_code_child(a):
+            a.unwrap()
 
 
 def _has_single_code_child(tag: Tag) -> bool:
