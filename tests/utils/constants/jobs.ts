@@ -32,4 +32,7 @@ export const JOB_TEST_CONSTANTS = {
   // Error Messages
   ERROR_JOB_NOT_FOUND: 'Job not found',
   ERROR_JOBS_NOT_FOUND_FOR_KEYS: 'Jobs not found for keys',
+
+  // Stop resolution
+  KEY_RESOLUTION_CHUNK_SIZE: 50,
 } as const;

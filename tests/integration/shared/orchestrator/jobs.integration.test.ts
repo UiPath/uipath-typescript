@@ -193,8 +193,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const { jobs, folderId } = getJobsService();
 
       if (!folderId) {
-        console.warn('INTEGRATION_TEST_FOLDER_ID not configured, skipping stop test.');
-        return;
+        throw new Error('INTEGRATION_TEST_FOLDER_ID not configured — cannot run stop test.');
       }
 
       // Find a running job to stop
@@ -223,14 +222,10 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
 
     it('should return empty result when called with empty array', async () => {
-      const { jobs, folderId } = getJobsService();
+      const { jobs } = getJobsService();
 
-      if (!folderId) {
-        console.warn('INTEGRATION_TEST_FOLDER_ID not configured, skipping stop test.');
-        return;
-      }
-
-      const result = await jobs.stop([], folderId);
+      // folderId is unused for empty-array inputs — stop() returns early before reading it
+      const result = await jobs.stop([], 0);
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
