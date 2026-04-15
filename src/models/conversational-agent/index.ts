@@ -24,7 +24,3 @@ export * from './feature-flags.types';
 export * from './conversational-agent.models';
 export * from './conversational-agent.types';
 
-// ==================== Feedback Types ====================
-// Feedback types and models
-export * from './feedback/feedback.types';
-export * from './feedback/feedback.models';

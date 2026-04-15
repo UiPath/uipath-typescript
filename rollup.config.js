@@ -196,7 +196,7 @@ const serviceEntries = [
   },
   {
     name: 'feedback',
-    input: 'src/services/conversational-agent/feedback/index.ts',
+    input: 'src/services/agents/feedback/index.ts',
     output: 'feedback/index'
   }
 ];
