@@ -1,8 +1,5 @@
 import {
-  EntityGetRecordsByIdOptions,
   EntityGetRecordByIdOptions,
-  EntityInsertOptions,
-  EntityBatchInsertOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
   EntityUpdateResponse,
@@ -159,7 +156,7 @@ export interface EntityServiceModel {
    * @deprecated Use {@link getAllRecords} instead.
    * @hidden
    */
-  getRecordsById<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(entityId: string, options?: T): Promise<
+  getRecordsById<T extends EntityGetRecordByIdOptions = EntityGetRecordByIdOptions>(entityId: string, options?: T): Promise<
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
@@ -218,7 +215,7 @@ export interface EntityServiceModel {
    * @deprecated Use {@link insertRecordById} instead.
    * @hidden
    */
-  insertById(id: string, data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+  insertById(id: string, data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse>;
 
   /**
    * Inserts one or more records into an entity by entity ID
@@ -255,7 +252,7 @@ export interface EntityServiceModel {
    * @deprecated Use {@link insertRecordsById} instead.
    * @hidden
    */
-  batchInsertById(id: string, data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
+  batchInsertById(id: string, data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse>;
 
   /**
    * Updates a single record in an entity by entity ID
@@ -578,7 +575,7 @@ export interface EntityServiceModel {
    * ```
    * @internal
    */
-  updateById(id: string, options: EntityUpdateByIdOptions): Promise<void>;
+  updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void>;
 
 }
 
@@ -699,7 +696,7 @@ export interface EntityMethods {
    * @deprecated Use {@link insertRecord} instead.
    * @hidden
    */
-  insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse>;
+  insert(data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse>;
 
   /**
    * @deprecated Use {@link insertRecords} instead.
