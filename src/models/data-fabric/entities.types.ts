@@ -191,7 +191,7 @@ export interface EntityQueryFilterGroup {
  */
 export interface EntityQuerySortOption {
   /** Name of the field to sort by */
-  fieldName?: string;
+  fieldName: string;
   /** Whether to sort in descending order (default: false) */
   isDescending?: boolean;
 }
@@ -248,10 +248,10 @@ export interface EntityFieldBase {
  */
 export interface EntityCreateFieldOptions extends EntityFieldBase {
   /**
-   * Technical field name — must start with a letter and contain only
+   * Field name — must start with a letter and contain only
    * letters, numbers, and underscores (e.g., `"productName"`).
    */
-  name: string;
+  fieldName: string;
   /** Field data type — one of the {@link EntityFieldDataType} values (default: STRING) */
   type?: EntityFieldDataType;
   /** Choice set ID for choice-set fields */
@@ -299,8 +299,8 @@ export interface EntityFieldUpdateOptions extends EntityFieldBase {
 export interface EntityUpdateByIdOptions {
   /** New fields to add */
   addFields?: EntityCreateFieldOptions[];
-  /** Names of fields to remove (case-insensitive) */
-  removeFields?: string[];
+  /** Fields to remove, each identified by field name */
+  removeFields?: Array<{ fieldName: string }>;
   /** Fields to update, each identified by its field ID */
   updateFields?: EntityFieldUpdateOptions[];
   /** New display name for the entity */

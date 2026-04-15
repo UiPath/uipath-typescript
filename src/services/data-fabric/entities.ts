@@ -702,7 +702,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Creates a new Data Fabric entity with the given schema
    *
-   * @param name - Technical entity name — must start with a letter and contain
+   * @param name - Entity name — must start with a letter and contain
    *   only letters, numbers, and underscores (e.g., `"productCatalog"`).
    * @param fields - Array of field definitions
    * @param options - Optional entity-level settings ({@link EntityCreateOptions})
@@ -711,8 +711,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @example
    * ```typescript
    * const entityId = await entities.create("product_catalog", [
-   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
-   *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    * ```
    * @internal
@@ -721,7 +721,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     this.validateName(name, 'entity');
     for (const field of fields) {
-      this.validateName(field.name, 'field');
+      this.validateName(field.fieldName, 'field');
     }
     const opts = options ?? {};
     const payload = {
@@ -758,7 +758,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Updates an existing Data Fabric entity — schema and/or metadata in a single call.
+   * Updates an existing Data Fabric entity — schema and/or metadata.
    *
    * Provide any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
    * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
@@ -776,8 +776,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```typescript
    * // Schema-only
    * await entities.updateById("<entityId>", {
-   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-   *   removeFields: ["old_field"],
+   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   removeFields: [{ fieldName: "old_field" }],
    * });
    *
    * // Metadata-only
@@ -795,18 +795,19 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @internal
    */
   @track('Entities.UpdateById')
-  async updateById(id: string, options: EntityUpdateByIdOptions): Promise<void> {
-    const hasSchemaChanges = !!(options.addFields?.length || options.removeFields?.length || options.updateFields?.length);
-    const hasMetadataChanges = options.displayName !== undefined || options.description !== undefined || options.isRbacEnabled !== undefined;
+  async updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void> {
+    const opts = options ?? {};
+    const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length);
+    const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined;
 
     if (hasSchemaChanges) {
-      await this.applySchemaUpdate(id, options);
+      await this.applySchemaUpdate(id, opts);
     }
     if (hasMetadataChanges) {
       await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(id), {
-        ...(options.displayName !== undefined && { displayName: options.displayName }),
-        ...(options.description !== undefined && { description: options.description }),
-        ...(options.isRbacEnabled !== undefined && { isRbacEnabled: options.isRbacEnabled }),
+        ...(opts.displayName !== undefined && { displayName: opts.displayName }),
+        ...(opts.description !== undefined && { description: opts.description }),
+        ...(opts.isRbacEnabled !== undefined && { isRbacEnabled: opts.isRbacEnabled }),
       });
     }
   }
@@ -830,7 +831,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
     // Filter out removed fields
     if (options.removeFields?.length) {
-      const removeSet = new Set(options.removeFields);
+      const removeSet = new Set(options.removeFields.map(r => r.fieldName));
       fields = fields.filter(f => !removeSet.has(f.name));
     }
 
@@ -857,7 +858,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const newFields: FieldSchemaPayload[] = [];
     if (options.addFields?.length) {
       for (const field of options.addFields) {
-        this.validateName(field.name, 'field');
+        this.validateName(field.fieldName, 'field');
       }
       newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
     }
@@ -964,11 +965,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
   private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
-    this.validateName(field.name, 'field');
+    this.validateName(field.fieldName, 'field');
     const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldDataType.STRING];
     return {
-      name: field.name,
-      displayName: field.displayName ?? field.name,
+      name: field.fieldName,
+      displayName: field.displayName ?? field.fieldName,
       sqlType: { name: mapping.sqlTypeName },
       fieldDisplayType: mapping.fieldDisplayType,
       description: field.description ?? '',

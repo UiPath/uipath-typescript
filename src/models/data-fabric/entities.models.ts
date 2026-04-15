@@ -351,7 +351,7 @@ export interface EntityServiceModel {
    *     logicalOperator: LogicalOperator.And,
    *     queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
    *   },
-   *   sortOptions: [{ fieldName: "created_at", isDescending: true }],
+   *   sortOptions: [{ fieldName: "createdTime", isDescending: true }],
    * });
    * console.log(`Found ${result.totalCount} records`);
    *
@@ -511,7 +511,7 @@ export interface EntityServiceModel {
   /**
    * Creates a new Data Fabric entity with the given schema
    *
-   * @param name - Technical entity name — must start with a letter, letters/numbers/underscores only
+   * @param name - Entity name — must start with a letter, letters/numbers/underscores only
    *   (e.g., `"productCatalog"`).
    * @param fields - Array of field definitions
    * @param options - Optional entity-level settings ({@link EntityCreateOptions})
@@ -523,8 +523,8 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * const id = await entities.create("product_catalog", [
-   *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
-   *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    * ```
    * @internal
@@ -545,32 +545,33 @@ export interface EntityServiceModel {
   deleteById(id: string): Promise<void>;
 
   /**
-   * Updates an existing Data Fabric entity — schema and/or metadata in a single call.
+   * Updates an existing Data Fabric entity — schema and/or metadata.
    *
    * Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
    * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
    * only when the corresponding fields are provided.
    *
    * @param id - UUID of the entity to update
+   * @param name - name of the entity (required by the API)
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
    * @returns Promise resolving when the update is complete
    *
    * @example
    * ```typescript
    * // Schema-only: add a field and remove another
-   * await entities.updateById(<id>, {
-   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-   *   removeFields: ["old_field"],
+   * await entities.updateById(<id>, "product_catalog", {
+   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   removeFields: [{ name: "old_field" }],
    * });
    *
    * // Metadata-only: rename the entity
-   * await entities.updateById(<id>, {
+   * await entities.updateById(<id>, "product_catalog", {
    *   displayName: "My Updated Entity",
    *   description: "Updated description",
    * });
    *
    * // Combined: update a field and rename at the same time
-   * await entities.updateById(<id>, {
+   * await entities.updateById(<id>, "product_catalog", {
    *   updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
    *   displayName: "Price Catalog",
    * });
@@ -712,6 +713,18 @@ export interface EntityMethods {
    * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
+   * @example
+   * ```typescript
+   * const entity = await entities.getById(<entityId>);
+   * const result = await entity.queryRecords({
+   *   filterGroup: {
+   *     logicalOperator: LogicalOperator.And,
+   *     queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
+   *   },
+   *   sortOptions: [{ fieldName: "createdTime", isDescending: true }],
+   * });
+   * console.log(`Found ${result.totalCount} records`);
+   * ```
    */
   queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
@@ -724,6 +737,13 @@ export interface EntityMethods {
    *
    * @param file - CSV file to import as a Blob, File, or Uint8Array
    * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
+   * @example
+   * ```typescript
+   * const entity = await entities.getById(<entityId>);
+   * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
+   * const result = await entity.importRecords(fileInput.files[0]);
+   * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   * ```
    */
   importRecords(file: EntityFileType): Promise<EntityImportRecordsResponse>;
 
@@ -751,16 +771,17 @@ export interface EntityMethods {
   delete(): Promise<void>;
 
   /**
-   * Updates this entity — schema and/or metadata in a single call.
+   * Updates this entity — schema and/or metadata.
    *
+   * @param name - Name of the entity (required by the API)
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
    * @returns Promise resolving when the update is complete
    * @example
    * ```typescript
    * const entity = await entities.getById(<id>);
-   * await entity.update({
+   * await entity.update("product_catalog", {
    *   displayName: "Updated Name",
-   *   addFields: [{ name: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
    * @internal

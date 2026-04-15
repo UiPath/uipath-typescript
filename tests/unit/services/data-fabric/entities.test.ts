@@ -1530,7 +1530,7 @@ describe("EntityService Unit Tests", () => {
 
       const result = await entityService.create(
         "my_entity",
-        [{ name: "title", type: EntityFieldDataType.STRING }],
+        [{ fieldName: "title", type: EntityFieldDataType.STRING }],
         { displayName: "My Entity", description: "A test entity", isRbacEnabled: true },
       );
 
@@ -1580,7 +1580,7 @@ describe("EntityService Unit Tests", () => {
 
     it("should throw if field name is invalid", async () => {
       await expect(
-        entityService.create("myentity", [{ name: "Bad Field Name" }]),
+        entityService.create("myentity", [{ fieldName: "Bad Field Name" }]),
       ).rejects.toThrow("Invalid field name 'Bad Field Name'");
     });
 
@@ -1701,7 +1701,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "count", type: EntityFieldDataType.INTEGER }],
+        addFields: [{ fieldName: "count", type: EntityFieldDataType.INTEGER }],
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
@@ -1732,7 +1732,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        removeFields: ["title"],
+        removeFields: [{ fieldName: "title" }],
       });
 
       const call = mockApiClient.post.mock.calls[0][1];
@@ -1764,7 +1764,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.post.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "status", type: EntityFieldDataType.STRING }],
+        addFields: [{ fieldName: "status", type: EntityFieldDataType.STRING }],
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -1783,9 +1783,9 @@ describe("EntityService Unit Tests", () => {
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         addFields: [
-          { name: "notes", type: EntityFieldDataType.MULTILINE_TEXT },
+          { fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT },
         ],
-        removeFields: ["title"],
+        removeFields: [{ fieldName: "title" }],
         updateFields: [],
       });
 
@@ -1855,7 +1855,7 @@ describe("EntityService Unit Tests", () => {
         mockApiClient.post.mockResolvedValue(undefined);
 
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ name: "new_field", type }],
+          addFields: [{ fieldName: "new_field", type }],
         });
 
         const call = mockApiClient.post.mock.calls[0][1];
@@ -1874,7 +1874,7 @@ describe("EntityService Unit Tests", () => {
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
         addFields: [
           {
-            name: "secret_field",
+            fieldName: "secret_field",
             type: EntityFieldDataType.STRING,
             isEncrypted: true,
           },
@@ -1951,7 +1951,7 @@ describe("EntityService Unit Tests", () => {
       mockApiClient.patch.mockResolvedValue(undefined);
 
       await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-        addFields: [{ name: "count", type: EntityFieldDataType.INTEGER }],
+        addFields: [{ fieldName: "count", type: EntityFieldDataType.INTEGER }],
         displayName: "New Display Name",
       });
 
@@ -1981,7 +1981,7 @@ describe("EntityService Unit Tests", () => {
 
       await expect(
         entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ name: "new_field", type: EntityFieldDataType.STRING }],
+          addFields: [{ fieldName: "new_field", type: EntityFieldDataType.STRING }],
         }),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });

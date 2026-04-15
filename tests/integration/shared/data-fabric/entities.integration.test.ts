@@ -784,8 +784,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
 
       const entityId = await entities.create(name, [
-        { name: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
-        { name: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
+        { fieldName: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
+        { fieldName: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
       ], { displayName: `SDK Test Entity ${name}`, description: 'Created by integration test' });
 
       expect(typeof entityId).toBe('string');
@@ -793,7 +793,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       createdEntityIds.push(entityId);
     });
 
-    it('should reject an invalid technical entity name', async () => {
+    it('should reject an invalid entity name', async () => {
       const { entities } = getServices();
 
       await expect(
@@ -801,13 +801,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       ).rejects.toThrow(/Invalid entity name/);
     });
 
-    it('should reject an invalid technical field name', async () => {
+    it('should reject an invalid field name', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
 
       await expect(
         entities.create(name, [
-          { name: 'Invalid Field', type: EntityFieldDataType.STRING },
+          { fieldName: 'Invalid Field', type: EntityFieldDataType.STRING },
         ])
       ).rejects.toThrow(/Invalid field name/);
     });
@@ -836,12 +836,12 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { name: 'base_field', type: EntityFieldDataType.STRING },
+        { fieldName: 'base_field', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
 
       await entities.updateById(entityId, {
-        addFields: [{ name: 'new_field', type: EntityFieldDataType.INTEGER }],
+        addFields: [{ fieldName: 'new_field', type: EntityFieldDataType.INTEGER }],
       });
 
       const updated = await entities.getById(entityId);
@@ -853,13 +853,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { name: 'keep_field', type: EntityFieldDataType.STRING },
-        { name: 'remove_me', type: EntityFieldDataType.INTEGER },
+        { fieldName: 'keep_field', type: EntityFieldDataType.STRING },
+        { fieldName: 'remove_me', type: EntityFieldDataType.INTEGER },
       ]);
       createdEntityIds.push(entityId);
 
       await entities.updateById(entityId, {
-        removeFields: ['remove_me'],
+        removeFields: [{ fieldName: 'remove_me' }],
       });
 
       const updated = await entities.getById(entityId);
@@ -872,7 +872,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { name: 'updatable_field', displayName: 'Original Name', type: EntityFieldDataType.STRING },
+        { fieldName: 'updatable_field', displayName: 'Original Name', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
 
@@ -898,8 +898,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
       const entityId = await entities.create(name, [
-        { name: 'to_update', displayName: 'Before Update', type: EntityFieldDataType.STRING },
-        { name: 'to_remove', type: EntityFieldDataType.INTEGER },
+        { fieldName: 'to_update', displayName: 'Before Update', type: EntityFieldDataType.STRING },
+        { fieldName: 'to_remove', type: EntityFieldDataType.INTEGER },
       ]);
       createdEntityIds.push(entityId);
 
@@ -910,9 +910,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       }
 
       await entities.updateById(entityId, {
-        addFields: [{ name: 'new_addition', type: EntityFieldDataType.BOOLEAN }],
+        addFields: [{ fieldName: 'new_addition', type: EntityFieldDataType.BOOLEAN }],
         updateFields: [{ id: fieldToUpdate.id, displayName: 'After Update' }],
-        removeFields: ['to_remove'],
+        removeFields: [{ fieldName: 'to_remove' }],
       });
 
       const after = await entities.getById(entityId);
