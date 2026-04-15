@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Check formatting
-        run: npx prettier --check .
+        run: npm run format:check
 
       - name: Typecheck
         run: npm run typecheck

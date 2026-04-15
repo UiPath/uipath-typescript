@@ -1,3 +1,16 @@
+// Only allow http(s) URLs or same-origin relative paths. Rejects javascript:,
+// data:, and other dangerous schemes that could flow from user-authored
+// data-dark / data-light attributes into src / srcset sinks.
+function sanitizeImageUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : '';
+  } catch {
+    return '';
+  }
+}
+
 function updateThemePictures() {
   const body = document.body;
   const mediaAttr = body.getAttribute('data-md-color-media') || '';
@@ -6,8 +19,8 @@ function updateThemePictures() {
   const pictures = document.querySelectorAll('picture');
 
   pictures.forEach((picture) => {
-    const darkSrc = picture.getAttribute('data-dark');
-    const lightSrc = picture.getAttribute('data-light');
+    const darkSrc = sanitizeImageUrl(picture.getAttribute('data-dark'));
+    const lightSrc = sanitizeImageUrl(picture.getAttribute('data-light'));
 
     const source = picture.querySelector('source');
     const img = picture.querySelector('img');
