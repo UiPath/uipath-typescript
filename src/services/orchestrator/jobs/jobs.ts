@@ -219,13 +219,31 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   /**
    * Stops one or more jobs by their UUID keys.
    *
-   * Resolves job UUID keys to integer IDs, then calls the StopJobs OData action.
-   * Keys are resolved in chunks of 50 to avoid URL length limits.
+   * Resolves the provided job UUID keys to integer IDs, then sends a stop request to the Orchestrator.
+   * Keys are processed in chunks of 50 to avoid URL length limits. Throws if any keys cannot be resolved.
    *
-   * @param jobKeys - Array of job UUID keys to stop
-   * @param folderId - The folder ID where the jobs reside (required by the API)
-   * @param options - Optional stop options including strategy
-   * @returns Promise resolving to an OperationResponse with the resolved job IDs
+   * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
+   * @param folderId - The folder ID where the jobs reside (required)
+   * @param options - Optional {@link JobStopOptions} including stop strategy
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobStopData}> with the resolved job IDs
+   *
+   * @example
+   * ```typescript
+   * // Stop a single job with default soft stop
+   * const result = await jobs.stop([<jobKey>], <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { StopStrategy } from '@uipath/uipath-typescript/jobs';
+   *
+   * // Force-kill multiple jobs
+   * const result = await jobs.stop(
+   *   [<jobKey1>, <jobKey2>],
+   *   <folderId>,
+   *   { strategy: StopStrategy.Kill }
+   * );
+   * ```
    */
   @track('Jobs.Stop')
   async stop(
@@ -308,7 +326,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       const response = await this.get<CollectionResponse<{ Key: string; Id: number }>>(
         JOB_ENDPOINTS.GET_ALL,
         {
-          params: { $filter: filter, $select: 'Id,Key' },
+          params: { $filter: filter, $select: 'Id,Key', $top: chunk.length },
           headers,
         }
       );
@@ -320,7 +338,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
 
     const missingKeys = uniqueKeys.filter((key) => !keyToIdMap.has(key));
     if (missingKeys.length > 0) {
-      throw new Error(`Jobs not found for keys: ${missingKeys.join(', ')}`);
+      throw new ValidationError({ message: `Jobs not found for keys: ${missingKeys.join(', ')}` });
     }
 
     return jobKeys.map((key) => keyToIdMap.get(key)!);

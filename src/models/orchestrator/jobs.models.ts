@@ -144,20 +144,18 @@ export interface JobServiceModel {
    *
    * @example
    * ```typescript
-   * import { Jobs } from '@uipath/uipath-typescript/jobs';
-   *
-   * const jobs = new Jobs(sdk);
-   *
    * // Stop a single job with default soft stop
-   * const result = await jobs.stop(
-   *   ['c80c3b30-f010-4eb8-82d4-b67bc615e137'],
-   *   123
-   * );
+   * const result = await jobs.stop([<jobKey>], <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { StopStrategy } from '@uipath/uipath-typescript/jobs';
    *
    * // Force-kill multiple jobs
-   * const killResult = await jobs.stop(
-   *   ['c80c3b30-f010-4eb8-82d4-b67bc615e137', '24ef1040-454d-4184-b994-c641ee32318d'],
-   *   123,
+   * const result = await jobs.stop(
+   *   [<jobKey1>, <jobKey2>],
+   *   <folderId>,
    *   { strategy: StopStrategy.Kill }
    * );
    * ```

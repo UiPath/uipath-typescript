@@ -519,6 +519,7 @@ describe('JobService Unit Tests', () => {
           params: {
             $filter: `Key in ('${JOB_TEST_CONSTANTS.JOB_KEY}')`,
             $select: 'Id,Key',
+            $top: 1,
           },
         })
       );
@@ -602,6 +603,33 @@ describe('JobService Unit Tests', () => {
       const filterArg = mockApiClient.get.mock.calls[0][1].params.$filter;
       const keyMatches = filterArg.match(/'/g);
       expect(keyMatches).toHaveLength(2); // One key, two quotes
+    });
+
+    it('should resolve keys in multiple chunks when count exceeds chunk size', async () => {
+      const chunkSize = JOB_TEST_CONSTANTS.KEY_RESOLUTION_CHUNK_SIZE;
+      const keys = Array.from(
+        { length: chunkSize + 1 },
+        (_, i) => `${i.toString().padStart(8, '0')}-bbbb-cccc-dddd-eeeeeeeeeeee`
+      );
+      const ids = keys.map((_, i) => i + 1);
+
+      // Chunk 1: first 50 keys
+      mockApiClient.get.mockResolvedValueOnce({
+        value: keys.slice(0, chunkSize).map((k, i) => ({ Key: k, Id: ids[i] })),
+      });
+      // Chunk 2: remaining 1 key
+      mockApiClient.get.mockResolvedValueOnce({
+        value: [{ Key: keys[chunkSize], Id: ids[chunkSize] }],
+      });
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      const result = await jobService.stop(keys, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
+      expect(mockApiClient.get.mock.calls[0][1].params.$top).toBe(chunkSize);
+      expect(mockApiClient.get.mock.calls[1][1].params.$top).toBe(1);
+      expect(result.data.jobIds).toHaveLength(chunkSize + 1);
+      expect(result.data.jobIds).toEqual(ids);
     });
 
     it('should propagate resolution API errors', async () => {
