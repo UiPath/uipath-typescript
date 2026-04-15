@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { FeedbackStatus } from '../../../../src/models/conversational-agent/feedback/feedback.types';
+import { FeedbackStatus } from '../../../../src/models/agents/feedback/feedback.types';
 
 const modes: InitMode[] = ['v1'];
 

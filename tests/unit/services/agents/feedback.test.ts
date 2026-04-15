@@ -1,10 +1,10 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { FeedbackService } from '../../../../src/services/conversational-agent/feedback/feedback';
+import { FeedbackService } from '../../../../src/services/agents/feedback/feedback';
 import {
   FeedbackGetResponse,
   FeedbackStatus,
-} from '../../../../src/models/conversational-agent/feedback/feedback.types';
+} from '../../../../src/models/agents/feedback/feedback.types';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { FEEDBACK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
