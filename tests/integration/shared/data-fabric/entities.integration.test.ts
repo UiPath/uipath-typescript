@@ -7,7 +7,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { generateRandomString, generateRandomInt, generateRandomFloat } from '../../utils/helpers';
+import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination } from '../../utils/helpers';
 import {
   EntityFieldDataType,
   EntityRecord,
@@ -724,21 +724,18 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(typeof result.totalCount).toBe('number');
     });
 
-    it('should query records with filter options', async () => {
+    it('should return paginated records when pageSize is provided', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
       const entityId = config.dataFabricTestEntityId || testEntityId;
       if (!entityId) {
         throw new Error('No entity ID available for testing');
       }
-      const result = await entities.queryRecordsById(entityId, {
-        start: 0,
-        limit: 5,
-      });
+      const result = await entities.queryRecordsById(entityId, { pageSize: 2 });
       expect(result).toBeDefined();
-      expect(result.items).toBeDefined();
-      expect(result.items.length).toBeLessThanOrEqual(5);
-      expect(typeof result.totalCount).toBe('number');
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeLessThanOrEqual(2);
+      expect(hasValidPagination(result)).toBe(true);
     });
   });
 
@@ -786,10 +783,10 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
 
-      const entityId = await entities.create(name, 'Created by integration test', [
+      const entityId = await entities.create(name, [
         { name: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
         { name: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
-      ], { displayName: `SDK Test Entity ${name}` });
+      ], { displayName: `SDK Test Entity ${name}`, description: 'Created by integration test' });
 
       expect(typeof entityId).toBe('string');
       expect(entityId.length).toBeGreaterThan(0);
@@ -800,7 +797,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
 
       await expect(
-        entities.create('Invalid Name', 'desc', [])
+        entities.create('Invalid Name', [])
       ).rejects.toThrow(/Invalid entity name/);
     });
 
@@ -809,7 +806,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
 
       await expect(
-        entities.create(name, 'desc', [
+        entities.create(name, [
           { name: 'Invalid Field', type: EntityFieldDataType.STRING },
         ])
       ).rejects.toThrow(/Invalid field name/);
@@ -821,7 +818,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     it('should update entity display name and description', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, 'Original description', [], { displayName: `Original ${name}` });
+      const entityId = await entities.create(name, [], { displayName: `Original ${name}`, description: 'Original description' });
       createdEntityIds.push(entityId);
 
       const newDisplayName = `Updated ${name}`;
@@ -838,7 +835,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     it('should add a new field to an existing entity', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, 'For field add test', [
+      const entityId = await entities.create(name, [
         { name: 'base_field', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
@@ -855,7 +852,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     it('should remove a field from an existing entity', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, 'For field remove test', [
+      const entityId = await entities.create(name, [
         { name: 'keep_field', type: EntityFieldDataType.STRING },
         { name: 'remove_me', type: EntityFieldDataType.INTEGER },
       ]);
@@ -874,7 +871,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     it('should update an existing field metadata', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, 'For field update test', [
+      const entityId = await entities.create(name, [
         { name: 'updatable_field', displayName: 'Original Name', type: EntityFieldDataType.STRING },
       ]);
       createdEntityIds.push(entityId);
@@ -900,7 +897,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     it('should add, update, and remove fields in a single call', async () => {
       const { entities } = getServices();
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, 'For combined schema update test', [
+      const entityId = await entities.create(name, [
         { name: 'to_update', displayName: 'Before Update', type: EntityFieldDataType.STRING },
         { name: 'to_remove', type: EntityFieldDataType.INTEGER },
       ]);
@@ -937,7 +934,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, 'To be deleted', []);
+      const entityId = await entities.create(name, []);
 
       // Delete it immediately (not added to createdEntityIds so afterAll won't double-delete)
       await entities.deleteById(entityId);
@@ -955,7 +952,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
 
       const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
-      const entityId = await entities.create(name, 'For bound method test', []);
+      const entityId = await entities.create(name, []);
 
       const entity = await entities.getById(entityId);
       expect(typeof entity.delete).toBe('function');

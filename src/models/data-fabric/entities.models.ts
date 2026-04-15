@@ -21,7 +21,6 @@ import {
   EntityGetAllRecordsOptions,
   EntityInsertRecordOptions,
   EntityQueryRecordsOptions,
-  EntityQueryRecordsResponse,
   EntityImportRecordsResponse,
   EntityCreateOptions,
   EntityCreateFieldOptions,
@@ -334,33 +333,40 @@ export interface EntityServiceModel {
 
 
   /**
-   * Queries entity records with filters, sorting, and pagination
+   * Queries entity records with filters, sorting, and SDK-managed pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
-   * @returns Promise resolving to {@link EntityQueryRecordsResponse} with matching records and total count
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
+   *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
    * import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
-   * // Query with a filter
+   * // Non-paginated query with a filter
    * const result = await entities.queryRecordsById(<id>, {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
    *     queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
    *   },
    *   sortOptions: [{ fieldName: "created_at", isDescending: true }],
-   *   start: 0,
-   *   limit: 50
    * });
-   *
    * console.log(`Found ${result.totalCount} records`);
-   * result.items.forEach(record => console.log(record));
+   *
+   * // With pagination
+   * const page1 = await entities.queryRecordsById(<id>, { pageSize: 25 });
+   * if (page1.hasNextPage) {
+   *   const page2 = await entities.queryRecordsById(<id>, { cursor: page1.nextCursor });
+   * }
    * ```
    */
-  queryRecordsById(id: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse>;
+  queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(id: string, options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
 
   /**
    * Imports records from a CSV file into an entity
@@ -507,7 +513,6 @@ export interface EntityServiceModel {
    *
    * @param name - Technical entity name — must start with a letter, letters/numbers/underscores only
    *   (e.g., `"productCatalog"`).
-   * @param description - Entity description
    * @param fields - Array of field definitions
    * @param options - Optional entity-level settings ({@link EntityCreateOptions})
    * @returns Promise resolving to the ID of the created entity
@@ -517,14 +522,14 @@ export interface EntityServiceModel {
    *
    * const entities = new Entities(sdk);
    *
-   * const id = await entities.create("product_catalog", "Our product catalog", [
+   * const id = await entities.create("product_catalog", [
    *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
    *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
-   * ], { displayName: "Product Catalog", isRbacEnabled: true });
+   * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    * ```
    * @internal
    */
-  create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
+  create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
 
   /**
    * Deletes a Data Fabric entity and all its records
@@ -702,12 +707,17 @@ export interface EntityMethods {
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
-   * Queries records in this entity with filters, sorting, and pagination
+   * Queries records in this entity with filters, sorting, and SDK-managed pagination
    *
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
-   * @returns Promise resolving to {@link EntityQueryRecordsResponse} with matching records and total count
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
+   *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    */
-  queryRecords(options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse>;
+  queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
 
   /**
    * Imports records from a CSV file into this entity
@@ -829,7 +839,11 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.deleteAttachment(entityData.id, recordId, fieldName);
     },
 
-    async queryRecords(options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
+    async queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<EntityRecord>
+        : NonPaginatedResponse<EntityRecord>
+    > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       return service.queryRecordsById(entityData.id, options);
     },

@@ -197,22 +197,21 @@ export interface EntityQuerySortOption {
 }
 
 /**
- * Options for querying entity records with filters, sorting, and pagination
+ * Options for querying entity records with filters, sorting, and pagination.
+ *
+ * Use `pageSize`, `cursor`, or `jumpToPage` for SDK-managed pagination.
+ * The SDK computes and manages offset parameters automatically.
  */
-export interface EntityQueryRecordsOptions {
+export type EntityQueryRecordsOptions = {
   /** Filter conditions to apply */
   filterGroup?: EntityQueryFilterGroup;
   /** List of field names to include in results (returns all fields if omitted) */
   selectedFields?: string[];
   /** Sort options for the results */
   sortOptions?: EntityQuerySortOption[];
-  /** Number of records to skip (for pagination) */
-  start?: number;
-  /** Maximum number of records to return */
-  limit?: number;
   /** Level of entity expansion for related fields (default: 0) */
   expansionLevel?: number;
-}
+} & PaginationOptions;
 
 /**
  * Response from querying entity records
@@ -270,12 +269,14 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
 export interface EntityCreateOptions {
   /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
   displayName?: string;
-  /** Folder ID for the entity (defaults to the tenant-level folder) */
-  folderId?: string;
+  /** Optional entity description */
+  description?: string;
+  /** UUID of the folder to place the entity in (defaults to the tenant-level folder) */
+  folderKey?: string;
   /** Whether role-based access control is enabled for this entity (default: false) */
   isRbacEnabled?: boolean;
-  /** Whether Insights integration is enabled for this entity (default: false) */
-  isInsightsEnabled?: boolean;
+  /** Whether Analytics integration is enabled for this entity (default: false) */
+  isAnalyticsEnabled?: boolean;
   /** External field source definitions (default: empty) */
   externalFields?: ExternalField[];
 }
@@ -582,7 +583,7 @@ export interface RawEntityGetResponse {
   name: string;
   displayName: string;
   entityType: EntityType;
-  description: string;
+  description?: string;
   fields: FieldMetaData[];
   folderId?: string;
   externalFields?: ExternalSourceFields[];

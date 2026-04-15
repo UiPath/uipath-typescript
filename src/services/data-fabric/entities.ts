@@ -25,7 +25,6 @@ import {
   EntityUploadAttachmentResponse,
   EntityDeleteAttachmentResponse,
   EntityQueryRecordsOptions,
-  EntityQueryRecordsResponse,
   EntityImportRecordsResponse,
   EntityCreateOptions,
   EntityCreateFieldOptions,
@@ -35,13 +34,13 @@ import {
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
+import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../utils/constants/common';
 import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
 import { EntityFieldTypeMap, EntityMap, EntitySchemaFieldTypeMap, FieldDisplayTypeToDataType } from '../../models/data-fabric/entities.constants';
-import { EntityQueryRawResponse, FieldSchemaPayload, SqlFieldType } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /**
@@ -448,8 +447,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * Queries entity records with filters, sorting, and pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, start, and limit
-   * @returns Promise resolving to matching records and total count
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
+   *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    *
    * @example
    * ```typescript
@@ -457,7 +457,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * const entities = new Entities(sdk);
    *
-   * // Query with a filter
+   * // Non-paginated query with a filter
    * const result = await entities.queryRecordsById("<entityId>", {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
@@ -466,32 +466,40 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *     ]
    *   },
    *   sortOptions: [{ fieldName: "created_at", isDescending: true }],
-   *   start: 0,
-   *   limit: 50
    * });
-   *
    * console.log(`Found ${result.totalCount} records`);
-   * result.items.forEach(record => console.log(record));
+   *
+   * // With pagination
+   * const page1 = await entities.queryRecordsById("<entityId>", {
+   *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
+   *   pageSize: 25,
+   * });
+   * if (page1.hasNextPage) {
+   *   const page2 = await entities.queryRecordsById("<entityId>", { cursor: page1.nextCursor });
+   * }
    * ```
    */
   @track('Entities.QueryRecordsById')
-  async queryRecordsById(id: string, options?: EntityQueryRecordsOptions): Promise<EntityQueryRecordsResponse> {
-    const { expansionLevel, ...queryBody } = options ?? {};
-    const params = createParams({ expansionLevel });
-
-    const response = await this.post<EntityQueryRawResponse>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
-      queryBody,
-      { params }
-    );
-
-    const raw = response.data;
-    const items = raw.value ?? [];
-
-    return {
-      items,
-      totalCount: raw.totalRecordCount ?? 0
-    };
+  async queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(
+    id: string,
+    options?: T
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
+      method: HTTP_METHODS.POST,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
+        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
+        }
+      },
+      excludeFromPrefix: ['expansionLevel', 'filterGroup', 'selectedFields', 'sortOptions']
+    }, options);
   }
 
   /**
@@ -696,36 +704,35 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @param name - Technical entity name — must start with a letter and contain
    *   only letters, numbers, and underscores (e.g., `"productCatalog"`).
-   * @param description - Entity description
    * @param fields - Array of field definitions
    * @param options - Optional entity-level settings ({@link EntityCreateOptions})
    * @returns Promise resolving to the ID of the created entity
    *
    * @example
    * ```typescript
-   * const entityId = await entities.create("product_catalog", "Our product catalog", [
+   * const entityId = await entities.create("product_catalog", [
    *   { name: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
    *   { name: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
-   * ], { displayName: "Product Catalog", isRbacEnabled: true });
+   * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
    * ```
    * @internal
    */
   @track('Entities.Create')
-  async create(name: string, description: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
+  async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     this.validateName(name, 'entity');
     for (const field of fields) {
       this.validateName(field.name, 'field');
     }
     const opts = options ?? {};
     const payload = {
-      description,
+      ...(opts.description !== undefined && { description: opts.description }),
       displayName: opts.displayName ?? name,
       entityDefinition: {
         name,
         fields: fields.map(f => this.buildSchemaFieldPayload(f)),
-        folderId: opts.folderId ?? DATA_FABRIC_TENANT_FOLDER_ID,
+        folderId: opts.folderKey ?? DATA_FABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: opts.isRbacEnabled ?? false,
-        isInsightsEnabled: opts.isInsightsEnabled ?? false,
+        isInsightsEnabled: opts.isAnalyticsEnabled ?? false,
         externalFields: opts.externalFields ?? [],
       },
     };
