@@ -559,26 +559,26 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Schema-only: add a field and remove another
-   * await entities.updateById(<id>, "product_catalog", {
+   * await entities.updateById(<id>, {
    *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
-   *   removeFields: [{ name: "old_field" }],
+   *   removeFields: [{ fieldName: "old_field" }],
    * });
    *
    * // Metadata-only: rename the entity
-   * await entities.updateById(<id>, "product_catalog", {
+   * await entities.updateById(<id>, {
    *   displayName: "My Updated Entity",
    *   description: "Updated description",
    * });
    *
    * // Combined: update a field and rename at the same time
-   * await entities.updateById(<id>, "product_catalog", {
+   * await entities.updateById(<id>, {
    *   updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
    *   displayName: "Price Catalog",
    * });
    * ```
    * @internal
    */
-  updateById(id: string, options: EntityUpdateByIdOptions): Promise<void>;
+  updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void>;
 
 }
 
@@ -773,20 +773,19 @@ export interface EntityMethods {
   /**
    * Updates this entity — schema and/or metadata.
    *
-   * @param name - Name of the entity (required by the API)
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
    * @returns Promise resolving when the update is complete
    * @example
    * ```typescript
    * const entity = await entities.getById(<id>);
-   * await entity.update("product_catalog", {
+   * await entity.update({
    *   displayName: "Updated Name",
    *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
    * @internal
    */
-  update(options: EntityUpdateByIdOptions): Promise<void>;
+  update(options?: EntityUpdateByIdOptions): Promise<void>;
 
 }
 
