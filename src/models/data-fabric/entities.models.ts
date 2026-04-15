@@ -21,7 +21,9 @@ import {
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
   EntityGetAllRecordsOptions,
-  EntityInsertRecordOptions
+  EntityInsertRecordOptions,
+  EntityQueryOptions,
+  EntityQueryResponse
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -461,6 +463,60 @@ export interface EntityServiceModel {
    * ```
    */
   deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
+
+  /**
+   *
+   * @experimental
+   *
+   * /// warning
+    Preview: This method is experimental and may change or be removed in future releases.
+    ///
+   *
+   * Queries an entity by ID with support for joins, aggregates, filters, grouping, and sorting
+   *
+   * @param entityId - UUID of the entity to query
+   * @param options - Query options including selectedFields, aggregates, joins, filterGroup, groupBy, sortOptions, start, limit
+   * @returns Promise resolving to query response with matching records
+   * {@link EntityQueryResponse}
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Simple query with filters
+   * const result = await entities.query('<entityId>', {
+   *   selectedFields: ['name', 'email'],
+   *   filterGroup: {
+   *     logicalOperator: 0,
+   *     queryFilters: [{ fieldName: 'status', operator: '=', value: 'active' }]
+   *   },
+   *   limit: 50
+   * });
+   *
+   * // Cross-entity join query
+   * const joinResult = await entities.query('<entityId>', {
+   *   selectedFields: ['Orders.orderId', 'Customer.name'],
+   *   joins: [{
+   *     type: 'INNER',
+   *     entity: 'Customer',
+   *     on: { left: 'customerId', right: 'Id' }
+   *   }],
+   *   sortOptions: [{ fieldName: 'Orders.createdDate', isDescending: true }],
+   *   limit: 100
+   * });
+   *
+   * // Aggregate query
+   * const stats = await entities.query('<entityId>', {
+   *   aggregates: [
+   *     { function: 'COUNT', field: 'Id', alias: 'totalOrders' },
+   *     { function: 'SUM', field: 'amount', alias: 'totalAmount' }
+   *   ],
+   *   groupBy: ['status']
+   * });
+   * ```
+   */
+  query(entityId: string, options?: EntityQueryOptions): Promise<EntityQueryResponse>;
 }
 
 /**
@@ -577,6 +633,21 @@ export interface EntityMethods {
   deleteAttachment(recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
 
   /**
+   *
+   * @experimental
+   *
+   * /// warning
+    Preview: This method is experimental and may change or be removed in future releases.
+    ///
+   *
+   * Queries this entity with support for joins, aggregates, filters, grouping, and sorting
+   *
+   * @param options - Query options
+   * @returns Promise resolving to query response with matching records
+   */
+  query(options?: EntityQueryOptions): Promise<EntityQueryResponse>;
+
+  /**
    * @deprecated Use {@link insertRecord} instead.
    * @hidden
    */
@@ -689,6 +760,12 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       if (!entityData.id) throw new Error('Entity ID is undefined');
 
       return service.deleteAttachment(entityData.id, recordId, fieldName);
+    },
+
+    async query(options?: EntityQueryOptions): Promise<EntityQueryResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+
+      return service.query(entityData.id, options);
     },
 
     async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
