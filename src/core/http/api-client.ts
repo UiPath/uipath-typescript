@@ -70,8 +70,13 @@ export class ApiClient {
     if (isFormData) {
       delete defaultHeaders['Content-Type'];
     }
-    const headers = {
+
+    const traceId = crypto.randomUUID().replace(/-/g, '');
+    const spanId = traceId.slice(0, 16);
+
+    const headers: Record<string, string> = {
       ...defaultHeaders,
+      'traceparent': `00-${traceId}-${spanId}-01`,
       ...options.headers
     };
 
