@@ -184,6 +184,7 @@ nav:
               - Session: api/interfaces/SessionStream.md
               - Exchanges: api/interfaces/ExchangeServiceModel.md
               - Messages: api/interfaces/MessageServiceModel.md
+            - Feedback: api/interfaces/FeedbackServiceModel.md
           - Attachments:
             - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
