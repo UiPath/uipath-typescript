@@ -79,6 +79,7 @@ plugins:
           - coded-action-apps/interfaces/CodedActionAppsServiceModel.md: Coded Action Apps service methods
   - llmstxt:
       full_output: "llms-full-content.txt"
+      preprocess: "scripts/llms-preprocess.py"
       sections:
         Getting Started:
           - getting-started.md: Introduction to UiPath TypeScript SDK
