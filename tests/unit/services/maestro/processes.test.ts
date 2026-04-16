@@ -1,16 +1,22 @@
 // ===== IMPORTS =====
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MaestroProcessesService } from '../../../../src/services/maestro/processes';
-import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { MAESTRO_ENDPOINTS, PROCESS_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { 
+import {
   MAESTRO_TEST_CONSTANTS,
-  createMockProcess, 
+  createMockProcess,
   createMockProcessesApiResponse,
-  createMockError, 
-  TEST_CONSTANTS
+  createMockError,
+  TEST_CONSTANTS,
+  createMockProcessStartResponse,
+  createMockProcessStartApiResponse,
 } from '../../../utils/mocks';
+import { PROCESS_TEST_CONSTANTS } from '../../../utils/constants';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
+import { JobPriority, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
+import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
+import { RequestOptions } from '../../../../src/models/common';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -151,6 +157,93 @@ describe('MaestroProcessesService', () => {
 
       
       expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.CUSTOM_PACKAGE_ID);
+    });
+  });
+
+  describe('start', () => {
+    it('should start process by processKey successfully with transformations applied', async () => {
+      const mockJob = createMockProcessStartResponse();
+      const mockResponse = createMockProcessStartApiResponse([mockJob]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      const result = await service.start(request, MAESTRO_TEST_CONSTANTS.FOLDER_KEY);
+
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(1);
+      expect(result[0].key).toBe(PROCESS_TEST_CONSTANTS.JOB_KEY);
+      expect(result[0].processName).toBe(PROCESS_TEST_CONSTANTS.PROCESS_NAME);
+      expect(result[0].state).toBe('Running');
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.objectContaining({
+          startInfo: expect.objectContaining({
+            releaseKey: PROCESS_TEST_CONSTANTS.PROCESS_KEY,
+            jobPriority: JobPriority.Normal,
+            inputArguments: PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST.inputArguments
+          })
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: MAESTRO_TEST_CONSTANTS.FOLDER_KEY
+          }),
+          params: expect.any(Object)
+        })
+      );
+    });
+
+    it('should start process by processName successfully with transformations applied', async () => {
+      const mockJob = createMockProcessStartResponse();
+      const mockResponse = createMockProcessStartApiResponse([mockJob]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST_WITH_NAME as ProcessStartRequest;
+      const result = await service.start(request, MAESTRO_TEST_CONSTANTS.FOLDER_KEY);
+
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(1);
+      expect(result[0].key).toBe(PROCESS_TEST_CONSTANTS.JOB_KEY);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.objectContaining({
+          startInfo: expect.objectContaining({
+            releaseName: PROCESS_TEST_CONSTANTS.PROCESS_NAME,
+            jobPriority: JobPriority.High,
+            inputArguments: PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST_WITH_NAME.inputArguments
+          })
+        }),
+        expect.any(Object)
+      );
+    });
+
+    it('should handle multiple jobs returned from start', async () => {
+      const mockJobs = [
+        createMockProcessStartResponse(),
+        createMockProcessStartResponse({
+          key: PROCESS_TEST_CONSTANTS.JOB_KEY,
+          id: 2
+        })
+      ];
+      const mockResponse = createMockProcessStartApiResponse(mockJobs);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      const result = await service.start(request, MAESTRO_TEST_CONSTANTS.FOLDER_KEY);
+
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(2);
+      expect(result[1].key).toBe(PROCESS_TEST_CONSTANTS.JOB_KEY);
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await expect(service.start(request, MAESTRO_TEST_CONSTANTS.FOLDER_KEY))
+        .rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

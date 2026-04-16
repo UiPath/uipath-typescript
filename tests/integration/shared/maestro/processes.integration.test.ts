@@ -134,6 +134,38 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('start', () => {
+    it('should start a process and create a job using processKey', async () => {
+      const { maestroProcesses } = getServices();
+      const config = getTestConfig();
+
+      const processKey = config.orchestratorTestProcessKey;
+
+      expect(
+        processKey,
+        'ORCHESTRATOR_TEST_PROCESS_KEY must be configured to test process execution'
+      ).toBeDefined();
+      expect(config.folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
+
+      const result = await maestroProcesses.start(
+        {
+          processKey: processKey!,
+          inputArguments: JSON.stringify({
+            testRun: true,
+            timestamp: new Date().toISOString(),
+          }),
+        },
+        config.folderId!
+      );
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length > 0) {
+        expect(result[0].id).toBeDefined();
+      }
+    });
+  });
+
   describe('Process metadata validation', () => {
     it('should have expected fields in process objects', async () => {
       const { maestroProcesses } = getServices();

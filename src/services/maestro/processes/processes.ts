@@ -9,6 +9,12 @@ import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_KEY } from '../../../utils/constants/headers';
 import { ProcessInstancesService } from './process-instances';
+import {
+  ProcessStartRequest,
+  ProcessStartResponse,
+} from '../../../models/orchestrator/processes.types';
+import { RequestOptions } from '../../../models/common/types';
+import { startProcessRequest } from '../../orchestrator/processes/helpers';
 
 /**
  * Service for interacting with Maestro Processes
@@ -77,4 +83,40 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     // Fetch BPMN XML and add element name/type to each incident
     return BpmnHelpers.enrichIncidentsWithBpmnData(rawResponse.data || [], folderKey, this.processInstancesService);
   }
-} 
+
+  /**
+   * Starts a Maestro process execution within a folder
+   *
+   * @param request - Process start request body
+   * @param folderKey - Required folder key
+   * @param options - Optional query parameters
+   * @returns Promise resolving to the created jobs
+   *
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * // Start a process by process key
+   * const jobs = await maestroProcesses.start({
+   *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+   * }, "<folderKey>");
+   *
+   * // Start a process by name
+   * const jobs = await maestroProcesses.start({
+   *   processName: "MyProcess"
+   * }, "<folderKey>");
+   * ```
+   */
+  @track('MaestroProcesses.Start')
+  async start(request: ProcessStartRequest, folderKey: string, options: RequestOptions = {}
+  ): Promise<ProcessStartResponse[]> {
+    return startProcessRequest(
+      this.post.bind(this),
+      request,
+      createHeaders({ [FOLDER_KEY]: folderKey }),
+      options
+    );
+  }
+}
