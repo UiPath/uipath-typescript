@@ -31,9 +31,11 @@ export interface FeedbackServiceModel {
    * When no pagination options are provided, the API defaults to returning the first 100 items.
    *
    * @param options - Optional query parameters for filtering and pagination
-   * @returns Promise resolving to either an array of feedback entries NonPaginatedResponse<FeedbackGetResponse> or a PaginatedResponse<FeedbackGetResponse> when pagination options are used.
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
    * @example
    * ```typescript
+   * import { Feedback, FeedbackStatus } from '@uipath/uipath-typescript/feedback';
+   *
    * // Get all feedback (default pagination: returns first 100 items)
    * const allFeedback = await feedback.getAll();
    *
