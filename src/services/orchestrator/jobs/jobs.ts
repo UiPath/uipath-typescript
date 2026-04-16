@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions } from '../../../models/orchestrator/jobs.types';
+import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobStopData } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -10,12 +10,17 @@ import { ValidationError, ServerError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
 import { errorResponseParser } from '../../../core/errors/parser';
 import { createHeaders } from '../../../utils/http/headers';
-import { FOLDER_ID } from '../../../utils/constants/headers';
+import { FOLDER_ID, RESPONSE_TYPES } from '../../../utils/constants/headers';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
+import { OperationResponse, CollectionResponse } from '../../../models/common/types';
+import { StopStrategy } from '../../../models/orchestrator/processes.types';
+
+/** Maximum number of job keys to resolve in a single OData filter query */
+const JOB_KEY_RESOLUTION_CHUNK_SIZE = 50;
 
 /**
  * Service for interacting with UiPath Orchestrator Jobs API
@@ -212,6 +217,55 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
+   * Stops one or more jobs by their UUID keys.
+   *
+   * Resolves the provided job UUID keys to integer IDs, then sends a stop request to the Orchestrator.
+   * Keys are processed in chunks of 50 to avoid URL length limits. Throws if any keys cannot be resolved.
+   *
+   * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
+   * @param folderId - The folder ID where the jobs reside (required)
+   * @param options - Optional {@link JobStopOptions} including stop strategy
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobStopData}> with the resolved job IDs
+   *
+   * @example
+   * ```typescript
+   * // Stop a single job with default soft stop
+   * const result = await jobs.stop([<jobKey>], <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { StopStrategy } from '@uipath/uipath-typescript/jobs';
+   *
+   * // Force-kill multiple jobs
+   * const result = await jobs.stop(
+   *   [<jobKey1>, <jobKey2>],
+   *   <folderId>,
+   *   { strategy: StopStrategy.Kill }
+   * );
+   * ```
+   */
+  @track('Jobs.Stop')
+  async stop(
+    jobKeys: string[],
+    folderId: number,
+    options?: JobStopOptions
+  ): Promise<OperationResponse<JobStopData>> {
+    if (jobKeys.length === 0) {
+      return { success: true, data: { jobIds: [] } };
+    }
+
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    const strategy = options?.strategy ?? StopStrategy.SoftStop;
+
+    const jobIds = await this.resolveJobKeys(jobKeys, headers);
+
+    await this.stopJobsByIds(jobIds, strategy, headers);
+
+    return { success: true, data: { jobIds } };
+  }
+
+  /**
    * Downloads the output file content via the Attachments API.
    * 1. Fetches blob access info from the attachment using AttachmentService
    * 2. Downloads content from the presigned blob URI
@@ -251,5 +305,57 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     } catch {
       throw new ServerError({ message: 'Failed to parse job output file as JSON' });
     }
+  }
+
+  /**
+   * Resolves job UUID keys to integer IDs via OData filter queries.
+   * Chunks keys into batches to avoid URL length limits.
+   */
+  private async resolveJobKeys(
+    jobKeys: string[],
+    headers: Record<string, string>
+  ): Promise<number[]> {
+    const uniqueKeys = [...new Set(jobKeys)];
+    const keyToIdMap = new Map<string, number>();
+
+    for (let i = 0; i < uniqueKeys.length; i += JOB_KEY_RESOLUTION_CHUNK_SIZE) {
+      const chunk = uniqueKeys.slice(i, i + JOB_KEY_RESOLUTION_CHUNK_SIZE);
+      const filterValues = chunk.map((key) => `'${key}'`).join(',');
+      const filter = `Key in (${filterValues})`;
+
+      const response = await this.get<CollectionResponse<{ Key: string; Id: number }>>(
+        JOB_ENDPOINTS.GET_ALL,
+        {
+          params: { $filter: filter, $select: 'Id,Key', $top: chunk.length },
+          headers,
+        }
+      );
+
+      for (const job of response.data.value) {
+        keyToIdMap.set(job.Key, job.Id);
+      }
+    }
+
+    const missingKeys = uniqueKeys.filter((key) => !keyToIdMap.has(key));
+    if (missingKeys.length > 0) {
+      throw new ValidationError({ message: `Jobs not found for keys: ${missingKeys.join(', ')}` });
+    }
+
+    return jobKeys.map((key) => keyToIdMap.get(key)!);
+  }
+
+  /**
+   * Calls the StopJobs OData action with resolved integer IDs.
+   */
+  private async stopJobsByIds(
+    jobIds: number[],
+    strategy: StopStrategy,
+    headers: Record<string, string>
+  ): Promise<void> {
+    await this.post(
+      JOB_ENDPOINTS.STOP,
+      { jobIds, strategy },
+      { headers, responseType: RESPONSE_TYPES.TEXT }
+    );
   }
 }

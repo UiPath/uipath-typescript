@@ -188,6 +188,51 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('stop', () => {
+    it('should stop a running job with soft stop strategy', async () => {
+      const { jobs, folderId } = getJobsService();
+
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID not configured — cannot run stop test.');
+      }
+
+      // Find a running job to stop
+      const runningJobs = await jobs.getAll({
+        folderId,
+        filter: "state eq 'Running'",
+        pageSize: 1,
+      });
+
+      if (runningJobs.items.length === 0) {
+        console.warn('No running jobs available to test stop. Skipping.');
+        return;
+      }
+
+      const jobKey = runningJobs.items[0].key;
+
+      const result = await jobs.stop([jobKey], folderId);
+
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.jobIds).toBeDefined();
+      expect(Array.isArray(result.data.jobIds)).toBe(true);
+      expect(result.data.jobIds.length).toBe(1);
+      expect(typeof result.data.jobIds[0]).toBe('number');
+    });
+
+    it('should return empty result when called with empty array', async () => {
+      const { jobs } = getJobsService();
+
+      // folderId is unused for empty-array inputs — stop() returns early before reading it
+      const result = await jobs.stop([], 0);
+
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.data.jobIds).toEqual([]);
+    });
+  });
+
   describe('Job structure validation', () => {
     it('should have expected fields in job objects', async () => {
       const { jobs, folderId } = getJobsService();
