@@ -36,5 +36,10 @@ export const TEST_CONSTANTS = {
   CLIENT_ID: 'test-client-id',
   CLIENT_SECRET: 'test-client-secret',
   ORGANIZATION_ID: 'test-org-id',
+  GUID_ORG_ID: '550e8400-e29b-41d4-a716-446655440000',
+  INVALID_GUID_ORG_ID: '550e840-e29b-41d4-a716-446655440000',
+  REDIRECT_URI: 'http://localhost:3000/callback',
+  CODE_CHALLENGE: 'test-code-challenge',
+  OAUTH_SCOPE: 'OR.Processes',
   TENANT_ID: 'test-tenant-id',
 } as const;
