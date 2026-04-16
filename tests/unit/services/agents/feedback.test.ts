@@ -35,6 +35,14 @@ describe('FeedbackService Unit Tests', () => {
 
   describe('getAll', () => {
     it('should get all feedback successfully', async () => {
+      const mockCategory = {
+        id: FEEDBACK_TEST_CONSTANTS.CATEGORY_ID,
+        category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME,
+        createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
+        isDefault: true,
+        isPositive: true,
+        isNegative: false,
+      };
       const mockResponse: FeedbackGetResponse[] = [
         {
           id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID,
@@ -43,7 +51,18 @@ describe('FeedbackService Unit Tests', () => {
           agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
           isPositive: true,
           comment: 'Great!',
-          feedbackCategories: [],
+          feedbackCategories: [mockCategory],
+          status: FeedbackStatus.Pending,
+          createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
+          updatedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
+        },
+        {
+          id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID_2,
+          traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,
+          spanId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_SPAN_ID,
+          agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
+          isPositive: false,
+          feedbackCategories: [mockCategory],
           status: FeedbackStatus.Pending,
           createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
           updatedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
@@ -57,7 +76,7 @@ describe('FeedbackService Unit Tests', () => {
       expect(result).toBeDefined();
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
-      expect(result.items.length).toBe(1);
+      expect(result.items.length).toBe(2);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
         expect.objectContaining({ params: expect.objectContaining({}) })
@@ -81,10 +100,10 @@ describe('FeedbackService Unit Tests', () => {
     });
 
     it('should throw error when API call fails', async () => {
-      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+      const error = new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(feedbackService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(feedbackService.getAll()).rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
     });
 
     it('should get paginated feedback', async () => {
