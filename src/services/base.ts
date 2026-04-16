@@ -169,7 +169,6 @@ export class BaseService {
       const existingBody = (options.body && typeof options.body === 'object') ? options.body as Record<string, unknown> : {};
       options.body = {
         ...existingBody,
-        ...options.params,
         ...requestParams
       };
     } else {

@@ -21,6 +21,7 @@ import {
 } from '../../../utils/mocks/pagination';
 import { DEFAULT_TOTAL_COUNT_FIELD, DEFAULT_ITEMS_FIELD } from '../../../../src/utils/pagination/constants';
 import { FOLDER_ID } from '../../../../src/utils/constants/headers';
+import { HTTP_METHODS } from '../../../../src/utils/constants/common';
 
 // ===== TEST SUITE =====
 describe('PaginationHelpers Unit Tests', () => {
@@ -525,6 +526,32 @@ describe('PaginationHelpers Unit Tests', () => {
         expect.any(Object)
       );
     });
+
+    it('should pass additionalParams in body (not params) for POST requests', async () => {
+      const mockResponse = createMockPaginatedResponse(MOCK_RAW_ITEMS);
+      vi.mocked(mockServiceAccess.requestWithPagination).mockResolvedValue(mockResponse);
+
+      const filterGroup = { logicalOperator: 'And', queryFilters: [] };
+
+      await PaginationHelpers.getAllPaginated({
+        serviceAccess: mockServiceAccess,
+        getEndpoint: () => PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
+        paginationParams: { pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE },
+        additionalParams: { filterGroup },
+        method: HTTP_METHODS.POST,
+        options: { paginationType: PaginationType.OFFSET },
+      });
+
+      expect(mockServiceAccess.requestWithPagination).toHaveBeenCalledWith(
+        HTTP_METHODS.POST,
+        PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
+        { pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE },
+        expect.objectContaining({
+          body: { filterGroup },
+          params: {},
+        })
+      );
+    });
   });
 
   describe('getAllNonPaginated', () => {
@@ -854,6 +881,28 @@ describe('PaginationHelpers Unit Tests', () => {
 
       expect(mockServiceAccess.get).toHaveBeenCalled();
       expect(result.items).toEqual([]);
+    });
+
+    it('should pass additionalParams in body (not params) for POST paginated requests', async () => {
+      const mockResponse = createMockPaginatedResponse(MOCK_RAW_ITEM);
+      vi.mocked(mockServiceAccess.requestWithPagination).mockResolvedValue(mockResponse);
+
+      const filterGroup = { logicalOperator: 0, queryFilters: [{ fieldName: 'status', operator: '=', value: 'active' }] };
+
+      await PaginationHelpers.getAll(
+        { ...mockConfig, method: HTTP_METHODS.POST, excludeFromPrefix: ['filterGroup'] },
+        { pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE, filterGroup }
+      );
+
+      expect(mockServiceAccess.requestWithPagination).toHaveBeenCalledWith(
+        HTTP_METHODS.POST,
+        PAGINATION_TEST_CONSTANTS.ENDPOINT_API_ITEMS,
+        { pageSize: PAGINATION_TEST_CONSTANTS.PAGE_SIZE },
+        expect.objectContaining({
+          body: { filterGroup },
+          params: {},
+        })
+      );
     });
   });
 });
