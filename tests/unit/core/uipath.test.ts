@@ -3,13 +3,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
+import { AuthenticationError, ValidationError } from '../../../src/core/errors';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 
 // ===== MOCKING =====
+const mockAuthState = {
+  token: 'mock-access-token' as string | undefined,
+  hasValidToken: true
+};
+
 const mockTokenManager = {
-  getToken: () => 'mock-access-token',
-  hasValidToken: () => true
+  getToken: () => mockAuthState.token,
+  hasValidToken: () => mockAuthState.hasValidToken
 };
 
 const mockLogout = vi.fn();
@@ -17,8 +23,8 @@ const mockLogout = vi.fn();
 vi.mock('../../../src/core/auth/service', () => {
   const AuthService: any = vi.fn().mockImplementation(() => ({
     getTokenManager: () => mockTokenManager,
-    hasValidToken: () => true,
-    getToken: () => 'mock-access-token',
+    hasValidToken: () => mockAuthState.hasValidToken,
+    getToken: () => mockAuthState.token,
     authenticateWithSecret: vi.fn(),
     authenticate: vi.fn().mockResolvedValue(true),
     logout: mockLogout
@@ -33,6 +39,13 @@ vi.mock('../../../src/core/auth/service', () => {
 });
 
 vi.mock('../../../src/core/http/api-client');
+
+// ===== TEST HELPERS =====
+const createJwt = (payload: Record<string, unknown>): string => {
+  const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${header}.${body}.signature`;
+};
 
 // ===== TEST SUITE =====
 describe('UiPath Core', () => {
@@ -349,6 +362,113 @@ describe('UiPath Core', () => {
 
       expect(mockLogout).toHaveBeenCalledOnce();
       expect(sdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('getTokenIdentity', () => {
+    beforeEach(() => {
+      mockAuthState.hasValidToken = true;
+      mockAuthState.token = 'mock-access-token';
+    });
+
+    it('should return all 5 mapped identity fields from JWT claims', () => {
+      mockAuthState.token = createJwt({
+        email: 'jane.doe@example.com',
+        first_name: 'Jane',
+        last_name: 'Doe',
+        preferred_username: 'jane.doe',
+        name: 'Jane Doe'
+      });
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      const identity = sdk.getTokenIdentity();
+
+      expect(identity).toEqual({
+        email: 'jane.doe@example.com',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        preferredUsername: 'jane.doe',
+        name: 'Jane Doe'
+      });
+    });
+
+    it('should return undefined for missing claims', () => {
+      mockAuthState.token = createJwt({ email: 'only.email@example.com' });
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      const identity = sdk.getTokenIdentity();
+
+      expect(identity.email).toBe('only.email@example.com');
+      expect(identity.firstName).toBeUndefined();
+      expect(identity.lastName).toBeUndefined();
+      expect(identity.preferredUsername).toBeUndefined();
+      expect(identity.name).toBeUndefined();
+    });
+
+    it('should throw AuthenticationError when user is not authenticated', () => {
+      mockAuthState.hasValidToken = false;
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      expect(() => sdk.getTokenIdentity()).toThrow(AuthenticationError);
+    });
+
+    it('should throw ValidationError when token has fewer than 3 segments', () => {
+      mockAuthState.token = 'not-a-jwt';
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      expect(() => sdk.getTokenIdentity()).toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError when token has more than 3 segments', () => {
+      mockAuthState.token = 'header.payload.sig.extra';
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      expect(() => sdk.getTokenIdentity()).toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError when payload is not valid JSON', () => {
+      const header = Buffer.from(JSON.stringify({ alg: 'none' })).toString('base64url');
+      const invalidPayload = Buffer.from('not-json-content').toString('base64url');
+      mockAuthState.token = `${header}.${invalidPayload}.signature`;
+
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET
+      });
+
+      expect(() => sdk.getTokenIdentity()).toThrow(ValidationError);
     });
   });
 
