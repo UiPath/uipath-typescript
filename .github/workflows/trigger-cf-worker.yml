@@ -1,0 +1,34 @@
+name: Trigger CF Worker Deploy
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [staging, production]
+    steps:
+      - name: Trigger CF Worker deploy (${{ matrix.environment }})
+        env:
+          ADO_PAT: ${{ secrets.ADO_PAT }}
+        run: |
+          RESPONSE=$(curl -sf -X POST \
+            "https://dev.azure.com/uipath/BusinessApplications/_apis/pipelines/17960/runs?api-version=7.1" \
+            -H "Authorization: Basic $(echo -n ":$ADO_PAT" | base64)" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "templateParameters": {
+                "environmentName": "${{ matrix.environment }}",
+                "cloudFlareAccountId": "${{ vars.CF_ACCOUNT_ID }}"
+              }
+            }')
+
+          RUN_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "### CF Worker Deploy - ${{ matrix.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ADO Pipeline Run ID: $RUN_ID" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Run](https://uipath.visualstudio.com/BusinessApplications/_build/results?buildId=$RUN_ID)" >> $GITHUB_STEP_SUMMARY
