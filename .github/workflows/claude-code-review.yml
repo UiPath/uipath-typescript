@@ -137,6 +137,13 @@ jobs:
               this run, and (b) any threads you unresolved this run. Do not list
               issues you skipped via the dedupe gate.
 
+            STEP 6 — Post approval message or stay silent.
+            After the review completes:
+              • If you posted NO new inline comments and unresolved NO threads
+                (i.e., the PR is clean) → post an approval comment using:
+                  gh pr comment ${{ github.event.pull_request.number }} --body "✅ No issues found. Checked for bugs and CLAUDE.md compliance."
+              • If you DID post inline comments or unresolve threads → do NOT post an approval comment.
+
             Now run the plugin:
             /code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }} --comment
           use_sticky_comment: true
