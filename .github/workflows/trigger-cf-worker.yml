@@ -24,7 +24,7 @@ jobs:
             -d '{
               "templateParameters": {
                 "environmentName": "${{ matrix.environment }}",
-                "cloudFlareAccountId": "078e41b2d3df720703d8df3c0d62aaaa"
+                "cloudFlareAccountId": "${{ vars.CF_ACCOUNT_ID }}"
               }
             }')
 
