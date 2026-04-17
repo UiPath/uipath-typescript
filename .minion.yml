@@ -1,0 +1,30 @@
+runtime:
+  package_manager: npm
+  node_version: "20"
+
+validation:
+  test_command: "npm test"
+  lint_command: "npm run lint"
+  build_command: "npm run build"
+
+branching:
+  target_branch: main
+
+limits:
+  max_turns: 25
+  timeout_minutes: 30
+
+autonomy: supervised
+
+model:
+  implementer: opus
+
+protected_paths:
+  - "src/core/auth/**"
+  - ".github/workflows/**"
+  - "packages/cli/src/commands/deploy/**"
+
+context_files:
+  - "CLAUDE.md"
+  - "README.md"
+  - "docs/CONTRIBUTING.md"
