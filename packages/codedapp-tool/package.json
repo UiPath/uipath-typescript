@@ -1,6 +1,6 @@
 {
   "name": "@uipath/codedapp-tool",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "description": "uipcli plugin for coded web applications",
   "keywords": ["uipcli-tool"],
   "type": "module",
@@ -41,7 +41,8 @@
     "directory": "packages/codedapp-tool"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "engines": {
     "node": ">=18.0.0"
