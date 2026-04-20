@@ -1,12 +1,14 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../../models/orchestrator/assets.types';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
-import { FOLDER_ID } from '../../../utils/constants/headers';
+import { FOLDER_ID, FOLDER_PATH, FOLDER_KEY } from '../../../utils/constants/headers';
 import { ASSET_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { AssetMap } from '../../../models/orchestrator/assets.constants';
+import { CollectionResponse } from '../../../models/common/types';
+import { NotFoundError } from '../../../core/errors';
 import { ODATA_PAGINATION } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
@@ -115,7 +117,62 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
     );
 
     const transformedAsset = transformData(pascalToCamelCaseKeys(response.data) as AssetGetResponse, AssetMap);
-    
+
     return transformedAsset;
+  }
+
+  /**
+   * Retrieves a single asset by name, optionally scoped to a folder
+   *
+   * @param name - Asset name to search for
+   * @param options - Optional folder scoping and query parameters
+   * @returns Promise resolving to a single asset
+   *
+   * @example
+   * ```typescript
+   * import { Assets } from '@uipath/uipath-typescript/assets';
+   *
+   * const assets = new Assets(sdk);
+   *
+   * // Get asset by name with folder path
+   * const asset = await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
+   *
+   * // Get asset by name with folder key
+   * const asset = await assets.getByName('ApiKey', { folderKey: 'folder-guid' });
+   *
+   * // Get asset by name (uses default folder context)
+   * const asset = await assets.getByName('ApiKey');
+   * ```
+   */
+  @track('Assets.GetByName')
+  async getByName(name: string, options: AssetGetByNameOptions = {}): Promise<AssetGetResponse> {
+    const { folderPath, folderKey, ...queryOptions } = options;
+
+    const headers = createHeaders({
+      [FOLDER_PATH]: folderPath,
+      [FOLDER_KEY]: folderKey,
+    });
+
+    const keysToPrefix = Object.keys(queryOptions);
+    const apiOptions = {
+      ...addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix),
+      '$filter': `Name eq '${name.replace(/'/g, "''")}'`,
+      '$top': '1',
+    };
+
+    const response = await this.get<CollectionResponse<AssetGetResponse>>(
+      ASSET_ENDPOINTS.GET_BY_FOLDER,
+      {
+        headers,
+        params: apiOptions,
+      }
+    );
+
+    const items = response.data?.value;
+    if (!items?.length) {
+      throw new NotFoundError({ message: `Asset with name '${name}' not found` });
+    }
+
+    return transformData(pascalToCamelCaseKeys(items[0]) as AssetGetResponse, AssetMap);
   }
 }

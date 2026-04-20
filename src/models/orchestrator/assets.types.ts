@@ -68,3 +68,19 @@ export type AssetGetAllOptions = RequestOptions & PaginationOptions & {
  * Options for getting a single asset by ID
  */
 export interface AssetGetByIdOptions extends BaseOptions {}
+
+/**
+ * Options for getting a single asset by name
+ */
+export interface AssetGetByNameOptions extends BaseOptions {
+  /**
+   * Folder path to scope the asset lookup (e.g. 'Shared/Finance').
+   * Mutually exclusive with folderKey.
+   */
+  folderPath?: string;
+  /**
+   * Folder key (GUID) to scope the asset lookup.
+   * Mutually exclusive with folderPath.
+   */
+  folderKey?: string;
+}

@@ -1,4 +1,4 @@
-import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions } from './assets.types';
+import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions, AssetGetByNameOptions } from './assets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -66,4 +66,29 @@ export interface AssetServiceModel {
    * ```
    */
   getById(id: number, folderId: number, options?: AssetGetByIdOptions): Promise<AssetGetResponse>;
-} 
+
+  /**
+   * Retrieves a single asset by name, optionally scoped to a folder
+   *
+   * Uses the asset name and folder path to look up the resource. The folder context
+   * is resolved server-side via the X-UIPATH-FolderPath header — no client-side
+   * folder ID resolution is needed.
+   *
+   * @param name - Asset name to search for
+   * @param options - Optional folder scoping and query parameters
+   * @returns Promise resolving to a single asset
+   * {@link AssetGetResponse}
+   * @example
+   * ```typescript
+   * // Get asset by name with folder path
+   * const asset = await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
+   *
+   * // Get asset by name with folder key
+   * const asset = await assets.getByName('ApiKey', { folderKey: 'folder-guid' });
+   *
+   * // Get asset by name (uses default folder context)
+   * const asset = await assets.getByName('ApiKey');
+   * ```
+   */
+  getByName(name: string, options?: AssetGetByNameOptions): Promise<AssetGetResponse>;
+}
