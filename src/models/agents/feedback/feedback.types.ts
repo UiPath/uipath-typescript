@@ -58,9 +58,9 @@ export interface FeedbackGetResponse {
   /** Current status of the feedback in the review workflow */
   status: FeedbackStatus;
   /** Timestamp when the feedback was created */
-  createdAt: string;
+  createdTime: string;
   /** Timestamp when the feedback was last updated */
-  updatedAt: string;
+  updatedTime: string;
 }
 
 /**

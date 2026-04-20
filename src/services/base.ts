@@ -227,7 +227,9 @@ export class BaseService {
         const countParam = paginationParams?.countParam || ODATA_OFFSET_PARAMS.COUNT_PARAM;
         
         requestParams[pageSizeParam] = limitedPageSize;
-        requestParams[offsetParam] = params.pageNumber ? (params.pageNumber - 1) * limitedPageSize : 0;
+        if (params.pageNumber && params.pageNumber > 1) {
+          requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
+        }
         if (countParam) {
           requestParams[countParam] = true;
         }

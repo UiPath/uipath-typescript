@@ -57,8 +57,8 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       expect(typeof item.isPositive).toBe('boolean');
       expect(Array.isArray(item.feedbackCategories)).toBe(true);
       expect(item.status).toBeDefined();
-      expect(item.createdAt).toBeDefined();
-      expect(item.updatedAt).toBeDefined();
+      expect(item.createdTime).toBeDefined();
+      expect(item.updatedTime).toBeDefined();
     });
   });
 });
