@@ -29,8 +29,8 @@ export default class Auth extends Command {
     domain: Flags.string({
       char: 'd',
       description: 'UiPath domain to authenticate with',
-      options: [AUTH_CONSTANTS.DOMAINS.CLOUD, AUTH_CONSTANTS.DOMAINS.ALPHA, AUTH_CONSTANTS.DOMAINS.STAGING],
-      default: AUTH_CONSTANTS.DOMAINS.CLOUD,
+      options: [AUTH_CONSTANTS.DOMAINS.ALPHA, AUTH_CONSTANTS.DOMAINS.CLOUD, AUTH_CONSTANTS.DOMAINS.STAGING],
+      default: AUTH_CONSTANTS.DOMAINS.ALPHA,
     }),
     alpha: createDomainShorthandFlag('alpha', ['cloud', 'staging']),
     cloud: createDomainShorthandFlag('cloud', ['alpha', 'staging']),

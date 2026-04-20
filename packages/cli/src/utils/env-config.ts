@@ -135,7 +135,7 @@ function logMissingConfigError(
  * Normalizes base URL to ensure it has a protocol
  */
 function normalizeBaseUrl(url: string | undefined): string {
-  let baseUrl = url || BASE_URLS.cloud;
+  let baseUrl = url || BASE_URLS.alpha;
   if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
     baseUrl = `https://${baseUrl}`;
   }

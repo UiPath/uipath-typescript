@@ -1,7 +1,7 @@
 import { BASE_URLS, AUTH_CONSTANTS } from '../../constants/auth.js';
 
 export const getBaseUrl = (domain: string): string => {
-  return BASE_URLS[domain] || BASE_URLS.cloud;
+  return BASE_URLS[domain] || BASE_URLS.alpha;
 };
 
 export const buildRedirectUri = (port: number): string => {
