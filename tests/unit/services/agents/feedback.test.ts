@@ -4,7 +4,7 @@ import { FeedbackService } from '../../../../src/services/agents/feedback/feedba
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { FEEDBACK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { TEST_CONSTANTS, FEEDBACK_TEST_CONSTANTS } from '../../../utils/constants';
+import { TEST_CONSTANTS, FEEDBACK_TEST_CONSTANTS, CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 import { createMockFeedback } from '../../../utils/mocks/feedback';
 
 // ===== MOCKING =====
@@ -58,6 +58,18 @@ describe('FeedbackService Unit Tests', () => {
       );
     });
 
+    it('should transform createdAt and updatedAt to createdTime and updatedTime', async () => {
+      mockApiClient.get.mockResolvedValue([createMockFeedback()]);
+
+      const result = await feedbackService.getAll();
+      const item = result.items[0];
+
+      expect(item.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
+      expect(item.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
+      expect((item as any).createdAt).toBeUndefined();
+      expect((item as any).updatedAt).toBeUndefined();
+    });
+
     it('should throw error when API call fails', async () => {
       const error = new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
       mockApiClient.get.mockRejectedValue(error);
@@ -76,7 +88,7 @@ describe('FeedbackService Unit Tests', () => {
       expect(result.items.length).toBe(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
-        expect.objectContaining({ params: expect.objectContaining({ skip: 0, take: TEST_CONSTANTS.PAGE_SIZE }) })
+        expect.objectContaining({ params: expect.objectContaining({ take: TEST_CONSTANTS.PAGE_SIZE }) })
       );
     });
   });
