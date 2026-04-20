@@ -529,3 +529,15 @@ export const createMockActionTasksResponse = (tasks: any[] = []) => {
     totalCount: taskItems.length
   });
 };
+
+/**
+ * Creates a mock TopProcessByRunCount response item
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock TopProcessByRunCountResponse object
+ */
+export const createMockTopProcessByRunCount = (overrides: Partial<any> = {}) => ({
+  packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+  runCount: MAESTRO_TEST_CONSTANTS.INSIGHTS_RUN_COUNT,
+  processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+  ...overrides,
+});
