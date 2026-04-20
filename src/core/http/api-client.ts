@@ -107,12 +107,6 @@ export class ApiClient {
         return blob as T;
       }
 
-      // Handle text response type for endpoints that return empty or plain text bodies
-      if (options.responseType === RESPONSE_TYPES.TEXT) {
-        const text = await response.text();
-        return (text || undefined) as T;
-      }
-
       // Check if we're expecting XML
       const acceptHeader = headers['Accept'] || headers['accept'];
       if (acceptHeader === CONTENT_TYPES.XML) {

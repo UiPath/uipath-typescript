@@ -19,6 +19,7 @@ import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { StopStrategy } from '../../../../src/models/orchestrator/processes.types';
+import { JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../../src/models/orchestrator/jobs.constants';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -608,7 +609,7 @@ describe('JobService Unit Tests', () => {
     });
 
     it('should resolve keys in multiple chunks when count exceeds chunk size', async () => {
-      const chunkSize = JOB_TEST_CONSTANTS.KEY_RESOLUTION_CHUNK_SIZE;
+      const chunkSize = JOB_KEY_RESOLUTION_CHUNK_SIZE;
       const keys = Array.from(
         { length: chunkSize + 1 },
         (_, i) => `${i.toString().padStart(8, '0')}-bbbb-cccc-dddd-eeeeeeeeeeee`
