@@ -47,7 +47,7 @@ export interface FeedbackGetResponse {
   agentVersion?: string;
   /** Optional text comment provided by the user (max 4000 characters) */
   comment?: string;
-  /** Optional JSON metadata for structured data associated with the feedback (max 4000 characters) */
+  /** Optional metadata string associated with the feedback (max 4000 characters) */
   metadata?: string;
   /** Whether the feedback is positive (thumbs up) or negative (thumbs down) */
   isPositive: boolean;

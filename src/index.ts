@@ -16,6 +16,7 @@ export * from './models/maestro';
 export * from './models/orchestrator';
 export * from './models/action-center';
 export * from './models/conversational-agent';
+export * from './models/agents';
 
 // Export error handling functionality (public API only)
 export * from './core/errors';
