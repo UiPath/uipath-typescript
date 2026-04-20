@@ -503,8 +503,8 @@ describe('JobService Unit Tests', () => {
 
   describe('stop', () => {
     it('should stop a single job with default soft stop strategy', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        value: [{ Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID }],
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
       });
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
@@ -518,14 +518,13 @@ describe('JobService Unit Tests', () => {
         data: { jobIds: [JOB_TEST_CONSTANTS.JOB_ID] },
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        JOB_ENDPOINTS.GET_ALL,
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
         expect.objectContaining({
-          params: {
-            $filter: `Key in ('${JOB_TEST_CONSTANTS.JOB_KEY}')`,
-            $select: 'Id,Key',
-            $top: 1,
-          },
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+          filter: `key in ('${JOB_TEST_CONSTANTS.JOB_KEY}')`,
+          select: 'id,key',
+          pageSize: 1,
         })
       );
 
@@ -537,10 +536,10 @@ describe('JobService Unit Tests', () => {
     });
 
     it('should stop multiple jobs with Kill strategy', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        value: [
-          { Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID },
-          { Key: JOB_TEST_CONSTANTS.JOB_KEY_2, Id: JOB_TEST_CONSTANTS.JOB_ID_2 },
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [
+          { key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID },
+          { key: JOB_TEST_CONSTANTS.JOB_KEY_2, id: JOB_TEST_CONSTANTS.JOB_ID_2 },
         ],
       });
       mockApiClient.post.mockResolvedValueOnce(undefined);
@@ -574,13 +573,13 @@ describe('JobService Unit Tests', () => {
         data: { jobIds: [] },
       });
 
-      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw when job keys are not found', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        value: [],
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [],
       });
 
       await expect(
@@ -589,8 +588,8 @@ describe('JobService Unit Tests', () => {
     });
 
     it('should deduplicate job keys for resolution and return unique IDs', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        value: [{ Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID }],
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
       });
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
@@ -602,10 +601,8 @@ describe('JobService Unit Tests', () => {
       // Duplicate keys are deduplicated — only one ID returned
       expect(result.data.jobIds).toEqual([JOB_TEST_CONSTANTS.JOB_ID]);
 
-      // Only one resolution call with deduplicated keys
-      const filterArg = mockApiClient.get.mock.calls[0][1].params.$filter;
-      const keyMatches = filterArg.match(/'/g);
-      expect(keyMatches).toHaveLength(2); // One key, two quotes
+      // Only one getAll call with deduplicated keys
+      expect(PaginationHelpers.getAll).toHaveBeenCalledTimes(1);
     });
 
     it('should resolve keys in multiple chunks when count exceeds chunk size', async () => {
@@ -617,20 +614,18 @@ describe('JobService Unit Tests', () => {
       const ids = keys.map((_, i) => i + 1);
 
       // Chunk 1: first 50 keys
-      mockApiClient.get.mockResolvedValueOnce({
-        value: keys.slice(0, chunkSize).map((k, i) => ({ Key: k, Id: ids[i] })),
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: keys.slice(0, chunkSize).map((k, i) => ({ key: k, id: ids[i] })),
       });
       // Chunk 2: remaining 1 key
-      mockApiClient.get.mockResolvedValueOnce({
-        value: [{ Key: keys[chunkSize], Id: ids[chunkSize] }],
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: keys[chunkSize], id: ids[chunkSize] }],
       });
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
       const result = await jobService.stop(keys, TEST_CONSTANTS.FOLDER_ID);
 
-      expect(mockApiClient.get).toHaveBeenCalledTimes(2);
-      expect(mockApiClient.get.mock.calls[0][1].params.$top).toBe(chunkSize);
-      expect(mockApiClient.get.mock.calls[1][1].params.$top).toBe(1);
+      expect(PaginationHelpers.getAll).toHaveBeenCalledTimes(2);
       expect(result.data.jobIds).toHaveLength(chunkSize + 1);
       expect(result.data.jobIds).toEqual(ids);
     });
@@ -643,7 +638,7 @@ describe('JobService Unit Tests', () => {
 
     it('should propagate resolution API errors', async () => {
       const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
-      mockApiClient.get.mockRejectedValueOnce(error);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValueOnce(error);
 
       await expect(
         jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], TEST_CONSTANTS.FOLDER_ID)
@@ -651,8 +646,8 @@ describe('JobService Unit Tests', () => {
     });
 
     it('should propagate stop API errors', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        value: [{ Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID }],
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
       });
 
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);

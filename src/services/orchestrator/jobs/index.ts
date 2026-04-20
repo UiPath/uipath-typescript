@@ -23,4 +23,3 @@ export { JobService as Jobs, JobService } from './jobs';
 export * from '../../../models/orchestrator/jobs.types';
 export * from '../../../models/orchestrator/jobs.models';
 export { JobState } from '../../../models/common/types';
-export { StopStrategy } from '../../../models/orchestrator/processes.types';

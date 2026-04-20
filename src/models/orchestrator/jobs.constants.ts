@@ -1,4 +1,4 @@
-/** Maximum number of job keys to resolve in a single OData filter query (matches Python SDK) */
+/** Maximum number of job keys to resolve in a single OData filter query */
 export const JOB_KEY_RESOLUTION_CHUNK_SIZE = 50;
 
 /**

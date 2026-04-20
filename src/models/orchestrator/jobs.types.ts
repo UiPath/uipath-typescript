@@ -14,6 +14,8 @@ import {
   FolderProperties,
 } from './processes.types';
 
+export { StopStrategy };
+
 /**
  * Enum for job sub-state
  */

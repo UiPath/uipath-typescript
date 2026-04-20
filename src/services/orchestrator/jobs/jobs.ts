@@ -16,7 +16,7 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
-import { OperationResponse, CollectionResponse } from '../../../models/common/types';
+import { OperationResponse } from '../../../models/common/types';
 import { StopStrategy } from '../../../models/orchestrator/processes.types';
 
 /**
@@ -258,7 +258,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     const strategy = options?.strategy ?? StopStrategy.SoftStop;
 
-    const jobIds = await this.resolveJobKeys(jobKeys, headers);
+    const jobIds = await this.resolveJobKeys(jobKeys, folderId);
 
     await this.stopJobsByIds(jobIds, strategy, headers);
 
@@ -308,31 +308,36 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
-   * Resolves job UUID keys to integer IDs via OData filter queries.
+   * Resolves job UUID keys to integer IDs via the getAll method.
    * Chunks keys into batches to avoid URL length limits.
    */
   private async resolveJobKeys(
     jobKeys: string[],
-    headers: Record<string, string>
+    folderId: number
   ): Promise<number[]> {
     const uniqueKeys = [...new Set(jobKeys)];
     const keyToIdMap = new Map<string, number>();
 
+    const chunks: string[][] = [];
     for (let i = 0; i < uniqueKeys.length; i += JOB_KEY_RESOLUTION_CHUNK_SIZE) {
-      const chunk = uniqueKeys.slice(i, i + JOB_KEY_RESOLUTION_CHUNK_SIZE);
-      const filterValues = chunk.map((key) => `'${key}'`).join(',');
-      const filter = `Key in (${filterValues})`;
+      chunks.push(uniqueKeys.slice(i, i + JOB_KEY_RESOLUTION_CHUNK_SIZE));
+    }
 
-      const response = await this.get<CollectionResponse<{ Key: string; Id: number }>>(
-        JOB_ENDPOINTS.GET_ALL,
-        {
-          params: { $filter: filter, $select: 'Id,Key', $top: chunk.length },
-          headers,
-        }
-      );
+    const results = await Promise.all(
+      chunks.map((chunk) => {
+        const filterValues = chunk.map((key) => `'${key}'`).join(',');
+        return this.getAll({
+          folderId,
+          filter: `key in (${filterValues})`,
+          select: 'id,key',
+          pageSize: chunk.length,
+        });
+      })
+    );
 
-      for (const job of response.data.value) {
-        keyToIdMap.set(job.Key, job.Id);
+    for (const response of results) {
+      for (const job of response.items) {
+        keyToIdMap.set(job.key, job.id);
       }
     }
 

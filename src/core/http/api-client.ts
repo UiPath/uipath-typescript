@@ -97,7 +97,7 @@ export class ApiClient {
         throw ErrorFactory.createFromHttpStatus(response.status, errorInfo);
       }
 
-      if (response.status === 204 || response.headers.get('content-length') === '0') {
+      if (response.status === 204) {
         return undefined as T;
       }
 
@@ -114,7 +114,11 @@ export class ApiClient {
         return text as T;
       }
 
-      return response.json();
+      const text = await response.text();
+      if (!text) {
+        return undefined as T;
+      }
+      return JSON.parse(text);
     } catch (error: any) {
       // If it's already one of our errors, re-throw it
       if (error.type && error.type.includes('Error')) {
