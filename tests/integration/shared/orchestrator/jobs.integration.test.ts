@@ -204,8 +204,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       });
 
       if (runningJobs.items.length === 0) {
-        console.warn('No running jobs available to test stop. Skipping.');
-        return;
+        throw new Error('No running jobs available in the test environment to test stop.');
       }
 
       const jobKey = runningJobs.items[0].key;

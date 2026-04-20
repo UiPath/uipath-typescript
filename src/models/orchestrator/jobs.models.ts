@@ -134,8 +134,7 @@ export interface JobServiceModel {
   /**
    * Stops one or more jobs by their UUID keys.
    *
-   * Resolves the provided job UUID keys to integer IDs, then sends a stop request to the Orchestrator.
-   * Keys are processed in chunks of 50 to avoid URL length limits. Throws if any keys cannot be resolved.
+   * Sends a stop request for the specified jobs to the Orchestrator. Throws if any keys cannot be resolved.
    *
    * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
    * @param folderId - The folder ID where the jobs reside (required)
@@ -192,6 +191,26 @@ export interface JobMethods {
    * ```
    */
   getOutput(): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Stops this job.
+   *
+   * Sends a stop request for this job to the Orchestrator.
+   *
+   * @param options - Optional {@link JobStopOptions} including stop strategy (defaults to SoftStop)
+   * @returns Promise resolving to an {@link OperationResponse}<{@link JobStopData}> with the resolved job ID
+   *
+   * @example
+   * ```typescript
+   * const allJobs = await jobs.getAll({ folderId: <folderId> });
+   * const runningJob = allJobs.items.find(j => j.state === JobState.Running);
+   *
+   * if (runningJob) {
+   *   const result = await runningJob.stop();
+   * }
+   * ```
+   */
+  stop(options?: JobStopOptions): Promise<OperationResponse<JobStopData>>;
 }
 
 /**
@@ -207,6 +226,11 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.getOutput(jobData.key, jobData.folderId);
+    },
+    async stop(options?: JobStopOptions): Promise<OperationResponse<JobStopData>> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.stop([jobData.key], jobData.folderId, options);
     },
   };
 }

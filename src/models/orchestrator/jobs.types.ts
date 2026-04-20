@@ -177,8 +177,8 @@ export interface JobGetByIdOptions extends BaseOptions {}
 export interface JobStopOptions {
   /**
    * The stop strategy to use.
-   * - `SoftStop` — sends a cancellation request and waits for the job to finish gracefully
-   * - `Kill` — forcefully terminates the job immediately
+   * - `SoftStop` — requests graceful cancellation; the job completes its current activity before stopping
+   * - `Kill` — requests immediate termination of the job
    * @default StopStrategy.SoftStop
    */
   strategy?: StopStrategy;

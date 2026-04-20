@@ -97,7 +97,7 @@ export class ApiClient {
         throw ErrorFactory.createFromHttpStatus(response.status, errorInfo);
       }
 
-      if (response.status === 204) {
+      if (response.status === 204 || response.headers.get('content-length') === '0') {
         return undefined as T;
       }
 

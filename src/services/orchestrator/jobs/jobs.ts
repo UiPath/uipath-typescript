@@ -4,13 +4,13 @@ import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
-import { JobMap } from '../../../models/orchestrator/jobs.constants';
+import { JobMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
 import { AttachmentService } from '../attachments/attachments';
 import { ValidationError, ServerError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
 import { errorResponseParser } from '../../../core/errors/parser';
 import { createHeaders } from '../../../utils/http/headers';
-import { FOLDER_ID, RESPONSE_TYPES } from '../../../utils/constants/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
@@ -18,9 +18,6 @@ import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
 import { OperationResponse, CollectionResponse } from '../../../models/common/types';
 import { StopStrategy } from '../../../models/orchestrator/processes.types';
-
-/** Maximum number of job keys to resolve in a single OData filter query */
-const JOB_KEY_RESOLUTION_CHUNK_SIZE = 50;
 
 /**
  * Service for interacting with UiPath Orchestrator Jobs API
@@ -219,8 +216,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   /**
    * Stops one or more jobs by their UUID keys.
    *
-   * Resolves the provided job UUID keys to integer IDs, then sends a stop request to the Orchestrator.
-   * Keys are processed in chunks of 50 to avoid URL length limits. Throws if any keys cannot be resolved.
+   * Sends a stop request for the specified jobs to the Orchestrator. Throws if any keys cannot be resolved.
    *
    * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
    * @param folderId - The folder ID where the jobs reside (required)
@@ -253,6 +249,10 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   ): Promise<OperationResponse<JobStopData>> {
     if (jobKeys.length === 0) {
       return { success: true, data: { jobIds: [] } };
+    }
+
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for stop' });
     }
 
     const headers = createHeaders({ [FOLDER_ID]: folderId });
@@ -341,7 +341,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       throw new ValidationError({ message: `Jobs not found for keys: ${missingKeys.join(', ')}` });
     }
 
-    return jobKeys.map((key) => keyToIdMap.get(key)!);
+    return uniqueKeys.map((key) => keyToIdMap.get(key)!);
   }
 
   /**
@@ -355,7 +355,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     await this.post(
       JOB_ENDPOINTS.STOP,
       { jobIds, strategy },
-      { headers, responseType: RESPONSE_TYPES.TEXT }
+      { headers }
     );
   }
 }

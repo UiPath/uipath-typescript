@@ -174,6 +174,8 @@ describe('JobService Unit Tests', () => {
 
       expect(transformed.getOutput).toBeDefined();
       expect(typeof transformed.getOutput).toBe('function');
+      expect(transformed.stop).toBeDefined();
+      expect(typeof transformed.stop).toBe('function');
     });
   });
 
@@ -216,7 +218,7 @@ describe('JobService Unit Tests', () => {
       expect((result as any).LastModificationTime).toBeUndefined();
     });
 
-    it('should attach getOutput method to result', async () => {
+    it('should attach bound methods to result', async () => {
       const mockRawJob = createMockRawJob();
       mockApiClient.get.mockResolvedValueOnce(mockRawJob);
 
@@ -224,6 +226,8 @@ describe('JobService Unit Tests', () => {
 
       expect(result.getOutput).toBeDefined();
       expect(typeof result.getOutput).toBe('function');
+      expect(result.stop).toBeDefined();
+      expect(typeof result.stop).toBe('function');
     });
 
     it('should pass expand and select options with OData prefix', async () => {
@@ -583,7 +587,7 @@ describe('JobService Unit Tests', () => {
       ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOBS_NOT_FOUND_FOR_KEYS);
     });
 
-    it('should deduplicate job keys for resolution but preserve original order in result', async () => {
+    it('should deduplicate job keys for resolution and return unique IDs', async () => {
       mockApiClient.get.mockResolvedValueOnce({
         value: [{ Key: JOB_TEST_CONSTANTS.JOB_KEY, Id: JOB_TEST_CONSTANTS.JOB_ID }],
       });
@@ -594,10 +598,8 @@ describe('JobService Unit Tests', () => {
         TEST_CONSTANTS.FOLDER_ID
       );
 
-      expect(result.data.jobIds).toEqual([
-        JOB_TEST_CONSTANTS.JOB_ID,
-        JOB_TEST_CONSTANTS.JOB_ID,
-      ]);
+      // Duplicate keys are deduplicated — only one ID returned
+      expect(result.data.jobIds).toEqual([JOB_TEST_CONSTANTS.JOB_ID]);
 
       // Only one resolution call with deduplicated keys
       const filterArg = mockApiClient.get.mock.calls[0][1].params.$filter;
@@ -630,6 +632,12 @@ describe('JobService Unit Tests', () => {
       expect(mockApiClient.get.mock.calls[1][1].params.$top).toBe(1);
       expect(result.data.jobIds).toHaveLength(chunkSize + 1);
       expect(result.data.jobIds).toEqual(ids);
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], 0)
+      ).rejects.toThrow('folderId is required for stop');
     });
 
     it('should propagate resolution API errors', async () => {
