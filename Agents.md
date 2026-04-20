@@ -5,7 +5,7 @@ TypeScript SDK for UiPath platform APIs. Provides typed clients for Action Cente
 ## Quick reference
 
 ```bash
-npm install              # install deps (npm workspaces: root + packages/cli)
+npm install              # install deps
 npm run build            # rollup build → dist/ (ESM, CJS, UMD, .d.ts)
 npm test                 # vitest
 npm run test:unit        # unit tests only (tests/unit/)

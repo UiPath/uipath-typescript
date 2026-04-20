@@ -19,7 +19,6 @@ export default defineConfig({
         "tests/",
         "dist/",
         "samples/**",
-        "packages/cli/**",
         "docs/**",
         "**/*.d.ts",
         "**/*.config.*",
