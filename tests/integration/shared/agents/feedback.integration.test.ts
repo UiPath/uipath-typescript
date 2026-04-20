@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { Feedback } from '../../../../src/services/agents/feedback';
 import { FeedbackStatus } from '../../../../src/models/agents/feedback/feedback.types';
 
 const modes: InitMode[] = ['v1'];
@@ -7,14 +8,14 @@ const modes: InitMode[] = ['v1'];
 describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
+  let feedback: Feedback;
+
+  beforeEach(() => {
+    feedback = getServices().feedback!;
+  });
+
   describe('getAll', () => {
     it('should retrieve all feedback', async () => {
-      const { feedback } = getServices();
-
-      if (!feedback) {
-        throw new Error('Feedback service not available in test services');
-      }
-
       const result = await feedback.getAll();
 
       expect(result).toBeDefined();
@@ -23,12 +24,6 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should retrieve feedback with pagination options', async () => {
-      const { feedback } = getServices();
-
-      if (!feedback) {
-        throw new Error('Feedback service not available in test services');
-      }
-
       const result = await feedback.getAll({ pageSize: 10 });
 
       expect(result).toBeDefined();
@@ -38,15 +33,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should retrieve feedback with status filter', async () => {
-      const { feedback } = getServices();
-
-      if (!feedback) {
-        throw new Error('Feedback service not available in test services');
-      }
-
-      const result = await feedback.getAll({
-        status: FeedbackStatus.Pending,
-      });
+      const result = await feedback.getAll({ status: FeedbackStatus.Pending });
 
       expect(result).toBeDefined();
       expect(result.items).toBeDefined();
@@ -56,12 +43,6 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
 
   describe('Feedback structure validation', () => {
     it('should have expected fields in feedback objects', async () => {
-      const { feedback } = getServices();
-
-      if (!feedback) {
-        throw new Error('Feedback service not available in test services');
-      }
-
       const result = await feedback.getAll({ pageSize: 1 });
 
       if (result.items.length === 0) {
@@ -70,12 +51,10 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
 
       const item = result.items[0];
 
-      expect(item).toBeDefined();
       expect(item.id).toBeDefined();
       expect(item.traceId).toBeDefined();
       expect(item.spanId).toBeDefined();
       expect(typeof item.isPositive).toBe('boolean');
-      expect(item.feedbackCategories).toBeDefined();
       expect(Array.isArray(item.feedbackCategories)).toBe(true);
       expect(item.status).toBeDefined();
       expect(item.createdAt).toBeDefined();

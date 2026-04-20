@@ -18,7 +18,6 @@
  * @module
  */
 
-export { FeedbackService as Feedback, FeedbackService } from './feedback';
+export { FeedbackService as Feedback } from './feedback';
 
-export * from '../../../models/agents/feedback/feedback.types';
-export * from '../../../models/agents/feedback/feedback.models';
+export * from '../../../models/agents/feedback';

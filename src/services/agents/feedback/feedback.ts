@@ -19,8 +19,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * Gets all feedback across all agents in the tenant, with optional filters
    *
    * @param options - Optional query parameters for filtering and pagination
-   * @returns Promise resolving to array of feedback or paginated response
-   *
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
@@ -58,7 +57,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
           countParam: FEEDBACK_OFFSET_PARAMS.COUNT_PARAM,
         },
       },
-      excludeFromPrefix: ['agentId', 'agentVersion', 'status', 'traceId', 'spanId', FEEDBACK_OFFSET_PARAMS.OFFSET_PARAM, FEEDBACK_OFFSET_PARAMS.PAGE_SIZE_PARAM],
+      excludeFromPrefix: ['agentId', 'agentVersion', 'status', 'traceId', 'spanId'],
     }, options);
   }
 }

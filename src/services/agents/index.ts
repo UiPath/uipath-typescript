@@ -1,1 +1,1 @@
-export { FeedbackService as Feedback, FeedbackService } from './feedback/feedback';
+export * from './feedback';

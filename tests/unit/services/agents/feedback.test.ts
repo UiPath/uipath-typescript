@@ -1,18 +1,11 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FeedbackService } from '../../../../src/services/agents/feedback/feedback';
-import {
-  FeedbackGetResponse,
-  FeedbackStatus,
-} from '../../../../src/models/agents/feedback/feedback.types';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { FEEDBACK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import {
-  TEST_CONSTANTS,
-  FEEDBACK_TEST_CONSTANTS,
-  CONVERSATIONAL_AGENT_TEST_CONSTANTS,
-} from '../../../utils/constants';
+import { TEST_CONSTANTS, FEEDBACK_TEST_CONSTANTS } from '../../../utils/constants';
+import { createMockFeedback } from '../../../utils/mocks/feedback';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -35,38 +28,9 @@ describe('FeedbackService Unit Tests', () => {
 
   describe('getAll', () => {
     it('should get all feedback successfully', async () => {
-      const mockCategory = {
-        id: FEEDBACK_TEST_CONSTANTS.CATEGORY_ID,
-        category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME,
-        createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
-        isDefault: true,
-        isPositive: true,
-        isNegative: false,
-      };
-      const mockResponse: FeedbackGetResponse[] = [
-        {
-          id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID,
-          traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,
-          spanId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_SPAN_ID,
-          agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
-          isPositive: true,
-          comment: 'Great!',
-          feedbackCategories: [mockCategory],
-          status: FeedbackStatus.Pending,
-          createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
-          updatedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
-        },
-        {
-          id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID_2,
-          traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,
-          spanId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_SPAN_ID,
-          agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
-          isPositive: false,
-          feedbackCategories: [mockCategory],
-          status: FeedbackStatus.Pending,
-          createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
-          updatedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
-        },
+      const mockResponse = [
+        createMockFeedback(),
+        createMockFeedback({ id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID_2, isPositive: false, comment: undefined }),
       ];
 
       mockApiClient.get.mockResolvedValue(mockResponse);
@@ -84,14 +48,9 @@ describe('FeedbackService Unit Tests', () => {
     });
 
     it('should get all feedback with filters', async () => {
-      const mockResponse: FeedbackGetResponse[] = [];
-      mockApiClient.get.mockResolvedValue(mockResponse);
+      mockApiClient.get.mockResolvedValue([]);
 
-      const options = {
-        agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
-      };
-
-      await feedbackService.getAll(options);
+      await feedbackService.getAll({ agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.GET_ALL,
@@ -107,19 +66,7 @@ describe('FeedbackService Unit Tests', () => {
     });
 
     it('should get paginated feedback', async () => {
-      const mockResponse: FeedbackGetResponse[] = [
-        {
-          id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID,
-          traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,
-          spanId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_SPAN_ID,
-          agentId: FEEDBACK_TEST_CONSTANTS.AGENT_UUID,
-          isPositive: true,
-          feedbackCategories: [],
-          status: FeedbackStatus.Pending,
-          createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
-          updatedAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT,
-        },
-      ];
+      const mockResponse = [createMockFeedback({ feedbackCategories: [] })];
 
       mockApiClient.get.mockResolvedValue(mockResponse);
 
