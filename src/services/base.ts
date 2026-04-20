@@ -172,6 +172,7 @@ export class BaseService {
         ...options.params,
         ...requestParams
       };
+      options.params = {};
     } else {
       // Merge pagination parameters with existing parameters
       options.params = {
