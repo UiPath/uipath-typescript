@@ -1,6 +1,5 @@
-import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions, JobStopData } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { OperationResponse } from '../common/types';
 
 /** Combined response type for job data with bound methods. */
 export type JobGetResponse = RawJobGetResponse & JobMethods;
@@ -139,7 +138,7 @@ export interface JobServiceModel {
    * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
    * @param folderId - The folder ID where the jobs reside (required)
    * @param options - Optional {@link JobStopOptions} including stop strategy
-   * @returns Promise resolving to an {@link OperationResponse}<{@link JobStopData}> with the resolved job IDs
+   * @returns Promise that resolves when the jobs are stopped successfully, or rejects on failure
    *
    * @example
    * ```typescript
@@ -163,7 +162,7 @@ export interface JobServiceModel {
     jobKeys: string[],
     folderId: number,
     options?: JobStopOptions
-  ): Promise<OperationResponse<JobStopData>>;
+  ): Promise<void>;
 }
 
 /**
@@ -198,7 +197,7 @@ export interface JobMethods {
    * Sends a stop request for this job to the Orchestrator.
    *
    * @param options - Optional {@link JobStopOptions} including stop strategy (defaults to SoftStop)
-   * @returns Promise resolving to an {@link OperationResponse}<{@link JobStopData}> with the resolved job ID
+   * @returns Promise that resolves when the jobs are stopped successfully, or rejects on failure
    *
    * @example
    * ```typescript
@@ -210,7 +209,7 @@ export interface JobMethods {
    * }
    * ```
    */
-  stop(options?: JobStopOptions): Promise<OperationResponse<JobStopData>>;
+  stop(options?: JobStopOptions): Promise<void>;
 }
 
 /**
@@ -227,7 +226,7 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.getOutput(jobData.key, jobData.folderId);
     },
-    async stop(options?: JobStopOptions): Promise<OperationResponse<JobStopData>> {
+    async stop(options?: JobStopOptions): Promise<void> {
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.stop([jobData.key], jobData.folderId, options);

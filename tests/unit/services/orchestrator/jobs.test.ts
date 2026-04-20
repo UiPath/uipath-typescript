@@ -508,15 +508,10 @@ describe('JobService Unit Tests', () => {
       });
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
-      const result = await jobService.stop(
+      await jobService.stop(
         [JOB_TEST_CONSTANTS.JOB_KEY],
         TEST_CONSTANTS.FOLDER_ID
       );
-
-      expect(result).toEqual({
-        success: true,
-        data: { jobIds: [JOB_TEST_CONSTANTS.JOB_ID] },
-      });
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.any(Object),
@@ -544,16 +539,11 @@ describe('JobService Unit Tests', () => {
       });
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
-      const result = await jobService.stop(
+      await jobService.stop(
         [JOB_TEST_CONSTANTS.JOB_KEY, JOB_TEST_CONSTANTS.JOB_KEY_2],
         TEST_CONSTANTS.FOLDER_ID,
         { strategy: StopStrategy.Kill }
       );
-
-      expect(result).toEqual({
-        success: true,
-        data: { jobIds: [JOB_TEST_CONSTANTS.JOB_ID, JOB_TEST_CONSTANTS.JOB_ID_2] },
-      });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         JOB_ENDPOINTS.STOP,
@@ -565,13 +555,8 @@ describe('JobService Unit Tests', () => {
       );
     });
 
-    it('should return empty result for empty job keys array', async () => {
-      const result = await jobService.stop([], TEST_CONSTANTS.FOLDER_ID);
-
-      expect(result).toEqual({
-        success: true,
-        data: { jobIds: [] },
-      });
+    it('should return immediately for empty job keys array', async () => {
+      await jobService.stop([], TEST_CONSTANTS.FOLDER_ID);
 
       expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
       expect(mockApiClient.post).not.toHaveBeenCalled();
@@ -593,13 +578,10 @@ describe('JobService Unit Tests', () => {
       });
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
-      const result = await jobService.stop(
+      await jobService.stop(
         [JOB_TEST_CONSTANTS.JOB_KEY, JOB_TEST_CONSTANTS.JOB_KEY],
         TEST_CONSTANTS.FOLDER_ID
       );
-
-      // Duplicate keys are deduplicated — only one ID returned
-      expect(result.data.jobIds).toEqual([JOB_TEST_CONSTANTS.JOB_ID]);
 
       // Only one getAll call with deduplicated keys
       expect(PaginationHelpers.getAll).toHaveBeenCalledTimes(1);
@@ -611,23 +593,20 @@ describe('JobService Unit Tests', () => {
         { length: chunkSize + 1 },
         (_, i) => `${i.toString().padStart(8, '0')}-bbbb-cccc-dddd-eeeeeeeeeeee`
       );
-      const ids = keys.map((_, i) => i + 1);
 
       // Chunk 1: first 50 keys
       vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
-        items: keys.slice(0, chunkSize).map((k, i) => ({ key: k, id: ids[i] })),
+        items: keys.slice(0, chunkSize).map((k, i) => ({ key: k, id: i + 1 })),
       });
       // Chunk 2: remaining 1 key
       vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
-        items: [{ key: keys[chunkSize], id: ids[chunkSize] }],
+        items: [{ key: keys[chunkSize], id: chunkSize + 1 }],
       });
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
-      const result = await jobService.stop(keys, TEST_CONSTANTS.FOLDER_ID);
+      await jobService.stop(keys, TEST_CONSTANTS.FOLDER_ID);
 
       expect(PaginationHelpers.getAll).toHaveBeenCalledTimes(2);
-      expect(result.data.jobIds).toHaveLength(chunkSize + 1);
-      expect(result.data.jobIds).toEqual(ids);
     });
 
     it('should throw validation error when folderId is missing', async () => {

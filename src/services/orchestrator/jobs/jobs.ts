@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobStopData } from '../../../models/orchestrator/jobs.types';
+import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -16,7 +16,6 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
-import { OperationResponse } from '../../../models/common/types';
 import { StopStrategy } from '../../../models/orchestrator/processes.types';
 
 /**
@@ -221,7 +220,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
    * @param folderId - The folder ID where the jobs reside (required)
    * @param options - Optional {@link JobStopOptions} including stop strategy
-   * @returns Promise resolving to an {@link OperationResponse}<{@link JobStopData}> with the resolved job IDs
+   * @returns Promise that resolves when the jobs are stopped successfully, or rejects on failure
    *
    * @example
    * ```typescript
@@ -246,9 +245,9 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     jobKeys: string[],
     folderId: number,
     options?: JobStopOptions
-  ): Promise<OperationResponse<JobStopData>> {
+  ): Promise<void> {
     if (jobKeys.length === 0) {
-      return { success: true, data: { jobIds: [] } };
+      return;
     }
 
     if (!folderId) {
@@ -261,8 +260,6 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     const jobIds = await this.resolveJobKeys(jobKeys, folderId);
 
     await this.stopJobsByIds(jobIds, strategy, headers);
-
-    return { success: true, data: { jobIds } };
   }
 
   /**

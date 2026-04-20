@@ -186,10 +186,3 @@ export interface JobStopOptions {
   strategy?: StopStrategy;
 }
 
-/**
- * Data returned from a stop operation
- */
-export interface JobStopData {
-  /** The resolved integer IDs of the jobs that were stopped */
-  jobIds: number[];
-}

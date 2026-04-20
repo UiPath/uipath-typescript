@@ -189,46 +189,35 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
   });
 
   describe('stop', () => {
-    it('should stop a running job with soft stop strategy', async () => {
+    it('should start a process and then stop the resulting job', async () => {
       const { jobs, folderId } = getJobsService();
+      const { processes } = getServices();
+      const config = getTestConfig();
 
       if (!folderId) {
         throw new Error('INTEGRATION_TEST_FOLDER_ID not configured — cannot run stop test.');
       }
 
-      // Find a running job to stop
-      const runningJobs = await jobs.getAll({
-        folderId,
-        filter: "state eq 'Running'",
-        pageSize: 1,
-      });
-
-      if (runningJobs.items.length === 0) {
-        throw new Error('No running jobs available in the test environment to test stop.');
+      const processKey = config.orchestratorTestProcessKey;
+      if (!processKey) {
+        throw new Error('ORCHESTRATOR_TEST_PROCESS_KEY not configured — cannot run stop test.');
       }
 
-      const jobKey = runningJobs.items[0].key;
+      // Start a process to create a job
+      const startedJobs = await processes.start({ processKey }, folderId);
+      expect(startedJobs.length).toBeGreaterThan(0);
 
-      const result = await jobs.stop([jobKey], folderId);
+      const jobKey = startedJobs[0].key;
 
-      expect(result).toBeDefined();
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data.jobIds).toBeDefined();
-      expect(Array.isArray(result.data.jobIds)).toBe(true);
-      expect(result.data.jobIds.length).toBe(1);
-      expect(typeof result.data.jobIds[0]).toBe('number');
+      // Stop the job we just started — resolves without error on success
+      await jobs.stop([jobKey], folderId);
     });
 
     it('should return empty result when called with empty array', async () => {
       const { jobs } = getJobsService();
 
       // folderId is unused for empty-array inputs — stop() returns early before reading it
-      const result = await jobs.stop([], 0);
-
-      expect(result).toBeDefined();
-      expect(result.success).toBe(true);
-      expect(result.data.jobIds).toEqual([]);
+      await jobs.stop([], 0);
     });
   });
 

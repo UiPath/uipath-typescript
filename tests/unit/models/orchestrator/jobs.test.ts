@@ -72,7 +72,7 @@ describe('Job Models', () => {
         const mockJobData = createBasicJob();
         const job = createJobWithMethods(mockJobData, mockService);
 
-        const mockResult = { success: true, data: { jobIds: [JOB_TEST_CONSTANTS.JOB_ID] } };
+        const mockResult = undefined;
         vi.mocked(mockService.stop).mockResolvedValue(mockResult);
 
         const result = await job.stop();
@@ -89,7 +89,7 @@ describe('Job Models', () => {
         const mockJobData = createBasicJob();
         const job = createJobWithMethods(mockJobData, mockService);
 
-        const mockResult = { success: true, data: { jobIds: [JOB_TEST_CONSTANTS.JOB_ID] } };
+        const mockResult = undefined;
         vi.mocked(mockService.stop).mockResolvedValue(mockResult);
 
         await job.stop({ strategy: StopStrategy.Kill });
