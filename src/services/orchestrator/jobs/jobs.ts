@@ -225,7 +225,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * @example
    * ```typescript
    * // Stop a single job with default soft stop
-   * const result = await jobs.stop([<jobKey>], <folderId>);
+   * await jobs.stop([<jobKey>], <folderId>);
    * ```
    *
    * @example
@@ -233,7 +233,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * import { StopStrategy } from '@uipath/uipath-typescript/jobs';
    *
    * // Force-kill multiple jobs
-   * const result = await jobs.stop(
+   * await jobs.stop(
    *   [<jobKey1>, <jobKey2>],
    *   <folderId>,
    *   { strategy: StopStrategy.Kill }

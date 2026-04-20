@@ -143,7 +143,7 @@ export interface JobServiceModel {
    * @example
    * ```typescript
    * // Stop a single job with default soft stop
-   * const result = await jobs.stop([<jobKey>], <folderId>);
+   * await jobs.stop([<jobKey>], <folderId>);
    * ```
    *
    * @example
@@ -151,7 +151,7 @@ export interface JobServiceModel {
    * import { StopStrategy } from '@uipath/uipath-typescript/jobs';
    *
    * // Force-kill multiple jobs
-   * const result = await jobs.stop(
+   * await jobs.stop(
    *   [<jobKey1>, <jobKey2>],
    *   <folderId>,
    *   { strategy: StopStrategy.Kill }
@@ -205,7 +205,7 @@ export interface JobMethods {
    * const runningJob = allJobs.items.find(j => j.state === JobState.Running);
    *
    * if (runningJob) {
-   *   const result = await runningJob.stop();
+   *   await runningJob.stop();
    * }
    * ```
    */
