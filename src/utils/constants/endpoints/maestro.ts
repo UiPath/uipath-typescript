@@ -2,7 +2,7 @@
  * Maestro Service Endpoints
  */
 
-import { PIMS_BASE } from './base';
+import { PIMS_BASE, INSIGHTS_RTM_BASE } from './base';
 
 /**
  * Maestro Process Service Endpoints
@@ -32,4 +32,12 @@ export const MAESTRO_ENDPOINTS = {
     GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v1/element-executions/case-instances/${instanceId}`,
     REOPEN: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/reopen`,
   },
+} as const;
+
+/**
+ * Insights Real-Time Monitoring Endpoints
+ */
+export const INSIGHTS_RTM_ENDPOINTS = {
+  TOP_PROCESSES_BY_RUN_COUNT: (orgName: string, tenantName: string, tenantId: string) =>
+    `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/${orgName}/${tenantName}/${tenantId}/TopProcessesByRunCount`,
 } as const;

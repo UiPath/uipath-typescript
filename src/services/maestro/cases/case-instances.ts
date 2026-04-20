@@ -12,14 +12,17 @@ import {
   CaseGetStageResponse,
   StageTask,
   ElementExecutionMetadata,
-  CaseInstanceExecutionHistoryResponse
+  CaseInstanceExecutionHistoryResponse,
+  TopProcessByRunCountResponse,
+  TopByRunCountOptions
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
   CaseJsonResponse
 } from '../../../models/maestro/case-instances.internal-types';
 import { OperationResponse } from '../../../models/common/types';
-import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { MAESTRO_ENDPOINTS, INSIGHTS_RTM_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { SDKInternalsRegistry } from '../../../core/internals';
 import { transformData } from '../../../utils/transform';
 import {
   CaseInstanceMap,
@@ -43,6 +46,7 @@ import { TaskGetAllOptions } from '../../../models/action-center';
 
 export class CaseInstancesService extends BaseService implements CaseInstancesServiceModel {
   private taskService: TaskService;
+  private instance: IUiPath;
 
   /**
    * Creates an instance of the Case Instances service.
@@ -51,6 +55,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    */
   constructor(instance: IUiPath) {
     super(instance);
+    this.instance = instance;
     this.taskService = new TaskService(instance);
   }
 
@@ -567,5 +572,32 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     } as T;
   
     return await this.taskService.getAll(enhancedOptions) as any;
+  }
+
+  /**
+   * Get top case processes ranked by run count within a time range
+   * @param tenantId The tenant GUID for the target environment
+   * @param startTime Start of the time range as epoch milliseconds
+   * @param endTime End of the time range as epoch milliseconds
+   * @param options Optional parameters including timezone offset
+   * @returns Promise<TopProcessByRunCountResponse[]>
+   */
+  @track('CaseInstances.GetTopByRunCount')
+  async getTopByRunCount(tenantId: string, startTime: number, endTime: number, options?: TopByRunCountOptions): Promise<TopProcessByRunCountResponse[]> {
+    const { config } = SDKInternalsRegistry.get(this.instance);
+    const endpoint = INSIGHTS_RTM_ENDPOINTS.TOP_PROCESSES_BY_RUN_COUNT(config.orgName, config.tenantName, tenantId);
+
+    const body = {
+      commonParams: {
+        startTime,
+        endTime,
+        isCaseManagement: true,
+      },
+      timezoneOffset: options?.timezoneOffset ?? 0,
+      tenantId,
+    };
+
+    const response = await this.post<TopProcessByRunCountResponse[]>(endpoint, body);
+    return response.data;
   }
 }

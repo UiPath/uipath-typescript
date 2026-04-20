@@ -1,7 +1,7 @@
 // ===== IMPORTS =====
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CaseInstancesService } from '../../../../src/services/maestro/cases/case-instances';
-import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { MAESTRO_ENDPOINTS, INSIGHTS_RTM_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { FOLDER_KEY } from '../../../../src/utils/constants/headers';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
@@ -16,6 +16,7 @@ import {
   createMockCaseInstanceExecutionHistory,
   createMockMaestroApiOperationResponse,
   createMockActionTasksResponse,
+  createMockTopProcessByRunCount,
 } from '../../../utils/mocks';
 import { createMockBaseResponse } from '../../../utils/mocks/core';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -833,5 +834,71 @@ describe('CaseInstancesService', () => {
       expect(result).toEqual(mockResponse);
     });
 
+  });
+
+  describe('getTopByRunCount', () => {
+    it('should return top case processes by run count with isCaseManagement=true', async () => {
+      const mockResponse = [
+        createMockTopProcessByRunCount(),
+      ];
+
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getTopByRunCount(
+        MAESTRO_TEST_CONSTANTS.TENANT_GUID,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        INSIGHTS_RTM_ENDPOINTS.TOP_PROCESSES_BY_RUN_COUNT(
+          TEST_CONSTANTS.ORGANIZATION_ID,
+          TEST_CONSTANTS.TENANT_ID,
+          MAESTRO_TEST_CONSTANTS.TENANT_GUID
+        ),
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            isCaseManagement: true,
+          }),
+        }),
+        {}
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
+      expect(result[0].runCount).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_RUN_COUNT);
+    });
+
+    it('should pass timezoneOffset from options', async () => {
+      mockApiClient.post.mockResolvedValue([]);
+
+      await service.getTopByRunCount(
+        MAESTRO_TEST_CONSTANTS.TENANT_GUID,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME,
+        { timezoneOffset: MAESTRO_TEST_CONSTANTS.INSIGHTS_TIMEZONE_OFFSET }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          timezoneOffset: MAESTRO_TEST_CONSTANTS.INSIGHTS_TIMEZONE_OFFSET,
+        }),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        service.getTopByRunCount(
+          MAESTRO_TEST_CONSTANTS.TENANT_GUID,
+          MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+          MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
   });
 });
