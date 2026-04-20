@@ -19,8 +19,6 @@ tests/
   unit/                  # Mirrors src/ structure
   integration/           # Integration tests (real API calls)
   utils/                 # Shared mocks, constants, test setup helpers
-packages/
-  cli/                   # Separate CLI package
 samples/                 # Sample apps (process-app, conversational-agent-app, etc.)
 docs/                    # MkDocs source; API docs generated via typedoc
 ```
