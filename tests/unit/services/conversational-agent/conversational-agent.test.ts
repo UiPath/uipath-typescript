@@ -12,6 +12,11 @@ import {
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { AGENT_ENDPOINTS, FEATURE_ENDPOINTS } from '@/utils/constants/endpoints';
+import {
+  CONVERSATIONAL_SURFACE_NAME,
+  CONVERSATIONAL_SURFACE_VERSION,
+  EXTERNAL_USER_ID,
+} from '@/utils/constants/headers';
 
 // ===== MOCKING =====
 vi.mock('@/core/http/api-client');
@@ -58,7 +63,7 @@ describe('ConversationalAgentService Unit Tests', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        { headers: { 'x-uipath-external-user-id': 'user-123' } }
+        { headers: { [EXTERNAL_USER_ID]: 'user-123' } }
       );
     });
 
@@ -73,6 +78,58 @@ describe('ConversationalAgentService Unit Tests', () => {
         expect.anything(),
         expect.anything(),
         {}
+      );
+    });
+
+    it('should pass surfaceName as x-uipath-conversational-surfacename header when set', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationalAgentService(instance, { surfaceName: 'agent_builder_frontend' });
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { headers: { [CONVERSATIONAL_SURFACE_NAME]: 'agent_builder_frontend' } }
+      );
+    });
+
+    it('should pass surfaceVersion as x-uipath-conversational-surfaceversion header when set', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationalAgentService(instance, { surfaceVersion: '1.2.3' });
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { headers: { [CONVERSATIONAL_SURFACE_VERSION]: '1.2.3' } }
+      );
+    });
+
+    it('should pass all optional headers together when externalUserId, surfaceName, and surfaceVersion are set', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationalAgentService(instance, {
+        externalUserId: 'user-123',
+        surfaceName: 'uipath_instance_management',
+        surfaceVersion: 'sha-abc',
+      });
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        {
+          headers: {
+            [EXTERNAL_USER_ID]: 'user-123',
+            [CONVERSATIONAL_SURFACE_NAME]: 'uipath_instance_management',
+            [CONVERSATIONAL_SURFACE_VERSION]: 'sha-abc',
+          },
+        }
       );
     });
   });
