@@ -28,6 +28,7 @@ export function loadFromMetaTags(): PartialUiPathConfig | null {
     tenantName: getMetaTagContent(UiPathMetaTags.TENANT_NAME),
     baseUrl: getMetaTagContent(UiPathMetaTags.BASE_URL),
     redirectUri: getMetaTagContent(UiPathMetaTags.REDIRECT_URI),
+    folderKey: getMetaTagContent(UiPathMetaTags.FOLDER_KEY),
   };
 
   const hasAnyValue = Object.values(config).some(Boolean);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Assets } from '@uipath/uipath-typescript/assets';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Folder {
   id: number;

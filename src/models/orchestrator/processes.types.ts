@@ -380,3 +380,19 @@ export type ProcessGetAllOptions = RequestOptions & PaginationOptions & {
  * Options for getting a single process by ID
  */
 export interface ProcessGetByIdOptions extends BaseOptions {}
+
+/**
+ * Options for getting a single process by name
+ */
+export interface ProcessGetByNameOptions extends BaseOptions {
+  /**
+   * Folder path to scope the process lookup (e.g. 'Shared/Finance').
+   * Mutually exclusive with folderKey.
+   */
+  folderPath?: string;
+  /**
+   * Folder key (GUID) to scope the process lookup.
+   * Mutually exclusive with folderPath.
+   */
+  folderKey?: string;
+}

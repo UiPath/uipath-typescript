@@ -5,13 +5,16 @@ import {
   ProcessGetAllOptions,
   ProcessStartRequest,
   ProcessStartResponse,
-  ProcessGetByIdOptions
+  ProcessGetByIdOptions,
+  ProcessGetByNameOptions
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { ProcessMap } from '../../../models/orchestrator/processes.constants';
-import { FOLDER_ID } from '../../../utils/constants/headers';
+import { FOLDER_ID, FOLDER_PATH_ENCODED, FOLDER_KEY } from '../../../utils/constants/headers';
+import { NotFoundError } from '../../../core/errors';
+import { validateGetByNameArgs } from '../../../utils/validation/name-validator';
 import { PROCESS_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
@@ -188,7 +191,72 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     );
 
     const transformedProcess = transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
-    
+
     return transformedProcess;
+  }
+
+  /**
+   * Retrieves a single process by name, optionally scoped to a folder
+   *
+   * @param name - Process name to search for
+   * @param options - Optional folder scoping and query parameters
+   * @returns Promise resolving to a single process
+   *
+   * @example
+   * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
+   * // Get process by name with folder path
+   * const process = await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
+   *
+   * // Get process by name with folder key
+   * const process = await processes.getByName('MyProcess', { folderKey: 'folder-guid' });
+   * ```
+   */
+  @track('Processes.GetByName')
+  async getByName(name: string, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
+    const { folderPath: rawFolderPath, folderKey: rawFolderKey, ...queryOptions } = options;
+    const validated = validateGetByNameArgs('Process', name, rawFolderPath, rawFolderKey);
+
+    // Fall back to the SDK's init-time folderKey (e.g. populated from the
+    // `uipath:folder-key` meta tag in coded-app deployments) when the
+    // caller didn't supply any folder context.
+    const effectiveFolderKey =
+      validated.folderKey ?? (validated.folderPath ? undefined : this.config.folderKey);
+
+    const headers = createHeaders({
+      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeURIComponent(validated.folderPath) : undefined,
+      [FOLDER_KEY]: effectiveFolderKey,
+    });
+
+    const keysToPrefix = Object.keys(queryOptions);
+    const apiOptions = {
+      ...addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix),
+      '$filter': `Name eq '${validated.name.replace(/'/g, "''")}'`,
+      '$top': '1',
+    };
+
+    const response = await this.get<CollectionResponse<ProcessGetResponse>>(
+      PROCESS_ENDPOINTS.GET_ALL,
+      {
+        headers,
+        params: apiOptions,
+      },
+    );
+
+    const items = response.data?.value;
+    if (!items?.length) {
+      const folderHint =
+        validated.folderPath ? ` in folder '${validated.folderPath}'`
+        : effectiveFolderKey ? ` in folder (key: ${effectiveFolderKey})`
+        : '';
+      throw new NotFoundError({
+        message: `Process '${validated.name}' not found${folderHint}.`,
+      });
+    }
+
+    return transformData(pascalToCamelCaseKeys(items[0]) as ProcessGetResponse, ProcessMap);
   }
 }

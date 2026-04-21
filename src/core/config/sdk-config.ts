@@ -3,6 +3,13 @@ export interface BaseConfig {
   baseUrl: string;
   orgName: string;
   tenantName: string;
+  /**
+   * Optional default folder key (GUID). Applied to folder-scoped service
+   * calls (e.g. `getByName`) when the caller doesn't pass `folderKey` /
+   * `folderPath` explicitly. Populated from `<meta name="uipath:folder-key">`
+   * in browser coded-app deployments, or can be set explicitly on SDK init.
+   */
+  folderKey?: string;
 }
 
 // OAuth specific fields

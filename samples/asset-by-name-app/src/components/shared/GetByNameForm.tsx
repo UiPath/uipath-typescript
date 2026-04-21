@@ -1,53 +1,62 @@
 import { useState } from 'react';
-import { Assets } from '@uipath/uipath-typescript/assets';
-import type { AssetGetResponse } from '@uipath/uipath-typescript/assets';
-import { useAuth } from '../hooks/useAuth';
 
-interface Props {
+interface Props<TResponse> {
+  /** Heading shown above the form — e.g. "assets.getByName()". */
+  title: string;
+  /** Subheading explaining what this form does. */
+  description: React.ReactNode;
+  /** Placeholder for the resource-name input. */
+  namePlaceholder: string;
+  /** Label for the submit button. */
+  submitLabel: string;
+  /** Current form values (controlled from parent so row-clicks can prefill). */
   name: string;
   folderPath: string;
   folderKey: string;
   onNameChange: (v: string) => void;
   onFolderPathChange: (v: string) => void;
   onFolderKeyChange: (v: string) => void;
+  /** Caller-supplied resource fetch — receives trimmed values, returns the resource. */
+  fetch: (
+    name: string,
+    options: { folderPath?: string; folderKey?: string },
+  ) => Promise<TResponse>;
 }
 
-type Result =
+type Result<T> =
   | { kind: 'idle' }
   | { kind: 'loading' }
-  | { kind: 'success'; data: AssetGetResponse; tookMs: number }
+  | { kind: 'success'; data: T; tookMs: number }
   | { kind: 'error'; message: string };
 
-export const GetByNameDemo = ({
+export function GetByNameForm<TResponse>({
+  title,
+  description,
+  namePlaceholder,
+  submitLabel,
   name,
   folderPath,
   folderKey,
   onNameChange,
   onFolderPathChange,
   onFolderKeyChange,
-}: Props) => {
-  const { sdk } = useAuth();
-  const [result, setResult] = useState<Result>({ kind: 'idle' });
+  fetch,
+}: Props<TResponse>) {
+  const [result, setResult] = useState<Result<TResponse>>({ kind: 'idle' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setResult({ kind: 'error', message: 'Asset name is required' });
+      setResult({ kind: 'error', message: 'Name is required' });
       return;
     }
     setResult({ kind: 'loading' });
     const started = performance.now();
     try {
-      const assets = new Assets(sdk);
-      // Orchestrator prefers FolderPath when both headers are sent,
-      // so pass whichever the user provided (or both).
       const options: { folderPath?: string; folderKey?: string } = {};
       if (folderPath.trim()) options.folderPath = folderPath.trim();
       if (folderKey.trim()) options.folderKey = folderKey.trim();
-      const data = await assets.getByName(
-        name.trim(),
-        Object.keys(options).length ? options : undefined,
-      );
+      const data = await fetch(name.trim(), options);
       setResult({
         kind: 'success',
         data,
@@ -65,23 +74,19 @@ export const GetByNameDemo = ({
   return (
     <section className="bg-white rounded-xl shadow border border-gray-200">
       <header className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">
-          assets.getByName()
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Resolves an asset by name via the <code>X-UIPATH-FolderPath</code> header.
-        </p>
+        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <p className="text-sm text-gray-500 mt-1">{description}</p>
       </header>
 
       <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">Asset name</span>
+            <span className="text-sm font-medium text-gray-700">Name</span>
             <input
               type="text"
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
-              placeholder="ApiKey"
+              placeholder={namePlaceholder}
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </label>
@@ -121,7 +126,7 @@ export const GetByNameDemo = ({
             disabled={result.kind === 'loading'}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium px-5 py-2 rounded-lg transition-colors"
           >
-            {result.kind === 'loading' ? 'Fetching…' : 'Get asset'}
+            {result.kind === 'loading' ? 'Fetching…' : submitLabel}
           </button>
           {result.kind === 'success' && (
             <span className="text-sm text-gray-500">
@@ -147,4 +152,4 @@ export const GetByNameDemo = ({
       )}
     </section>
   );
-};
+}

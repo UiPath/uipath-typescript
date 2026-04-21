@@ -71,8 +71,9 @@ export interface AssetServiceModel {
    * Retrieves a single asset by name, optionally scoped to a folder
    *
    * Uses the asset name and folder path to look up the resource. The folder context
-   * is resolved server-side via the X-UIPATH-FolderPath header — no client-side
-   * folder ID resolution is needed.
+   * is resolved server-side via the X-UIPATH-FolderPath-Encoded /
+   * X-UIPATH-FolderKey headers — no client-side folder ID resolution is needed.
+   * The folder path is URL-encoded automatically before being sent.
    *
    * @param name - Asset name to search for
    * @param options - Optional folder scoping and query parameters

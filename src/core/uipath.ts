@@ -80,7 +80,8 @@ export class UiPath implements IUiPath {
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
-      scope: hasOAuthAuth ? config.scope : undefined
+      scope: hasOAuthAuth ? config.scope : undefined,
+      folderKey: config.folderKey
     });
 
     const executionContext = new ExecutionContext();
@@ -98,7 +99,8 @@ export class UiPath implements IUiPath {
     (this as any).config = {
       baseUrl: internalConfig.baseUrl,
       orgName: internalConfig.orgName,
-      tenantName: internalConfig.tenantName
+      tenantName: internalConfig.tenantName,
+      folderKey: internalConfig.folderKey
     };
 
     // Initialize telemetry with SDK configuration
