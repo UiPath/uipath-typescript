@@ -28,7 +28,7 @@ export interface FeedbackServiceModel {
    * Gets all feedback across all agents in the tenant, with optional filters.
    *
    * Retrieves a list of feedback entries, optionally filtered by agent, trace, span, status, or agent version.
-   * When no pagination options are provided, returns the first 50 items (SDK default page size).
+   * When no pagination options are provided, the API returns its default page size.
    *
    * @param options - Optional query parameters for filtering and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
@@ -36,7 +36,7 @@ export interface FeedbackServiceModel {
    * ```typescript
    * import { Feedback, FeedbackStatus } from '@uipath/uipath-typescript/feedback';
    *
-   * // Get all feedback (default pagination: returns first 50 items)
+   * // Get all feedback (returns API default page size)
    * const allFeedback = await feedback.getAll();
    *
    * // Get the agentId from a feedback entry

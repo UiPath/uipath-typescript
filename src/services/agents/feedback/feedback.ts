@@ -5,6 +5,7 @@ import {
 } from '../../../models/agents/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FeedbackMap } from '../../../models/agents/feedback/feedback.constants';
+import { RawFeedbackGetResponse } from '../../../models/agents/feedback/feedback.internal-types';
 import { transformData } from '../../../utils/transform';
 import { FEEDBACK_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { FEEDBACK_OFFSET_PARAMS } from '../../../utils/constants/common';
@@ -21,7 +22,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * Gets all feedback across all agents in the tenant, with optional filters.
    *
    * Retrieves a list of feedback entries, optionally filtered by agent, trace, span, status, or agent version.
-   * When no pagination options are provided, returns the first 50 items (SDK default page size).
+   * When no pagination options are provided, the API returns its default page size.
    *
    * @param options - Optional query parameters for filtering and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
@@ -62,10 +63,10 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
       ? PaginatedResponse<FeedbackGetResponse>
       : NonPaginatedResponse<FeedbackGetResponse>
   > {
-    const transformFeedbackResponse = (item: any): FeedbackGetResponse =>
-      transformData(item as FeedbackGetResponse, FeedbackMap);
+    const transformFeedbackResponse = (item: RawFeedbackGetResponse): FeedbackGetResponse =>
+      transformData(item, FeedbackMap) as unknown as FeedbackGetResponse;
 
-    return PaginationHelpers.getAll<T, FeedbackGetResponse>({
+    return PaginationHelpers.getAll<T, RawFeedbackGetResponse, FeedbackGetResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => FEEDBACK_ENDPOINTS.GET_ALL,
       transformFn: transformFeedbackResponse,
