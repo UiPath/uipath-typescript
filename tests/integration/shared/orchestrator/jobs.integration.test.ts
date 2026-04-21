@@ -188,6 +188,39 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('stop', () => {
+    it('should start a process and then stop the resulting job', async () => {
+      const { jobs, folderId } = getJobsService();
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID not configured — cannot run stop test.');
+      }
+
+      const processKey = config.orchestratorTestProcessKey;
+      if (!processKey) {
+        throw new Error('ORCHESTRATOR_TEST_PROCESS_KEY not configured — cannot run stop test.');
+      }
+
+      // Start a process to create a job
+      const startedJobs = await processes.start({ processKey }, folderId);
+      expect(startedJobs.length).toBeGreaterThan(0);
+
+      const jobKey = startedJobs[0].key;
+
+      // Stop the job we just started — resolves without error on success
+      await jobs.stop([jobKey], folderId);
+    });
+
+    it('should return empty result when called with empty array', async () => {
+      const { jobs } = getJobsService();
+
+      // folderId is unused for empty-array inputs — stop() returns early before reading it
+      await jobs.stop([], 0);
+    });
+  });
+
   describe('Job structure validation', () => {
     it('should have expected fields in job objects', async () => {
       const { jobs, folderId } = getJobsService();

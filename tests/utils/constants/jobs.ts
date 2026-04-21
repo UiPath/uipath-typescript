@@ -9,6 +9,8 @@ export const JOB_TEST_CONSTANTS = {
 
   // Job Metadata
   JOB_KEY: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+  JOB_KEY_2: 'bbbbbbbb-cccc-dddd-eeee-ffffffffffff',
+  JOB_ID_2: 789,
   PROCESS_NAME: 'MyProcess_Production',
   HOST_MACHINE_NAME: 'ROBOT-01',
   ENTRY_POINT_PATH: 'Main.xaml',
@@ -29,4 +31,6 @@ export const JOB_TEST_CONSTANTS = {
 
   // Error Messages
   ERROR_JOB_NOT_FOUND: 'Job not found',
+  ERROR_JOBS_NOT_FOUND_FOR_KEYS: 'Jobs not found for keys',
+
 } as const;

@@ -1,4 +1,4 @@
-import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /** Combined response type for job data with bound methods. */
@@ -129,6 +129,40 @@ export interface JobServiceModel {
    * ```
    */
   getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Stops one or more jobs by their UUID keys.
+   *
+   * Sends a stop request for the specified jobs to the Orchestrator. Throws if any keys cannot be resolved.
+   *
+   * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
+   * @param folderId - The folder ID where the jobs reside (required)
+   * @param options - Optional {@link JobStopOptions} including stop strategy
+   * @returns Promise that resolves when the jobs are stopped successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * // Stop a single job with default soft stop
+   * await jobs.stop([<jobKey>], <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { StopStrategy } from '@uipath/uipath-typescript/jobs';
+   *
+   * // Force-kill multiple jobs
+   * await jobs.stop(
+   *   [<jobKey1>, <jobKey2>],
+   *   <folderId>,
+   *   { strategy: StopStrategy.Kill }
+   * );
+   * ```
+   */
+  stop(
+    jobKeys: string[],
+    folderId: number,
+    options?: JobStopOptions
+  ): Promise<void>;
 }
 
 /**
@@ -156,6 +190,26 @@ export interface JobMethods {
    * ```
    */
   getOutput(): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Stops this job.
+   *
+   * Sends a stop request for this job to the Orchestrator.
+   *
+   * @param options - Optional {@link JobStopOptions} including stop strategy (defaults to SoftStop)
+   * @returns Promise that resolves when the jobs are stopped successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * const allJobs = await jobs.getAll({ folderId: <folderId> });
+   * const runningJob = allJobs.items.find(j => j.state === JobState.Running);
+   *
+   * if (runningJob) {
+   *   await runningJob.stop();
+   * }
+   * ```
+   */
+  stop(options?: JobStopOptions): Promise<void>;
 }
 
 /**
@@ -171,6 +225,11 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.getOutput(jobData.key, jobData.folderId);
+    },
+    async stop(options?: JobStopOptions): Promise<void> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.stop([jobData.key], jobData.folderId, options);
     },
   };
 }

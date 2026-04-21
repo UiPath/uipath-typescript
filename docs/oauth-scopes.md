@@ -16,6 +16,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
 | `getById()` | `OR.Jobs` or `OR.Jobs.Read` |
 | `getOutput()` | `OR.Jobs` or `OR.Jobs.Read`, `OR.Folders` or `OR.Folders.Read` |
+| `stop()` | `OR.Jobs` |
 
 ## Attachments
 
