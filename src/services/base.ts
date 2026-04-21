@@ -164,7 +164,7 @@ export class BaseService {
     // Prepare request parameters based on pagination type
     const requestParams = this.preparePaginationRequestParams(paginationType, params, options.pagination);
 
-    // For POST requests, merge pagination params into body; for GET, use query params
+    // For POST requests, merge pagination params into body and set params to undefined; for GET, use query params
     if (method.toUpperCase() === 'POST') {
       const existingBody = (options.body && typeof options.body === 'object') ? options.body as Record<string, unknown> : {};
       options.body = {
@@ -172,7 +172,7 @@ export class BaseService {
         ...options.params,
         ...requestParams
       };
-      options.params = {};
+      options.params = undefined;
     } else {
       // Merge pagination parameters with existing parameters
       options.params = {
