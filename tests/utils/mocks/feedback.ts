@@ -1,4 +1,5 @@
 import { FeedbackCategory, FeedbackStatus } from '../../../src/models/agents/feedback/feedback.types';
+import { RawFeedbackGetResponse } from '../../../src/models/agents/feedback/feedback.internal-types';
 import { FEEDBACK_TEST_CONSTANTS } from '../constants/feedback';
 import { CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '../constants/conversational-agent';
 
@@ -24,7 +25,7 @@ export const createMockFeedbackCategory = (overrides: Partial<FeedbackCategory> 
  * @param overrides - Optional overrides for specific fields
  * @returns Mock feedback data
  */
-export const createMockFeedback = (overrides: Record<string, unknown> = {}) => ({
+export const createMockFeedback = (overrides: Partial<RawFeedbackGetResponse> = {}): RawFeedbackGetResponse => ({
   id: FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID,
   traceId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_TRACE_ID,
   spanId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_SPAN_ID,
