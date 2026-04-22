@@ -22,7 +22,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * Gets all feedback across all agents in the tenant, with optional filters.
    *
    * Retrieves a list of feedback entries, optionally filtered by agent, trace, span, status, or agent version.
-   * When no pagination options are provided, the API returns its default page size.
+   * When no pagination options are provided, the API returns up to 100 items. When pagination options are provided without a pageSize, the SDK defaults to 50 items per page.
    *
    * @param options - Optional query parameters for filtering and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
