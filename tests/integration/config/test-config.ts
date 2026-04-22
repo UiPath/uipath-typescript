@@ -12,6 +12,8 @@ export interface IntegrationConfig {
   timeout: number;
   skipCleanup: boolean;
   folderId?: string;
+  folderKey?: string;
+  folderPath?: string;
   maestroTestProcessKey?: string;
   orchestratorTestProcessKey?: string;
   dataFabricTestEntityId?: string;
@@ -62,6 +64,8 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     timeout: typeof rawConfig.timeout === 'number' && rawConfig.timeout > 0 ? rawConfig.timeout : 30000,
     skipCleanup: typeof rawConfig.skipCleanup === 'boolean' ? rawConfig.skipCleanup : false,
     folderId: typeof rawConfig.folderId === 'string' ? rawConfig.folderId : undefined,
+    folderKey: typeof rawConfig.folderKey === 'string' ? rawConfig.folderKey : undefined,
+    folderPath: typeof rawConfig.folderPath === 'string' ? rawConfig.folderPath : undefined,
     maestroTestProcessKey: typeof rawConfig.maestroTestProcessKey === 'string' ? rawConfig.maestroTestProcessKey : undefined,
     orchestratorTestProcessKey: typeof rawConfig.orchestratorTestProcessKey === 'string' ? rawConfig.orchestratorTestProcessKey : undefined,
     dataFabricTestEntityId: typeof rawConfig.dataFabricTestEntityId === 'string' ? rawConfig.dataFabricTestEntityId : undefined,
@@ -96,6 +100,8 @@ export function loadIntegrationConfig(): IntegrationConfig {
       : 30000,
     skipCleanup: process.env.INTEGRATION_TEST_SKIP_CLEANUP === 'true',
     folderId: process.env.INTEGRATION_TEST_FOLDER_ID || undefined,
+    folderKey: process.env.INTEGRATION_TEST_FOLDER_KEY || undefined,
+    folderPath: process.env.INTEGRATION_TEST_FOLDER_PATH || undefined,
     maestroTestProcessKey: process.env.MAESTRO_TEST_PROCESS_KEY || undefined,
     orchestratorTestProcessKey: process.env.ORCHESTRATOR_TEST_PROCESS_KEY || undefined,
     dataFabricTestEntityId: process.env.DATA_FABRIC_TEST_ENTITY_ID || undefined,

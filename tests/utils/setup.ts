@@ -98,9 +98,10 @@ export const createMockApiClient = () => ({
  * ```
  */
 export const createMockUiPath = (
-  configOverrides?: Partial<UiPathConfig>,
+  overrides?: Partial<UiPathConfig> & { folderKey?: string },
   tokenManagerOverrides?: Partial<TokenManager>
 ): UiPath => {
+  const { folderKey, ...configOverrides } = overrides ?? {};
   const config = createMockConfig(configOverrides);
   const executionContext = createMockExecutionContext();
   const tokenManager = createMockTokenManager(tokenManagerOverrides);
@@ -119,7 +120,8 @@ export const createMockUiPath = (
   SDKInternalsRegistry.set(mockInstance, {
     config,
     context: executionContext,
-    tokenManager
+    tokenManager,
+    folderKey,
   });
 
   return mockInstance;
@@ -142,9 +144,11 @@ export const createMockUiPath = (
  * ```
  */
 export const createServiceTestDependencies = (
-  configOverrides?: Partial<UiPathConfig>,
+  overrides?: Partial<UiPathConfig> & { folderKey?: string },
   tokenManagerOverrides?: Partial<MockableTokenManager>
 ) => {
+  // `folderKey` is meta-tag-only — not on UiPathConfig; lives on PrivateSDK.
+  const { folderKey, ...configOverrides } = overrides ?? {};
   const config = createMockConfig(configOverrides);
   const executionContext = createMockExecutionContext();
   const tokenManager = createMockTokenManager(tokenManagerOverrides);
@@ -167,7 +171,8 @@ export const createServiceTestDependencies = (
   SDKInternalsRegistry.set(mockInstance, {
     config,
     context: executionContext,
-    tokenManager
+    tokenManager,
+    folderKey,
   });
 
   return {

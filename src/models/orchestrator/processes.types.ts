@@ -1,4 +1,4 @@
-import { JobState, RequestOptions, BaseOptions } from '../common/types';
+import { JobState, RequestOptions, BaseOptions, FolderScopedOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -380,3 +380,21 @@ export type ProcessGetAllOptions = RequestOptions & PaginationOptions & {
  * Options for getting a single process by ID
  */
 export interface ProcessGetByIdOptions extends BaseOptions {}
+
+/**
+ * Options for getting a single process by name
+ */
+export interface ProcessGetByNameOptions extends FolderScopedOptions {}
+
+/**
+ * Options for `processes.start()`. Folder context can be supplied via
+ * `folderId`, `folderPath`, or `folderKey`. When more than one is supplied,
+ * the server prefers `folderPath` > `folderKey` > `folderId`.
+ */
+export interface ProcessStartOptions extends RequestOptions, FolderScopedOptions {
+  /**
+   * Numeric folder ID (sent as `X-UIPATH-OrganizationUnitId`). Equivalent to
+   * the legacy positional `folderId` argument on `start()`.
+   */
+  folderId?: number;
+}
