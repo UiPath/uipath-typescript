@@ -411,17 +411,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Deletes a single record from an entity by entity ID and record ID
    *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to delete
-   * @returns Promise resolving to delete response
-   *
+   * @returns Promise resolving to {@link EntityDeleteRecordResponse}
    * @example
    * ```typescript
-   * import { Entities } from '@uipath/uipath-typescript/entities';
-   *
-   * const entities = new Entities(sdk);
-   *
-   * const result = await entities.deleteRecordById("<entityId>", "<recordId>");
+   * const result = await entities.deleteRecordById(<entityId>, <recordId>);
    * console.log(result.success); // true
    * ```
    */
