@@ -518,7 +518,7 @@ describe("Entity Models", () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        await expect(entity.deleteRecord('')).rejects.toThrow('Record ID is undefined');
+        await expect(entity.deleteRecord('')).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED);
       });
     });
 
