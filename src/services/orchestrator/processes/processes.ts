@@ -5,7 +5,8 @@ import {
   ProcessGetAllOptions,
   ProcessStartRequest,
   ProcessStartResponse,
-  ProcessGetByIdOptions
+  ProcessGetByIdOptions,
+  ProcessGetByNameOptions
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
@@ -188,7 +189,49 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     );
 
     const transformedProcess = transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
-    
+
     return transformedProcess;
+  }
+
+  /**
+   * Retrieves a single process by name, optionally scoped to a folder
+   *
+   * Uses the process name and folder path (or folder key) to look up the resource.
+   * The folder context is resolved server-side via the X-UIPATH-FolderPath-Encoded /
+   * X-UIPATH-FolderKey headers — no client-side folder ID resolution is needed.
+   * The folder path is URL-encoded automatically before being sent.
+   *
+   * @param name - Process name to search for
+   * @param options - Optional folder scoping and query parameters
+   * @returns Promise resolving to a single process
+   * {@link ProcessGetResponse}
+   * @example
+   * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
+   * // Get process by name with folder path
+   * const process = await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
+   *
+   * // Get process by name with folder key
+   * const process = await processes.getByName('MyProcess', { folderKey: 'folder-guid' });
+   *
+   * // Get process by name (uses default folder context)
+   * const process = await processes.getByName('MyProcess');
+   * ```
+   */
+  @track('Processes.GetByName')
+  async getByName(name: string, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
+    const { folderPath, folderKey, ...queryOptions } = options;
+    return this.getResourceByName<ProcessGetResponse>({
+      resourceType: 'Process',
+      endpoint: PROCESS_ENDPOINTS.GET_ALL,
+      name,
+      folderPath,
+      folderKey,
+      queryOptions,
+      transformFn: (raw) => transformData(pascalToCamelCaseKeys(raw as ProcessGetResponse), ProcessMap),
+    });
   }
 }

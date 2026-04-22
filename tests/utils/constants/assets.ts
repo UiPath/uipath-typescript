@@ -30,8 +30,17 @@ export const ASSET_TEST_CONSTANTS = {
   
   // Error Messages
   ERROR_ASSET_NOT_FOUND: 'Asset not found',
-  
+
   // OData Parameters
   ODATA_EXPAND_KEY_VALUE_LIST: 'keyValueList',
   ODATA_SELECT_FIELDS: 'id,name,value',
+
+  // getByName
+  FOLDER_PATH: 'Shared/Finance',
+  FOLDER_PATH_WITH_SPACE: 'Shared/My Finance',
+  FOLDER_PATH_ENCODED: 'Shared%2FMy%20Finance',
+  FOLDER_KEY: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+  ASSET_NAME_WITH_QUOTE: "O'Brien",
+  ASSET_NAME_WITH_QUOTE_ESCAPED: "O''Brien",
+  MISSING_ASSET_NAME: 'MissingAsset',
 } as const;

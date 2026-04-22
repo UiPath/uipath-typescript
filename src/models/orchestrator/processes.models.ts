@@ -1,5 +1,5 @@
 import { RequestOptions } from '../common/types';
-import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions } from './processes.types';
+import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions } from './processes.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -78,7 +78,33 @@ export interface ProcessServiceModel {
    * ```
    */
   getById(id: number, folderId: number, options?: ProcessGetByIdOptions): Promise<ProcessGetResponse>;
-  
+
+  /**
+   * Retrieves a single process by name, optionally scoped to a folder
+   *
+   * Uses the process name and folder path (or folder key) to look up the resource.
+   * The folder context is resolved server-side via the X-UIPATH-FolderPath-Encoded /
+   * X-UIPATH-FolderKey headers — no client-side folder ID resolution is needed.
+   * The folder path is URL-encoded automatically before being sent.
+   *
+   * @param name - Process name to search for
+   * @param options - Optional folder scoping and query parameters
+   * @returns Promise resolving to a single process
+   * {@link ProcessGetResponse}
+   * @example
+   * ```typescript
+   * // Get process by name with folder path
+   * const process = await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
+   *
+   * // Get process by name with folder key
+   * const process = await processes.getByName('MyProcess', { folderKey: 'folder-guid' });
+   *
+   * // Get process by name (uses default folder context)
+   * const process = await processes.getByName('MyProcess');
+   * ```
+   */
+  getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
+
   /**
    * Starts a process with the specified configuration
    * 

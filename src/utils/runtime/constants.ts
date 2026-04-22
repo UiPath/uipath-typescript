@@ -16,4 +16,7 @@ export enum UiPathMetaTags {
   // Asset resolution and routing
   CDN_BASE = 'uipath:cdn-base',
   APP_BASE = 'uipath:app-base',
+
+  // Folder context (injected by jamjam when deploying coded apps)
+  FOLDER_KEY = 'uipath:folder-key',
 }

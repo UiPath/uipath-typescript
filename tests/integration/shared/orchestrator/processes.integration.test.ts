@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { isNotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -136,6 +137,82 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
       if (result.length > 0) {
         expect(result[0].id).toBeDefined();
       }
+    });
+  });
+
+  describe('getByName', () => {
+    it('should retrieve a process by name using folderKey', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
+
+      const allProcesses = await processes.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      expect(allProcesses.items.length, 'No processes available to test getByName').toBeGreaterThan(0);
+      const existing = allProcesses.items[0];
+
+      const result = await processes.getByName(existing.name, { folderKey: config.folderKey });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existing.id);
+      expect(result.name).toBe(existing.name);
+      expect(result.key).toBe(existing.key);
+    });
+
+    it('should retrieve a process by name using folderPath', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const allProcesses = await processes.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      expect(allProcesses.items.length, 'No processes available to test getByName').toBeGreaterThan(0);
+      const existing = allProcesses.items[0];
+
+      const result = await processes.getByName(existing.name, { folderPath: config.folderPath });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existing.id);
+      expect(result.name).toBe(existing.name);
+    });
+
+    it('should return transformed camelCase fields (no PascalCase leaks)', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
+
+      const allProcesses = await processes.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      expect(allProcesses.items.length, 'No processes available to validate transform').toBeGreaterThan(0);
+
+      const result = await processes.getByName(allProcesses.items[0].name, { folderKey: config.folderKey });
+
+      expect(result.createdTime).toBeDefined();
+      expect(result.folderId).toBeDefined();
+      expect((result as any).CreationTime).toBeUndefined();
+      expect((result as any).LastModificationTime).toBeUndefined();
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+    });
+
+    it('should throw NotFoundError for a nonexistent process name', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
+
+      const missingName = `__uipath-sdk-nonexistent-process-${Date.now()}`;
+      await expect(
+        processes.getByName(missingName, { folderKey: config.folderKey }),
+      ).rejects.toSatisfy(isNotFoundError);
     });
   });
 

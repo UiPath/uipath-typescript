@@ -12,9 +12,15 @@ import {
 import { PaginationManager } from '../utils/pagination/pagination-manager';
 import { PaginationHelpers } from '../utils/pagination/helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/constants';
-import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
+import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS, ODATA_PREFIX } from '../utils/constants/common';
 import type { IUiPath } from '../core/types';
 import { SDKInternalsRegistry } from '../core/internals';
+import { CollectionResponse } from '../models/common/types';
+import { createHeaders } from '../utils/http/headers';
+import { FOLDER_PATH_ENCODED, FOLDER_KEY } from '../utils/constants/headers';
+import { NotFoundError } from '../core/errors';
+import { addPrefixToKeys } from '../utils/transform';
+import { validateGetByNameArgs } from '../utils/validation/name-validator';
 
 export interface ApiResponse<T> {
   data: T;
@@ -38,6 +44,12 @@ export interface ApiResponse<T> {
 export class BaseService {
   // Private field - not visible via Object.keys() or any reflection
   #apiClient: ApiClient;
+
+  /**
+   * SDK configuration (read-only). Available to subclasses so they can
+   * fall back to init-time defaults like `folderKey`.
+   */
+  protected readonly config: { folderKey?: string };
 
   /**
    * Creates a base service instance with dependency injection.
@@ -72,6 +84,7 @@ export class BaseService {
   constructor(instance: IUiPath, headers?: Record<string, string>) {
     const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
     this.#apiClient = new ApiClient(config, context, tokenManager, headers ? { headers } : {});
+    this.config = { folderKey: config.folderKey };
   }
 
   /**
@@ -145,6 +158,83 @@ export class BaseService {
   protected async delete<T>(path: string, options: RequestSpec = {}): Promise<ApiResponse<T>> {
     const response = await this.#apiClient.delete<T>(path, options);
     return { data: response };
+  }
+
+  /**
+   * Look up a single resource by name on a folder-scoped OData collection.
+   *
+   * Shared by `getByName` implementations across services (Assets, Processes, etc).
+   * Handles:
+   * - Input validation via `validateGetByNameArgs`
+   * - Folder context resolution with init-time `config.folderKey` as fallback
+   * - OData `$filter=Name eq '…'` with single-quote escaping + `$top=1`
+   * - `X-UIPATH-FolderPath-Encoded` / `X-UIPATH-FolderKey` header construction
+   * - Empty-result → `NotFoundError` with folder context in the message
+   *
+   * The transform step is caller-provided because each resource has its own
+   * PascalCase → camelCase field mapping.
+   *
+   * @param params - Resource-specific parameters
+   * @throws ValidationError when inputs are malformed; NotFoundError when no match
+   */
+  protected async getResourceByName<T>(params: {
+    /** Resource label used in validation + error messages (e.g. 'Asset', 'Process') */
+    resourceType: string;
+    /** Folder-scoped OData collection endpoint */
+    endpoint: string;
+    /** Resource name to search for */
+    name: unknown;
+    /** Optional folder path (sent as X-UIPATH-FolderPath-Encoded) */
+    folderPath?: unknown;
+    /** Optional folder key (sent as X-UIPATH-FolderKey) */
+    folderKey?: unknown;
+    /** Additional OData query options ($expand, $select, ...) */
+    queryOptions?: Record<string, unknown>;
+    /** Transform raw OData item → typed response. Cast to the concrete raw shape inside the lambda. */
+    transformFn: (raw: unknown) => T;
+  }): Promise<T> {
+    const validated = validateGetByNameArgs(
+      params.resourceType,
+      params.name,
+      params.folderPath,
+      params.folderKey,
+    );
+
+    // Fall back to the SDK's init-time folderKey (e.g. populated from the
+    // `uipath:folder-key` meta tag in coded-app deployments) when the caller
+    // didn't supply any folder context.
+    const effectiveFolderKey =
+      validated.folderKey ?? (validated.folderPath ? undefined : this.config.folderKey);
+
+    const headers = createHeaders({
+      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeURIComponent(validated.folderPath) : undefined,
+      [FOLDER_KEY]: effectiveFolderKey,
+    });
+
+    const queryOptions = params.queryOptions ?? {};
+    const apiOptions = {
+      ...addPrefixToKeys(queryOptions, ODATA_PREFIX, Object.keys(queryOptions)),
+      '$filter': `Name eq '${validated.name.replace(/'/g, "''")}'`,
+      '$top': '1',
+    };
+
+    const response = await this.get<CollectionResponse<unknown>>(params.endpoint, {
+      headers,
+      params: apiOptions,
+    });
+
+    const items = response.data?.value;
+    if (!items?.length) {
+      const folderHint =
+        validated.folderPath ? ` in folder '${validated.folderPath}'`
+        : effectiveFolderKey ? ` in folder (key: ${effectiveFolderKey})`
+        : '';
+      throw new NotFoundError({
+        message: `${params.resourceType} '${validated.name}' not found${folderHint}.`,
+      });
+    }
+
+    return params.transformFn(items[0]);
   }
 
   /**
