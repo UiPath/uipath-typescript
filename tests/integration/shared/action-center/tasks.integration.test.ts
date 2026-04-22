@@ -8,7 +8,7 @@ import {
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { generateTestResourceName } from '../../utils/helpers';
-import { TaskPriority, TaskType } from '../../../../src/models/action-center/tasks.types';
+import { TaskPriority, TaskType, TaskUserType } from '../../../../src/models/action-center/tasks.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -195,11 +195,12 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       try {
         const users = await tasks.getUsers(folderId!);
 
-        if (users.items.length === 0) {
-          throw new Error('No users available to assign task');
+        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User );
+        if (!user) {
+          throw new Error('No DirectoryUser available to assign task');
         }
 
-        const userId = users.items[0].id;
+        const userId = user.id;
 
         const result = await tasks.assign({
           taskId: createdTaskId,
@@ -232,16 +233,19 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         if (!task.assignedToUser) {
           const users = await tasks.getUsers(folderId!);
 
-          if (users.items.length === 0) {
-            throw new Error('No users available to assign task');
+          const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User );
+          if (!user) {
+            throw new Error('No DirectoryUser available to assign task');
           }
 
-          const userId = users.items[0].id;
+          const userId = user.id;
 
-          await tasks.assign({
+          const assignResult = await tasks.assign({
             taskId: createdTaskId,
             userId: userId,
           });
+          expect(assignResult).toBeDefined();
+          expect(assignResult.success).toBe(true);
         }
 
         const result = await tasks.unassign(createdTaskId);
@@ -270,12 +274,14 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
       try {
         const users = await tasks.getUsers(folderId!);
-        if (users.items.length > 0) {
-          const userId = users.items[0].id;
+        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User );
+        if (user) {
           await tasks.assign({
             taskId: createdTaskId,
-            userId: userId,
+            userId: user.id,
           });
+        } else {
+            throw new Error('No DirectoryUser available to assign task');
         }
 
         const result = await tasks.complete({

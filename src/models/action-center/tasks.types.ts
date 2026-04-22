@@ -9,6 +9,7 @@ export interface UserLoginInfo {
   emailAddress: string;
   displayName: string;
   id: number;
+  type: TaskUserType;
 }
 
 /**
@@ -268,3 +269,25 @@ export interface TaskGetByIdOptions extends BaseOptions {
  * Options for getting users with task permissions
  */
 export type TaskGetUsersOptions = RequestOptions & PaginationOptions;
+
+
+export enum TaskUserType
+{
+    /**  A user of this type is supposed to be used by a human. */
+    User = 'User',
+
+    /**  A user of this type is automatically created when adding a robot, is associated with Robot role and it is used by a robot when communicating with Orchestrator. */
+    Robot = 'Robot',
+
+    /**  A user of type Directory User */
+    DirectoryUser = 'DirectoryUser',
+
+    /** A user of type Directory Group */
+    DirectoryGroup = 'DirectoryGroup',
+
+    /** A user of type Directory Robot Account */
+    DirectoryRobot = 'DirectoryRobot',
+
+    /** A user of type Directory External Application */
+    DirectoryExternalApplication = 'DirectoryExternalApplication',
+}
