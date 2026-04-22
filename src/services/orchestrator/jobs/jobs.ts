@@ -6,7 +6,6 @@ import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
 import { JobMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
 import { AttachmentService } from '../attachments/attachments';
-import { OperationResponse } from '../../../models/common/types';
 import { ValidationError, ServerError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
 import { errorResponseParser } from '../../../core/errors/parser';
@@ -273,25 +272,24 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * @param jobKey - The unique key (GUID) of the suspended job to resume
    * @param folderId - The folder ID where the job resides
    * @param options - Optional parameters including input arguments
-   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the resumed job details
+   * @returns Promise that resolves when the job is resumed successfully, or rejects on failure
    *
    * @example
    * ```typescript
    * // Resume a suspended job
-   * const result = await jobs.resume(<jobKey>, <folderId>);
-   * console.log(result.data.state); // 'Resumed'
+   * await jobs.resume(<jobKey>, <folderId>);
    * ```
    *
    * @example
    * ```typescript
    * // Resume with input arguments
-   * const result = await jobs.resume(<jobKey>, <folderId>, {
+   * await jobs.resume(<jobKey>, <folderId>, {
    *   inputArguments: JSON.stringify({ approved: true })
    * });
    * ```
    */
   @track('Jobs.Resume')
-  async resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<OperationResponse<JobGetResponse>> {
+  async resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<void> {
     if (!jobKey) {
       throw new ValidationError({ message: 'jobKey is required for resume' });
     }
@@ -303,14 +301,15 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       body.inputArguments = options.inputArguments;
     }
 
-    const response = await this.post<Record<string, unknown>>(
+    if (options?.fpsProperties) {
+      body.FpsProperties = options.fpsProperties;
+    }
+
+    await this.post(
       JOB_ENDPOINTS.RESUME,
       body,
       { headers }
     );
-
-    const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
-    return { success: true, data: createJobWithMethods(rawJob, this) };
   }
 
   /**

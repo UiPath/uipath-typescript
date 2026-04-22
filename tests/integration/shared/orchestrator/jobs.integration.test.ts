@@ -241,12 +241,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      const resumed = await jobs.resume(job.key, folderId);
-
-      expect(resumed.success).toBe(true);
-      expect(resumed.data).toBeDefined();
-      expect(resumed.data.key).toBe(job.key);
-      expect(resumed.data.state).toBeDefined();
+      await jobs.resume(job.key, folderId);
     });
   });
 
