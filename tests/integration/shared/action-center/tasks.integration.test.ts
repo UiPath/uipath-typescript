@@ -195,7 +195,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       try {
         const users = await tasks.getUsers(folderId!);
 
-        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User );
+        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User);
         if (!user) {
           throw new Error('No DirectoryUser available to assign task');
         }
@@ -233,7 +233,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         if (!task.assignedToUser) {
           const users = await tasks.getUsers(folderId!);
 
-          const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User );
+          const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User);
           if (!user) {
             throw new Error('No DirectoryUser available to assign task');
           }
@@ -274,14 +274,14 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
 
       try {
         const users = await tasks.getUsers(folderId!);
-        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User );
+        const user = users.items.find((u) => u.type === TaskUserType.DirectoryUser || u.type === TaskUserType.User);
         if (user) {
           await tasks.assign({
             taskId: createdTaskId,
             userId: user.id,
           });
         } else {
-            throw new Error('No DirectoryUser available to assign task');
+          throw new Error('No DirectoryUser available to assign task');
         }
 
         const result = await tasks.complete({
