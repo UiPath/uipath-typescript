@@ -1130,6 +1130,37 @@ describe("EntityService Unit Tests", () => {
     });
   });
 
+  describe('deleteRecordById', () => {
+    it('should delete a single record successfully', async () => {
+      mockApiClient.delete.mockResolvedValue(true);
+
+      const result = await entityService.deleteRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID
+      );
+
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        ),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      await expect(entityService.deleteRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
   describe("downloadAttachment", () => {
     it("should download attachment successfully", async () => {
       const mockBlob = new Blob(["test content"], { type: "application/pdf" });

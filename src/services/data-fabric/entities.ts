@@ -17,7 +17,6 @@ import {
   EntityUpdateResponse,
   EntityDeleteRecordsOptions,
   EntityDeleteResponse,
-  EntityDeleteRecordOptions,
   EntityDeleteRecordResponse,
   EntityRecord,
   RawEntityGetResponse,
@@ -428,7 +427,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * ```
    */
   @track('Entities.DeleteRecordById')
-  async deleteRecordById(entityId: string, recordId: string, _options: EntityDeleteRecordOptions = {}): Promise<EntityDeleteRecordResponse> {
+  async deleteRecordById(entityId: string, recordId: string): Promise<EntityDeleteRecordResponse> {
     const response = await this.delete<boolean>(
       DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(entityId, recordId)
     );
