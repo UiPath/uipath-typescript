@@ -3,11 +3,11 @@ import { PaginationOptions } from '../../utils/pagination';
 import { JobState } from "../common/types";
 
 export enum TaskUserType {
-  /**  A user of this type is supposed to be used by a human. */
+  /** A user of this type is supposed to be used by a human. */
   User = 'User',
-  /**  A user of this type is automatically created when adding a robot, is associated with Robot role and it is used by a robot when communicating with Orchestrator. */
+  /** A user of this type is automatically created when adding a robot, is associated with Robot role and it is used by a robot when communicating with Orchestrator. */
   Robot = 'Robot',
-  /**  A user of type Directory User */
+  /** A user of type Directory User */
   DirectoryUser = 'DirectoryUser',
   /** A user of type Directory Group */
   DirectoryGroup = 'DirectoryGroup',
