@@ -364,6 +364,20 @@ export interface ConversationServiceModel {
    * @internal
    */
   onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void;
+
+  /**
+   * Closes the WebSocket connection and releases all session resources.
+   *
+   * In Node.js the WebSocket keeps the event loop alive until disconnected,
+   * so call this to allow the process to exit cleanly. In the browser the
+   * runtime handles socket cleanup on page unload, so this is effectively a no-op.
+   *
+   * @example
+   * ```typescript
+   * conversationalAgent.conversations.disconnect();
+   * ```
+   */
+  disconnect(): void;
 }
 
 /**

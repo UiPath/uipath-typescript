@@ -36,6 +36,7 @@ vi.mock('@/services/conversational-agent/conversations/session/session-manager',
     setLogLevel: vi.fn(),
     setEventDispatcher: vi.fn(),
     emitEvent: vi.fn(),
+    disconnect: vi.fn(),
   }))
 }));
 
@@ -650,6 +651,14 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       expect(cleanup).toBeDefined();
       expect(typeof cleanup).toBe('function');
+    });
+
+    it('should call disconnect on the session manager', () => {
+      const sessionManager = (conversationalAgent.conversations as any)._sessionManager;
+
+      conversationalAgent.conversations.disconnect();
+
+      expect(sessionManager.disconnect).toHaveBeenCalledTimes(1);
     });
   });
 });

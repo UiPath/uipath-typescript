@@ -471,6 +471,23 @@ export class ConversationService extends BaseService implements ConversationServ
     return this._sessionManager.onConnectionStatusChanged(handler);
   }
 
+  /**
+   * Closes the WebSocket connection and releases all session resources.
+   *
+   * In Node.js the WebSocket keeps the event loop alive until disconnected,
+   * so call this to allow the process to exit cleanly. In the browser the
+   * runtime handles socket cleanup on page unload, so this is effectively a no-op.
+   *
+   * @example
+   * ```typescript
+   * conversationalAgent.conversations.disconnect();
+   * ```
+   */
+  @track('ConversationalAgent.Conversations.Disconnect')
+  disconnect(): void {
+    this._sessionManager.disconnect();
+  }
+
   // ==================== Private Methods ====================
 
   private _getEvents(): ConversationEventHelperManager {
