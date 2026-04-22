@@ -191,6 +191,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(typeof entity.insertRecords).toBe('function');
       expect(typeof entity.updateRecords).toBe('function');
       expect(typeof entity.deleteRecords).toBe('function');
+      expect(typeof entity.deleteRecord).toBe('function');
       expect(typeof entity.getAllRecords).toBe('function');
       expect(typeof entity.getRecord).toBe('function');
       expect(typeof entity.downloadAttachment).toBe('function');
@@ -260,6 +261,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(typeof result.insertRecords).toBe('function');
       expect(typeof result.updateRecords).toBe('function');
       expect(typeof result.deleteRecords).toBe('function');
+      expect(typeof result.deleteRecord).toBe('function');
       expect(typeof result.getAllRecords).toBe('function');
       expect(typeof result.getRecord).toBe('function');
       expect(typeof result.downloadAttachment).toBe('function');
