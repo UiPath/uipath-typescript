@@ -120,6 +120,7 @@ describe("EntityService Unit Tests", () => {
       expect(typeof result.updateRecord).toBe("function");
       expect(typeof result.updateRecords).toBe("function");
       expect(typeof result.deleteRecords).toBe("function");
+      expect(typeof result.deleteRecord).toBe("function");
       expect(typeof result.getAllRecords).toBe("function");
     });
 
@@ -315,6 +316,7 @@ describe("EntityService Unit Tests", () => {
         expect(typeof entity.insertRecords).toBe("function");
         expect(typeof entity.updateRecords).toBe("function");
         expect(typeof entity.deleteRecords).toBe("function");
+        expect(typeof entity.deleteRecord).toBe("function");
         expect(typeof entity.getAllRecords).toBe("function");
       });
 
