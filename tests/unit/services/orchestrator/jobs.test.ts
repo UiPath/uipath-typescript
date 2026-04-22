@@ -639,11 +639,10 @@ describe('JobService Unit Tests', () => {
   });
 
   describe('resume', () => {
-    it('should resume a suspended job and return transformed response', async () => {
-      const mockRawJob = createMockRawJob({ State: 'Resumed' });
-      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+    it('should resume a suspended job', async () => {
+      mockApiClient.post.mockResolvedValueOnce(undefined);
 
-      const result = await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+      await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         JOB_ENDPOINTS.RESUME,
@@ -654,15 +653,10 @@ describe('JobService Unit Tests', () => {
           }),
         })
       );
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
     });
 
     it('should pass input arguments when provided', async () => {
-      const mockRawJob = createMockRawJob({ State: 'Resumed' });
-      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+      mockApiClient.post.mockResolvedValueOnce(undefined);
 
       await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
         inputArguments: JOB_TEST_CONSTANTS.INPUT_ARGUMENTS,
@@ -676,16 +670,6 @@ describe('JobService Unit Tests', () => {
         },
         expect.any(Object)
       );
-    });
-
-    it('should attach bound methods to the returned job', async () => {
-      const mockRawJob = createMockRawJob({ State: 'Resumed' });
-      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
-
-      const result = await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
-
-      expect(typeof result.data.getOutput).toBe('function');
-      expect(typeof result.data.resume).toBe('function');
     });
 
     it('should throw validation error when jobKey is missing', async () => {

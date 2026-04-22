@@ -164,6 +164,8 @@ export interface RawJobGetResponse extends FolderProperties {
 export interface JobResumeOptions {
   /** Input arguments as a JSON string to pass to the resumed job */
   inputArguments?: string;
+  /** Fast Process Scenario properties as a JSON string (e.g., debug metadata, serverless runtime config) */
+  fpsProperties?: string;
 }
 
 /**

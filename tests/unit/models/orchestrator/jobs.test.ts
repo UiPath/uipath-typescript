@@ -122,21 +122,18 @@ describe('Job Models', () => {
         const mockJobData = createBasicJob();
         const job = createJobWithMethods(mockJobData, mockService);
 
-        const mockResult = { success: true, data: job };
-        vi.mocked(mockService.resume).mockResolvedValue(mockResult);
+        vi.mocked(mockService.resume).mockResolvedValue(undefined);
 
-        const result = await job.resume();
+        await job.resume();
 
         expect(mockService.resume).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, undefined);
-        expect(result).toEqual(mockResult);
       });
 
       it('should pass options to service.resume', async () => {
         const mockJobData = createBasicJob();
         const job = createJobWithMethods(mockJobData, mockService);
 
-        const mockResult = { success: true, data: job };
-        vi.mocked(mockService.resume).mockResolvedValue(mockResult);
+        vi.mocked(mockService.resume).mockResolvedValue(undefined);
 
         await job.resume({ inputArguments: JOB_TEST_CONSTANTS.INPUT_ARGUMENTS });
 
