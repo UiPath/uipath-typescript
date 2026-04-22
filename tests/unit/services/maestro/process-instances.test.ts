@@ -1,7 +1,7 @@
 // ===== IMPORTS =====
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ProcessInstancesService } from '../../../../src/services/maestro/processes/process-instances';
-import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { MAESTRO_ENDPOINTS, INSIGHTS_RTM_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../../../src/utils/constants/headers';
 import { PaginationHelpers } from '../../../../src/utils/pagination/helpers';
@@ -12,7 +12,8 @@ import {
   createMockBpmnWithVariables,
   createMockExecutionHistory,
   createMockProcessVariables,
-  createMockMaestroApiOperationResponse
+  createMockMaestroApiOperationResponse,
+  createMockTopProcessByRunCount
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import type { 
@@ -563,6 +564,94 @@ describe('ProcessInstancesService', () => {
 
       
       await expect(service.getVariables(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getTopByRunCount', () => {
+    it('should return top processes by run count', async () => {
+      const mockResponse = [
+        createMockTopProcessByRunCount(),
+        createMockTopProcessByRunCount({
+          packageId: MAESTRO_TEST_CONSTANTS.INSIGHTS_PACKAGE_ID_2,
+          runCount: MAESTRO_TEST_CONSTANTS.INSIGHTS_RUN_COUNT_2,
+          processKey: MAESTRO_TEST_CONSTANTS.INSIGHTS_PROCESS_KEY_2,
+        }),
+      ];
+
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getTopByRunCount(
+        MAESTRO_TEST_CONSTANTS.TENANT_GUID,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        INSIGHTS_RTM_ENDPOINTS.TOP_PROCESSES_BY_RUN_COUNT(
+          TEST_CONSTANTS.ORGANIZATION_ID,
+          TEST_CONSTANTS.TENANT_ID,
+          MAESTRO_TEST_CONSTANTS.TENANT_GUID
+        ),
+        {
+          commonParams: {
+            startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+            endTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME,
+            isCaseManagement: false,
+          },
+          timezoneOffset: 0,
+          tenantId: MAESTRO_TEST_CONSTANTS.TENANT_GUID,
+        },
+        {}
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
+      expect(result[0].runCount).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_RUN_COUNT);
+      expect(result[1].packageId).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_PACKAGE_ID_2);
+    });
+
+    it('should pass timezoneOffset from options', async () => {
+      mockApiClient.post.mockResolvedValue([]);
+
+      await service.getTopByRunCount(
+        MAESTRO_TEST_CONSTANTS.TENANT_GUID,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME,
+        { timezoneOffset: MAESTRO_TEST_CONSTANTS.INSIGHTS_TIMEZONE_OFFSET }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          timezoneOffset: MAESTRO_TEST_CONSTANTS.INSIGHTS_TIMEZONE_OFFSET,
+        }),
+        {}
+      );
+    });
+
+    it('should return empty array when no data', async () => {
+      mockApiClient.post.mockResolvedValue([]);
+
+      const result = await service.getTopByRunCount(
+        MAESTRO_TEST_CONSTANTS.TENANT_GUID,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        service.getTopByRunCount(
+          MAESTRO_TEST_CONSTANTS.TENANT_GUID,
+          MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+          MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

@@ -6,7 +6,9 @@ import type {
   ProcessInstanceExecutionHistoryResponse,
   BpmnXmlString,
   ProcessInstanceGetVariablesResponse,
-  ProcessInstanceGetVariablesOptions
+  ProcessInstanceGetVariablesOptions,
+  TopProcessByRunCountResponse,
+  TopByRunCountOptions
 } from './process-instances.types';
 import type { ProcessIncidentGetResponse } from './process-incidents.types';
 import { OperationResponse } from '../common/types';
@@ -255,6 +257,44 @@ export interface ProcessInstancesServiceModel {
    * ```
    */
   getIncidents(instanceId: string, folderKey: string): Promise<ProcessIncidentGetResponse[]>;
+
+  /**
+   * Get top processes ranked by run count within a time range
+   *
+   * Returns an array of processes sorted by the number of runs (descending) for the specified time window.
+   * Uses the Insights Real-Time Monitoring API to provide analytics on process execution frequency.
+   *
+   * @param tenantId - The tenant GUID for the target environment
+   * @param startTime - Start of the time range as epoch milliseconds
+   * @param endTime - End of the time range as epoch milliseconds
+   * @param options - Optional parameters including timezone offset
+   * @returns Promise resolving to an array of {@link TopProcessByRunCountResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get top processes by run count for the last 7 days
+   * const now = Date.now();
+   * const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+   * const topProcesses = await processInstances.getTopByRunCount(
+   *   '<tenantId>',
+   *   weekAgo,
+   *   now
+   * );
+   *
+   * // With timezone offset
+   * const topProcesses = await processInstances.getTopByRunCount(
+   *   '<tenantId>',
+   *   weekAgo,
+   *   now,
+   *   { timezoneOffset: 330 }
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.runCount} runs`);
+   * }
+   * ```
+   */
+  getTopByRunCount(tenantId: string, startTime: number, endTime: number, options?: TopByRunCountOptions): Promise<TopProcessByRunCountResponse[]>;
 }
 
 // Method interface that will be added to process instance objects

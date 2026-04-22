@@ -111,6 +111,16 @@ export const MAESTRO_TEST_CONSTANTS = {
   EXTRACTED_NAME_WITHOUT_PREFIX: 'RegularPackageName',
   EXTRACTED_NAME_DEFAULT: 'TestCase',
   
+  // Insights RTM constants
+  TENANT_GUID: 'e367ca54-053b-4b86-89a2-6b9e89e85e7a',
+  INSIGHTS_START_TIME: 1776101721328,
+  INSIGHTS_END_TIME: 1776706521328,
+  INSIGHTS_TIMEZONE_OFFSET: 330,
+  INSIGHTS_RUN_COUNT: 6,
+  INSIGHTS_RUN_COUNT_2: 1,
+  INSIGHTS_PACKAGE_ID_2: 'FlowSol.flow.Flow',
+  INSIGHTS_PROCESS_KEY_2: 'e9f2accc-abab-48ac-a5af-8d1f59b91226',
+
   // Execution History constants
   ELEMENT_RUN_ID: 'run-1',
   EXTERNAL_LINK: 'https://test.uipath.com/task/123',
