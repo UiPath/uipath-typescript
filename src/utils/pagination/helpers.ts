@@ -185,13 +185,16 @@ export class PaginationHelpers {
     const endpoint = getEndpoint(folderId);
     const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
 
+    const isPost = method?.toUpperCase() === HTTP_METHODS.POST.toUpperCase();
     const paginatedResponse = await serviceAccess.requestWithPagination<T>(
       method,
       endpoint,
       paginationParams,
       {
         headers,
-        params: additionalParams,
+        // POST: body
+        // GET: query params 
+        ...(isPost ? { body: additionalParams, params: {} } : { params: additionalParams }),
         pagination: {
           paginationType: options.paginationType || PaginationType.OFFSET,
           itemsField: options.itemsField || DEFAULT_ITEMS_FIELD,

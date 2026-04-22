@@ -14,6 +14,8 @@ import {
   FieldDisplayType,
   FieldMetaData,
   RawEntityGetResponse,
+  LogicalOperator,
+  QueryFilterOperator,
 } from '../../../../src/models/data-fabric/entities.types';
 
 // Cache for choice set values to avoid repeated API calls within a test run
@@ -736,6 +738,52 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.items)).toBe(true);
       expect(result.items.length).toBeLessThanOrEqual(2);
       expect(hasValidPagination(result)).toBe(true);
+    });
+
+    it('should query records with filterGroup and pageSize', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      // If filterGroup were serialized as a query param it would produce
+      // filterGroup=%5Bobject+Object%5D and the API would return an error or wrong results
+      const result = await entities.queryRecordsById(entityId, {
+        pageSize: 2,
+        filterGroup: {
+          logicalOperator: LogicalOperator.And,
+          queryFilters: [
+            { fieldName: 'Id', operator: QueryFilterOperator.NotEquals, value: '00000000-0000-0000-0000-000000000000' },
+          ],
+        },
+      });
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(hasValidPagination(result)).toBe(true);
+    });
+
+    it('should query records with sortOptions', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const asc = await entities.queryRecordsById(entityId, {
+        pageSize: 5,
+        sortOptions: [{ fieldName: 'Id', isDescending: false }],
+      });
+      const desc = await entities.queryRecordsById(entityId, {
+        pageSize: 5,
+        sortOptions: [{ fieldName: 'Id', isDescending: true }],
+      });
+      expect(asc.items.length).toBeGreaterThan(0);
+      expect(desc.items.length).toBeGreaterThan(0);
+      // If more than one record, verify sort order is reversed between asc and desc
+      if (asc.items.length > 1) {
+        expect(asc.items[0].Id).not.toBe(desc.items[0].Id);
+      }
     });
   });
 
