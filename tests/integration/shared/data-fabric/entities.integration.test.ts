@@ -989,9 +989,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const testData = await buildDummyRecord(entityMetadata);
       const inserted = await entities.insertRecordById(entityId, testData);
 
-      expect(inserted.id).toBeDefined();
+      expect(inserted.Id).toBeDefined();
 
-      const result = await entities.deleteRecordById(entityId, inserted.id);
+      const result = await entities.deleteRecordById(entityId, inserted.Id);
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
@@ -1030,9 +1030,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const testData = await buildDummyRecord(entity);
       const inserted = await entity.insertRecord(testData);
 
-      expect(inserted.id).toBeDefined();
+      expect(inserted.Id).toBeDefined();
 
-      const result = await entity.deleteRecord(inserted.id);
+      const result = await entity.deleteRecord(inserted.Id);
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
