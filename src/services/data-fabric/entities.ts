@@ -413,7 +413,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to delete
-   * @param options - Delete options
    * @returns Promise resolving to delete response
    *
    * @example
