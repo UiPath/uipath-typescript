@@ -12,3 +12,6 @@ export * from './orchestrator';
 
 // Task models
 export * from './action-center';
+
+// Document Understanding models
+export * from './document-understanding';
