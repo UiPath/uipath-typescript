@@ -971,8 +971,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   afterAll(async () => {
     const config = getTestConfig();
     if (!config.skipCleanup) {
-      if (createdRecordIds.length > 0 && testEntityId) {
-        await cleanupTestEntityRecords(testEntityId, createdRecordIds);
+      const cleanupEntityId = config.dataFabricTestEntityId || testEntityId;
+      if (createdRecordIds.length > 0 && cleanupEntityId) {
+        await cleanupTestEntityRecords(cleanupEntityId, createdRecordIds);
       }
       // Clean up any entities created by schema management tests (no-op when those tests are skipped)
       if (createdEntityIds.length > 0) {
