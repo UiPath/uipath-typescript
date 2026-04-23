@@ -67,7 +67,7 @@ describe('ConversationalAgentService Unit Tests', () => {
       );
     });
 
-    it('should not pass external user id header when externalUserId is not set', () => {
+    it('should not pass any optional headers when no options are provided', () => {
       const { instance } = createServiceTestDependencies();
       vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 

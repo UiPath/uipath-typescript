@@ -11,14 +11,18 @@ export interface ConversationalAgentOptions {
    */
   externalUserId?: string;
   /**
-   * Optional identifier used in UiPath logs to identify the implementing service of
-   * requests. External consumers do not need to set this; the server tags unrecognized
-   * or missing values as external automatically.
+   * Optional identifier used in UiPath logs to identify the implementing service
+   * of requests. External consumers do not need to set it; the server logs
+   * missing values as "unknown".
+   *
+   * @internal Intended for UiPath first-party surfaces.
    */
   surfaceName?: string;
   /**
-   * Optional version of the implementing service of requests. Paired with `surfaceName` for
-   * internal telemetry.
+   * Optional version of the implementing service of requests. Paired with
+   * `surfaceName` for internal telemetry.
+   *
+   * @internal Intended for UiPath first-party surfaces.
    */
   surfaceVersion?: string;
   /** Log level for debugging */
