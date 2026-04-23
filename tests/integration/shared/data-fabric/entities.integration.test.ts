@@ -191,6 +191,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(typeof entity.insertRecords).toBe('function');
       expect(typeof entity.updateRecords).toBe('function');
       expect(typeof entity.deleteRecords).toBe('function');
+      expect(typeof entity.deleteRecord).toBe('function');
       expect(typeof entity.getAllRecords).toBe('function');
       expect(typeof entity.getRecord).toBe('function');
       expect(typeof entity.downloadAttachment).toBe('function');
@@ -260,6 +261,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(typeof result.insertRecords).toBe('function');
       expect(typeof result.updateRecords).toBe('function');
       expect(typeof result.deleteRecords).toBe('function');
+      expect(typeof result.deleteRecord).toBe('function');
       expect(typeof result.getAllRecords).toBe('function');
       expect(typeof result.getRecord).toBe('function');
       expect(typeof result.downloadAttachment).toBe('function');
@@ -745,6 +747,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const { entities } = getServices();
       const config = getTestConfig();
       const entityId = config.dataFabricTestEntityId || testEntityId;
+
       if (!entityId) {
         throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
       }
@@ -963,6 +966,87 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const all = await entities.getAll();
       expect(all.find(e => e.id === entityId)).toBeUndefined();
+    });
+  });
+
+  // ─── Single Record Delete ─────────────────────────────────────────────────
+
+  describe('deleteRecordById (service-level)', () => {
+    it('should delete a single record using deleteRecordById', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
+      }
+
+      if (entityMetadata?.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
+      }
+
+      const testData = await buildDummyRecord(entityMetadata);
+      const inserted = await entities.insertRecordById(entityId, testData);
+
+      expect(inserted).toBeDefined();
+      expect(inserted.Id).toBeDefined();
+      createdRecordIds.push(inserted.Id);
+      registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
+
+      const result = await entities.deleteRecordById(entityId, inserted.Id);
+
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+
+      const idx = createdRecordIds.indexOf(inserted.Id);
+      if (idx !== -1) createdRecordIds.splice(idx, 1);
+    });
+
+    it('should throw for a non-existent record', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      await expect(
+        entities.deleteRecordById(entityId, '00000000-0000-0000-0000-000000000000')
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('deleteRecord (entity-level method)', () => {
+    it('should delete a single record via entity.deleteRecord', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      const entity = await entities.getById(entityId);
+
+      const testData = await buildDummyRecord(entity);
+      const inserted = await entity.insertRecord(testData);
+
+      expect(inserted).toBeDefined();
+      expect(inserted.Id).toBeDefined();
+      createdRecordIds.push(inserted.Id);
+      registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
+
+      const result = await entity.deleteRecord(inserted.Id);
+
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+
+      const idx = createdRecordIds.indexOf(inserted.Id);
+      if (idx !== -1) createdRecordIds.splice(idx, 1);
     });
   });
 

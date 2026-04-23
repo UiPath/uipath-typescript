@@ -17,6 +17,7 @@ import {
   EntityUpdateResponse,
   EntityDeleteRecordsOptions,
   EntityDeleteResponse,
+  EntityDeleteRecordResponse,
   EntityRecord,
   RawEntityGetResponse,
   FieldMetaData,
@@ -372,6 +373,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Deletes data from an entity by entity ID
    *
+   * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
+   *
    * @param entityId - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
@@ -405,6 +408,30 @@ export class EntityService extends BaseService implements EntityServiceModel {
     );
 
     return response.data;
+  }
+
+  /**
+   * Deletes a single record from an entity by entity ID and record ID
+   *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to delete
+   * @returns Promise resolving to {@link EntityDeleteRecordResponse}
+   * @example
+   * ```typescript
+   * const result = await entities.deleteRecordById(<entityId>, <recordId>);
+   * console.log(result.success); // true
+   * ```
+   */
+  @track('Entities.DeleteRecordById')
+  async deleteRecordById(entityId: string, recordId: string): Promise<EntityDeleteRecordResponse> {
+    const response = await this.delete<boolean>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(entityId, recordId)
+    );
+
+    return { success: response.data };
   }
 
   /**

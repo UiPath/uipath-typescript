@@ -9,6 +9,7 @@ import {
   EntityUpdateRecordOptions,
   EntityUpdateRecordResponse,
   EntityDeleteResponse,
+  EntityDeleteRecordResponse,
   EntityRecord,
   RawEntityGetResponse,
   EntityFileType,
@@ -316,6 +317,8 @@ export interface EntityServiceModel {
   /**
    * Deletes data from an entity by entity ID
    *
+   * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
+   *
    * @param id - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
@@ -331,6 +334,23 @@ export interface EntityServiceModel {
    */
   deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
 
+
+  /**
+   * Deletes a single record from an entity by entity ID and record ID
+   *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to delete
+   * @returns Promise resolving to {@link EntityDeleteRecordResponse}
+   * @example
+   * ```typescript
+   * const result = await entities.deleteRecordById(<entityId>, <recordId>);
+   * console.log(result.success); // true
+   * ```
+   */
+  deleteRecordById(entityId: string, recordId: string): Promise<EntityDeleteRecordResponse>;
 
   /**
    * Queries entity records with filters, sorting, and SDK-managed pagination
@@ -646,6 +666,17 @@ export interface EntityMethods {
   deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
 
   /**
+   * Delete a single record from this entity
+   *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
+   * @param recordId - UUID of the record to delete
+   * @returns Promise resolving to delete response
+   */
+  deleteRecord(recordId: string): Promise<EntityDeleteRecordResponse>;
+
+  /**
    * Get all records from this entity
    *
    * @param options - Query options
@@ -827,6 +858,12 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       return service.deleteRecordsById(entityData.id, recordIds, options);
+    },
+
+    async deleteRecord(recordId: string): Promise<EntityDeleteRecordResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      if (!recordId) throw new Error('Record ID is undefined');
+      return service.deleteRecordById(entityData.id, recordId);
     },
 
     async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<
