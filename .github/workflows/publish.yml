@@ -77,3 +77,10 @@ jobs:
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
+
+  trigger-cf-worker:
+    needs: publish-sdk
+    uses: ./.github/workflows/trigger-cf-worker.yml
+    secrets:
+      ADO_PAT: ${{ secrets.ADO_PAT }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
