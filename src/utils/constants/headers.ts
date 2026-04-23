@@ -34,10 +34,28 @@ export const RESPONSE_TYPES = {
 export const EXTERNAL_USER_ID = 'x-uipath-external-user-id';
 
 /**
+ * Optional identifier used in UiPath logs to identify the implementing service
+ * of requests. External consumers do not need to set it; the server logs
+ * missing values as "unknown".
+ *
+ * @internal Intended for UiPath first-party surfaces.
+ */
+export const CONVERSATIONAL_SURFACE_NAME = 'x-uipath-conversational-surfacename';
+/**
+ * Optional version of the implementing service of requests. Paired with
+ * `surfaceName` for internal telemetry.
+ *
+ * @internal Intended for UiPath first-party surfaces.
+ */
+export const CONVERSATIONAL_SURFACE_VERSION = 'x-uipath-conversational-surfaceversion';
+
+/**
  * Query parameter keys sent during WebSocket connection
  */
 export const WEBSOCKET_QUERY_PARAMS = {
   ORGANIZATION_ID: 'x-uipath-internal-accountid',
   TENANT_ID: 'x-uipath-internal-tenantid',
   EXTERNAL_USER_ID,
+  CONVERSATIONAL_SURFACE_NAME,
+  CONVERSATIONAL_SURFACE_VERSION,
 } as const;

@@ -115,6 +115,55 @@ describe('WebSocketSession Unit Tests', () => {
       });
     });
 
+    it('should include surfaceName and surfaceVersion when provided in options', () => {
+      const session = new WebSocketSession(mockInstance, {
+        surfaceName: 'agent_builder_frontend',
+        surfaceVersion: '2.0.0'
+      });
+
+      session.connect();
+
+      expect(io).toHaveBeenCalledTimes(1);
+      const ioCall = (io as any).mock.calls[0];
+      const options = ioCall[1];
+
+      expect(options.query).toEqual({
+        [WEBSOCKET_QUERY_PARAMS.ORGANIZATION_ID]: TEST_CONSTANTS.ORGANIZATION_ID,
+        [WEBSOCKET_QUERY_PARAMS.TENANT_ID]: TEST_CONSTANTS.TENANT_ID,
+        [WEBSOCKET_QUERY_PARAMS.CONVERSATIONAL_SURFACE_NAME]: 'agent_builder_frontend',
+        [WEBSOCKET_QUERY_PARAMS.CONVERSATIONAL_SURFACE_VERSION]: '2.0.0'
+      });
+    });
+
+    it('should include only surfaceName when surfaceVersion is omitted', () => {
+      const session = new WebSocketSession(mockInstance, {
+        surfaceName: 'standalone_chat'
+      });
+
+      session.connect();
+
+      const ioCall = (io as any).mock.calls[0];
+      const options = ioCall[1];
+
+      expect(options.query).toEqual({
+        [WEBSOCKET_QUERY_PARAMS.ORGANIZATION_ID]: TEST_CONSTANTS.ORGANIZATION_ID,
+        [WEBSOCKET_QUERY_PARAMS.TENANT_ID]: TEST_CONSTANTS.TENANT_ID,
+        [WEBSOCKET_QUERY_PARAMS.CONVERSATIONAL_SURFACE_NAME]: 'standalone_chat'
+      });
+    });
+
+    it('should omit surface query params entirely when neither is set', () => {
+      const session = new WebSocketSession(mockInstance);
+
+      session.connect();
+
+      const ioCall = (io as any).mock.calls[0];
+      const options = ioCall[1];
+
+      expect(options.query).not.toHaveProperty(WEBSOCKET_QUERY_PARAMS.CONVERSATIONAL_SURFACE_NAME);
+      expect(options.query).not.toHaveProperty(WEBSOCKET_QUERY_PARAMS.CONVERSATIONAL_SURFACE_VERSION);
+    });
+
     it('should omit empty query params when orgName and tenantName are not set', () => {
       const emptyConfig = {
         baseUrl: TEST_CONSTANTS.BASE_URL
