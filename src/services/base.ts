@@ -230,7 +230,6 @@ export class BaseService {
         if (params.pageNumber && params.pageNumber > 1) {
           requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
         }
-        // Include total count for ODATA APIs
         if (countParam) {
           requestParams[countParam] = true;
         }
@@ -270,8 +269,9 @@ export class BaseService {
     const continuationTokenField = fields.continuationTokenField || 'continuationToken';
 
     // Extract items and metadata
-    const items = response.data[itemsField] || [];
-    const totalCount = response.data[totalCountField];
+    // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
+    const items = Array.isArray(response.data) ? response.data : (response.data[itemsField] || []);
+    const totalCount = Array.isArray(response.data) ? undefined : response.data[totalCountField];
     const continuationToken = response.data[continuationTokenField];
     
     // Determine if there are more pages
