@@ -284,7 +284,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * ```typescript
    * // Resume with input arguments
    * await jobs.resume(<jobKey>, <folderId>, {
-   *   inputArguments: JSON.stringify({ approved: true })
+   *   inputArguments: { approved: true }
    * });
    * ```
    */
@@ -294,15 +294,19 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       throw new ValidationError({ message: 'jobKey is required for resume' });
     }
 
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for resume' });
+    }
+
     const headers = createHeaders({ [FOLDER_ID]: folderId });
     const body: Record<string, unknown> = { jobKey };
 
     if (options?.inputArguments) {
-      body.inputArguments = options.inputArguments;
+      body.inputArguments = JSON.stringify(options.inputArguments);
     }
 
     if (options?.fpsProperties) {
-      body.FpsProperties = options.fpsProperties;
+      body.FpsProperties = JSON.stringify(options.fpsProperties);
     }
 
     await this.post(

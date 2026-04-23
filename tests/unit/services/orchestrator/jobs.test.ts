@@ -655,28 +655,28 @@ describe('JobService Unit Tests', () => {
       );
     });
 
-    it('should pass input arguments when provided', async () => {
+    it('should stringify and pass input arguments when provided', async () => {
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
       await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
-        inputArguments: JOB_TEST_CONSTANTS.INPUT_ARGUMENTS,
+        inputArguments: { approved: true },
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         JOB_ENDPOINTS.RESUME,
         {
           jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
-          inputArguments: JOB_TEST_CONSTANTS.INPUT_ARGUMENTS,
+          inputArguments: '{"approved":true}',
         },
         expect.any(Object)
       );
     });
 
-    it('should pass fpsProperties when provided', async () => {
+    it('should stringify and pass fpsProperties when provided', async () => {
       mockApiClient.post.mockResolvedValueOnce(undefined);
 
       await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
-        fpsProperties: '{"debug.master":"true"}',
+        fpsProperties: { 'debug.master': 'true' },
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -693,6 +693,12 @@ describe('JobService Unit Tests', () => {
       await expect(
         jobService.resume('', TEST_CONSTANTS.FOLDER_ID)
       ).rejects.toThrow('jobKey is required for resume');
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, 0)
+      ).rejects.toThrow('folderId is required for resume');
     });
 
     it('should handle API errors', async () => {

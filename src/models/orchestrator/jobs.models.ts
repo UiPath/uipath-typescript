@@ -186,7 +186,7 @@ export interface JobServiceModel {
    * ```typescript
    * // Resume with input arguments
    * await jobs.resume(<jobKey>, <folderId>, {
-   *   inputArguments: JSON.stringify({ approved: true })
+   *   inputArguments: { approved: true }
    * });
    * ```
    */
