@@ -317,6 +317,8 @@ export interface EntityServiceModel {
   /**
    * Deletes data from an entity by entity ID
    *
+   * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
+   *
    * @param id - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
@@ -861,7 +863,6 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async deleteRecord(recordId: string): Promise<EntityDeleteRecordResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
-
       return service.deleteRecordById(entityData.id, recordId);
     },
 
