@@ -15,6 +15,7 @@ jobs:
   trigger:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         environment: [staging, production]
     steps:
