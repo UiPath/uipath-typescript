@@ -5,6 +5,11 @@
 
 import { RawMaestroProcessGetAllResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
+import {
+  ProcessStartRequest,
+  ProcessStartResponse,
+} from '../orchestrator/processes.types';
+import { RequestOptions } from '../common/types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -66,6 +71,29 @@ export interface MaestroProcessesServiceModel {
    * ```
    */
   getIncidents(processKey: string, folderKey: string): Promise<ProcessIncidentGetResponse[]>;
+
+  /**
+   * Starts a Maestro process execution within a folder.
+   *
+   * @param request - Process start request body (provide either `processKey` or `processName`)
+   * @param folderKey - Required folder key
+   * @param options - Optional query parameters
+   * @returns Promise resolving to the created jobs
+   * {@link ProcessStartResponse}
+   * @example
+   * ```typescript
+   * // Start a process by process key
+   * const jobs = await maestroProcesses.start({
+   *   processKey: '<processKey>'
+   * }, '<folderKey>');
+   *
+   * // Start a process by name
+   * const jobs = await maestroProcesses.start({
+   *   processName: 'MyProcess'
+   * }, '<folderKey>');
+   * ```
+   */
+  start(request: ProcessStartRequest, folderKey: string, options?: RequestOptions): Promise<ProcessStartResponse[]>;
 }
 
 // Method interface that will be added to process objects

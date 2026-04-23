@@ -66,6 +66,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `PIMS` |
 | `getIncidents()` | `PIMS` |
+| `start()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ## Maestro Process Instances
 
