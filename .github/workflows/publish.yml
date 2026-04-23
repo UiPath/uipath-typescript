@@ -89,4 +89,5 @@ jobs:
   trigger-cf-worker:
     needs: publish-sdk
     uses: ./.github/workflows/trigger-cf-worker.yml
-    secrets: inherit
+    secrets:
+      ADO_PAT: ${{ secrets.ADO_PAT }}
