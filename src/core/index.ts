@@ -45,7 +45,7 @@
 
 export { UiPath } from './uipath';
 export type { UiPathSDKConfig } from './config/sdk-config';
-export type { TokenInfo } from './auth/types';
+export type { TokenInfo, TokenIdentity } from './auth/types';
 export * from './errors';
 
 // Pagination (common across all services)
