@@ -30,7 +30,7 @@ export const JOB_TEST_CONSTANTS = {
   PARSED_BLOB_OUTPUT: { largeResult: 'data from blob' },
 
   // Resume
-  INPUT_ARGUMENTS: '{"approved": true}',
+  INPUT_ARGUMENTS: { approved: true },
 
   // Error Messages
   ERROR_JOB_NOT_FOUND: 'Job not found',
