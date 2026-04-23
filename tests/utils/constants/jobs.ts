@@ -29,8 +29,11 @@ export const JOB_TEST_CONSTANTS = {
   BLOB_CONTENT: '{"largeResult": "data from blob"}',
   PARSED_BLOB_OUTPUT: { largeResult: 'data from blob' },
 
+  // Resume
+  INPUT_ARGUMENTS: { approved: true },
+
   // Error Messages
   ERROR_JOB_NOT_FOUND: 'Job not found',
   ERROR_JOBS_NOT_FOUND_FOR_KEYS: 'Jobs not found for keys',
-
+  ERROR_JOB_RESUME_FAILED: 'Job resume failed',
 } as const;

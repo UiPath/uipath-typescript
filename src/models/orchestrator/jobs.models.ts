@@ -1,4 +1,4 @@
-import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions, JobResumeOptions } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /** Combined response type for job data with bound methods. */
@@ -163,6 +163,34 @@ export interface JobServiceModel {
     folderId: number,
     options?: JobStopOptions
   ): Promise<void>;
+
+  /**
+   * Resumes a suspended job.
+   *
+   * Sends a resume request to a job that is currently in the `Suspended` state.
+   * The job transitions to `Resumed` and continues execution. Optionally pass
+   * input arguments to provide data for the resumed workflow.
+   *
+   * @param jobKey - The unique key (GUID) of the suspended job to resume
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional parameters including input arguments
+   * @returns Promise that resolves when the job is resumed successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * // Resume a suspended job
+   * await jobs.resume(<jobKey>, <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Resume with input arguments
+   * await jobs.resume(<jobKey>, <folderId>, {
+   *   inputArguments: { approved: true }
+   * });
+   * ```
+   */
+  resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<void>;
 }
 
 /**
@@ -210,6 +238,14 @@ export interface JobMethods {
    * ```
    */
   stop(options?: JobStopOptions): Promise<void>;
+
+  /**
+   * Resumes this suspended job.
+   *
+   * @param options - Optional parameters including input arguments
+   * @returns Promise that resolves when the job is resumed successfully, or rejects on failure
+   */
+  resume(options?: JobResumeOptions): Promise<void>;
 }
 
 /**
@@ -230,6 +266,11 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.stop([jobData.key], jobData.folderId, options);
+    },
+    async resume(options?: JobResumeOptions): Promise<void> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.resume(jobData.key, jobData.folderId, options);
     },
   };
 }

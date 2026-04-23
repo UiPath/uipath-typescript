@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions } from '../../../models/orchestrator/jobs.types';
+import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobResumeOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -260,6 +260,60 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     const jobIds = await this.resolveJobKeys(jobKeys, folderId);
 
     await this.stopJobsByIds(jobIds, strategy, headers);
+  }
+
+  /**
+   * Resumes a suspended job.
+   *
+   * Sends a resume request to a job that is currently in the `Suspended` state.
+   * The job transitions to `Resumed` and continues execution. Optionally pass
+   * input arguments to provide data for the resumed workflow.
+   *
+   * @param jobKey - The unique key (GUID) of the suspended job to resume
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional parameters including input arguments
+   * @returns Promise that resolves when the job is resumed successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * // Resume a suspended job
+   * await jobs.resume(<jobKey>, <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Resume with input arguments
+   * await jobs.resume(<jobKey>, <folderId>, {
+   *   inputArguments: { approved: true }
+   * });
+   * ```
+   */
+  @track('Jobs.Resume')
+  async resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<void> {
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for resume' });
+    }
+
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for resume' });
+    }
+
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    const body: Record<string, unknown> = { jobKey };
+
+    if (options?.inputArguments) {
+      body.inputArguments = JSON.stringify(options.inputArguments);
+    }
+
+    if (options?.fpsProperties) {
+      body.FpsProperties = JSON.stringify(options.fpsProperties);
+    }
+
+    await this.post(
+      JOB_ENDPOINTS.RESUME,
+      body,
+      { headers }
+    );
   }
 
   /**

@@ -637,4 +637,77 @@ describe('JobService Unit Tests', () => {
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
+
+  describe('resume', () => {
+    it('should resume a suspended job', async () => {
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESUME,
+        { jobKey: JOB_TEST_CONSTANTS.JOB_KEY },
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
+          }),
+        })
+      );
+    });
+
+    it('should stringify and pass input arguments when provided', async () => {
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
+        inputArguments: { approved: true },
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESUME,
+        {
+          jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
+          inputArguments: '{"approved":true}',
+        },
+        expect.any(Object)
+      );
+    });
+
+    it('should stringify and pass fpsProperties when provided', async () => {
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
+        fpsProperties: { 'debug.master': 'true' },
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESUME,
+        {
+          jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
+          FpsProperties: '{"debug.master":"true"}',
+        },
+        expect.any(Object)
+      );
+    });
+
+    it('should throw validation error when jobKey is missing', async () => {
+      await expect(
+        jobService.resume('', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow('jobKey is required for resume');
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, 0)
+      ).rejects.toThrow('folderId is required for resume');
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_RESUME_FAILED);
+      mockApiClient.post.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_RESUME_FAILED);
+    });
+  });
 });
