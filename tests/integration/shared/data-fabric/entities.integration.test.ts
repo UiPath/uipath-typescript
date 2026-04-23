@@ -998,6 +998,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
+
+      const idx = createdRecordIds.indexOf(inserted.Id);
+      if (idx !== -1) createdRecordIds.splice(idx, 1);
     });
 
     it('should throw for a non-existent record', async () => {
@@ -1041,6 +1044,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
+
+      const idx = createdRecordIds.indexOf(inserted.Id);
+      if (idx !== -1) createdRecordIds.splice(idx, 1);
     });
   });
 

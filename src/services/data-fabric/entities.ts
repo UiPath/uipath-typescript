@@ -373,6 +373,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Deletes data from an entity by entity ID
    *
+   * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
+   *
    * @param entityId - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
