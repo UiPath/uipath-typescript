@@ -30,6 +30,7 @@ import { transformData } from '@/utils/transform';
 
 // Local imports
 import { ConversationService } from './conversations';
+import { UserService } from './user';
 
 /**
  * Service for interacting with UiPath Conversational Agent API
@@ -37,6 +38,9 @@ import { ConversationService } from './conversations';
 export class ConversationalAgentService extends BaseService implements ConversationalAgentServiceModel {
   /** Service for creating and managing conversations. See {@link ConversationServiceModel}. */
   public readonly conversations: ConversationService;
+
+  /** Service for reading and updating the current user's profile/context settings. */
+  public readonly user: UserService;
 
   /**
    * Creates an instance of the ConversationalAgent service.
@@ -49,6 +53,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
 
     // Create conversation service with WebSocket support
     this.conversations = new ConversationService(instance, options);
+    this.user = new UserService(instance, options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined);
   }
 
   /**
