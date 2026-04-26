@@ -43,4 +43,13 @@ export const PROCESS_TEST_CONSTANTS = {
     jobPriority: 'High',
     inputArguments: '{"test": "input"}'
   },
+
+  // getByName
+  FOLDER_PATH: 'Shared/Finance',
+  FOLDER_PATH_WITH_SPACE: 'Shared/My Finance',
+  FOLDER_PATH_ENCODED: 'Shared%2FMy%20Finance',
+  FOLDER_KEY: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+  PROCESS_NAME_WITH_QUOTE: "Joe's Process",
+  PROCESS_NAME_WITH_QUOTE_ESCAPED: "Joe''s Process",
+  MISSING_PROCESS_NAME: 'MissingProcess',
 } as const;

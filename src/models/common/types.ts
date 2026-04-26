@@ -45,3 +45,21 @@ export interface RequestOptions extends BaseOptions {
   filter?: string;
   orderby?: string;
 }
+
+/**
+ * Options for folder-scoped name lookups (e.g. `getByName`). The resolved
+ * folder context is sent to Orchestrator as `X-UIPATH-FolderPath-Encoded`
+ * and/or `X-UIPATH-FolderKey` headers. When both are supplied, the server
+ * prefers `folderPath`.
+ */
+export interface FolderScopedOptions extends BaseOptions {
+  /**
+   * Folder path (e.g. 'Shared/Finance'). Sent as the
+   * `X-UIPATH-FolderPath-Encoded` header (URL-encoded automatically).
+   */
+  folderPath?: string;
+  /**
+   * Folder key (GUID). Sent as the `X-UIPATH-FolderKey` header.
+   */
+  folderKey?: string;
+}

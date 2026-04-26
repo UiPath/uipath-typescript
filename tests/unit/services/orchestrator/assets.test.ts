@@ -20,7 +20,8 @@ import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { ASSET_TEST_CONSTANTS } from '../../../utils/constants/assets';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { ASSET_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { FOLDER_ID } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
+import { NotFoundError, ValidationError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -227,6 +228,165 @@ describe('AssetService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(assetService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getByName', () => {
+    it('should return a transformed asset when the OData response contains one item', async () => {
+      const rawAsset = createMockRawAsset();
+      mockApiClient.get.mockResolvedValue({ value: [rawAsset] });
+
+      const result = await assetService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME, {
+        folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(ASSET_TEST_CONSTANTS.ASSET_ID);
+      expect(result.name).toBe(ASSET_TEST_CONSTANTS.ASSET_NAME);
+      expect(result.key).toBe(ASSET_TEST_CONSTANTS.ASSET_KEY);
+      expect(result.valueType).toBe(AssetValueType.DBConnectionString);
+
+      // Transform validation — camelCase fields present, PascalCase originals absent
+      expect(result.createdTime).toBe(ASSET_TEST_CONSTANTS.CREATED_TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.lastModifiedTime).toBe(ASSET_TEST_CONSTANTS.LAST_MODIFIED_TIME);
+      expect((result as any).LastModificationTime).toBeUndefined();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': `Name eq '${ASSET_TEST_CONSTANTS.ASSET_NAME}'`,
+            '$top': '1',
+          }),
+        }),
+      );
+    });
+
+    it('should URL-encode folderPath and send it via X-UIPATH-FolderPath-Encoded', async () => {
+      const rawAsset = createMockRawAsset();
+      mockApiClient.get.mockResolvedValue({ value: [rawAsset] });
+
+      await assetService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME, {
+        folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE,
+      });
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: ASSET_TEST_CONSTANTS.FOLDER_PATH_ENCODED,
+      });
+      // folderKey header must not be set when the caller only supplied folderPath
+      expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();
+    });
+
+    it('should send folderKey header when only folderKey is provided', async () => {
+      const rawAsset = createMockRawAsset();
+      mockApiClient.get.mockResolvedValue({ value: [rawAsset] });
+
+      await assetService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME, {
+        folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_KEY]: ASSET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should forward both headers when folderPath and folderKey are supplied', async () => {
+      const rawAsset = createMockRawAsset();
+      mockApiClient.get.mockResolvedValue({ value: [rawAsset] });
+
+      await assetService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME, {
+        folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH,
+        folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: encodeURIComponent(ASSET_TEST_CONSTANTS.FOLDER_PATH),
+        [FOLDER_KEY]: ASSET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+    });
+
+    it('should OData-escape single quotes in the name', async () => {
+      const rawAsset = createMockRawAsset();
+      mockApiClient.get.mockResolvedValue({ value: [rawAsset] });
+
+      await assetService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME_WITH_QUOTE, {
+        folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': `Name eq '${ASSET_TEST_CONSTANTS.ASSET_NAME_WITH_QUOTE_ESCAPED}'`,
+          }),
+        }),
+      );
+    });
+
+    it('should throw NotFoundError when the OData value array is empty', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [] });
+
+      await expect(
+        assetService.getByName(ASSET_TEST_CONSTANTS.MISSING_ASSET_NAME, {
+          folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH,
+        }),
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('should throw ValidationError for an empty name', async () => {
+      await expect(assetService.getByName('   ')).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when the name is not a string', async () => {
+      await expect(
+        assetService.getByName(42 as unknown as string),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to SDK init-time folderKey when no folder context is provided', async () => {
+      // Re-initialize the service with a config that carries a folderKey —
+      // simulates the coded-app meta-tag (`uipath:folder-key`) path.
+      const { instance } = createServiceTestDependencies({ folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new AssetService(instance);
+
+      const rawAsset = createMockRawAsset();
+      mockApiClient.get.mockResolvedValue({ value: [rawAsset] });
+
+      await scopedService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME);
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_KEY]: ASSET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should suppress the init-time folderKey fallback when the caller provides folderPath', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new AssetService(instance);
+
+      const rawAsset = createMockRawAsset();
+      mockApiClient.get.mockResolvedValue({ value: [rawAsset] });
+
+      await scopedService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME, {
+        folderPath: ASSET_TEST_CONSTANTS.FOLDER_PATH,
+      });
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: encodeURIComponent(ASSET_TEST_CONSTANTS.FOLDER_PATH),
+      });
+      // folderKey from config must NOT leak when folderPath is explicit
+      expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { JobState, RequestOptions, BaseOptions } from '../common/types';
+import { JobState, RequestOptions, BaseOptions, FolderScopedOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -380,3 +380,8 @@ export type ProcessGetAllOptions = RequestOptions & PaginationOptions & {
  * Options for getting a single process by ID
  */
 export interface ProcessGetByIdOptions extends BaseOptions {}
+
+/**
+ * Options for getting a single process by name
+ */
+export interface ProcessGetByNameOptions extends FolderScopedOptions {}

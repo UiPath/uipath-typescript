@@ -47,6 +47,10 @@ export class UiPath implements IUiPath {
   #authService?: AuthService;
   #initialized: boolean = false;
   #partialConfig?: PartialUiPathConfig;
+  // Folder key sourced only from `<meta name="uipath:folder-key">` (coded-app
+  // deployments). Not accepted via the public constructor; lives here so the
+  // SDK can flow it through to BaseService.config without polluting BaseConfig.
+  #metaFolderKey?: string;
 
   /** Read-only config for user convenience */
   public readonly config!: Readonly<BaseConfig>;
@@ -54,6 +58,7 @@ export class UiPath implements IUiPath {
   constructor(config?: PartialUiPathConfig) {
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
+    this.#metaFolderKey = configFromMetaTags?.folderKey;
 
     // Merge configuration: constructor config overrides meta tags
     const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
@@ -80,7 +85,8 @@ export class UiPath implements IUiPath {
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
-      scope: hasOAuthAuth ? config.scope : undefined
+      scope: hasOAuthAuth ? config.scope : undefined,
+      folderKey: this.#metaFolderKey
     });
 
     const executionContext = new ExecutionContext();
@@ -125,6 +131,7 @@ export class UiPath implements IUiPath {
   #loadConfig(): UiPathSDKConfig {
     // Load from meta tags
     const metaConfig = loadFromMetaTags();
+    this.#metaFolderKey = metaConfig?.folderKey;
 
     // Merge with any partial config from constructor (constructor overrides meta tags)
     const merged = { ...metaConfig, ...this.#partialConfig };

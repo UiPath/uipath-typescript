@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../../models/orchestrator/assets.types';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
@@ -115,7 +115,49 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
     );
 
     const transformedAsset = transformData(pascalToCamelCaseKeys(response.data) as AssetGetResponse, AssetMap);
-    
+
     return transformedAsset;
+  }
+
+  /**
+   * Retrieves a single asset by name, optionally scoped to a folder
+   *
+   * Uses the asset name and folder path (or folder key) to look up the resource.
+   * The folder context is resolved server-side via the X-UIPATH-FolderPath-Encoded /
+   * X-UIPATH-FolderKey headers — no client-side folder ID resolution is needed.
+   * The folder path is URL-encoded automatically before being sent.
+   *
+   * @param name - Asset name to search for
+   * @param options - Optional folder scoping and query parameters
+   * @returns Promise resolving to a single asset
+   * {@link AssetGetResponse}
+   * @example
+   * ```typescript
+   * import { Assets } from '@uipath/uipath-typescript/assets';
+   *
+   * const assets = new Assets(sdk);
+   *
+   * // Get asset by name with folder path
+   * const asset = await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
+   *
+   * // Get asset by name with folder key
+   * const asset = await assets.getByName('ApiKey', { folderKey: 'folder-guid' });
+   *
+   * // Get asset by name (uses default folder context)
+   * const asset = await assets.getByName('ApiKey');
+   * ```
+   */
+  @track('Assets.GetByName')
+  async getByName(name: string, options: AssetGetByNameOptions = {}): Promise<AssetGetResponse> {
+    const { folderPath, folderKey, ...queryOptions } = options;
+    return this.getResourceByName<AssetGetResponse>({
+      resourceType: 'Asset',
+      endpoint: ASSET_ENDPOINTS.GET_ALL,
+      name,
+      folderPath,
+      folderKey,
+      queryOptions,
+      transformFn: (raw) => transformData(pascalToCamelCaseKeys(raw as AssetGetResponse), AssetMap),
+    });
   }
 }
