@@ -87,12 +87,60 @@ export const createMockExecutionHistory = (overrides: Partial<any> = {}) => {
     traceId: MAESTRO_TEST_CONSTANTS.TRACE_ID,
     parentId: null,
     name: MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME,
-    startedTime: new Date().toISOString(),
-    endTime: new Date().toISOString(),
+    startedTime: MAESTRO_TEST_CONSTANTS.START_TIME,
+    endTime: MAESTRO_TEST_CONSTANTS.END_TIME,
     attributes: MAESTRO_TEST_CONSTANTS.ATTRIBUTES,
-    createdTime: new Date().toISOString(),
-    updatedTime: new Date().toISOString(),
+    updatedTime: MAESTRO_TEST_CONSTANTS.END_TIME,
     expiredTime: null
+  }, overrides);
+};
+
+export const createMockElementExecutionsResponse = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
+    elementExecutions: [
+      {
+        elementId: 'Event_start',
+        elementType: 'StartEvent',
+        elementExtensionType: null,
+        status: 'Completed',
+        startedTimeUtc: MAESTRO_TEST_CONSTANTS.START_TIME,
+        completedTimeUtc: MAESTRO_TEST_CONSTANTS.END_TIME,
+        parentRunId: null,
+        parentElementId: null,
+        parentElementRunId: null,
+        runId: '',
+        elementRuns: [
+          {
+            elementRunId: MAESTRO_TEST_CONSTANTS.SPAN_ID,
+            status: 'Completed',
+            startedTimeUtc: MAESTRO_TEST_CONSTANTS.START_TIME,
+            completedTimeUtc: MAESTRO_TEST_CONSTANTS.END_TIME,
+            incomingFlowId: null,
+            incomingFlowIds: [],
+            markerItemIndex: null,
+            workflowId: null,
+            temporalExecutionId: null,
+            version: 2,
+            parentElementRunId: null
+          }
+        ]
+      }
+    ]
+  }, overrides);
+};
+
+export const createMockTraceSpan = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    Id: MAESTRO_TEST_CONSTANTS.SPAN_ID,
+    TraceId: MAESTRO_TEST_CONSTANTS.TRACE_ID,
+    ParentId: null,
+    Name: MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME,
+    StartTime: MAESTRO_TEST_CONSTANTS.START_TIME,
+    EndTime: MAESTRO_TEST_CONSTANTS.END_TIME,
+    Attributes: MAESTRO_TEST_CONSTANTS.ATTRIBUTES,
+    ExpiryTimeUtc: null,
+    UpdatedAt: MAESTRO_TEST_CONSTANTS.END_TIME
   }, overrides);
 };
 
