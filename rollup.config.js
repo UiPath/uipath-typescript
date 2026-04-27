@@ -5,7 +5,7 @@ import dts from 'rollup-plugin-dts';              // Generates TypeScript declar
 import json from '@rollup/plugin-json';           // Imports JSON files as ES6 modules
 import alias from '@rollup/plugin-alias';         // Path alias support (@/ -> src/)
 import builtins from 'builtin-modules';           // List of Node.js built-in modules (fs, crypto, etc.)
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -228,6 +228,34 @@ serviceEntries.forEach(({ name, input, output }) => {
     external: dtsExternal
   });
 });
+
+// Bundled type definitions — a single .d.ts combining all service entries.
+// Dynamically generated from serviceEntries so new services are included automatically.
+// Post-processes the output into ambient declarations with proper aliases
+// (e.g., `EntityService as Entities` → `type Entities = EntityService; const Entities: typeof EntityService;`)
+function buildBundledTypesConfig(entries) {
+  const tempEntryPath = path.resolve(__dirname, 'src/.types-entry.generated.ts');
+
+  const exportLines = entries.map(
+    e => `export * from '${path.resolve(__dirname, e.input).replace(/\.ts$/, '')}';`
+  );
+  writeFileSync(tempEntryPath, [
+    '// Auto-generated from serviceEntries in rollup.config.js — do not edit',
+    ...exportLines,
+  ].join('\n') + '\n');
+
+  return {
+    input: tempEntryPath,
+    output: { file: 'dist/types/index.d.ts', format: 'es' },
+    plugins: [
+      alias(aliasConfig),
+      dts(),
+      { name: 'cleanup-generated-entry', writeBundle() { try { unlinkSync(tempEntryPath); } catch {} } }
+    ]
+  };
+}
+
+configs.push(buildBundledTypesConfig(serviceEntries));
 
 // Export all build configurations
 export default configs;
