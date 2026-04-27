@@ -7,9 +7,11 @@ import type {
   BpmnXmlString,
   ProcessInstanceGetVariablesResponse,
   ProcessInstanceGetVariablesOptions,
+} from './process-instances.types';
+import type {
   TopProcessByRunCountResponse,
   TopByRunCountOptions
-} from './process-instances.types';
+} from './insights-rtm.types';
 import type { ProcessIncidentGetResponse } from './process-incidents.types';
 import { OperationResponse } from '../common/types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';

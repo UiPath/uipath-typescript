@@ -19,3 +19,6 @@ export * from './cases.models';
 // Case instance types and models
 export * from './case-instances.types';
 export * from './case-instances.models';
+
+// Insights RTM types
+export * from './insights-rtm.types';

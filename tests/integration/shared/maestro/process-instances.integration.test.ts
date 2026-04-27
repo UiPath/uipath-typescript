@@ -299,6 +299,61 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
     });
   });
 
+  describe('getTopByRunCount', () => {
+    it('should retrieve top processes by run count', async () => {
+      const { processInstances } = getServices();
+      const config = getTestConfig();
+
+      if (!config.insightsRtmTenantId) {
+        throw new Error('INSIGHTS_RTM_TENANT_ID is required for getTopByRunCount tests');
+      }
+
+      const now = Date.now();
+      const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+      const result = await processInstances.getTopByRunCount(
+        config.insightsRtmTenantId,
+        weekAgo,
+        now
+      );
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length > 0) {
+        const topProcess = result[0];
+        expect(topProcess.packageId).toBeDefined();
+        expect(typeof topProcess.packageId).toBe('string');
+        expect(topProcess.runCount).toBeDefined();
+        expect(typeof topProcess.runCount).toBe('number');
+        expect(topProcess.processKey).toBeDefined();
+        expect(typeof topProcess.processKey).toBe('string');
+      }
+    });
+
+    it('should accept timezone offset option', async () => {
+      const { processInstances } = getServices();
+      const config = getTestConfig();
+
+      if (!config.insightsRtmTenantId) {
+        throw new Error('INSIGHTS_RTM_TENANT_ID is required for getTopByRunCount tests');
+      }
+
+      const now = Date.now();
+      const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+      const result = await processInstances.getTopByRunCount(
+        config.insightsRtmTenantId,
+        weekAgo,
+        now,
+        { timezoneOffset: 330 }
+      );
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
   afterAll(async () => {
     // Note: We don't cleanup test instances as they may be pre-existing
   });

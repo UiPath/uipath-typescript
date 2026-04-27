@@ -7,7 +7,7 @@ import {
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse
 } from './case-instances.types';
-import { TopProcessByRunCountResponse, TopByRunCountOptions } from './process-instances.types';
+import { TopProcessByRunCountResponse, TopByRunCountOptions } from './insights-rtm.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
 import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
