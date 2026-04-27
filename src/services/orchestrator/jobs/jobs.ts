@@ -327,21 +327,22 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * @example
    * ```typescript
    * // Restart a faulted job
-   * const result = await jobs.restart(<jobId>, <folderId>);
+   * const result = await jobs.restart(<jobKey>, <folderId>);
    * console.log(result.data.state); // 'Pending'
    * console.log(result.data.key);   // new job key
    * ```
    */
   @track('Jobs.Restart')
-  async restart(jobId: number, folderId: number): Promise<OperationResponse<JobGetResponse>> {
-    if (!jobId) {
-      throw new ValidationError({ message: 'jobId is required for restart' });
+  async restart(jobKey: string, folderId: number): Promise<OperationResponse<JobGetResponse>> {
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for restart' });
     }
 
     if (!folderId) {
       throw new ValidationError({ message: 'folderId is required for restart' });
     }
 
+    const [jobId] = await this.resolveJobKeys([jobKey], folderId);
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
     const response = await this.post<Record<string, unknown>>(

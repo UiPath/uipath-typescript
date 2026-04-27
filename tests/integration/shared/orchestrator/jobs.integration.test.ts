@@ -253,7 +253,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
   });
 
   describe('restart', () => {
-    it('should restart a faulted job', async () => {
+    it('should restart a faulted job with correct transform pipeline', async () => {
       const { jobs, folderId } = getJobsService();
 
       if (!folderId) {
@@ -271,32 +271,12 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      const restarted = await jobs.restart(job.id, folderId);
+      const restarted = await jobs.restart(job.key, folderId);
 
+      // Core restart assertions
       expect(restarted.success).toBe(true);
       expect(restarted.data).toBeDefined();
       expect(restarted.data.state).toBeDefined();
-    });
-
-    it('should apply transform pipeline correctly on restarted job', async () => {
-      const { jobs, folderId } = getJobsService();
-
-      if (!folderId) {
-        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for restart tests.');
-      }
-
-      const result = await jobs.getAll({
-        folderId,
-        pageSize: 1,
-        filter: "state eq 'Faulted'",
-      });
-
-      if (result.items.length === 0) {
-        throw new Error('No faulted jobs found in the test environment to test restart transform.');
-      }
-
-      const job = result.items[0];
-      const restarted = await jobs.restart(job.id, folderId);
 
       // Verify transformed camelCase fields present with values
       expect(restarted.data.createdTime).toBeDefined();
