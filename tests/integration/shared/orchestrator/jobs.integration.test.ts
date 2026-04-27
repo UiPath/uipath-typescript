@@ -223,15 +223,22 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
 
   describe('resume', () => {
     it('should resume a suspended job', async () => {
-      const { jobs, folderId } = getJobsService();
+      const { jobs } = getJobsService();
+      const config = getTestConfig();
 
-      if (!folderId) {
-        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for resume tests.');
+      const resumeFolderId = config.jobsTestFolderId
+        ? Number(config.jobsTestFolderId)
+        : config.folderId
+          ? Number(config.folderId)
+          : undefined;
+
+      if (!resumeFolderId) {
+        throw new Error('JOBS_TEST_FOLDER_ID or INTEGRATION_TEST_FOLDER_ID is required for resume tests.');
       }
 
       // Find a suspended job
       const result = await jobs.getAll({
-        folderId,
+        folderId: resumeFolderId,
         pageSize: 1,
         filter: "State eq 'Suspended'",
       });
@@ -241,7 +248,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       }
 
       const job = result.items[0];
-      await jobs.resume(job.key, folderId);
+      await jobs.resume(job.key, resumeFolderId);
     });
   });
 

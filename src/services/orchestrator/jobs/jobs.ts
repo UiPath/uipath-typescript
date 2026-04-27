@@ -266,7 +266,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
    * Resumes a suspended job.
    *
    * Sends a resume request to a job that is currently in the `Suspended` state.
-   * The job transitions to `Resumed` and continues execution. Optionally pass
+   * The job transitions to `Resumed` and then to `Running` as it continues execution. Optionally pass
    * input arguments to provide data for the resumed workflow.
    *
    * @param jobKey - The unique key (GUID) of the suspended job to resume
@@ -306,7 +306,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     }
 
     if (options?.fpsProperties) {
-      body.FpsProperties = JSON.stringify(options.fpsProperties);
+      body.fpsProperties = JSON.stringify(options.fpsProperties);
     }
 
     await this.post(
