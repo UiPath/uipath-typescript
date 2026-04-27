@@ -135,10 +135,11 @@ export interface ExternalValue {
 export type InlineOrExternalValue<T> = InlineValue<T> | ExternalValue;
 
 /**
- * Input arguments passed to the agent on each exchange. Only inline values are currently supported by the API.
- * Using the InlineOrExternalValue type to make future external value support easier.
+ * Input arguments passed in to the execution of the agent on each exchange. The input arguments are
+ * expected to match the input-schema defined in the Agent definition. Currently, only inline values
+ * are supported and the total serialized JSON payload must be less than 4,000 characters.
  */
-export type AgentInput = InlineOrExternalValue<JSONObject>;
+export type AgentInput = InlineValue<JSONObject>;
 
 /**
  * Tool call input value type.
