@@ -305,10 +305,6 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       body.inputArguments = JSON.stringify(options.inputArguments);
     }
 
-    if (options?.fpsProperties) {
-      body.fpsProperties = JSON.stringify(options.fpsProperties);
-    }
-
     await this.post(
       JOB_ENDPOINTS.RESUME,
       body,
