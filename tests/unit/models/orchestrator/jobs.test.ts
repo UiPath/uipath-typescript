@@ -18,6 +18,7 @@ describe('Job Models', () => {
       getById: vi.fn(),
       getOutput: vi.fn(),
       stop: vi.fn(),
+      resume: vi.fn(),
     } as any;
   });
 
@@ -113,6 +114,48 @@ describe('Job Models', () => {
         const job = createJobWithMethods(mockJobData, mockService);
 
         await expect(job.stop()).rejects.toThrow('Job folderId is undefined');
+      });
+    });
+
+    describe('job.resume()', () => {
+      it('should call service.resume with the job key and folderId', async () => {
+        const mockJobData = createBasicJob();
+        const job = createJobWithMethods(mockJobData, mockService);
+
+        vi.mocked(mockService.resume).mockResolvedValue(undefined);
+
+        await job.resume();
+
+        expect(mockService.resume).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, undefined);
+      });
+
+      it('should pass options to service.resume', async () => {
+        const mockJobData = createBasicJob();
+        const job = createJobWithMethods(mockJobData, mockService);
+
+        vi.mocked(mockService.resume).mockResolvedValue(undefined);
+
+        await job.resume({ inputArguments: JOB_TEST_CONSTANTS.INPUT_ARGUMENTS });
+
+        expect(mockService.resume).toHaveBeenCalledWith(
+          JOB_TEST_CONSTANTS.JOB_KEY,
+          TEST_CONSTANTS.FOLDER_ID,
+          { inputArguments: JOB_TEST_CONSTANTS.INPUT_ARGUMENTS }
+        );
+      });
+
+      it('should throw when job key is undefined', async () => {
+        const mockJobData = createBasicJob({ key: '' as any });
+        const job = createJobWithMethods(mockJobData, mockService);
+
+        await expect(job.resume()).rejects.toThrow('Job key is undefined');
+      });
+
+      it('should throw when job folderId is undefined', async () => {
+        const mockJobData = createBasicJob({ folderId: undefined as any });
+        const job = createJobWithMethods(mockJobData, mockService);
+
+        await expect(job.resume()).rejects.toThrow('Job folderId is undefined');
       });
     });
   });
