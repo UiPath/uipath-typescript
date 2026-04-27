@@ -194,9 +194,9 @@ export interface JobServiceModel {
   resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<void>;
 
   /**
-   * Restarts a completed or faulted job.
+   * Restarts a job in a final state (Successful, Faulted, or Stopped).
    *
-   * Creates a new job execution from a previously completed, faulted, or stopped job.
+   * Creates a new job execution from a previously successful, faulted, or stopped job.
    * The new job is created with `Pending` state and uses the same process and input
    * arguments as the original job.
    *

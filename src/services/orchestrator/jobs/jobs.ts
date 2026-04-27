@@ -314,13 +314,13 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
-   * Restarts a completed or faulted job.
+   * Restarts a job in a final state (Successful, Faulted, or Stopped).
    *
-   * Creates a new job execution from a previously completed, faulted, or stopped job.
+   * Creates a new job execution from a previously successful, faulted, or stopped job.
    * The new job is created with `Pending` state and uses the same process and input
    * arguments as the original job.
    *
-   * @param jobId - The numeric ID of the job to restart
+   * @param jobKey - The unique key (GUID) of the job to restart
    * @param folderId - The folder ID where the job resides
    * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the new job details
    *
