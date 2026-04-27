@@ -22,6 +22,7 @@
 - Every public service method must be decorated with `@track('ServiceName.MethodName')` for telemetry — gaps are invisible until production debugging, when they're expensive.
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
 - **Barrel files must use `export * from`**, not `export type * from`. Using `export type` re-exports only type declarations and silently drops runtime values (class constructors, enums), causing `undefined` errors for SDK consumers who import them.
+- When a service method makes multiple independent API calls (e.g., chunk-based key resolution), parallelize them with `Promise.all` — sequential calls compound latency unnecessarily.
 
 ## Type naming
 

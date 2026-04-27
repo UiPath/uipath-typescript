@@ -17,6 +17,10 @@ npm run typecheck        # tsc --noEmit
 npm run docs:api         # typedoc + post-process
 ```
 
+## Release workflow
+
+- Version bumps go in a **separate PR** — never include a version bump in a feature or fix PR. Other in-flight changes may need to ship in the same version, so the bump is always a dedicated step.
+
 @agent_docs/architecture.md
 @agent_docs/conventions.md
 @agent_docs/rules.md
