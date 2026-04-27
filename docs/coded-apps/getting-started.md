@@ -269,7 +269,7 @@ await sdk.initialize()
 ```bash
 $ uip login
 $ npm run build
-$ uip codedapp pack dist -n my-app --version 1.0.0
+$ uip codedapp pack dist -n <appName> --version 1.0.0
 $ uip codedapp publish
 $ uip codedapp deploy
 ```
