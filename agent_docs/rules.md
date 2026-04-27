@@ -55,6 +55,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - **Add a one-line description of what the response includes** beyond the method signature (e.g., "Returns the full job details including state, timing, and input/output arguments. Use `expand` to include related entities like Robot, Machine, or Release").
 - **NEVER** reference unrelated parameters in JSDoc examples — keep examples focused on the method being documented. If `getOutput()` doesn't accept `folderId`, don't show `folderId` in its example.
 - **Show bare minimum call first** in the first `@example`, then a second example with filtering/options. Never use `$` prefix on OData params in examples (`expand` not `$expand`).
+- **NEVER** assign a `void` return to a variable in JSDoc examples — if a method returns `Promise<void>`, write `await service.method()` not `const result = await service.method()`. Assigning void implies the return value is usable, which misleads users.
 - **Add JSDoc to non-obvious enum values** — if an enum has values whose meaning isn't clear from the name alone, add a brief comment to each value.
 
 ## Post-implementation verification checklist
