@@ -45,3 +45,21 @@ export interface RequestOptions extends BaseOptions {
   filter?: string;
   orderby?: string;
 }
+
+/**
+ * Folder-scoping options accepted by methods that resolve a resource by name.
+ * Both `folderPath` and `folderKey` are optional; the server prefers
+ * `folderPath` when both are sent.
+ */
+export interface FolderScopedOptions extends BaseOptions {
+  /**
+   * Slash-delimited folder path that scopes the lookup, e.g. `'Shared/Finance'`.
+   * When both `folderPath` and `folderKey` are supplied, `folderPath` wins.
+   */
+  folderPath?: string;
+  /**
+   * Folder key (GUID) that scopes the lookup. When both `folderPath` and
+   * `folderKey` are supplied, `folderPath` wins.
+   */
+  folderKey?: string;
+}

@@ -1,4 +1,4 @@
-import { JobState, RequestOptions, BaseOptions } from '../common/types';
+import { JobState, RequestOptions, BaseOptions, FolderScopedOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -382,17 +382,30 @@ export type ProcessGetAllOptions = RequestOptions & PaginationOptions & {
 export interface ProcessGetByIdOptions extends BaseOptions {}
 
 /**
- * Options for getting a single process by name
+ * Options for getting a single process by name.
+ * Both `folderPath` and `folderKey` are optional; the server prefers
+ * `folderPath` when both are supplied.
  */
-export interface ProcessGetByNameOptions extends BaseOptions {
+export interface ProcessGetByNameOptions extends FolderScopedOptions {}
+
+/**
+ * Options for `processes.start()`. Folder context lives here in the new
+ * options shape: `folderId`, `folderPath`, or `folderKey`. When multiple are
+ * supplied, the server prefers `folderPath` > `folderKey` > `folderId`.
+ */
+export interface ProcessStartOptions extends RequestOptions {
   /**
-   * Folder path to scope the process lookup (e.g. 'Shared/Finance').
-   * Mutually exclusive with folderKey.
+   * Numeric folder ID. Sent as `X-UIPATH-OrganizationUnitId`. Equivalent to
+   * the legacy positional `folderId` argument.
+   */
+  folderId?: number;
+  /**
+   * Slash-delimited folder path. Sent as `X-UIPATH-FolderPath-Encoded`
+   * (base64-of-UTF-16-LE).
    */
   folderPath?: string;
   /**
-   * Folder key (GUID) to scope the process lookup.
-   * Mutually exclusive with folderPath.
+   * Folder key (GUID). Sent as `X-UIPATH-FolderKey`.
    */
   folderKey?: string;
 }

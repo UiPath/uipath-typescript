@@ -1,4 +1,4 @@
-import { BaseOptions, RequestOptions } from '../common/types';
+import { BaseOptions, FolderScopedOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -70,17 +70,8 @@ export type AssetGetAllOptions = RequestOptions & PaginationOptions & {
 export interface AssetGetByIdOptions extends BaseOptions {}
 
 /**
- * Options for getting a single asset by name
+ * Options for getting a single asset by name.
+ * Both `folderPath` and `folderKey` are optional; the server prefers
+ * `folderPath` when both are supplied.
  */
-export interface AssetGetByNameOptions extends BaseOptions {
-  /**
-   * Folder path to scope the asset lookup (e.g. 'Shared/Finance').
-   * Mutually exclusive with folderKey.
-   */
-  folderPath?: string;
-  /**
-   * Folder key (GUID) to scope the asset lookup.
-   * Mutually exclusive with folderPath.
-   */
-  folderKey?: string;
-}
+export interface AssetGetByNameOptions extends FolderScopedOptions {}

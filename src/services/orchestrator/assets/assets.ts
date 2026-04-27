@@ -3,14 +3,10 @@ import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNa
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
-import { FOLDER_ID, FOLDER_PATH_ENCODED, FOLDER_KEY } from '../../../utils/constants/headers';
+import { FOLDER_ID } from '../../../utils/constants/headers';
 import { ASSET_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { AssetMap } from '../../../models/orchestrator/assets.constants';
-import { CollectionResponse } from '../../../models/common/types';
-import { NotFoundError } from '../../../core/errors';
-import { validateGetByNameArgs } from '../../../utils/validation/name-validator';
-import { encodeFolderPathHeader } from '../../../utils/encoding/folder-path';
 import { ODATA_PAGINATION } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
@@ -148,46 +144,12 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
    */
   @track('Assets.GetByName')
   async getByName(name: string, options: AssetGetByNameOptions = {}): Promise<AssetGetResponse> {
-    const { folderPath: rawFolderPath, folderKey: rawFolderKey, ...queryOptions } = options;
-    const validated = validateGetByNameArgs('Asset', name, rawFolderPath, rawFolderKey);
-
-    // Fall back to the SDK's init-time folderKey (e.g. populated from the
-    // `uipath:folder-key` meta tag in coded-app deployments) when the
-    // caller didn't supply any folder context.
-    const effectiveFolderKey =
-      validated.folderKey ?? (validated.folderPath ? undefined : this.config.folderKey);
-
-    const headers = createHeaders({
-      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeFolderPathHeader(validated.folderPath) : undefined,
-      [FOLDER_KEY]: effectiveFolderKey,
-    });
-
-    const keysToPrefix = Object.keys(queryOptions);
-    const apiOptions = {
-      ...addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix),
-      '$filter': `Name eq '${validated.name.replace(/'/g, "''")}'`,
-      '$top': '1',
-    };
-
-    const response = await this.get<CollectionResponse<AssetGetResponse>>(
+    return this.getByNameLookup<AssetGetResponse, AssetGetResponse>(
+      'Asset',
       ASSET_ENDPOINTS.GET_BY_FOLDER,
-      {
-        headers,
-        params: apiOptions,
-      }
+      name,
+      options,
+      (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
     );
-
-    const items = response.data?.value;
-    if (!items?.length) {
-      const folderHint =
-        validated.folderPath ? ` in folder '${validated.folderPath}'`
-        : effectiveFolderKey ? ` in folder (key: ${effectiveFolderKey})`
-        : '';
-      throw new NotFoundError({
-        message: `Asset '${validated.name}' not found${folderHint}.`,
-      });
-    }
-
-    return transformData(pascalToCamelCaseKeys(items[0]) as AssetGetResponse, AssetMap);
   }
 }

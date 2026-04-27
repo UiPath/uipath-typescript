@@ -1,4 +1,4 @@
-import { BaseService } from '../../base';
+import { FolderScopedService } from '../../folder-scoped';
 import { CollectionResponse, RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
@@ -6,15 +6,14 @@ import {
   ProcessStartRequest,
   ProcessStartResponse,
   ProcessGetByIdOptions,
-  ProcessGetByNameOptions
+  ProcessGetByNameOptions,
+  ProcessStartOptions,
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { ProcessMap } from '../../../models/orchestrator/processes.constants';
 import { FOLDER_ID, FOLDER_PATH_ENCODED, FOLDER_KEY } from '../../../utils/constants/headers';
-import { NotFoundError } from '../../../core/errors';
-import { validateGetByNameArgs } from '../../../utils/validation/name-validator';
 import { encodeFolderPathHeader } from '../../../utils/encoding/folder-path';
 import { PROCESS_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
@@ -26,17 +25,17 @@ import { track } from '../../../core/telemetry';
 /**
  * Service for interacting with UiPath Orchestrator Processes API
  */
-export class ProcessService extends BaseService implements ProcessServiceModel {
+export class ProcessService extends FolderScopedService implements ProcessServiceModel {
   /**
    * Gets all processes across folders with optional filtering and folder scoping
-   * 
+   *
    * The method returns either:
    * - An array of processes (when no pagination parameters are provided)
    * - A paginated result with navigation cursors (when any pagination parameter is provided)
-   * 
+   *
    * @param options - Query options including optional folderId
    * @returns Promise resolving to an array of processes or paginated result
-   * 
+   *
    * @example
    * ```typescript
    * import { Processes } from '@uipath/uipath-typescript/processes';
@@ -47,28 +46,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    * const allProcesses = await processes.getAll();
    *
    * // Get processes within a specific folder
-   * const folderProcesses = await processes.getAll({
-   *   folderId: 123
-   * });
-   *
-   * // Get processes with filtering
-   * const filteredProcesses = await processes.getAll({
-   *   filter: "name eq 'MyProcess'"
-   * });
-   *
-   * // First page with pagination
-   * const page1 = await processes.getAll({ pageSize: 10 });
-   *
-   * // Navigate using cursor
-   * if (page1.hasNextPage) {
-   *   const page2 = await processes.getAll({ cursor: page1.nextCursor });
-   * }
-   *
-   * // Jump to specific page
-   * const page5 = await processes.getAll({
-   *   jumpToPage: 5,
-   *   pageSize: 10
-   * });
+   * const folderProcesses = await processes.getAll({ folderId: 123 });
    * ```
    */
   @track('Processes.GetAll')
@@ -79,8 +57,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
       ? PaginatedResponse<ProcessGetResponse>
       : NonPaginatedResponse<ProcessGetResponse>
   > {
-    // Transformation function for processes
-    const transformProcessResponse = (process: any) => 
+    const transformProcessResponse = (process: any) =>
       transformData(pascalToCamelCaseKeys(process) as ProcessGetResponse, ProcessMap);
 
     return PaginationHelpers.getAll({
@@ -93,107 +70,121 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
         itemsField: ODATA_PAGINATION.ITEMS_FIELD,
         totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
-          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,      
-          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,           
-          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM              
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM
         }
       }
     }, options) as any;
   }
 
   /**
-   * Starts a process execution (job)
-   * 
+   * Starts a process execution (job).
+   *
+   * **Folder context** can be supplied three ways via the options object:
+   * `folderId` (numeric), `folderPath` (e.g. `'Shared/Finance'`), or `folderKey`
+   * (GUID). At least one is required. When more than one is supplied, the
+   * server prefers `folderPath` > `folderKey` > `folderId`.
+   *
+   * The legacy positional-`folderId` form (`start(request, 123, options?)`)
+   * remains supported for backward compatibility but is deprecated; prefer the
+   * options object.
+   *
    * @param request - Process start request body
-   * @param folderId - Required folder ID
-   * @param options - Optional query parameters
+   * @param optionsOrFolderId - Options object **or** legacy positional folder ID
+   * @param legacyOptions - Legacy options object (only used with positional folderId)
    * @returns Promise resolving to the created jobs
-   * 
+   *
    * @example
    * ```typescript
-   * import { Processes } from '@uipath/uipath-typescript/processes';
+   * // New (preferred) — options object
+   * const jobs = await processes.start(
+   *   { processName: 'MyProcess' },
+   *   { folderPath: 'Shared/Finance' },
+   * );
    *
-   * const processes = new Processes(sdk);
+   * // With folder key
+   * await processes.start({ processKey: '...' }, { folderKey: 'guid' });
    *
-   * // Start a process by process key
-   * const jobs = await processes.start({
-   *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-   * }, 123); // folderId is required
-   *
-   * // Start a process by name with specific robots
-   * const jobs = await processes.start({
-   *   processName: "MyProcess"
-   * }, 123); // folderId is required
+   * // Legacy positional form (still works)
+   * await processes.start({ processName: 'MyProcess' }, 123);
    * ```
    */
   @track('Processes.Start')
-  async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
+  async start(
+    request: ProcessStartRequest,
+    optionsOrFolderId?: ProcessStartOptions | number,
+    legacyOptions: RequestOptions = {},
+  ): Promise<ProcessStartResponse[]> {
+    // Normalize the two call shapes into a single options object.
+    const opts: ProcessStartOptions =
+      typeof optionsOrFolderId === 'number'
+        ? { folderId: optionsOrFolderId, ...legacyOptions }
+        : (optionsOrFolderId ?? {});
+
+    const { folderId, folderPath, folderKey, ...queryOptions } = opts;
+
+    // Fall back to init-time folderKey (e.g. uipath:folder-key meta tag) only
+    // when the caller supplied no folder context at all.
+    const effectiveFolderKey =
+      folderKey ?? (folderPath || folderId ? undefined : this.config.folderKey);
+
+    const headers = createHeaders({
+      [FOLDER_ID]: folderId,
+      [FOLDER_PATH_ENCODED]: folderPath ? encodeFolderPathHeader(folderPath) : undefined,
+      [FOLDER_KEY]: effectiveFolderKey,
+    });
 
     // Transform SDK field names to API field names (e.g., processKey → releaseKey)
     const apiRequest = transformRequest(request, ProcessMap);
+    const requestBody = { startInfo: apiRequest };
 
-    // Create the request object according to API spec
-    const requestBody = {
-      startInfo: apiRequest
-    };
+    const keysToPrefix = Object.keys(queryOptions);
+    const apiOptions = addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix);
 
-    // Prefix all query parameter keys with '$' for OData
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_PROCESS,
       requestBody,
-      { 
+      {
         params: apiOptions,
         headers
       }
     );
-    
-    const transformedProcess = response.data?.value.map(process => 
+
+    return response.data?.value.map(process =>
       transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
     );
-
-    return transformedProcess;
   }
 
   /**
    * Gets a single process by ID
-   * 
+   *
    * @param id - Process ID
    * @param folderId - Required folder ID
-   * @param options - Optional query parameters 
+   * @param options - Optional query parameters
    * @returns Promise resolving to a single process
-   * 
+   *
    * @example
    * ```typescript
-   * import { Processes } from '@uipath/uipath-typescript/processes';
-   *
-   * const processes = new Processes(sdk);
-   *
-   * // Get process by ID
    * const process = await processes.getById(123, 456);
    * ```
    */
   @track('Processes.GetById')
   async getById(id: number, folderId: number, options: ProcessGetByIdOptions = {}): Promise<ProcessGetResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
+
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
+
     const response = await this.get<ProcessGetResponse>(
       PROCESS_ENDPOINTS.GET_BY_ID(id),
-      { 
+      {
         headers,
         params: apiOptions
       }
     );
 
-    const transformedProcess = transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
-
-    return transformedProcess;
+    return transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
   }
 
   /**
@@ -205,59 +196,17 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    *
    * @example
    * ```typescript
-   * import { Processes } from '@uipath/uipath-typescript/processes';
-   *
-   * const processes = new Processes(sdk);
-   *
-   * // Get process by name with folder path
    * const process = await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
-   *
-   * // Get process by name with folder key
-   * const process = await processes.getByName('MyProcess', { folderKey: 'folder-guid' });
    * ```
    */
   @track('Processes.GetByName')
   async getByName(name: string, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
-    const { folderPath: rawFolderPath, folderKey: rawFolderKey, ...queryOptions } = options;
-    const validated = validateGetByNameArgs('Process', name, rawFolderPath, rawFolderKey);
-
-    // Fall back to the SDK's init-time folderKey (e.g. populated from the
-    // `uipath:folder-key` meta tag in coded-app deployments) when the
-    // caller didn't supply any folder context.
-    const effectiveFolderKey =
-      validated.folderKey ?? (validated.folderPath ? undefined : this.config.folderKey);
-
-    const headers = createHeaders({
-      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeFolderPathHeader(validated.folderPath) : undefined,
-      [FOLDER_KEY]: effectiveFolderKey,
-    });
-
-    const keysToPrefix = Object.keys(queryOptions);
-    const apiOptions = {
-      ...addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix),
-      '$filter': `Name eq '${validated.name.replace(/'/g, "''")}'`,
-      '$top': '1',
-    };
-
-    const response = await this.get<CollectionResponse<ProcessGetResponse>>(
+    return this.getByNameLookup<ProcessGetResponse, ProcessGetResponse>(
+      'Process',
       PROCESS_ENDPOINTS.GET_ALL,
-      {
-        headers,
-        params: apiOptions,
-      },
+      name,
+      options,
+      (raw) => transformData(pascalToCamelCaseKeys(raw), ProcessMap),
     );
-
-    const items = response.data?.value;
-    if (!items?.length) {
-      const folderHint =
-        validated.folderPath ? ` in folder '${validated.folderPath}'`
-        : effectiveFolderKey ? ` in folder (key: ${effectiveFolderKey})`
-        : '';
-      throw new NotFoundError({
-        message: `Process '${validated.name}' not found${folderHint}.`,
-      });
-    }
-
-    return transformData(pascalToCamelCaseKeys(items[0]) as ProcessGetResponse, ProcessMap);
   }
 }

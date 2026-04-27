@@ -1,4 +1,4 @@
-import { BaseOptions, RequestOptions } from "../common/types";
+import { BaseOptions, FolderScopedOptions, RequestOptions } from "../common/types";
 import { PaginationOptions } from "../../utils/pagination";
 
 export enum BucketOptions {
@@ -30,20 +30,11 @@ export type BucketGetAllOptions = RequestOptions & PaginationOptions & {
 export interface BucketGetByIdOptions extends BaseOptions {}
 
 /**
- * Options for getting a single bucket by name
+ * Options for getting a single bucket by name.
+ * Both `folderPath` and `folderKey` are optional; the server prefers
+ * `folderPath` when both are supplied.
  */
-export interface BucketGetByNameOptions extends BaseOptions {
-  /**
-   * Folder path to scope the bucket lookup (e.g. 'Shared/Finance').
-   * Mutually exclusive with folderKey.
-   */
-  folderPath?: string;
-  /**
-   * Folder key (GUID) to scope the bucket lookup.
-   * Mutually exclusive with folderPath.
-   */
-  folderKey?: string;
-}
+export interface BucketGetByNameOptions extends FolderScopedOptions {}
 
 /**
  * Maps header names to their values
