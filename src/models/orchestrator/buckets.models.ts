@@ -1,4 +1,4 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetByNameOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -79,6 +79,32 @@ export interface BucketServiceModel {
    * ```
    */
   getById(bucketId: number, folderId: number, options?: BucketGetByIdOptions): Promise<BucketGetResponse>;
+
+  /**
+   * Retrieves a single bucket by name, optionally scoped to a folder
+   *
+   * Uses the bucket name and folder path (or folder key) to look up the resource.
+   * The folder context is resolved server-side via the X-UIPATH-FolderPath-Encoded /
+   * X-UIPATH-FolderKey headers — no client-side folder ID resolution is needed.
+   * The folder path is URL-encoded automatically before being sent.
+   *
+   * @param name - Bucket name to search for
+   * @param options - Optional folder scoping and query parameters
+   * @returns Promise resolving to a single bucket
+   * {@link BucketGetResponse}
+   * @example
+   * ```typescript
+   * // Get bucket by name with folder path
+   * const bucket = await buckets.getByName('MyBucket', { folderPath: 'Shared/Finance' });
+   *
+   * // Get bucket by name with folder key
+   * const bucket = await buckets.getByName('MyBucket', { folderKey: 'folder-guid' });
+   *
+   * // Get bucket by name (uses default folder context)
+   * const bucket = await buckets.getByName('MyBucket');
+   * ```
+   */
+  getByName(name: string, options?: BucketGetByNameOptions): Promise<BucketGetResponse>;
 
   /**
    * Gets metadata for files in a bucket with optional filtering and pagination

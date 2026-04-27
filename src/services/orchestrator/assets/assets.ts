@@ -10,6 +10,7 @@ import { AssetMap } from '../../../models/orchestrator/assets.constants';
 import { CollectionResponse } from '../../../models/common/types';
 import { NotFoundError } from '../../../core/errors';
 import { validateGetByNameArgs } from '../../../utils/validation/name-validator';
+import { encodeFolderPathHeader } from '../../../utils/encoding/folder-path';
 import { ODATA_PAGINATION } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
@@ -157,7 +158,7 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       validated.folderKey ?? (validated.folderPath ? undefined : this.config.folderKey);
 
     const headers = createHeaders({
-      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeURIComponent(validated.folderPath) : undefined,
+      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeFolderPathHeader(validated.folderPath) : undefined,
       [FOLDER_KEY]: effectiveFolderKey,
     });
 

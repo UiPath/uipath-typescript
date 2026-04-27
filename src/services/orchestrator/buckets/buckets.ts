@@ -1,9 +1,10 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { ValidationError, HttpStatus } from '../../../core/errors';
+import { ValidationError, NotFoundError, HttpStatus } from '../../../core/errors';
 import {
   BucketGetResponse,
   BucketGetAllOptions,
   BucketGetByIdOptions,
+  BucketGetByNameOptions,
   BucketGetUriResponse,
   BucketGetReadUriOptions,
   BucketGetFileMetaDataWithPaginationOptions,
@@ -16,7 +17,10 @@ import { BucketServiceModel } from '../../../models/orchestrator/buckets.models'
 import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
 import { filterUndefined } from '../../../utils/object';
 import { createHeaders } from '../../../utils/http/headers';
-import { FOLDER_ID } from '../../../utils/constants/headers';
+import { FOLDER_ID, FOLDER_PATH_ENCODED, FOLDER_KEY } from '../../../utils/constants/headers';
+import { CollectionResponse } from '../../../models/common/types';
+import { validateGetByNameArgs } from '../../../utils/validation/name-validator';
+import { encodeFolderPathHeader } from '../../../utils/encoding/folder-path';
 import { BUCKET_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../../utils/constants/common';
 import { BucketMap } from '../../../models/orchestrator/buckets.constants';
@@ -70,6 +74,68 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     
     // Transform response from PascalCase to camelCase
     return pascalToCamelCaseKeys(response.data) as BucketGetResponse;
+  }
+
+  /**
+   * Retrieves a single bucket by name, optionally scoped to a folder
+   *
+   * @param name - Bucket name to search for
+   * @param options - Optional folder scoping and query parameters
+   * @returns Promise resolving to a single bucket
+   *
+   * @example
+   * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
+   * // Get bucket by name with folder path
+   * const bucket = await buckets.getByName('MyBucket', { folderPath: 'Shared/Finance' });
+   *
+   * // Get bucket by name with folder key
+   * const bucket = await buckets.getByName('MyBucket', { folderKey: 'folder-guid' });
+   * ```
+   */
+  @track('Buckets.GetByName')
+  async getByName(name: string, options: BucketGetByNameOptions = {}): Promise<BucketGetResponse> {
+    const { folderPath: rawFolderPath, folderKey: rawFolderKey, ...queryOptions } = options;
+    const validated = validateGetByNameArgs('Bucket', name, rawFolderPath, rawFolderKey);
+
+    const effectiveFolderKey =
+      validated.folderKey ?? (validated.folderPath ? undefined : this.config.folderKey);
+
+    const headers = createHeaders({
+      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeFolderPathHeader(validated.folderPath) : undefined,
+      [FOLDER_KEY]: effectiveFolderKey,
+    });
+
+    const keysToPrefix = Object.keys(queryOptions);
+    const apiOptions = {
+      ...addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix),
+      '$filter': `Name eq '${validated.name.replace(/'/g, "''")}'`,
+      '$top': '1',
+    };
+
+    const response = await this.get<CollectionResponse<BucketGetResponse>>(
+      BUCKET_ENDPOINTS.GET_BY_FOLDER,
+      {
+        headers,
+        params: apiOptions,
+      },
+    );
+
+    const items = response.data?.value;
+    if (!items?.length) {
+      const folderHint =
+        validated.folderPath ? ` in folder '${validated.folderPath}'`
+        : effectiveFolderKey ? ` in folder (key: ${effectiveFolderKey})`
+        : '';
+      throw new NotFoundError({
+        message: `Bucket '${validated.name}' not found${folderHint}.`,
+      });
+    }
+
+    return pascalToCamelCaseKeys(items[0]) as BucketGetResponse;
   }
 
   /**

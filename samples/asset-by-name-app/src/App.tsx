@@ -6,6 +6,8 @@ import { AssetList } from './components/assets/AssetList';
 import { AssetsGetByName } from './components/assets/AssetsGetByName';
 import { ProcessList } from './components/processes/ProcessList';
 import { ProcessesGetByName } from './components/processes/ProcessesGetByName';
+import { BucketList } from './components/buckets/BucketList';
+import { BucketsGetByName } from './components/buckets/BucketsGetByName';
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 
 const authConfig: UiPathSDKConfig = {
@@ -17,7 +19,7 @@ const authConfig: UiPathSDKConfig = {
   scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access',
 };
 
-type ResourceTab = 'assets' | 'processes';
+type ResourceTab = 'assets' | 'processes' | 'buckets';
 
 interface TabState {
   name: string;
@@ -34,6 +36,7 @@ function AppContent() {
   // wipe what the user typed.
   const [assetState, setAssetState] = useState<TabState>(emptyState);
   const [processState, setProcessState] = useState<TabState>(emptyState);
+  const [bucketState, setBucketState] = useState<TabState>(emptyState);
 
   if (isLoading) {
     return (
@@ -53,6 +56,7 @@ function AppContent() {
   const tabs: Array<{ id: ResourceTab; label: string }> = [
     { id: 'assets', label: 'Assets' },
     { id: 'processes', label: 'Processes' },
+    { id: 'buckets', label: 'Buckets' },
   ];
 
   return (
@@ -109,6 +113,24 @@ function AppContent() {
               onNameChange={(name) => setProcessState((s) => ({ ...s, name }))}
               onFolderPathChange={(folderPath) => setProcessState((s) => ({ ...s, folderPath }))}
               onFolderKeyChange={(folderKey) => setProcessState((s) => ({ ...s, folderKey }))}
+            />
+          </>
+        )}
+
+        {activeTab === 'buckets' && (
+          <>
+            <BucketList
+              onPickBucket={(name, folderPath, folderKey) =>
+                setBucketState({ name, folderPath, folderKey })
+              }
+            />
+            <BucketsGetByName
+              name={bucketState.name}
+              folderPath={bucketState.folderPath}
+              folderKey={bucketState.folderKey}
+              onNameChange={(name) => setBucketState((s) => ({ ...s, name }))}
+              onFolderPathChange={(folderPath) => setBucketState((s) => ({ ...s, folderPath }))}
+              onFolderKeyChange={(folderKey) => setBucketState((s) => ({ ...s, folderKey }))}
             />
           </>
         )}

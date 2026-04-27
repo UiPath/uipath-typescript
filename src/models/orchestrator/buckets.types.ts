@@ -30,6 +30,22 @@ export type BucketGetAllOptions = RequestOptions & PaginationOptions & {
 export interface BucketGetByIdOptions extends BaseOptions {}
 
 /**
+ * Options for getting a single bucket by name
+ */
+export interface BucketGetByNameOptions extends BaseOptions {
+  /**
+   * Folder path to scope the bucket lookup (e.g. 'Shared/Finance').
+   * Mutually exclusive with folderKey.
+   */
+  folderPath?: string;
+  /**
+   * Folder key (GUID) to scope the bucket lookup.
+   * Mutually exclusive with folderPath.
+   */
+  folderKey?: string;
+}
+
+/**
  * Maps header names to their values
  * 
  * @example

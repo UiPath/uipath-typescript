@@ -15,6 +15,7 @@ import { ProcessMap } from '../../../models/orchestrator/processes.constants';
 import { FOLDER_ID, FOLDER_PATH_ENCODED, FOLDER_KEY } from '../../../utils/constants/headers';
 import { NotFoundError } from '../../../core/errors';
 import { validateGetByNameArgs } from '../../../utils/validation/name-validator';
+import { encodeFolderPathHeader } from '../../../utils/encoding/folder-path';
 import { PROCESS_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
@@ -227,7 +228,7 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
       validated.folderKey ?? (validated.folderPath ? undefined : this.config.folderKey);
 
     const headers = createHeaders({
-      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeURIComponent(validated.folderPath) : undefined,
+      [FOLDER_PATH_ENCODED]: validated.folderPath ? encodeFolderPathHeader(validated.folderPath) : undefined,
       [FOLDER_KEY]: effectiveFolderKey,
     });
 
