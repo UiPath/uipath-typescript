@@ -683,7 +683,7 @@ describe('JobService Unit Tests', () => {
         JOB_ENDPOINTS.RESUME,
         {
           jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
-          FpsProperties: '{"debug.master":"true"}',
+          fpsProperties: '{"debug.master":"true"}',
         },
         expect.any(Object)
       );
