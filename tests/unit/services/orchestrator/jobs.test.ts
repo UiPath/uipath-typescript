@@ -714,6 +714,15 @@ describe('JobService Unit Tests', () => {
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
       expect(result.data.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      // Verify transformed camelCase fields have expected values
+      expect(result.data.createdTime).toBe(JOB_TEST_CONSTANTS.CREATED_TIME);
+      expect(result.data.processName).toBe(JOB_TEST_CONSTANTS.PROCESS_NAME);
+
+      // Verify original PascalCase fields are absent
+      expect((result.data as any).CreationTime).toBeUndefined();
+      expect((result.data as any).ReleaseName).toBeUndefined();
+      expect((result.data as any).OrganizationUnitId).toBeUndefined();
     });
 
     it('should attach bound methods to the returned job', async () => {
@@ -731,6 +740,12 @@ describe('JobService Unit Tests', () => {
       await expect(
         jobService.restart(0, TEST_CONSTANTS.FOLDER_ID)
       ).rejects.toThrow('jobId is required for restart');
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.restart(JOB_TEST_CONSTANTS.JOB_ID, 0)
+      ).rejects.toThrow('folderId is required for restart');
     });
 
     it('should handle API errors', async () => {

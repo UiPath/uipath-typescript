@@ -338,6 +338,10 @@ export class JobService extends FolderScopedService implements JobServiceModel {
       throw new ValidationError({ message: 'jobId is required for restart' });
     }
 
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for restart' });
+    }
+
     const headers = createHeaders({ [FOLDER_ID]: folderId });
 
     const response = await this.post<Record<string, unknown>>(

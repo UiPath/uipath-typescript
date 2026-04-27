@@ -263,7 +263,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const result = await jobs.getAll({
         folderId,
         pageSize: 1,
-        filter: "State eq 'Faulted'",
+        filter: "state eq 'Faulted'",
       });
 
       if (result.items.length === 0) {
@@ -276,6 +276,37 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       expect(restarted.success).toBe(true);
       expect(restarted.data).toBeDefined();
       expect(restarted.data.state).toBeDefined();
+    });
+
+    it('should apply transform pipeline correctly on restarted job', async () => {
+      const { jobs, folderId } = getJobsService();
+
+      if (!folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for restart tests.');
+      }
+
+      const result = await jobs.getAll({
+        folderId,
+        pageSize: 1,
+        filter: "state eq 'Faulted'",
+      });
+
+      if (result.items.length === 0) {
+        throw new Error('No faulted jobs found in the test environment to test restart transform.');
+      }
+
+      const job = result.items[0];
+      const restarted = await jobs.restart(job.id, folderId);
+
+      // Verify transformed camelCase fields present with values
+      expect(restarted.data.createdTime).toBeDefined();
+      expect(restarted.data.processName).toBeDefined();
+      expect(restarted.data.folderId).toBeDefined();
+
+      // Verify original PascalCase API fields absent
+      expect((restarted.data as any).CreationTime).toBeUndefined();
+      expect((restarted.data as any).ReleaseName).toBeUndefined();
+      expect((restarted.data as any).OrganizationUnitId).toBeUndefined();
     });
   });
 
