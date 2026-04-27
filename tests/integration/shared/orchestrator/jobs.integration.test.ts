@@ -240,7 +240,7 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
       const result = await jobs.getAll({
         folderId: resumeFolderId,
         pageSize: 1,
-        filter: "State eq 'Suspended'",
+        filter: "state eq 'Suspended'",
       });
 
       if (result.items.length === 0) {
