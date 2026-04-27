@@ -11,11 +11,13 @@ import {
   ProcessInstanceGetVariablesResponse,
   ProcessInstanceGetVariablesOptions,
   GlobalVariableMetaData,
-  ProcessIncidentGetResponse
+  ProcessIncidentGetResponse,
+  TopProcessByRunCountResponse,
+  TopByRunCountOptions
 } from '../../../models/maestro';
 import { BpmnHelpers } from './helpers';
 import { OperationResponse } from '../../../models/common/types';
-import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
+import { MAESTRO_ENDPOINTS, INSIGHTS_RTM_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../../utils/constants/headers';
 import { transformData } from '../../../utils/transform';
@@ -27,9 +29,17 @@ import { PaginationType } from '../../../utils/pagination/internal-types';
 import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
 import { BpmnVariableMetadata } from '../../../models/maestro/process-instances.internal-types';
+import type { IUiPath } from '../../../core/types';
+import { SDKInternalsRegistry } from '../../../core/internals';
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
+  private instance: IUiPath;
+
+  constructor(instance: IUiPath) {
+    super(instance);
+    this.instance = instance;
+  }
   /**
    * Get all process instances with optional filtering and pagination
    *
@@ -364,4 +374,30 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     return BpmnHelpers.enrichIncidentsWithBpmnData(rawResponse.data || [], folderKey, this);
   }
 
-} 
+  /**
+   * Get top processes ranked by run count within a time range
+   * @param tenantId The tenant GUID for the target environment
+   * @param startTime Start of the time range as epoch milliseconds
+   * @param endTime End of the time range as epoch milliseconds
+   * @param options Optional parameters including timezone offset
+   * @returns Promise<TopProcessByRunCountResponse[]>
+   */
+  @track('ProcessInstances.GetTopByRunCount')
+  async getTopByRunCount(tenantId: string, startTime: number, endTime: number, options?: TopByRunCountOptions): Promise<TopProcessByRunCountResponse[]> {
+    const { config } = SDKInternalsRegistry.get(this.instance);
+    const endpoint = INSIGHTS_RTM_ENDPOINTS.TOP_PROCESSES_BY_RUN_COUNT(config.orgName, config.tenantName, tenantId);
+
+    const body = {
+      commonParams: {
+        startTime,
+        endTime,
+        isCaseManagement: false,
+      },
+      timezoneOffset: options?.timezoneOffset ?? 0,
+      tenantId,
+    };
+
+    const response = await this.post<TopProcessByRunCountResponse[]>(endpoint, body);
+    return response.data;
+  }
+}

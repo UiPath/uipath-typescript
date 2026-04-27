@@ -7,6 +7,7 @@ import {
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse
 } from './case-instances.types';
+import { TopProcessByRunCountResponse, TopByRunCountOptions } from './process-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
 import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
@@ -281,6 +282,44 @@ export interface CaseInstancesServiceModel {
       ? PaginatedResponse<TaskGetResponse>
       : NonPaginatedResponse<TaskGetResponse>
   >;
+
+  /**
+   * Get top case processes ranked by run count within a time range
+   *
+   * Returns an array of case processes sorted by the number of runs (descending) for the specified time window.
+   * Uses the Insights Real-Time Monitoring API to provide analytics on case execution frequency.
+   *
+   * @param tenantId - The tenant GUID for the target environment
+   * @param startTime - Start of the time range as epoch milliseconds
+   * @param endTime - End of the time range as epoch milliseconds
+   * @param options - Optional parameters including timezone offset
+   * @returns Promise resolving to an array of {@link TopProcessByRunCountResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get top case processes by run count for the last 7 days
+   * const now = Date.now();
+   * const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+   * const topCases = await caseInstances.getTopByRunCount(
+   *   '<tenantId>',
+   *   weekAgo,
+   *   now
+   * );
+   *
+   * // With timezone offset
+   * const topCases = await caseInstances.getTopByRunCount(
+   *   '<tenantId>',
+   *   weekAgo,
+   *   now,
+   *   { timezoneOffset: 330 }
+   * );
+   *
+   * for (const caseProcess of topCases) {
+   *   console.log(`${caseProcess.packageId}: ${caseProcess.runCount} runs`);
+   * }
+   * ```
+   */
+  getTopByRunCount(tenantId: string, startTime: number, endTime: number, options?: TopByRunCountOptions): Promise<TopProcessByRunCountResponse[]>;
 }
 
 // Method interface that will be added to case instance objects
