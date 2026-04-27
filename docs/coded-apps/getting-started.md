@@ -172,7 +172,7 @@ When deployed, the platform injects these config tags automatically — the plug
 
 ## Pre-deployment Checklist
 
-Coded app will be deployed and served at `https://<orgName>.uipath.host/<appName>`. When deployed, platform injects `<base href="/your-app-name/">` into your `index.html`. Make sure your app handles this correctly by following below best practices:
+Coded app will be deployed and served at `https://<orgName>.uipath.host/<appName>`. When deployed, platform injects `<base href="/your-app-name/">` into your `index.html`. Make sure your app handles this correctly by following the best practices below:
 
 ### 1. Configure relative asset paths
 
@@ -282,8 +282,8 @@ https://<orgName>.uipath.host/<appName>
 Refer to [CLI Reference](cli-reference.md) for details.
 
 !!! info "Coded apps deployment domain"
-    Coded Apps uses `uipath.host` domain (for example, <orgname>.uipath.host) because Coded Apps is a static-site hosting service separate from the main UiPath application site. Key reasons are:
+    Coded Apps uses `uipath.host` domain (for example, `<orgname>.uipath.host`) because Coded Apps is a static-site hosting service separate from the main UiPath application site. Key reasons are:
 
-    - Separation of concerns: Coded Apps publishes static HTML/CSS/JS from your package and exposes it at a dedicated site URL under uipath.host rather than the UiPath product domain. 
-    - Site types and naming: Coded app sites are published under https://<orgname>.uipath.host/<appname>. This provides a predictable, account-scoped URL scheme.
+    - Separation of concerns: Coded Apps publishes static HTML/CSS/JS from your package and exposes it at a dedicated site URL under uipath.host rather than the UiPath product domain.
+    - Site types and naming: Coded app sites are published under `https://<orgname>.uipath.host/<appname>`. This provides a predictable, account-scoped URL scheme.
 
