@@ -177,6 +177,8 @@ select: "outputArguments,outputFile"    // not "OutputArguments,..."
 - **Orchestrator**: `createHeaders({ [FOLDER_ID]: folderId })` — numeric folder IDs
 - **Maestro**: `createHeaders({ [FOLDER_KEY]: folderKey })` — string folder keys
 
+**Header constant naming**: Do **not** add a `_HEADER` suffix to constants in `src/utils/constants/headers.ts` — every constant in that file is already a header. Use `EXTERNAL_USER_ID` not `EXTERNAL_USER_ID_HEADER`. This mirrors the endpoint-group rule: context provides the prefix, names stay short.
+
 ## Constructor JSDoc
 
 Service constructors that take dependency parameters (beyond the `UiPath` instance) must have JSDoc comments. Pattern (from `case-instances.ts`):
@@ -229,4 +231,4 @@ interface OperationResponse<TData> { success: boolean; data: TData; }
 
 - **NEVER** leave unused code — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
 - **NEVER** commit sensitive files — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
-- **NEVER** define static lookup tables inside method bodies — move them to module-level constants or `*.internal-types.ts`. A static mapping that doesn't change between calls (e.g., `TaskTypeEndpoints`) rebuilt on every invocation wastes memory and hides structure.
+- **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure.
