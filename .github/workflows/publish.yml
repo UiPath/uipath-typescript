@@ -80,7 +80,17 @@ jobs:
 
   trigger-cf-worker:
     needs: publish-sdk
-    uses: ./.github/workflows/trigger-cf-worker.yml
-    secrets:
-      ADO_PAT: ${{ secrets.ADO_PAT }}
-      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger API CORS Worker deploy (staging + production)
+        env:
+          GH_TOKEN: ${{ secrets.APPS_DEV_TOOLS_PAT }}
+        run: |
+          gh workflow run deploy-api-cors.yml \
+            --repo UiPath/apps-dev-tools \
+            --field environments="staging,production"
+
+          echo "### CF Worker Deploy Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "- Triggered deploy-api-cors.yml in UiPath/apps-dev-tools" >> $GITHUB_STEP_SUMMARY
+          echo "- Environments: staging, production" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Runs](https://github.com/UiPath/apps-dev-tools/actions/workflows/deploy-api-cors.yml)" >> $GITHUB_STEP_SUMMARY
