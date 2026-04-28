@@ -81,6 +81,7 @@ jobs:
   trigger-cf-worker:
     needs: publish-sdk
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Trigger API CORS Worker deploy (staging + production)
         env:
