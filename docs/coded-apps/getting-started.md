@@ -289,9 +289,9 @@ Refer to [CLI Reference](cli-reference.md) for details.
 
 ## Network requirements
 
-### Whitelisting Domains
+### Allowlisting Domains
 
-To ensure the proper functioning of Coded Apps, it is essential to whitelist specific domains in your firewall settings. This allows the app to communicate with necessary services and resources. The required domains include:
+To ensure the proper functioning of Coded Apps, it is essential to allowlist specific domains in your firewall settings. This allows the app to communicate with necessary services and resources. The required domains include:
 
 | Description | Domain |
 |---|---|
