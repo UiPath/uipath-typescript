@@ -197,10 +197,10 @@ export interface JobServiceModel {
    * Restarts a job in a final state (Successful, Faulted, or Stopped).
    *
    * Creates a **new** job execution from a previously successful, faulted, or stopped job.
-   * The new job has its own unique `key` and `id`, starts in `Pending` state, and uses
+   * The new job has its own unique `key`, starts in `Pending` state, and uses
    * the same process and input arguments as the original job.
    *
-   * To monitor the new job's progress, poll with {@link JobServiceModel.getById | getById}
+   * To monitor the new job's progress, poll with {@link getById}
    * using the returned job's key until the state reaches a final value.
    *
    * @param jobKey - The unique key (GUID) of the job to restart
@@ -273,7 +273,7 @@ export interface JobMethods {
   resume(options?: JobResumeOptions): Promise<void>;
 
   /**
-   * Restarts this job, creating a new execution with a new key and ID.
+   * Restarts this job, creating a new execution with a new key.
    *
    * @returns Promise resolving to the new {@link JobGetResponse} with full job details
    */
