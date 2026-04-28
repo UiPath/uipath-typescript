@@ -9,13 +9,13 @@ import { SDK_RUN_EVENT } from './constants';
 /**
  * Common tracking logic shared between method and function decorators
  */
-function createTrackedFunction<T extends (...args: any[]) => any>(
+function createTrackedFunction<T extends (...args: unknown[]) => unknown>(
     originalFunction: T,
     nameOrOptions: string | TrackOptions | undefined,
     fallbackName: string,
     opts: TrackOptions
 ): T {
-    return function (this: any, ...args: any[]) {
+    return function (this: unknown, ...args: unknown[]) {
         // Determine if we should track this call
         let shouldTrack = true;
         if (opts.condition !== undefined) {
@@ -55,27 +55,21 @@ function createTrackedFunction<T extends (...args: any[]) => any>(
 export function track(
     nameOrOptions?: string | TrackOptions,
     options?: TrackOptions
-): MethodDecorator | ((target: any) => any) {
-    return function decorator(_target: any, propertyKey?: string, descriptor?: PropertyDescriptor) {
+): MethodDecorator {
+    return function decorator(_target: unknown, propertyKey?: string | symbol, descriptor?: PropertyDescriptor) {
         const opts = typeof nameOrOptions === 'object' ? nameOrOptions : options || {};
 
         if (descriptor && typeof descriptor.value === 'function') {
             // Method decorator
             descriptor.value = createTrackedFunction(
-                descriptor.value as (...args: any[]) => any, 
-                nameOrOptions, 
-                propertyKey || 'unknown_method', 
+                descriptor.value as (...args: unknown[]) => unknown,
+                nameOrOptions,
+                (propertyKey ? String(propertyKey) : 'unknown_method'),
                 opts
             );
             return descriptor;
         }
-        
-        // Function decorator
-        return (originalFunction: Function) => createTrackedFunction(
-            originalFunction as (...args: any[]) => any, 
-            nameOrOptions, 
-            originalFunction.name || 'unknown_function', 
-            opts
-        );
+
+        return descriptor;
     };
 }

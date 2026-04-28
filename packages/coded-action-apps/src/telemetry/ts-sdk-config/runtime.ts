@@ -6,6 +6,10 @@ import { UiPathMetaTags } from './runtime-constants';
  * Returns undefined if not in browser environment or meta tag is not found.
  */
 export function getMetaTagContent(name: string): string | undefined {
+  // Check if running in browser environment
+  if (typeof document === 'undefined') {
+    return undefined;
+  }
   return document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content;
 }
 

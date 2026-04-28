@@ -21,6 +21,10 @@ import { TelemetryAttributes, TelemetryConfig } from './types';
 /**
  * Log exporter that sends ALL logs as Application Insights custom events
  */
+
+const INSTRUMENTATION_KEY_REGEX = /InstrumentationKey=([^;]+)/;
+const INGESTION_ENDPOINT_REGEX = /IngestionEndpoint=([^;]+)/;
+
 class ApplicationInsightsEventExporter implements LogRecordExporter {
     private connectionString: string;
 
@@ -30,10 +34,21 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
 
     export(logs: any[], resultCallback: (result: any) => void): void {
         try {
-            logs.forEach(logRecord => {
-                this.sendAsCustomEvent(logRecord);
-            });
+            // Start all async operations but don't wait for them
+            // This follows the fire-and-forget pattern typical for telemetry
+            const promises = logs.map(logRecord =>
+                this.sendAsCustomEvent(logRecord).catch(error => {
+                    console.debug('Failed to send individual log record:', error);
+                })
+            );
+
+            // Call the callback immediately for telemetry (fire-and-forget)
             resultCallback({ code: 0 });
+
+            // Optional: Log any failures but don't block the callback
+            Promise.allSettled(promises).catch(error => {
+                console.debug('Some telemetry operations failed:', error);
+            });
         } catch (error) {
             console.debug('Failed to export logs to Application Insights:', error);
             resultCallback({ code: 2, error });
@@ -44,10 +59,10 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
         return Promise.resolve();
     }
 
-    private sendAsCustomEvent(logRecord: any): void {
+    private async sendAsCustomEvent(logRecord: any): Promise<void> {
         // Get event name from body or attributes
         const eventName = logRecord.body || SDK_RUN_EVENT;
-        
+
         const payload = {
             name: 'Microsoft.ApplicationInsights.Event',
             time: new Date().toISOString(),
@@ -66,11 +81,11 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
             }
         };
 
-        this.sendToApplicationInsights(payload);
+        await this.sendToApplicationInsights(payload);
     }
 
     private extractInstrumentationKey(): string {
-        const match = this.connectionString.match(/InstrumentationKey=([^;]+)/);
+        const match = this.connectionString.match(INSTRUMENTATION_KEY_REGEX);
         return match ? match[1] : '';
     }
 
@@ -109,7 +124,7 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
     }
 
     private extractIngestionEndpoint(): string {
-        const match = this.connectionString.match(/IngestionEndpoint=([^;]+)/);
+        const match = this.connectionString.match(INGESTION_ENDPOINT_REGEX);
         return match ? match[1] : '';
     }
 }

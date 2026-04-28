@@ -11,5 +11,4 @@ export interface OAuthFields {
 }
 
 // Flexible partial type for constructor input (allows any combination of fields)
-// The isCompleteConfig function validates the final merged config
 export type PartialUiPathConfig = Partial<BaseConfig & OAuthFields>;
