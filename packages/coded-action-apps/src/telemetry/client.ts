@@ -26,7 +26,7 @@ const INSTRUMENTATION_KEY_REGEX = /InstrumentationKey=([^;]+)/;
 const INGESTION_ENDPOINT_REGEX = /IngestionEndpoint=([^;]+)/;
 
 class ApplicationInsightsEventExporter implements LogRecordExporter {
-    private connectionString: string;
+    private readonly connectionString: string;
 
     constructor(connectionString: string) {
         this.connectionString = connectionString;
@@ -45,10 +45,9 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
             // Call the callback immediately for telemetry (fire-and-forget)
             resultCallback({ code: 0 });
 
-            // Optional: Log any failures but don't block the callback
-            Promise.allSettled(promises).catch(error => {
-                console.debug('Some telemetry operations failed:', error);
-            });
+            // Promise.allSettled never rejects - it always resolves with settlement objects
+            // Individual promise failures are already handled by .catch() on each promise above
+            Promise.allSettled(promises);
         } catch (error) {
             console.debug('Failed to export logs to Application Insights:', error);
             resultCallback({ code: 2, error });
@@ -85,7 +84,7 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
     }
 
     private extractInstrumentationKey(): string {
-        const match = this.connectionString.match(INSTRUMENTATION_KEY_REGEX);
+        const match = INSTRUMENTATION_KEY_REGEX.exec(this.connectionString);
         return match ? match[1] : '';
     }
 
@@ -124,7 +123,7 @@ class ApplicationInsightsEventExporter implements LogRecordExporter {
     }
 
     private extractIngestionEndpoint(): string {
-        const match = this.connectionString.match(INGESTION_ENDPOINT_REGEX);
+        const match = INGESTION_ENDPOINT_REGEX.exec(this.connectionString);
         return match ? match[1] : '';
     }
 }
