@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import type { JobGetResponse } from '../../../../src/models/orchestrator/jobs.models';
 
 const modes: InitMode[] = ['v1'];
 
@@ -253,40 +254,44 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
   });
 
   describe('restart', () => {
-    it('should restart a faulted job with correct transform pipeline', async () => {
-      const { jobs, folderId } = getJobsService();
+    let restartResult!: JobGetResponse;
 
-      if (!folderId) {
+    beforeAll(async () => {
+      const { jobs: svc, folderId: fId } = getJobsService();
+
+      if (!fId) {
         throw new Error('INTEGRATION_TEST_FOLDER_ID is required for restart tests.');
       }
 
-      const result = await jobs.getAll({
-        folderId,
+      const result = await svc.getAll({
+        folderId: fId,
         pageSize: 1,
-        filter: "state eq 'Faulted'",
+        filter: "state eq 'Faulted' or state eq 'Successful' or state eq 'Stopped'",
       });
 
       if (result.items.length === 0) {
-        throw new Error('No faulted jobs found in the test environment to test restart.');
+        throw new Error('No restartable jobs (Faulted/Successful/Stopped) found in the test environment.');
       }
 
-      const job = result.items[0];
-      const restarted = await jobs.restart(job.key, folderId);
+      restartResult = await svc.restart(result.items[0].key, fId);
+    });
 
-      // Core restart assertions
-      expect(restarted.success).toBe(true);
-      expect(restarted.data).toBeDefined();
-      expect(restarted.data.state).toBeDefined();
+    it('should restart a job in a final state', () => {
+      expect(restartResult).toBeDefined();
+      expect(restartResult.state).toBeDefined();
+      expect(restartResult.key).toBeDefined();
+    });
 
+    it('should apply transform pipeline correctly on restarted job', () => {
       // Verify transformed camelCase fields present with values
-      expect(restarted.data.createdTime).toBeDefined();
-      expect(restarted.data.processName).toBeDefined();
-      expect(restarted.data.folderId).toBeDefined();
+      expect(restartResult.createdTime).toBeDefined();
+      expect(restartResult.processName).toBeDefined();
+      expect(restartResult.folderId).toBeDefined();
 
       // Verify original PascalCase API fields absent
-      expect((restarted.data as any).CreationTime).toBeUndefined();
-      expect((restarted.data as any).ReleaseName).toBeUndefined();
-      expect((restarted.data as any).OrganizationUnitId).toBeUndefined();
+      expect((restartResult as any).CreationTime).toBeUndefined();
+      expect((restartResult as any).ReleaseName).toBeUndefined();
+      expect((restartResult as any).OrganizationUnitId).toBeUndefined();
     });
   });
 

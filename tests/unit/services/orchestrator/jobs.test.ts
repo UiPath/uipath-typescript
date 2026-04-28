@@ -728,18 +728,17 @@ describe('JobService Unit Tests', () => {
         })
       );
 
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+      expect(result).toBeDefined();
+      expect(result.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
 
       // Verify transformed camelCase fields have expected values
-      expect(result.data.createdTime).toBe(JOB_TEST_CONSTANTS.CREATED_TIME);
-      expect(result.data.processName).toBe(JOB_TEST_CONSTANTS.PROCESS_NAME);
+      expect(result.createdTime).toBe(JOB_TEST_CONSTANTS.CREATED_TIME);
+      expect(result.processName).toBe(JOB_TEST_CONSTANTS.PROCESS_NAME);
 
       // Verify original PascalCase fields are absent
-      expect((result.data as any).CreationTime).toBeUndefined();
-      expect((result.data as any).ReleaseName).toBeUndefined();
-      expect((result.data as any).OrganizationUnitId).toBeUndefined();
+      expect((result as any).CreationTime).toBeUndefined();
+      expect((result as any).ReleaseName).toBeUndefined();
+      expect((result as any).OrganizationUnitId).toBeUndefined();
     });
 
     it('should attach bound methods to the returned job', async () => {
@@ -751,9 +750,10 @@ describe('JobService Unit Tests', () => {
 
       const result = await jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
 
-      expect(typeof result.data.getOutput).toBe('function');
-      expect(typeof result.data.resume).toBe('function');
-      expect(typeof result.data.restart).toBe('function');
+      expect(typeof result.getOutput).toBe('function');
+      expect(typeof result.stop).toBe('function');
+      expect(typeof result.resume).toBe('function');
+      expect(typeof result.restart).toBe('function');
     });
 
     it('should throw validation error when jobKey is missing', async () => {

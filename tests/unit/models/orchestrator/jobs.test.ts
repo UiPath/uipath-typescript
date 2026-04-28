@@ -165,13 +165,12 @@ describe('Job Models', () => {
         const mockJobData = createBasicJob();
         const job = createJobWithMethods(mockJobData, mockService);
 
-        const mockResult = { success: true, data: job };
-        vi.mocked(mockService.restart).mockResolvedValue(mockResult);
+        vi.mocked(mockService.restart).mockResolvedValue(job);
 
         const result = await job.restart();
 
         expect(mockService.restart).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
-        expect(result).toEqual(mockResult);
+        expect(result).toEqual(job);
       });
 
       it('should throw when job key is undefined', async () => {

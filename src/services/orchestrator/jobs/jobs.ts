@@ -17,7 +17,6 @@ import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
 import { StopStrategy } from '../../../models/orchestrator/processes.types';
-import { OperationResponse } from '../../../models/common/types';
 
 /**
  * Service for interacting with UiPath Orchestrator Jobs API
@@ -316,24 +315,27 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   /**
    * Restarts a job in a final state (Successful, Faulted, or Stopped).
    *
-   * Creates a new job execution from a previously successful, faulted, or stopped job.
-   * The new job is created with `Pending` state and uses the same process and input
-   * arguments as the original job.
+   * Creates a **new** job execution from a previously successful, faulted, or stopped job.
+   * The new job has its own unique `key` and `id`, starts in `Pending` state, and uses
+   * the same process and input arguments as the original job.
+   *
+   * To monitor the new job's progress, poll with {@link JobServiceModel.getById | getById}
+   * using the returned job's key until the state reaches a final value.
    *
    * @param jobKey - The unique key (GUID) of the job to restart
    * @param folderId - The folder ID where the job resides
-   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the new job details
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
    *
    * @example
    * ```typescript
    * // Restart a faulted job
-   * const result = await jobs.restart(<jobKey>, <folderId>);
-   * console.log(result.data.state); // 'Pending'
-   * console.log(result.data.key);   // new job key
+   * const newJob = await jobs.restart(<jobKey>, <folderId>);
+   * console.log(newJob.state); // 'Pending'
+   * console.log(newJob.key);   // new job key (different from original)
    * ```
    */
   @track('Jobs.Restart')
-  async restart(jobKey: string, folderId: number): Promise<OperationResponse<JobGetResponse>> {
+  async restart(jobKey: string, folderId: number): Promise<JobGetResponse> {
     if (!jobKey) {
       throw new ValidationError({ message: 'jobKey is required for restart' });
     }
@@ -352,7 +354,7 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     );
 
     const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
-    return { success: true, data: createJobWithMethods(rawJob, this) };
+    return createJobWithMethods(rawJob, this);
   }
 
   /**

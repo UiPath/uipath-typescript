@@ -1,6 +1,6 @@
 import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions, JobResumeOptions } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
-import { OperationResponse } from '../common/types';
+
 
 /** Combined response type for job data with bound methods. */
 export type JobGetResponse = RawJobGetResponse & JobMethods;
@@ -196,23 +196,26 @@ export interface JobServiceModel {
   /**
    * Restarts a job in a final state (Successful, Faulted, or Stopped).
    *
-   * Creates a new job execution from a previously successful, faulted, or stopped job.
-   * The new job is created with `Pending` state and uses the same process and input
-   * arguments as the original job.
+   * Creates a **new** job execution from a previously successful, faulted, or stopped job.
+   * The new job has its own unique `key` and `id`, starts in `Pending` state, and uses
+   * the same process and input arguments as the original job.
+   *
+   * To monitor the new job's progress, poll with {@link JobServiceModel.getById | getById}
+   * using the returned job's key until the state reaches a final value.
    *
    * @param jobKey - The unique key (GUID) of the job to restart
    * @param folderId - The folder ID where the job resides
-   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the new job details
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
    *
    * @example
    * ```typescript
    * // Restart a faulted job
-   * const result = await jobs.restart(<jobKey>, <folderId>);
-   * console.log(result.data.state); // 'Pending'
-   * console.log(result.data.key);   // new job key
+   * const newJob = await jobs.restart(<jobKey>, <folderId>);
+   * console.log(newJob.state); // 'Pending'
+   * console.log(newJob.key);   // new job key (different from original)
    * ```
    */
-  restart(jobKey: string, folderId: number): Promise<OperationResponse<JobGetResponse>>;
+  restart(jobKey: string, folderId: number): Promise<JobGetResponse>;
 }
 
 /**
@@ -270,11 +273,11 @@ export interface JobMethods {
   resume(options?: JobResumeOptions): Promise<void>;
 
   /**
-   * Restarts this job, creating a new execution.
+   * Restarts this job, creating a new execution with a new key and ID.
    *
-   * @returns Promise resolving to an {@link OperationResponse}<{@link JobGetResponse}> with the new job details
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
    */
-  restart(): Promise<OperationResponse<JobGetResponse>>;
+  restart(): Promise<JobGetResponse>;
 }
 
 /**
@@ -301,7 +304,7 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.resume(jobData.key, jobData.folderId, options);
     },
-    async restart(): Promise<OperationResponse<JobGetResponse>> {
+    async restart(): Promise<JobGetResponse> {
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.restart(jobData.key, jobData.folderId);
