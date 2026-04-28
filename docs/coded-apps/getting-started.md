@@ -269,7 +269,7 @@ await sdk.initialize()
 ```bash
 $ uip login
 $ npm run build
-$ uip codedapp pack dist -n my-app --version 1.0.0
+$ uip codedapp pack dist -n <appName> --version 1.0.0
 $ uip codedapp publish
 $ uip codedapp deploy
 ```
@@ -287,3 +287,13 @@ Refer to [CLI Reference](cli-reference.md) for details.
     - Separation of concerns: Coded Apps publishes static HTML/CSS/JS from your package and exposes it at a dedicated site URL under uipath.host rather than the UiPath product domain. 
     - Site types and naming: Coded app sites are published under https://<orgname>.uipath.host/<appname>. This provides a predictable, account-scoped URL scheme.
 
+## Network requirements
+
+### Allowlisting Domains
+
+To ensure the proper functioning of Coded Apps, it is essential to allowlist specific domains in your firewall settings. This allows the app to communicate with necessary services and resources. The required domains include:
+
+| Description | Domain |
+|---|---|
+| Host path for coded apps | `<orgname>.uipath.host` |
+| API domain for coded apps | `api.uipath.com` |
