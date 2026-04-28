@@ -1,7 +1,6 @@
 import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions, JobResumeOptions } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
-
 /** Combined response type for job data with bound methods. */
 export type JobGetResponse = RawJobGetResponse & JobMethods;
 
