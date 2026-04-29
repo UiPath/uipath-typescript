@@ -6,7 +6,7 @@ import { Task, MessageSeverity, TaskCompleteResponse } from './types';
  * ### Usage
  *
  * ```typescript
- * import { CodedActionApps } from '@uipath/uipath-ts-coded-action-apps';
+ * import { CodedActionApps } from '@uipath/coded-action-app';
  *
  * const service = new CodedActionApps();
  * ```
@@ -64,7 +64,7 @@ export interface CodedActionAppsServiceModel {
    * @param type - The severity/style of the message (`info`, `success`, `warning`, or `error`).
    * @example
    * ```typescript
-   * import { MessageSeverity } from '@uipath/uipath-ts-coded-action-apps';
+   * import { MessageSeverity } from '@uipath/coded-action-app';
    *
    * service.showMessage('Submitted successfully', MessageSeverity.Success);
    * service.showMessage('Submission failed', MessageSeverity.Error);
