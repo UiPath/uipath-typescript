@@ -4,7 +4,7 @@ import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
-import { CONTENT_TYPES, RESPONSE_TYPES } from '../../utils/constants/headers';
+import { CONTENT_TYPES, RESPONSE_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -64,8 +64,15 @@ export class ApiClient {
     if (isFormData) {
       delete defaultHeaders['Content-Type'];
     }
-    const headers = {
+
+    const traceId = crypto.randomUUID().replace(/-/g, '');
+    const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+    const traceparentValue = `00-${traceId}-${spanId}-01`;
+
+    const headers: Record<string, string> = {
       ...defaultHeaders,
+      [TRACEPARENT]: traceparentValue,
+      [UIPATH_TRACEPARENT_ID]: traceparentValue,
       ...options.headers
     };
 

@@ -7,6 +7,8 @@ export const  CORRELATION_ID = 'X-UIPATH-Correlation-Id';
 export const  JOB_KEY = 'X-UIPATH-JobKey';
 export const  FOLDER_ID = 'X-UIPATH-OrganizationUnitId';
 export const  INSTANCE_ID = 'X-UIPATH-InstanceId';
+export const  TRACEPARENT = 'traceparent';
+export const  UIPATH_TRACEPARENT_ID = 'x-uipath-traceparent-id';
 
 /**
  * Content type constants for HTTP requests/responses
