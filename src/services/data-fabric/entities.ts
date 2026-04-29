@@ -420,12 +420,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * @returns Promise resolving to void on success
    * @example
    * ```typescript
-   * await entities.deleteRecordById(<entityId>, <recordId>);
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * await entities.deleteRecordById("<entityId>", "<recordId>");
    * ```
    */
   @track('Entities.DeleteRecordById')
   async deleteRecordById(entityId: string, recordId: string): Promise<void> {
-    await this.delete<boolean>(
+    await this.delete(
       DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(entityId, recordId)
     );
   }

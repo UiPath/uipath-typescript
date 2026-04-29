@@ -333,7 +333,6 @@ export interface EntityServiceModel {
    */
   deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
 
-
   /**
    * Deletes a single record from an entity by entity ID and record ID
    *
@@ -345,7 +344,11 @@ export interface EntityServiceModel {
    * @returns Promise resolving to void on success
    * @example
    * ```typescript
-   * await entities.deleteRecordById(<entityId>, <recordId>);
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * await entities.deleteRecordById("<entityId>", "<recordId>");
    * ```
    */
   deleteRecordById(entityId: string, recordId: string): Promise<void>;
@@ -657,6 +660,8 @@ export interface EntityMethods {
   /**
    * Delete data from this entity
    *
+   * Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use {@link deleteRecord} if you need trigger events to fire for the deleted record.
+   *
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
    * @returns Promise resolving to delete response
@@ -861,7 +866,7 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async deleteRecord(recordId: string): Promise<void> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
-      await service.deleteRecordById(entityData.id, recordId);
+      return service.deleteRecordById(entityData.id, recordId);
     },
 
     async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<
