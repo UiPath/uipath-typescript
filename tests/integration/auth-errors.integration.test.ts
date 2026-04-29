@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { UiPath } from '../../src';
+import { NetworkError } from '../../src/core/errors/network';
 import { loadIntegrationConfig } from './config/test-config';
 
 /**
@@ -17,6 +18,7 @@ function isForbiddenError(error: any, keywords: string[] = []): boolean {
     // Server may return HTML (redirect/error page) for invalid org/tenant,
     // causing a JSON parse error — this still indicates rejection
     (error instanceof SyntaxError && error.message?.includes('is not valid JSON')) ||
+    (error instanceof NetworkError && error.message?.includes('is not valid JSON')) ||
     allKeywords.some(kw => error.message?.toLowerCase().includes(kw))
   );
 }
@@ -59,16 +61,6 @@ async function expectApiToFail(
     await apiCall();
     expect.fail(`Expected API call to fail: ${testDescription}`);
   } catch (error: any) {
-    console.log(`[DEBUG] ${testDescription} — error shape:`, JSON.stringify({
-      constructorName: error?.constructor?.name,
-      type: error?.type,
-      message: error?.message,
-      statusCode: error?.statusCode,
-      status: error?.status,
-      requestId: error?.requestId,
-      isSyntaxError: error instanceof SyntaxError,
-      keys: error ? Object.keys(error) : [],
-    }, null, 2));
     expect(error).toBeDefined();
     expect(errorValidator(error)).toBe(true);
     console.log(`✓ ${testDescription}:`, error.message);
