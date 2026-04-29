@@ -241,6 +241,14 @@ export interface EntityFieldBase {
   isEncrypted?: boolean;
   /** Default value for the field */
   defaultValue?: string;
+  /** Maximum character length for STRING fields (default: 200, max: 4000) and MULTILINE_TEXT fields (default: 10000). For DECIMAL fields, defaults to 1000 if not provided. */
+  lengthLimit?: number;
+  /** Maximum allowed value for numeric fields (INTEGER, BIG_INTEGER, FLOAT, DOUBLE, DECIMAL — default: 1,000,000,000,000) */
+  maxValue?: number;
+  /** Minimum allowed value for numeric fields (INTEGER, BIG_INTEGER, FLOAT, DOUBLE, DECIMAL — default: -1,000,000,000,000) */
+  minValue?: number;
+  /** Number of decimal places for DECIMAL fields (e.g., `2` for currency values) */
+  decimalPrecision?: number;
 }
 
 /**

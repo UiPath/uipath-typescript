@@ -929,6 +929,174 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   });
 
   // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('sqlType constraint defaults', () => {
+    it('should create STRING field with default lengthLimit 200', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'str_field');
+      expect(field).toBeDefined();
+      expect(field?.fieldDataType.lengthLimit).toBe(200);
+    });
+
+    it('should create STRING field with user-provided lengthLimit', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 500 },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'str_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(500);
+    });
+
+    it('should create MULTILINE_TEXT field with default lengthLimit 10000', async () => {
+      const { entities } = getServices();
+      const name = `sdk_ml_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'ml_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(10000);
+    });
+
+    it('should create DECIMAL field with correct default constraints', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dec_field', type: EntityFieldDataType.DECIMAL },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dec_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+      expect(field?.fieldDataType.decimalPrecision).toBe(2);
+      expect(field?.fieldDataType.maxValue).toBe(1000000000000);
+      expect(field?.fieldDataType.minValue).toBe(-1000000000000);
+    });
+
+    it('should create DECIMAL field with user-provided constraints', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        {
+          fieldName: 'dec_field',
+          type: EntityFieldDataType.DECIMAL,
+          decimalPrecision: 4,
+          maxValue: 99999,
+          minValue: -99999,
+        },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dec_field');
+      expect(field?.fieldDataType.decimalPrecision).toBe(4);
+      expect(field?.fieldDataType.maxValue).toBe(99999);
+      expect(field?.fieldDataType.minValue).toBe(-99999);
+    });
+
+    it('should create BOOLEAN field with fixed lengthLimit 100', async () => {
+      const { entities } = getServices();
+      const name = `sdk_bit_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'bool_field', type: EntityFieldDataType.BOOLEAN },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'bool_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(100);
+    });
+
+    it('should create DATE field with fixed lengthLimit 1000', async () => {
+      const { entities } = getServices();
+      const name = `sdk_date_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'date_field', type: EntityFieldDataType.DATE },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'date_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+    });
+
+    it('should create DATETIME_WITH_TZ field with fixed lengthLimit 1000', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dtz_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dtz_field', type: EntityFieldDataType.DATETIME_WITH_TZ },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dtz_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+    });
+
+    it('should allow updating STRING field lengthLimit without "Field type cannot be changed" error', async () => {
+      const { entities } = getServices();
+      const name = `sdk_upd_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const before = await entities.getById(entityId);
+      const field = before.fields.find(f => f.name === 'str_field');
+      if (!field?.id) {
+        throw new Error('Could not find str_field id in entity schema');
+      }
+
+      // Must not throw "Field type cannot be changed"
+      await entities.updateById(entityId, {
+        updateFields: [{ id: field.id, lengthLimit: 500 }],
+      });
+
+      const after = await entities.getById(entityId);
+      const updated = after.fields.find(f => f.name === 'str_field');
+      expect(updated?.fieldDataType.lengthLimit).toBe(500);
+    });
+
+    it('should allow updating DECIMAL field constraints via updateById', async () => {
+      const { entities } = getServices();
+      const name = `sdk_upddec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dec_field', type: EntityFieldDataType.DECIMAL },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const before = await entities.getById(entityId);
+      const field = before.fields.find(f => f.name === 'dec_field');
+      if (!field?.id) {
+        throw new Error('Could not find dec_field id in entity schema');
+      }
+
+      await entities.updateById(entityId, {
+        updateFields: [{ id: field.id, decimalPrecision: 4, maxValue: 9999, minValue: -9999 }],
+      });
+
+      const after = await entities.getById(entityId);
+      const updated = after.fields.find(f => f.name === 'dec_field');
+      expect(updated?.fieldDataType.decimalPrecision).toBe(4);
+      expect(updated?.fieldDataType.maxValue).toBe(9999);
+      expect(updated?.fieldDataType.minValue).toBe(-9999);
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
   describe.skip('deleteById', () => {
     it('should delete an entity created for this test', async () => {
       const { entities } = getServices();
@@ -977,13 +1145,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       // Clean up any entities created by schema management tests (no-op when those tests are skipped)
       if (createdEntityIds.length > 0) {
         const { entities } = getServices();
-        for (const entityId of createdEntityIds) {
-          try {
-            await entities.deleteById(entityId);
-          } catch {
-            // Best-effort cleanup — entity may have already been deleted
-          }
-        }
+        await Promise.all(
+          createdEntityIds.map(entityId =>
+            entities.deleteById(entityId).catch(() => {
+              // Best-effort cleanup — entity may have already been deleted
+            })
+          )
+        );
       }
     }
   });
