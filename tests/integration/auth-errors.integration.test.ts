@@ -59,6 +59,16 @@ async function expectApiToFail(
     await apiCall();
     expect.fail(`Expected API call to fail: ${testDescription}`);
   } catch (error: any) {
+    console.log(`[DEBUG] ${testDescription} — error shape:`, JSON.stringify({
+      constructorName: error?.constructor?.name,
+      type: error?.type,
+      message: error?.message,
+      statusCode: error?.statusCode,
+      status: error?.status,
+      requestId: error?.requestId,
+      isSyntaxError: error instanceof SyntaxError,
+      keys: error ? Object.keys(error) : [],
+    }, null, 2));
     expect(error).toBeDefined();
     expect(errorValidator(error)).toBe(true);
     console.log(`✓ ${testDescription}:`, error.message);
