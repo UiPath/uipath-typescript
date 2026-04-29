@@ -191,6 +191,30 @@ export interface JobServiceModel {
    * ```
    */
   resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<void>;
+
+  /**
+   * Restarts a job in a final state (Successful, Faulted, or Stopped).
+   *
+   * Creates a **new** job execution from a previously successful, faulted, or stopped job.
+   * The new job has its own unique `key`, starts in `Pending` state, and uses
+   * the same process and input arguments as the original job.
+   *
+   * To monitor the new job's progress, poll with {@link getById}
+   * using the returned job's key until the state reaches a final value.
+   *
+   * @param jobKey - The unique key (GUID) of the job to restart
+   * @param folderId - The folder ID where the job resides
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
+   *
+   * @example
+   * ```typescript
+   * // Restart a faulted job
+   * const newJob = await jobs.restart(<jobKey>, <folderId>);
+   * console.log(newJob.state); // 'Pending'
+   * console.log(newJob.key);   // new job key (different from original)
+   * ```
+   */
+  restart(jobKey: string, folderId: number): Promise<JobGetResponse>;
 }
 
 /**
@@ -246,6 +270,13 @@ export interface JobMethods {
    * @returns Promise that resolves when the job is resumed successfully, or rejects on failure
    */
   resume(options?: JobResumeOptions): Promise<void>;
+
+  /**
+   * Restarts this job, creating a new execution with a new key.
+   *
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
+   */
+  restart(): Promise<JobGetResponse>;
 }
 
 /**
@@ -271,6 +302,11 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.resume(jobData.key, jobData.folderId, options);
+    },
+    async restart(): Promise<JobGetResponse> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.restart(jobData.key, jobData.folderId);
     },
   };
 }

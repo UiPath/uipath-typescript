@@ -313,6 +313,51 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
+   * Restarts a job in a final state (Successful, Faulted, or Stopped).
+   *
+   * Creates a **new** job execution from a previously successful, faulted, or stopped job.
+   * The new job has its own unique `key`, starts in `Pending` state, and uses
+   * the same process and input arguments as the original job.
+   *
+   * To monitor the new job's progress, poll with {@link getById}
+   * using the returned job's key until the state reaches a final value.
+   *
+   * @param jobKey - The unique key (GUID) of the job to restart
+   * @param folderId - The folder ID where the job resides
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
+   *
+   * @example
+   * ```typescript
+   * // Restart a faulted job
+   * const newJob = await jobs.restart(<jobKey>, <folderId>);
+   * console.log(newJob.state); // 'Pending'
+   * console.log(newJob.key);   // new job key (different from original)
+   * ```
+   */
+  @track('Jobs.Restart')
+  async restart(jobKey: string, folderId: number): Promise<JobGetResponse> {
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for restart' });
+    }
+
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for restart' });
+    }
+
+    const [jobId] = await this.resolveJobKeys([jobKey], folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+
+    const response = await this.post<Record<string, unknown>>(
+      JOB_ENDPOINTS.RESTART,
+      { jobId },
+      { headers }
+    );
+
+    const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
+    return createJobWithMethods(rawJob, this);
+  }
+
+  /**
    * Downloads the output file content via the Attachments API.
    * 1. Fetches blob access info from the attachment using AttachmentService
    * 2. Downloads content from the presigned blob URI

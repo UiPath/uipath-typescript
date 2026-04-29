@@ -693,4 +693,91 @@ describe('JobService Unit Tests', () => {
       ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_RESUME_FAILED);
     });
   });
+
+  describe('restart', () => {
+    it('should resolve job key and restart with transformed response', async () => {
+      // Key resolution via getAll
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      // Restart API call
+      const mockRawJob = createMockRawJob({ State: 'Pending' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      // Verify key resolution
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+          filter: `key in ('${JOB_TEST_CONSTANTS.JOB_KEY}')`,
+          select: 'id,key',
+          pageSize: 1,
+        })
+      );
+
+      // Verify restart call with resolved numeric ID
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESTART,
+        { jobId: JOB_TEST_CONSTANTS.JOB_ID },
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
+          }),
+        })
+      );
+
+      expect(result).toBeDefined();
+      expect(result.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      // Verify transformed camelCase fields have expected values
+      expect(result.createdTime).toBe(JOB_TEST_CONSTANTS.CREATED_TIME);
+      expect(result.processName).toBe(JOB_TEST_CONSTANTS.PROCESS_NAME);
+
+      // Verify original PascalCase fields are absent
+      expect((result as any).CreationTime).toBeUndefined();
+      expect((result as any).ReleaseName).toBeUndefined();
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+    });
+
+    it('should attach bound methods to the returned job', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      const mockRawJob = createMockRawJob({ State: 'Pending' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(typeof result.getOutput).toBe('function');
+      expect(typeof result.stop).toBe('function');
+      expect(typeof result.resume).toBe('function');
+      expect(typeof result.restart).toBe('function');
+    });
+
+    it('should throw validation error when jobKey is missing', async () => {
+      await expect(
+        jobService.restart('', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow('jobKey is required for restart');
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, 0)
+      ).rejects.toThrow('folderId is required for restart');
+    });
+
+    it('should handle API errors', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+      mockApiClient.post.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+    });
+  });
 });

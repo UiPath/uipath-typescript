@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import type { JobGetResponse } from '../../../../src/models/orchestrator/jobs.models';
 
 const modes: InitMode[] = ['v1'];
 
@@ -249,6 +250,48 @@ describe.each(modes)('Orchestrator Jobs - Integration Tests [%s]', (mode) => {
 
       const job = result.items[0];
       await jobs.resume(job.key, resumeFolderId);
+    });
+  });
+
+  describe('restart', () => {
+    let restartResult!: JobGetResponse;
+
+    beforeAll(async () => {
+      const { jobs: svc, folderId: fId } = getJobsService();
+
+      if (!fId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID is required for restart tests.');
+      }
+
+      const result = await svc.getAll({
+        folderId: fId,
+        pageSize: 1,
+        filter: "state eq 'Faulted' or state eq 'Successful' or state eq 'Stopped'",
+      });
+
+      if (result.items.length === 0) {
+        throw new Error('No restartable jobs (Faulted/Successful/Stopped) found in the test environment.');
+      }
+
+      restartResult = await svc.restart(result.items[0].key, fId);
+    });
+
+    it('should restart a job in a final state', () => {
+      expect(restartResult).toBeDefined();
+      expect(restartResult.state).toBeDefined();
+      expect(restartResult.key).toBeDefined();
+    });
+
+    it('should apply transform pipeline correctly on restarted job', () => {
+      // Verify transformed camelCase fields present with values
+      expect(restartResult.createdTime).toBeDefined();
+      expect(restartResult.processName).toBeDefined();
+      expect(restartResult.folderId).toBeDefined();
+
+      // Verify original PascalCase API fields absent
+      expect((restartResult as any).CreationTime).toBeUndefined();
+      expect((restartResult as any).ReleaseName).toBeUndefined();
+      expect((restartResult as any).OrganizationUnitId).toBeUndefined();
     });
   });
 

@@ -19,6 +19,7 @@ describe('Job Models', () => {
       getOutput: vi.fn(),
       stop: vi.fn(),
       resume: vi.fn(),
+      restart: vi.fn(),
     } as any;
   });
 
@@ -156,6 +157,34 @@ describe('Job Models', () => {
         const job = createJobWithMethods(mockJobData, mockService);
 
         await expect(job.resume()).rejects.toThrow('Job folderId is undefined');
+      });
+    });
+
+    describe('job.restart()', () => {
+      it('should call service.restart with the job key and folderId', async () => {
+        const mockJobData = createBasicJob();
+        const job = createJobWithMethods(mockJobData, mockService);
+
+        vi.mocked(mockService.restart).mockResolvedValue(job);
+
+        const result = await job.restart();
+
+        expect(mockService.restart).toHaveBeenCalledWith(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+        expect(result).toEqual(job);
+      });
+
+      it('should throw when job key is undefined', async () => {
+        const mockJobData = createBasicJob({ key: '' as any });
+        const job = createJobWithMethods(mockJobData, mockService);
+
+        await expect(job.restart()).rejects.toThrow('Job key is undefined');
+      });
+
+      it('should throw when job folderId is undefined', async () => {
+        const mockJobData = createBasicJob({ folderId: undefined as any });
+        const job = createJobWithMethods(mockJobData, mockService);
+
+        await expect(job.restart()).rejects.toThrow('Job folderId is undefined');
       });
     });
   });
