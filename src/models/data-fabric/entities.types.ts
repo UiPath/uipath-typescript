@@ -125,14 +125,6 @@ export interface EntityDeleteOptions {
  */
 export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
 
-/**
- * Response from deleting a single record from an entity
- */
-export interface EntityDeleteRecordResponse {
-  /** Whether the record was successfully deleted */
-  success: boolean;
-}
-
 
 /**
  * Logical operator for combining query filter groups

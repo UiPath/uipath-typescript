@@ -9,7 +9,6 @@ import {
   EntityUpdateRecordOptions,
   EntityUpdateRecordResponse,
   EntityDeleteResponse,
-  EntityDeleteRecordResponse,
   EntityRecord,
   RawEntityGetResponse,
   EntityFileType,
@@ -343,14 +342,13 @@ export interface EntityServiceModel {
    *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to delete
-   * @returns Promise resolving to {@link EntityDeleteRecordResponse}
+   * @returns Promise resolving to void on success
    * @example
    * ```typescript
-   * const result = await entities.deleteRecordById(<entityId>, <recordId>);
-   * console.log(result.success); // true
+   * await entities.deleteRecordById(<entityId>, <recordId>);
    * ```
    */
-  deleteRecordById(entityId: string, recordId: string): Promise<EntityDeleteRecordResponse>;
+  deleteRecordById(entityId: string, recordId: string): Promise<void>;
 
   /**
    * Queries entity records with filters, sorting, and SDK-managed pagination
@@ -672,9 +670,9 @@ export interface EntityMethods {
    * Use this method if you need trigger events to fire for the deleted record.
    *
    * @param recordId - UUID of the record to delete
-   * @returns Promise resolving to delete response
+   * @returns Promise resolving to void on success
    */
-  deleteRecord(recordId: string): Promise<EntityDeleteRecordResponse>;
+  deleteRecord(recordId: string): Promise<void>;
 
   /**
    * Get all records from this entity
@@ -860,10 +858,10 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.deleteRecordsById(entityData.id, recordIds, options);
     },
 
-    async deleteRecord(recordId: string): Promise<EntityDeleteRecordResponse> {
+    async deleteRecord(recordId: string): Promise<void> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
-      return service.deleteRecordById(entityData.id, recordId);
+      await service.deleteRecordById(entityData.id, recordId);
     },
 
     async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<

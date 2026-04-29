@@ -1136,13 +1136,11 @@ describe("EntityService Unit Tests", () => {
     it('should delete a single record successfully', async () => {
       mockApiClient.delete.mockResolvedValue(true);
 
-      const result = await entityService.deleteRecordById(
+      await entityService.deleteRecordById(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID
       );
 
-      expect(result).toBeDefined();
-      expect(result.success).toBe(true);
       expect(mockApiClient.delete).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,

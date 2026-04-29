@@ -494,17 +494,14 @@ describe("Entity Models", () => {
         const entityData = createBasicEntity();
         const entity = createEntityWithMethods(entityData, mockService);
 
-        const mockResponse = { success: true };
-        mockService.deleteRecordById = vi.fn().mockResolvedValue(mockResponse);
+        mockService.deleteRecordById = vi.fn().mockResolvedValue(undefined);
 
-        const result = await entity.deleteRecord(ENTITY_TEST_CONSTANTS.RECORD_ID);
+        await entity.deleteRecord(ENTITY_TEST_CONSTANTS.RECORD_ID);
 
         expect(mockService.deleteRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID
         );
-        expect(result).toEqual(mockResponse);
-        expect(result.success).toBe(true);
       });
 
       it('should throw error if entity id is undefined', async () => {

@@ -994,10 +994,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       createdRecordIds.push(inserted.Id);
       registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
 
-      const result = await entities.deleteRecordById(entityId, inserted.Id);
-
-      expect(result).toBeDefined();
-      expect(result.success).toBe(true);
+      await entities.deleteRecordById(entityId, inserted.Id);
 
       const idx = createdRecordIds.indexOf(inserted.Id);
       if (idx !== -1) createdRecordIds.splice(idx, 1);
@@ -1040,10 +1037,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       createdRecordIds.push(inserted.Id);
       registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
 
-      const result = await entity.deleteRecord(inserted.Id);
-
-      expect(result).toBeDefined();
-      expect(result.success).toBe(true);
+      await entity.deleteRecord(inserted.Id);
 
       const idx = createdRecordIds.indexOf(inserted.Id);
       if (idx !== -1) createdRecordIds.splice(idx, 1);
