@@ -47,6 +47,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `insertRecordById()` / `insertRecord()` | `DataFabric.Data.Write` |
 | `insertRecordsById()` / `insertRecords()` | `DataFabric.Data.Write` |
 | `deleteRecordsById()` / `deleteRecords()` | `DataFabric.Data.Write` |
+| `deleteRecordById()` / `deleteRecord()` | `DataFabric.Data.Write` |
 | `updateRecordById()` / `updateRecord()` | `DataFabric.Data.Write` |
 | `updateRecordsById()` / `updateRecords()` | `DataFabric.Data.Write` |
 | `downloadAttachment()` | `DataFabric.Data.Read` |
