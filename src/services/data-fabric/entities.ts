@@ -30,6 +30,7 @@ import {
   EntityCreateFieldOptions,
   EntityFieldDataType,
   EntityUpdateByIdOptions,
+  SqlType,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -841,6 +842,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
       fields = fields.map(f => {
         const update = updateMap.get(f.id ?? '');
         if (!update) return f;
+        const constraintUpdate = {
+          ...(update.lengthLimit !== undefined && { lengthLimit: update.lengthLimit }),
+          ...(update.maxValue !== undefined && { maxValue: update.maxValue }),
+          ...(update.minValue !== undefined && { minValue: update.minValue }),
+          ...(update.decimalPrecision !== undefined && { decimalPrecision: update.decimalPrecision }),
+        };
+        const hasConstraintUpdate = Object.keys(constraintUpdate).length > 0;
         return {
           ...f,
           ...(update.displayName !== undefined && { displayName: update.displayName }),
@@ -850,6 +858,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           ...(update.isRbacEnabled !== undefined && { isRbacEnabled: update.isRbacEnabled }),
           ...(update.isEncrypted !== undefined && { isEncrypted: update.isEncrypted }),
           ...(update.defaultValue !== undefined && { defaultValue: update.defaultValue }),
+          ...(hasConstraintUpdate && f.sqlType && { sqlType: { ...f.sqlType, ...constraintUpdate } }),
         };
       });
     }
@@ -966,11 +975,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
   private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
     this.validateName(field.fieldName, 'field');
-    const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldDataType.STRING];
+    const fieldType = field.type ?? EntityFieldDataType.STRING;
+    const mapping = EntitySchemaFieldTypeMap[fieldType];
     return {
       name: field.fieldName,
       displayName: field.displayName ?? field.fieldName,
-      sqlType: { name: mapping.sqlTypeName },
+      sqlType: {
+        name: mapping.sqlTypeName,
+        ...this.buildSqlTypeConstraints(fieldType, field),
+      },
       fieldDisplayType: mapping.fieldDisplayType,
       description: field.description ?? '',
       isRequired: field.isRequired ?? false,
@@ -982,6 +995,47 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ...(field.referenceEntityName !== undefined && { referenceEntityName: field.referenceEntityName }),
       ...(field.referenceFieldName !== undefined && { referenceFieldName: field.referenceFieldName }),
     };
+  }
+
+  /**
+   * Returns the sqlType constraint fields for a given field type.
+   */
+  private buildSqlTypeConstraints(type: EntityFieldDataType, field: EntityCreateFieldOptions): Omit<SqlType, 'name'> {
+    switch (type) {
+      case EntityFieldDataType.STRING:
+        // NVARCHAR requires an explicit lengthLimit — without it the API stores the field
+        return { lengthLimit: field.lengthLimit ?? 200 };
+      case EntityFieldDataType.MULTILINE_TEXT:
+        return { lengthLimit: field.lengthLimit ?? 10000 };
+      case EntityFieldDataType.DECIMAL:
+        return {
+          lengthLimit: field.lengthLimit ?? 1000,
+          decimalPrecision: field.decimalPrecision ?? 2,
+          maxValue: field.maxValue ?? 1000000000000,
+          minValue: field.minValue ?? -1000000000000,
+        };
+      case EntityFieldDataType.BOOLEAN:
+        return { lengthLimit: 100 };
+      case EntityFieldDataType.DATE:
+        return { lengthLimit: 1000 };
+      case EntityFieldDataType.DATETIME_WITH_TZ:
+        return { lengthLimit: 1000 };
+      case EntityFieldDataType.INTEGER:
+      case EntityFieldDataType.BIG_INTEGER:
+      case EntityFieldDataType.FLOAT:
+      case EntityFieldDataType.DOUBLE:
+        return {
+          maxValue: field.maxValue ?? 1000000000000,
+          minValue: field.minValue ?? -1000000000000,
+        };
+      default:
+        return {
+          ...(field.lengthLimit !== undefined && { lengthLimit: field.lengthLimit }),
+          ...(field.maxValue !== undefined && { maxValue: field.maxValue }),
+          ...(field.minValue !== undefined && { minValue: field.minValue }),
+          ...(field.decimalPrecision !== undefined && { decimalPrecision: field.decimalPrecision }),
+        };
+    }
   }
 
   private static readonly RESERVED_FIELD_NAMES = new Set([
