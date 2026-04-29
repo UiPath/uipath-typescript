@@ -1,16 +1,16 @@
-# @uipath/uipath-ts-coded-action-apps
+# @uipath/coded-action-app
 
 An SDK enabling coded apps to be the UI for tasks within UiPath Action Center. SDK handles bi-directional communication between the coded app and UiPath Action Center host using window.postMessage events.
 
 ## Installation
 
 ```bash
-npm install @uipath/uipath-ts-coded-action-apps
+npm install @uipath/coded-action-app
 ```
 
 ## Overview
 
-Action Center renders a coded action app within an iframe. `@uipath/uipath-ts-coded-action-apps` provides service CodedActionAppsService which offers below capabilities:
+Action Center renders a coded action app within an iframe. `@uipath/coded-action-app` provides service CodedActionAppsService which offers below capabilities:
 
 - **Receive** - `getTask()` - On app load, UiPath Action Center provides the task details.
 - **Notify** - `setTaskData()` - Notify Action Center when task data changes (e.g. to enable the Save button).
@@ -22,7 +22,7 @@ Action Center renders a coded action app within an iframe. `@uipath/uipath-ts-co
 ### Initialise the service
 
 ```ts
-import { CodedActionAppsService } from '@uipath/uipath-ts-coded-action-apps';
+import { CodedActionAppsService } from '@uipath/coded-action-app';
 
 const service = new CodedActionAppsService();
 ```
@@ -30,7 +30,7 @@ const service = new CodedActionAppsService();
 The class is also exported under the alias `CodedActionApps` for convenience:
 
 ```ts
-import { CodedActionApps } from '@uipath/uipath-ts-coded-action-apps';
+import { CodedActionApps } from '@uipath/coded-action-app';
 
 const service = new CodedActionApps();
 ```
@@ -89,7 +89,7 @@ if (!result.success) {
 Show a toast notification inside Action Center using one of the four severity levels.
 
 ```ts
-import { MessageSeverity } from '@uipath/uipath-ts-coded-action-apps';
+import { MessageSeverity } from '@uipath/coded-action-app';
 
 service.showMessage('Validation successful', MessageSeverity.Success);
 service.showMessage('Validation failed', MessageSeverity.Error);
