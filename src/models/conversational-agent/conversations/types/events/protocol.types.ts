@@ -398,18 +398,14 @@ export interface ToolCallStartEvent {
  * Sent by the client to approve or reject a tool call that was emitted with
  * `requireConfirmation: true`. Carries the user's decision and, when approved,
  * the (possibly edited) input the tool should execute with.
+ *
+ * `input` is required when `approved` is `true` and optional when `approved`
+ * is `false`. The discriminated union enforces this at compile time so
+ * `{ approved: true }` (no `input`) is a type error.
  */
-export interface ToolCallConfirmationEvent {
-  /**
-   * Whether the user approved the tool call.
-   */
-  approved: boolean;
-  /**
-   * The (possibly edited) input parameters for the tool call. Required when
-   * `approved` is true.
-   */
-  input?: JSONValue;
-}
+export type ToolCallConfirmationEvent =
+  | { approved: true; input: JSONValue }
+  | { approved: false; input?: JSONValue };
 
 /**
  * Signals the end of a tool call.

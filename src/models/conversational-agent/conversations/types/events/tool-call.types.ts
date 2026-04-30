@@ -130,13 +130,13 @@ export interface ToolCallStream {
    *
    * @example Handling a confirmation response (agent-side)
    * ```typescript
-   * toolCall.onConfirmToolCall(({ approved, input }) => {
+   * toolCall.onToolCallConfirm(({ approved, input }) => {
    *   if (approved) executeTool(toolCall.startEvent.toolName, input);
    *   else cancelToolCall();
    * });
    * ```
    */
-  onConfirmToolCall(cb: (confirmToolCall: ToolCallConfirmationEvent) => void): () => void;
+  onToolCallConfirm(cb: (confirmToolCall: ToolCallConfirmationEvent) => void): () => void;
 
   // ==================== Sending ====================
 
@@ -164,15 +164,15 @@ export interface ToolCallStream {
    *
    * @example Approving a tool call
    * ```typescript
-   * toolCall.sendConfirmToolCall({ approved: true, input: editedInput });
+   * toolCall.sendToolCallConfirm({ approved: true, input: editedInput });
    * ```
    *
    * @example Rejecting a tool call
    * ```typescript
-   * toolCall.sendConfirmToolCall({ approved: false });
+   * toolCall.sendToolCallConfirm({ approved: false });
    * ```
    */
-  sendConfirmToolCall(confirmToolCall: ToolCallConfirmationEvent): void;
+  sendToolCallConfirm(confirmToolCall: ToolCallConfirmationEvent): void;
 
   // ==================== Advanced ====================
 

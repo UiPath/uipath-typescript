@@ -114,7 +114,7 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
    * peer responds to a tool call that was emitted with `requireConfirmation`.
    * @returns Cleanup function to remove the handler.
    */
-  public onConfirmToolCall(cb: ToolCallConfirmationHandler) {
+  public onToolCallConfirm(cb: ToolCallConfirmationHandler) {
     this._confirmHandlers.push(cb);
     return () => {
       const index = this._confirmHandlers.indexOf(cb);
@@ -128,7 +128,7 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
    * `sendInterruptEnd` flow for tool call confirmation.
    * @throws Error if tool call has already ended.
    */
-  public sendConfirmToolCall(confirmToolCall: ToolCallConfirmationEvent) {
+  public sendToolCallConfirm(confirmToolCall: ToolCallConfirmationEvent) {
     this.assertNotEnded();
     this.emit({ confirmToolCall });
   }
