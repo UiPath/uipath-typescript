@@ -6,7 +6,7 @@ The E2E testing browser app calls the API via `alpha.api.uipath.com` (a Cloudfla
 
 ## Procedure
 
-1. **Read the Cloudflare Worker source** at the additional working directory `apps-dev-tools` (`CFWorkers/ApiCorsWorker/api-cors-worker.ts`). If the directory is not available, warn the user and skip this step entirely.
+1. **Pull latest changes** in `~/Desktop/CodeBase/apps-dev-tools` before reading any files. Run `cd ~/Desktop/CodeBase/apps-dev-tools && git checkout main && git pull` to ensure you're working against the current state of the whitelist. Then **read the Cloudflare Worker source** (`CFWorkers/ApiCorsWorker/api-cors-worker.ts`). If the directory is not available, warn the user and skip this step entirely.
 
 2. **Check if the endpoint pattern already exists** — grep `ALLOWED_API_PATTERNS` for the endpoint path segments. If already present, skip this step and note it.
 
