@@ -3,15 +3,16 @@ name: Publish SDK package
 on:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
-  id-token: write
+permissions: {}
 
 jobs:
   publish-sdk:
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -77,3 +78,21 @@ jobs:
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
+
+  trigger-cf-worker:
+    needs: publish-sdk
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Trigger API CORS Worker deploy (staging + production)
+        env:
+          GH_TOKEN: ${{ secrets.APPS_DEV_TOOLS_PAT }}
+        run: |
+          gh workflow run deploy-api-cors.yml \
+            --repo UiPath/apps-dev-tools \
+            --field environments="staging,production"
+
+          echo "### CF Worker Deploy Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "- Triggered deploy-api-cors.yml in UiPath/apps-dev-tools" >> $GITHUB_STEP_SUMMARY
+          echo "- Environments: staging, production" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Runs](https://github.com/UiPath/apps-dev-tools/actions/workflows/deploy-api-cors.yml)" >> $GITHUB_STEP_SUMMARY
