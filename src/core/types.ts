@@ -9,7 +9,7 @@
  */
 
 import type { BaseConfig } from './config/sdk-config';
-import type { TokenInfo } from './auth/types';
+import type { TokenInfo, TokenIdentity } from './auth/types';
 
 export interface IUiPath {
   /** Read-only configuration for the SDK instance */
@@ -46,6 +46,13 @@ export interface IUiPath {
    * Get the current authentication token
    */
   getToken(): string | undefined;
+
+  /**
+   * Retrieves identity claims (email, firstName, lastName, preferredUsername, name)
+   * of the currently authenticated user by decoding the JWT access token.
+   * Does not work with PAT tokens.
+   */
+  getTokenIdentity(): TokenIdentity;
 
   /**
    * Logout from the SDK, clearing all authentication state.

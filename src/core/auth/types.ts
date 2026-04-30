@@ -31,3 +31,14 @@ export interface OAuthContext {
   tenantName: string;
   scope: string;
 }
+
+/**
+ * Identity claims decoded from the current JWT access token.
+ */
+export interface TokenIdentity {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  preferredUsername?: string;
+  name?: string;
+}
