@@ -111,6 +111,23 @@ export const MAESTRO_TEST_CONSTANTS = {
   EXTRACTED_NAME_WITHOUT_PREFIX: 'RegularPackageName',
   EXTRACTED_NAME_DEFAULT: 'TestCase',
   
+  // SLA Summary constants
+  SLA_CASE_INSTANCE_ID: '1238b9c9-37b6-4a69-bb67-042548d05c77',
+  SLA_EXTERNAL_ID: 'CASE-48322321',
+  SLA_CASE_NAME: 'Agentic Case',
+  SLA_DUE_TIME: '5/8/2026 11:20:17 AM',
+  SLA_STATUS_ON_TRACK: 'On Track',
+  SLA_STATUS_OVERDUE: 'Overdue',
+  SLA_STATUS_UNKNOWN: 'Unknown',
+  SLA_ESCALATION_RULE_INDEX: '0',
+  SLA_ESCALATION_RULE_TYPE: 'None',
+  SLA_INSTANCE_STATUS_CANCELLED: 'Cancelled',
+  SLA_TOTAL_COUNT: 40,
+  SLA_PAGE_NUMBER: 1,
+  SLA_PAGE_SIZE: 200,
+  SLA_TOTAL_PAGES: 1,
+  ERROR_SLA_SUMMARY_FAILED: 'Failed to fetch SLA summary',
+
   // Execution History constants
   ELEMENT_RUN_ID: 'run-1',
   EXTERNAL_LINK: 'https://test.uipath.com/task/123',

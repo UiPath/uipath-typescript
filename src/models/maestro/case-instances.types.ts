@@ -98,7 +98,65 @@ export interface CaseAppConfig {
 }
 
 /**
- * Case stage task type 
+ * SLA status for a case instance
+ */
+export enum SlaSummaryStatus {
+  /** Case is within SLA deadline */
+  ON_TRACK = 'On Track',
+  /** Case has exceeded SLA deadline */
+  OVERDUE = 'Overdue',
+  /** SLA status cannot be determined */
+  UNKNOWN = 'Unknown'
+}
+
+/**
+ * SLA summary item for a single case instance
+ */
+export interface SlaSummaryItem {
+  caseInstanceId: string;
+  folderKey: string;
+  name: string;
+  externalId: string;
+  caseSummary: string;
+  processKey: string;
+  slaDueTime: string;
+  slaStatus: string;
+  escalationRuleIndex: string;
+  escalationRuleType: string;
+  instanceStatus: string;
+  lastModifiedTime: string;
+}
+
+/**
+ * Pagination metadata from SLA summary response
+ */
+export interface SlaSummaryPagination {
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+/**
+ * Full response from the SLA summary endpoint
+ */
+export interface SlaSummaryResponse {
+  data: SlaSummaryItem[];
+  pagination: SlaSummaryPagination;
+}
+
+/**
+ * Options for querying SLA summary
+ */
+export interface SlaSummaryOptions {
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+/**
+ * Case stage task type
  */
 export enum StageTaskType {
   EXTERNAL_AGENT = 'external-agent',
