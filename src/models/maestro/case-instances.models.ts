@@ -5,7 +5,9 @@ import {
   CaseInstanceOperationResponse,
   CaseInstanceReopenOptions,
   CaseGetStageResponse,
-  CaseInstanceExecutionHistoryResponse
+  CaseInstanceExecutionHistoryResponse,
+  SlaSummaryResponse,
+  SlaSummaryOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -281,6 +283,36 @@ export interface CaseInstancesServiceModel {
       ? PaginatedResponse<TaskGetResponse>
       : NonPaginatedResponse<TaskGetResponse>
   >;
+
+  /**
+   * Get SLA summary for all case instances across folders.
+   *
+   * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
+   * Uses the Insights Real-Time Monitoring service.
+   *
+   * @param options - Optional pagination options
+   * @returns Promise resolving to SLA summary with data array and pagination metadata
+   * {@link SlaSummaryResponse}
+   * @example
+   * ```typescript
+   * // Get SLA summary (first page, default page size)
+   * const summary = await caseInstances.getSlaSummary();
+   *
+   * for (const item of summary.data) {
+   *   console.log(`Case ${item.externalId}: ${item.slaStatus} — due ${item.slaDueTime}`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With pagination
+   * const page = await caseInstances.getSlaSummary({ pageNumber: 2, pageSize: 50 });
+   *
+   * console.log(`Page ${page.pagination.pageNumber} of ${page.pagination.totalPages}`);
+   * console.log(`Total cases: ${page.pagination.totalCount}`);
+   * ```
+   */
+  getSlaSummary(options?: SlaSummaryOptions): Promise<SlaSummaryResponse>;
 }
 
 // Method interface that will be added to case instance objects

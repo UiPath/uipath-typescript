@@ -12,7 +12,9 @@ import {
   CaseGetStageResponse,
   StageTask,
   ElementExecutionMetadata,
-  CaseInstanceExecutionHistoryResponse
+  CaseInstanceExecutionHistoryResponse,
+  SlaSummaryResponse,
+  SlaSummaryOptions
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
@@ -538,7 +540,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @param caseInstanceId - The ID of the case instance
    * @param options - Optional filtering and pagination options
    * @returns Promise resolving to human in the loop tasks associated with the case instance
-   */ 
+   */
   @track('CaseInstances.GetActionTasks')
   async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
     caseInstanceId: string,
@@ -550,22 +552,65 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   > {
     // Build filter to match tasks by case instance ID using tags
     const tagFilter = CASE_INSTANCE_TASK_FILTER(caseInstanceId);
-    
+
     // Combine with any existing filter
-    const filter = options?.filter 
+    const filter = options?.filter
       ? `(${tagFilter}) and (${options.filter})`
       : tagFilter;
 
     // Add expand to include AssignedToUser and Activities
     const expand = CASE_INSTANCE_TASK_EXPAND;
-    
+
     // Prepare the enhanced options with proper typing
     const enhancedOptions: T = {
       ...options,
       filter,
       expand
     } as T;
-  
+
     return await this.taskService.getAll(enhancedOptions) as any;
+  }
+
+  /**
+   * Get SLA summary for all case instances across folders.
+   *
+   * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
+   * Uses the Insights Real-Time Monitoring service.
+   *
+   * @param options - Optional pagination options
+   * @returns Promise resolving to SLA summary with data array and pagination metadata
+   * {@link SlaSummaryResponse}
+   * @example
+   * ```typescript
+   * // Get SLA summary (first page, default page size)
+   * const summary = await caseInstances.getSlaSummary();
+   *
+   * for (const item of summary.data) {
+   *   console.log(`Case ${item.externalId}: ${item.slaStatus} — due ${item.slaDueTime}`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // With pagination
+   * const page = await caseInstances.getSlaSummary({ pageNumber: 2, pageSize: 50 });
+   *
+   * console.log(`Page ${page.pagination.pageNumber} of ${page.pagination.totalPages}`);
+   * console.log(`Total cases: ${page.pagination.totalCount}`);
+   * ```
+   */
+  @track('CaseInstances.GetSlaSummary')
+  async getSlaSummary(options?: SlaSummaryOptions): Promise<SlaSummaryResponse> {
+    const requestBody = {
+      PageNumber: options?.pageNumber ?? 1,
+      PageSize: options?.pageSize ?? 200
+    };
+
+    const response = await this.post<SlaSummaryResponse>(
+      MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
+      requestBody
+    );
+
+    return response.data;
   }
 }

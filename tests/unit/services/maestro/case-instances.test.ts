@@ -16,6 +16,7 @@ import {
   createMockCaseInstanceExecutionHistory,
   createMockMaestroApiOperationResponse,
   createMockActionTasksResponse,
+  createMockSlaSummaryResponse,
 } from '../../../utils/mocks';
 import { createMockBaseResponse } from '../../../utils/mocks/core';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -833,5 +834,59 @@ describe('CaseInstancesService', () => {
       expect(result).toEqual(mockResponse);
     });
 
+  });
+
+  describe('getSlaSummary', () => {
+    it('should return SLA summary with default pagination', async () => {
+      const mockResponse = createMockSlaSummaryResponse();
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getSlaSummary();
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
+        { PageNumber: 1, PageSize: 200 },
+        {}
+      );
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].caseInstanceId).toBe(MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID);
+      expect(result.data[0].slaStatus).toBe(MAESTRO_TEST_CONSTANTS.SLA_STATUS_ON_TRACK);
+      expect(result.data[1].slaStatus).toBe(MAESTRO_TEST_CONSTANTS.SLA_STATUS_OVERDUE);
+      expect(result.pagination.totalCount).toBe(2);
+      expect(result.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should pass custom pagination options', async () => {
+      const mockResponse = createMockSlaSummaryResponse();
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      await service.getSlaSummary({ pageNumber: 2, pageSize: 50 });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
+        { PageNumber: 2, PageSize: 50 },
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error(MAESTRO_TEST_CONSTANTS.ERROR_SLA_SUMMARY_FAILED);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(service.getSlaSummary()).rejects.toThrow(
+        MAESTRO_TEST_CONSTANTS.ERROR_SLA_SUMMARY_FAILED
+      );
+    });
+
+    it('should return empty data array when no cases exist', async () => {
+      const mockResponse = createMockSlaSummaryResponse([]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getSlaSummary();
+
+      expect(result.data).toEqual([]);
+      expect(result.pagination.totalCount).toBe(0);
+    });
   });
 });

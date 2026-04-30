@@ -250,6 +250,65 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
+  describe('getSlaSummary', () => {
+    it('should retrieve SLA summary for case instances', async () => {
+      const { caseInstances } = getServices();
+
+      try {
+        const result = await caseInstances.getSlaSummary();
+
+        expect(result).toBeDefined();
+        expect(result.data).toBeDefined();
+        expect(Array.isArray(result.data)).toBe(true);
+        expect(result.pagination).toBeDefined();
+        expect(typeof result.pagination.totalCount).toBe('number');
+        expect(typeof result.pagination.pageNumber).toBe('number');
+        expect(typeof result.pagination.pageSize).toBe('number');
+        expect(typeof result.pagination.hasNextPage).toBe('boolean');
+
+        if (result.data.length > 0) {
+          const item = result.data[0];
+          expect(item.caseInstanceId).toBeDefined();
+          expect(typeof item.caseInstanceId).toBe('string');
+          expect(item.slaStatus).toBeDefined();
+          expect(typeof item.slaStatus).toBe('string');
+          expect(item.folderKey).toBeDefined();
+        }
+      } catch (error: any) {
+        if (error.message?.includes('Forbidden') || error.statusCode === 403 || error.statusCode === 401) {
+          console.log(
+            'Skipping test: Token does not have Insights permissions. ' +
+              'This endpoint requires OAuth with Insights.RealTimeData scope (PAT not supported).'
+          );
+          return;
+        }
+        throw error;
+      }
+    });
+
+    it('should support custom pagination options', async () => {
+      const { caseInstances } = getServices();
+
+      try {
+        const result = await caseInstances.getSlaSummary({ pageNumber: 1, pageSize: 5 });
+
+        expect(result).toBeDefined();
+        expect(result.data.length).toBeLessThanOrEqual(5);
+        expect(result.pagination.pageSize).toBe(5);
+        expect(result.pagination.pageNumber).toBe(1);
+      } catch (error: any) {
+        if (error.message?.includes('Forbidden') || error.statusCode === 403 || error.statusCode === 401) {
+          console.log(
+            'Skipping test: Token does not have Insights permissions. ' +
+              'This endpoint requires OAuth with Insights.RealTimeData scope (PAT not supported).'
+          );
+          return;
+        }
+        throw error;
+      }
+    });
+  });
+
   describe('Service verification', () => {
     it('should use the same SDK instance as other Maestro services', () => {
       const services = getServices();

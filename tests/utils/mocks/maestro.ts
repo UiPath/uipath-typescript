@@ -499,6 +499,59 @@ export const createMockCaseStage = (overrides: Partial<any> = {}) => {
 };
 
 /**
+ * Creates a mock SLA summary item
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock SlaSummaryItem object
+ */
+export const createMockSlaSummaryItem = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
+    folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+    name: MAESTRO_TEST_CONSTANTS.SLA_CASE_NAME,
+    externalId: MAESTRO_TEST_CONSTANTS.SLA_EXTERNAL_ID,
+    caseSummary: '',
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+    slaDueTime: MAESTRO_TEST_CONSTANTS.SLA_DUE_TIME,
+    slaStatus: MAESTRO_TEST_CONSTANTS.SLA_STATUS_ON_TRACK,
+    escalationRuleIndex: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_INDEX,
+    escalationRuleType: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_TYPE,
+    instanceStatus: '',
+    lastModifiedTime: '4/28/2026 11:20:17 AM'
+  }, overrides);
+};
+
+/**
+ * Creates a mock SLA summary response
+ * @param items - Optional array of SLA summary items
+ * @returns Mock SlaSummaryResponse
+ */
+export const createMockSlaSummaryResponse = (items?: any[]) => {
+  const defaultItems = [
+    createMockSlaSummaryItem(),
+    createMockSlaSummaryItem({
+      caseInstanceId: 'case-instance-456',
+      externalId: 'CASE-47934842',
+      slaStatus: MAESTRO_TEST_CONSTANTS.SLA_STATUS_OVERDUE,
+      instanceStatus: MAESTRO_TEST_CONSTANTS.SLA_INSTANCE_STATUS_CANCELLED
+    })
+  ];
+
+  const data = items ?? defaultItems;
+
+  return {
+    data,
+    pagination: {
+      totalCount: data.length,
+      pageNumber: MAESTRO_TEST_CONSTANTS.SLA_PAGE_NUMBER,
+      pageSize: MAESTRO_TEST_CONSTANTS.SLA_PAGE_SIZE,
+      totalPages: MAESTRO_TEST_CONSTANTS.SLA_TOTAL_PAGES,
+      hasNextPage: false,
+      hasPreviousPage: false
+    }
+  };
+};
+
+/**
  * Creates a mock Action Task object (for Human-in-the-Loop tasks)
  * @param overrides - Optional overrides for specific fields
  * @returns Mock Action Task object with id, title, and status
