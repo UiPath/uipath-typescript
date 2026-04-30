@@ -103,6 +103,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getExecutionHistory()` | `PIMS` |
 | `getStages()` | `PIMS OR.Execution.Read` |
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
+| `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Conversational Agent
 
