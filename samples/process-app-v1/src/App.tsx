@@ -12,8 +12,8 @@ const authConfig: UiPathSDKConfig = {
   clientId: import.meta.env.VITE_UIPATH_CLIENT_ID || 'your-client-id',
   orgName: import.meta.env.VITE_UIPATH_ORG_NAME || 'your-organization',
   tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME || 'your-tenant',
-  baseUrl: window.location.origin,
-  redirectUri: import.meta.env.VITE_UIPATH_REDIRECT_URI || window.location.origin,
+  baseUrl: 'https://staging.api.uipath.com',
+  redirectUri: window.location.origin + window.location.pathname,
   scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access',
 };
 
