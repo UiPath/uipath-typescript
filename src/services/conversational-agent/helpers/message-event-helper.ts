@@ -27,6 +27,7 @@ import type {
   MessageCompletedHandler,
   MessageEndHandler,
   ToolCallCompletedHandler,
+  ToolCallConfirmHandler,
   ToolCallStartEventWithId,
   ToolCallStartHandler,
   ToolCallStartHandlerAsync
@@ -55,6 +56,7 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   protected readonly _toolCallMap = new Map<string, ToolCallEventHelperImpl>();
   protected readonly _interruptStartHandlers = new Array<InterruptStartHandler>();
   protected readonly _interruptEndHandlers = new Array<InterruptEndHandler>();
+  protected readonly _toolCallConfirmHandlers = new Array<ToolCallConfirmHandler>();
 
   constructor(
     public readonly exchange: ExchangeEventHelper,
@@ -340,6 +342,25 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
   }
 
   /**
+   * Registers a handler for tool-call confirmation events. Fired when a peer
+   * responds to a tool call that was emitted with `requireConfirmation: true`.
+   *
+   * Fires at the message level before the event is delegated to the per-tool-call
+   * helper, so this handler runs even when no `ToolCallEventHelper` exists for the
+   * confirmed tool call (e.g. on the agent side after the originating helper has
+   * been cleaned up, or on the client side if no `onToolCallStart` is registered).
+   *
+   * @returns Cleanup function to remove the handler.
+   */
+  public onToolCallConfirm(cb: ToolCallConfirmHandler) {
+    this._toolCallConfirmHandlers.push(cb);
+    return () => {
+      const index = this._toolCallConfirmHandlers.indexOf(cb);
+      if (index >= 0) this._toolCallConfirmHandlers.splice(index, 1);
+    };
+  }
+
+  /**
    * Sends an interrupt start event.
    */
   public sendInterrupt(interruptId: string, startInterrupt: InterruptStartEvent) {
@@ -483,6 +504,17 @@ export class MessageEventHelperImpl extends MessageEventHelper {
     }
 
     if (messageEvent.toolCall) {
+      // Dispatch confirmToolCall at the message level (flat dispatch) before delegating
+      // to the per-tool-call helper. Needed because the tool-call helper may not exist
+      // for this id on the receiving side.
+      if (messageEvent.toolCall.confirmToolCall) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this._toolCallConfirmHandlers.forEach(cb => cb({
+          toolCallId: messageEvent.toolCall!.toolCallId,
+          confirmEvent: messageEvent.toolCall!.confirmToolCall!
+        }));
+      }
+
       let toolCallHelper = this._toolCallMap.get(messageEvent.toolCall.toolCallId);
       if (!toolCallHelper && this._toolCallStartHandlers.length > 0) {
         toolCallHelper = new ToolCallEventHelperImpl(this, messageEvent.toolCall.toolCallId, messageEvent.toolCall.startToolCall);

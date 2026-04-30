@@ -199,6 +199,74 @@ describe('ToolCallEventHelper', () => {
       cleanup();
       expect((toolCall as any)._endHandlers).toHaveLength(0);
     });
+
+    it('should register and unregister onToolCallConfirm handler', () => {
+      const { toolCall } = createToolCall();
+      const handler = vi.fn();
+      const cleanup = toolCall.onToolCallConfirm(handler);
+
+      expect((toolCall as any)._confirmHandlers).toHaveLength(1);
+      cleanup();
+      expect((toolCall as any)._confirmHandlers).toHaveLength(0);
+    });
+  });
+
+  describe('sendToolCallConfirm', () => {
+    it('should emit confirmToolCall with approved=true and input', () => {
+      const { emitSpy, toolCall } = createToolCall();
+
+      toolCall.sendToolCallConfirm({ approved: true, input: { query: 'edited' } });
+
+      expect(emitSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exchange: expect.objectContaining({
+            message: expect.objectContaining({
+              toolCall: expect.objectContaining({
+                toolCallId: TOOL_CALL_ID,
+                confirmToolCall: { approved: true, input: { query: 'edited' } },
+              }),
+            }),
+          }),
+        })
+      );
+    });
+
+    it('should emit confirmToolCall with approved=false', () => {
+      const { emitSpy, toolCall } = createToolCall();
+
+      toolCall.sendToolCallConfirm({ approved: false });
+
+      expect(emitSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exchange: expect.objectContaining({
+            message: expect.objectContaining({
+              toolCall: expect.objectContaining({
+                toolCallId: TOOL_CALL_ID,
+                confirmToolCall: { approved: false },
+              }),
+            }),
+          }),
+        })
+      );
+    });
+
+    it('should not mark the tool call as ended', () => {
+      const { toolCall } = createToolCall();
+
+      toolCall.sendToolCallConfirm({ approved: true, input: {} });
+
+      expect(toolCall.ended).toBe(false);
+      expect(toolCall.deleted).toBe(false);
+    });
+
+    it('should throw after the tool call has ended', () => {
+      const { toolCall } = createToolCall();
+      toolCall.sendToolCallEnd();
+
+      expect(() => toolCall.sendToolCallConfirm({ approved: false })).toThrow(
+        ConversationEventInvalidOperationError
+      );
+    });
   });
 
   describe('dispatch', () => {
@@ -261,6 +329,33 @@ describe('ToolCallEventHelper', () => {
       expect(errorEndSpy).toHaveBeenCalledWith(
         expect.objectContaining({ errorId: 'tc-err-1' })
       );
+    });
+
+    it('should dispatch confirmToolCall to confirm handlers', () => {
+      const { toolCall } = createToolCall();
+      const confirmSpy = vi.fn();
+      toolCall.onToolCallConfirm(confirmSpy);
+
+      toolCall.dispatch({
+        toolCallId: TOOL_CALL_ID,
+        confirmToolCall: { approved: true, input: { query: 'q' } },
+      });
+
+      expect(confirmSpy).toHaveBeenCalledWith({ approved: true, input: { query: 'q' } });
+      expect(toolCall.ended).toBe(false);
+    });
+
+    it('should not invoke end handlers when dispatching confirmToolCall', () => {
+      const { toolCall } = createToolCall();
+      const endSpy = vi.fn();
+      toolCall.onToolCallEnd(endSpy);
+
+      toolCall.dispatch({
+        toolCallId: TOOL_CALL_ID,
+        confirmToolCall: { approved: false },
+      });
+
+      expect(endSpy).not.toHaveBeenCalled();
     });
 
     it('should ignore events for different toolCallId', () => {

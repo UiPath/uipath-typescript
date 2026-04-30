@@ -474,6 +474,16 @@ describe('MessageEventHelper', () => {
       cleanup();
       expect((message as any)._interruptEndHandlers).toHaveLength(0);
     });
+
+    it('should register and unregister onToolCallConfirm handler', () => {
+      const { message } = createMessage();
+      const handler = vi.fn();
+      const cleanup = message.onToolCallConfirm(handler);
+
+      expect((message as any)._toolCallConfirmHandlers).toHaveLength(1);
+      cleanup();
+      expect((message as any)._toolCallConfirmHandlers).toHaveLength(0);
+    });
   });
 
   describe('dispatch', () => {
@@ -543,6 +553,76 @@ describe('MessageEventHelper', () => {
       expect(intEndSpy).toHaveBeenCalledWith(
         expect.objectContaining({ interruptId: 'int-1' })
       );
+    });
+
+    it('should dispatch confirmToolCall to message-level onToolCallConfirm handler', () => {
+      const { message } = createMessage();
+      const confirmSpy = vi.fn();
+      message.onToolCallConfirm(confirmSpy);
+
+      message.dispatch({
+        messageId: MESSAGE_ID,
+        toolCall: {
+          toolCallId: 'tc-confirm-1',
+          confirmToolCall: { approved: true, input: { v: 1 } },
+        },
+      });
+
+      expect(confirmSpy).toHaveBeenCalledWith({
+        toolCallId: 'tc-confirm-1',
+        confirmEvent: { approved: true, input: { v: 1 } },
+      });
+    });
+
+    it('should fire message-level onToolCallConfirm even when no per-tool-call helper exists', () => {
+      const { message } = createMessage();
+      const confirmSpy = vi.fn();
+      message.onToolCallConfirm(confirmSpy);
+
+      // No onToolCallStart registered; no per-tool-call helper is created.
+      message.dispatch({
+        messageId: MESSAGE_ID,
+        toolCall: {
+          toolCallId: 'tc-no-helper',
+          confirmToolCall: { approved: false },
+        },
+      });
+
+      expect(confirmSpy).toHaveBeenCalledWith({
+        toolCallId: 'tc-no-helper',
+        confirmEvent: { approved: false },
+      });
+      expect((message as any)._toolCallMap.size).toBe(0);
+    });
+
+    it('should fire message-level onToolCallConfirm before per-tool-call onToolCallConfirm', () => {
+      const { message } = createMessage();
+      const order: string[] = [];
+
+      message.onToolCallConfirm(() => order.push('message'));
+      message.onToolCallStart((tc) => {
+        tc.onToolCallConfirm(() => order.push('toolCall'));
+      });
+
+      // Create the per-tool-call helper via a start event
+      message.dispatch({
+        messageId: MESSAGE_ID,
+        toolCall: {
+          toolCallId: 'tc-order-1',
+          startToolCall: { toolName: 'search' },
+        },
+      });
+
+      // Dispatch a confirmation
+      message.dispatch({
+        messageId: MESSAGE_ID,
+        toolCall: {
+          toolCallId: 'tc-order-1',
+          confirmToolCall: { approved: true, input: {} },
+        },
+      });
+
+      expect(order).toEqual(['message', 'toolCall']);
     });
 
     it('should dispatch endMessage and mark ended and deleted', () => {

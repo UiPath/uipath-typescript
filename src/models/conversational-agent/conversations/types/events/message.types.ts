@@ -17,6 +17,7 @@ import type {
   MessageEvent,
   MessageStartEvent,
   MetaEvent,
+  ToolCallConfirmationEvent,
   ToolCallStartEvent
 } from './protocol.types';
 import type { CompletedContentPart, ContentPartStream } from './content-part.types';
@@ -340,6 +341,26 @@ export interface MessageStream {
    * ```
    */
   sendInterruptEnd(interruptId: string, endInterrupt: InterruptEndEvent): void;
+
+  /**
+   * Registers a handler for tool-call confirmation events on this message
+   *
+   * Fired when a peer responds to a tool call that was emitted with
+   * `requireConfirmation: true`. The handler runs at the message level, so it
+   * fires even if no per-tool-call stream exists for the confirmed `toolCallId`.
+   *
+   * @param cb - Callback receiving the toolCallId and the confirmation event
+   * @returns Cleanup function to remove the handler
+   *
+   * @example Handling a tool-call confirmation response
+   * ```typescript
+   * message.onToolCallConfirm(({ toolCallId, confirmEvent }) => {
+   *   if (confirmEvent.approved) executeTool(toolCallId, confirmEvent.input);
+   *   else cancelToolCall(toolCallId);
+   * });
+   * ```
+   */
+  onToolCallConfirm(cb: (args: { toolCallId: string; confirmEvent: ToolCallConfirmationEvent }) => void): () => void;
 
   // ==================== Content Part Management ====================
 

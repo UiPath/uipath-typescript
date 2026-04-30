@@ -7,7 +7,7 @@
  */
 
 import type { MakeRequired } from '..';
-import type { ErrorEndEvent, ErrorStartEvent, MetaEvent, ToolCallEndEvent, ToolCallEvent, ToolCallStartEvent } from './protocol.types';
+import type { ErrorEndEvent, ErrorStartEvent, MetaEvent, ToolCallConfirmationEvent, ToolCallEndEvent, ToolCallEvent, ToolCallStartEvent } from './protocol.types';
 
 /**
  * Aggregated data for a completed tool call
@@ -120,6 +120,24 @@ export interface ToolCallStream {
    */
   onToolCallEnd(cb: (endToolCall: ToolCallEndEvent) => void): () => void;
 
+  /**
+   * Registers a handler for tool call confirmation events. Fired when the
+   * peer responds to a tool call that was emitted with
+   * `requireConfirmation: true` on its start event.
+   *
+   * @param cb - Callback receiving the confirmation event
+   * @returns Cleanup function to remove the handler
+   *
+   * @example Handling a confirmation response (agent-side)
+   * ```typescript
+   * toolCall.onToolCallConfirm(({ approved, input }) => {
+   *   if (approved) executeTool(toolCall.startEvent.toolName, input);
+   *   else cancelToolCall();
+   * });
+   * ```
+   */
+  onToolCallConfirm(cb: (confirmToolCall: ToolCallConfirmationEvent) => void): () => void;
+
   // ==================== Sending ====================
 
   /**
@@ -135,6 +153,26 @@ export interface ToolCallStream {
    * ```
    */
   sendToolCallEnd(endToolCall?: ToolCallEndEvent): void;
+
+  /**
+   * Sends a tool call confirmation (approve or reject) for a tool call that
+   * was emitted with `requireConfirmation: true`. Replaces the legacy
+   * interrupt-based confirmation flow.
+   *
+   * @param confirmToolCall - The user's decision and (when approved) the
+   *   possibly-edited input the tool should execute with
+   *
+   * @example Approving a tool call
+   * ```typescript
+   * toolCall.sendToolCallConfirm({ approved: true, input: editedInput });
+   * ```
+   *
+   * @example Rejecting a tool call
+   * ```typescript
+   * toolCall.sendToolCallConfirm({ approved: false });
+   * ```
+   */
+  sendToolCallConfirm(confirmToolCall: ToolCallConfirmationEvent): void;
 
   // ==================== Advanced ====================
 

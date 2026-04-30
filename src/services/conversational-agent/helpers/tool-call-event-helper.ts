@@ -2,6 +2,7 @@ import type {
   MakeRequired,
   MetaEvent,
   ToolCall,
+  ToolCallConfirmationEvent,
   ToolCallEndEvent,
   ToolCallEvent,
   ToolCallStartEvent
@@ -12,6 +13,7 @@ import {
   ConversationEventValidationError,
   type ErrorEndEventOptions,
   type ErrorStartEventOptions,
+  type ToolCallConfirmationHandler,
   type ToolCallEndHandler
 } from './conversation-event-helper-common';
 import type { ToolCallStream } from '@/models/conversational-agent';
@@ -27,6 +29,7 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
 > implements ToolCallStream {
 
   protected readonly _endHandlers = new Array<ToolCallEndHandler>();
+  protected readonly _confirmHandlers = new Array<ToolCallConfirmationHandler>();
 
   constructor(
     public readonly message: MessageEventHelper,
@@ -104,6 +107,30 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
    */
   public onEndToolCall(cb: ToolCallEndHandler) {
     this.onToolCallEnd(cb);
+  }
+
+  /**
+   * Registers a handler for tool call confirmation events. Fired when the
+   * peer responds to a tool call that was emitted with `requireConfirmation`.
+   * @returns Cleanup function to remove the handler.
+   */
+  public onToolCallConfirm(cb: ToolCallConfirmationHandler) {
+    this._confirmHandlers.push(cb);
+    return () => {
+      const index = this._confirmHandlers.indexOf(cb);
+      if (index >= 0) this._confirmHandlers.splice(index, 1);
+    };
+  }
+
+  /**
+   * Sends a tool call confirmation (approve/reject) for a tool call that was
+   * emitted with `requireConfirmation: true`. Replaces the legacy
+   * `sendInterruptEnd` flow for tool call confirmation.
+   * @throws Error if tool call has already ended.
+   */
+  public sendToolCallConfirm(confirmToolCall: ToolCallConfirmationEvent) {
+    this.assertNotEnded();
+    this.emit({ confirmToolCall });
   }
 
   /**
@@ -192,6 +219,11 @@ export class ToolCallEventHelperImpl extends ToolCallEventHelper {
 
     if (toolCallEvent.toolCallError?.endError) {
       this.dispatchErrorEnd(toolCallEvent.toolCallError.errorId, toolCallEvent.toolCallError.endError);
+    }
+
+    if (toolCallEvent.confirmToolCall) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this._confirmHandlers.forEach(cb => cb(toolCallEvent.confirmToolCall!));
     }
 
     if (toolCallEvent.endToolCall) {
