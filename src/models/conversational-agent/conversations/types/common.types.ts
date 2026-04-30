@@ -135,6 +135,13 @@ export interface ExternalValue {
 export type InlineOrExternalValue<T> = InlineValue<T> | ExternalValue;
 
 /**
+ * Input arguments passed in to the execution of the agent on each exchange. The input arguments are
+ * expected to match the input-schema defined in the Agent definition. Currently, only inline values
+ * are supported and the total serialized JSON payload must be less than 4,000 characters.
+ */
+export type AgentInput = InlineValue<JSONObject>;
+
+/**
  * Tool call input value type.
  */
 export type ToolCallInputValue = JSONObject;

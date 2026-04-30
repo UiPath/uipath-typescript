@@ -18,6 +18,8 @@ import { PaginatedResponse } from '../../../../src/utils/pagination';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 import { JOB_TEST_CONSTANTS } from '../../../utils/constants/jobs';
 import { JOB_ENDPOINTS, ORCHESTRATOR_ATTACHMENT_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { StopStrategy } from '../../../../src/models/orchestrator/processes.types';
+import { JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../../src/models/orchestrator/jobs.constants';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -173,6 +175,8 @@ describe('JobService Unit Tests', () => {
 
       expect(transformed.getOutput).toBeDefined();
       expect(typeof transformed.getOutput).toBe('function');
+      expect(transformed.stop).toBeDefined();
+      expect(typeof transformed.stop).toBe('function');
     });
   });
 
@@ -215,7 +219,7 @@ describe('JobService Unit Tests', () => {
       expect((result as any).LastModificationTime).toBeUndefined();
     });
 
-    it('should attach getOutput method to result', async () => {
+    it('should attach bound methods to result', async () => {
       const mockRawJob = createMockRawJob();
       mockApiClient.get.mockResolvedValueOnce(mockRawJob);
 
@@ -223,6 +227,8 @@ describe('JobService Unit Tests', () => {
 
       expect(result.getOutput).toBeDefined();
       expect(typeof result.getOutput).toBe('function');
+      expect(result.stop).toBeDefined();
+      expect(typeof result.stop).toBe('function');
     });
 
     it('should pass expand and select options with OData prefix', async () => {
@@ -492,6 +498,286 @@ describe('JobService Unit Tests', () => {
       await expect(jobService.getOutput(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(
         TEST_CONSTANTS.ERROR_MESSAGE
       );
+    });
+  });
+
+  describe('stop', () => {
+    it('should stop a single job with default soft stop strategy', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.stop(
+        [JOB_TEST_CONSTANTS.JOB_KEY],
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+          filter: `key in ('${JOB_TEST_CONSTANTS.JOB_KEY}')`,
+          select: 'id,key',
+          pageSize: 1,
+        })
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.STOP,
+        { jobIds: [JOB_TEST_CONSTANTS.JOB_ID], strategy: StopStrategy.SoftStop },
+        expect.any(Object)
+      );
+    });
+
+    it('should stop multiple jobs with Kill strategy', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [
+          { key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID },
+          { key: JOB_TEST_CONSTANTS.JOB_KEY_2, id: JOB_TEST_CONSTANTS.JOB_ID_2 },
+        ],
+      });
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.stop(
+        [JOB_TEST_CONSTANTS.JOB_KEY, JOB_TEST_CONSTANTS.JOB_KEY_2],
+        TEST_CONSTANTS.FOLDER_ID,
+        { strategy: StopStrategy.Kill }
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.STOP,
+        {
+          jobIds: [JOB_TEST_CONSTANTS.JOB_ID, JOB_TEST_CONSTANTS.JOB_ID_2],
+          strategy: StopStrategy.Kill,
+        },
+        expect.any(Object)
+      );
+    });
+
+    it('should return immediately for empty job keys array', async () => {
+      await jobService.stop([], TEST_CONSTANTS.FOLDER_ID);
+
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw when job keys are not found', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [],
+      });
+
+      await expect(
+        jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOBS_NOT_FOUND_FOR_KEYS);
+    });
+
+    it('should deduplicate job keys for resolution and return unique IDs', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.stop(
+        [JOB_TEST_CONSTANTS.JOB_KEY, JOB_TEST_CONSTANTS.JOB_KEY],
+        TEST_CONSTANTS.FOLDER_ID
+      );
+
+      // Only one getAll call with deduplicated keys
+      expect(PaginationHelpers.getAll).toHaveBeenCalledTimes(1);
+    });
+
+    it('should resolve keys in multiple chunks when count exceeds chunk size', async () => {
+      const chunkSize = JOB_KEY_RESOLUTION_CHUNK_SIZE;
+      const keys = Array.from(
+        { length: chunkSize + 1 },
+        (_, i) => `${i.toString().padStart(8, '0')}-bbbb-cccc-dddd-eeeeeeeeeeee`
+      );
+
+      // Chunk 1: first 50 keys
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: keys.slice(0, chunkSize).map((k, i) => ({ key: k, id: i + 1 })),
+      });
+      // Chunk 2: remaining 1 key
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: keys[chunkSize], id: chunkSize + 1 }],
+      });
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.stop(keys, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], 0)
+      ).rejects.toThrow('folderId is required for stop');
+    });
+
+    it('should propagate resolution API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+    });
+
+    it('should propagate stop API errors', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.stop([JOB_TEST_CONSTANTS.JOB_KEY], TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('resume', () => {
+    it('should resume a suspended job', async () => {
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESUME,
+        { jobKey: JOB_TEST_CONSTANTS.JOB_KEY },
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
+          }),
+        })
+      );
+    });
+
+    it('should stringify and pass input arguments when provided', async () => {
+      mockApiClient.post.mockResolvedValueOnce(undefined);
+
+      await jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID, {
+        inputArguments: { approved: true },
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESUME,
+        {
+          jobKey: JOB_TEST_CONSTANTS.JOB_KEY,
+          inputArguments: '{"approved":true}',
+        },
+        expect.any(Object)
+      );
+    });
+
+    it('should throw validation error when jobKey is missing', async () => {
+      await expect(
+        jobService.resume('', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow('jobKey is required for resume');
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, 0)
+      ).rejects.toThrow('folderId is required for resume');
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_RESUME_FAILED);
+      mockApiClient.post.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.resume(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_RESUME_FAILED);
+    });
+  });
+
+  describe('restart', () => {
+    it('should resolve job key and restart with transformed response', async () => {
+      // Key resolution via getAll
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      // Restart API call
+      const mockRawJob = createMockRawJob({ State: 'Pending' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      // Verify key resolution
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+          filter: `key in ('${JOB_TEST_CONSTANTS.JOB_KEY}')`,
+          select: 'id,key',
+          pageSize: 1,
+        })
+      );
+
+      // Verify restart call with resolved numeric ID
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        JOB_ENDPOINTS.RESTART,
+        { jobId: JOB_TEST_CONSTANTS.JOB_ID },
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'X-UIPATH-OrganizationUnitId': String(TEST_CONSTANTS.FOLDER_ID),
+          }),
+        })
+      );
+
+      expect(result).toBeDefined();
+      expect(result.key).toBe(JOB_TEST_CONSTANTS.JOB_KEY);
+
+      // Verify transformed camelCase fields have expected values
+      expect(result.createdTime).toBe(JOB_TEST_CONSTANTS.CREATED_TIME);
+      expect(result.processName).toBe(JOB_TEST_CONSTANTS.PROCESS_NAME);
+
+      // Verify original PascalCase fields are absent
+      expect((result as any).CreationTime).toBeUndefined();
+      expect((result as any).ReleaseName).toBeUndefined();
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+    });
+
+    it('should attach bound methods to the returned job', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      const mockRawJob = createMockRawJob({ State: 'Pending' });
+      mockApiClient.post.mockResolvedValueOnce(mockRawJob);
+
+      const result = await jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID);
+
+      expect(typeof result.getOutput).toBe('function');
+      expect(typeof result.stop).toBe('function');
+      expect(typeof result.resume).toBe('function');
+      expect(typeof result.restart).toBe('function');
+    });
+
+    it('should throw validation error when jobKey is missing', async () => {
+      await expect(
+        jobService.restart('', TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow('jobKey is required for restart');
+    });
+
+    it('should throw validation error when folderId is missing', async () => {
+      await expect(
+        jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, 0)
+      ).rejects.toThrow('folderId is required for restart');
+    });
+
+    it('should handle API errors', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValueOnce({
+        items: [{ key: JOB_TEST_CONSTANTS.JOB_KEY, id: JOB_TEST_CONSTANTS.JOB_ID }],
+      });
+      const error = createMockError(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
+      mockApiClient.post.mockRejectedValueOnce(error);
+
+      await expect(
+        jobService.restart(JOB_TEST_CONSTANTS.JOB_KEY, TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(JOB_TEST_CONSTANTS.ERROR_JOB_NOT_FOUND);
     });
   });
 });

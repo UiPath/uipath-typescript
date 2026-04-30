@@ -4,6 +4,7 @@
  */
 
 import {
+  AgentInput,
   CitationSource,
   InlineOrExternalValue,
   InterruptType,
@@ -383,5 +384,9 @@ export interface RawConversationGetResponse {
    * Whether the conversation's job is running locally.
    */
   isLocalJobExecution?: boolean;
+  /**
+   * Optional agent input arguments for the conversation.
+   */
+  agentInput?: AgentInput;
 }
 

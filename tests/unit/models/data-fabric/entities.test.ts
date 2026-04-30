@@ -37,6 +37,7 @@ describe("Entity Models", () => {
       deleteRecordsById: vi.fn(),
       queryRecordsById: vi.fn(),
       importRecordsById: vi.fn(),
+      deleteRecordById: vi.fn(),
       downloadAttachment: vi.fn(),
       uploadAttachment: vi.fn(),
       deleteAttachment: vi.fn(),
@@ -488,6 +489,36 @@ describe("Entity Models", () => {
       });
     });
 
+    describe('entity.deleteRecord()', () => {
+      it('should call service.deleteRecordById with entity id and record id', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        mockService.deleteRecordById = vi.fn().mockResolvedValue(undefined);
+
+        await entity.deleteRecord(ENTITY_TEST_CONSTANTS.RECORD_ID);
+
+        expect(mockService.deleteRecordById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        );
+      });
+
+      it('should throw error if entity id is undefined', async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.deleteRecord(ENTITY_TEST_CONSTANTS.RECORD_ID)).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+      });
+
+      it('should throw error if record id is empty', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.deleteRecord('')).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED);
+      });
+    });
+
     describe("entity.getAllRecords()", () => {
       it("should call entity.getAllRecords without options", async () => {
         const entityData = createBasicEntity();
@@ -765,6 +796,7 @@ describe("Entity Models", () => {
       expect(typeof entity.updateRecord).toBe("function");
       expect(typeof entity.updateRecords).toBe("function");
       expect(typeof entity.deleteRecords).toBe("function");
+      expect(typeof entity.deleteRecord).toBe("function");
       expect(typeof entity.getAllRecords).toBe("function");
       expect(typeof entity.getRecord).toBe("function");
       expect(typeof entity.downloadAttachment).toBe("function");
@@ -825,3 +857,4 @@ describe("Entity Models", () => {
     });
   });
 });
+

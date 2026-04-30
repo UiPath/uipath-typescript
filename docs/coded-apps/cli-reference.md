@@ -12,7 +12,7 @@ uip tools install codedapp
 ```
 
 !!! info "Minimum versions"
-    Coded Apps requires **CLI version >= 0.1.21** and **codedapp tool version >= 0.1.14**.
+    Coded Apps requires **CLI version >= 0.9.0** and **codedapp tool version >= 0.9.0**.
 
     Check your installed CLI version:
 
@@ -89,7 +89,7 @@ $ uip codedapp pack <dist> [options]
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
 | `-n, --name` | string | Package name | — |
-| `--version` | string | Package version | `1.0.0` |
+| `-v, --version` | string | Package version | `1.0.0` |
 | `-o, --output` | string | Output directory | `./.uipath` |
 | `--author` | string | Package author | `UiPath Developer` |
 | `--description` | string | Package description | — |
@@ -133,7 +133,7 @@ $ uip codedapp publish [options]
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
 | `-n, --name` | string | Package name (non-interactive) | — |
-| `--version` | string | Package version (requires `--name`) | — |
+| `-v, --version` | string | Package version (requires `--name`) | — |
 | `-t, --type` | string | App type: `Web` or `Action` | `Web` |
 | `--uipath-dir` | string | UiPath directory containing packages | `./.uipath` |
 | `--base-url` | string | UiPath base URL | — |
@@ -196,7 +196,7 @@ When updating a deployed app, just repeat the build-pack-publish-deploy cycle wi
 # 1. Rebuild
 npm run build
 # 2. Pack with new version
-uip codedapp pack dist -n my-webapp --version 2.0.0
+uip codedapp pack dist -n <appName> --version 2.0.0
 # 3. Publish
 uip codedapp publish
 # 4. Deploy (auto-detects upgrade)

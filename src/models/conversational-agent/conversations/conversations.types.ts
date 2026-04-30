@@ -3,6 +3,7 @@
  */
 
 import type { SortOrder, ConversationJobStartOverrides, RawConversationGetResponse } from './types/core.types';
+import type { AgentInput } from './types/common.types';
 import type { ConversationGetResponse } from './conversations.models';
 import type { PaginationOptions } from '@/utils/pagination/types';
 import type { LogLevel } from '@/core/websocket';
@@ -57,6 +58,8 @@ export interface ConversationCreateOptions {
   traceId?: string;
   /** Optional configuration for job start behavior */
   jobStartOverrides?: ConversationJobStartOverrides;
+  /** Input arguments for the agent */
+  agentInput?: AgentInput;
 }
 
 export interface ConversationUpdateOptions {
@@ -68,6 +71,8 @@ export interface ConversationUpdateOptions {
   jobKey?: string;
   /** Whether the conversation's job is running locally */
   isLocalJobExecution?: boolean;
+  /** Input arguments for the agent */
+  agentInput?: AgentInput;
 }
 
 export type ConversationGetAllOptions = PaginationOptions & {

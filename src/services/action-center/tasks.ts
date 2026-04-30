@@ -75,15 +75,15 @@ export class TaskService extends BaseService implements TaskServiceModel {
   }
 
   /**
-   * Gets users in the given folder who have Tasks.View and Tasks.Edit permissions
+   * Gets task users (users, robots, groups etc) in the given folder who have Tasks.View and Tasks.Edit permissions
    * 
    * The method returns either:
-   * - An array of users (when no pagination parameters are provided)
+   * - An array of task users (when no pagination parameters are provided)
    * - A paginated result with navigation cursors (when any pagination parameter is provided)
    * 
-   * @param folderId - The folder ID to get users from
+   * @param folderId - The folder ID to get task users from
    * @param options - Optional query and pagination parameters
-   * @returns Promise resolving to an array of users or paginated result
+   * @returns Promise resolving to an array of task users or paginated result
    * 
    * @example
    * ```typescript
@@ -94,7 +94,7 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * // Standard array return
    * const users = await tasks.getUsers(123);
    *
-   * // Get users with filtering
+   * // Get task users with filtering
    * const users = await tasks.getUsers(123, {
    *   filter: "name eq 'abc'"
    * });

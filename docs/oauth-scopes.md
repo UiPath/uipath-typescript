@@ -16,6 +16,9 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
 | `getById()` | `OR.Jobs` or `OR.Jobs.Read` |
 | `getOutput()` | `OR.Jobs` or `OR.Jobs.Read`, `OR.Folders` or `OR.Folders.Read` |
+| `stop()` | `OR.Jobs` |
+| `resume()` | `OR.Jobs` or `OR.Jobs.Write` |
+| `restart()` | `OR.Jobs` |
 
 ## Attachments
 
@@ -44,6 +47,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `insertRecordById()` / `insertRecord()` | `DataFabric.Data.Write` |
 | `insertRecordsById()` / `insertRecords()` | `DataFabric.Data.Write` |
 | `deleteRecordsById()` / `deleteRecords()` | `DataFabric.Data.Write` |
+| `deleteRecordById()` / `deleteRecord()` | `DataFabric.Data.Write` |
 | `updateRecordById()` / `updateRecord()` | `DataFabric.Data.Write` |
 | `updateRecordsById()` / `updateRecords()` | `DataFabric.Data.Write` |
 | `downloadAttachment()` | `DataFabric.Data.Read` |
@@ -150,6 +154,12 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getSettings()` | `OR.Users` or `OR.Users.Read` |
 | `updateSettings()` | `OR.Users` |
+
+### Feedback
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `Traces.Api` |
 
 ## Processes
 

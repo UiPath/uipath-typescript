@@ -15,6 +15,8 @@
 - **Mock factories must return `Raw{Entity}GetResponse`**, not `{Entity}GetResponse`** — mock factories like `createBasicJob()` produce plain data without bound methods. Methods are attached by the service layer via `create{Entity}WithMethods()`, not by mocks. Using the combined type causes compile errors for missing method properties.
 - **Shared mock setup belongs in `beforeEach`**, not inline in individual tests** — mock creation like `mockApiClient.getValidToken = vi.fn()` must be in the shared setup block, not duplicated inside each test.
 - **NEVER** leave unused mock methods in mock objects — dead mocks obscure what the test actually exercises and accumulate as the API evolves.
+- **NEVER** access private methods via `as any` in tests (e.g., `(service as any)._privateMethod()`). This violates the no-`any` rule and creates brittle tests tied to implementation internals. Test behaviour through the public API instead, or extract the logic to a module-level pure function that can be imported and tested directly.
+- Use `let variable!: Type` (definite assignment assertion) for variables initialized in `beforeAll`, not `let variable: Type | undefined`. The `!` signals TypeScript that the value is guaranteed before any test runs, eliminating null-checks throughout the test bodies. The `afterAll` guard (`if (!variable) return`) still works at runtime.
 - **NEVER** wrap integration test API calls in try/catch — let errors propagate naturally. Silent catches mask real failures and make tests pass when they should fail.
 - **NEVER** create a separate `afterAll` per describe block if the file already has one — reuse the existing cleanup block by pushing to the shared `createdRecordIds` array.
 - **Coverage**: 80% minimum for new code, 100% for critical paths (auth, API calls).
@@ -28,6 +30,7 @@ Every new method must also have an integration test in `tests/integration/shared
 - Use `registerResource()` from `tests/integration/utils/cleanup.ts` for cleanup tracking
 - Use `generateRandomString()` from `tests/integration/utils/helpers.ts` for unique test data
 - Tests run in both `v0` and `v1` init modes via `describe.each(modes)` — **only if the service is registered in both modes in `unified-setup.ts`**. New services that only support `v1` init should use `['v1']` only.
+- **Always `throw new Error()` when test preconditions are not met** — whether it's missing config (e.g., no `folderId`) or missing test data (e.g., no running jobs). Never use `console.warn()` + `return` to silently skip — silent skips hide unrunnable tests and make CI green when tests aren't actually exercised.
 - **NEVER** write redundant integration tests — each test must cover a distinct code path, error scenario, or response shape aspect.
 - **Include a transform validation test** for new methods with a transform pipeline. This test should verify: (a) transformed camelCase fields exist and have values (`job.createdTime`, `job.processName`), AND (b) original PascalCase API fields are absent (`(job as any).CreationTime` is `undefined`, `(job as any).ReleaseName` is `undefined`). This is a separate test from the basic "should retrieve by ID" test — it validates the SDK transform layer against the live API. Note: existing integration tests don't yet follow this pattern, but unit tests do (Assets, Queues, ChoiceSets). Extending it to integration tests catches mismatches between the Swagger spec assumptions and the live API response.
 
@@ -52,6 +55,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - **Add a one-line description of what the response includes** beyond the method signature (e.g., "Returns the full job details including state, timing, and input/output arguments. Use `expand` to include related entities like Robot, Machine, or Release").
 - **NEVER** reference unrelated parameters in JSDoc examples — keep examples focused on the method being documented. If `getOutput()` doesn't accept `folderId`, don't show `folderId` in its example.
 - **Show bare minimum call first** in the first `@example`, then a second example with filtering/options. Never use `$` prefix on OData params in examples (`expand` not `$expand`).
+- **NEVER** assign a `void` return to a variable in JSDoc examples — if a method returns `Promise<void>`, write `await service.method()` not `const result = await service.method()`. Assigning void implies the return value is usable, which misleads users.
 - **Add JSDoc to non-obvious enum values** — if an enum has values whose meaning isn't clear from the name alone, add a brief comment to each value.
 
 ## Post-implementation verification checklist

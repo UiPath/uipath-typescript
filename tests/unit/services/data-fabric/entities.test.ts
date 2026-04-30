@@ -120,6 +120,7 @@ describe("EntityService Unit Tests", () => {
       expect(typeof result.updateRecord).toBe("function");
       expect(typeof result.updateRecords).toBe("function");
       expect(typeof result.deleteRecords).toBe("function");
+      expect(typeof result.deleteRecord).toBe("function");
       expect(typeof result.getAllRecords).toBe("function");
     });
 
@@ -315,6 +316,7 @@ describe("EntityService Unit Tests", () => {
         expect(typeof entity.insertRecords).toBe("function");
         expect(typeof entity.updateRecords).toBe("function");
         expect(typeof entity.deleteRecords).toBe("function");
+        expect(typeof entity.deleteRecord).toBe("function");
         expect(typeof entity.getAllRecords).toBe("function");
       });
 
@@ -1127,6 +1129,35 @@ describe("EntityService Unit Tests", () => {
           ENTITY_TEST_CONSTANTS.RECORD_ID,
         ]),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('deleteRecordById', () => {
+    it('should delete a single record successfully', async () => {
+      mockApiClient.delete.mockResolvedValue(true);
+
+      await entityService.deleteRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        ),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      await expect(entityService.deleteRecordById(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        ENTITY_TEST_CONSTANTS.RECORD_ID
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

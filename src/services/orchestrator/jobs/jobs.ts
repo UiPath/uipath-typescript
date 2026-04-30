@@ -1,10 +1,10 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions } from '../../../models/orchestrator/jobs.types';
+import { RawJobGetResponse, JobGetAllOptions, JobGetByIdOptions, JobStopOptions, JobResumeOptions } from '../../../models/orchestrator/jobs.types';
 import { JobServiceModel, JobGetResponse, createJobWithMethods } from '../../../models/orchestrator/jobs.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { JOB_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PAGINATION, ODATA_OFFSET_PARAMS, ODATA_PREFIX } from '../../../utils/constants/common';
-import { JobMap } from '../../../models/orchestrator/jobs.constants';
+import { JobMap, JOB_KEY_RESOLUTION_CHUNK_SIZE } from '../../../models/orchestrator/jobs.constants';
 import { AttachmentService } from '../attachments/attachments';
 import { ValidationError, ServerError } from '../../../core/errors';
 import { ErrorFactory } from '../../../core/errors/error-factory';
@@ -16,6 +16,7 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import type { IUiPath } from '../../../core/types';
+import { StopStrategy } from '../../../models/orchestrator/processes.types';
 
 /**
  * Service for interacting with UiPath Orchestrator Jobs API
@@ -212,6 +213,151 @@ export class JobService extends FolderScopedService implements JobServiceModel {
   }
 
   /**
+   * Stops one or more jobs by their UUID keys.
+   *
+   * Sends a stop request for the specified jobs to the Orchestrator. Throws if any keys cannot be resolved.
+   *
+   * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
+   * @param folderId - The folder ID where the jobs reside (required)
+   * @param options - Optional {@link JobStopOptions} including stop strategy
+   * @returns Promise that resolves when the jobs are stopped successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * // Stop a single job with default soft stop
+   * await jobs.stop([<jobKey>], <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { StopStrategy } from '@uipath/uipath-typescript/jobs';
+   *
+   * // Force-kill multiple jobs
+   * await jobs.stop(
+   *   [<jobKey1>, <jobKey2>],
+   *   <folderId>,
+   *   { strategy: StopStrategy.Kill }
+   * );
+   * ```
+   */
+  @track('Jobs.Stop')
+  async stop(
+    jobKeys: string[],
+    folderId: number,
+    options?: JobStopOptions
+  ): Promise<void> {
+    if (jobKeys.length === 0) {
+      return;
+    }
+
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for stop' });
+    }
+
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    const strategy = options?.strategy ?? StopStrategy.SoftStop;
+
+    const jobIds = await this.resolveJobKeys(jobKeys, folderId);
+
+    await this.stopJobsByIds(jobIds, strategy, headers);
+  }
+
+  /**
+   * Resumes a suspended job.
+   *
+   * Sends a resume request to a job that is currently in the `Suspended` state.
+   * The job transitions to `Resumed` and then to `Running` as it continues execution. Optionally pass
+   * input arguments to provide data for the resumed workflow.
+   *
+   * @param jobKey - The unique key (GUID) of the suspended job to resume
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional parameters including input arguments
+   * @returns Promise that resolves when the job is resumed successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * // Resume a suspended job
+   * await jobs.resume(<jobKey>, <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Resume with input arguments
+   * await jobs.resume(<jobKey>, <folderId>, {
+   *   inputArguments: { approved: true }
+   * });
+   * ```
+   */
+  @track('Jobs.Resume')
+  async resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<void> {
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for resume' });
+    }
+
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for resume' });
+    }
+
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+    const body: Record<string, unknown> = { jobKey };
+
+    if (options?.inputArguments) {
+      body.inputArguments = JSON.stringify(options.inputArguments);
+    }
+
+    await this.post(
+      JOB_ENDPOINTS.RESUME,
+      body,
+      { headers }
+    );
+  }
+
+  /**
+   * Restarts a job in a final state (Successful, Faulted, or Stopped).
+   *
+   * Creates a **new** job execution from a previously successful, faulted, or stopped job.
+   * The new job has its own unique `key`, starts in `Pending` state, and uses
+   * the same process and input arguments as the original job.
+   *
+   * To monitor the new job's progress, poll with {@link getById}
+   * using the returned job's key until the state reaches a final value.
+   *
+   * @param jobKey - The unique key (GUID) of the job to restart
+   * @param folderId - The folder ID where the job resides
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
+   *
+   * @example
+   * ```typescript
+   * // Restart a faulted job
+   * const newJob = await jobs.restart(<jobKey>, <folderId>);
+   * console.log(newJob.state); // 'Pending'
+   * console.log(newJob.key);   // new job key (different from original)
+   * ```
+   */
+  @track('Jobs.Restart')
+  async restart(jobKey: string, folderId: number): Promise<JobGetResponse> {
+    if (!jobKey) {
+      throw new ValidationError({ message: 'jobKey is required for restart' });
+    }
+
+    if (!folderId) {
+      throw new ValidationError({ message: 'folderId is required for restart' });
+    }
+
+    const [jobId] = await this.resolveJobKeys([jobKey], folderId);
+    const headers = createHeaders({ [FOLDER_ID]: folderId });
+
+    const response = await this.post<Record<string, unknown>>(
+      JOB_ENDPOINTS.RESTART,
+      { jobId },
+      { headers }
+    );
+
+    const rawJob = transformData(pascalToCamelCaseKeys(response.data) as RawJobGetResponse, JobMap);
+    return createJobWithMethods(rawJob, this);
+  }
+
+  /**
    * Downloads the output file content via the Attachments API.
    * 1. Fetches blob access info from the attachment using AttachmentService
    * 2. Downloads content from the presigned blob URI
@@ -251,5 +397,62 @@ export class JobService extends FolderScopedService implements JobServiceModel {
     } catch {
       throw new ServerError({ message: 'Failed to parse job output file as JSON' });
     }
+  }
+
+  /**
+   * Resolves job UUID keys to integer IDs via the getAll method.
+   * Chunks keys into batches to avoid URL length limits.
+   */
+  private async resolveJobKeys(
+    jobKeys: string[],
+    folderId: number
+  ): Promise<number[]> {
+    const uniqueKeys = [...new Set(jobKeys)];
+    const keyToIdMap = new Map<string, number>();
+
+    const chunks: string[][] = [];
+    for (let i = 0; i < uniqueKeys.length; i += JOB_KEY_RESOLUTION_CHUNK_SIZE) {
+      chunks.push(uniqueKeys.slice(i, i + JOB_KEY_RESOLUTION_CHUNK_SIZE));
+    }
+
+    const results = await Promise.all(
+      chunks.map((chunk) => {
+        const filterValues = chunk.map((key) => `'${key}'`).join(',');
+        return this.getAll({
+          folderId,
+          filter: `key in (${filterValues})`,
+          select: 'id,key',
+          pageSize: chunk.length,
+        });
+      })
+    );
+
+    for (const response of results) {
+      for (const job of response.items) {
+        keyToIdMap.set(job.key, job.id);
+      }
+    }
+
+    const missingKeys = uniqueKeys.filter((key) => !keyToIdMap.has(key));
+    if (missingKeys.length > 0) {
+      throw new ValidationError({ message: `Jobs not found for keys: ${missingKeys.join(', ')}` });
+    }
+
+    return uniqueKeys.map((key) => keyToIdMap.get(key)!);
+  }
+
+  /**
+   * Calls the StopJobs OData action with resolved integer IDs.
+   */
+  private async stopJobsByIds(
+    jobIds: number[],
+    strategy: StopStrategy,
+    headers: Record<string, string>
+  ): Promise<void> {
+    await this.post(
+      JOB_ENDPOINTS.STOP,
+      { jobIds, strategy },
+      { headers }
+    );
   }
 }
