@@ -1,5 +1,5 @@
 import { BaseService } from '../../base';
-import { CollectionResponse, RequestOptions } from '../../../models/common/types';
+import { RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
   ProcessGetAllOptions,
@@ -8,12 +8,13 @@ import {
   ProcessGetByIdOptions
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
-import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
+import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { ProcessMap } from '../../../models/orchestrator/processes.constants';
 import { FOLDER_ID } from '../../../utils/constants/headers';
 import { PROCESS_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_PAGINATION, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { startProcessRequest } from './helpers';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
@@ -124,34 +125,12 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
    */
   @track('Processes.Start')
   async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
-
-    // Transform SDK field names to API field names (e.g., processKey → releaseKey)
-    const apiRequest = transformRequest(request, ProcessMap);
-
-    // Create the request object according to API spec
-    const requestBody = {
-      startInfo: apiRequest
-    };
-
-    // Prefix all query parameter keys with '$' for OData
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
-    const response = await this.post<CollectionResponse<ProcessStartResponse>>(
-      PROCESS_ENDPOINTS.START_PROCESS,
-      requestBody,
-      { 
-        params: apiOptions,
-        headers
-      }
+    return startProcessRequest(
+      this.post.bind(this),
+      request,
+      createHeaders({ [FOLDER_ID]: folderId }),
+      options
     );
-    
-    const transformedProcess = response.data?.value.map(process => 
-      transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
-    );
-
-    return transformedProcess;
   }
 
   /**
