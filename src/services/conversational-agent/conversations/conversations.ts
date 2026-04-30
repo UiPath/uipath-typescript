@@ -35,7 +35,12 @@ import { ConversationMap, createConversationWithMethods } from '@/models/convers
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
 import { CONVERSATION_ENDPOINTS, ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
-import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
+import {
+  CONVERSATIONAL_SURFACE_NAME,
+  CONVERSATIONAL_SURFACE_VERSION,
+  EXTERNAL_USER_ID,
+} from '@/utils/constants/headers';
+import { createHeaders } from '@/utils/http/headers';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
@@ -101,7 +106,12 @@ export class ConversationService extends BaseService implements ConversationServ
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    super(instance, options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined);
+    const defaultHeaders = createHeaders({
+      [EXTERNAL_USER_ID]: options?.externalUserId,
+      [CONVERSATIONAL_SURFACE_NAME]: options?.surfaceName,
+      [CONVERSATIONAL_SURFACE_VERSION]: options?.surfaceVersion,
+    });
+    super(instance, Object.keys(defaultHeaders).length > 0 ? defaultHeaders : undefined);
 
     this._sessionManager = new SessionManager(instance, options);
     this._exchangeService = new ExchangeService(instance, options);
