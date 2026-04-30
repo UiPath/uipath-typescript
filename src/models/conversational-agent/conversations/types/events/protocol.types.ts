@@ -381,6 +381,34 @@ export interface ToolCallStartEvent {
    * Optional metadata pertaining to the tool call.
    */
   metaData?: MetaData;
+  /**
+   * Indicates that the tool call requires user confirmation before execution.
+   * When true, the client should render a confirmation UI and respond with a
+   * `confirmToolCall` event on the same tool call.
+   */
+  requireConfirmation?: boolean;
+  /**
+   * JSON schema describing the tool's input parameters. Present when
+   * `requireConfirmation` is true so the client can render an editable form.
+   */
+  inputSchema?: JSONValue;
+}
+
+/**
+ * Sent by the client to approve or reject a tool call that was emitted with
+ * `requireConfirmation: true`. Carries the user's decision and, when approved,
+ * the (possibly edited) input the tool should execute with.
+ */
+export interface ToolCallConfirmationEvent {
+  /**
+   * Whether the user approved the tool call.
+   */
+  approved: boolean;
+  /**
+   * The (possibly edited) input parameters for the tool call. Required when
+   * `approved` is true.
+   */
+  input?: JSONValue;
 }
 
 /**
@@ -446,6 +474,11 @@ export interface ToolCallEvent {
    * Signals the end of a tool call.
    */
   endToolCall?: ToolCallEndEvent;
+  /**
+   * Signals the user's approve/reject decision for a tool call that was
+   * emitted with `requireConfirmation: true`.
+   */
+  confirmToolCall?: ToolCallConfirmationEvent;
   /**
    * Allows additional events to be sent in the context of the enclosing event stream.
    */

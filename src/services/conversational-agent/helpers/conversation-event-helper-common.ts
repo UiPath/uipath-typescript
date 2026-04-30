@@ -23,6 +23,7 @@ import type {
   SessionStartedEvent,
   SessionStartEvent,
   Simplify,
+  ToolCallConfirmationEvent,
   ToolCallEndEvent,
   ToolCallStartEvent
 } from '@/models/conversational-agent';
@@ -76,6 +77,8 @@ export type SessionStartHandlerAsync = (session: SessionEventHelper) => Promise<
 export type ToolCallEndHandler = (endToolCall: ToolCallEndEvent) => void;
 export type ToolCallStartHandler = (toolCall: ToolCallEventHelper) => void;
 export type ToolCallStartHandlerAsync = (toolCall: ToolCallEventHelper) => Promise<ToolCallEndEvent | void>;
+export type ToolCallConfirmationHandler = (confirmToolCall: ToolCallConfirmationEvent) => void;
+export type ToolCallConfirmHandler = (args: ToolCallConfirmationHandlerArgs) => void;
 export type ToolCallCompletedHandler = (completedToolCall: CompletedToolCall) => void;
 export type ContentPartCompletedHandler = (completedContentPart: CompletedContentPart) => void;
 export type MessageCompletedHandler = (completedMessage: CompletedMessage) => void;
@@ -118,6 +121,8 @@ export type UnhandledErrorEndHandlerArgs = AnyErrorEndHandlerArgs;
 export type InterruptStartHandlerArgs = { interruptId: string; startEvent: InterruptStartEvent };
 export type InterruptEndHandlerArgs = { interruptId: string; endEvent: InterruptEndEvent };
 export type InterruptCompletedHandlerArgs = { interruptId: string; startEvent: InterruptStartEvent; endEvent: InterruptEndEvent };
+
+export type ToolCallConfirmationHandlerArgs = { toolCallId: string; confirmEvent: ToolCallConfirmationEvent };
 
 export type ConversationEventErrorSource = ConversationEventHelperBase<any, any>;
 
