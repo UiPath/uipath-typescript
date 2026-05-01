@@ -8,6 +8,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `OR.Assets` or `OR.Assets.Read` |
 | `getById()` | `OR.Assets` or `OR.Assets.Read` |
+| `getByName()` | `OR.Assets` or `OR.Assets.Read` |
 
 ## Jobs
 
@@ -160,6 +161,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getAll()` | `OR.Execution` or `OR.Execution.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
+| `getByName()` | `OR.Execution` or `OR.Execution.Read` |
 | `start()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ## Queues

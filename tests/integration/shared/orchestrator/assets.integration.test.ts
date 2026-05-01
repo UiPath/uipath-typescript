@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { isNotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -76,6 +77,85 @@ describe.each(modes)('Orchestrator Assets - Integration Tests [%s]', (mode) => {
       expect(result.name).toBeDefined();
       expect(result.valueType).toBeDefined();
       expect(typeof result.name).toBe('string');
+    });
+  });
+
+  describe('getByName', () => {
+    it('should retrieve an asset by name using folderKey', async () => {
+      const { assets } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
+
+      // Pick an existing asset in the folder so we have a real name to look up
+      const allAssets = await assets.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      expect(allAssets.items.length, 'No assets available to test getByName').toBeGreaterThan(0);
+      const existing = allAssets.items[0];
+
+      const result = await assets.getByName(existing.name, { folderKey: config.folderKey });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existing.id);
+      expect(result.name).toBe(existing.name);
+      expect(result.key).toBe(existing.key);
+    });
+
+    it('should retrieve an asset by name using folderPath', async () => {
+      const { assets } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const allAssets = await assets.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      expect(allAssets.items.length, 'No assets available to test getByName').toBeGreaterThan(0);
+      const existing = allAssets.items[0];
+
+      const result = await assets.getByName(existing.name, { folderPath: config.folderPath });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existing.id);
+      expect(result.name).toBe(existing.name);
+    });
+
+    it('should return transformed camelCase fields (no PascalCase leaks)', async () => {
+      const { assets } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
+
+      const allAssets = await assets.getAll({
+        folderId: config.folderId ? Number(config.folderId) : undefined,
+        pageSize: 1,
+      });
+      expect(allAssets.items.length, 'No assets available to validate transform').toBeGreaterThan(0);
+
+      const result = await assets.getByName(allAssets.items[0].name, { folderKey: config.folderKey });
+
+      // Transformed camelCase fields should be present
+      expect(result.createdTime).toBeDefined();
+      expect(result.valueType).toBeDefined();
+      // Original PascalCase keys from the raw OData payload must be gone
+      expect((result as any).CreationTime).toBeUndefined();
+      expect((result as any).LastModificationTime).toBeUndefined();
+      expect((result as any).ValueType).toBeUndefined();
+    });
+
+    it('should throw NotFoundError for a nonexistent asset name', async () => {
+      const { assets } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured for getByName').toBeDefined();
+
+      const missingName = `__uipath-sdk-nonexistent-asset-${Date.now()}`;
+      await expect(
+        assets.getByName(missingName, { folderKey: config.folderKey }),
+      ).rejects.toSatisfy(isNotFoundError);
     });
   });
 

@@ -1,4 +1,4 @@
-import { BaseOptions, RequestOptions } from '../common/types';
+import { BaseOptions, FolderScopedOptions, RequestOptions } from '../common/types';
 import { PaginationOptions } from '../../utils/pagination';
 
 /**
@@ -68,3 +68,8 @@ export type AssetGetAllOptions = RequestOptions & PaginationOptions & {
  * Options for getting a single asset by ID
  */
 export interface AssetGetByIdOptions extends BaseOptions {}
+
+/**
+ * Options for getting a single asset by name
+ */
+export interface AssetGetByNameOptions extends FolderScopedOptions {}

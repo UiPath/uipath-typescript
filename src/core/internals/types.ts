@@ -18,4 +18,11 @@ export interface PrivateSDK {
   context: ExecutionContext;
   /** Token manager for authentication */
   tokenManager: TokenManager;
+  /**
+   * Default folder key (GUID), sourced only from `<meta name="uipath:folder-key">`
+   * (injected by jamjam in coded-app deployments). Used by folder-scoped
+   * services as a fallback when the caller doesn't supply folder context.
+   * Not user-settable via the SDK constructor.
+   */
+  folderKey?: string;
 }

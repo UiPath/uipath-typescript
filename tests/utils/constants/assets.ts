@@ -30,8 +30,20 @@ export const ASSET_TEST_CONSTANTS = {
   
   // Error Messages
   ERROR_ASSET_NOT_FOUND: 'Asset not found',
-  
+
   // OData Parameters
   ODATA_EXPAND_KEY_VALUE_LIST: 'keyValueList',
   ODATA_SELECT_FIELDS: 'id,name,value',
+
+  // getByName
+  FOLDER_PATH: 'Shared/Finance',
+  FOLDER_PATH_WITH_SPACE: 'Shared/My Finance',
+  // base64-of-UTF-16-LE encoded values matching encodeFolderPathHeader().
+  // Reference: Buffer.from(<path>, 'utf16le').toString('base64').
+  FOLDER_PATH_ENCODED: 'UwBoAGEAcgBlAGQALwBGAGkAbgBhAG4AYwBlAA==',
+  FOLDER_PATH_WITH_SPACE_ENCODED: 'UwBoAGEAcgBlAGQALwBNAHkAIABGAGkAbgBhAG4AYwBlAA==',
+  FOLDER_KEY: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+  ASSET_NAME_WITH_QUOTE: "O'Brien",
+  ASSET_NAME_WITH_QUOTE_ESCAPED: "O''Brien",
+  MISSING_ASSET_NAME: 'MissingAsset',
 } as const;

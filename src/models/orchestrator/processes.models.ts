@@ -1,5 +1,5 @@
 import { RequestOptions } from '../common/types';
-import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions } from './processes.types';
+import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions, ProcessStartOptions } from './processes.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -78,27 +78,79 @@ export interface ProcessServiceModel {
    * ```
    */
   getById(id: number, folderId: number, options?: ProcessGetByIdOptions): Promise<ProcessGetResponse>;
-  
+
   /**
-   * Starts a process with the specified configuration
-   * 
-   * @param request - Process start configuration
-   * @param folderId - Required folder ID
-   * @param options - Optional request options
-   * @returns Promise resolving to array of started process instances
+   * Retrieves a single process by name.
+   *
+   * @param name - Process name to search for
+   * @param options - Optional folder scoping (`folderPath` or `folderKey`) and OData query parameters
+   * @returns Promise resolving to a single process
+   * {@link ProcessGetResponse}
+   * @example
+   * ```typescript
+   * // Get process by name with folder path
+   * const process = await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
+   *
+   * // Get process by name with folder key
+   * const process = await processes.getByName('MyProcess', { folderKey: 'folder-guid' });
+   * ```
+   */
+  getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
+
+  /**
+   * Starts a process execution (job).
+   *
+   * Folder context is supplied via the options object using `folderId`,
+   * `folderPath`, or `folderKey`. When more than one is supplied, the server
+   * prefers `folderPath` > `folderKey` > `folderId`.
+   *
+   * @param request - Process start configuration. Either `processKey` or `processName` must be provided.
+   * @param options - Folder context plus optional OData query parameters
+   * @returns Promise resolving to the started jobs
    * {@link ProcessStartResponse}
    * @example
    * ```typescript
-   * // Start a process by process key
-   * const result = await processes.start({
-   *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-   * }, <folderId>); // folderId is required
+   * // Start by name within a folder path
+   * await processes.start(
+   *   { processName: 'MyProcess' },
+   *   { folderPath: 'Shared/Finance' },
+   * );
    *
-   * // Start a process by name with specific robots
-   * const result = await processes.start({
-   *   processName: "MyProcess"
-   * }, <folderId>); // folderId is required
+   * // Start by key within a folder key
+   * await processes.start(
+   *   { processKey: '<process-key>' },
+   *   { folderKey: '<folder-guid>' },
+   * );
+   *
+   * // Start by name within a folder ID
+   * await processes.start(
+   *   { processName: 'MyProcess' },
+   *   { folderId: <folder-id> },
+   * );
    * ```
    */
-  start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
-} 
+  start(
+    request: ProcessStartRequest,
+    options?: ProcessStartOptions,
+  ): Promise<ProcessStartResponse[]>;
+
+  /**
+   * Starts a process execution (job) using the positional folder-ID form.
+   *
+   * @param request - Process start configuration. Either `processKey` or `processName` must be provided.
+   * @param folderId - Numeric folder ID
+   * @param options - Optional OData query parameters
+   * @returns Promise resolving to the started jobs
+   * {@link ProcessStartResponse}
+   * @deprecated Pass folder context via the options object instead — `start(request, { folderId })`.
+   * @example
+   * ```typescript
+   * await processes.start({ processName: 'MyProcess' }, <folderId>);
+   * ```
+   */
+  start(
+    request: ProcessStartRequest,
+    folderId: number,
+    options?: RequestOptions,
+  ): Promise<ProcessStartResponse[]>;
+}

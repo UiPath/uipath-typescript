@@ -45,3 +45,21 @@ export interface RequestOptions extends BaseOptions {
   filter?: string;
   orderby?: string;
 }
+
+/**
+ * Options that scope a name-based lookup (e.g. `getByName`) to a folder.
+ * Provide `folderPath` or `folderKey`. When both are supplied, `folderPath`
+ * wins.
+ */
+export interface FolderScopedOptions extends BaseOptions {
+  /**
+   * Slash-delimited folder path that scopes the lookup, e.g. `'Shared/Finance'`.
+   * When both `folderPath` and `folderKey` are supplied, `folderPath` wins.
+   */
+  folderPath?: string;
+  /**
+   * Folder key (GUID) that scopes the lookup. When both `folderPath` and
+   * `folderKey` are supplied, `folderPath` wins.
+   */
+  folderKey?: string;
+}

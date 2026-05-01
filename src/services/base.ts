@@ -40,6 +40,12 @@ export class BaseService {
   #apiClient: ApiClient;
 
   /**
+   * SDK configuration (read-only). Available to subclasses so they can
+   * fall back to init-time defaults like `folderKey`.
+   */
+  protected readonly config: { folderKey?: string };
+
+  /**
    * Creates a base service instance with dependency injection.
    *
    * Extracts configuration, execution context, and token manager from the UiPath instance
@@ -70,8 +76,9 @@ export class BaseService {
    * ```
    */
   constructor(instance: IUiPath, headers?: Record<string, string>) {
-    const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
+    const { config, context, tokenManager, folderKey } = SDKInternalsRegistry.get(instance);
     this.#apiClient = new ApiClient(config, context, tokenManager, headers ? { headers } : {});
+    this.config = { folderKey };
   }
 
   /**

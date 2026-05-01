@@ -1,5 +1,5 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions } from '../../../models/orchestrator/assets.types';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
@@ -115,7 +115,38 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
     );
 
     const transformedAsset = transformData(pascalToCamelCaseKeys(response.data) as AssetGetResponse, AssetMap);
-    
+
     return transformedAsset;
+  }
+
+  /**
+   * Retrieves a single asset by name.
+   *
+   * @param name - Asset name to search for
+   * @param options - Optional folder scoping (`folderPath` or `folderKey`) and OData query parameters
+   * @returns Promise resolving to a single asset
+   * {@link AssetGetResponse}
+   * @example
+   * ```typescript
+   * import { Assets } from '@uipath/uipath-typescript/assets';
+   *
+   * const assets = new Assets(sdk);
+   *
+   * // Get asset by name with folder path
+   * const asset = await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
+   *
+   * // Get asset by name with folder key
+   * const asset = await assets.getByName('ApiKey', { folderKey: 'folder-guid' });
+   * ```
+   */
+  @track('Assets.GetByName')
+  async getByName(name: string, options: AssetGetByNameOptions = {}): Promise<AssetGetResponse> {
+    return this.getByNameLookup<AssetGetResponse, AssetGetResponse>(
+      'Asset',
+      ASSET_ENDPOINTS.GET_BY_FOLDER,
+      name,
+      options,
+      (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
+    );
   }
 }
