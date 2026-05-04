@@ -119,9 +119,6 @@ export const MAESTRO_TEST_CONSTANTS = {
   SLA_ESCALATION_RULE_INDEX: '0',
   SLA_ESCALATION_RULE_TYPE: 'None',
   SLA_INSTANCE_STATUS_CANCELLED: 'Cancelled',
-  SLA_PAGE_NUMBER: 1,
-  SLA_PAGE_SIZE: 200,
-  SLA_TOTAL_PAGES: 1,
   ERROR_SLA_SUMMARY_FAILED: 'Failed to fetch SLA summary',
 
   // Execution History constants

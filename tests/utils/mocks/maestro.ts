@@ -523,37 +523,6 @@ export const createMockSlaSummaryItem = (overrides: Partial<SlaSummaryItem> = {}
 };
 
 /**
- * Creates a mock SLA summary response
- * @param items - Optional array of SLA summary items
- * @returns Mock SlaSummaryResponse
- */
-export const createMockSlaSummaryResponse = (items?: SlaSummaryItem[]) => {
-  const defaultItems = [
-    createMockSlaSummaryItem(),
-    createMockSlaSummaryItem({
-      caseInstanceId: 'case-instance-456',
-      externalId: 'CASE-47934842',
-      slaStatus: SlaSummaryStatus.OVERDUE,
-      instanceStatus: MAESTRO_TEST_CONSTANTS.SLA_INSTANCE_STATUS_CANCELLED
-    })
-  ];
-
-  const data = items ?? defaultItems;
-
-  return {
-    data,
-    pagination: {
-      totalCount: data.length,
-      pageNumber: MAESTRO_TEST_CONSTANTS.SLA_PAGE_NUMBER,
-      pageSize: MAESTRO_TEST_CONSTANTS.SLA_PAGE_SIZE,
-      totalPages: MAESTRO_TEST_CONSTANTS.SLA_TOTAL_PAGES,
-      hasNextPage: false,
-      hasPreviousPage: false
-    }
-  };
-};
-
-/**
  * Creates a mock Action Task object (for Human-in-the-Loop tasks)
  * @param overrides - Optional overrides for specific fields
  * @returns Mock Action Task object with id, title, and status
