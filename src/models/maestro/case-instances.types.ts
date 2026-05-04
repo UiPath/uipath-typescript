@@ -206,14 +206,7 @@ export interface StageSummaryItem {
 /**
  * Options for querying stages summary
  */
-export interface StageSummaryOptions {
-  /** Filter to a specific case instance */
-  caseInstanceId?: string;
-  /** Filter by event start time in UTC */
-  startTimeUtc?: string;
-  /** Filter by event end time in UTC */
-  endTimeUtc?: string;
-}
+export type StageSummaryOptions = InsightsCaseFilterOptions;
 
 /**
  * Case stage task type
