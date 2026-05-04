@@ -91,7 +91,8 @@ Log detected type in the summary.
 **Log summary** — present all collected input (Swagger URL, endpoints, OAuth scope, ticket type, folderId requirements) to the user. If any information is missing — including whether endpoints require a `folderId` — ask the user in this summary before creating the branch. Then create feature branch:
 - Jira: `feat/sdk-<ticket-key-lowered>`
 - Direct: `feat/<service>-<method-name>`
-- Already on feature branch → skip, note it
+- Already on feature branch **for the same ticket** → skip, note it
+- Already on feature branch **for a different ticket** → create a new branch from it (e.g., `feat/sdk-<new-ticket-key-lowered>`). The new PR should target the current feature branch, not `main`. This keeps each ticket's work in its own PR.
 
 ---
 
