@@ -89,7 +89,7 @@ export const SLA_SUMMARY_OFFSET_PARAMS = {
   OFFSET_PARAM: 'PageNumber',
 
   /** No count param needed */
-  COUNT_PARAM: ''
+  COUNT_PARAM: undefined
 };
 
 /**

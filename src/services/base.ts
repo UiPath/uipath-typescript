@@ -285,7 +285,8 @@ export class BaseService {
     // Extract items and metadata
     // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
     const items = Array.isArray(response.data) ? response.data : (response.data[itemsField] || []);
-    const totalCount = Array.isArray(response.data) ? undefined : this.resolveNestedField(response.data, totalCountField);
+    const rawTotalCount = Array.isArray(response.data) ? undefined : this.resolveNestedField(response.data, totalCountField);
+    const totalCount = typeof rawTotalCount === 'number' ? rawTotalCount : undefined;
     const continuationToken = response.data[continuationTokenField];
     
     // Determine if there are more pages
@@ -347,13 +348,13 @@ export class BaseService {
   /**
    * Resolves a potentially nested field path (e.g., 'pagination.totalCount') from an object
    */
-  private resolveNestedField(data: Record<string, any>, fieldPath: string): any {
+  private resolveNestedField(data: Record<string, unknown>, fieldPath: string): unknown {
     if (!fieldPath.includes('.')) {
       return data[fieldPath];
     }
-    let value: any = data;
+    let value: unknown = data;
     for (const part of fieldPath.split('.')) {
-      value = value?.[part];
+      value = (value as Record<string, unknown>)?.[part];
     }
     return value;
   }
