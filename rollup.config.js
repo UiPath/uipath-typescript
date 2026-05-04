@@ -198,6 +198,11 @@ const serviceEntries = [
     name: 'feedback',
     input: 'src/services/agents/feedback/index.ts',
     output: 'feedback/index'
+  },
+  {
+    name: 'document-understanding',
+    input: 'src/models/document-understanding/index.ts',
+    output: 'document-understanding/index'
   }
 ];
 

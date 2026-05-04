@@ -155,6 +155,16 @@
                 "types": "./dist/feedback/index.d.ts",
                 "default": "./dist/feedback/index.cjs"
             }
+        },
+        "./document-understanding": {
+            "import": {
+                "types": "./dist/document-understanding/index.d.ts",
+                "default": "./dist/document-understanding/index.mjs"
+            },
+            "require": {
+                "types": "./dist/document-understanding/index.d.ts",
+                "default": "./dist/document-understanding/index.cjs"
+            }
         }
     },
     "files": [
