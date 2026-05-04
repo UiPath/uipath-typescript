@@ -353,12 +353,6 @@ export interface CaseInstancesServiceModel {
    * const filtered = await caseInstances.getStagesSummary({
    *   caseInstanceId: '<caseInstanceId>'
    * });
-   *
-   * // Filter by time range
-   * const timeFiltered = await caseInstances.getStagesSummary({
-   *   startTimeUtc: '2026-01-01T00:00:00Z',
-   *   endTimeUtc: '2026-01-31T23:59:59Z'
-   * });
    * ```
    */
   getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryItem[]>;

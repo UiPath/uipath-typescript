@@ -934,8 +934,6 @@ describe('CaseInstancesService', () => {
         MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
         {
           caseInstanceId: undefined,
-          startTimeUtc: undefined,
-          endTimeUtc: undefined,
         },
         expect.any(Object)
       );
@@ -953,8 +951,6 @@ describe('CaseInstancesService', () => {
 
       const options = {
         caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
-        startTimeUtc: '2026-01-01T00:00:00Z',
-        endTimeUtc: '2026-01-31T23:59:59Z'
       };
 
       const result = await service.getStagesSummary(options);
@@ -963,8 +959,6 @@ describe('CaseInstancesService', () => {
         MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
         {
           caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
-          startTimeUtc: '2026-01-01T00:00:00Z',
-          endTimeUtc: '2026-01-31T23:59:59Z',
         },
         expect.any(Object)
       );

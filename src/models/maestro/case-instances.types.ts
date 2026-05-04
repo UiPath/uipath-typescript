@@ -206,7 +206,10 @@ export interface StageSummaryItem {
 /**
  * Options for querying stages summary
  */
-export type StageSummaryOptions = InsightsCaseFilterOptions;
+export interface StageSummaryOptions {
+  /** Filter to a specific case instance */
+  caseInstanceId?: string;
+}
 
 /**
  * Case stage task type
