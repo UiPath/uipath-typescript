@@ -16,8 +16,9 @@ import {
   createMockCaseInstanceExecutionHistory,
   createMockMaestroApiOperationResponse,
   createMockActionTasksResponse,
-  createMockSlaSummaryResponse,
+  createMockSlaSummaryItem,
 } from '../../../utils/mocks';
+import { HTTP_METHODS } from '../../../../src/utils/constants/common';
 import { createMockBaseResponse } from '../../../utils/mocks/core';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import type {
@@ -838,56 +839,78 @@ describe('CaseInstancesService', () => {
   });
 
   describe('getSlaSummary', () => {
-    it('should return SLA summary with default pagination', async () => {
-      const mockResponse = createMockSlaSummaryResponse();
-      mockApiClient.post.mockResolvedValue(mockResponse);
+    it('should return SLA summary without pagination options', async () => {
+      const mockResponse = {
+        items: [
+          createMockSlaSummaryItem(),
+          createMockSlaSummaryItem({
+            caseInstanceId: 'case-instance-456',
+            slaStatus: SlaSummaryStatus.OVERDUE
+          })
+        ],
+        totalCount: 2
+      };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const result = await service.getSlaSummary();
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
-        { PageNumber: 1, PageSize: 200 },
-        {}
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serviceAccess: expect.any(Object),
+          getEndpoint: expect.any(Function),
+          method: HTTP_METHODS.POST,
+          pagination: expect.objectContaining({
+            paginationType: 'offset',
+            itemsField: 'data',
+            totalCountField: 'pagination.totalCount'
+          })
+        }),
+        undefined
       );
 
-      expect(result.data).toHaveLength(2);
-      expect(result.data[0].caseInstanceId).toBe(MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID);
-      expect(result.data[0].slaStatus).toBe(SlaSummaryStatus.ON_TRACK);
-      expect(result.data[1].slaStatus).toBe(SlaSummaryStatus.OVERDUE);
-      expect(result.pagination.totalCount).toBe(2);
-      expect(result.pagination.hasNextPage).toBe(false);
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].caseInstanceId).toBe(MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID);
+      expect(result.items[0].slaStatus).toBe(SlaSummaryStatus.ON_TRACK);
+      expect(result.items[1].slaStatus).toBe(SlaSummaryStatus.OVERDUE);
+      expect(result.totalCount).toBe(2);
     });
 
-    it('should pass custom pagination options', async () => {
-      const mockResponse = createMockSlaSummaryResponse();
-      mockApiClient.post.mockResolvedValue(mockResponse);
+    it('should pass pagination options through', async () => {
+      const mockResponse = {
+        items: [createMockSlaSummaryItem()],
+        totalCount: 100,
+        hasNextPage: true
+      };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      await service.getSlaSummary({ pageNumber: 2, pageSize: 50 });
+      const result = await service.getSlaSummary({ pageSize: 10 });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
-        { PageNumber: 2, PageSize: 50 },
-        {}
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          method: HTTP_METHODS.POST
+        }),
+        { pageSize: 10 }
       );
+
+      expect(result.items).toHaveLength(1);
     });
 
     it('should handle API errors', async () => {
       const error = new Error(MAESTRO_TEST_CONSTANTS.ERROR_SLA_SUMMARY_FAILED);
-      mockApiClient.post.mockRejectedValue(error);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(service.getSlaSummary()).rejects.toThrow(
         MAESTRO_TEST_CONSTANTS.ERROR_SLA_SUMMARY_FAILED
       );
     });
 
-    it('should return empty data array when no cases exist', async () => {
-      const mockResponse = createMockSlaSummaryResponse([]);
-      mockApiClient.post.mockResolvedValue(mockResponse);
+    it('should return empty items when no cases exist', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
 
       const result = await service.getSlaSummary();
 
-      expect(result.data).toEqual([]);
-      expect(result.pagination.totalCount).toBe(0);
+      expect(result.items).toEqual([]);
+      expect(result.totalCount).toBe(0);
     });
   });
 });

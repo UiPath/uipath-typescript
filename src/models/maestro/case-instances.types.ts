@@ -132,32 +132,9 @@ export interface SlaSummaryItem {
 }
 
 /**
- * Pagination metadata from SLA summary response
- */
-export interface SlaSummaryPagination {
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
-
-/**
- * Full response from the SLA summary endpoint
- */
-export interface SlaSummaryResponse {
-  data: SlaSummaryItem[];
-  pagination: SlaSummaryPagination;
-}
-
-/**
  * Options for querying SLA summary
  */
-export interface SlaSummaryOptions {
-  pageNumber?: number;
-  pageSize?: number;
-}
+export type SlaSummaryOptions = PaginationOptions;
 
 /**
  * Case stage task type

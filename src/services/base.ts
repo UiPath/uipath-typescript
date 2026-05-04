@@ -233,10 +233,15 @@ export class BaseService {
         const pageSizeParam = paginationParams?.pageSizeParam || ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM;
         const offsetParam = paginationParams?.offsetParam || ODATA_OFFSET_PARAMS.OFFSET_PARAM;
         const countParam = paginationParams?.countParam || ODATA_OFFSET_PARAMS.COUNT_PARAM;
-        
+        const convertToSkip = paginationParams?.convertToSkip ?? true;
+
         requestParams[pageSizeParam] = limitedPageSize;
-        if (params.pageNumber && params.pageNumber > 1) {
-          requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
+        if (convertToSkip) {
+          if (params.pageNumber && params.pageNumber > 1) {
+            requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
+          }
+        } else {
+          requestParams[offsetParam] = params.pageNumber || 1;
         }
         if (countParam) {
           requestParams[countParam] = true;
@@ -246,7 +251,7 @@ export class BaseService {
       case PaginationType.TOKEN:
         const tokenPageSizeParam = paginationParams?.pageSizeParam || BUCKET_TOKEN_PARAMS.PAGE_SIZE_PARAM;
         const tokenParam = paginationParams?.tokenParam || BUCKET_TOKEN_PARAMS.TOKEN_PARAM;
-        
+
         if (params.pageSize) {
           requestParams[tokenPageSizeParam] = getLimitedPageSize(params.pageSize);
         }
@@ -254,6 +259,7 @@ export class BaseService {
           requestParams[tokenParam] = params.continuationToken;
         }
         break;
+
     }
 
     return requestParams;
@@ -279,7 +285,7 @@ export class BaseService {
     // Extract items and metadata
     // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
     const items = Array.isArray(response.data) ? response.data : (response.data[itemsField] || []);
-    const totalCount = Array.isArray(response.data) ? undefined : response.data[totalCountField];
+    const totalCount = Array.isArray(response.data) ? undefined : this.resolveNestedField(response.data, totalCountField);
     const continuationToken = response.data[continuationTokenField];
     
     // Determine if there are more pages
@@ -332,9 +338,23 @@ export class BaseService {
         
       case PaginationType.TOKEN:
         return !!info.continuationToken;
-        
+
       default:
         return false;
     }
+  }
+
+  /**
+   * Resolves a potentially nested field path (e.g., 'pagination.totalCount') from an object
+   */
+  private resolveNestedField(data: Record<string, any>, fieldPath: string): any {
+    if (!fieldPath.includes('.')) {
+      return data[fieldPath];
+    }
+    let value: any = data;
+    for (const part of fieldPath.split('.')) {
+      value = value?.[part];
+    }
+    return value;
   }
 }

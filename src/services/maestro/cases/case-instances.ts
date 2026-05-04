@@ -13,8 +13,8 @@ import {
   StageTask,
   ElementExecutionMetadata,
   CaseInstanceExecutionHistoryResponse,
-  SlaSummaryResponse,
-  SlaSummaryOptions
+  SlaSummaryItem,
+  SlaSummaryOptions,
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
@@ -35,7 +35,7 @@ import {
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
-import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
+import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS, HTTP_METHODS, SLA_SUMMARY_PAGINATION, SLA_SUMMARY_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { FOLDER_KEY } from '../../../utils/constants/headers';
@@ -575,42 +575,49 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * Get SLA summary for all case instances across folders.
    *
    * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
-   * Uses the Insights Real-Time Monitoring service.
    *
    * @param options - Optional pagination options
-   * @returns Promise resolving to SLA summary with data array and pagination metadata
-   * {@link SlaSummaryResponse}
+   * @returns Promise resolving to SLA summary items, paginated or non-paginated based on options
+   * {@link SlaSummaryItem}
    * @example
    * ```typescript
-   * // Get SLA summary (first page, default page size)
+   * // Non-paginated
    * const summary = await caseInstances.getSlaSummary();
+   * console.log(`Found ${summary.totalCount} cases`);
    *
-   * for (const item of summary.data) {
-   *   console.log(`Case ${item.externalId}: ${item.slaStatus} — due ${item.slaDueTime}`);
-   * }
-   * ```
-   *
-   * @example
-   * ```typescript
    * // With pagination
-   * const page = await caseInstances.getSlaSummary({ pageNumber: 2, pageSize: 50 });
+   * const page1 = await caseInstances.getSlaSummary({ pageSize: 25 });
+   * if (page1.hasNextPage) {
+   *   const page2 = await caseInstances.getSlaSummary({ cursor: page1.nextCursor });
+   * }
    *
-   * console.log(`Page ${page.pagination.pageNumber} of ${page.pagination.totalPages}`);
-   * console.log(`Total cases: ${page.pagination.totalCount}`);
+   * // Jump to specific page
+   * const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
    * ```
    */
   @track('CaseInstances.GetSlaSummary')
-  async getSlaSummary(options?: SlaSummaryOptions): Promise<SlaSummaryResponse> {
-    const requestBody = {
-      PageNumber: options?.pageNumber ?? 1,
-      PageSize: options?.pageSize ?? 200
-    };
-
-    const response = await this.post<SlaSummaryResponse>(
-      MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
-      requestBody
-    );
-
-    return response.data;
+  async getSlaSummary<T extends SlaSummaryOptions = SlaSummaryOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<SlaSummaryItem>
+      : NonPaginatedResponse<SlaSummaryItem>
+  > {
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
+      method: HTTP_METHODS.POST,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: SLA_SUMMARY_PAGINATION.ITEMS_FIELD,
+        totalCountField: SLA_SUMMARY_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: SLA_SUMMARY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: SLA_SUMMARY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: SLA_SUMMARY_OFFSET_PARAMS.COUNT_PARAM,
+          convertToSkip: false
+        }
+      }
+    }, options) as any;
   }
 }

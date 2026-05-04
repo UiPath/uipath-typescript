@@ -24,10 +24,10 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
         expect(result).toBeDefined();
         expect(hasValidPagination(result)).toBe(true);
-        expect(Array.isArray(result.data)).toBe(true);
+        expect(Array.isArray(result.items)).toBe(true);
 
-        if (result.data.length > 0) {
-          testCaseInstanceId = result.data[0].id;
+        if (result.items.length > 0) {
+          testCaseInstanceId = result.items[0].id;
         }
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
@@ -51,7 +51,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
         expect(result).toBeDefined();
         expect(hasValidPagination(result)).toBe(true);
-        expect(result.data.length).toBeLessThanOrEqual(5);
+        expect(result.items.length).toBeLessThanOrEqual(5);
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
@@ -220,12 +220,12 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
           limit: 1,
         });
 
-        if (result.data.length === 0) {
+        if (result.items.length === 0) {
           console.log('No case instances available to validate structure');
           return;
         }
 
-        const instance = result.data[0];
+        const instance = result.items[0];
 
         expect(instance.id).toBeDefined();
         expect(typeof instance.id).toBe('string');
@@ -257,16 +257,11 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       const result = await caseInstances.getSlaSummary();
 
       expect(result).toBeDefined();
-      expect(result.data).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
-      expect(result.pagination).toBeDefined();
-      expect(typeof result.pagination.totalCount).toBe('number');
-      expect(typeof result.pagination.pageNumber).toBe('number');
-      expect(typeof result.pagination.pageSize).toBe('number');
-      expect(typeof result.pagination.hasNextPage).toBe('boolean');
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
 
-      if (result.data.length > 0) {
-        const item = result.data[0];
+      if (result.items.length > 0) {
+        const item = result.items[0];
         expect(item.caseInstanceId).toBeDefined();
         expect(typeof item.caseInstanceId).toBe('string');
         expect(item.slaStatus).toBeDefined();
@@ -274,15 +269,13 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       }
     });
 
-    it('should support custom pagination options', async () => {
+    it('should support pagination with pageSize', async () => {
       const { caseInstances } = getServices();
 
-      const result = await caseInstances.getSlaSummary({ pageNumber: 1, pageSize: 5 });
+      const result = await caseInstances.getSlaSummary({ pageSize: 5 });
 
       expect(result).toBeDefined();
-      expect(result.data.length).toBeLessThanOrEqual(5);
-      expect(result.pagination.pageSize).toBe(5);
-      expect(result.pagination.pageNumber).toBe(1);
+      expect(result.items.length).toBeLessThanOrEqual(5);
     });
   });
 

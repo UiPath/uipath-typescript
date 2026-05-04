@@ -88,6 +88,7 @@ export interface GetAllPaginatedParams<T, R = T> {
       offsetParam?: string;
       tokenParam?: string;
       countParam?: string;
+      convertToSkip?: boolean;
     };
   };
 }
@@ -157,6 +158,7 @@ export interface RequestWithPaginationOptions extends RequestSpec {
       offsetParam?: string;
       tokenParam?: string;
       countParam?: string;
+      convertToSkip?: boolean;
     };
   };
 }
@@ -191,6 +193,10 @@ export interface PaginationConfig {
     tokenParam?: string;
     /** Parameter name for count inclusion (ODATA type only) */
     countParam?: string;
+    /** When true (default), converts pageNumber to a skip count: (pageNumber - 1) * pageSize.
+     *  When false, sends the pageNumber directly as the offset param value.
+     *  Only applies to OFFSET pagination type. */
+    convertToSkip?: boolean;
   };
 }
 

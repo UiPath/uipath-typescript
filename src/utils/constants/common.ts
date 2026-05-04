@@ -68,6 +68,31 @@ export const BUCKET_PAGINATION = {
 };
 
 /**
+ * SLA Summary pagination constants for page-number-based pagination
+ */
+export const SLA_SUMMARY_PAGINATION = {
+  /** Field name for items in SLA summary response */
+  ITEMS_FIELD: 'data',
+
+  /** Dot-notation path for total count in nested pagination object */
+  TOTAL_COUNT_FIELD: 'pagination.totalCount'
+};
+
+/**
+ * SLA Summary OFFSET pagination parameter names (page-number style, no skip conversion)
+ */
+export const SLA_SUMMARY_OFFSET_PARAMS = {
+  /** Page size parameter name */
+  PAGE_SIZE_PARAM: 'PageSize',
+
+  /** Page number parameter name (sent directly, not converted to skip) */
+  OFFSET_PARAM: 'PageNumber',
+
+  /** No count param needed */
+  COUNT_PARAM: ''
+};
+
+/**
  * Process Instance pagination constants for token-based pagination
  */
 export const PROCESS_INSTANCE_PAGINATION = {

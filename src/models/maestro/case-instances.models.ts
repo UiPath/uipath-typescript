@@ -6,7 +6,7 @@ import {
   CaseInstanceReopenOptions,
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse,
-  SlaSummaryResponse,
+  SlaSummaryItem,
   SlaSummaryOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
@@ -288,31 +288,33 @@ export interface CaseInstancesServiceModel {
    * Get SLA summary for all case instances across folders.
    *
    * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
-   * Uses the Insights Real-Time Monitoring service.
    *
    * @param options - Optional pagination options
-   * @returns Promise resolving to SLA summary with data array and pagination metadata
-   * {@link SlaSummaryResponse}
+   * @returns Promise resolving to SLA summary items, paginated or non-paginated based on options
+   * {@link SlaSummaryItem}
    * @example
    * ```typescript
-   * // Get SLA summary (first page, default page size)
+   * // Non-paginated
    * const summary = await caseInstances.getSlaSummary();
+   * console.log(`Found ${summary.totalCount} cases`);
    *
-   * for (const item of summary.data) {
-   *   console.log(`Case ${item.externalId}: ${item.slaStatus} — due ${item.slaDueTime}`);
-   * }
-   * ```
-   *
-   * @example
-   * ```typescript
    * // With pagination
-   * const page = await caseInstances.getSlaSummary({ pageNumber: 2, pageSize: 50 });
+   * const page1 = await caseInstances.getSlaSummary({ pageSize: 25 });
+   * if (page1.hasNextPage) {
+   *   const page2 = await caseInstances.getSlaSummary({ cursor: page1.nextCursor });
+   * }
    *
-   * console.log(`Page ${page.pagination.pageNumber} of ${page.pagination.totalPages}`);
-   * console.log(`Total cases: ${page.pagination.totalCount}`);
+   * // Jump to specific page
+   * const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
    * ```
    */
-  getSlaSummary(options?: SlaSummaryOptions): Promise<SlaSummaryResponse>;
+  getSlaSummary<T extends SlaSummaryOptions = SlaSummaryOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<SlaSummaryItem>
+      : NonPaginatedResponse<SlaSummaryItem>
+  >;
 }
 
 // Method interface that will be added to case instance objects
