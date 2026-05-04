@@ -526,6 +526,13 @@ export interface EntityServiceModel {
    *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
    *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+   *
+   * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+   * const ordersId = await entities.create("orders", [
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+   *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   * ]);
    * ```
    * @internal
    */
@@ -574,6 +581,17 @@ export interface EntityServiceModel {
    * await entities.updateById(<id>, {
    *   updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
    *   displayName: "Price Catalog",
+   * });
+   *
+   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+   * await entities.updateById(<id>, {
+   *   addFields: [
+   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   ],
+   *   updateFields: [
+   *     { id: <fieldId>, lengthLimit: 1000 },
+   *   ],
    * });
    * ```
    * @internal
@@ -781,6 +799,14 @@ export interface EntityMethods {
    * await entity.update({
    *   displayName: "Updated Name",
    *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   * });
+   *
+   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints 
+   * await entity.update({
+   *   addFields: [
+   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "string" },
+   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   ],
    * });
    * ```
    * @internal

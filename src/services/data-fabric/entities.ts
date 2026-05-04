@@ -30,6 +30,8 @@ import {
   EntityCreateFieldOptions,
   EntityFieldDataType,
   EntityUpdateByIdOptions,
+  SqlType,
+  FieldDisplayType,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -39,8 +41,15 @@ import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
 import { transformData } from '../../utils/transform';
-import { EntityFieldTypeMap, EntityMap, EntitySchemaFieldTypeMap, FieldDisplayTypeToDataType } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType } from '../../models/data-fabric/entities.internal-types';
+import {
+  EntityFieldTypeMap,
+  EntityMap,
+  EntitySchemaFieldTypeMap,
+  FieldDisplayTypeToDataType,
+  ENTITY_FIELD_CONSTRAINT_DEFAULTS,
+  ENTITY_FIELD_CONSTRAINT_SPEC,
+} from '../../models/data-fabric/entities.constants';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /**
@@ -714,6 +723,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
    *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+   *
+   * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+   * const ordersId = await entities.create("orders", [
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+   *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   * ]);
    * ```
    * @internal
    */
@@ -791,6 +807,17 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
    *   displayName: "Price Catalog",
    * });
+   *
+   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+   * await entities.updateById("<entityId>", {
+   *   addFields: [
+   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   ],
+   *   updateFields: [
+   *     { id: "<fieldId>", lengthLimit: 1000 },
+   *   ],
+   * });
    * ```
    * @internal
    */
@@ -841,6 +868,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
       fields = fields.map(f => {
         const update = updateMap.get(f.id ?? '');
         if (!update) return f;
+        const constraintUpdate = {
+          ...(update.lengthLimit !== undefined && { lengthLimit: update.lengthLimit }),
+          ...(update.maxValue !== undefined && { maxValue: update.maxValue }),
+          ...(update.minValue !== undefined && { minValue: update.minValue }),
+          ...(update.decimalPrecision !== undefined && { decimalPrecision: update.decimalPrecision }),
+        };
+        const hasConstraintUpdate = Object.keys(constraintUpdate).length > 0;
+        if (hasConstraintUpdate) {
+          if (!f.sqlType) {
+            throw new ValidationError({
+              message: `Cannot update constraints on field '${f.name}' (id: ${f.id}) — the field is missing sqlType metadata in the entity definition.`,
+            });
+          }
+          this.validateFieldConstraints(this.resolveFieldDataType(f), update, f.name);
+        }
         return {
           ...f,
           ...(update.displayName !== undefined && { displayName: update.displayName }),
@@ -850,6 +892,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           ...(update.isRbacEnabled !== undefined && { isRbacEnabled: update.isRbacEnabled }),
           ...(update.isEncrypted !== undefined && { isEncrypted: update.isEncrypted }),
           ...(update.defaultValue !== undefined && { defaultValue: update.defaultValue }),
+          ...(hasConstraintUpdate && f.sqlType && { sqlType: { ...f.sqlType, ...constraintUpdate } }),
         };
       });
     }
@@ -897,31 +940,38 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   private mapFieldTypes(metadata: RawEntityGetResponse): void {
     if (!metadata.fields?.length) return;
-    
+
     metadata.fields = metadata.fields.map(field => {
       // Rename sqlType to fieldDataType
       let transformedField = transformData(field, EntityMap);
-      
+
       // Map field type: prefer fieldDisplayType for types that share SQL types (File, ChoiceSet, AutoNumber)
       if (transformedField.fieldDataType?.name) {
-        const displayTypeMapped = transformedField.fieldDisplayType
-          ? FieldDisplayTypeToDataType[transformedField.fieldDisplayType]
-          : undefined;
-        if (displayTypeMapped) {
-          transformedField.fieldDataType.name = displayTypeMapped;
-        } else {
-          const rawSqlTypeName = field.sqlType?.name as SqlFieldType | undefined;
-          const mapped = rawSqlTypeName ? EntityFieldTypeMap[rawSqlTypeName] : undefined;
-          if (mapped) {
-            transformedField.fieldDataType.name = mapped;
-          }
+        const mapped = this.tryResolveFieldDataType(transformedField.fieldDisplayType, field.sqlType?.name);
+        if (mapped) {
+          transformedField.fieldDataType.name = mapped;
         }
       }
-      
+
       this.transformNestedReferences(transformedField);
-      
+
       return transformedField;
     });
+  }
+
+  /**
+   * Resolves an {@link EntityFieldDataType} from a field's `fieldDisplayType` and
+   * raw SQL type name. Prefers `fieldDisplayType` to disambiguate types that
+   * share a SQL type (FILE, CHOICE_SET_*, AUTO_NUMBER, RELATIONSHIP); falls back
+   * to the SQL-type-name mapping. Returns `undefined` if neither resolves.
+   */
+  private tryResolveFieldDataType(
+    fieldDisplayType: FieldDisplayType | undefined,
+    sqlTypeName: string | undefined,
+  ): EntityFieldDataType | undefined {
+    const displayMapped = fieldDisplayType ? FieldDisplayTypeToDataType[fieldDisplayType] : undefined;
+    if (displayMapped) return displayMapped;
+    return sqlTypeName ? EntityFieldTypeMap[sqlTypeName as SqlFieldType] : undefined;
   }
 
   /**
@@ -966,11 +1016,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
   private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
     this.validateName(field.fieldName, 'field');
-    const mapping = EntitySchemaFieldTypeMap[field.type ?? EntityFieldDataType.STRING];
+    const fieldType = field.type ?? EntityFieldDataType.STRING;
+    this.validateFieldConstraints(fieldType, field, field.fieldName);
+    const mapping = EntitySchemaFieldTypeMap[fieldType];
     return {
       name: field.fieldName,
       displayName: field.displayName ?? field.fieldName,
-      sqlType: { name: mapping.sqlTypeName },
+      sqlType: {
+        name: mapping.sqlTypeName,
+        ...this.buildSqlTypeConstraints(fieldType, field),
+      },
       fieldDisplayType: mapping.fieldDisplayType,
       description: field.description ?? '',
       isRequired: field.isRequired ?? false,
@@ -982,6 +1037,117 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ...(field.referenceEntityName !== undefined && { referenceEntityName: field.referenceEntityName }),
       ...(field.referenceFieldName !== undefined && { referenceFieldName: field.referenceFieldName }),
     };
+  }
+
+  /**
+   * Derives the user-facing {@link EntityFieldDataType} for a field on the raw
+   * API response. Throws if the field's `fieldDisplayType` and `sqlType.name`
+   * are both unmappable.
+   */
+  private resolveFieldDataType(f: FieldMetaData): EntityFieldDataType {
+    const mapped = this.tryResolveFieldDataType(f.fieldDisplayType, f.sqlType?.name);
+    if (!mapped) {
+      throw new ValidationError({
+        message: `Cannot determine field type for '${f.name}' (id: ${f.id}) — sqlType '${f.sqlType?.name ?? '(missing)'}' and fieldDisplayType '${f.fieldDisplayType ?? '(missing)'}' are both unrecognized.`,
+      });
+    }
+    return mapped;
+  }
+
+  /**
+   * Validates that the user-supplied constraint properties on a field are
+   * supported by the field's data type. Throws a `ValidationError` listing
+   * any unsupported properties.
+   */
+  private validateFieldConstraints(
+    type: EntityFieldDataType,
+    field: Pick<EntityCreateFieldOptions, EntityFieldConstraint>,
+    fieldName: string,
+  ): void {
+    const spec = ENTITY_FIELD_CONSTRAINT_SPEC[type] ?? {};
+    const supported = Object.keys(spec) as EntityFieldConstraint[];
+    const provided = Object.values(EntityFieldConstraint).filter(name => field[name] !== undefined);
+
+    const unsupported = provided.filter(p => !(p in spec));
+    if (unsupported.length > 0) {
+      const allowedDesc = supported.length > 0 ? supported.join(', ') : 'none';
+      throw new ValidationError({
+        message: `Field '${fieldName}' of type ${type} does not accept ${unsupported.join(', ')}. Allowed constraints for this type: ${allowedDesc}.`,
+      });
+    }
+
+    // Range check: each user-supplied constraint must be within its allowed bounds.
+    for (const name of provided) {
+      const range = spec[name];
+      const value = field[name];
+      if (range && value !== undefined && (value < range.min || value > range.max)) {
+        throw new ValidationError({
+          message: `Field '${fieldName}' of type ${type} has ${name} ${value} out of range [${range.min}, ${range.max}].`,
+        });
+      }
+    }
+
+    // Cross-field check: when both bounds are user-supplied in the same call,
+    // minValue must be strictly less than maxValue.
+    if (field.minValue !== undefined && field.maxValue !== undefined && field.minValue >= field.maxValue) {
+      throw new ValidationError({
+        message: `Field '${fieldName}' of type ${type} has minValue ${field.minValue} >= maxValue ${field.maxValue}. minValue must be strictly less than maxValue.`,
+      });
+    }
+  }
+
+  /**
+   * Returns the sqlType constraint fields for a given field type.
+   *
+   * The API requires specific constraint properties to be set per SQL type;
+   * without them the field is stored in an incomplete state, causing
+   * "Field type cannot be changed" errors when the UI later tries to edit
+   * advanced options. User-supplied values from `EntityCreateFieldOptions`
+   * override the defaults where the type accepts overrides.
+   */
+  private buildSqlTypeConstraints(type: EntityFieldDataType, field: EntityCreateFieldOptions): Omit<SqlType, 'name'> {
+    const defaults = ENTITY_FIELD_CONSTRAINT_DEFAULTS;
+    switch (type) {
+      case EntityFieldDataType.STRING:
+        return { lengthLimit: field.lengthLimit ?? defaults.STRING_LENGTH_LIMIT };
+      case EntityFieldDataType.MULTILINE_TEXT:
+        return { lengthLimit: field.lengthLimit ?? defaults.MULTILINE_TEXT_LENGTH_LIMIT };
+      case EntityFieldDataType.DECIMAL:
+        return {
+          lengthLimit: defaults.DECIMAL_LENGTH_LIMIT,
+          decimalPrecision: field.decimalPrecision ?? defaults.DECIMAL_PRECISION,
+          maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
+          minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
+        };
+      case EntityFieldDataType.BOOLEAN:
+        return { lengthLimit: defaults.BOOLEAN_LENGTH_LIMIT };
+      case EntityFieldDataType.DATE:
+      case EntityFieldDataType.DATETIME_WITH_TZ:
+        return { lengthLimit: defaults.DATE_LENGTH_LIMIT };
+      case EntityFieldDataType.INTEGER:
+      case EntityFieldDataType.BIG_INTEGER:
+        return {
+          maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
+          minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
+        };
+      case EntityFieldDataType.FLOAT:
+      case EntityFieldDataType.DOUBLE:
+        return {
+          decimalPrecision: field.decimalPrecision ?? defaults.DECIMAL_PRECISION,
+          maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
+          minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
+        };
+      case EntityFieldDataType.FILE:
+      case EntityFieldDataType.RELATIONSHIP:
+        // UNIQUEIDENTIFIER fixed lengthLimit (300)
+        return { lengthLimit: defaults.UNIQUEIDENTIFIER_LENGTH_LIMIT };
+      case EntityFieldDataType.CHOICE_SET_MULTIPLE:
+        // CHOICE_SET_MULTIPLE fixed lengthLimit (4000)
+        return { lengthLimit: defaults.CHOICE_SET_MULTIPLE_LENGTH_LIMIT };
+      default:
+        // UUID, CHOICE_SET_SINGLE, AUTO_NUMBER, DATETIME — (sqlType: { name })
+        return {};
+    }
   }
 
   private static readonly RESERVED_FIELD_NAMES = new Set([

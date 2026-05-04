@@ -929,6 +929,247 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   });
 
   // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('sqlType constraint defaults', () => {
+    it('should create STRING field with default lengthLimit 200', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'str_field');
+      expect(field).toBeDefined();
+      expect(field?.fieldDataType.lengthLimit).toBe(200);
+    });
+
+    it('should create STRING field with user-provided lengthLimit', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 500 },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'str_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(500);
+    });
+
+    it('should create MULTILINE_TEXT field with default lengthLimit 200', async () => {
+      const { entities } = getServices();
+      const name = `sdk_ml_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'ml_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(200);
+    });
+
+    it('should create DECIMAL field with correct default constraints', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dec_field', type: EntityFieldDataType.DECIMAL },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dec_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+      expect(field?.fieldDataType.decimalPrecision).toBe(2);
+      expect(field?.fieldDataType.maxValue).toBe(1000000000000);
+      expect(field?.fieldDataType.minValue).toBe(-1000000000000);
+    });
+
+    it('should create DECIMAL field with user-provided constraints', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        {
+          fieldName: 'dec_field',
+          type: EntityFieldDataType.DECIMAL,
+          decimalPrecision: 4,
+          maxValue: 99999,
+          minValue: -99999,
+        },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dec_field');
+      expect(field?.fieldDataType.decimalPrecision).toBe(4);
+      expect(field?.fieldDataType.maxValue).toBe(99999);
+      expect(field?.fieldDataType.minValue).toBe(-99999);
+    });
+
+    it('should create BOOLEAN field with fixed lengthLimit 100', async () => {
+      const { entities } = getServices();
+      const name = `sdk_bit_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'bool_field', type: EntityFieldDataType.BOOLEAN },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'bool_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(100);
+    });
+
+    it('should create DATE field with fixed lengthLimit 1000', async () => {
+      const { entities } = getServices();
+      const name = `sdk_date_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'date_field', type: EntityFieldDataType.DATE },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'date_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+    });
+
+    it('should create DATETIME_WITH_TZ field with fixed lengthLimit 1000', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dtz_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dtz_field', type: EntityFieldDataType.DATETIME_WITH_TZ },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dtz_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+    });
+
+    it('should allow updating STRING field lengthLimit without "Field type cannot be changed" error', async () => {
+      const { entities } = getServices();
+      const name = `sdk_upd_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const before = await entities.getById(entityId);
+      const field = before.fields.find(f => f.name === 'str_field');
+      if (!field?.id) {
+        throw new Error('Could not find str_field id in entity schema');
+      }
+
+      // Must not throw "Field type cannot be changed"
+      await entities.updateById(entityId, {
+        updateFields: [{ id: field.id, lengthLimit: 500 }],
+      });
+
+      const after = await entities.getById(entityId);
+      const updated = after.fields.find(f => f.name === 'str_field');
+      expect(updated?.fieldDataType.lengthLimit).toBe(500);
+    });
+
+    it('should allow updating DECIMAL field constraints via updateById', async () => {
+      const { entities } = getServices();
+      const name = `sdk_upddec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dec_field', type: EntityFieldDataType.DECIMAL },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const before = await entities.getById(entityId);
+      const field = before.fields.find(f => f.name === 'dec_field');
+      if (!field?.id) {
+        throw new Error('Could not find dec_field id in entity schema');
+      }
+
+      await entities.updateById(entityId, {
+        updateFields: [{ id: field.id, decimalPrecision: 4, maxValue: 9999, minValue: -9999 }],
+      });
+
+      const after = await entities.getById(entityId);
+      const updated = after.fields.find(f => f.name === 'dec_field');
+      expect(updated?.fieldDataType.decimalPrecision).toBe(4);
+      expect(updated?.fieldDataType.maxValue).toBe(9999);
+      expect(updated?.fieldDataType.minValue).toBe(-9999);
+    });
+
+    it('should reject STRING with lengthLimit above max (5000) without hitting the API', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_oor_${generateRandomString(8).toLowerCase()}`;
+
+      // SDK validation must throw before any API call is made.
+      await expect(
+        entities.create(name, [
+          { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 5000 },
+        ]),
+      ).rejects.toThrow(/lengthLimit 5000 out of range \[1, 4000\]/);
+
+      // Verify no entity was created server-side
+      const all = await entities.getAll();
+      expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+
+    it('should reject MULTILINE_TEXT with lengthLimit above max (15000) without hitting the API', async () => {
+      const { entities } = getServices();
+      const name = `sdk_ml_oor_${generateRandomString(8).toLowerCase()}`;
+
+      await expect(
+        entities.create(name, [
+          { fieldName: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 15000 },
+        ]),
+      ).rejects.toThrow(/lengthLimit 15000 out of range \[1, 10000\]/);
+
+      const all = await entities.getAll();
+      expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+
+    it('should reject STRING with lengthLimit below min (0) without hitting the API', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_zero_${generateRandomString(8).toLowerCase()}`;
+
+      await expect(
+        entities.create(name, [
+          { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 0 },
+        ]),
+      ).rejects.toThrow(/lengthLimit 0 out of range \[1, 4000\]/);
+
+      const all = await entities.getAll();
+      expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+
+    it('should apply default lengthLimit (200) when STRING lengthLimit is omitted, confirmed via GET', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_default_${generateRandomString(8).toLowerCase()}`;
+
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'str_field');
+      // Default is applied client-side and round-trips through the API as 200
+      expect(field?.fieldDataType.lengthLimit).toBe(200);
+    });
+
+    it('should reject INTEGER when minValue >= maxValue without hitting the API', async () => {
+      const { entities } = getServices();
+      const name = `sdk_int_minmax_${generateRandomString(8).toLowerCase()}`;
+
+      await expect(
+        entities.create(name, [
+          { fieldName: 'int_field', type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 },
+        ]),
+      ).rejects.toThrow(/minValue 100 >= maxValue 50/);
+
+      const all = await entities.getAll();
+      expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
   describe.skip('deleteById', () => {
     it('should delete an entity created for this test', async () => {
       const { entities } = getServices();
@@ -977,13 +1218,13 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       // Clean up any entities created by schema management tests (no-op when those tests are skipped)
       if (createdEntityIds.length > 0) {
         const { entities } = getServices();
-        for (const entityId of createdEntityIds) {
-          try {
-            await entities.deleteById(entityId);
-          } catch {
-            // Best-effort cleanup — entity may have already been deleted
-          }
-        }
+        await Promise.all(
+          createdEntityIds.map(entityId =>
+            entities.deleteById(entityId).catch(() => {
+              // Best-effort cleanup — entity may have already been deleted
+            })
+          )
+        );
       }
     }
   });
