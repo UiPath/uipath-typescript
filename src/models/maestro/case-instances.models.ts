@@ -289,14 +289,24 @@ export interface CaseInstancesServiceModel {
    *
    * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
    *
-   * @param options - Optional pagination options
-   * @returns Promise resolving to SLA summary items, paginated or non-paginated based on options
-   * {@link SlaSummaryItem}
+   * @param options - Optional filtering and pagination options
+   * @returns Promise resolving to {@link SlaSummaryItem}, paginated or non-paginated based on options
    * @example
    * ```typescript
    * // Non-paginated
    * const summary = await caseInstances.getSlaSummary();
    * console.log(`Found ${summary.totalCount} cases`);
+   *
+   * // Filter by case instance ID
+   * const filtered = await caseInstances.getSlaSummary({
+   *   caseInstanceId: '<caseInstanceId>'
+   * });
+   *
+   * // Filter by time range
+   * const timeFiltered = await caseInstances.getSlaSummary({
+   *   startTimeUtc: '2026-01-01T00:00:00Z',
+   *   endTimeUtc: '2026-01-31T23:59:59Z'
+   * });
    *
    * // With pagination
    * const page1 = await caseInstances.getSlaSummary({ pageSize: 25 });
