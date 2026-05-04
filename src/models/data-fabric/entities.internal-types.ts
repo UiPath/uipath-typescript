@@ -38,6 +38,28 @@ export interface EntityQueryRawResponse {
 }
 
 /**
+ * Names of the per-field SQL constraint properties (i.e. the contents of `sqlType`
+ * excluding its `name`). Used internally to validate user-supplied constraints
+ * against the set of constraints that each `EntityFieldDataType` accepts.
+ *
+ * Enum values match the corresponding property names on `EntityCreateFieldOptions`.
+ */
+export enum EntityFieldConstraint {
+  LengthLimit = 'lengthLimit',
+  MaxValue = 'maxValue',
+  MinValue = 'minValue',
+  DecimalPrecision = 'decimalPrecision',
+}
+
+/**
+ * Inclusive [min, max] range for a single user-configurable constraint value.
+ */
+export interface FieldConstraintRange {
+  min: number;
+  max: number;
+}
+
+/**
  * Entity field data types (SQL types from API)
  */
 export enum SqlFieldType {
