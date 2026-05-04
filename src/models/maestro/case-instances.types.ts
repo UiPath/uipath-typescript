@@ -132,21 +132,16 @@ export interface SlaSummaryItem {
 }
 
 /**
- * Common filter options for Insights RTM case management endpoints
+ * Options for querying SLA summary
  */
-export interface InsightsCaseFilterOptions {
+export type SlaSummaryOptions = PaginationOptions & {
   /** Filter to a specific case instance */
   caseInstanceId?: string;
   /** Filter by event start time in UTC */
   startTimeUtc?: string;
   /** Filter by event end time in UTC */
   endTimeUtc?: string;
-}
-
-/**
- * Options for querying SLA summary
- */
-export type SlaSummaryOptions = PaginationOptions & InsightsCaseFilterOptions;
+};
 
 /**
  * Case stage task type
