@@ -30,6 +30,7 @@ import type {
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
 import { SlaSummaryStatus } from '../../../../src/models/maestro/case-instances.types';
+import { PaginationType } from '../../../../src/utils/pagination/internal-types';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -860,7 +861,7 @@ describe('CaseInstancesService', () => {
           getEndpoint: expect.any(Function),
           method: HTTP_METHODS.POST,
           pagination: expect.objectContaining({
-            paginationType: 'offset',
+            paginationType: PaginationType.OFFSET,
             itemsField: 'data',
             totalCountField: 'pagination.totalCount'
           })
