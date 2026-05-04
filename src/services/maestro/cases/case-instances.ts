@@ -15,6 +15,8 @@ import {
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
+  StageSummaryItem,
+  StageSummaryOptions,
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
@@ -642,5 +644,52 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
         }
       }
     }, apiOptions) as any;
+  }
+
+  /**
+   * Get stages summary for all case instances across folders.
+   *
+   * Returns stage-level status and SLA information for each case instance, aggregated from Insights Real-Time Monitoring.
+   * Unlike {@link getStages}, which returns detailed task-level data for a single instance, this method returns a
+   * lightweight summary across all instances.
+   *
+   * @param options - Optional filtering options
+   * @returns Promise resolving to an array of stage summary items
+   * {@link StageSummaryItem}
+   * @example
+   * ```typescript
+   * // Get stages summary for all case instances
+   * const stagesSummary = await caseInstances.getStagesSummary();
+   * for (const item of stagesSummary) {
+   *   console.log(`Instance: ${item.caseInstanceId}`);
+   *   for (const stage of item.stages) {
+   *     console.log(`  Stage: ${stage.name} - Status: ${stage.latestStatus}`);
+   *   }
+   * }
+   *
+   * // Filter by case instance ID
+   * const filtered = await caseInstances.getStagesSummary({
+   *   caseInstanceId: '<caseInstanceId>'
+   * });
+   *
+   * // Filter by time range
+   * const timeFiltered = await caseInstances.getStagesSummary({
+   *   startTimeUtc: '2026-01-01T00:00:00Z',
+   *   endTimeUtc: '2026-01-31T23:59:59Z'
+   * });
+   * ```
+   */
+  @track('CaseInstances.GetStagesSummary')
+  async getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryItem[]> {
+    const response = await this.post<StageSummaryItem[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
+      {
+        caseInstanceId: options?.caseInstanceId,
+        startTimeUtc: options?.startTimeUtc,
+        endTimeUtc: options?.endTimeUtc,
+      }
+    );
+
+    return response.data ?? [];
   }
 }

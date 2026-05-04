@@ -17,6 +17,8 @@ import {
   createMockMaestroApiOperationResponse,
   createMockActionTasksResponse,
   createMockSlaSummaryResponse,
+  createMockStageSummaryItem,
+  createMockStageSummaryStage,
 } from '../../../utils/mocks';
 import { HTTP_METHODS } from '../../../../src/utils/constants/common';
 import { createMockBaseResponse } from '../../../utils/mocks/core';
@@ -912,6 +914,92 @@ describe('CaseInstancesService', () => {
 
       expect(result.items).toEqual([]);
       expect(result.totalCount).toBe(0);
+    });
+  });
+
+  describe('getStagesSummary', () => {
+    it('should return stages summary without options', async () => {
+      const mockItems = [
+        createMockStageSummaryItem(),
+        createMockStageSummaryItem({
+          caseInstanceId: 'case-instance-456',
+          stages: [createMockStageSummaryStage({ latestStatus: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_TERMINATED })]
+        })
+      ];
+      mockApiClient.post.mockResolvedValue(mockItems);
+
+      const result = await service.getStagesSummary();
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
+        {
+          caseInstanceId: undefined,
+          startTimeUtc: undefined,
+          endTimeUtc: undefined,
+        },
+        expect.any(Object)
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0].caseInstanceId).toBe(MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID);
+      expect(result[0].stages[0].elementId).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_ELEMENT_ID);
+      expect(result[0].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS);
+      expect(result[1].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_TERMINATED);
+    });
+
+    it('should pass filter options through', async () => {
+      const mockItems = [createMockStageSummaryItem()];
+      mockApiClient.post.mockResolvedValue(mockItems);
+
+      const options = {
+        caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
+        startTimeUtc: '2026-01-01T00:00:00Z',
+        endTimeUtc: '2026-01-31T23:59:59Z'
+      };
+
+      const result = await service.getStagesSummary(options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
+        {
+          caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
+          startTimeUtc: '2026-01-01T00:00:00Z',
+          endTimeUtc: '2026-01-31T23:59:59Z',
+        },
+        expect.any(Object)
+      );
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error(MAESTRO_TEST_CONSTANTS.ERROR_STAGES_SUMMARY_FAILED);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(service.getStagesSummary()).rejects.toThrow(
+        MAESTRO_TEST_CONSTANTS.ERROR_STAGES_SUMMARY_FAILED
+      );
+    });
+
+    it('should return empty array when no data exists', async () => {
+      mockApiClient.post.mockResolvedValue(null);
+
+      const result = await service.getStagesSummary();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return stages with SLA status from SlaSummaryStatus enum', async () => {
+      const mockItems = [
+        createMockStageSummaryItem({
+          stages: [createMockStageSummaryStage({ slaStatus: SlaSummaryStatus.ON_TRACK })]
+        })
+      ];
+      mockApiClient.post.mockResolvedValue(mockItems);
+
+      const result = await service.getStagesSummary();
+
+      expect(result[0].stages[0].slaStatus).toBe(SlaSummaryStatus.ON_TRACK);
     });
   });
 });

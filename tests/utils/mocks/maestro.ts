@@ -7,7 +7,7 @@ import { TEST_CONSTANTS } from '../constants/common';
 import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
-import type { SlaSummaryResponse } from '../../../src/models/maestro/case-instances.types';
+import type { SlaSummaryResponse, StageSummaryItem, StageSummaryStage } from '../../../src/models/maestro/case-instances.types';
 
 // Maestro-Specific Mock Factories
 
@@ -552,4 +552,33 @@ export const createMockActionTasksResponse = (tasks: any[] = []) => {
     items: taskItems,
     totalCount: taskItems.length
   });
+};
+
+/**
+ * Creates a mock StageSummaryStage object
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock StageSummaryStage object
+ */
+export const createMockStageSummaryStage = (overrides: Partial<StageSummaryStage> = {}): StageSummaryStage => {
+  return createMockBaseResponse({
+    elementId: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_ELEMENT_ID,
+    name: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_STAGE_NAME,
+    latestStatus: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS,
+    slaDueTime: '',
+    slaStatus: SlaSummaryStatus.UNKNOWN,
+    escalationRuleIndex: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_INDEX,
+    escalationRuleType: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_TYPE,
+  }, overrides);
+};
+
+/**
+ * Creates a mock StageSummaryItem object
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock StageSummaryItem object
+ */
+export const createMockStageSummaryItem = (overrides: Partial<StageSummaryItem> = {}): StageSummaryItem => {
+  return createMockBaseResponse({
+    caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
+    stages: [createMockStageSummaryStage()],
+  }, overrides);
 };

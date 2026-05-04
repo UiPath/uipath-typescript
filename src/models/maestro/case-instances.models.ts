@@ -7,7 +7,9 @@ import {
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryResponse,
-  CaseInstanceSlaSummaryOptions
+  CaseInstanceSlaSummaryOptions,
+  StageSummaryItem,
+  StageSummaryOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -326,6 +328,41 @@ export interface CaseInstancesServiceModel {
       ? PaginatedResponse<SlaSummaryResponse>
       : NonPaginatedResponse<SlaSummaryResponse>
   >;
+
+  /**
+   * Get stages summary for all case instances across folders.
+   *
+   * Returns stage-level status and SLA information for each case instance, aggregated from Insights Real-Time Monitoring.
+   * Unlike {@link getStages}, which returns detailed task-level data for a single instance, this method returns a
+   * lightweight summary across all instances.
+   *
+   * @param options - Optional filtering options
+   * @returns Promise resolving to an array of stage summary items
+   * {@link StageSummaryItem}
+   * @example
+   * ```typescript
+   * // Get stages summary for all case instances
+   * const stagesSummary = await caseInstances.getStagesSummary();
+   * for (const item of stagesSummary) {
+   *   console.log(`Instance: ${item.caseInstanceId}`);
+   *   for (const stage of item.stages) {
+   *     console.log(`  Stage: ${stage.name} - Status: ${stage.latestStatus}`);
+   *   }
+   * }
+   *
+   * // Filter by case instance ID
+   * const filtered = await caseInstances.getStagesSummary({
+   *   caseInstanceId: '<caseInstanceId>'
+   * });
+   *
+   * // Filter by time range
+   * const timeFiltered = await caseInstances.getStagesSummary({
+   *   startTimeUtc: '2026-01-01T00:00:00Z',
+   *   endTimeUtc: '2026-01-31T23:59:59Z'
+   * });
+   * ```
+   */
+  getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryItem[]>;
 }
 
 // Method interface that will be added to case instance objects

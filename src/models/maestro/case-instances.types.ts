@@ -174,6 +174,48 @@ export type CaseInstanceSlaSummaryOptions = PaginationOptions & {
 };
 
 /**
+ * Stage summary for a single stage within a case instance (from Insights RTM)
+ */
+export interface StageSummaryStage {
+  /** Stage element identifier */
+  elementId: string;
+  /** Stage display name */
+  name: string;
+  /** Current execution status of the stage (e.g., "InProgress", "Terminated", "Completed") */
+  latestStatus: string;
+  /** Computed SLA due time for this stage */
+  slaDueTime: string;
+  /** SLA status for this stage */
+  slaStatus: SlaSummaryStatus;
+  /** Index of the current escalation rule */
+  escalationRuleIndex: string;
+  /** Type of the current escalation rule */
+  escalationRuleType: string;
+}
+
+/**
+ * Stages summary for a single case instance (from Insights RTM)
+ */
+export interface StageSummaryItem {
+  /** Case instance identifier */
+  caseInstanceId: string;
+  /** Stages within this case instance */
+  stages: StageSummaryStage[];
+}
+
+/**
+ * Options for querying stages summary
+ */
+export interface StageSummaryOptions {
+  /** Filter to a specific case instance */
+  caseInstanceId?: string;
+  /** Filter by event start time in UTC */
+  startTimeUtc?: string;
+  /** Filter by event end time in UTC */
+  endTimeUtc?: string;
+}
+
+/**
  * Case stage task type
  */
 export enum StageTaskType {
