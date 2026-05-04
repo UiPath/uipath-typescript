@@ -332,9 +332,10 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
       expect(filtered).toBeDefined();
       expect(Array.isArray(filtered)).toBe(true);
-      if (filtered.length > 0) {
-        expect(filtered[0].caseInstanceId).toBe(targetId);
+      if (filtered.length === 0) {
+        throw new Error('Filter by caseInstanceId returned no results — expected at least one matching item');
       }
+      expect(filtered[0].caseInstanceId).toBe(targetId);
     });
   });
 
