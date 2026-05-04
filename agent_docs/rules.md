@@ -19,6 +19,8 @@
 - Use `let variable!: Type` (definite assignment assertion) for variables initialized in `beforeAll`, not `let variable: Type | undefined`. The `!` signals TypeScript that the value is guaranteed before any test runs, eliminating null-checks throughout the test bodies. The `afterAll` guard (`if (!variable) return`) still works at runtime.
 - **NEVER** wrap integration test API calls in try/catch — let errors propagate naturally. Silent catches mask real failures and make tests pass when they should fail.
 - **NEVER** create a separate `afterAll` per describe block if the file already has one — reuse the existing cleanup block by pushing to the shared `createdRecordIds` array.
+- **After a successful delete in an integration test, remove the resource from `createdRecordIds`** (or the equivalent cleanup array) — if cleanup runs after a delete test, trying to delete an already-deleted record produces a spurious error. Remove it immediately after the delete call succeeds: `createdRecordIds.splice(createdRecordIds.indexOf(id), 1)`.
+- **Consolidate service availability guards in `beforeAll`**, not inline in each test — if a service may be `undefined` (e.g., `getServices().feedback`), check once in `beforeAll` with `if (!service) throw new Error(...)` and assign to a non-nullable `let service!: ServiceType` variable. Repeating the guard in every `it` block is noise and can mask which test actually failed.
 - **Coverage**: 80% minimum for new code, 100% for critical paths (auth, API calls).
 - Remove unused mock methods. Extract repeated logic into shared helpers.
 
@@ -56,6 +58,7 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - **NEVER** reference unrelated parameters in JSDoc examples — keep examples focused on the method being documented. If `getOutput()` doesn't accept `folderId`, don't show `folderId` in its example.
 - **Show bare minimum call first** in the first `@example`, then a second example with filtering/options. Never use `$` prefix on OData params in examples (`expand` not `$expand`).
 - **NEVER** assign a `void` return to a variable in JSDoc examples — if a method returns `Promise<void>`, write `await service.method()` not `const result = await service.method()`. Assigning void implies the return value is usable, which misleads users.
+- **When a new option or feature is added to one method, update related methods' `@example` blocks too** — if `create()` gains an `agentInput` option, `updateById()` (which accepts the same option) also needs a second `@example` showing it. Users look at examples to learn what's possible; a feature shown on one method but silently omitted from a parallel method is effectively invisible.
 - **Add JSDoc to non-obvious enum values** — if an enum has values whose meaning isn't clear from the name alone, add a brief comment to each value.
 
 ## Post-implementation verification checklist
