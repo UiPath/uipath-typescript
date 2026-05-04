@@ -6,6 +6,8 @@
 import { TEST_CONSTANTS } from '../constants/common';
 import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
+import { SlaSummaryStatus } from '../../../src/models/maestro/case-instances.types';
+import type { SlaSummaryItem } from '../../../src/models/maestro/case-instances.types';
 
 // Maestro-Specific Mock Factories
 
@@ -503,7 +505,7 @@ export const createMockCaseStage = (overrides: Partial<any> = {}) => {
  * @param overrides - Optional overrides for specific fields
  * @returns Mock SlaSummaryItem object
  */
-export const createMockSlaSummaryItem = (overrides: Partial<any> = {}) => {
+export const createMockSlaSummaryItem = (overrides: Partial<SlaSummaryItem> = {}) => {
   return createMockBaseResponse({
     caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
     folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
@@ -512,7 +514,7 @@ export const createMockSlaSummaryItem = (overrides: Partial<any> = {}) => {
     caseSummary: '',
     processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
     slaDueTime: MAESTRO_TEST_CONSTANTS.SLA_DUE_TIME,
-    slaStatus: MAESTRO_TEST_CONSTANTS.SLA_STATUS_ON_TRACK,
+    slaStatus: SlaSummaryStatus.ON_TRACK,
     escalationRuleIndex: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_INDEX,
     escalationRuleType: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_TYPE,
     instanceStatus: '',
@@ -525,13 +527,13 @@ export const createMockSlaSummaryItem = (overrides: Partial<any> = {}) => {
  * @param items - Optional array of SLA summary items
  * @returns Mock SlaSummaryResponse
  */
-export const createMockSlaSummaryResponse = (items?: any[]) => {
+export const createMockSlaSummaryResponse = (items?: SlaSummaryItem[]) => {
   const defaultItems = [
     createMockSlaSummaryItem(),
     createMockSlaSummaryItem({
       caseInstanceId: 'case-instance-456',
       externalId: 'CASE-47934842',
-      slaStatus: MAESTRO_TEST_CONSTANTS.SLA_STATUS_OVERDUE,
+      slaStatus: SlaSummaryStatus.OVERDUE,
       instanceStatus: MAESTRO_TEST_CONSTANTS.SLA_INSTANCE_STATUS_CANCELLED
     })
   ];

@@ -28,6 +28,7 @@ import type {
 } from '../../../../src/models/maestro';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
+import { SlaSummaryStatus } from '../../../../src/models/maestro/case-instances.types';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -851,8 +852,8 @@ describe('CaseInstancesService', () => {
 
       expect(result.data).toHaveLength(2);
       expect(result.data[0].caseInstanceId).toBe(MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID);
-      expect(result.data[0].slaStatus).toBe(MAESTRO_TEST_CONSTANTS.SLA_STATUS_ON_TRACK);
-      expect(result.data[1].slaStatus).toBe(MAESTRO_TEST_CONSTANTS.SLA_STATUS_OVERDUE);
+      expect(result.data[0].slaStatus).toBe(SlaSummaryStatus.ON_TRACK);
+      expect(result.data[1].slaStatus).toBe(SlaSummaryStatus.OVERDUE);
       expect(result.pagination.totalCount).toBe(2);
       expect(result.pagination.hasNextPage).toBe(false);
     });

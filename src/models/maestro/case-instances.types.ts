@@ -103,9 +103,13 @@ export interface CaseAppConfig {
 export enum SlaSummaryStatus {
   /** Case is within SLA deadline */
   ON_TRACK = 'On Track',
+  /** Case is approaching SLA deadline based on at-risk percentage threshold */
+  AT_RISK = 'At Risk',
   /** Case has exceeded SLA deadline */
   OVERDUE = 'Overdue',
-  /** SLA status cannot be determined */
+  /** Case instance has completed */
+  COMPLETED = 'Completed',
+  /** SLA status cannot be determined (no SLA deadline defined) */
   UNKNOWN = 'Unknown'
 }
 
@@ -120,7 +124,7 @@ export interface SlaSummaryItem {
   caseSummary: string;
   processKey: string;
   slaDueTime: string;
-  slaStatus: string;
+  slaStatus: SlaSummaryStatus;
   escalationRuleIndex: string;
   escalationRuleType: string;
   instanceStatus: string;
