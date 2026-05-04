@@ -654,8 +654,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * lightweight summary across all instances.
    *
    * @param options - Optional filtering options
-   * @returns Promise resolving to an array of stage summary items
-   * {@link StageSummaryItem}
+   * @returns Promise resolving to an array of {@link StageSummaryItem}
    * @example
    * ```typescript
    * // Get stages summary for all case instances

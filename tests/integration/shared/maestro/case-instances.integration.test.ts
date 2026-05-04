@@ -294,23 +294,27 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
 
-      if (result.length > 0) {
-        const item = result[0];
-        expect(item.caseInstanceId).toBeDefined();
-        expect(typeof item.caseInstanceId).toBe('string');
-        expect(item.stages).toBeDefined();
-        expect(Array.isArray(item.stages)).toBe(true);
-
-        if (item.stages.length > 0) {
-          const stage = item.stages[0];
-          expect(stage.elementId).toBeDefined();
-          expect(stage.name).toBeDefined();
-          expect(stage.latestStatus).toBeDefined();
-          expect(typeof stage.slaStatus).toBe('string');
-          expect(typeof stage.escalationRuleIndex).toBe('string');
-          expect(typeof stage.escalationRuleType).toBe('string');
-        }
+      if (result.length === 0) {
+        throw new Error('No stage summary items returned — cannot validate response structure');
       }
+
+      const item = result[0];
+      expect(item.caseInstanceId).toBeDefined();
+      expect(typeof item.caseInstanceId).toBe('string');
+      expect(item.stages).toBeDefined();
+      expect(Array.isArray(item.stages)).toBe(true);
+
+      if (item.stages.length === 0) {
+        throw new Error('No stages returned for first item — cannot validate stage structure');
+      }
+
+      const stage = item.stages[0];
+      expect(stage.elementId).toBeDefined();
+      expect(stage.name).toBeDefined();
+      expect(stage.latestStatus).toBeDefined();
+      expect(typeof stage.slaStatus).toBe('string');
+      expect(typeof stage.escalationRuleIndex).toBe('string');
+      expect(typeof stage.escalationRuleType).toBe('string');
     });
 
     it('should support filtering by caseInstanceId', async () => {
@@ -319,15 +323,17 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       // First get all to find a valid caseInstanceId
       const allResults = await caseInstances.getStagesSummary();
 
-      if (allResults.length > 0) {
-        const targetId = allResults[0].caseInstanceId;
-        const filtered = await caseInstances.getStagesSummary({ caseInstanceId: targetId });
+      if (allResults.length === 0) {
+        throw new Error('No stage summary items returned — cannot test caseInstanceId filter');
+      }
 
-        expect(filtered).toBeDefined();
-        expect(Array.isArray(filtered)).toBe(true);
-        if (filtered.length > 0) {
-          expect(filtered[0].caseInstanceId).toBe(targetId);
-        }
+      const targetId = allResults[0].caseInstanceId;
+      const filtered = await caseInstances.getStagesSummary({ caseInstanceId: targetId });
+
+      expect(filtered).toBeDefined();
+      expect(Array.isArray(filtered)).toBe(true);
+      if (filtered.length > 0) {
+        expect(filtered[0].caseInstanceId).toBe(targetId);
       }
     });
   });
