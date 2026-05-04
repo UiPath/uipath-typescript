@@ -518,7 +518,7 @@ export const createMockSlaSummaryItem = (overrides: Partial<SlaSummaryItem> = {}
     escalationRuleIndex: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_INDEX,
     escalationRuleType: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_TYPE,
     instanceStatus: '',
-    lastModifiedTime: '4/28/2026 11:20:17 AM'
+    lastModifiedTime: MAESTRO_TEST_CONSTANTS.SLA_LAST_MODIFIED_TIME
   }, overrides);
 };
 

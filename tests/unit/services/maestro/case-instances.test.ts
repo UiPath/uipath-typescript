@@ -844,7 +844,7 @@ describe('CaseInstancesService', () => {
         items: [
           createMockSlaSummaryItem(),
           createMockSlaSummaryItem({
-            caseInstanceId: 'case-instance-456',
+            caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID_2,
             slaStatus: SlaSummaryStatus.OVERDUE
           })
         ],

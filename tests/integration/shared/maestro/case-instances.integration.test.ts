@@ -260,13 +260,15 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
 
-      if (result.items.length > 0) {
-        const item = result.items[0];
-        expect(item.caseInstanceId).toBeDefined();
-        expect(typeof item.caseInstanceId).toBe('string');
-        expect(item.slaStatus).toBeDefined();
-        expect(item.folderKey).toBeDefined();
+      if (result.items.length === 0) {
+        throw new Error('No SLA data available — cannot validate response structure');
       }
+
+      const item = result.items[0];
+      expect(item.caseInstanceId).toBeDefined();
+      expect(typeof item.caseInstanceId).toBe('string');
+      expect(item.slaStatus).toBeDefined();
+      expect(item.folderKey).toBeDefined();
     });
 
     it('should support pagination with pageSize', async () => {
