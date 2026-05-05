@@ -24,3 +24,6 @@ export * from './content-part-helper';
 
 // Transformers
 export * from './transformers';
+
+// Header builder
+export * from './header';

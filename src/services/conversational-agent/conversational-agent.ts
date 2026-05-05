@@ -25,16 +25,11 @@ import {
 
 // Utils
 import { FEATURE_ENDPOINTS, AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
-import {
-  CONVERSATIONAL_SURFACE_NAME,
-  CONVERSATIONAL_SURFACE_VERSION,
-  EXTERNAL_USER_ID,
-} from '@/utils/constants/headers';
-import { createHeaders } from '@/utils/http/headers';
 import { transformData } from '@/utils/transform';
 
 // Local imports
 import { ConversationService } from './conversations';
+import { buildCasDefaultHeaders } from './helpers';
 
 /**
  * Service for interacting with UiPath Conversational Agent API
@@ -50,12 +45,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    const defaultHeaders = createHeaders({
-      [EXTERNAL_USER_ID]: options?.externalUserId,
-      [CONVERSATIONAL_SURFACE_NAME]: options?.surfaceName,
-      [CONVERSATIONAL_SURFACE_VERSION]: options?.surfaceVersion,
-    });
-    super(instance, Object.keys(defaultHeaders).length > 0 ? defaultHeaders : undefined);
+    super(instance, buildCasDefaultHeaders(options));
 
     // Create conversation service with WebSocket support
     this.conversations = new ConversationService(instance, options);

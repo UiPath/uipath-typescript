@@ -23,15 +23,9 @@ import type {
 
 // Utils
 import { MESSAGE_ENDPOINTS } from '@/utils/constants/endpoints';
-import {
-  CONVERSATIONAL_SURFACE_NAME,
-  CONVERSATIONAL_SURFACE_VERSION,
-  EXTERNAL_USER_ID,
-} from '@/utils/constants/headers';
-import { createHeaders } from '@/utils/http/headers';
 
 // Local imports
-import { transformMessage, ContentPartHelper } from '@/services/conversational-agent/helpers';
+import { buildCasDefaultHeaders, transformMessage, ContentPartHelper } from '@/services/conversational-agent/helpers';
 
 /**
  * Service for message operations within a conversation
@@ -70,12 +64,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    const defaultHeaders = createHeaders({
-      [EXTERNAL_USER_ID]: options?.externalUserId,
-      [CONVERSATIONAL_SURFACE_NAME]: options?.surfaceName,
-      [CONVERSATIONAL_SURFACE_VERSION]: options?.surfaceVersion,
-    });
-    super(instance, Object.keys(defaultHeaders).length > 0 ? defaultHeaders : undefined);
+    super(instance, buildCasDefaultHeaders(options));
   }
 
   /**
