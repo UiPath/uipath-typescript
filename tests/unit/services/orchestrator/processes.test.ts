@@ -19,8 +19,9 @@ import {
 } from '../../../utils/constants';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { JobPriority, ProcessGetAllOptions, ProcessGetByIdOptions, ProcessStartRequest } from '../../../../src/models/orchestrator/processes.types';
-import { FOLDER_ID } from '../../../../src/utils/constants/headers';
+import { FOLDER_ID, FOLDER_KEY, FOLDER_PATH_ENCODED } from '../../../../src/utils/constants/headers';
 import { RequestOptions } from '../../../../src/models/common';
+import { NotFoundError, ValidationError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -340,6 +341,178 @@ describe('ProcessService Unit Tests', () => {
       const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
       await expect(service.start(request, TEST_CONSTANTS.FOLDER_ID))
         .rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getByName', () => {
+    it('should return a transformed process when the OData response contains one item', async () => {
+      const rawProcess = createMockRawOrchestratorProcess();
+      mockApiClient.get.mockResolvedValue({ value: [rawProcess] });
+
+      const result = await service.getByName(
+        PROCESS_TEST_CONSTANTS.PROCESS_NAME,
+        { folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH },
+      );
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(PROCESS_TEST_CONSTANTS.PROCESS_ID);
+      expect(result.key).toBe(PROCESS_TEST_CONSTANTS.PROCESS_KEY);
+      expect(result.name).toBe(PROCESS_TEST_CONSTANTS.PROCESS_NAME);
+
+      // Transform validation — camelCase fields present, PascalCase originals absent
+      expect(result.createdTime).toBe(PROCESS_TEST_CONSTANTS.TIME);
+      expect((result as any).CreationTime).toBeUndefined();
+      expect(result.lastModifiedTime).toBe(PROCESS_TEST_CONSTANTS.TIME);
+      expect((result as any).LastModificationTime).toBeUndefined();
+      expect(result.folderId).toBe(TEST_CONSTANTS.FOLDER_ID);
+      expect((result as any).OrganizationUnitId).toBeUndefined();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': `Name eq '${PROCESS_TEST_CONSTANTS.PROCESS_NAME}'`,
+            '$top': '1',
+          }),
+        }),
+      );
+    });
+
+    it('should route a numeric folderId to X-UIPATH-OrganizationUnitId', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(PROCESS_TEST_CONSTANTS.PROCESS_NAME, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+      });
+      expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should route folderKey to X-UIPATH-FolderKey', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(PROCESS_TEST_CONSTANTS.PROCESS_NAME, { folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_KEY]: PROCESS_TEST_CONSTANTS.FOLDER_KEY,
+      });
+      expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should route folderPath to X-UIPATH-FolderPath-Encoded (base64-of-UTF-16-LE)', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(
+        PROCESS_TEST_CONSTANTS.PROCESS_NAME,
+        { folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE },
+      );
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: PROCESS_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+      });
+      expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
+      expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();
+    });
+
+    it('should pass OData query options through to the request', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(
+        PROCESS_TEST_CONSTANTS.PROCESS_NAME,
+        {
+          folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH,
+          expand: PROCESS_TEST_CONSTANTS.EXPAND_ARGUMENTS,
+        },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$expand': PROCESS_TEST_CONSTANTS.EXPAND_ARGUMENTS,
+          }),
+        }),
+      );
+    });
+
+    it('should OData-escape single quotes in the name', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await service.getByName(
+        PROCESS_TEST_CONSTANTS.PROCESS_NAME_WITH_QUOTE,
+        { folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.GET_ALL,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$filter': `Name eq '${PROCESS_TEST_CONSTANTS.PROCESS_NAME_WITH_QUOTE_ESCAPED}'`,
+          }),
+        }),
+      );
+    });
+
+    it('should throw NotFoundError when the OData value array is empty', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [] });
+
+      await expect(
+        service.getByName(PROCESS_TEST_CONSTANTS.MISSING_PROCESS_NAME, { folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH }),
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('should throw ValidationError for an empty name', async () => {
+      await expect(
+        service.getByName('   ', { folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to SDK init-time folderKey when no folder is provided', async () => {
+      // Simulates the coded-app meta-tag (`uipath:folder-key`) path.
+      const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new ProcessService(instance);
+
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await scopedService.getByName(PROCESS_TEST_CONSTANTS.PROCESS_NAME);
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_KEY]: PROCESS_TEST_CONSTANTS.FOLDER_KEY,
+      });
+      expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should suppress the init-time folderKey fallback when the caller provides explicit folder', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new ProcessService(instance);
+
+      mockApiClient.get.mockResolvedValue({ value: [createMockRawOrchestratorProcess()] });
+
+      await scopedService.getByName(PROCESS_TEST_CONSTANTS.PROCESS_NAME, { folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH });
+
+      const [, requestSpec] = mockApiClient.get.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: PROCESS_TEST_CONSTANTS.FOLDER_PATH_ENCODED,
+      });
+      expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();
+    });
+
+    it('should throw ValidationError when no folder context is resolvable', async () => {
+      // No folder arg AND no init-time folderKey on config — must reject.
+      await expect(service.getByName(PROCESS_TEST_CONSTANTS.PROCESS_NAME))
+        .rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
   });
 });

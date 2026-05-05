@@ -1,5 +1,5 @@
 export const  FOLDER_KEY = 'X-UIPATH-FolderKey';
-export const  FOLDER_PATH = 'X-UIPATH-FolderPath';
+export const  FOLDER_PATH_ENCODED = 'X-UIPATH-FolderPath-Encoded';
 export const  USER_AGENT = 'X-UIPATH-UserAgent';
 export const  TENANT_ID = 'X-UIPATH-Internal-TenantId';
 export const  ACCOUNT_ID = 'X-UIPATH-Internal-AccountId';
