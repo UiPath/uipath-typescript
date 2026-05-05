@@ -14,7 +14,7 @@ import {
   ElementExecutionMetadata,
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryItem,
-  SlaSummaryOptions,
+  CaseInstanceSlaSummaryOptions,
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
@@ -22,7 +22,7 @@ import {
 } from '../../../models/maestro/case-instances.internal-types';
 import { OperationResponse } from '../../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { transformData } from '../../../utils/transform';
+import { transformData, toISOUtc } from '../../../utils/transform';
 import {
   CaseInstanceMap,
   CaseAppConfigMap,
@@ -606,7 +606,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * ```
    */
   @track('CaseInstances.GetSlaSummary')
-  async getSlaSummary<T extends SlaSummaryOptions = SlaSummaryOptions>(
+  async getSlaSummary<T extends CaseInstanceSlaSummaryOptions = CaseInstanceSlaSummaryOptions>(
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
@@ -618,6 +618,11 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
       getEndpoint: () => MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
       method: HTTP_METHODS.POST,
       excludeFromPrefix: ['caseInstanceId', 'startTimeUtc', 'endTimeUtc'],
+      transformFn: (item: SlaSummaryItem): SlaSummaryItem => ({
+        ...item,
+        slaDueTime: toISOUtc(item.slaDueTime),
+        lastModifiedTime: toISOUtc(item.lastModifiedTime)
+      }),
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: SLA_SUMMARY_PAGINATION.ITEMS_FIELD,

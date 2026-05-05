@@ -120,21 +120,27 @@ export interface SlaSummaryItem {
   caseInstanceId: string;
   folderKey: string;
   name: string;
+  /** Human-readable reference number for a case instance */
   externalId: string;
+  /** Summary text for the case instance — may be empty */
   caseSummary: string;
   processKey: string;
+  /** SLA deadline timestamp in UTC (ISO 8601 format) */
   slaDueTime: string;
   slaStatus: SlaSummaryStatus;
   escalationRuleIndex: string;
+  /** Type of escalation rule applied (e.g., "None", "TimeElapsed") — not a fixed set */
   escalationRuleType: string;
+  /** Current status of the case instance (e.g., "Cancelled", "Active") — not a fixed set */
   instanceStatus: string;
+  /** Last modification timestamp in UTC (ISO 8601 format) */
   lastModifiedTime: string;
 }
 
 /**
  * Options for querying SLA summary
  */
-export type SlaSummaryOptions = PaginationOptions & {
+export type CaseInstanceSlaSummaryOptions = PaginationOptions & {
   /** Filter to a specific case instance */
   caseInstanceId?: string;
   /** Filter by event start time in UTC */

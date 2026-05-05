@@ -7,7 +7,7 @@ import {
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryItem,
-  SlaSummaryOptions
+  CaseInstanceSlaSummaryOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -318,7 +318,7 @@ export interface CaseInstancesServiceModel {
    * const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
    * ```
    */
-  getSlaSummary<T extends SlaSummaryOptions = SlaSummaryOptions>(
+  getSlaSummary<T extends CaseInstanceSlaSummaryOptions = CaseInstanceSlaSummaryOptions>(
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
