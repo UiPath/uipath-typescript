@@ -269,6 +269,10 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       expect(typeof item.caseInstanceId).toBe('string');
       expect(item.slaStatus).toBeDefined();
       expect(item.folderKey).toBeDefined();
+
+      // Validate transform pipeline: timestamps must be ISO 8601, not the raw "M/D/YYYY h:mm:ss AM" format
+      expect(item.slaDueTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(item.lastModifiedTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
 
     it('should support pagination with pageSize', async () => {
