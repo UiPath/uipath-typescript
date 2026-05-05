@@ -60,6 +60,7 @@ The method attachment pattern:
 - `create{Entity}Methods(rawData, service)` — returns an object of bound async methods that delegate to the service
 - `create{Entity}WithMethods(rawData, service)` — merges raw data + methods via `Object.assign({}, rawData, methods)`
 - Methods validate required fields (`if (!data.id) throw new Error(...)`) before delegating
+- **Use direct `return` in bound method delegates, not `await`** — `return service.deleteRecord(id)` not `return await service.deleteRecord(id)`. Adding `await` in a factory delegate creates an unnecessary microtask suspension with no benefit; the returned promise is already awaitable by the caller.
 
 **Include output/attachment indicator fields in response types:** When an entity response can reference a file or attachment (e.g., `outputFile` on a Job indicating a blob attachment key), include that field in `Raw{Entity}GetResponse` even if the primary retrieval method does not fetch the file. This lets callers check for output availability without an extra API call.
 
