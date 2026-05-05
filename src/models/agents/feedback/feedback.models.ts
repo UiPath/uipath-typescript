@@ -68,12 +68,9 @@ export interface FeedbackServiceModel {
   >;
 
   /**
-   * Gets a single feedback entry by its unique identifier.
+   * Gets a single feedback entry by its feedback ID.
    *
-   * Retrieves detailed information about a specific feedback entry, including
-   * its associated categories, user email, status, and timing information.
-   *
-   * @param id - Unique identifier (GUID) of the feedback entry
+   * @param id - Feedback ID (GUID) of the feedback entry
    * @returns Promise resolving to {@link FeedbackGetResponse}
    * @example
    * ```typescript
@@ -82,12 +79,12 @@ export interface FeedbackServiceModel {
    * const feedback = new Feedback(sdk);
    *
    * // Get a specific feedback entry
-   * const item = await feedback.getById('<feedbackId>');
+   * const item = await feedback.getById(<feedbackId>);
    * console.log(item.isPositive, item.comment, item.status);
    * ```
    * @example
    * ```typescript
-   * // Get feedback ID from getAll, then retrieve details
+   * // First, get feedback entries to obtain the ID
    * const allFeedback = await feedback.getAll({ pageSize: 10 });
    * const feedbackId = allFeedback.items[0].id;
    * const item = await feedback.getById(feedbackId);
