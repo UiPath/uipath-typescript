@@ -66,4 +66,32 @@ export interface FeedbackServiceModel {
       ? PaginatedResponse<FeedbackGetResponse>
       : NonPaginatedResponse<FeedbackGetResponse>
   >;
+
+  /**
+   * Gets a single feedback entry by its unique identifier.
+   *
+   * Retrieves detailed information about a specific feedback entry, including
+   * its associated categories, user email, status, and timing information.
+   *
+   * @param id - Unique identifier (GUID) of the feedback entry
+   * @returns Promise resolving to {@link FeedbackGetResponse}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * // Get a specific feedback entry
+   * const item = await feedback.getById('<feedbackId>');
+   * console.log(item.isPositive, item.comment, item.status);
+   * ```
+   * @example
+   * ```typescript
+   * // Get feedback ID from getAll, then retrieve details
+   * const allFeedback = await feedback.getAll({ pageSize: 10 });
+   * const feedbackId = allFeedback.items[0].id;
+   * const item = await feedback.getById(feedbackId);
+   * ```
+   */
+  getById(id: string): Promise<FeedbackGetResponse>;
 }
