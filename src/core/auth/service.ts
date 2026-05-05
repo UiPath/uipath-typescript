@@ -345,11 +345,10 @@ export class AuthService {
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
-    if (this.config.includeAcrValues === false) {
-      return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
-    }
-
-    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}&acr_values=${acrValues}`;
+    const authorizeUrl = `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
+    return this.config.includeAcrValues === false
+      ? authorizeUrl
+      : `${authorizeUrl}&acr_values=${acrValues}`;
   }
 
   /**

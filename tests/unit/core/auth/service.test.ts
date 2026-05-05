@@ -80,6 +80,13 @@ describe('AuthService', () => {
       expect(parsedUrl.searchParams.has('acr_values')).toBe(false);
       expect(url).not.toContain('acr_values=');
     });
+
+    it('should include acr_values when includeAcrValues is true', () => {
+      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID, { includeAcrValues: true });
+      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+      const parsedUrl = new URL(url);
+      expect(parsedUrl.searchParams.get('acr_values')).toBe(`tenantName:${TEST_CONSTANTS.ORGANIZATION_ID}`);
+    });
   });
 
   describe('exchangeCode', () => {
