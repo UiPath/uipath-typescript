@@ -16,14 +16,15 @@ describe('AuthService', () => {
   const codeChallenge = TEST_CONSTANTS.CODE_CHALLENGE;
   const scope = TEST_CONSTANTS.OAUTH_SCOPE;
 
-  function createService(orgName: string) {
+  function createService(orgName: string, options?: { includeAcrValues?: boolean }) {
     const config = {
       baseUrl: TEST_CONSTANTS.BASE_URL,
       orgName,
       tenantName: TEST_CONSTANTS.TENANT_ID,
       clientId,
       redirectUri,
-      scope
+      scope,
+      ...options
     };
     return new AuthService(config, new ExecutionContext());
   }
@@ -70,6 +71,14 @@ describe('AuthService', () => {
       const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
       const parsedUrl = new URL(url);
       expect(parsedUrl.searchParams.get('acr_values')).toBe(`tenantName:${TEST_CONSTANTS.INVALID_GUID_ORG_ID}`);
+    });
+
+    it('should omit acr_values when includeAcrValues is false', () => {
+      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID, { includeAcrValues: false });
+      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+      const parsedUrl = new URL(url);
+      expect(parsedUrl.searchParams.has('acr_values')).toBe(false);
+      expect(url).not.toContain('acr_values=');
     });
   });
 

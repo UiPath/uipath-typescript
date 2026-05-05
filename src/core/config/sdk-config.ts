@@ -10,11 +10,12 @@ export interface OAuthFields {
   clientId: string;
   redirectUri: string;
   scope: string;
+  includeAcrValues?: boolean;
 }
 
 // Configuration type that enforces either secret or complete OAuth fields
 export type UiPathSDKConfig = BaseConfig & (
-  | { secret: string; clientId?: never; redirectUri?: never; scope?: never }
+  | { secret: string; clientId?: never; redirectUri?: never; scope?: never; includeAcrValues?: never }
   | ({ secret?: never } & OAuthFields)
 );
 
@@ -30,4 +31,4 @@ export function hasOAuthConfig(config: { clientId?: string; redirectUri?: string
 // Type guard to check if config has secret
 export function hasSecretConfig(config: { secret?: string }): config is { secret: string } {
   return Boolean(config.secret);
-} 
+}

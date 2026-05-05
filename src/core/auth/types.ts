@@ -30,4 +30,5 @@ export interface OAuthContext {
   orgName: string;
   tenantName: string;
   scope: string;
+  includeAcrValues?: boolean;
 }

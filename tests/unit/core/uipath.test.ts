@@ -63,6 +63,20 @@ describe('UiPath Core', () => {
       expect(sdk.isInitialized()).toBe(false); // OAuth requires initialize()
     });
 
+    it('should pass includeAcrValues through OAuth config', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        clientId: TEST_CONSTANTS.CLIENT_ID,
+        redirectUri: 'http://localhost:3000/callback',
+        scope: 'offline_access',
+        includeAcrValues: false
+      });
+
+      expect(getConfig(sdk).includeAcrValues).toBe(false);
+    });
+
     it('should validate required config fields', async () => {
       const sdk = new UiPath({
         baseUrl: '',

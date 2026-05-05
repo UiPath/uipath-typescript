@@ -132,6 +132,17 @@ const sdk = new UiPath({
 await sdk.initialize();
 ```
 
+To omit `acr_values` from the OAuth authorize URL, pass `includeAcrValues: false` in the constructor config:
+
+```typescript
+const sdk = new UiPath({
+  ...oauthConfig,
+  includeAcrValues: false
+});
+```
+
+This option is constructor-only and is not read from `uipath.json` or injected meta tags.
+
 </details>
 
 <details>

@@ -80,7 +80,8 @@ export class UiPath implements IUiPath {
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
-      scope: hasOAuthAuth ? config.scope : undefined
+      scope: hasOAuthAuth ? config.scope : undefined,
+      includeAcrValues: hasOAuthAuth ? config.includeAcrValues : undefined
     });
 
     const executionContext = new ExecutionContext();

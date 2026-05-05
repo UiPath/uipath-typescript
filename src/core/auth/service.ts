@@ -106,7 +106,8 @@ export class AuthService {
       tenantName: context.tenantName,
       clientId: context.clientId,
       redirectUri: context.redirectUri,
-      scope: context.scope
+      scope: context.scope,
+      includeAcrValues: context.includeAcrValues
     };
   }
 
@@ -344,6 +345,10 @@ export class AuthService {
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
+    if (this.config.includeAcrValues === false) {
+      return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
+    }
+
     return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}&acr_values=${acrValues}`;
   }
 
@@ -412,7 +417,8 @@ export class AuthService {
       baseUrl: this.config.baseUrl,
       orgName: this.config.orgName,
       tenantName: this.config.tenantName,
-      scope
+      scope,
+      includeAcrValues: this.config.includeAcrValues
     };
     
     sessionStorage.setItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, JSON.stringify(oauthContext));
@@ -450,4 +456,4 @@ export class AuthService {
     url.searchParams.delete('state');
     window.history.replaceState({}, '', url.toString());
   }
-} 
+}
