@@ -103,6 +103,7 @@ plugins:
           - api/interfaces/ConversationServiceModel.md: Conversation service methods
           - api/interfaces/ExchangeServiceModel.md: Exchange service methods
           - api/interfaces/MessageServiceModel.md: Message service methods
+          - api/interfaces/UserSettingsServiceModel.md: User settings service methods
           - api/interfaces/SessionStream.md: Real-time WebSocket session
           - api/interfaces/ExchangeStream.md: Exchange streaming events
           - api/interfaces/MessageStream.md: Message streaming events
@@ -184,6 +185,7 @@ nav:
               - Session: api/interfaces/SessionStream.md
               - Exchanges: api/interfaces/ExchangeServiceModel.md
               - Messages: api/interfaces/MessageServiceModel.md
+              - User Settings: api/interfaces/UserSettingsServiceModel.md
             - Feedback: api/interfaces/FeedbackServiceModel.md
           - Attachments:
             - api/interfaces/attachments/index.md

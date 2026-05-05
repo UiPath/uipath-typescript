@@ -3,13 +3,15 @@
  */
 
 // Core SDK imports
+import type { IUiPath } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
 import type {
+  ConversationalAgentOptions,
   UserSettingsUpdateOptions,
-  UserServiceModel,
+  UserSettingsServiceModel,
   UserSettingsGetResponse,
   UserSettingsUpdateResponse
 } from '@/models/conversational-agent';
@@ -17,28 +19,43 @@ import { UserSettingsMap } from '@/models/conversational-agent';
 
 // Utils
 import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
+import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
 import { transformData } from '@/utils/transform';
 
 /**
- * Service for managing user profile and context settings
+ * Service for reading and updating the current user's profile and context settings.
  *
- * User settings are passed to the agent for all conversations
- * to provide user context (name, email, role, timezone, etc.).
- *
- * @internal
+ * User settings are user-supplied profile fields (name, email, role, department, company,
+ * country, timezone) that the SDK passes to a UiPath Conversational Agent on every conversation
+ * so the agent can personalize its responses.
  */
-export class UserService extends BaseService implements UserServiceModel {
+export class UserService extends BaseService implements UserSettingsServiceModel {
   /**
-   * Gets the current user's profile and context settings
+   * Creates an instance of the UserService.
    *
-   * @returns Promise resolving to user settings object containing profile information
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration (e.g. externalUserId for external app auth)
+   */
+  constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
+    super(instance, options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined);
+  }
+
+  /**
+   * Gets the current user's profile and context settings.
+   *
+   * Returns the full user settings record — profile fields the agent uses for personalization
+   * (name, email, role, department, company, country, timezone) plus identifiers and timestamps.
+   * Fields the user has not set are returned as `null`.
+   *
+   * @returns Promise resolving to the current user's settings
+   * {@link UserSettingsGetResponse}
    *
    * @example
    * ```typescript
-   * const userSettings = await userService.getSettings();
-   * console.log(userSettings.name);      // User's name
-   * console.log(userSettings.email);     // User's email
-   * console.log(userSettings.timezone);  // User's timezone
+   * const settings = await conversationalAgent.user.getSettings();
+   * console.log(settings.name);      // e.g. 'John Doe' or null
+   * console.log(settings.email);     // e.g. 'john@example.com' or null
+   * console.log(settings.timezone);  // e.g. 'America/New_York' or null
    * ```
    */
   @track('ConversationalAgent.User.GetSettings')
@@ -48,31 +65,27 @@ export class UserService extends BaseService implements UserServiceModel {
   }
 
   /**
-   * Updates the current user's profile and context settings
+   * Updates the current user's profile and context settings.
    *
-   * All fields are optional - only send the fields you want to change.
-   * Set fields to `null` to explicitly clear them.
-   * Omitting fields means no change.
+   * Accepts a partial payload — only fields included in `options` are changed. Pass `null` to
+   * explicitly clear a field. Omitting a field leaves it unchanged. Returns the full updated
+   * settings record.
    *
-   * @param options - Fields to update
-   * @returns Promise resolving to updated user settings object
+   * @param options - Fields to update; omit fields to leave them unchanged, set to `null` to clear
+   * @returns Promise resolving to the updated user settings
+   * {@link UserSettingsUpdateResponse}
    *
-   * @example
+   * @example Partial update
    * ```typescript
-   * // Update specific fields
-   * const updatedUserSettings = await userService.updateSettings({
+   * const updated = await conversationalAgent.user.updateSettings({
    *   name: 'John Doe',
-   *   email: 'john@example.com',
    *   timezone: 'America/New_York'
    * });
+   * ```
    *
-   * // Partial update - only change timezone
-   * await userService.updateSettings({
-   *   timezone: 'Europe/London'
-   * });
-   *
-   * // Clear fields by setting to null
-   * await userService.updateSettings({
+   * @example Clear fields by setting to null
+   * ```typescript
+   * await conversationalAgent.user.updateSettings({
    *   role: null,
    *   department: null
    * });

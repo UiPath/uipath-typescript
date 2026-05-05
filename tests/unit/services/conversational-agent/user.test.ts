@@ -46,6 +46,36 @@ describe('UserService Unit Tests', () => {
     vi.clearAllMocks();
   });
 
+  describe('constructor', () => {
+    it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new UserService(instance, { externalUserId: 'user-123' });
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { headers: { 'x-uipath-external-user-id': 'user-123' } }
+      );
+    });
+
+    it('should not pass external user id header when externalUserId is not set', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new UserService(instance);
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        {}
+      );
+    });
+  });
+
   describe('getSettings', () => {
     it('should get user settings successfully', async () => {
       mockApiClient.get.mockResolvedValue(MOCK_USER_SETTINGS);

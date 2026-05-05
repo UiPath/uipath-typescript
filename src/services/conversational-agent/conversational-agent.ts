@@ -39,7 +39,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
   /** Service for creating and managing conversations. See {@link ConversationServiceModel}. */
   public readonly conversations: ConversationService;
 
-  /** Service for reading and updating the current user's profile/context settings. See {@link UserServiceModel}. */
+  /** Service for reading and updating the current user's profile/context settings. See {@link UserSettingsServiceModel}. */
   public readonly user: UserService;
 
   /**
@@ -49,12 +49,11 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    const externalUserHeaders = options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined;
-    super(instance, externalUserHeaders);
+    super(instance, options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined);
 
     // Create conversation service with WebSocket support
     this.conversations = new ConversationService(instance, options);
-    this.user = new UserService(instance, externalUserHeaders);
+    this.user = new UserService(instance, options);
   }
 
   /**

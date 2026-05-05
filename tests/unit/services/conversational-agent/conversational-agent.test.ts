@@ -305,4 +305,12 @@ describe('ConversationalAgentService Unit Tests', () => {
       expect(conversationalAgent.conversations).toBeDefined();
     });
   });
+
+  describe('user property', () => {
+    it('should expose user service', () => {
+      expect(conversationalAgent.user).toBeDefined();
+      expect(typeof conversationalAgent.user.getSettings).toBe('function');
+      expect(typeof conversationalAgent.user.updateSettings).toBe('function');
+    });
+  });
 });

@@ -4,7 +4,7 @@ import type {
 } from './agents';
 import type { ConversationServiceModel } from './conversations';
 import type { FeatureFlags } from './feature-flags.types';
-import type { UserServiceModel } from './user';
+import type { UserSettingsServiceModel } from './user';
 import type { ConnectionStatus } from '@/core/websocket';
 
 /**
@@ -154,8 +154,8 @@ export interface ConversationalAgentServiceModel {
   /** Service for creating and managing conversations. See {@link ConversationServiceModel}. */
   readonly conversations: ConversationServiceModel;
 
-  /** Service for reading and updating the current user's profile/context settings. See {@link UserServiceModel}. */
-  readonly user: UserServiceModel;
+  /** Service for reading and updating the current user's profile/context settings. See {@link UserSettingsServiceModel}. */
+  readonly user: UserSettingsServiceModel;
 
   /**
    * Gets feature flags for the current tenant
