@@ -47,6 +47,7 @@ export class UiPath implements IUiPath {
   #authService?: AuthService;
   #initialized: boolean = false;
   #partialConfig?: PartialUiPathConfig;
+  #multiLogin: boolean = false;
 
   /** Read-only config for user convenience */
   public readonly config!: Readonly<BaseConfig>;
@@ -85,6 +86,9 @@ export class UiPath implements IUiPath {
 
     const executionContext = new ExecutionContext();
     this.#authService = new AuthService(internalConfig, executionContext);
+    if (this.#multiLogin) {
+      this.#authService.setMultiLogin();
+    }
     this.#config = internalConfig;
 
     // Store internals in SDKInternalsRegistry (not visible on instance)
@@ -181,6 +185,16 @@ export class UiPath implements IUiPath {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       throw new Error(`Failed to initialize UiPath SDK: ${errorMessage}`);
     }
+  }
+
+  /**
+   * Enables the UiPath login picker during OAuth sign-in.
+   *
+   * @internal
+   */
+  public setMultiLogin(): void {
+    this.#multiLogin = true;
+    this.#authService?.setMultiLogin();
   }
 
   /**

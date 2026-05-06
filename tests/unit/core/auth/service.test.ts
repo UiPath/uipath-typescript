@@ -71,6 +71,15 @@ describe('AuthService', () => {
       const parsedUrl = new URL(url);
       expect(parsedUrl.searchParams.get('acr_values')).toBe(`tenantName:${TEST_CONSTANTS.INVALID_GUID_ORG_ID}`);
     });
+
+    it('should omit acr_values when multi-login is enabled', () => {
+      const service = createService(TEST_CONSTANTS.ORGANIZATION_ID);
+      service.setMultiLogin();
+      const url = service.getAuthorizationUrl({ clientId, redirectUri, codeChallenge, scope });
+      const parsedUrl = new URL(url);
+      expect(parsedUrl.searchParams.has('acr_values')).toBe(false);
+      expect(url).not.toContain('acr_values=');
+    });
   });
 
   describe('exchangeCode', () => {
