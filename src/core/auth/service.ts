@@ -119,7 +119,7 @@ export class AuthService {
   }
 
   /**
-   * Enables login picker behavior by omitting acr_values from the authorization URL.
+   * Enables the UiPath login picker during OAuth sign-in.
    */
   public setMultiLogin(): void {
     this.skipAcrValues = true;

@@ -188,7 +188,7 @@ export class UiPath implements IUiPath {
   }
 
   /**
-   * Enables multi-login behavior for OAuth by showing the login picker.
+   * Enables the UiPath login picker during OAuth sign-in.
    */
   public setMultiLogin(): void {
     this.#multiLogin = true;
