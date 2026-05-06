@@ -197,10 +197,48 @@ export interface EntityQuerySortOption {
 }
 
 /**
- * Options for querying entity records with filters, sorting, and pagination.
+ * Aggregate functions supported by the Data Fabric query API.
+ *
+ * Server-side limits (Phase 1):
+ * - Maximum 5 aggregate expressions per query
+ * - Operates on root entity fields only (no expanded relationships)
+ * - `COUNT(DISTINCT ...)` is not supported
+ */
+export enum EntityAggregateFunction {
+  Count = 'COUNT',
+  Sum = 'SUM',
+  Avg = 'AVG',
+  Min = 'MIN',
+  Max = 'MAX',
+}
+
+/**
+ * A single aggregate expression to apply during a query.
+ *
+ * Aggregate results are returned as fields on each record in the response,
+ * keyed by `alias` (or by `{FUNCTION}_{field}` when `alias` is omitted —
+ * e.g., `"COUNT_Id"`, `"AVG_Salary"`).
+ */
+export interface EntityAggregate {
+  /** Aggregate function to apply */
+  function: EntityAggregateFunction;
+  /** Field to aggregate on. For `COUNT`, any non-null field works (typically `Id`). */
+  field: string;
+  /** Optional alias for the aggregate result. If omitted, server auto-generates as `{FUNCTION}_{field}`. */
+  alias?: string;
+}
+
+/**
+ * Options for querying entity records with filters, sorting, aggregates, and pagination.
  *
  * Use `pageSize`, `cursor`, or `jumpToPage` for SDK-managed pagination.
  * The SDK computes and manages offset parameters automatically.
+ *
+ * **Aggregate constraints (server-enforced):**
+ * - Aggregates operate on root entity fields only — `expansionLevel` must be 0 or omitted
+ * - When both `aggregates` and `selectedFields` are provided, every entry in `selectedFields`
+ *   must also appear in `groupBy`
+ * - Maximum 5 aggregates and 5 `groupBy` fields per query
  */
 export type EntityQueryRecordsOptions = {
   /** Filter conditions to apply */
@@ -209,8 +247,12 @@ export type EntityQueryRecordsOptions = {
   selectedFields?: string[];
   /** Sort options for the results */
   sortOptions?: EntityQuerySortOption[];
-  /** Level of entity expansion for related fields (default: 0) */
+  /** Level of entity expansion for related fields (default: 0). Must be 0 or omitted when `aggregates` is provided. */
   expansionLevel?: number;
+  /** Aggregate expressions (COUNT, SUM, AVG, MIN, MAX) to apply across the result set. */
+  aggregates?: EntityAggregate[];
+  /** Field names to group aggregate results by. Required when `aggregates` and `selectedFields` are both provided. */
+  groupBy?: string[];
 } & PaginationOptions;
 
 /**

@@ -9,6 +9,7 @@ import {
 import { registerResource } from '../../utils/cleanup';
 import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination } from '../../utils/helpers';
 import {
+  EntityAggregateFunction,
   EntityFieldDataType,
   EntityRecord,
   FieldDisplayType,
@@ -738,6 +739,27 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(Array.isArray(result.items)).toBe(true);
       expect(result.items.length).toBeLessThanOrEqual(2);
       expect(hasValidPagination(result)).toBe(true);
+    });
+
+    it('should return aggregate count when aggregates is provided without groupBy', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecordsById(entityId, {
+        aggregates: [
+          { function: EntityAggregateFunction.Count, field: 'Id', alias: 'total' },
+        ],
+      });
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBe(1);
+      const row = result.items[0] as Record<string, any>;
+      expect(row.total).toBeDefined();
+      expect(typeof row.total).toBe('number');
+      expect(row.total).toBeGreaterThanOrEqual(0);
     });
   });
 

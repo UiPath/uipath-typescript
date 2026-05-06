@@ -354,19 +354,24 @@ export interface EntityServiceModel {
   deleteRecordById(entityId: string, recordId: string): Promise<void>;
 
   /**
-   * Queries entity records with filters, sorting, and SDK-managed pagination
+   * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination.
+   *
+   * Returns matching records (filter/sort/page mode) or aggregated rows
+   * (when `aggregates` is provided). In aggregate mode, each item in the response
+   * contains the `groupBy` field values plus aggregate results keyed by their alias
+   * (or `{FUNCTION}_{field}` if `alias` is omitted).
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
-   * // Non-paginated query with a filter
+   * // Filter + sort
    * const result = await entities.queryRecordsById(<id>, {
    *   filterGroup: {
    *     logicalOperator: LogicalOperator.And,
@@ -376,11 +381,28 @@ export interface EntityServiceModel {
    * });
    * console.log(`Found ${result.totalCount} records`);
    *
-   * // With pagination
+   * // Pagination
    * const page1 = await entities.queryRecordsById(<id>, { pageSize: 25 });
    * if (page1.hasNextPage) {
    *   const page2 = await entities.queryRecordsById(<id>, { cursor: page1.nextCursor });
    * }
+   *
+   * // Aggregate: count of records per status
+   * const byStatus = await entities.queryRecordsById(<id>, {
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum (no grouping)
+   * const totals = await entities.queryRecordsById(<id>, {
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
    * ```
    */
   queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(id: string, options?: T): Promise<
@@ -760,9 +782,9 @@ export interface EntityMethods {
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
-   * Queries records in this entity with filters, sorting, and SDK-managed pagination
+   * Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination.
    *
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
@@ -776,6 +798,15 @@ export interface EntityMethods {
    *   sortOptions: [{ fieldName: "createdTime", isDescending: true }],
    * });
    * console.log(`Found ${result.totalCount} records`);
+   *
+   * // Aggregate: count of records per status
+   * const byStatus = await entity.queryRecords({
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
    * ```
    */
   queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<

@@ -1,0 +1,17 @@
+{
+  "name": "datafabric-dashboard-app",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Vanilla JS sample showing Data Fabric aggregate queries powering a dashboard",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@uipath/uipath-typescript": "file:../.."
+  },
+  "devDependencies": {
+    "vite": "^7.3.2"
+  }
+}
