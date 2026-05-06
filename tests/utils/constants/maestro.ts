@@ -3,6 +3,8 @@
  * Maestro-specific constants only
  */
 
+import { EscalationTriggerType } from '../../../src/models/maestro/case-instances.types';
+
 export const MAESTRO_TEST_CONSTANTS = {
   // Maestro-specific identifiers
   PROCESS_KEY: 'TestProcess',
@@ -118,7 +120,7 @@ export const MAESTRO_TEST_CONSTANTS = {
   SLA_CASE_NAME: 'Agentic Case',
   SLA_DUE_TIME: '5/8/2026 11:20:17 AM',
   SLA_ESCALATION_RULE_INDEX: '0',
-  SLA_ESCALATION_RULE_TYPE: 'None',
+  SLA_ESCALATION_RULE_TYPE: EscalationTriggerType.NONE,
   SLA_LAST_MODIFIED_TIME: '4/28/2026 11:20:17 AM',
   ERROR_SLA_SUMMARY_FAILED: 'Failed to fetch SLA summary',
 

@@ -129,8 +129,7 @@ export interface SlaSummaryItem {
   slaDueTime: string;
   slaStatus: SlaSummaryStatus;
   escalationRuleIndex: string;
-  /** Type of escalation rule applied (e.g., "None", "TimeElapsed") — not a fixed set */
-  escalationRuleType: string;
+  escalationRuleType: EscalationTriggerType;
   /** Current status of the case instance (e.g., "Cancelled", "Active") — not a fixed set */
   instanceStatus: string;
   /** Last modification timestamp in UTC (ISO 8601 format) */
@@ -213,7 +212,9 @@ export interface EscalationAction {
  */
 export enum EscalationTriggerType {
   SLA_BREACHED = 'sla-breached',
-  AT_RISK = 'at-risk'
+  AT_RISK = 'at-risk',
+  /** Default value when no escalation rule is defined */
+  NONE = 'None'
 }
 
 /**
