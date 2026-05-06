@@ -1,6 +1,6 @@
 {
   "name": "@uipath/core-telemetry",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "Shared typescript telemetry package. Sends Application Insights custom events through OpenTelemetry's batched log pipeline.",
   "license": "MIT",
   "type": "module",

@@ -6,12 +6,12 @@ import { Task, MessageSeverity, TaskCompleteResponse } from './types';
  * ### Usage
  *
  * ```typescript
- * import { CodedActionApps } from '@uipath/coded-action-app';
+ * import { CodedActionApp } from '@uipath/coded-action-app';
  *
- * const service = new CodedActionApps();
+ * const service = new CodedActionApp();
  * ```
  */
-export interface CodedActionAppsServiceModel {
+export interface CodedActionAppServiceModel {
 
   /**
    * Notifies Action Center that the task data has been changed by the user.

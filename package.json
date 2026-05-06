@@ -177,8 +177,8 @@
         "build": "rollup -c",
         "build:watch": "rollup -c -w",
         "clean": "rimraf dist && rimraf node_modules && rimraf package-lock.json",
-        "docs:api": "typedoc && npm run docs:post-process && npm run docs:coded-action-apps",
-        "docs:coded-action-apps": "npm run docs --prefix packages/coded-action-apps",
+        "docs:api": "typedoc && npm run docs:post-process && npm run docs:coded-action-app",
+        "docs:coded-action-app": "npm run docs --prefix packages/coded-action-app",
         "docs:post-process": "node scripts/docs-post-process.mjs",
         "lint": "oxlint",
         "typecheck": "tsc --noEmit",
@@ -196,7 +196,7 @@
         "test:coverage": "vitest --coverage"
     },
     "dependencies": {
-        "@opentelemetry/sdk-logs": "^0.204.0",
+        "@uipath/core-telemetry": "^1.0.0-beta.1",
         "socket.io-client": "^4.8.1"
     },
     "peerDependencies": {
@@ -227,8 +227,5 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/UiPath/uipath-typescript.git"
-    },
-    "workspaces": [
-        "packages/*"
-    ]
+    }
 }
