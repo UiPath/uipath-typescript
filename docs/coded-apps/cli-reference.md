@@ -48,6 +48,9 @@ $ uip login [options]
 | `-t, --tenant` | string | Tenant name (non-interactive mode) | — |
 | `--it, --interactive` | boolean | Interactively select tenant from list | — |
 
+!!! note
+    Publishing and deploying coded apps with `client-id` and `client-secret` based login is not currently supported. Use interactive browser-based user OAuth login only.
+
 **Examples**
 
 <!-- termynal -->
