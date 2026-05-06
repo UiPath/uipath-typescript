@@ -2,6 +2,7 @@ import { BaseService } from '../../base';
 import {
   FeedbackGetResponse,
   FeedbackGetAllOptions,
+  FeedbackGetByIdOptions,
 } from '../../../models/agents/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FeedbackMap } from '../../../models/agents/feedback/feedback.constants';
@@ -89,7 +90,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * Gets a single feedback entry by its feedback ID.
    *
    * @param id - Feedback ID (GUID) of the feedback entry
-   * @param folderKey The folder key for authorization
+   * @param options - Optional query parameters including folderKey for authorization {@link FeedbackGetByIdOptions}
    * @returns Promise resolving to {@link FeedbackGetResponse}
    * @example
    * ```typescript
@@ -101,18 +102,17 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * const allFeedback = await feedback.getAll({ pageSize: 10 });
    * const feedbackId = allFeedback.items[0].id;
    * const folderKey = allFeedback.items[0].folderKey;
-   * const item = await feedback.getById(feedbackId, folderKey);
+   * const item = await feedback.getById(feedbackId, { folderKey });
    * console.log(item.isPositive, item.comment, item.status);
    * ```
    */
   @track('Feedback.GetById')
-  async getById(id: string, folderKey: string): Promise<FeedbackGetResponse> {
+  async getById(id: string, options?: FeedbackGetByIdOptions): Promise<FeedbackGetResponse> {
     if (!id) throw new ValidationError({ message: 'Feedback ID is required for getById' });
-    if (!folderKey) throw new ValidationError({ message: 'Folder key is required for getById' });
 
     const response = await this.get<RawFeedbackGetResponse>(
       FEEDBACK_ENDPOINTS.GET_BY_ID(id),
-      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
     );
     return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
   }

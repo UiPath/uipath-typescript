@@ -76,14 +76,14 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should retrieve feedback by ID', async () => {
-      const result = await feedback.getById(existingFeedbackId, existingFolderKey);
+      const result = await feedback.getById(existingFeedbackId, { folderKey: existingFolderKey });
 
       expect(result).toBeDefined();
       expect(result.id).toBe(existingFeedbackId);
     });
 
     it('should have expected fields on the retrieved feedback', async () => {
-      const result: FeedbackGetResponse = await feedback.getById(existingFeedbackId, existingFolderKey);
+      const result: FeedbackGetResponse = await feedback.getById(existingFeedbackId, { folderKey: existingFolderKey });
 
       expect(result.id).toBeDefined();
       expect(result.traceId).toBeDefined();
@@ -96,7 +96,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should transform API fields — camelCase fields present, raw fields absent', async () => {
-      const result = await feedback.getById(existingFeedbackId, existingFolderKey);
+      const result = await feedback.getById(existingFeedbackId, { folderKey: existingFolderKey });
 
       expect(result.createdTime).toBeDefined();
       expect(result.updatedTime).toBeDefined();

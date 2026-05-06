@@ -66,6 +66,14 @@ export interface FeedbackGetResponse {
 }
 
 /**
+ * Options for retrieving a single feedback entry by ID
+ */
+export interface FeedbackGetByIdOptions {
+  /** Folder key for authorization (required for folder-scoped tenants) */
+  folderKey?: string;
+}
+
+/**
  * Options for retrieving multiple feedback entries
  */
 export type FeedbackGetAllOptions = PaginationOptions & {
