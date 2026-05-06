@@ -73,7 +73,10 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
         throw new Error('No feedback available for getById tests — create at least one feedback entry first');
       }
       existingFeedbackId = result.items[0].id;
-      existingFolderKey = result.items[0].folderKey!;
+      if (!result.items[0].folderKey) {
+        throw new Error('Feedback entry missing folderKey — cannot run getById tests');
+      }
+      existingFolderKey = result.items[0].folderKey;
     });
 
     it('should retrieve feedback by ID', async () => {

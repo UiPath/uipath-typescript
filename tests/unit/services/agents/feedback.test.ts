@@ -124,13 +124,9 @@ describe('FeedbackService Unit Tests', () => {
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
-    it('should work without folderKey option', async () => {
-      mockApiClient.get.mockResolvedValue(createMockFeedback());
-
-      const result = await feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
-
-      expect(result).toBeDefined();
-      expect(result.id).toBe(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
+    it('should throw ValidationError when folderKey is empty', async () => {
+      await expect(feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: '' })).rejects.toThrow('folderKey is required');
+      expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
     it('should throw error when feedback not found', async () => {

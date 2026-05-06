@@ -2,7 +2,7 @@ import { BaseService } from '../../base';
 import {
   FeedbackGetResponse,
   FeedbackGetAllOptions,
-  FeedbackGetByIdOptions,
+  FeedbackOptions,
 } from '../../../models/agents/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FeedbackMap } from '../../../models/agents/feedback/feedback.constants';
@@ -90,7 +90,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * Gets a single feedback entry by its feedback ID.
    *
    * @param id - Feedback ID (GUID) of the feedback entry
-   * @param options - Optional query parameters including folderKey for authorization {@link FeedbackGetByIdOptions}
+   * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
    * @returns Promise resolving to {@link FeedbackGetResponse}
    * @example
    * ```typescript
@@ -107,8 +107,9 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * ```
    */
   @track('Feedback.GetById')
-  async getById(id: string, options?: FeedbackGetByIdOptions): Promise<FeedbackGetResponse> {
+  async getById(id: string, options: FeedbackOptions): Promise<FeedbackGetResponse> {
     if (!id) throw new ValidationError({ message: 'Feedback ID is required for getById' });
+    if (!options?.folderKey) throw new ValidationError({ message: 'folderKey is required for getById' });
 
     const response = await this.get<RawFeedbackGetResponse>(
       FEEDBACK_ENDPOINTS.GET_BY_ID(id),

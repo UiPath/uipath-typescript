@@ -1,7 +1,7 @@
 import type {
   FeedbackGetResponse,
   FeedbackGetAllOptions,
-  FeedbackGetByIdOptions,
+  FeedbackOptions,
 } from './feedback.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 
@@ -72,7 +72,7 @@ export interface FeedbackServiceModel {
    * Gets a single feedback entry by its feedback ID.
    *
    * @param id - Feedback ID (GUID) of the feedback entry
-   * @param options - Optional query parameters including folderKey for authorization {@link FeedbackGetByIdOptions}
+   * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
    * @returns Promise resolving to {@link FeedbackGetResponse}
    * @example
    * ```typescript
@@ -88,5 +88,5 @@ export interface FeedbackServiceModel {
    * console.log(item.isPositive, item.comment, item.status);
    * ```
    */
-  getById(id: string, options?: FeedbackGetByIdOptions): Promise<FeedbackGetResponse>;
+  getById(id: string, options: FeedbackOptions): Promise<FeedbackGetResponse>;
 }

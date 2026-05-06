@@ -66,11 +66,11 @@ export interface FeedbackGetResponse {
 }
 
 /**
- * Options for retrieving a single feedback entry by ID
+ * Options shared across feedback operations
  */
-export interface FeedbackGetByIdOptions {
-  /** Folder key for authorization (required for folder-scoped tenants) */
-  folderKey?: string;
+export interface FeedbackOptions {
+  /** Folder key for authorization */
+  folderKey: string;
 }
 
 /**
