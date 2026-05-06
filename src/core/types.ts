@@ -23,6 +23,11 @@ export interface IUiPath {
   initialize(): Promise<void>;
 
   /**
+   * Enables multi-login behavior for OAuth by showing the login picker.
+   */
+  setMultiLogin(): void;
+
+  /**
    * Check if the SDK has been initialized
    */
   isInitialized(): boolean;

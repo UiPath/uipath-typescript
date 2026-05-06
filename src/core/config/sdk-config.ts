@@ -10,12 +10,11 @@ export interface OAuthFields {
   clientId: string;
   redirectUri: string;
   scope: string;
-  includeAcrValues?: boolean;
 }
 
 // Configuration type that enforces either secret or complete OAuth fields
 export type UiPathSDKConfig = BaseConfig & (
-  | { secret: string; clientId?: never; redirectUri?: never; scope?: never; includeAcrValues?: never }
+  | { secret: string; clientId?: never; redirectUri?: never; scope?: never }
   | ({ secret?: never } & OAuthFields)
 );
 

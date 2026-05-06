@@ -12,6 +12,7 @@ const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 export class AuthService {
   private config: Config;
   private tokenManager: TokenManager;
+  private skipAcrValues: boolean = false;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     // Only use stored OAuth context when completing an active callback (URL has ?code=).
@@ -106,8 +107,7 @@ export class AuthService {
       tenantName: context.tenantName,
       clientId: context.clientId,
       redirectUri: context.redirectUri,
-      scope: context.scope,
-      includeAcrValues: context.includeAcrValues
+      scope: context.scope
     };
   }
 
@@ -116,6 +116,13 @@ export class AuthService {
    */
   public getTokenManager(): TokenManager {
     return this.tokenManager;
+  }
+
+  /**
+   * Enables login picker behavior by omitting acr_values from the authorization URL.
+   */
+  public setMultiLogin(): void {
+    this.skipAcrValues = true;
   }
 
   /**
@@ -346,7 +353,7 @@ export class AuthService {
     });
 
     const authorizeUrl = `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
-    return this.config.includeAcrValues === false
+    return this.skipAcrValues
       ? authorizeUrl
       : `${authorizeUrl}&acr_values=${acrValues}`;
   }
@@ -416,8 +423,7 @@ export class AuthService {
       baseUrl: this.config.baseUrl,
       orgName: this.config.orgName,
       tenantName: this.config.tenantName,
-      scope,
-      includeAcrValues: this.config.includeAcrValues
+      scope
     };
     
     sessionStorage.setItem(AUTH_STORAGE_KEYS.OAUTH_CONTEXT, JSON.stringify(oauthContext));

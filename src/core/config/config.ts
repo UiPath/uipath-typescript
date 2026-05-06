@@ -7,8 +7,7 @@ export const ConfigSchema = z.object({
   secret: z.string().optional(),
   clientId: z.string().optional(),
   redirectUri: z.string().url().optional(),
-  scope: z.string().optional(),
-  includeAcrValues: z.boolean().optional()
+  scope: z.string().optional()
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -21,7 +20,6 @@ interface ConfigOptions {
   clientId?: string;
   redirectUri?: string;
   scope?: string;
-  includeAcrValues?: boolean;
 }
 
 export class UiPathConfig {
@@ -32,7 +30,6 @@ export class UiPathConfig {
   public readonly clientId?: string;
   public readonly redirectUri?: string;
   public readonly scope?: string;
-  public readonly includeAcrValues?: boolean;
 
   constructor(options: ConfigOptions) {
     this.baseUrl = options.baseUrl;
@@ -42,7 +39,6 @@ export class UiPathConfig {
     this.clientId = options.clientId;
     this.redirectUri = options.redirectUri;
     this.scope = options.scope;
-    this.includeAcrValues = options.includeAcrValues;
   }
 }
 
