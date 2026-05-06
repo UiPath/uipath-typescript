@@ -53,6 +53,8 @@ export interface FeedbackGetResponse {
   isPositive: boolean;
   /** Categories associated with this feedback entry */
   feedbackCategories: FeedbackCategory[];
+  /** Folder key (GUID) of the folder the feedback belongs to */
+  folderKey?: string;
   /** Email address of the user who submitted the feedback */
   userEmail?: string;
   /** Current status of the feedback in the review workflow */

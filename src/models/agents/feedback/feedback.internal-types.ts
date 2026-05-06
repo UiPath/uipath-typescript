@@ -14,6 +14,7 @@ export interface RawFeedbackGetResponse {
   metadata?: string;
   isPositive: boolean;
   feedbackCategories: FeedbackCategory[];
+  folderKey?: string;
   userEmail?: string;
   status: FeedbackStatus;
   createdAt: string;

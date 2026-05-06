@@ -7,6 +7,9 @@ export const FEEDBACK_TEST_CONSTANTS = {
   FEEDBACK_ID: 'feedback-1',
   FEEDBACK_ID_2: 'feedback-2',
 
+  // Folder key for authorization
+  FOLDER_KEY: '00000000-0000-0000-0000-000000000001',
+
   // Agent identifiers (string UUID for feedback API)
   AGENT_UUID: 'agent-789',
 

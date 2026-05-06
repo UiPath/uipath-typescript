@@ -98,7 +98,7 @@ describe('FeedbackService Unit Tests', () => {
       const mockResponse = createMockFeedback();
       mockApiClient.get.mockResolvedValue(mockResponse);
 
-      const result = await feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
+      const result = await feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, FEEDBACK_TEST_CONSTANTS.FOLDER_KEY);
 
       expect(result).toBeDefined();
       expect(result.id).toBe(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
@@ -111,7 +111,7 @@ describe('FeedbackService Unit Tests', () => {
     it('should transform createdAt and updatedAt to createdTime and updatedTime', async () => {
       mockApiClient.get.mockResolvedValue(createMockFeedback());
 
-      const result = await feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
+      const result = await feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, FEEDBACK_TEST_CONSTANTS.FOLDER_KEY);
 
       expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
       expect(result.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
@@ -120,7 +120,12 @@ describe('FeedbackService Unit Tests', () => {
     });
 
     it('should throw ValidationError when ID is empty', async () => {
-      await expect(feedbackService.getById('')).rejects.toThrow('Feedback ID is required');
+      await expect(feedbackService.getById('', FEEDBACK_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow('Feedback ID is required');
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when folder key is empty', async () => {
+      await expect(feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, '')).rejects.toThrow('Folder key is required for getById');
       expect(mockApiClient.get).not.toHaveBeenCalled();
     });
 
@@ -128,7 +133,7 @@ describe('FeedbackService Unit Tests', () => {
       const error = new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID)).rejects.toThrow(
+      await expect(feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, FEEDBACK_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(
         FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND
       );
     });

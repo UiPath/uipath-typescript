@@ -14,6 +14,8 @@ import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_KEY } from '../../../utils/constants/headers';
 
 /**
  * Service for interacting with UiPath Agent Feedback API
@@ -87,6 +89,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * Gets a single feedback entry by its feedback ID.
    *
    * @param id - Feedback ID (GUID) of the feedback entry
+   * @param folderKey The folder key for authorization
    * @returns Promise resolving to {@link FeedbackGetResponse}
    * @example
    * ```typescript
@@ -94,23 +97,23 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    *
    * const feedback = new Feedback(sdk);
    *
-   * // Get a specific feedback entry
-   * const item = await feedback.getById(<feedbackId>);
-   * console.log(item.isPositive, item.comment, item.status);
-   * ```
-   * @example
-   * ```typescript
-   * // First, get feedback entries to obtain the ID
+   * // First, get feedback entries to obtain the ID and folder key
    * const allFeedback = await feedback.getAll({ pageSize: 10 });
    * const feedbackId = allFeedback.items[0].id;
-   * const item = await feedback.getById(feedbackId);
+   * const folderKey = allFeedback.items[0].folderKey;
+   * const item = await feedback.getById(feedbackId, folderKey);
+   * console.log(item.isPositive, item.comment, item.status);
    * ```
    */
   @track('Feedback.GetById')
-  async getById(id: string): Promise<FeedbackGetResponse> {
-    if (!id) throw new ValidationError({ message: 'Feedback ID is required' });
+  async getById(id: string, folderKey: string): Promise<FeedbackGetResponse> {
+    if (!id) throw new ValidationError({ message: 'Feedback ID is required for getById' });
+    if (!folderKey) throw new ValidationError({ message: 'Folder key is required for getById' });
 
-    const response = await this.get<RawFeedbackGetResponse>(FEEDBACK_ENDPOINTS.GET_BY_ID(id));
+    const response = await this.get<RawFeedbackGetResponse>(
+      FEEDBACK_ENDPOINTS.GET_BY_ID(id),
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
     return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
   }
 }

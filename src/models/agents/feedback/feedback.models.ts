@@ -71,6 +71,7 @@ export interface FeedbackServiceModel {
    * Gets a single feedback entry by its feedback ID.
    *
    * @param id - Feedback ID (GUID) of the feedback entry
+   * @param folderKey The folder key for authorization
    * @returns Promise resolving to {@link FeedbackGetResponse}
    * @example
    * ```typescript
@@ -78,17 +79,13 @@ export interface FeedbackServiceModel {
    *
    * const feedback = new Feedback(sdk);
    *
-   * // Get a specific feedback entry
-   * const item = await feedback.getById(<feedbackId>);
-   * console.log(item.isPositive, item.comment, item.status);
-   * ```
-   * @example
-   * ```typescript
-   * // First, get feedback entries to obtain the ID
+   * // First, get feedback entries to obtain the ID and folder key
    * const allFeedback = await feedback.getAll({ pageSize: 10 });
    * const feedbackId = allFeedback.items[0].id;
-   * const item = await feedback.getById(feedbackId);
+   * const folderKey = allFeedback.items[0].folderKey;
+   * const item = await feedback.getById(feedbackId, folderKey);
+   * console.log(item.isPositive, item.comment, item.status);
    * ```
    */
-  getById(id: string): Promise<FeedbackGetResponse>;
+  getById(id: string, folderKey: string): Promise<FeedbackGetResponse>;
 }

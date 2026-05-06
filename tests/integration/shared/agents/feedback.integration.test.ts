@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Feedback } from '../../../../src/services/agents/feedback';
 import { FeedbackStatus, FeedbackGetResponse } from '../../../../src/models/agents/feedback/feedback.types';
@@ -63,25 +63,27 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   });
 
   describe('getById', () => {
-    let existingFeedbackId: string;
+    let existingFeedbackId!: string;
+    let existingFolderKey!: string;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
       const result = await feedback.getAll({ pageSize: 1 });
       if (result.items.length === 0) {
         throw new Error('No feedback available for getById tests — create at least one feedback entry first');
       }
       existingFeedbackId = result.items[0].id;
+      existingFolderKey = result.items[0].folderKey!;
     });
 
     it('should retrieve feedback by ID', async () => {
-      const result = await feedback.getById(existingFeedbackId);
+      const result = await feedback.getById(existingFeedbackId, existingFolderKey);
 
       expect(result).toBeDefined();
       expect(result.id).toBe(existingFeedbackId);
     });
 
     it('should have expected fields on the retrieved feedback', async () => {
-      const result: FeedbackGetResponse = await feedback.getById(existingFeedbackId);
+      const result: FeedbackGetResponse = await feedback.getById(existingFeedbackId, existingFolderKey);
 
       expect(result.id).toBeDefined();
       expect(result.traceId).toBeDefined();
@@ -94,7 +96,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should transform API fields — camelCase fields present, raw fields absent', async () => {
-      const result = await feedback.getById(existingFeedbackId);
+      const result = await feedback.getById(existingFeedbackId, existingFolderKey);
 
       expect(result.createdTime).toBeDefined();
       expect(result.updatedTime).toBeDefined();
