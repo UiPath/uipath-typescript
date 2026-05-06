@@ -67,6 +67,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     let existingFolderKey!: string;
 
     beforeAll(async () => {
+      feedback = getServices().feedback!;
       const result = await feedback.getAll({ pageSize: 1 });
       if (result.items.length === 0) {
         throw new Error('No feedback available for getById tests — create at least one feedback entry first');
