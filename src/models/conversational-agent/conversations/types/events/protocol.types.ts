@@ -487,6 +487,11 @@ export interface ToolCallEvent {
 
 /**
  * Schema for tool call confirmation interrupt value.
+ *
+ * @deprecated Tool call confirmation now travels on {@link ToolCallStartEvent} via
+ * `requireConfirmation: true` / `inputSchema` and is responded to with
+ * {@link ToolCallConfirmationEvent}. This shape is retained for agents on the legacy
+ * runtime that still emit confirmations as interrupts.
  */
 export interface ToolCallConfirmationValue {
   /**
@@ -509,6 +514,10 @@ export interface ToolCallConfirmationValue {
 
 /**
  * Schema for tool call confirmation end value.
+ *
+ * @deprecated Confirmation responses now use {@link ToolCallConfirmationEvent} (sent via
+ * {@link ToolCallStream.sendToolCallConfirm}). This shape is retained for agents on the
+ * legacy runtime that consume confirmations through the interrupt-end channel.
  */
 export interface ToolCallConfirmationEndValue {
   /**
@@ -523,6 +532,11 @@ export interface ToolCallConfirmationEndValue {
 
 /**
  * Known interrupt start event for tool call confirmation.
+ *
+ * @deprecated Emitted only by agents on the legacy runtime. Agents on the current runtime
+ * express confirmation as `requireConfirmation: true` on {@link ToolCallStartEvent}, with
+ * the client responding via {@link ToolCallConfirmationEvent} (`confirmToolCall` on
+ * {@link ToolCallEvent}).
  */
 export interface ToolCallConfirmationInterruptStartEvent {
   /**
