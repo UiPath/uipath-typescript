@@ -120,6 +120,8 @@ export class AuthService {
 
   /**
    * Enables the UiPath login picker during OAuth sign-in.
+   *
+   * @internal
    */
   public setMultiLogin(): void {
     this.skipAcrValues = true;
