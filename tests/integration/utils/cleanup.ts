@@ -140,8 +140,9 @@ export async function cleanupTestFeedbackEntry(
   try {
     const { feedback } = getServices();
     if (!feedback) return;
+    if (!folderKey) return;
     await retryWithBackoff(async () => {
-      await feedback.deleteById(id, { folderKey: folderKey! });
+      await feedback.deleteById(id, { folderKey });
     });
     console.log(`Cleaned up test feedback entry: ${id}`);
   } catch (error) {

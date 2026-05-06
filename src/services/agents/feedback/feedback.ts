@@ -131,7 +131,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    *
    * const feedback = new Feedback(sdk);
    *
-   * const item = await feedback.create({
+   * const item = await feedback.submit({
    *   traceId: '<traceId>',
    *   spanId: '<spanId>',
    *   isPositive: true,
@@ -141,14 +141,14 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * console.log(item.id, item.status);
    * ```
    */
-  @track('Feedback.Create')
-  async create(options: FeedbackCreateOptions): Promise<FeedbackGetResponse> {
-    if (!options.traceId) throw new ValidationError({ message: 'traceId is required for create' });
-    if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for create' });
+  @track('Feedback.Submit')
+  async submit(options: FeedbackCreateOptions): Promise<FeedbackGetResponse> {
+    if (!options.traceId) throw new ValidationError({ message: 'traceId is required for submit' });
+    if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for submit' });
 
     const { folderKey, ...request } = options;
     const response = await this.post<RawFeedbackGetResponse>(
-      FEEDBACK_ENDPOINTS.CREATE,
+      FEEDBACK_ENDPOINTS.SUBMIT,
       request,
       { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
@@ -209,7 +209,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     if (!id) throw new ValidationError({ message: 'Feedback ID is required for deleteById' });
     if (!options?.folderKey) throw new ValidationError({ message: 'folderKey is required for deleteById' });
 
-    await super.delete(
+    await this.delete(
       FEEDBACK_ENDPOINTS.DELETE(id),
       { headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
     );

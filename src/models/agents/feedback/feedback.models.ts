@@ -103,7 +103,7 @@ export interface FeedbackServiceModel {
    *
    * const feedback = new Feedback(sdk);
    *
-   * const item = await feedback.create({
+   * const item = await feedback.submit({
    *   traceId: '<traceId>',
    *   spanId: '<spanId>',
    *   isPositive: true,
@@ -113,7 +113,7 @@ export interface FeedbackServiceModel {
    * console.log(item.id, item.status);
    * ```
    */
-  create(options: FeedbackCreateOptions): Promise<FeedbackGetResponse>;
+  submit(options: FeedbackCreateOptions): Promise<FeedbackGetResponse>;
 
   /**
    * Updates an existing feedback entry.

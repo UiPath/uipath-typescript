@@ -110,7 +110,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('create / updateById / deleteById', () => {
+  describe('submit / updateById / deleteById', () => {
     let traceId!: string;
     let folderKey!: string;
     const createdIds: string[] = [];
@@ -134,8 +134,8 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       }
     });
 
-    it('should create a feedback entry', async () => {
-      const result = await feedback.create({ traceId, isPositive: true, comment: 'Integration test feedback', folderKey });
+    it('should submit a feedback entry', async () => {
+      const result = await feedback.submit({ traceId, isPositive: true, comment: 'Integration test feedback', folderKey });
 
       createdIds.push(result.id);
       registerResource('feedbackEntries', { id: result.id, folderKey });
@@ -151,7 +151,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should update a feedback entry', async () => {
-      const created = await feedback.create({ traceId, isPositive: true, comment: 'Before update', folderKey });
+      const created = await feedback.submit({ traceId, isPositive: true, comment: 'Before update', folderKey });
       createdIds.push(created.id);
       registerResource('feedbackEntries', { id: created.id, folderKey });
 
@@ -168,9 +168,12 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should delete a feedback entry', async () => {
-      const created = await feedback.create({ traceId, isPositive: true, comment: 'To be deleted', folderKey });
+      const created = await feedback.submit({ traceId, isPositive: true, comment: 'To be deleted', folderKey });
+      createdIds.push(created.id);
+      registerResource('feedbackEntries', { id: created.id, folderKey });
 
       await feedback.deleteById(created.id, { folderKey });
+      createdIds.splice(createdIds.indexOf(created.id), 1);
     });
   });
 });
