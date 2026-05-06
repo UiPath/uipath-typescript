@@ -1,8 +1,8 @@
 {
-  "name": "datafabric-dashboard-app",
+  "name": "datafabric-ticket-dashboard-app",
   "private": true,
   "version": "0.0.0",
-  "description": "Vanilla JS sample showing Data Fabric aggregate queries powering a dashboard",
+  "description": "Ticket Operations Dashboard — vanilla JS sample showing Data Fabric aggregates + record CRUD powering a support team lead's daily workspace",
   "type": "module",
   "scripts": {
     "dev": "vite",

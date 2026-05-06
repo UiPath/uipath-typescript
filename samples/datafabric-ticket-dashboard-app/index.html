@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket Operations Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>Ticket Operations Dashboard</h1>
+        <p class="subtitle">
+          Powered by UiPath For Coding Agents + Procode SDK + DataFabric
+        </p>
+      </div>
+      <button id="refresh-btn" class="secondary" disabled>Refresh</button>
+    </header>
+
+    <section class="auth-panel">
+      <label for="token-input">
+        Bearer token
+        <span class="hint">
+          Open <a href="https://staging.uipath.com/dataservicetest/ashishTest/datafabric_/" target="_blank" rel="noopener">staging.uipath.com/dataservicetest/ashishTest</a>
+          → DevTools → Network → any <code>/api/</code> call → copy the <code>Authorization: Bearer …</code> header value
+        </span>
+      </label>
+      <div class="token-row">
+        <input id="token-input" type="password" placeholder="Paste bearer token (kept in sessionStorage only)" autocomplete="off" />
+        <button id="apply-token-btn">Load Dashboard</button>
+        <button id="clear-token-btn" class="secondary">Clear</button>
+      </div>
+      <div id="status" class="status"></div>
+    </section>
+
+    <section id="dashboard" class="dashboard hidden">
+      <!-- KPI strip -->
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Open tickets</div><div class="kpi-value" id="kpi-open">—</div></div>
+        <div class="kpi-card breach"><div class="kpi-label">SLA breached (open)</div><div class="kpi-value" id="kpi-breach">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Avg open age</div><div class="kpi-value" id="kpi-avg">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Resolved (24h)</div><div class="kpi-value" id="kpi-resolved">—</div></div>
+      </div>
+
+      <!-- Charts grid -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Tickets per agent</h3>
+          <p class="chart-note">
+            <code>groupBy: ['assignee']</code>, <code>COUNT(Id)</code>, status ≠ Resolved
+          </p>
+          <canvas id="chart-by-agent"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>Avg resolution time by category</h3>
+          <p class="chart-note">
+            <code>groupBy: ['category']</code>, <code>AVG(resolutionMinutes)</code>
+          </p>
+          <canvas id="chart-by-category"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>Where time is going</h3>
+          <p class="chart-note">
+            <code>groupBy: ['reasonForDelay']</code>, <code>COUNT(Id)</code>, status ≠ Resolved
+          </p>
+          <canvas id="chart-by-reason"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>Tickets by age</h3>
+          <p class="chart-note">
+            4 parallel filtered <code>COUNT</code> queries via <code>Promise.all</code>
+          </p>
+          <canvas id="chart-by-age"></canvas>
+        </div>
+      </div>
+
+      <!-- Drill-down list with filters and bulk actions -->
+      <div class="list-card">
+        <div class="list-header">
+          <h3>Tickets</h3>
+          <div class="list-filters">
+            <label>
+              Assignee
+              <select id="filter-assignee"><option value="">Any</option></select>
+            </label>
+            <label>
+              Priority
+              <select id="filter-priority">
+                <option value="">Any</option>
+                <option>Critical</option>
+                <option>High</option>
+                <option>Medium</option>
+                <option>Low</option>
+              </select>
+            </label>
+            <label>
+              Status
+              <select id="filter-status">
+                <option value="open">Open (any non-Resolved)</option>
+                <option value="">Any</option>
+                <option>Open</option>
+                <option>InProgress</option>
+                <option>WaitingOnCustomer</option>
+                <option>Escalated</option>
+                <option>Resolved</option>
+                <option>Closed</option>
+              </select>
+            </label>
+            <label>
+              Sort
+              <select id="filter-sort">
+                <option value="oldest">Oldest first</option>
+                <option value="newest">Newest first</option>
+              </select>
+            </label>
+            <button id="apply-filter-btn">Apply</button>
+          </div>
+        </div>
+
+        <div class="bulk-bar hidden" id="bulk-bar">
+          <span id="bulk-count">0 selected</span>
+          <input id="bulk-assignee-input" type="text" placeholder="Reassign to (email)" />
+          <button id="bulk-reassign-btn">Reassign selected</button>
+        </div>
+
+        <div class="list-table-wrap">
+          <table class="list-table">
+            <thead>
+              <tr>
+                <th class="check"><input type="checkbox" id="select-all" /></th>
+                <th>#</th>
+                <th>Subject</th>
+                <th>Customer</th>
+                <th>Assignee</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Category</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody id="list-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Drill-down side panel -->
+    <aside id="drilldown" class="drilldown hidden">
+      <div class="drilldown-header">
+        <h3 id="dd-title">Ticket</h3>
+        <button id="dd-close" class="icon-btn" title="Close">×</button>
+      </div>
+      <div class="drilldown-body">
+        <dl class="dd-grid">
+          <dt>Customer</dt><dd id="dd-customer">—</dd>
+          <dt>Subject</dt><dd id="dd-subject">—</dd>
+          <dt>Description</dt><dd id="dd-description">—</dd>
+          <dt>Created</dt><dd id="dd-created">—</dd>
+          <dt>Age</dt><dd id="dd-age">—</dd>
+        </dl>
+
+        <div class="dd-attachment" id="dd-attachment-wrap">
+          <h4>Attachment</h4>
+          <button id="dd-attachment-btn" class="secondary">Download</button>
+          <div id="dd-attachment-preview"></div>
+        </div>
+
+        <h4>Edit</h4>
+        <form id="dd-form" class="dd-form">
+          <label>Status
+            <select name="status">
+              <option>Open</option>
+              <option>InProgress</option>
+              <option>WaitingOnCustomer</option>
+              <option>Escalated</option>
+              <option>Resolved</option>
+              <option>Closed</option>
+            </select>
+          </label>
+          <label>Priority
+            <select name="priority">
+              <option>Critical</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+          </label>
+          <label>Reason for delay
+            <select name="reasonForDelay">
+              <option value="">(none)</option>
+              <option>AwaitingCustomer</option>
+              <option>AwaitingEngineering</option>
+              <option>PendingRefundApproval</option>
+              <option>AwaitingApproval</option>
+              <option>KnowledgeGap</option>
+            </select>
+          </label>
+          <label>Assignee
+            <input name="assignee" type="text" />
+          </label>
+          <button type="submit">Save changes</button>
+        </form>
+        <div id="dd-status" class="dd-status"></div>
+      </div>
+    </aside>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
