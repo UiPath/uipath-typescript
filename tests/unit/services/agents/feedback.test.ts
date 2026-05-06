@@ -6,6 +6,7 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { FEEDBACK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { TEST_CONSTANTS, FEEDBACK_TEST_CONSTANTS, CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 import { createMockFeedback } from '../../../utils/mocks/feedback';
+import { FeedbackCreateOptions, FeedbackUpdateOptions } from '../../../../src/models/agents/feedback/feedback.types';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -136,6 +137,144 @@ describe('FeedbackService Unit Tests', () => {
       await expect(feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY })).rejects.toThrow(
         FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND
       );
+    });
+  });
+
+  describe('create', () => {
+    const createOptions: FeedbackCreateOptions = {
+      traceId: FEEDBACK_TEST_CONSTANTS.TRACE_ID,
+      spanId: FEEDBACK_TEST_CONSTANTS.SPAN_ID,
+      isPositive: true,
+      comment: 'Great response!',
+      folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY,
+    };
+
+    it('should create feedback successfully', async () => {
+      mockApiClient.post.mockResolvedValue(createMockFeedback());
+
+      const result = await feedbackService.create(createOptions);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CREATE,
+        expect.objectContaining({ traceId: FEEDBACK_TEST_CONSTANTS.TRACE_ID }),
+        expect.any(Object)
+      );
+    });
+
+    it('should transform createdAt and updatedAt to createdTime and updatedTime', async () => {
+      mockApiClient.post.mockResolvedValue(createMockFeedback());
+
+      const result = await feedbackService.create(createOptions);
+
+      expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
+      expect(result.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
+      expect((result as any).createdAt).toBeUndefined();
+      expect((result as any).updatedAt).toBeUndefined();
+    });
+
+    it('should throw ValidationError when traceId is empty', async () => {
+      await expect(feedbackService.create({ ...createOptions, traceId: '' }))
+        .rejects.toThrow('traceId is required');
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when folderKey is empty', async () => {
+      await expect(feedbackService.create({ ...createOptions, folderKey: '' }))
+        .rejects.toThrow('folderKey is required');
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw error when API call fails', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND));
+
+      await expect(feedbackService.create(createOptions))
+        .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
+    });
+  });
+
+  describe('updateById', () => {
+    const updateOptions: FeedbackUpdateOptions = {
+      isPositive: false,
+      comment: 'On reflection, not great.',
+      folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY,
+    };
+
+    it('should update feedback successfully', async () => {
+      mockApiClient.post.mockResolvedValue(createMockFeedback({ isPositive: false, comment: 'On reflection, not great.' }));
+
+      const result = await feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, updateOptions);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.UPDATE(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID),
+        expect.objectContaining({ isPositive: false }),
+        expect.any(Object)
+      );
+    });
+
+    it('should transform createdAt and updatedAt to createdTime and updatedTime', async () => {
+      mockApiClient.post.mockResolvedValue(createMockFeedback());
+
+      const result = await feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, updateOptions);
+
+      expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
+      expect(result.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
+      expect((result as any).createdAt).toBeUndefined();
+      expect((result as any).updatedAt).toBeUndefined();
+    });
+
+    it('should throw ValidationError when ID is empty', async () => {
+      await expect(feedbackService.updateById('', updateOptions))
+        .rejects.toThrow('Feedback ID is required');
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when folderKey is empty', async () => {
+      await expect(feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { ...updateOptions, folderKey: '' }))
+        .rejects.toThrow('folderKey is required');
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw error when feedback not found', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND));
+
+      await expect(feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, updateOptions))
+        .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
+    });
+  });
+
+  describe('deleteById', () => {
+    it('should delete feedback successfully', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await feedbackService.deleteById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.DELETE(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID),
+        expect.any(Object)
+      );
+    });
+
+    it('should throw ValidationError when ID is empty', async () => {
+      await expect(feedbackService.deleteById('', { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY }))
+        .rejects.toThrow('Feedback ID is required');
+      expect(mockApiClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when folderKey is empty', async () => {
+      await expect(feedbackService.deleteById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: '' }))
+        .rejects.toThrow('folderKey is required');
+      expect(mockApiClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw error when feedback not found', async () => {
+      mockApiClient.delete.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND));
+
+      await expect(feedbackService.deleteById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY }))
+        .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
     });
   });
 });

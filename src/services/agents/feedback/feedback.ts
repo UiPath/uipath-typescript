@@ -3,6 +3,8 @@ import {
   FeedbackGetResponse,
   FeedbackGetAllOptions,
   FeedbackOptions,
+  FeedbackCreateOptions,
+  FeedbackUpdateOptions,
 } from '../../../models/agents/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FeedbackMap } from '../../../models/agents/feedback/feedback.constants';
@@ -116,5 +118,100 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
     );
     return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
+  }
+
+  /**
+   * Creates a feedback entry.
+   *
+   * @param options - Feedback data and folderKey for authorization {@link FeedbackCreateOptions}
+   * @returns Promise resolving to the created {@link FeedbackGetResponse}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * const item = await feedback.create({
+   *   traceId: '<traceId>',
+   *   spanId: '<spanId>',
+   *   isPositive: true,
+   *   comment: 'Great response!',
+   *   folderKey: '<folderKey>',
+   * });
+   * console.log(item.id, item.status);
+   * ```
+   */
+  @track('Feedback.Create')
+  async create(options: FeedbackCreateOptions): Promise<FeedbackGetResponse> {
+    if (!options.traceId) throw new ValidationError({ message: 'traceId is required for create' });
+    if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for create' });
+
+    const { folderKey, ...request } = options;
+    const response = await this.post<RawFeedbackGetResponse>(
+      FEEDBACK_ENDPOINTS.CREATE,
+      request,
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
+  }
+
+  /**
+   * Updates an existing feedback entry.
+   *
+   * @param id - Feedback ID (GUID) of the entry to update
+   * @param options - Updated feedback data and folderKey for authorization {@link FeedbackUpdateOptions}
+   * @returns Promise resolving to the updated {@link FeedbackGetResponse}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * const updated = await feedback.updateById('<feedbackId>', {
+   *   isPositive: false,
+   *   comment: 'On reflection, not great.',
+   *   folderKey: '<folderKey>',
+   * });
+   * console.log(updated.isPositive, updated.comment);
+   * ```
+   */
+  @track('Feedback.UpdateById')
+  async updateById(id: string, options: FeedbackUpdateOptions): Promise<FeedbackGetResponse> {
+    if (!id) throw new ValidationError({ message: 'Feedback ID is required for updateById' });
+    if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for updateById' });
+
+    const { folderKey, ...request } = options;
+    const response = await this.post<RawFeedbackGetResponse>(
+      FEEDBACK_ENDPOINTS.UPDATE(id),
+      request,
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+    );
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
+  }
+
+  /**
+   * Deletes a feedback entry by its ID.
+   *
+   * @param id - Feedback ID (GUID) of the entry to delete
+   * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
+   * @returns Promise resolving to void on success
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * await feedback.deleteById('<feedbackId>', { folderKey: '<folderKey>' });
+   * ```
+   */
+  @track('Feedback.DeleteById')
+  async deleteById(id: string, options: FeedbackOptions): Promise<void> {
+    if (!id) throw new ValidationError({ message: 'Feedback ID is required for deleteById' });
+    if (!options?.folderKey) throw new ValidationError({ message: 'folderKey is required for deleteById' });
+
+    await super.delete(
+      FEEDBACK_ENDPOINTS.DELETE(id),
+      { headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+    );
   }
 }

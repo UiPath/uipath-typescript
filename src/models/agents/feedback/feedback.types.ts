@@ -66,11 +66,59 @@ export interface FeedbackGetResponse {
 }
 
 /**
- * Options shared across feedback operations
+ * Options shared across feedback operations requiring folder-level authorization
  */
 export interface FeedbackOptions {
-  /** Folder key for authorization */
+  /** Folder key (GUID) of the folder the feedback belongs to, required for authorization */
   folderKey: string;
+}
+
+/**
+ * A category reference used when creating or updating feedback
+ */
+export interface FeedbackCategoryInput {
+  /** Unique identifier of the category */
+  id: string;
+  /** Category name */
+  category: string;
+}
+
+/**
+ * Options for creating a new feedback entry
+ */
+export interface FeedbackCreateOptions extends FeedbackOptions {
+  /** Trace identifier linking feedback to a specific agent execution */
+  traceId: string;
+  /** Span identifier representing a specific operation within the trace */
+  spanId?: string;
+  /** Identifier of the agent that generated the response being reviewed */
+  agentId?: string;
+  /** Version of the agent at the time the feedback was given (max 100 characters) */
+  agentVersion?: string;
+  /** Span type (e.g., agent, llm) */
+  spanType?: string;
+  /** Optional text comment provided by the user (max 4000 characters) */
+  comment?: string;
+  /** Optional metadata string associated with the feedback (max 4000 characters) */
+  metadata?: string;
+  /** Whether the feedback is positive (thumbs up) or negative (thumbs down) */
+  isPositive: boolean;
+  /** Categories to associate with this feedback entry */
+  categories?: FeedbackCategoryInput[];
+}
+
+/**
+ * Options for updating an existing feedback entry
+ */
+export interface FeedbackUpdateOptions extends FeedbackOptions {
+  /** Optional text comment provided by the user (max 4000 characters) */
+  comment?: string;
+  /** Optional metadata string associated with the feedback (max 4000 characters) */
+  metadata?: string;
+  /** Whether the feedback is positive (thumbs up) or negative (thumbs down) */
+  isPositive: boolean;
+  /** Categories to associate with this feedback entry */
+  categories?: FeedbackCategoryInput[];
 }
 
 /**

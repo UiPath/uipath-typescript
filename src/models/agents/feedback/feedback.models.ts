@@ -2,6 +2,8 @@ import type {
   FeedbackGetResponse,
   FeedbackGetAllOptions,
   FeedbackOptions,
+  FeedbackCreateOptions,
+  FeedbackUpdateOptions,
 } from './feedback.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 
@@ -89,4 +91,66 @@ export interface FeedbackServiceModel {
    * ```
    */
   getById(id: string, options: FeedbackOptions): Promise<FeedbackGetResponse>;
+
+  /**
+   * Creates a feedback entry.
+   *
+   * @param options - Feedback data and folderKey for authorization {@link FeedbackCreateOptions}
+   * @returns Promise resolving to the created {@link FeedbackGetResponse}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * const item = await feedback.create({
+   *   traceId: '<traceId>',
+   *   spanId: '<spanId>',
+   *   isPositive: true,
+   *   comment: 'Great response!',
+   *   folderKey: '<folderKey>',
+   * });
+   * console.log(item.id, item.status);
+   * ```
+   */
+  create(options: FeedbackCreateOptions): Promise<FeedbackGetResponse>;
+
+  /**
+   * Updates an existing feedback entry.
+   *
+   * @param id - Feedback ID (GUID) of the entry to update
+   * @param options - Updated feedback data and folderKey for authorization {@link FeedbackUpdateOptions}
+   * @returns Promise resolving to the updated {@link FeedbackGetResponse}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * const updated = await feedback.updateById('<feedbackId>', {
+   *   isPositive: false,
+   *   comment: 'On reflection, not great.',
+   *   folderKey: '<folderKey>',
+   * });
+   * console.log(updated.isPositive, updated.comment);
+   * ```
+   */
+  updateById(id: string, options: FeedbackUpdateOptions): Promise<FeedbackGetResponse>;
+
+  /**
+   * Deletes a feedback entry by its ID.
+   *
+   * @param id - Feedback ID (GUID) of the entry to delete
+   * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
+   * @returns Promise resolving to void on success
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * await feedback.deleteById('<feedbackId>', { folderKey: '<folderKey>' });
+   * ```
+   */
+  deleteById(id: string, options: FeedbackOptions): Promise<void>;
 }

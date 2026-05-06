@@ -13,6 +13,10 @@ export const FEEDBACK_TEST_CONSTANTS = {
   // Agent identifiers (string UUID for feedback API)
   AGENT_UUID: 'agent-789',
 
+  // Trace / span identifiers
+  TRACE_ID: 'trace-abc-123',
+  SPAN_ID: 'span-def-456',
+
   // Feedback category identifiers
   CATEGORY_ID: 'category-1',
   CATEGORY_NAME: 'Output',
