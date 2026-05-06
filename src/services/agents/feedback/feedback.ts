@@ -2,6 +2,7 @@ import { BaseService } from '../../base';
 import {
   FeedbackGetResponse,
   FeedbackGetAllOptions,
+  FeedbackOptions,
 } from '../../../models/agents/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FeedbackMap } from '../../../models/agents/feedback/feedback.constants';
@@ -13,6 +14,9 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { ValidationError } from '../../../core/errors';
+import { createHeaders } from '../../../utils/http/headers';
+import { FOLDER_KEY } from '../../../utils/constants/headers';
 
 /**
  * Service for interacting with UiPath Agent Feedback API
@@ -80,5 +84,37 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
       },
       excludeFromPrefix: Object.keys(options || {}),
     }, options);
+  }
+
+  /**
+   * Gets a single feedback entry by its feedback ID.
+   *
+   * @param id - Feedback ID (GUID) of the feedback entry
+   * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
+   * @returns Promise resolving to {@link FeedbackGetResponse}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * // First, get feedback entries to obtain the ID and folder key
+   * const allFeedback = await feedback.getAll({ pageSize: 10 });
+   * const feedbackId = allFeedback.items[0].id;
+   * const folderKey = allFeedback.items[0].folderKey;
+   * const item = await feedback.getById(feedbackId, { folderKey });
+   * console.log(item.isPositive, item.comment, item.status);
+   * ```
+   */
+  @track('Feedback.GetById')
+  async getById(id: string, options: FeedbackOptions): Promise<FeedbackGetResponse> {
+    if (!id) throw new ValidationError({ message: 'Feedback ID is required for getById' });
+    if (!options?.folderKey) throw new ValidationError({ message: 'folderKey is required for getById' });
+
+    const response = await this.get<RawFeedbackGetResponse>(
+      FEEDBACK_ENDPOINTS.GET_BY_ID(id),
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
+    );
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
   }
 }

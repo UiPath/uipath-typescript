@@ -92,4 +92,50 @@ describe('FeedbackService Unit Tests', () => {
       );
     });
   });
+
+  describe('getById', () => {
+    it('should get feedback by ID successfully', async () => {
+      const mockResponse = createMockFeedback();
+      mockApiClient.get.mockResolvedValue(mockResponse);
+
+      const result = await feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.GET_BY_ID(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID),
+        expect.any(Object)
+      );
+    });
+
+    it('should transform createdAt and updatedAt to createdTime and updatedTime', async () => {
+      mockApiClient.get.mockResolvedValue(createMockFeedback());
+
+      const result = await feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
+      expect(result.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
+      expect((result as any).createdAt).toBeUndefined();
+      expect((result as any).updatedAt).toBeUndefined();
+    });
+
+    it('should throw ValidationError when ID is empty', async () => {
+      await expect(feedbackService.getById('', { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY })).rejects.toThrow('Feedback ID is required');
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when folderKey is empty', async () => {
+      await expect(feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: '' })).rejects.toThrow('folderKey is required');
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should throw error when feedback not found', async () => {
+      const error = new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
+      mockApiClient.get.mockRejectedValue(error);
+
+      await expect(feedbackService.getById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY })).rejects.toThrow(
+        FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND
+      );
+    });
+  });
 });

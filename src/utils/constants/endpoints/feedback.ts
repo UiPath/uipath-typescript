@@ -5,4 +5,5 @@ import { LLMOPS_BASE } from './base';
  */
 export const FEEDBACK_ENDPOINTS = {
   GET_ALL: `${LLMOPS_BASE}/api/Feedback`,
+  GET_BY_ID: (id: string) => `${LLMOPS_BASE}/api/Feedback/${id}`,
 } as const;
