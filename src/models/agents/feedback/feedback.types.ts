@@ -66,10 +66,10 @@ export interface FeedbackGetResponse {
 }
 
 /**
- * Options shared across feedback operations requiring folder-level authorization
+ * Options shared across feedback operations
  */
 export interface FeedbackOptions {
-  /** Folder key (GUID) of the folder the feedback belongs to, required for authorization */
+  /** Folder key for authorization */
   folderKey: string;
 }
 
