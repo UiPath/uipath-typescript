@@ -44,11 +44,7 @@ $ uip login [options]
 
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
-| `-f, --file` | string | Path to credentials folder | — |
 | `--authority` | string | Custom authority URL | — |
-| `--client-id` | string | Client ID or Application ID | — |
-| `--client-secret` | string | Client secret or Application secret | — |
-| `-s, --scope` | string | Custom scopes (space-separated) | — |
 | `-t, --tenant` | string | Tenant name (non-interactive mode) | — |
 | `--it, --interactive` | boolean | Interactively select tenant from list | — |
 
