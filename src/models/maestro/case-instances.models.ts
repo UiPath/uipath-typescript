@@ -388,6 +388,20 @@ export interface CaseInstanceMethods {
       ? PaginatedResponse<TaskGetResponse>
       : NonPaginatedResponse<TaskGetResponse>
   >;
+
+  /**
+   * Gets the SLA summary for this case instance
+   *
+   * @param options - Optional time range filtering and pagination options
+   * @returns Promise resolving to SLA summary items for this case instance
+   */
+  getSlaSummary<T extends Omit<CaseInstanceSlaSummaryOptions, 'caseInstanceId'> = Omit<CaseInstanceSlaSummaryOptions, 'caseInstanceId'>>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<SlaSummaryItem>
+      : NonPaginatedResponse<SlaSummaryItem>
+  >;
 }
 
 // Combined type for case instance data with methods
@@ -454,6 +468,18 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
 
       return service.getActionTasks(instanceData.instanceId, options);
+    },
+
+    async getSlaSummary<T extends Omit<CaseInstanceSlaSummaryOptions, 'caseInstanceId'> = Omit<CaseInstanceSlaSummaryOptions, 'caseInstanceId'>>(
+      options?: T
+    ): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<SlaSummaryItem>
+        : NonPaginatedResponse<SlaSummaryItem>
+    > {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+
+      return service.getSlaSummary({ ...options, caseInstanceId: instanceData.instanceId } as CaseInstanceSlaSummaryOptions) as any;
     }
   };
 }

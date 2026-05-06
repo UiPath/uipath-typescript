@@ -114,24 +114,49 @@ export enum SlaSummaryStatus {
 }
 
 /**
+ * Instance status values for case instances and process instances
+ */
+export enum InstanceStatus {
+  /** Instance status not yet populated by the backend */
+  UNKNOWN = '',
+  CANCELLED = 'Cancelled',
+  CANCELING = 'Canceling',
+  COMPLETED = 'Completed',
+  FAULTED = 'Faulted',
+  PAUSED = 'Paused',
+  PAUSING = 'Pausing',
+  PENDING = 'Pending',
+  RESUMING = 'Resuming',
+  RETRYING = 'Retrying',
+  RUNNING = 'Running',
+  UPGRADING = 'Upgrading'
+}
+
+/**
  * SLA summary item for a single case instance
  */
 export interface SlaSummaryItem {
+  /** Unique identifier of the case instance */
   caseInstanceId: string;
+  /** Folder key that the case instance belongs to */
   folderKey: string;
+  /** Display name of the SLA rule */
   name: string;
   /** Human-readable reference number for a case instance */
   externalId: string;
   /** Summary text for the case instance — may be empty */
   caseSummary: string;
+  /** Unique key of the process associated with the case instance */
   processKey: string;
   /** SLA deadline timestamp in UTC (ISO 8601 format) */
   slaDueTime: string;
+  /** Current SLA status indicating whether the deadline is met, at risk, or breached */
   slaStatus: SlaSummaryStatus;
+  /** Index of the escalation rule currently applied to the SLA */
   escalationRuleIndex: string;
   escalationRuleType: EscalationTriggerType;
-  /** Current status of the case instance (e.g., "Cancelled", "Active") — not a fixed set */
-  instanceStatus: string;
+  /** Current status of the case instance */
+  instanceStatus: InstanceStatus;
   /** Last modification timestamp in UTC (ISO 8601 format) */
   lastModifiedTime: string;
 }

@@ -13,6 +13,7 @@ import { PaginationManager } from '../utils/pagination/pagination-manager';
 import { PaginationHelpers } from '../utils/pagination/helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/constants';
 import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
+import { resolveNestedField } from '../utils/object';
 import type { IUiPath } from '../core/types';
 import { SDKInternalsRegistry } from '../core/internals';
 
@@ -287,7 +288,7 @@ export class BaseService {
     // Extract items and metadata
     // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
     const items = Array.isArray(response.data) ? response.data : (response.data[itemsField] || []);
-    const rawTotalCount = Array.isArray(response.data) ? undefined : this.resolveNestedField(response.data, totalCountField);
+    const rawTotalCount = Array.isArray(response.data) ? undefined : resolveNestedField(response.data, totalCountField);
     const totalCount = typeof rawTotalCount === 'number' ? rawTotalCount : undefined;
     const continuationToken = response.data[continuationTokenField];
     
@@ -347,17 +348,4 @@ export class BaseService {
     }
   }
 
-  /**
-   * Resolves a potentially nested field path (e.g., 'pagination.totalCount') from an object
-   */
-  private resolveNestedField(data: Record<string, unknown>, fieldPath: string): unknown {
-    if (!fieldPath.includes('.')) {
-      return data[fieldPath];
-    }
-    let value: unknown = data;
-    for (const part of fieldPath.split('.')) {
-      value = (value as Record<string, unknown>)?.[part];
-    }
-    return value;
-  }
 }

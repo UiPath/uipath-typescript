@@ -6,7 +6,7 @@
 import { TEST_CONSTANTS } from '../constants/common';
 import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
-import { SlaSummaryStatus } from '../../../src/models/maestro/case-instances.types';
+import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
 import type { SlaSummaryItem } from '../../../src/models/maestro/case-instances.types';
 
 // Maestro-Specific Mock Factories
@@ -517,7 +517,7 @@ export const createMockSlaSummaryItem = (overrides: Partial<SlaSummaryItem> = {}
     slaStatus: SlaSummaryStatus.ON_TRACK,
     escalationRuleIndex: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_INDEX,
     escalationRuleType: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_TYPE,
-    instanceStatus: '',
+    instanceStatus: InstanceStatus.RUNNING,
     lastModifiedTime: MAESTRO_TEST_CONSTANTS.SLA_LAST_MODIFIED_TIME
   }, overrides);
 };

@@ -5,6 +5,28 @@
 import { OperationResponse } from "../models/common";
 
 /**
+ * Resolves a field value from an object, supporting both direct keys (e.g., '@odata.count')
+ * and dot-separated nested paths (e.g., 'pagination.totalCount').
+ * Direct key match takes priority over nested traversal.
+ */
+export function resolveNestedField(data: Record<string, unknown>, fieldPath: string): unknown {
+  if (!data) {
+    return undefined;
+  }
+  if (fieldPath in data) {
+    return data[fieldPath];
+  }
+  if (!fieldPath.includes('.')) {
+    return undefined;
+  }
+  let value: unknown = data;
+  for (const part of fieldPath.split('.')) {
+    value = (value as Record<string, unknown>)?.[part];
+  }
+  return value;
+}
+
+/**
  * Filters out undefined values from an object
  * @param obj The source object
  * @returns A new object without undefined values
