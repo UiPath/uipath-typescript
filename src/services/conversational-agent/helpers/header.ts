@@ -1,9 +1,9 @@
 /**
  * Header builder for Conversational Agent Services
  *
- * Builds the default request headers shared across the CAS service constructors
- * (`ConversationalAgentService`, `ConversationService`, `ExchangeService`,
- * `MessageService`) from a single set of options.
+ * Builds the default request headers shared across the Conversational Agent
+ * service constructors (`ConversationalAgentService`, `ConversationService`,
+ * `ExchangeService`, `MessageService`) from a single set of options.
  */
 
 import type { ConversationalAgentOptions } from '@/models/conversational-agent';
@@ -19,7 +19,7 @@ import { createHeaders } from '@/utils/http/headers';
  * from the provided options. Returns `undefined` when no headers apply, so
  * the SDK does not pass an empty `headers` bag down to the HTTP layer.
  */
-export function buildCasDefaultHeaders(
+export function buildConversationalAgentDefaultHeaders(
   options?: ConversationalAgentOptions,
 ): Record<string, string> | undefined {
   const headers = createHeaders({
