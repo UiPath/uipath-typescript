@@ -92,6 +92,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `cancel()` | `PIMS` |
 | `pause()` | `PIMS` |
 | `resume()` | `PIMS` |
+| `getElementCountByStatus()` | `Insights.RealTimeData` `Insights` `PIMS` `OR.Folders.Read` |
 
 ## Maestro Cases
 
@@ -119,6 +120,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getActionTasks()` | `OR.Tasks` or `OR.Tasks.Read` |
 | `getSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
 | `getStagesSlaSummary()` | `Insights.RealTimeData Insights OR.Folders.Read PIMS` |
+| `getElementCountByStatus()` | `Insights.RealTimeData` `Insights` `PIMS` `OR.Folders.Read` |
 
 ## Conversational Agent
 

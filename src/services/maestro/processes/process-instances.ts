@@ -11,7 +11,9 @@ import {
   ProcessInstanceGetVariablesResponse,
   ProcessInstanceGetVariablesOptions,
   GlobalVariableMetaData,
-  ProcessIncidentGetResponse
+  ProcessIncidentGetResponse,
+  ElementCountByStatus,
+  ElementCountByStatusOptions
 } from '../../../models/maestro';
 import { BpmnHelpers } from './helpers';
 import { OperationResponse } from '../../../models/common/types';
@@ -201,6 +203,35 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
       success: true,
       data: response.data
     };
+  }
+
+  /**
+   * Get element count by status for process instances
+   * @param options Options containing processKey, packageId, time range, and version
+   * @returns Promise resolving to an array of element count by status
+   */
+  async getElementCountByStatusImpl(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]> {
+    const requestBody = {
+      commonParams: {
+        processKey: options.processKey,
+        packageId: options.packageId,
+        startTime: options.startTime.getTime(),
+        endTime: options.endTime.getTime(),
+        version: options.version
+      }
+    };
+
+    const response = await this.post<ElementCountByStatus[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+      requestBody
+    );
+
+    return response.data;
+  }
+
+  @track('ProcessInstances.GetElementCountByStatus')
+  async getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]> {
+    return this.getElementCountByStatusImpl(options);
   }
 
   /**

@@ -20,7 +20,8 @@ import type {
   ProcessInstanceOperationOptions,
   ProcessInstanceGetVariablesOptions,
   RawProcessInstanceGetResponse,
-  ProcessInstanceExecutionHistoryResponse
+  ProcessInstanceExecutionHistoryResponse,
+  ElementCountByStatusOptions
 } from '../../../../src/models/maestro';
 
 // ===== MOCKING =====
@@ -563,6 +564,93 @@ describe('ProcessInstancesService', () => {
 
 
       await expect(service.getVariables(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getElementCountByStatus', () => {
+    const mockElementCountByStatusResponse = [
+      {
+        elementId: 'Event_start',
+        successCount: 2,
+        failCount: 0,
+        terminatedCount: 0,
+        pausedCount: 0,
+        inProgressCount: 0,
+        minDurationMs: 763,
+        maxDurationMs: 946,
+        avgDurationMs: 855,
+        p50DurationMs: 855,
+        p95DurationMs: 937,
+        p99DurationMs: 944
+      },
+      {
+        elementId: 'Activity_kHklPW',
+        successCount: 2,
+        failCount: 1,
+        terminatedCount: 0,
+        pausedCount: 0,
+        inProgressCount: 0,
+        minDurationMs: 683,
+        maxDurationMs: 1129,
+        avgDurationMs: 906,
+        p50DurationMs: 906,
+        p95DurationMs: 1107,
+        p99DurationMs: 1125
+      }
+    ];
+
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
+
+    const options: ElementCountByStatusOptions = {
+      processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+      packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+      startTime: startDate,
+      endTime: endDate,
+      version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+    };
+
+    it('should return element count by status for process instances', async () => {
+      mockApiClient.post.mockResolvedValue(mockElementCountByStatusResponse);
+
+      const result = await service.getElementCountByStatus(options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+        {
+          commonParams: {
+            processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
+            version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+          }
+        },
+        {}
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0].elementId).toBe('Event_start');
+      expect(result[0].successCount).toBe(2);
+      expect(result[0].avgDurationMs).toBe(855);
+      expect(result[1].failCount).toBe(1);
+      expect(result[1].p95DurationMs).toBe(1107);
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(service.getElementCountByStatus(options)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should handle empty response', async () => {
+      mockApiClient.post.mockResolvedValue([]);
+
+      const result = await service.getElementCountByStatus(options);
+
+      expect(result).toEqual([]);
+      expect(result).toHaveLength(0);
     });
   });
 });

@@ -351,6 +351,42 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
+  describe('getElementCountByStatus', () => {
+    it('should retrieve element count by status for a case', async () => {
+      const { caseInstances } = getServices();
+
+      // First get a case instance to extract processKey, packageId, version
+      const instances = await caseInstances.getAll({ pageSize: 1 });
+      if (instances.items.length === 0) {
+        throw new Error('No case instances available for testing getElementCountByStatus');
+      }
+
+      const instance = instances.items[0];
+      const result = await caseInstances.getElementCountByStatus({
+        processKey: instance.processKey,
+        packageId: instance.packageId,
+        startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        endTime: new Date(),
+        version: instance.packageVersion
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length > 0) {
+        const element = result[0];
+        expect(element.elementId).toBeDefined();
+        expect(typeof element.successCount).toBe('number');
+        expect(typeof element.failCount).toBe('number');
+        expect(typeof element.terminatedCount).toBe('number');
+        expect(typeof element.pausedCount).toBe('number');
+        expect(typeof element.inProgressCount).toBe('number');
+        expect(typeof element.avgDurationMs).toBe('number');
+        expect(typeof element.p95DurationMs).toBe('number');
+      }
+    });
+  });
+
   afterAll(async () => {
     // Note: We don't cleanup test case instances as they may be pre-existing
   });

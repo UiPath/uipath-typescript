@@ -17,7 +17,10 @@ import {
   CaseInstanceSlaSummaryOptions,
   CaseInstanceStageSLAResponse,
   CaseInstanceStageSLAOptions,
+  ElementCountByStatus,
+  ElementCountByStatusOptions
 } from '../../../models/maestro';
+import { ProcessInstancesService } from '../processes/process-instances';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
   CaseJsonResponse
@@ -47,6 +50,7 @@ import { TaskGetAllOptions } from '../../../models/action-center';
 
 export class CaseInstancesService extends BaseService implements CaseInstancesServiceModel {
   private taskService: TaskService;
+  private processInstancesService: ProcessInstancesService;
 
   /**
    * Creates an instance of the Case Instances service.
@@ -56,6 +60,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   constructor(instance: IUiPath) {
     super(instance);
     this.taskService = new TaskService(instance);
+    this.processInstancesService = new ProcessInstancesService(instance);
   }
 
   /**
@@ -167,6 +172,16 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     
     // Enhance with case JSON data
     return this.enhanceInstanceWithCaseJson(instanceWithMethods);
+  }
+
+  /**
+   * Get element count by status for case instances
+   * @param options Options containing processKey, packageId, time range, and version
+   * @returns Promise resolving to an array of element count by status
+   */
+  @track('CaseInstances.GetElementCountByStatus')
+  async getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]> {
+    return this.processInstancesService.getElementCountByStatusImpl(options);
   }
 
   /**
