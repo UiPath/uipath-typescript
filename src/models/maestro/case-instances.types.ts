@@ -168,9 +168,9 @@ export type CaseInstanceSlaSummaryOptions = PaginationOptions & {
   /** Filter to a specific case instance */
   caseInstanceId?: string;
   /** Filter by event start time in UTC */
-  startTimeUtc?: string;
+  startTimeUtc?: Date;
   /** Filter by event end time in UTC */
-  endTimeUtc?: string;
+  endTimeUtc?: Date;
 };
 
 /**

@@ -288,12 +288,13 @@ export interface CaseInstancesServiceModel {
    * Get SLA summary for all case instances across folders.
    *
    * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
+   * The default page size is 50, so only the top 50 items are returned when no pagination options are provided.
    *
    * @param options - Optional filtering and pagination options
    * @returns Promise resolving to {@link SlaSummaryResponse}, paginated or non-paginated based on options
    * @example
    * ```typescript
-   * // Non-paginated
+   * // Non-paginated (returns top 50 items by default)
    * const summary = await caseInstances.getSlaSummary();
    * console.log(`Found ${summary.totalCount} cases`);
    *
@@ -304,8 +305,8 @@ export interface CaseInstancesServiceModel {
    *
    * // Filter by time range
    * const timeFiltered = await caseInstances.getSlaSummary({
-   *   startTimeUtc: '2026-01-01T00:00:00Z',
-   *   endTimeUtc: '2026-01-31T23:59:59Z'
+   *   startTimeUtc: new Date('2026-01-01'),
+   *   endTimeUtc: new Date('2026-01-31')
    * });
    *
    * // With pagination
@@ -390,7 +391,8 @@ export interface CaseInstanceMethods {
   >;
 
   /**
-   * Gets the SLA summary for this case instance
+   * Gets the SLA summary for this case instance.
+   * The default page size is 50, so only the top 50 items are returned when no pagination options are provided.
    *
    * @param options - Optional time range filtering and pagination options
    * @returns Promise resolving to SLA summary items for this case instance

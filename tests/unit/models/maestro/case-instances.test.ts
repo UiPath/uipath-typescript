@@ -31,7 +31,8 @@ describe('Case Instance Models', () => {
       reopen: vi.fn(),
       getExecutionHistory: vi.fn(),
       getStages: vi.fn(),
-      getActionTasks: vi.fn()
+      getActionTasks: vi.fn(),
+      getSlaSummary: vi.fn()
     } as any;
   });
 
@@ -395,8 +396,31 @@ describe('Case Instance Models', () => {
         const mockInstanceData = createMockCaseInstance();
         const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
         const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
-        
+
         await expect(invalidInstance.getActionTasks()).rejects.toThrow('Case instance ID is undefined');
+      });
+    });
+
+    describe('caseInstance.getSlaSummary()', () => {
+      it('should call service.getSlaSummary with bound caseInstanceId', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
+
+        mockService.getSlaSummary = vi.fn().mockResolvedValue({ items: [], totalCount: 0 });
+
+        await instance.getSlaSummary();
+
+        expect(mockService.getSlaSummary).toHaveBeenCalledWith(
+          expect.objectContaining({ caseInstanceId: mockInstanceData.instanceId })
+        );
+      });
+
+      it('should throw error if instanceId is undefined', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
+        const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
+
+        await expect(invalidInstance.getSlaSummary()).rejects.toThrow('Case instance ID is undefined');
       });
     });
   });
@@ -416,6 +440,7 @@ describe('Case Instance Models', () => {
       expect(typeof instance.getExecutionHistory).toBe('function');
       expect(typeof instance.getStages).toBe('function');
       expect(typeof instance.getActionTasks).toBe('function');
+      expect(typeof instance.getSlaSummary).toBe('function');
     });
 
     it('should preserve all original instance data', () => {
