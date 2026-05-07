@@ -1,4 +1,4 @@
-import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions } from './assets.types';
+import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions, AssetGetByNameOptions } from './assets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -66,4 +66,28 @@ export interface AssetServiceModel {
    * ```
    */
   getById(id: number, folderId: number, options?: AssetGetByIdOptions): Promise<AssetGetResponse>;
-} 
+
+  /**
+   * Retrieves a single asset by name.
+   *
+   * @param name - Asset name to search for
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+   * @returns Promise resolving to a single asset
+   * {@link AssetGetResponse}
+   * @example
+   * ```typescript
+   * // By folder ID
+   * await assets.getByName('ApiKey', { folderId: 123 });
+   *
+   * // By folder key (GUID)
+   * await assets.getByName('ApiKey', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await assets.getByName('ApiKey', { folderPath: 'Shared/Finance' });
+   *
+   * // With expand
+   * await assets.getByName('ApiKey', { folderPath: 'Shared/Finance', expand: 'keyValueList' });
+   * ```
+   */
+  getByName(name: string, options?: AssetGetByNameOptions): Promise<AssetGetResponse>;
+}
