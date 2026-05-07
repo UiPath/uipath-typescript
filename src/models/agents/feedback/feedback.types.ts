@@ -10,7 +10,7 @@ export interface FeedbackCategory {
   /** Category name (max 256 characters, unique per tenant) */
   category: string;
   /** Timestamp when the category was created */
-  createdAt: string;
+  createdTime: string;
   /** Whether this is a system default category (e.g., Output, Agent Error, Agent Plan Execution) */
   isDefault: boolean;
   /** Whether this category applies to positive feedback */
@@ -129,4 +129,22 @@ export type FeedbackGetAllOptions = PaginationOptions & {
   traceId?: string;
   /** Filter by OpenTelemetry span identifier */
   spanId?: string;
+}
+
+/**
+ * Options for creating a new feedback category
+ */
+export interface FeedbackCreateCategoryOptions {
+  /** Whether the category applies to positive feedback */
+  isPositive: boolean;
+  /** Whether the category applies to negative feedback */
+  isNegative: boolean;
+}
+
+/**
+ * Options for deleting a feedback category
+ */
+export interface FeedbackDeleteCategoryOptions {
+  /** When true, deletes the category even if it has associated feedback entries */
+  forceDelete?: boolean;
 }

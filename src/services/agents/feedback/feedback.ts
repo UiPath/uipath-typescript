@@ -1,14 +1,17 @@
 import { BaseService } from '../../base';
 import {
   FeedbackResponse,
+  FeedbackCategory,
   FeedbackGetAllOptions,
   FeedbackOptions,
   FeedbackSubmitOptions,
   FeedbackUpdateOptions,
+  FeedbackCreateCategoryOptions,
+  FeedbackDeleteCategoryOptions,
 } from '../../../models/agents/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FeedbackMap } from '../../../models/agents/feedback/feedback.constants';
-import { RawFeedbackResponse } from '../../../models/agents/feedback/feedback.internal-types';
+import { RawFeedbackResponse, RawFeedbackCategory, RawFeedbackCategoryListResponse } from '../../../models/agents/feedback/feedback.internal-types';
 import { transformData } from '../../../utils/transform';
 import { FEEDBACK_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { FEEDBACK_OFFSET_PARAMS } from '../../../utils/constants/common';
@@ -221,6 +224,38 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     await this.delete(
       FEEDBACK_ENDPOINTS.DELETE(id),
       { headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) }
+    );
+  }
+
+  @track('Feedback.CreateCategory')
+  async createCategory(category: string, options: FeedbackCreateCategoryOptions): Promise<FeedbackCategory> {
+    if (!category) throw new ValidationError({ message: 'category name is required for createCategory' });
+
+    const response = await this.post<RawFeedbackCategory>(
+      FEEDBACK_ENDPOINTS.CATEGORY.CREATE,
+      { category, isPositive: options.isPositive, isNegative: options.isNegative }
+    );
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackCategory;
+  }
+
+  @track('Feedback.GetCategories')
+  async getCategories(): Promise<FeedbackCategory[]> {
+    const response = await this.get<RawFeedbackCategoryListResponse>(
+      FEEDBACK_ENDPOINTS.CATEGORY.GET_ALL
+    );
+    return response.data.categories.map(
+      (item) => transformData(item, FeedbackMap) as unknown as FeedbackCategory
+    );
+  }
+
+  @track('Feedback.DeleteCategory')
+  async deleteCategory(id: string, options?: FeedbackDeleteCategoryOptions): Promise<void> {
+    if (!id) throw new ValidationError({ message: 'Category ID is required for deleteCategory' });
+
+    const params = options?.forceDelete !== undefined ? { forceDelete: options.forceDelete } : undefined;
+    await this.delete(
+      FEEDBACK_ENDPOINTS.CATEGORY.DELETE(id),
+      { params }
     );
   }
 }
