@@ -3,6 +3,13 @@ import { UiPathMetaTags } from '../../utils/runtime/constants';
 import { isBrowser } from '../../utils/platform';
 
 /**
+ * Meta-tag-derived config. Extends {@link PartialUiPathConfig} with
+ * `folderKey`, which is sourced only from `<meta name="uipath:folder-key">`
+ * (not accepted via the public SDK constructor).
+ */
+export type MetaTagConfig = PartialUiPathConfig & { folderKey?: string };
+
+/**
  * Get the content of a meta tag by name.
  * Returns undefined if not in browser environment or meta tag is not found.
  */
@@ -18,16 +25,17 @@ export function getMetaTagContent(name: string): string | undefined {
  *
  * Returns partial config with values found, or null if no meta tags present.
  */
-export function loadFromMetaTags(): PartialUiPathConfig | null {
+export function loadFromMetaTags(): MetaTagConfig | null {
   if (!isBrowser) return null;
 
-  const config: PartialUiPathConfig = {
+  const config: MetaTagConfig = {
     clientId: getMetaTagContent(UiPathMetaTags.CLIENT_ID),
     scope: getMetaTagContent(UiPathMetaTags.SCOPE),
     orgName: getMetaTagContent(UiPathMetaTags.ORG_NAME),
     tenantName: getMetaTagContent(UiPathMetaTags.TENANT_NAME),
     baseUrl: getMetaTagContent(UiPathMetaTags.BASE_URL),
     redirectUri: getMetaTagContent(UiPathMetaTags.REDIRECT_URI),
+    folderKey: getMetaTagContent(UiPathMetaTags.FOLDER_KEY),
   };
 
   const hasAnyValue = Object.values(config).some(Boolean);

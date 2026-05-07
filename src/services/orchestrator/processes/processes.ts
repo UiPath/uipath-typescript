@@ -1,11 +1,12 @@
-import { BaseService } from '../../base';
+import { FolderScopedService } from '../../folder-scoped';
 import { CollectionResponse, RequestOptions } from '../../../models/common/types';
 import {
   ProcessGetResponse,
   ProcessGetAllOptions,
   ProcessStartRequest,
   ProcessStartResponse,
-  ProcessGetByIdOptions
+  ProcessGetByIdOptions,
+  ProcessGetByNameOptions,
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
@@ -22,7 +23,7 @@ import { track } from '../../../core/telemetry';
 /**
  * Service for interacting with UiPath Orchestrator Processes API
  */
-export class ProcessService extends BaseService implements ProcessServiceModel {
+export class ProcessService extends FolderScopedService implements ProcessServiceModel {
   /**
    * Gets all processes across folders with optional filtering and folder scoping
    * 
@@ -99,12 +100,12 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
 
   /**
    * Starts a process execution (job)
-   * 
+   *
    * @param request - Process start request body
    * @param folderId - Required folder ID
    * @param options - Optional query parameters
    * @returns Promise resolving to the created jobs
-   * 
+   *
    * @example
    * ```typescript
    * import { Processes } from '@uipath/uipath-typescript/processes';
@@ -137,17 +138,17 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     // Prefix all query parameter keys with '$' for OData
     const keysToPrefix = Object.keys(options);
     const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
-    
+
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_PROCESS,
       requestBody,
-      { 
+      {
         params: apiOptions,
         headers
       }
     );
-    
-    const transformedProcess = response.data?.value.map(process => 
+
+    const transformedProcess = response.data?.value.map(process =>
       transformData(pascalToCamelCaseKeys(process) as ProcessStartResponse, ProcessMap)
     );
 
@@ -188,7 +189,44 @@ export class ProcessService extends BaseService implements ProcessServiceModel {
     );
 
     const transformedProcess = transformData(pascalToCamelCaseKeys(response.data) as ProcessGetResponse, ProcessMap);
-    
+
     return transformedProcess;
+  }
+
+  /**
+   * Retrieves a single process by name.
+   *
+   * @param name - Process name to search for
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+   * @returns Promise resolving to a single process
+   * {@link ProcessGetResponse}
+   * @example
+   * ```typescript
+   * import { Processes } from '@uipath/uipath-typescript/processes';
+   *
+   * const processes = new Processes(sdk);
+   *
+   * // By folder ID
+   * await processes.getByName('MyProcess', { folderId: 123 });
+   *
+   * // By folder key (GUID)
+   * await processes.getByName('MyProcess', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
+   *
+   * // With expand
+   * await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: 'entryPoints' });
+   * ```
+   */
+  @track('Processes.GetByName')
+  async getByName(name: string, options: ProcessGetByNameOptions = {}): Promise<ProcessGetResponse> {
+    return this.getByNameLookup<ProcessGetResponse, ProcessGetResponse>(
+      'Process',
+      PROCESS_ENDPOINTS.GET_ALL,
+      name,
+      options,
+      (raw) => transformData(pascalToCamelCaseKeys(raw), ProcessMap),
+    );
   }
 }

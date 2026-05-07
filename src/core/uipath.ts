@@ -47,6 +47,11 @@ export class UiPath implements IUiPath {
   #authService?: AuthService;
   #initialized: boolean = false;
   #partialConfig?: PartialUiPathConfig;
+  #multiLogin: boolean = false;
+  // Folder key sourced only from `<meta name="uipath:folder-key">` (coded-app
+  // deployments). Not accepted via the public constructor; lives here so the
+  // SDK can flow it through to BaseService.config without polluting BaseConfig.
+  #metaFolderKey?: string;
 
   /** Read-only config for user convenience */
   public readonly config!: Readonly<BaseConfig>;
@@ -54,6 +59,7 @@ export class UiPath implements IUiPath {
   constructor(config?: PartialUiPathConfig) {
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
+    this.#metaFolderKey = configFromMetaTags?.folderKey;
 
     // Merge configuration: constructor config overrides meta tags
     const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
@@ -80,18 +86,24 @@ export class UiPath implements IUiPath {
       secret: hasSecretAuth ? config.secret : undefined,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined,
-      scope: hasOAuthAuth ? config.scope : undefined
+      scope: hasOAuthAuth ? config.scope : undefined,
     });
 
     const executionContext = new ExecutionContext();
     this.#authService = new AuthService(internalConfig, executionContext);
+    if (this.#multiLogin) {
+      this.#authService.setMultiLogin();
+    }
     this.#config = internalConfig;
 
-    // Store internals in SDKInternalsRegistry (not visible on instance)
+    // Store internals in SDKInternalsRegistry (not visible on instance).
+    // `folderKey` is meta-tag-only — kept off `UiPathConfig` (which mirrors
+    // user-passed values) and lives here on the runtime registry instead.
     SDKInternalsRegistry.set(this, {
       config: internalConfig,
       context: executionContext,
-      tokenManager: this.#authService.getTokenManager()
+      tokenManager: this.#authService.getTokenManager(),
+      folderKey: this.#metaFolderKey,
     });
 
     // Expose read-only config for user convenience
@@ -125,6 +137,7 @@ export class UiPath implements IUiPath {
   #loadConfig(): UiPathSDKConfig {
     // Load from meta tags
     const metaConfig = loadFromMetaTags();
+    this.#metaFolderKey = metaConfig?.folderKey;
 
     // Merge with any partial config from constructor (constructor overrides meta tags)
     const merged = { ...metaConfig, ...this.#partialConfig };
@@ -181,6 +194,16 @@ export class UiPath implements IUiPath {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       throw new Error(`Failed to initialize UiPath SDK: ${errorMessage}`);
     }
+  }
+
+  /**
+   * Enables the UiPath login picker during OAuth sign-in.
+   *
+   * @internal
+   */
+  public setMultiLogin(): void {
+    this.#multiLogin = true;
+    this.#authService?.setMultiLogin();
   }
 
   /**

@@ -14,6 +14,7 @@ import {
   createMockBlob,
 } from "../../../utils/mocks/entities";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
+import { EntityAggregateFunction } from "../../../../src/models/data-fabric/entities.types";
 import type { EntityUpdateByIdOptions } from "../../../../src/models/data-fabric/entities.types";
 
 // ===== TEST SUITE =====
@@ -586,6 +587,59 @@ describe("Entity Models", () => {
             expect(record.RecordOwner).toHaveProperty("id");
           }
         });
+      });
+    });
+
+    describe("entity.queryRecords()", () => {
+      it("should call queryRecordsById with entity id and no options", async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const mockResponse = { items: createMockEntityRecords(2), totalCount: 2 };
+        mockService.queryRecordsById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.queryRecords();
+
+        expect(mockService.queryRecordsById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          undefined,
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.queryRecords()).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+        );
+      });
+
+      it("should call queryRecordsById with aggregates and groupBy options", async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const options = {
+          selectedFields: ["status"],
+          groupBy: ["status"],
+          aggregates: [
+            { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+          ],
+        };
+        const mockResponse = {
+          items: [{ status: "active", total: 12 }, { status: "closed", total: 5 }],
+          totalCount: 2,
+        };
+        mockService.queryRecordsById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.queryRecords(options);
+
+        expect(mockService.queryRecordsById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          options,
+        );
+        expect(result).toEqual(mockResponse);
       });
     });
 
