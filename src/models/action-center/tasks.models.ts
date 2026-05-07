@@ -246,17 +246,17 @@ export interface TaskServiceModel {
   ): Promise<OperationResponse<TaskCompletionOptions>>;
 
   /**
-   * Gets users in the given folder who have Tasks.View and Tasks.Edit permissions
+   * Gets task users (users, robots, groups etc) in the given folder who have Tasks.View and Tasks.Edit permissions
    * Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided,
    * or a PaginatedResponse when any pagination parameter is provided
    * 
-   * @param folderId - The folder ID to get users from
+   * @param folderId - The folder ID to get task users from
    * @param options - Optional query and pagination parameters
-   * @returns Promise resolving to either an array of users NonPaginatedResponse<UserLoginInfo> or a PaginatedResponse<UserLoginInfo> when pagination options are used. 
+   * @returns Promise resolving to either an array of task users NonPaginatedResponse<UserLoginInfo> or a PaginatedResponse<UserLoginInfo> when pagination options are used. 
    * {@link UserLoginInfo}
    * @example
    * ```typescript
-   * // Get users from a folder
+   * // Get task users from a folder
    * const users = await tasks.getUsers(<folderId>);
    *
    * // Access user properties

@@ -15,7 +15,7 @@ An SDK enabling coded apps to be the UI for tasks within UiPath Action Center. S
     <!-- termynal -->
 
     ```bash
-    $ npm install @uipath/uipath-ts-coded-action-apps
+    $ npm install @uipath/coded-action-app
 
     found 0 vulnerabilities
     ```
@@ -25,7 +25,7 @@ An SDK enabling coded apps to be the UI for tasks within UiPath Action Center. S
     <!-- termynal -->
 
     ```bash
-    $ yarn add @uipath/uipath-ts-coded-action-apps
+    $ yarn add @uipath/coded-action-app
     ✨ Done in 1.85s.
     ```
 
@@ -34,12 +34,12 @@ An SDK enabling coded apps to be the UI for tasks within UiPath Action Center. S
     <!-- termynal -->
 
     ```bash
-    $ pnpm add @uipath/uipath-ts-coded-action-apps
+    $ pnpm add @uipath/coded-action-app
     ```
 
 ## Project Setup
 
-A coded action app is a standard browser-based web application that runs in UiPath Action Center. Set up your project as you normally would, then install the `@uipath/uipath-ts-coded-action-apps` SDK.
+A coded action app is a standard browser-based web application that runs in UiPath Action Center. Set up your project as you normally would, then install the `@uipath/coded-action-app` SDK.
 
 === "TypeScript Project"
 
@@ -54,7 +54,7 @@ A coded action app is a standard browser-based web application that runs in UiPa
     added x packages in 1s
     $ npx tsc --init
     Created a new tsconfig.json
-    $ npm install @uipath/uipath-ts-coded-action-apps
+    $ npm install @uipath/coded-action-app
 
     added x packages in 1s
     ```
@@ -67,14 +67,14 @@ A coded action app is a standard browser-based web application that runs in UiPa
     $ mkdir my-uipath-project && cd my-uipath-project
     $ npm init -y
     Wrote to package.json
-    $ npm install @uipath/uipath-ts-coded-action-apps
+    $ npm install @uipath/coded-action-app
 
     added x packages in 1s
     ```
 
 ## Overview
 
-Action Center renders a coded action app within an iframe. `@uipath/uipath-ts-coded-action-apps` provides `CodedActionAppsService` which offers the following capabilities:
+Action Center renders a coded action app within an iframe. `@uipath/coded-action-app` provides `CodedActionAppsService` which offers the following capabilities:
 
 - **Receive** — `getTask()` — On app load, UiPath Action Center provides the task details along with task data.
 - **Notify** — `setTaskData()` — Notify Action Center when task data changes (e.g. to enable the Save button).
@@ -84,7 +84,7 @@ Action Center renders a coded action app within an iframe. `@uipath/uipath-ts-co
 ## Import & Initialize
 
 ```typescript
-import { CodedActionAppsService } from '@uipath/uipath-ts-coded-action-apps';
+import { CodedActionAppsService } from '@uipath/coded-action-app';
 
 const service = new CodedActionAppsService();
 ```
@@ -92,7 +92,7 @@ const service = new CodedActionAppsService();
 The class is also exported under the alias `CodedActionApps` for convenience:
 
 ```typescript
-import { CodedActionApps } from '@uipath/uipath-ts-coded-action-apps';
+import { CodedActionApps } from '@uipath/coded-action-app';
 
 const service = new CodedActionApps();
 ```
@@ -147,7 +147,7 @@ if (!result.success) {
 Show a toast notification inside Action Center using one of the four severity levels.
 
 ```typescript
-import { MessageSeverity } from '@uipath/uipath-ts-coded-action-apps';
+import { MessageSeverity } from '@uipath/coded-action-app';
 
 service.showMessage('Validation successful', MessageSeverity.Success);
 service.showMessage('Validation failed', MessageSeverity.Error);
@@ -163,8 +163,8 @@ The SDK is designed for rapid prototyping and development, making it perfect for
 
 After installing the SDK, supercharge your development with AI IDEs:
 
-1. **Install the SDK**: `npm install @uipath/uipath-ts-coded-action-apps`
-2. **Drag & Drop**: From your `node_modules/@uipath/uipath-ts-coded-action-apps` folder, drag the entire package into your AI IDE
+1. **Install the SDK**: `npm install @uipath/coded-action-app`
+2. **Drag & Drop**: From your `node_modules/@uipath/coded-action-app` folder, drag the entire package into your AI IDE
 3. **Start Prompting**: Your AI assistant now has full context of the SDK!
 
 **Works with:**

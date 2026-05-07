@@ -1,5 +1,5 @@
 {
-  "name": "@uipath/uipath-ts-coded-action-apps",
+  "name": "@uipath/coded-action-app",
   "version": "1.0.0-beta.1",
   "description": "UiPath package to be used for viewing coded action apps in Action Center",
   "type": "module",

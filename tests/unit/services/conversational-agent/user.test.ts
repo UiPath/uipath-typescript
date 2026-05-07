@@ -1,6 +1,6 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UserService } from '@/services/conversational-agent/user/user';
+import { UserSettingsService } from '@/services/conversational-agent/user/user';
 import { ApiClient } from '@/core/http/api-client';
 import {
   createMockError,
@@ -9,6 +9,7 @@ import {
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
+import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
 
 // ===== MOCKING =====
 vi.mock('@/core/http/api-client');
@@ -29,8 +30,8 @@ const MOCK_USER_SETTINGS = {
 };
 
 // ===== TEST SUITE =====
-describe('UserService Unit Tests', () => {
-  let userService: UserService;
+describe('UserSettingsService Unit Tests', () => {
+  let userSettingsService: UserSettingsService;
   let mockApiClient: any;
 
   beforeEach(() => {
@@ -39,18 +40,46 @@ describe('UserService Unit Tests', () => {
 
     vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 
-    userService = new UserService(instance);
+    userSettingsService = new UserSettingsService(instance);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
+  describe('constructor', () => {
+    it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
+      const { instance } = createServiceTestDependencies();
+
+      const _service = new UserSettingsService(instance, { externalUserId: 'user-123' });
+
+      expect(ApiClient).toHaveBeenLastCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { headers: { [EXTERNAL_USER_ID]: 'user-123' } }
+      );
+    });
+
+    it('should not pass external user id header when externalUserId is not set', () => {
+      const { instance } = createServiceTestDependencies();
+
+      const _service = new UserSettingsService(instance);
+
+      expect(ApiClient).toHaveBeenLastCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        {}
+      );
+    });
+  });
+
   describe('getSettings', () => {
     it('should get user settings successfully', async () => {
       mockApiClient.get.mockResolvedValue(MOCK_USER_SETTINGS);
 
-      const result = await userService.getSettings();
+      const result = await userSettingsService.getSettings();
 
       expect(result).toBeDefined();
       expect(result.userId).toBe('user-uuid-123');
@@ -72,7 +101,7 @@ describe('UserService Unit Tests', () => {
     it('should transform createdAt -> createdTime and updatedAt -> updatedTime', async () => {
       mockApiClient.get.mockResolvedValue(MOCK_USER_SETTINGS);
 
-      const result = await userService.getSettings();
+      const result = await userSettingsService.getSettings();
 
       // Field transformations via UserSettingsMap (CommonFieldMap)
       expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
@@ -96,7 +125,7 @@ describe('UserService Unit Tests', () => {
       };
       mockApiClient.get.mockResolvedValue(settingsWithNulls);
 
-      const result = await userService.getSettings();
+      const result = await userSettingsService.getSettings();
 
       expect(result.name).toBeNull();
       expect(result.email).toBeNull();
@@ -111,7 +140,7 @@ describe('UserService Unit Tests', () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(userService.getSettings()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(userSettingsService.getSettings()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
@@ -124,7 +153,7 @@ describe('UserService Unit Tests', () => {
       };
       mockApiClient.patch.mockResolvedValue(updatedSettings);
 
-      const result = await userService.updateSettings({
+      const result = await userSettingsService.updateSettings({
         name: 'Jane Doe',
         timezone: 'Europe/London',
       });
@@ -144,7 +173,7 @@ describe('UserService Unit Tests', () => {
     it('should transform fields in update response', async () => {
       mockApiClient.patch.mockResolvedValue(MOCK_USER_SETTINGS);
 
-      const result = await userService.updateSettings({ name: 'test' });
+      const result = await userSettingsService.updateSettings({ name: 'test' });
 
       expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
       expect(result.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
@@ -158,7 +187,7 @@ describe('UserService Unit Tests', () => {
         email: 'newemail@example.com',
       });
 
-      const result = await userService.updateSettings({ email: 'newemail@example.com' });
+      const result = await userSettingsService.updateSettings({ email: 'newemail@example.com' });
 
       expect(result.email).toBe('newemail@example.com');
       expect(mockApiClient.patch).toHaveBeenCalledWith(
@@ -175,7 +204,7 @@ describe('UserService Unit Tests', () => {
         department: null,
       });
 
-      const result = await userService.updateSettings({
+      const result = await userSettingsService.updateSettings({
         role: null,
         department: null,
       });
@@ -194,7 +223,7 @@ describe('UserService Unit Tests', () => {
       mockApiClient.patch.mockRejectedValue(error);
 
       await expect(
-        userService.updateSettings({ name: 'test' })
+        userSettingsService.updateSettings({ name: 'test' })
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

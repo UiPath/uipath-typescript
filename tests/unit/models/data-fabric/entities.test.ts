@@ -14,6 +14,7 @@ import {
   createMockBlob,
 } from "../../../utils/mocks/entities";
 import { ENTITY_TEST_CONSTANTS } from "../../../utils/constants/entities";
+import { EntityAggregateFunction } from "../../../../src/models/data-fabric/entities.types";
 import type { EntityUpdateByIdOptions } from "../../../../src/models/data-fabric/entities.types";
 
 // ===== TEST SUITE =====
@@ -37,6 +38,7 @@ describe("Entity Models", () => {
       deleteRecordsById: vi.fn(),
       queryRecordsById: vi.fn(),
       importRecordsById: vi.fn(),
+      deleteRecordById: vi.fn(),
       downloadAttachment: vi.fn(),
       uploadAttachment: vi.fn(),
       deleteAttachment: vi.fn(),
@@ -488,6 +490,36 @@ describe("Entity Models", () => {
       });
     });
 
+    describe('entity.deleteRecord()', () => {
+      it('should call service.deleteRecordById with entity id and record id', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        mockService.deleteRecordById = vi.fn().mockResolvedValue(undefined);
+
+        await entity.deleteRecord(ENTITY_TEST_CONSTANTS.RECORD_ID);
+
+        expect(mockService.deleteRecordById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          ENTITY_TEST_CONSTANTS.RECORD_ID
+        );
+      });
+
+      it('should throw error if entity id is undefined', async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.deleteRecord(ENTITY_TEST_CONSTANTS.RECORD_ID)).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED);
+      });
+
+      it('should throw error if record id is empty', async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.deleteRecord('')).rejects.toThrow(ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_RECORD_ID_UNDEFINED);
+      });
+    });
+
     describe("entity.getAllRecords()", () => {
       it("should call entity.getAllRecords without options", async () => {
         const entityData = createBasicEntity();
@@ -555,6 +587,59 @@ describe("Entity Models", () => {
             expect(record.RecordOwner).toHaveProperty("id");
           }
         });
+      });
+    });
+
+    describe("entity.queryRecords()", () => {
+      it("should call queryRecordsById with entity id and no options", async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const mockResponse = { items: createMockEntityRecords(2), totalCount: 2 };
+        mockService.queryRecordsById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.queryRecords();
+
+        expect(mockService.queryRecordsById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          undefined,
+        );
+        expect(result).toEqual(mockResponse);
+      });
+
+      it("should throw error if entity id is undefined", async () => {
+        const entityData = createBasicEntity({ id: undefined as any });
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        await expect(entity.queryRecords()).rejects.toThrow(
+          ENTITY_TEST_CONSTANTS.ERROR_MESSAGE_ENTITY_ID_UNDEFINED,
+        );
+      });
+
+      it("should call queryRecordsById with aggregates and groupBy options", async () => {
+        const entityData = createBasicEntity();
+        const entity = createEntityWithMethods(entityData, mockService);
+
+        const options = {
+          selectedFields: ["status"],
+          groupBy: ["status"],
+          aggregates: [
+            { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+          ],
+        };
+        const mockResponse = {
+          items: [{ status: "active", total: 12 }, { status: "closed", total: 5 }],
+          totalCount: 2,
+        };
+        mockService.queryRecordsById = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await entity.queryRecords(options);
+
+        expect(mockService.queryRecordsById).toHaveBeenCalledWith(
+          ENTITY_TEST_CONSTANTS.ENTITY_ID,
+          options,
+        );
+        expect(result).toEqual(mockResponse);
       });
     });
 
@@ -765,6 +850,7 @@ describe("Entity Models", () => {
       expect(typeof entity.updateRecord).toBe("function");
       expect(typeof entity.updateRecords).toBe("function");
       expect(typeof entity.deleteRecords).toBe("function");
+      expect(typeof entity.deleteRecord).toBe("function");
       expect(typeof entity.getAllRecords).toBe("function");
       expect(typeof entity.getRecord).toBe("function");
       expect(typeof entity.downloadAttachment).toBe("function");
@@ -825,3 +911,4 @@ describe("Entity Models", () => {
     });
   });
 });
+

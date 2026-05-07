@@ -1,5 +1,5 @@
 /**
- * Types for User Service
+ * Types for User Settings Service
  */
 
 // ==================== User Settings Types ====================

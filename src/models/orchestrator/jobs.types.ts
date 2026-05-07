@@ -14,6 +14,8 @@ import {
   FolderProperties,
 } from './processes.types';
 
+export { StopStrategy };
+
 /**
  * Enum for job sub-state
  */
@@ -157,6 +159,14 @@ export interface RawJobGetResponse extends FolderProperties {
 }
 
 /**
+ * Options for resuming a suspended job
+ */
+export interface JobResumeOptions {
+  /** Input arguments to pass to the resumed job */
+  inputArguments?: Record<string, unknown>;
+}
+
+/**
  * Options for getting all jobs
  */
 export type JobGetAllOptions = RequestOptions & PaginationOptions & {
@@ -170,4 +180,17 @@ export type JobGetAllOptions = RequestOptions & PaginationOptions & {
  * Options for getting a job by ID
  */
 export interface JobGetByIdOptions extends BaseOptions {}
+
+/**
+ * Options for stopping jobs
+ */
+export interface JobStopOptions {
+  /**
+   * The stop strategy to use.
+   * - `SoftStop` — requests graceful cancellation; the job completes its current activity before stopping
+   * - `Kill` — requests immediate termination of the job
+   * @default StopStrategy.SoftStop
+   */
+  strategy?: StopStrategy;
+}
 

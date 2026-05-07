@@ -316,6 +316,8 @@ export interface EntityServiceModel {
   /**
    * Deletes data from an entity by entity ID
    *
+   * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
+   *
    * @param id - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
@@ -331,17 +333,36 @@ export interface EntityServiceModel {
    */
   deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
 
+  /**
+   * Deletes a single record from an entity by entity ID and record ID
+   *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to delete
+   * @returns Promise resolving to void on success
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * await entities.deleteRecordById("<entityId>", "<recordId>");
+   * ```
+   */
+  deleteRecordById(entityId: string, recordId: string): Promise<void>;
 
   /**
-   * Queries entity records with filters, sorting, and SDK-managed pagination
+   * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -360,6 +381,23 @@ export interface EntityServiceModel {
    * if (page1.hasNextPage) {
    *   const page2 = await entities.queryRecordsById(<id>, { cursor: page1.nextCursor });
    * }
+   *
+   * // Aggregate: count of records per status
+   * await entities.queryRecordsById(<id>, {
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum and average across all records (no grouping)
+   * await entities.queryRecordsById(<id>, {
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
    * ```
    */
   queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(id: string, options?: T): Promise<
@@ -526,6 +564,13 @@ export interface EntityServiceModel {
    *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
    *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
    * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+   *
+   * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+   * const ordersId = await entities.create("orders", [
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+   *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   * ]);
    * ```
    * @internal
    */
@@ -574,6 +619,17 @@ export interface EntityServiceModel {
    * await entities.updateById(<id>, {
    *   updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
    *   displayName: "Price Catalog",
+   * });
+   *
+   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+   * await entities.updateById(<id>, {
+   *   addFields: [
+   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   ],
+   *   updateFields: [
+   *     { id: <fieldId>, lengthLimit: 1000 },
+   *   ],
    * });
    * ```
    * @internal
@@ -639,11 +695,24 @@ export interface EntityMethods {
   /**
    * Delete data from this entity
    *
+   * Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use {@link deleteRecord} if you need trigger events to fire for the deleted record.
+   *
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
    * @returns Promise resolving to delete response
    */
   deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Delete a single record from this entity
+   *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
+   * @param recordId - UUID of the record to delete
+   * @returns Promise resolving to void on success
+   */
+  deleteRecord(recordId: string): Promise<void>;
 
   /**
    * Get all records from this entity
@@ -708,13 +777,17 @@ export interface EntityMethods {
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
-   * Queries records in this entity with filters, sorting, and SDK-managed pagination
+   * Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination
    *
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * const entity = await entities.getById(<entityId>);
    * const result = await entity.queryRecords({
    *   filterGroup: {
@@ -724,6 +797,23 @@ export interface EntityMethods {
    *   sortOptions: [{ fieldName: "createdTime", isDescending: true }],
    * });
    * console.log(`Found ${result.totalCount} records`);
+   *
+   * // Aggregate: count of records per status
+   * await entity.queryRecords({
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum and average across all records (no grouping)
+   * await entity.queryRecords({
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
    * ```
    */
   queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<
@@ -782,6 +872,14 @@ export interface EntityMethods {
    *   displayName: "Updated Name",
    *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
+   *
+   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints 
+   * await entity.update({
+   *   addFields: [
+   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "string" },
+   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   ],
+   * });
    * ```
    * @internal
    */
@@ -827,6 +925,12 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
     async deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       return service.deleteRecordsById(entityData.id, recordIds, options);
+    },
+
+    async deleteRecord(recordId: string): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      if (!recordId) throw new Error('Record ID is undefined');
+      return service.deleteRecordById(entityData.id, recordId);
     },
 
     async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<

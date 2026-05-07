@@ -197,7 +197,33 @@ export interface EntityQuerySortOption {
 }
 
 /**
- * Options for querying entity records with filters, sorting, and pagination.
+ * Aggregate functions supported by the Data Fabric query API.
+ */
+export enum EntityAggregateFunction {
+  Count = 'COUNT',
+  Sum = 'SUM',
+  Avg = 'AVG',
+  Min = 'MIN',
+  Max = 'MAX',
+}
+
+/**
+ * A single aggregate expression to apply during a query.
+ *
+ * Aggregate results are returned as fields on each item in the response,
+ * keyed by `alias` when provided.
+ */
+export interface EntityAggregate {
+  /** Aggregate function to apply */
+  function: EntityAggregateFunction;
+  /** Field to aggregate on. For `COUNT`, any non-null field works (typically `Id`). */
+  field: string;
+  /** Optional alias for the aggregate result column. */
+  alias?: string;
+}
+
+/**
+ * Options for querying entity records with filters, sorting, aggregates, and pagination.
  *
  * Use `pageSize`, `cursor`, or `jumpToPage` for SDK-managed pagination.
  * The SDK computes and manages offset parameters automatically.
@@ -211,6 +237,10 @@ export type EntityQueryRecordsOptions = {
   sortOptions?: EntityQuerySortOption[];
   /** Level of entity expansion for related fields (default: 0) */
   expansionLevel?: number;
+  /** Aggregate expressions (COUNT, SUM, AVG, MIN, MAX) to apply across the result set. */
+  aggregates?: EntityAggregate[];
+  /** Field names to group aggregate results by. */
+  groupBy?: string[];
 } & PaginationOptions;
 
 /**
@@ -241,6 +271,14 @@ export interface EntityFieldBase {
   isEncrypted?: boolean;
   /** Default value for the field */
   defaultValue?: string;
+  /** Maximum character length for STRING fields (default: 200, range: 1–4000) and MULTILINE_TEXT fields (default: 200, range: 1–10000). */
+  lengthLimit?: number;
+  /** Maximum allowed value for numeric fields (INTEGER, BIG_INTEGER, FLOAT, DOUBLE, DECIMAL — default: 1,000,000,000,000; range: ±9,007,199,254,740,991) */
+  maxValue?: number;
+  /** Minimum allowed value for numeric fields (INTEGER, BIG_INTEGER, FLOAT, DOUBLE, DECIMAL — default: -1,000,000,000,000; range: ±9,007,199,254,740,991) */
+  minValue?: number;
+  /** Number of decimal places for DECIMAL, FLOAT, and DOUBLE fields (default: 2, range: 0–10) */
+  decimalPrecision?: number;
 }
 
 /**

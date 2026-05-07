@@ -22,6 +22,7 @@
 - Every public service method must be decorated with `@track('ServiceName.MethodName')` for telemetry — gaps are invisible until production debugging, when they're expensive.
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
 - **Barrel files must use `export * from`**, not `export type * from`. Using `export type` re-exports only type declarations and silently drops runtime values (class constructors, enums), causing `undefined` errors for SDK consumers who import them.
+- When a service method makes multiple independent API calls (e.g., chunk-based key resolution), parallelize them with `Promise.all` — sequential calls compound latency unnecessarily.
 
 ## Type naming
 
@@ -59,6 +60,7 @@ The method attachment pattern:
 - `create{Entity}Methods(rawData, service)` — returns an object of bound async methods that delegate to the service
 - `create{Entity}WithMethods(rawData, service)` — merges raw data + methods via `Object.assign({}, rawData, methods)`
 - Methods validate required fields (`if (!data.id) throw new Error(...)`) before delegating
+- **Use direct `return` in bound method delegates, not `await`** — `return service.deleteRecord(id)` not `return await service.deleteRecord(id)`. Adding `await` in a factory delegate creates an unnecessary microtask suspension with no benefit; the returned promise is already awaitable by the caller.
 
 **Include output/attachment indicator fields in response types:** When an entity response can reference a file or attachment (e.g., `outputFile` on a Job indicating a blob attachment key), include that field in `Raw{Entity}GetResponse` even if the primary retrieval method does not fetch the file. This lets callers check for output availability without an extra API call.
 
@@ -177,6 +179,8 @@ select: "outputArguments,outputFile"    // not "OutputArguments,..."
 - **Orchestrator**: `createHeaders({ [FOLDER_ID]: folderId })` — numeric folder IDs
 - **Maestro**: `createHeaders({ [FOLDER_KEY]: folderKey })` — string folder keys
 
+**Header constant naming**: Do **not** add a `_HEADER` suffix to constants in `src/utils/constants/headers.ts` — every constant in that file is already a header. Use `EXTERNAL_USER_ID` not `EXTERNAL_USER_ID_HEADER`. This mirrors the endpoint-group rule: context provides the prefix, names stay short.
+
 ## Constructor JSDoc
 
 Service constructors that take dependency parameters (beyond the `UiPath` instance) must have JSDoc comments. Pattern (from `case-instances.ts`):
@@ -229,4 +233,4 @@ interface OperationResponse<TData> { success: boolean; data: TData; }
 
 - **NEVER** leave unused code — unused imports, variables, redundant constructors that only call `super()`. Linter (oxlint) catches these.
 - **NEVER** commit sensitive files — `.env`, `credentials.json`, `*.key`, `*.pem`, hardcoded API keys/tokens.
-- **NEVER** define static lookup tables inside method bodies — move them to module-level constants or `*.internal-types.ts`. A static mapping that doesn't change between calls (e.g., `TaskTypeEndpoints`) rebuilt on every invocation wastes memory and hides structure.
+- **NEVER** define static lookup tables or inline regex literals inside method bodies — move them to module-level constants. A static mapping or regex that doesn't change between calls (e.g., `TaskTypeEndpoints`, `GUID_REGEX`) rebuilt on every invocation wastes memory and hides structure.

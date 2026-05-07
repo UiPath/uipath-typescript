@@ -17,6 +17,7 @@ export * from './assets';
 export * from './queues';
 export * from './pagination';
 export * from './conversational-agent';
+export * from './feedback';
 export * from './attachments';
 
 // Re-export constants for convenience

@@ -1,4 +1,4 @@
-import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse } from './jobs.types';
+import { JobGetAllOptions, JobGetByIdOptions, RawJobGetResponse, JobStopOptions, JobResumeOptions } from './jobs.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /** Combined response type for job data with bound methods. */
@@ -129,6 +129,92 @@ export interface JobServiceModel {
    * ```
    */
   getOutput(jobKey: string, folderId: number): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Stops one or more jobs by their UUID keys.
+   *
+   * Sends a stop request for the specified jobs to the Orchestrator. Throws if any keys cannot be resolved.
+   *
+   * @param jobKeys - Array of job UUID keys to stop (e.g., from {@link JobGetResponse}.key)
+   * @param folderId - The folder ID where the jobs reside (required)
+   * @param options - Optional {@link JobStopOptions} including stop strategy
+   * @returns Promise that resolves when the jobs are stopped successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * // Stop a single job with default soft stop
+   * await jobs.stop([<jobKey>], <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { StopStrategy } from '@uipath/uipath-typescript/jobs';
+   *
+   * // Force-kill multiple jobs
+   * await jobs.stop(
+   *   [<jobKey1>, <jobKey2>],
+   *   <folderId>,
+   *   { strategy: StopStrategy.Kill }
+   * );
+   * ```
+   */
+  stop(
+    jobKeys: string[],
+    folderId: number,
+    options?: JobStopOptions
+  ): Promise<void>;
+
+  /**
+   * Resumes a suspended job.
+   *
+   * Sends a resume request to a job that is currently in the `Suspended` state.
+   * The job transitions to `Resumed` and then to `Running` as it continues execution. Optionally pass
+   * input arguments to provide data for the resumed workflow.
+   *
+   * @param jobKey - The unique key (GUID) of the suspended job to resume
+   * @param folderId - The folder ID where the job resides
+   * @param options - Optional parameters including input arguments
+   * @returns Promise that resolves when the job is resumed successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * // Resume a suspended job
+   * await jobs.resume(<jobKey>, <folderId>);
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Resume with input arguments
+   * await jobs.resume(<jobKey>, <folderId>, {
+   *   inputArguments: { approved: true }
+   * });
+   * ```
+   */
+  resume(jobKey: string, folderId: number, options?: JobResumeOptions): Promise<void>;
+
+  /**
+   * Restarts a job in a final state (Successful, Faulted, or Stopped).
+   *
+   * Creates a **new** job execution from a previously successful, faulted, or stopped job.
+   * The new job has its own unique `key`, starts in `Pending` state, and uses
+   * the same process and input arguments as the original job.
+   *
+   * To monitor the new job's progress, poll with {@link getById}
+   * using the returned job's key until the state reaches a final value.
+   *
+   * @param jobKey - The unique key (GUID) of the job to restart
+   * @param folderId - The folder ID where the job resides
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
+   *
+   * @example
+   * ```typescript
+   * // Restart a faulted job
+   * const newJob = await jobs.restart(<jobKey>, <folderId>);
+   * console.log(newJob.state); // 'Pending'
+   * console.log(newJob.key);   // new job key (different from original)
+   * ```
+   */
+  restart(jobKey: string, folderId: number): Promise<JobGetResponse>;
 }
 
 /**
@@ -156,6 +242,41 @@ export interface JobMethods {
    * ```
    */
   getOutput(): Promise<Record<string, unknown> | null>;
+
+  /**
+   * Stops this job.
+   *
+   * Sends a stop request for this job to the Orchestrator.
+   *
+   * @param options - Optional {@link JobStopOptions} including stop strategy (defaults to SoftStop)
+   * @returns Promise that resolves when the jobs are stopped successfully, or rejects on failure
+   *
+   * @example
+   * ```typescript
+   * const allJobs = await jobs.getAll({ folderId: <folderId> });
+   * const runningJob = allJobs.items.find(j => j.state === JobState.Running);
+   *
+   * if (runningJob) {
+   *   await runningJob.stop();
+   * }
+   * ```
+   */
+  stop(options?: JobStopOptions): Promise<void>;
+
+  /**
+   * Resumes this suspended job.
+   *
+   * @param options - Optional parameters including input arguments
+   * @returns Promise that resolves when the job is resumed successfully, or rejects on failure
+   */
+  resume(options?: JobResumeOptions): Promise<void>;
+
+  /**
+   * Restarts this job, creating a new execution with a new key.
+   *
+   * @returns Promise resolving to the new {@link JobGetResponse} with full job details
+   */
+  restart(): Promise<JobGetResponse>;
 }
 
 /**
@@ -171,6 +292,21 @@ function createJobMethods(jobData: RawJobGetResponse, service: JobServiceModel):
       if (!jobData.key) throw new Error('Job key is undefined');
       if (!jobData.folderId) throw new Error('Job folderId is undefined');
       return service.getOutput(jobData.key, jobData.folderId);
+    },
+    async stop(options?: JobStopOptions): Promise<void> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.stop([jobData.key], jobData.folderId, options);
+    },
+    async resume(options?: JobResumeOptions): Promise<void> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.resume(jobData.key, jobData.folderId, options);
+    },
+    async restart(): Promise<JobGetResponse> {
+      if (!jobData.key) throw new Error('Job key is undefined');
+      if (!jobData.folderId) throw new Error('Job folderId is undefined');
+      return service.restart(jobData.key, jobData.folderId);
     },
   };
 }

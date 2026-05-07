@@ -12,6 +12,7 @@ const GUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 export class AuthService {
   private config: Config;
   private tokenManager: TokenManager;
+  private skipAcrValues: boolean = false;
 
   constructor(config: Config, executionContext: ExecutionContext) {
     // Only use stored OAuth context when completing an active callback (URL has ?code=).
@@ -115,6 +116,15 @@ export class AuthService {
    */
   public getTokenManager(): TokenManager {
     return this.tokenManager;
+  }
+
+  /**
+   * Enables the UiPath login picker during OAuth sign-in.
+   *
+   * @internal
+   */
+  public setMultiLogin(): void {
+    this.skipAcrValues = true;
   }
 
   /**
@@ -344,7 +354,10 @@ export class AuthService {
       state: params.state || this.generateCodeVerifier().slice(0, 16)
     });
 
-    return `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}&acr_values=${acrValues}`;
+    const authorizeUrl = `${this.config.baseUrl}/${IDENTITY_ENDPOINTS.AUTHORIZE}?${queryParams.toString()}`;
+    return this.skipAcrValues
+      ? authorizeUrl
+      : `${authorizeUrl}&acr_values=${acrValues}`;
   }
 
   /**
@@ -450,4 +463,4 @@ export class AuthService {
     url.searchParams.delete('state');
     window.history.replaceState({}, '', url.toString());
   }
-} 
+}

@@ -62,6 +62,9 @@ export const CONVERSATIONAL_AGENT_TEST_CONSTANTS = {
   FEATURE_FLAG_KEY: 'test-feature',
   FEATURE_FLAG_VALUE: true,
 
+  // Agent input
+  AGENT_INPUT: { inline: { userId: 'user-test-123', language: 'en' } },
+
   // Error messages
   ERROR_AGENT_NOT_FOUND: 'Agent not found',
   ERROR_CONVERSATION_NOT_FOUND: 'Conversation not found',
