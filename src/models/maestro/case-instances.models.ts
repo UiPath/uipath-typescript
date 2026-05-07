@@ -6,7 +6,7 @@ import {
   CaseInstanceReopenOptions,
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse,
-  SlaSummaryItem,
+  SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
@@ -290,7 +290,7 @@ export interface CaseInstancesServiceModel {
    * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
    *
    * @param options - Optional filtering and pagination options
-   * @returns Promise resolving to {@link SlaSummaryItem}, paginated or non-paginated based on options
+   * @returns Promise resolving to {@link SlaSummaryResponse}, paginated or non-paginated based on options
    * @example
    * ```typescript
    * // Non-paginated
@@ -322,8 +322,8 @@ export interface CaseInstancesServiceModel {
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SlaSummaryItem>
-      : NonPaginatedResponse<SlaSummaryItem>
+      ? PaginatedResponse<SlaSummaryResponse>
+      : NonPaginatedResponse<SlaSummaryResponse>
   >;
 }
 
@@ -399,8 +399,8 @@ export interface CaseInstanceMethods {
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SlaSummaryItem>
-      : NonPaginatedResponse<SlaSummaryItem>
+      ? PaginatedResponse<SlaSummaryResponse>
+      : NonPaginatedResponse<SlaSummaryResponse>
   >;
 }
 
@@ -474,8 +474,8 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       options?: T
     ): Promise<
       T extends HasPaginationOptions<T>
-        ? PaginatedResponse<SlaSummaryItem>
-        : NonPaginatedResponse<SlaSummaryItem>
+        ? PaginatedResponse<SlaSummaryResponse>
+        : NonPaginatedResponse<SlaSummaryResponse>
     > {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
 

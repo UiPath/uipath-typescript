@@ -7,7 +7,7 @@ import { TEST_CONSTANTS } from '../constants/common';
 import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
-import type { SlaSummaryItem } from '../../../src/models/maestro/case-instances.types';
+import type { SlaSummaryResponse } from '../../../src/models/maestro/case-instances.types';
 
 // Maestro-Specific Mock Factories
 
@@ -503,9 +503,9 @@ export const createMockCaseStage = (overrides: Partial<any> = {}) => {
 /**
  * Creates a mock SLA summary item
  * @param overrides - Optional overrides for specific fields
- * @returns Mock SlaSummaryItem object
+ * @returns Mock SlaSummaryResponse object
  */
-export const createMockSlaSummaryItem = (overrides: Partial<SlaSummaryItem> = {}) => {
+export const createMockSlaSummaryResponse = (overrides: Partial<SlaSummaryResponse> = {}) => {
   return createMockBaseResponse({
     caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
     folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY,

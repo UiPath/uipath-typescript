@@ -16,7 +16,7 @@ import {
   createMockCaseInstanceExecutionHistory,
   createMockMaestroApiOperationResponse,
   createMockActionTasksResponse,
-  createMockSlaSummaryItem,
+  createMockSlaSummaryResponse,
 } from '../../../utils/mocks';
 import { HTTP_METHODS } from '../../../../src/utils/constants/common';
 import { createMockBaseResponse } from '../../../utils/mocks/core';
@@ -843,8 +843,8 @@ describe('CaseInstancesService', () => {
     it('should return SLA summary without pagination options', async () => {
       const mockResponse = {
         items: [
-          createMockSlaSummaryItem(),
-          createMockSlaSummaryItem({
+          createMockSlaSummaryResponse(),
+          createMockSlaSummaryResponse({
             caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID_2,
             slaStatus: SlaSummaryStatus.OVERDUE
           })
@@ -878,7 +878,7 @@ describe('CaseInstancesService', () => {
 
     it('should pass pagination options through', async () => {
       const mockResponse = {
-        items: [createMockSlaSummaryItem()],
+        items: [createMockSlaSummaryResponse()],
         totalCount: 100,
         hasNextPage: true
       };

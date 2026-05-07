@@ -133,9 +133,9 @@ export enum InstanceStatus {
 }
 
 /**
- * SLA summary item for a single case instance
+ * SLA summary response for a single case instance
  */
-export interface SlaSummaryItem {
+export interface SlaSummaryResponse {
   /** Unique identifier of the case instance */
   caseInstanceId: string;
   /** Folder key that the case instance belongs to */

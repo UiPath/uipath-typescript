@@ -13,7 +13,7 @@ import {
   StageTask,
   ElementExecutionMetadata,
   CaseInstanceExecutionHistoryResponse,
-  SlaSummaryItem,
+  SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
@@ -577,7 +577,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
    *
    * @param options - Optional filtering and pagination options
-   * @returns Promise resolving to {@link SlaSummaryItem}, paginated or non-paginated based on options
+   * @returns Promise resolving to {@link SlaSummaryResponse}, paginated or non-paginated based on options
    * @example
    * ```typescript
    * // Non-paginated
@@ -610,15 +610,15 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SlaSummaryItem>
-      : NonPaginatedResponse<SlaSummaryItem>
+      ? PaginatedResponse<SlaSummaryResponse>
+      : NonPaginatedResponse<SlaSummaryResponse>
   > {
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
       method: HTTP_METHODS.POST,
       excludeFromPrefix: ['caseInstanceId', 'startTimeUtc', 'endTimeUtc'],
-      transformFn: (item: SlaSummaryItem): SlaSummaryItem => ({
+      transformFn: (item: SlaSummaryResponse): SlaSummaryResponse => ({
         ...item,
         slaDueTime: toISOUtc(item.slaDueTime),
         lastModifiedTime: toISOUtc(item.lastModifiedTime)
