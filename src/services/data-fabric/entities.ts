@@ -480,16 +480,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Queries entity records with filters, sorting, and pagination
+   * Queries entity records with filters, sorting, aggregates, and pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    *
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -513,6 +513,23 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * if (page1.hasNextPage) {
    *   const page2 = await entities.queryRecordsById("<entityId>", { cursor: page1.nextCursor });
    * }
+   *
+   * // Aggregate: count of records per status
+   * await entities.queryRecordsById("<entityId>", {
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum and average across all records (no grouping)
+   * await entities.queryRecordsById("<entityId>", {
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
    * ```
    */
   @track('Entities.QueryRecordsById')
@@ -534,7 +551,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['expansionLevel', 'filterGroup', 'selectedFields', 'sortOptions']
+      excludeFromPrefix: ['expansionLevel', 'filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy']
     }, options);
   }
 

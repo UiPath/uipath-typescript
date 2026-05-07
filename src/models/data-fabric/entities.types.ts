@@ -197,7 +197,33 @@ export interface EntityQuerySortOption {
 }
 
 /**
- * Options for querying entity records with filters, sorting, and pagination.
+ * Aggregate functions supported by the Data Fabric query API.
+ */
+export enum EntityAggregateFunction {
+  Count = 'COUNT',
+  Sum = 'SUM',
+  Avg = 'AVG',
+  Min = 'MIN',
+  Max = 'MAX',
+}
+
+/**
+ * A single aggregate expression to apply during a query.
+ *
+ * Aggregate results are returned as fields on each item in the response,
+ * keyed by `alias` when provided.
+ */
+export interface EntityAggregate {
+  /** Aggregate function to apply */
+  function: EntityAggregateFunction;
+  /** Field to aggregate on. For `COUNT`, any non-null field works (typically `Id`). */
+  field: string;
+  /** Optional alias for the aggregate result column. */
+  alias?: string;
+}
+
+/**
+ * Options for querying entity records with filters, sorting, aggregates, and pagination.
  *
  * Use `pageSize`, `cursor`, or `jumpToPage` for SDK-managed pagination.
  * The SDK computes and manages offset parameters automatically.
@@ -211,6 +237,10 @@ export type EntityQueryRecordsOptions = {
   sortOptions?: EntityQuerySortOption[];
   /** Level of entity expansion for related fields (default: 0) */
   expansionLevel?: number;
+  /** Aggregate expressions (COUNT, SUM, AVG, MIN, MAX) to apply across the result set. */
+  aggregates?: EntityAggregate[];
+  /** Field names to group aggregate results by. */
+  groupBy?: string[];
 } & PaginationOptions;
 
 /**
