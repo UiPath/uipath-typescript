@@ -349,7 +349,7 @@ export interface MessageStream {
    * `requireConfirmation: true`. The handler runs at the message level, so it
    * fires even if no per-tool-call stream exists for the confirmed `toolCallId`.
    *
-   * @param cb - Callback receiving the toolCallId and the confirmation event
+   * @param callback - Callback receiving the toolCallId and the confirmation event
    * @returns Cleanup function to remove the handler
    *
    * @example Handling a tool-call confirmation response
@@ -360,7 +360,7 @@ export interface MessageStream {
    * });
    * ```
    */
-  onToolCallConfirm(cb: (args: { toolCallId: string; confirmEvent: ToolCallConfirmationEvent }) => void): () => void;
+  onToolCallConfirm(callback: (args: { toolCallId: string; confirmEvent: ToolCallConfirmationEvent }) => void): () => void;
 
   // ==================== Content Part Management ====================
 

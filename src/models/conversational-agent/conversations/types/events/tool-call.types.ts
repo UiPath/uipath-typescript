@@ -63,6 +63,36 @@ export type CompletedToolCall = ToolCallStartEvent & ToolCallEndEvent & {
  *   });
  * });
  * ```
+ *
+ * @example Migrating from legacy interrupt-based confirmation
+ * ```typescript
+ * // BEFORE — legacy interrupt flow
+ * message.onInterruptStart(async ({ interruptId, startEvent }) => {
+ *   if (startEvent.type !== InterruptType.ToolCallConfirmation) return;
+ *   const { toolName, inputSchema, inputValue } = startEvent.value;
+ *
+ *   const decision = await showConfirmationDialog({
+ *     toolName, inputSchema, input: inputValue,
+ *   });
+ *   message.sendInterruptEnd(interruptId, {
+ *     approved: decision.approved,
+ *     input: decision.editedInput,
+ *   });
+ * });
+ *
+ * // AFTER — new tool-call confirmation flow
+ * message.onToolCallStart(async (toolCall) => {
+ *   const { toolName, input, requireConfirmation, inputSchema } = toolCall.startEvent;
+ *   if (!requireConfirmation) return;
+ *
+ *   const decision = await showConfirmationDialog({ toolName, inputSchema, input });
+ *   if (decision.approved) {
+ *     toolCall.sendToolCallConfirm({ approved: true, input: decision.editedInput });
+ *   } else {
+ *     toolCall.sendToolCallConfirm({ approved: false });
+ *   }
+ * });
+ * ```
  */
 export interface ToolCallStream {
   /** Unique identifier for this tool call */
