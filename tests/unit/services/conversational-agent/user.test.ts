@@ -9,6 +9,7 @@ import {
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { USER_ENDPOINTS } from '@/utils/constants/endpoints';
+import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
 
 // ===== MOCKING =====
 vi.mock('@/core/http/api-client');
@@ -49,25 +50,23 @@ describe('UserSettingsService Unit Tests', () => {
   describe('constructor', () => {
     it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 
       const _service = new UserSettingsService(instance, { externalUserId: 'user-123' });
 
-      expect(ApiClient).toHaveBeenCalledWith(
+      expect(ApiClient).toHaveBeenLastCalledWith(
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        { headers: { 'x-uipath-external-user-id': 'user-123' } }
+        { headers: { [EXTERNAL_USER_ID]: 'user-123' } }
       );
     });
 
     it('should not pass external user id header when externalUserId is not set', () => {
       const { instance } = createServiceTestDependencies();
-      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 
       const _service = new UserSettingsService(instance);
 
-      expect(ApiClient).toHaveBeenCalledWith(
+      expect(ApiClient).toHaveBeenLastCalledWith(
         expect.anything(),
         expect.anything(),
         expect.anything(),
