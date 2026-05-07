@@ -19,7 +19,7 @@ import { createHeaders } from '@/utils/http/headers';
  * from the provided options. Returns `undefined` when no headers apply, so
  * the SDK does not pass an empty `headers` bag down to the HTTP layer.
  */
-export function buildConversationalAgentDefaultHeaders(
+export function buildConversationalAgentHeaders(
   options?: ConversationalAgentOptions,
 ): Record<string, string> | undefined {
   const headers = createHeaders({

@@ -25,7 +25,7 @@ import type {
 import { MESSAGE_ENDPOINTS } from '@/utils/constants/endpoints';
 
 // Local imports
-import { buildConversationalAgentDefaultHeaders, transformMessage, ContentPartHelper } from '@/services/conversational-agent/helpers';
+import { buildConversationalAgentHeaders, transformMessage, ContentPartHelper } from '@/services/conversational-agent/helpers';
 
 /**
  * Service for message operations within a conversation
@@ -64,7 +64,7 @@ export class MessageService extends BaseService implements MessageServiceModel {
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    super(instance, buildConversationalAgentDefaultHeaders(options));
+    super(instance, buildConversationalAgentHeaders(options));
   }
 
   /**

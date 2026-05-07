@@ -15,14 +15,14 @@ export interface ConversationalAgentOptions {
    * of requests. External consumers do not need to set it; the server logs
    * missing values as "unknown".
    *
-   * @internal Intended for UiPath first-party surfaces.
+   * @internal
    */
   surfaceName?: string;
   /**
    * Optional version of the implementing service of requests. Paired with
    * `surfaceName` for internal telemetry.
    *
-   * @internal Intended for UiPath first-party surfaces.
+   * @internal
    */
   surfaceVersion?: string;
   /** Log level for debugging */

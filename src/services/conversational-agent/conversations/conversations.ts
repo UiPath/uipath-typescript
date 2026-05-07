@@ -43,7 +43,7 @@ import { transformData, transformRequest, arrayDictionaryToRecord } from '@/util
 // Local imports
 import {
   ConversationEventHelperManagerImpl,
-  buildConversationalAgentDefaultHeaders,
+  buildConversationalAgentHeaders,
   type ConversationEventHelperManager
 } from '../helpers';
 import { ExchangeService } from './exchanges';
@@ -101,7 +101,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    super(instance, buildConversationalAgentDefaultHeaders(options));
+    super(instance, buildConversationalAgentHeaders(options));
 
     this._sessionManager = new SessionManager(instance, options);
     this._exchangeService = new ExchangeService(instance, options);

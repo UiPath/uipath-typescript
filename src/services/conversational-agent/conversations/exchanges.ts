@@ -31,7 +31,7 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 
 // Local imports
-import { buildConversationalAgentDefaultHeaders, transformExchange } from '@/services/conversational-agent/helpers';
+import { buildConversationalAgentHeaders, transformExchange } from '@/services/conversational-agent/helpers';
 
 /**
  * Service for exchange operations within a conversation
@@ -66,7 +66,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    super(instance, buildConversationalAgentDefaultHeaders(options));
+    super(instance, buildConversationalAgentHeaders(options));
   }
 
   /**
