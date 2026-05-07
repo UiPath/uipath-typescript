@@ -23,4 +23,8 @@ export const FEEDBACK_TEST_CONSTANTS = {
 
   // Error messages
   ERROR_FEEDBACK_NOT_FOUND: 'Feedback not found',
+  ERROR_CATEGORY_NOT_FOUND: 'Category not found',
+
+  // Category name for create tests
+  CATEGORY_NAME_CUSTOM: 'Hallucination',
 } as const;

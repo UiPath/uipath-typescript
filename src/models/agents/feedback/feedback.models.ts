@@ -1,9 +1,12 @@
 import type {
   FeedbackResponse,
+  FeedbackCategory,
   FeedbackGetAllOptions,
   FeedbackOptions,
   FeedbackSubmitOptions,
   FeedbackUpdateOptions,
+  FeedbackCreateCategoryOptions,
+  FeedbackDeleteCategoryOptions,
 } from './feedback.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 
@@ -163,4 +166,72 @@ export interface FeedbackServiceModel {
    * ```
    */
   deleteById(id: string, options: FeedbackOptions): Promise<void>;
+
+  /**
+   * Creates a new feedback category.
+   *
+   * Custom categories can be used to label feedback entries beyond the default system categories.
+   * Once created, reference the category by its `id` when submitting or updating feedback.
+   *
+   * @param category - Name of the category to create (max 256 characters, unique per tenant)
+   * @param options - Whether the category applies to positive and/or negative feedback {@link FeedbackCreateCategoryOptions}
+   * @returns Promise resolving to the created {@link FeedbackCategory}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * const category = await feedback.createCategory('Hallucination', {
+   *   isPositive: false,
+   *   isNegative: true,
+   * });
+   * console.log(category.id, category.category);
+   * ```
+   */
+  createCategory(category: string, options: FeedbackCreateCategoryOptions): Promise<FeedbackCategory>;
+
+  /**
+   * Gets all feedback categories for the tenant.
+   *
+   * Returns both system default categories (Output, Agent Error, Agent Plan Execution)
+   * and any custom categories created for this tenant.
+   *
+   * @returns Promise resolving to an array of {@link FeedbackCategory}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * const categories = await feedback.getCategories();
+   * console.log(categories.map(c => c.category));
+   * ```
+   */
+  getCategories(): Promise<FeedbackCategory[]>;
+
+  /**
+   * Deletes a feedback category by its ID.
+   *
+   * Default system categories cannot be deleted. Use `forceDelete` to delete a category
+   * that already has feedback entries associated with it.
+   *
+   * @param id - Category ID (GUID) of the category to delete
+   * @param options - Optional deletion options {@link FeedbackDeleteCategoryOptions}
+   * @returns Promise resolving to void on success
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * // Get categories to obtain the ID of the one to delete
+   * const categories = await feedback.getCategories();
+   * const customCategory = categories.find(c => !c.isDefault);
+   * if (customCategory) {
+   *   await feedback.deleteCategory(customCategory.id);
+   * }
+   * ```
+   */
+  deleteCategory(id: string, options?: FeedbackDeleteCategoryOptions): Promise<void>;
 }
