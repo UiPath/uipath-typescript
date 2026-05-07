@@ -205,9 +205,12 @@ describe('ToolCallEventHelper', () => {
       const handler = vi.fn();
       const cleanup = toolCall.onToolCallConfirm(handler);
 
-      expect((toolCall as any)._confirmHandlers).toHaveLength(1);
+      toolCall.dispatch({ toolCallId: TOOL_CALL_ID, confirmToolCall: { approved: false } });
+      expect(handler).toHaveBeenCalledTimes(1);
+
       cleanup();
-      expect((toolCall as any)._confirmHandlers).toHaveLength(0);
+      toolCall.dispatch({ toolCallId: TOOL_CALL_ID, confirmToolCall: { approved: false } });
+      expect(handler).toHaveBeenCalledTimes(1); // not called again after cleanup
     });
   });
 

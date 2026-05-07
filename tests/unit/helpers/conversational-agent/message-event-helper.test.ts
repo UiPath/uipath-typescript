@@ -480,9 +480,18 @@ describe('MessageEventHelper', () => {
       const handler = vi.fn();
       const cleanup = message.onToolCallConfirm(handler);
 
-      expect((message as any)._toolCallConfirmHandlers).toHaveLength(1);
+      message.dispatch({
+        messageId: MESSAGE_ID,
+        toolCall: { toolCallId: 'tc-cleanup', confirmToolCall: { approved: false } },
+      });
+      expect(handler).toHaveBeenCalledTimes(1);
+
       cleanup();
-      expect((message as any)._toolCallConfirmHandlers).toHaveLength(0);
+      message.dispatch({
+        messageId: MESSAGE_ID,
+        toolCall: { toolCallId: 'tc-cleanup', confirmToolCall: { approved: false } },
+      });
+      expect(handler).toHaveBeenCalledTimes(1); // not called again after cleanup
     });
   });
 
@@ -592,7 +601,7 @@ describe('MessageEventHelper', () => {
         toolCallId: 'tc-no-helper',
         confirmEvent: { approved: false },
       });
-      expect((message as any)._toolCallMap.size).toBe(0);
+      expect(message.getToolCall('tc-no-helper')).toBeUndefined();
     });
 
     it('should fire message-level onToolCallConfirm before per-tool-call onToolCallConfirm', () => {
