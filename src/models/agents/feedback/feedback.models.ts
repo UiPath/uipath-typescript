@@ -2,6 +2,7 @@ import type {
   FeedbackResponse,
   FeedbackCategory,
   FeedbackGetAllOptions,
+  FeedbackGetCategoriesOptions,
   FeedbackOptions,
   FeedbackSubmitOptions,
   FeedbackUpdateOptions,
@@ -196,19 +197,32 @@ export interface FeedbackServiceModel {
    *
    * Returns both system default categories (Output, Agent Error, Agent Plan Execution)
    * and any custom categories created for this tenant.
+   * When no pagination options are provided, the API returns up to 100 items. When pagination options are provided without a pageSize, the SDK defaults to 50 items per page.
    *
-   * @returns Promise resolving to an array of {@link FeedbackCategory}
+   * @param options - Optional filters and pagination options {@link FeedbackGetCategoriesOptions}
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackCategory} without pagination options, or {@link PaginatedResponse} of {@link FeedbackCategory} when pagination options are used.
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
    *
    * const feedback = new Feedback(sdk);
    *
+   * // Get all categories
    * const categories = await feedback.getCategories();
-   * console.log(categories.map(c => c.category));
+   * console.log(categories.items.map(c => c.category));
+   *
+   * // Get only categories applicable to negative feedback
+   * const negativeCategories = await feedback.getCategories({ isNegative: true });
+   *
+   * // Paginated
+   * const page1 = await feedback.getCategories({ pageSize: 10 });
    * ```
    */
-  getCategories(): Promise<FeedbackCategory[]>;
+  getCategories<T extends FeedbackGetCategoriesOptions = FeedbackGetCategoriesOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<FeedbackCategory>
+      : NonPaginatedResponse<FeedbackCategory>
+  >;
 
   /**
    * Deletes a feedback category by its ID.

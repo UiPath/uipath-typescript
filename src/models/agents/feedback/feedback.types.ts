@@ -154,3 +154,13 @@ export interface FeedbackDeleteCategoryOptions {
   /** When true, deletes the category even if it has associated feedback entries */
   forceDelete?: boolean;
 }
+
+/**
+ * Options for retrieving feedback categories
+ */
+export type FeedbackGetCategoriesOptions = PaginationOptions & {
+  /** Filter by whether the category applies to positive feedback */
+  isPositive?: boolean;
+  /** Filter by whether the category applies to negative feedback */
+  isNegative?: boolean;
+}

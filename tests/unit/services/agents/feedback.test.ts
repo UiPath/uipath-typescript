@@ -336,8 +336,9 @@ describe('FeedbackService Unit Tests', () => {
       const result = await feedbackService.getCategories();
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBe(1);
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBe(1);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.CATEGORY.GET_ALL,
         expect.any(Object)
@@ -349,16 +350,28 @@ describe('FeedbackService Unit Tests', () => {
 
       const result = await feedbackService.getCategories();
 
-      expect(result[0].createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
-      expect((result[0] as any).createdAt).toBeUndefined();
+      expect(result.items[0].createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
+      expect((result.items[0] as any).createdAt).toBeUndefined();
     });
 
-    it('should return empty array when no categories exist', async () => {
+    it('should return empty items when no categories exist', async () => {
       mockApiClient.get.mockResolvedValue(createMockRawCategoryListResponse({ categories: [], totalCount: 0 }));
 
       const result = await feedbackService.getCategories();
 
-      expect(result).toEqual([]);
+      expect(result.items).toEqual([]);
+    });
+
+    it('should get paginated categories', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawCategoryListResponse());
+
+      const result = await feedbackService.getCategories({ pageSize: TEST_CONSTANTS.PAGE_SIZE });
+
+      expect(result.items).toBeDefined();
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CATEGORY.GET_ALL,
+        expect.objectContaining({ params: expect.objectContaining({ take: TEST_CONSTANTS.PAGE_SIZE }) })
+      );
     });
 
     it('should throw error when API call fails', async () => {

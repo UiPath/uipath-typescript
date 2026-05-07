@@ -93,6 +93,28 @@ export const ODATA_OFFSET_PARAMS = {
 };
 
 /**
+ * Feedback pagination response shape constants
+ */
+export const FEEDBACK_PAGINATION = {
+  /** Field name for items in feedback response */
+  ITEMS_FIELD: 'items',
+
+  /** Field name for total count in feedback response */
+  TOTAL_COUNT_FIELD: 'totalCount'
+};
+
+/**
+ * Feedback category pagination response shape constants
+ */
+export const FEEDBACK_CATEGORY_PAGINATION = {
+  /** Field name for items in feedback category response */
+  ITEMS_FIELD: 'categories',
+
+  /** Field name for total count in feedback category response */
+  TOTAL_COUNT_FIELD: 'totalCount'
+};
+
+/**
  * Feedback OFFSET pagination parameter names (take/skip style)
  */
 export const FEEDBACK_OFFSET_PARAMS = {

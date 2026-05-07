@@ -3,6 +3,7 @@ import {
   FeedbackResponse,
   FeedbackCategory,
   FeedbackGetAllOptions,
+  FeedbackGetCategoriesOptions,
   FeedbackOptions,
   FeedbackSubmitOptions,
   FeedbackUpdateOptions,
@@ -11,10 +12,10 @@ import {
 } from '../../../models/agents/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FeedbackMap } from '../../../models/agents/feedback/feedback.constants';
-import { RawFeedbackResponse, RawFeedbackCategory, RawFeedbackCategoryListResponse } from '../../../models/agents/feedback/feedback.internal-types';
+import { RawFeedbackResponse, RawFeedbackCategory } from '../../../models/agents/feedback/feedback.internal-types';
 import { transformData } from '../../../utils/transform';
 import { FEEDBACK_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { FEEDBACK_OFFSET_PARAMS } from '../../../utils/constants/common';
+import { FEEDBACK_OFFSET_PARAMS, FEEDBACK_CATEGORY_PAGINATION } from '../../../utils/constants/common';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
@@ -239,13 +240,32 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
   }
 
   @track('Feedback.GetCategories')
-  async getCategories(): Promise<FeedbackCategory[]> {
-    const response = await this.get<RawFeedbackCategoryListResponse>(
-      FEEDBACK_ENDPOINTS.CATEGORY.GET_ALL
-    );
-    return response.data.categories.map(
-      (item) => transformData(item, FeedbackMap) as unknown as FeedbackCategory
-    );
+  async getCategories<T extends FeedbackGetCategoriesOptions = FeedbackGetCategoriesOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<FeedbackCategory>
+      : NonPaginatedResponse<FeedbackCategory>
+  > {
+    const transformCategory = (item: RawFeedbackCategory): FeedbackCategory =>
+      transformData(item, FeedbackMap) as unknown as FeedbackCategory;
+
+    return PaginationHelpers.getAll<T, RawFeedbackCategory, FeedbackCategory>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => FEEDBACK_ENDPOINTS.CATEGORY.GET_ALL,
+      transformFn: transformCategory,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: FEEDBACK_CATEGORY_PAGINATION.ITEMS_FIELD,
+        totalCountField: FEEDBACK_CATEGORY_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: FEEDBACK_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: FEEDBACK_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: FEEDBACK_OFFSET_PARAMS.COUNT_PARAM,
+        },
+      },
+      excludeFromPrefix: Object.keys(options || {}),
+    }, options);
   }
 
   @track('Feedback.DeleteCategory')

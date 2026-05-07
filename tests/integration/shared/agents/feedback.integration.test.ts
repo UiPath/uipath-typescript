@@ -124,14 +124,15 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       const result = await feedback.getCategories();
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
     });
 
     it('should include default categories in results', async () => {
       const result = await feedback.getCategories();
 
       const defaultNames = ['Output', 'Agent Error', 'Agent Plan Execution'];
-      const names = result.map((c) => c.category);
+      const names = result.items.map((c) => c.category);
       for (const name of defaultNames) {
         expect(names).toContain(name);
       }
@@ -140,9 +141,9 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     it('should have expected fields on each category', async () => {
       const result = await feedback.getCategories();
 
-      if (result.length === 0) throw new Error('No categories returned');
+      if (result.items.length === 0) throw new Error('No categories returned');
 
-      const item = result[0];
+      const item = result.items[0];
       expect(item.id).toBeDefined();
       expect(item.category).toBeDefined();
       expect(item.createdTime).toBeDefined();
@@ -154,10 +155,17 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     it('should transform API fields — createdTime present, createdAt absent', async () => {
       const result = await feedback.getCategories();
 
-      if (result.length === 0) throw new Error('No categories returned');
+      if (result.items.length === 0) throw new Error('No categories returned');
 
-      expect(result[0].createdTime).toBeDefined();
-      expect((result[0] as any).createdAt).toBeUndefined();
+      expect(result.items[0].createdTime).toBeDefined();
+      expect((result.items[0] as any).createdAt).toBeUndefined();
+    });
+
+    it('should support isNegative filter', async () => {
+      const result = await feedback.getCategories({ isNegative: true });
+
+      expect(result.items).toBeDefined();
+      expect(result.items.every((c) => c.isNegative)).toBe(true);
     });
 
     it('should create a category with minimum required fields', async () => {
