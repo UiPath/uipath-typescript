@@ -33,8 +33,7 @@ export { ConversationalAgentService as ConversationalAgent, ConversationalAgentS
 // Standalone services (HTTP-only operations)
 export { Exchanges, ExchangeService, Messages, MessageService } from './conversations';
 
-/** @internal */
-export { User, UserService } from './user';
+export { UserSettings, UserSettingsService } from './user';
 
 // ==================== Models ====================
 // Re-export all types: ID types, model types, request/response types, event types, etc.

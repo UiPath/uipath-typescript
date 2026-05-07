@@ -12,6 +12,7 @@ import {
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { AGENT_ENDPOINTS, FEATURE_ENDPOINTS } from '@/utils/constants/endpoints';
+import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
 
 // ===== MOCKING =====
 vi.mock('@/core/http/api-client');
@@ -58,7 +59,7 @@ describe('ConversationalAgentService Unit Tests', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        { headers: { 'x-uipath-external-user-id': 'user-123' } }
+        { headers: { [EXTERNAL_USER_ID]: 'user-123' } }
       );
     });
 
@@ -303,6 +304,14 @@ describe('ConversationalAgentService Unit Tests', () => {
   describe('conversations property', () => {
     it('should expose conversations service', () => {
       expect(conversationalAgent.conversations).toBeDefined();
+    });
+  });
+
+  describe('user property', () => {
+    it('should expose user service', () => {
+      expect(conversationalAgent.user).toBeDefined();
+      expect(typeof conversationalAgent.user.getSettings).toBe('function');
+      expect(typeof conversationalAgent.user.updateSettings).toBe('function');
     });
   });
 });
