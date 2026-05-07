@@ -354,15 +354,15 @@ export interface EntityServiceModel {
   deleteRecordById(entityId: string, recordId: string): Promise<void>;
 
   /**
-   * Queries entity records with filters, sorting, and SDK-managed pagination
+   * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
-   * import { Entities, LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
    *
    * const entities = new Entities(sdk);
    *
@@ -381,6 +381,23 @@ export interface EntityServiceModel {
    * if (page1.hasNextPage) {
    *   const page2 = await entities.queryRecordsById(<id>, { cursor: page1.nextCursor });
    * }
+   *
+   * // Aggregate: count of records per status
+   * await entities.queryRecordsById(<id>, {
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum and average across all records (no grouping)
+   * await entities.queryRecordsById(<id>, {
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
    * ```
    */
   queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(id: string, options?: T): Promise<
@@ -760,13 +777,17 @@ export interface EntityMethods {
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
   /**
-   * Queries records in this entity with filters, sorting, and SDK-managed pagination
+   * Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination
    *
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
    * ```typescript
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
    * const entity = await entities.getById(<entityId>);
    * const result = await entity.queryRecords({
    *   filterGroup: {
@@ -776,6 +797,23 @@ export interface EntityMethods {
    *   sortOptions: [{ fieldName: "createdTime", isDescending: true }],
    * });
    * console.log(`Found ${result.totalCount} records`);
+   *
+   * // Aggregate: count of records per status
+   * await entity.queryRecords({
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum and average across all records (no grouping)
+   * await entity.queryRecords({
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
    * ```
    */
   queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<

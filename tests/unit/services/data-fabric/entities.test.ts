@@ -35,6 +35,7 @@ import type {
 } from "../../../../src/models/data-fabric/entities.types";
 import {
   EntityFieldDataType,
+  EntityAggregateFunction,
   ExternalField,
   FieldDisplayType,
   QueryFilterOperator,
@@ -1443,6 +1444,77 @@ describe("EntityService Unit Tests", () => {
       await expect(
         entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID),
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it("should pass aggregates and groupBy through to PaginationHelpers.getAll", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({
+        items: [{ status: "active", total: 12 }, { status: "closed", total: 5 }],
+        totalCount: 2,
+      });
+
+      const options = {
+        selectedFields: ["status"],
+        groupBy: ["status"],
+        aggregates: [
+          { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+        ],
+      };
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, options);
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          selectedFields: options.selectedFields,
+          groupBy: options.groupBy,
+          aggregates: options.aggregates,
+        }),
+      );
+    });
+
+    it("should include aggregates and groupBy in excludeFromPrefix so OData $ prefix is not added", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        aggregates: [
+          { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+        ],
+        groupBy: ["region"],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          excludeFromPrefix: expect.arrayContaining(["aggregates", "groupBy"]),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it("should send aggregate function values as uppercase enum strings", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        aggregates: [
+          { function: EntityAggregateFunction.Count, field: "Id" },
+          { function: EntityAggregateFunction.Avg, field: "score", alias: "avgScore" },
+          { function: EntityAggregateFunction.Min, field: "score" },
+          { function: EntityAggregateFunction.Max, field: "score" },
+          { function: EntityAggregateFunction.Sum, field: "amount" },
+        ],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          aggregates: [
+            { function: "COUNT", field: "Id" },
+            { function: "AVG",   field: "score", alias: "avgScore" },
+            { function: "MIN",   field: "score" },
+            { function: "MAX",   field: "score" },
+            { function: "SUM",   field: "amount" },
+          ],
+        }),
+      );
     });
   });
 
