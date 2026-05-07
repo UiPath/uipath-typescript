@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Feedback } from '../../../../src/services/agents/feedback';
-import { FeedbackStatus, FeedbackGetResponse } from '../../../../src/models/agents/feedback/feedback.types';
+import { FeedbackStatus, FeedbackResponse } from '../../../../src/models/agents/feedback/feedback.types';
 import { registerResource } from '../../utils/cleanup';
 
 const modes: InitMode[] = ['v1'];
@@ -88,7 +88,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should have expected fields on the retrieved feedback', async () => {
-      const result: FeedbackGetResponse = await feedback.getById(existingFeedbackId, { folderKey: existingFolderKey });
+      const result: FeedbackResponse = await feedback.getById(existingFeedbackId, { folderKey: existingFolderKey });
 
       expect(result.id).toBeDefined();
       expect(result.traceId).toBeDefined();
@@ -122,7 +122,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
         throw new Error('No existing feedback — need at least one entry to obtain a valid traceId and folderKey');
       }
       if (!result.items[0].folderKey) {
-        throw new Error('Feedback entry missing folderKey — cannot run create/update/delete tests');
+        throw new Error('Feedback entry missing folderKey — cannot run submit/update/delete tests');
       }
       traceId = result.items[0].traceId;
       folderKey = result.items[0].folderKey;
@@ -134,8 +134,8 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       }
     });
 
-    it('should submit a feedback entry', async () => {
-      const result = await feedback.submit({ traceId, isPositive: true, comment: 'Integration test feedback', folderKey });
+    it('should submit a feedback entry with minimum required fields', async () => {
+      const result = await feedback.submit(traceId, true, { folderKey });
 
       createdIds.push(result.id);
       registerResource('feedbackEntries', { id: result.id, folderKey });
@@ -151,11 +151,11 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should update a feedback entry', async () => {
-      const created = await feedback.submit({ traceId, isPositive: true, comment: 'Before update', folderKey });
+      const created = await feedback.submit(traceId, true, { comment: 'Before update', folderKey });
       createdIds.push(created.id);
       registerResource('feedbackEntries', { id: created.id, folderKey });
 
-      const updated = await feedback.updateById(created.id, { isPositive: false, comment: 'After update', folderKey });
+      const updated = await feedback.updateById(created.id, false, { comment: 'After update', folderKey });
 
       expect(updated).toBeDefined();
       expect(updated.id).toBe(created.id);
@@ -168,7 +168,7 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
     });
 
     it('should delete a feedback entry', async () => {
-      const created = await feedback.submit({ traceId, isPositive: true, comment: 'To be deleted', folderKey });
+      const created = await feedback.submit(traceId, true, { comment: 'To be deleted', folderKey });
       createdIds.push(created.id);
       registerResource('feedbackEntries', { id: created.id, folderKey });
 

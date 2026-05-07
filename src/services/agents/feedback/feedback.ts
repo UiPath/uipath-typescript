@@ -1,14 +1,14 @@
 import { BaseService } from '../../base';
 import {
-  FeedbackGetResponse,
+  FeedbackResponse,
   FeedbackGetAllOptions,
   FeedbackOptions,
-  FeedbackCreateOptions,
+  FeedbackSubmitOptions,
   FeedbackUpdateOptions,
 } from '../../../models/agents/feedback/feedback.types';
 import { FeedbackServiceModel } from '../../../models/agents/feedback/feedback.models';
 import { FeedbackMap } from '../../../models/agents/feedback/feedback.constants';
-import { RawFeedbackGetResponse } from '../../../models/agents/feedback/feedback.internal-types';
+import { RawFeedbackResponse } from '../../../models/agents/feedback/feedback.internal-types';
 import { transformData } from '../../../utils/transform';
 import { FEEDBACK_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { FEEDBACK_OFFSET_PARAMS } from '../../../utils/constants/common';
@@ -31,7 +31,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * When no pagination options are provided, the API returns up to 100 items. When pagination options are provided without a pageSize, the SDK defaults to 50 items per page.
    *
    * @param options - Optional query parameters for filtering and pagination
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackResponse} when pagination options are used.
    * @example
    * ```typescript
    * import { Feedback, FeedbackStatus } from '@uipath/uipath-typescript/feedback';
@@ -66,13 +66,13 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<FeedbackGetResponse>
-      : NonPaginatedResponse<FeedbackGetResponse>
+      ? PaginatedResponse<FeedbackResponse>
+      : NonPaginatedResponse<FeedbackResponse>
   > {
-    const transformFeedbackResponse = (item: RawFeedbackGetResponse): FeedbackGetResponse =>
-      transformData(item, FeedbackMap) as unknown as FeedbackGetResponse;
+    const transformFeedbackResponse = (item: RawFeedbackResponse): FeedbackResponse =>
+      transformData(item, FeedbackMap) as unknown as FeedbackResponse;
 
-    return PaginationHelpers.getAll<T, RawFeedbackGetResponse, FeedbackGetResponse>({
+    return PaginationHelpers.getAll<T, RawFeedbackResponse, FeedbackResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => FEEDBACK_ENDPOINTS.GET_ALL,
       transformFn: transformFeedbackResponse,
@@ -93,7 +93,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    *
    * @param id - Feedback ID (GUID) of the feedback entry
    * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
-   * @returns Promise resolving to {@link FeedbackGetResponse}
+   * @returns Promise resolving to {@link FeedbackResponse}
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
@@ -109,84 +109,89 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * ```
    */
   @track('Feedback.GetById')
-  async getById(id: string, options: FeedbackOptions): Promise<FeedbackGetResponse> {
+  async getById(id: string, options: FeedbackOptions): Promise<FeedbackResponse> {
     if (!id) throw new ValidationError({ message: 'Feedback ID is required for getById' });
-    if (!options?.folderKey) throw new ValidationError({ message: 'folderKey is required for getById' });
+    if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for getById' });
 
-    const response = await this.get<RawFeedbackGetResponse>(
+    const response = await this.get<RawFeedbackResponse>(
       FEEDBACK_ENDPOINTS.GET_BY_ID(id),
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
     );
-    return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackResponse;
   }
 
   /**
-   * Creates a feedback entry.
+   * Submits a feedback entry.
    *
-   * @param options - Feedback data and folderKey for authorization {@link FeedbackCreateOptions}
-   * @returns Promise resolving to the created {@link FeedbackGetResponse}
+   * @param traceId - Trace identifier linking feedback to a specific agent execution
+   * @param isPositive - Whether the feedback is positive (thumbs up) or negative (thumbs down)
+   * @param options - Additional feedback data and folderKey for authorization {@link FeedbackSubmitOptions}
+   * @returns Promise resolving to the submitted {@link FeedbackResponse}
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
    *
    * const feedback = new Feedback(sdk);
    *
-   * const item = await feedback.submit({
-   *   traceId: '<traceId>',
-   *   spanId: '<spanId>',
-   *   isPositive: true,
-   *   comment: 'Great response!',
-   *   folderKey: '<folderKey>',
-   * });
+   * // Obtain traceId and folderKey from an existing feedback entry
+   * const allFeedback = await feedback.getAll({ pageSize: 1 });
+   * const traceId = allFeedback.items[0].traceId;
+   * const folderKey = allFeedback.items[0].folderKey!;
+   *
+   * const item = await feedback.submit(traceId, true, { folderKey });
    * console.log(item.id, item.status);
    * ```
    */
   @track('Feedback.Submit')
-  async submit(options: FeedbackCreateOptions): Promise<FeedbackGetResponse> {
-    if (!options.traceId) throw new ValidationError({ message: 'traceId is required for submit' });
+  async submit(traceId: string, isPositive: boolean, options: FeedbackSubmitOptions): Promise<FeedbackResponse> {
+    if (!traceId) throw new ValidationError({ message: 'traceId is required for submit' });
     if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for submit' });
 
-    const { folderKey, ...request } = options;
-    const response = await this.post<RawFeedbackGetResponse>(
+    const { folderKey, ...rest } = options;
+    const response = await this.post<RawFeedbackResponse>(
       FEEDBACK_ENDPOINTS.SUBMIT,
-      request,
+      { traceId, isPositive, ...rest },
       { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
-    return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackResponse;
   }
 
   /**
-   * Updates an existing feedback entry.
+   * Updates already submitted feedback.
    *
    * @param id - Feedback ID (GUID) of the entry to update
+   * @param isPositive - Whether the feedback is positive (thumbs up) or negative (thumbs down)
    * @param options - Updated feedback data and folderKey for authorization {@link FeedbackUpdateOptions}
-   * @returns Promise resolving to the updated {@link FeedbackGetResponse}
+   * @returns Promise resolving to the updated {@link FeedbackResponse}
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
    *
    * const feedback = new Feedback(sdk);
    *
-   * const updated = await feedback.updateById('<feedbackId>', {
-   *   isPositive: false,
+   * const allFeedback = await feedback.getAll({ pageSize: 1 });
+   * const feedbackId = allFeedback.items[0].id;
+   * const folderKey = allFeedback.items[0].folderKey!;
+   *
+   * const updated = await feedback.updateById(feedbackId, false, {
    *   comment: 'On reflection, not great.',
-   *   folderKey: '<folderKey>',
+   *   folderKey,
    * });
    * console.log(updated.isPositive, updated.comment);
    * ```
    */
   @track('Feedback.UpdateById')
-  async updateById(id: string, options: FeedbackUpdateOptions): Promise<FeedbackGetResponse> {
+  async updateById(id: string, isPositive: boolean, options: FeedbackUpdateOptions): Promise<FeedbackResponse> {
     if (!id) throw new ValidationError({ message: 'Feedback ID is required for updateById' });
     if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for updateById' });
 
-    const { folderKey, ...request } = options;
-    const response = await this.post<RawFeedbackGetResponse>(
+    const { folderKey, ...rest } = options;
+    const response = await this.post<RawFeedbackResponse>(
       FEEDBACK_ENDPOINTS.UPDATE(id),
-      request,
+      { isPositive, ...rest },
       { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
-    return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackResponse;
   }
 
   /**
@@ -201,13 +206,17 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    *
    * const feedback = new Feedback(sdk);
    *
-   * await feedback.deleteById('<feedbackId>', { folderKey: '<folderKey>' });
+   * const allFeedback = await feedback.getAll({ pageSize: 1 });
+   * const feedbackId = allFeedback.items[0].id;
+   * const folderKey = allFeedback.items[0].folderKey!;
+   *
+   * await feedback.deleteById(feedbackId, { folderKey });
    * ```
    */
   @track('Feedback.DeleteById')
   async deleteById(id: string, options: FeedbackOptions): Promise<void> {
     if (!id) throw new ValidationError({ message: 'Feedback ID is required for deleteById' });
-    if (!options?.folderKey) throw new ValidationError({ message: 'folderKey is required for deleteById' });
+    if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for deleteById' });
 
     await this.delete(
       FEEDBACK_ENDPOINTS.DELETE(id),

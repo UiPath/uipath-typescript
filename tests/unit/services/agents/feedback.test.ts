@@ -6,7 +6,7 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { FEEDBACK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { TEST_CONSTANTS, FEEDBACK_TEST_CONSTANTS, CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 import { createMockFeedback } from '../../../utils/mocks/feedback';
-import { FeedbackCreateOptions, FeedbackUpdateOptions } from '../../../../src/models/agents/feedback/feedback.types';
+import { FeedbackSubmitOptions, FeedbackUpdateOptions } from '../../../../src/models/agents/feedback/feedback.types';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -141,24 +141,22 @@ describe('FeedbackService Unit Tests', () => {
   });
 
   describe('submit', () => {
-    const createOptions: FeedbackCreateOptions = {
-      traceId: FEEDBACK_TEST_CONSTANTS.TRACE_ID,
+    const submitOptions: FeedbackSubmitOptions = {
       spanId: FEEDBACK_TEST_CONSTANTS.SPAN_ID,
-      isPositive: true,
       comment: 'Great response!',
       folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY,
     };
 
-    it('should create feedback successfully', async () => {
+    it('should submit feedback successfully', async () => {
       mockApiClient.post.mockResolvedValue(createMockFeedback());
 
-      const result = await feedbackService.submit(createOptions);
+      const result = await feedbackService.submit(FEEDBACK_TEST_CONSTANTS.TRACE_ID, true, submitOptions);
 
       expect(result).toBeDefined();
       expect(result.id).toBe(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.SUBMIT,
-        expect.objectContaining({ traceId: FEEDBACK_TEST_CONSTANTS.TRACE_ID }),
+        expect.objectContaining({ traceId: FEEDBACK_TEST_CONSTANTS.TRACE_ID, isPositive: true }),
         expect.objectContaining({ headers: expect.objectContaining({ 'X-UIPATH-FolderKey': FEEDBACK_TEST_CONSTANTS.FOLDER_KEY }) })
       );
       expect(mockApiClient.post.mock.calls[0][1]).not.toHaveProperty('folderKey');
@@ -167,7 +165,7 @@ describe('FeedbackService Unit Tests', () => {
     it('should transform createdAt and updatedAt to createdTime and updatedTime', async () => {
       mockApiClient.post.mockResolvedValue(createMockFeedback());
 
-      const result = await feedbackService.submit(createOptions);
+      const result = await feedbackService.submit(FEEDBACK_TEST_CONSTANTS.TRACE_ID, true, submitOptions);
 
       expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
       expect(result.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
@@ -176,13 +174,13 @@ describe('FeedbackService Unit Tests', () => {
     });
 
     it('should throw ValidationError when traceId is empty', async () => {
-      await expect(feedbackService.submit({ ...createOptions, traceId: '' }))
+      await expect(feedbackService.submit('', true, submitOptions))
         .rejects.toThrow('traceId is required');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when folderKey is empty', async () => {
-      await expect(feedbackService.submit({ ...createOptions, folderKey: '' }))
+      await expect(feedbackService.submit(FEEDBACK_TEST_CONSTANTS.TRACE_ID, true, { ...submitOptions, folderKey: '' }))
         .rejects.toThrow('folderKey is required');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
@@ -190,14 +188,13 @@ describe('FeedbackService Unit Tests', () => {
     it('should throw error when API call fails', async () => {
       mockApiClient.post.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND));
 
-      await expect(feedbackService.submit(createOptions))
+      await expect(feedbackService.submit(FEEDBACK_TEST_CONSTANTS.TRACE_ID, true, submitOptions))
         .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
     });
   });
 
   describe('updateById', () => {
     const updateOptions: FeedbackUpdateOptions = {
-      isPositive: false,
       comment: 'On reflection, not great.',
       folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY,
     };
@@ -205,7 +202,7 @@ describe('FeedbackService Unit Tests', () => {
     it('should update feedback successfully', async () => {
       mockApiClient.post.mockResolvedValue(createMockFeedback({ isPositive: false, comment: 'On reflection, not great.' }));
 
-      const result = await feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, updateOptions);
+      const result = await feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, false, updateOptions);
 
       expect(result).toBeDefined();
       expect(result.id).toBe(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID);
@@ -220,7 +217,7 @@ describe('FeedbackService Unit Tests', () => {
     it('should transform createdAt and updatedAt to createdTime and updatedTime', async () => {
       mockApiClient.post.mockResolvedValue(createMockFeedback());
 
-      const result = await feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, updateOptions);
+      const result = await feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, false, updateOptions);
 
       expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
       expect(result.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
@@ -229,13 +226,13 @@ describe('FeedbackService Unit Tests', () => {
     });
 
     it('should throw ValidationError when ID is empty', async () => {
-      await expect(feedbackService.updateById('', updateOptions))
+      await expect(feedbackService.updateById('', false, updateOptions))
         .rejects.toThrow('Feedback ID is required');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when folderKey is empty', async () => {
-      await expect(feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { ...updateOptions, folderKey: '' }))
+      await expect(feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, false, { ...updateOptions, folderKey: '' }))
         .rejects.toThrow('folderKey is required');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
@@ -243,7 +240,7 @@ describe('FeedbackService Unit Tests', () => {
     it('should throw error when feedback not found', async () => {
       mockApiClient.post.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND));
 
-      await expect(feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, updateOptions))
+      await expect(feedbackService.updateById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, false, updateOptions))
         .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
     });
   });
