@@ -1,5 +1,5 @@
 /**
- * UserService - Service for managing user profile and context settings
+ * UserSettingsService - Service for managing user profile and context settings
  */
 
 // Core SDK imports
@@ -29,9 +29,9 @@ import { transformData } from '@/utils/transform';
  * country, timezone) that the SDK passes to a UiPath Conversational Agent on every conversation
  * so the agent can personalize its responses.
  */
-export class UserService extends BaseService implements UserSettingsServiceModel {
+export class UserSettingsService extends BaseService implements UserSettingsServiceModel {
   /**
-   * Creates an instance of the UserService.
+   * Creates an instance of the UserSettingsService.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
@@ -58,7 +58,7 @@ export class UserService extends BaseService implements UserSettingsServiceModel
    * console.log(settings.timezone);  // e.g. 'America/New_York' or null
    * ```
    */
-  @track('ConversationalAgent.User.GetSettings')
+  @track('ConversationalAgent.UserSettings.GetSettings')
   async getSettings(): Promise<UserSettingsGetResponse> {
     const response = await this.get<UserSettingsGetResponse>(USER_ENDPOINTS.SETTINGS);
     return transformData(response.data, UserSettingsMap) as UserSettingsGetResponse;
@@ -91,7 +91,7 @@ export class UserService extends BaseService implements UserSettingsServiceModel
    * });
    * ```
    */
-  @track('ConversationalAgent.User.UpdateSettings')
+  @track('ConversationalAgent.UserSettings.UpdateSettings')
   async updateSettings(options: UserSettingsUpdateOptions): Promise<UserSettingsUpdateResponse> {
     const response = await this.patch<UserSettingsUpdateResponse>(USER_ENDPOINTS.SETTINGS, options);
     return transformData(response.data, UserSettingsMap) as UserSettingsUpdateResponse;

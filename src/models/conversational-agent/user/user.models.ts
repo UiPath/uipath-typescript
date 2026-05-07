@@ -5,8 +5,8 @@ import type { UserSettingsGetResponse, UserSettingsUpdateResponse, UserSettingsU
  *
  * User settings are user-supplied profile fields (name, email, role, department, company,
  * country, timezone) that the SDK passes to a UiPath Conversational Agent on every conversation
- * so the agent can personalize its responses. The user is identified by the access token used
- * to initialize the SDK — settings are always scoped to the calling user.
+ * so the agent can personalize its responses. Settings are scoped to the calling user — identified
+ * by the access token for user tokens, or by the externalUserId option for app-scoped tokens.
  *
  * Accessed via `conversationalAgent.user`.
  *
