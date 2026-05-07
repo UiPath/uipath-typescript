@@ -44,13 +44,12 @@ $ uip login [options]
 
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
-| `-f, --file` | string | Path to credentials folder | — |
 | `--authority` | string | Custom authority URL | — |
-| `--client-id` | string | Client ID or Application ID | — |
-| `--client-secret` | string | Client secret or Application secret | — |
-| `-s, --scope` | string | Custom scopes (space-separated) | — |
 | `-t, --tenant` | string | Tenant name (non-interactive mode) | — |
 | `--it, --interactive` | boolean | Interactively select tenant from list | — |
+
+!!! note
+    Publishing and deploying coded apps with `client-id` and `client-secret` based login is not currently supported. Use interactive browser-based user OAuth login only.
 
 **Examples**
 
