@@ -4,6 +4,7 @@ import {
   BucketGetResponse,
   BucketGetAllOptions,
   BucketGetByIdOptions,
+  BucketGetByNameOptions,
   BucketGetUriResponse,
   BucketGetReadUriOptions,
   BucketGetFileMetaDataWithPaginationOptions,
@@ -70,6 +71,40 @@ export class BucketService extends FolderScopedService implements BucketServiceM
     
     // Transform response from PascalCase to camelCase
     return pascalToCamelCaseKeys(response.data) as BucketGetResponse;
+  }
+
+  /**
+   * Retrieves a single orchestrator storage bucket by name.
+   *
+   * @param name - Bucket name to search for
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+   * @returns Promise resolving to a single bucket
+   * {@link BucketGetResponse}
+   * @example
+   * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
+   * // By folder ID
+   * await buckets.getByName('MyBucket', { folderId: <folderId> });
+   *
+   * // By folder key (GUID)
+   * await buckets.getByName('MyBucket', { folderKey: '<folderKey>' });
+   *
+   * // By folder path
+   * await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
+   * ```
+   */
+  @track('Buckets.GetByName')
+  async getByName(name: string, options: BucketGetByNameOptions = {}): Promise<BucketGetResponse> {
+    return this.getByNameLookup<BucketGetResponse, BucketGetResponse>(
+      'Bucket',
+      BUCKET_ENDPOINTS.GET_BY_FOLDER,
+      name,
+      options,
+      (raw) => pascalToCamelCaseKeys(raw) as BucketGetResponse,
+    );
   }
 
   /**

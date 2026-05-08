@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { createTestFileContent } from '../../utils/helpers';
+import { isNotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -78,6 +79,73 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
       expect(result.id).toBe(bucket.bucketId);
       expect(result.name).toBeDefined();
       expect(typeof result.name).toBe('string');
+    });
+  });
+
+  describe('getByName', () => {
+    let existingBucket!: { id: number; name: string };
+    let folderKey!: string;
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+      if (!config.folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY must be configured for getByName');
+      }
+      folderKey = config.folderKey;
+
+      const { buckets } = getServices();
+      const allBuckets = await buckets.getAll({
+        folderId: getFolderId(),
+        pageSize: 1,
+      });
+      expect(allBuckets.items.length, 'No buckets available to test getByName').toBeGreaterThan(0);
+      existingBucket = { id: allBuckets.items[0].id, name: allBuckets.items[0].name };
+    });
+
+    it('should retrieve a bucket by name using folderKey', async () => {
+      const { buckets } = getServices();
+
+      const result = await buckets.getByName(existingBucket.name, { folderKey });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existingBucket.id);
+      expect(result.name).toBe(existingBucket.name);
+    });
+
+    it('should retrieve a bucket by name using folderPath', async () => {
+      const { buckets } = getServices();
+      const config = getTestConfig();
+
+      expect(config.folderPath, 'INTEGRATION_TEST_FOLDER_PATH must be configured for getByName').toBeDefined();
+
+      const result = await buckets.getByName(existingBucket.name, { folderPath: config.folderPath });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(existingBucket.id);
+      expect(result.name).toBe(existingBucket.name);
+    });
+
+    it('should return transformed camelCase fields (no PascalCase leaks)', async () => {
+      const { buckets } = getServices();
+
+      const result = await buckets.getByName(existingBucket.name, { folderKey });
+
+      // Transformed camelCase fields should be present
+      expect(result.id).toBeDefined();
+      expect(result.name).toBeDefined();
+      // Original PascalCase keys from the raw OData payload must be gone
+      expect((result as any).Id).toBeUndefined();
+      expect((result as any).Name).toBeUndefined();
+      expect((result as any).StorageProvider).toBeUndefined();
+    });
+
+    it('should throw NotFoundError for a nonexistent bucket name', async () => {
+      const { buckets } = getServices();
+
+      const missingName = `__uipath-sdk-nonexistent-bucket-${Date.now()}`;
+      await expect(
+        buckets.getByName(missingName, { folderKey }),
+      ).rejects.toSatisfy(isNotFoundError);
     });
   });
 
