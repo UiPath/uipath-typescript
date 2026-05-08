@@ -352,10 +352,10 @@ export abstract class MessageEventHelper extends ConversationEventHelperBase<
    *
    * @returns Cleanup function to remove the handler.
    */
-  public onToolCallConfirm(cb: ToolCallConfirmHandler) {
-    this._toolCallConfirmHandlers.push(cb);
+  public onToolCallConfirm(callback: ToolCallConfirmHandler) {
+    this._toolCallConfirmHandlers.push(callback);
     return () => {
-      const index = this._toolCallConfirmHandlers.indexOf(cb);
+      const index = this._toolCallConfirmHandlers.indexOf(callback);
       if (index >= 0) this._toolCallConfirmHandlers.splice(index, 1);
     };
   }

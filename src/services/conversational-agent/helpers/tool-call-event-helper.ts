@@ -114,10 +114,10 @@ export abstract class ToolCallEventHelper extends ConversationEventHelperBase<
    * peer responds to a tool call that was emitted with `requireConfirmation`.
    * @returns Cleanup function to remove the handler.
    */
-  public onToolCallConfirm(cb: ToolCallConfirmationHandler) {
-    this._confirmHandlers.push(cb);
+  public onToolCallConfirm(callback: ToolCallConfirmationHandler) {
+    this._confirmHandlers.push(callback);
     return () => {
-      const index = this._confirmHandlers.indexOf(cb);
+      const index = this._confirmHandlers.indexOf(callback);
       if (index >= 0) this._confirmHandlers.splice(index, 1);
     };
   }

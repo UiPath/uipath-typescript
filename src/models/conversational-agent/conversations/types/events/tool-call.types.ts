@@ -155,7 +155,7 @@ export interface ToolCallStream {
    * peer responds to a tool call that was emitted with
    * `requireConfirmation: true` on its start event.
    *
-   * @param cb - Callback receiving the confirmation event
+   * @param callback - Callback receiving the confirmation event
    * @returns Cleanup function to remove the handler
    *
    * @example Handling a confirmation response (agent-side)
@@ -166,7 +166,7 @@ export interface ToolCallStream {
    * });
    * ```
    */
-  onToolCallConfirm(cb: (confirmToolCall: ToolCallConfirmationEvent) => void): () => void;
+  onToolCallConfirm(callback: (confirmToolCall: ToolCallConfirmationEvent) => void): () => void;
 
   // ==================== Sending ====================
 
