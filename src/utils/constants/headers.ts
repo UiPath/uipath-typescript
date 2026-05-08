@@ -40,14 +40,14 @@ export const EXTERNAL_USER_ID = 'x-uipath-external-user-id';
  * of requests. External consumers do not need to set it; the server logs
  * missing values as "unknown".
  *
- * @internal Intended for UiPath first-party surfaces.
+ * @internal
  */
 export const CONVERSATIONAL_SURFACE_NAME = 'x-uipath-conversational-surfacename';
 /**
  * Optional version of the implementing service of requests. Paired with
  * `surfaceName` for internal telemetry.
  *
- * @internal Intended for UiPath first-party surfaces.
+ * @internal
  */
 export const CONVERSATIONAL_SURFACE_VERSION = 'x-uipath-conversational-surfaceversion';
 
