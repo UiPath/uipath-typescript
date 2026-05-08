@@ -25,7 +25,8 @@ import type {
 import { MESSAGE_ENDPOINTS } from '@/utils/constants/endpoints';
 
 // Local imports
-import { buildConversationalAgentHeaders, transformMessage, ContentPartHelper } from '@/services/conversational-agent/helpers';
+import { transformMessage, ContentPartHelper } from '@/services/conversational-agent/helpers';
+import { buildConversationalAgentHeaders } from '@/services/conversational-agent/helpers/header';
 
 /**
  * Service for message operations within a conversation

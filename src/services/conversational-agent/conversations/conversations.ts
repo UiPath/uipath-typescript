@@ -43,9 +43,9 @@ import { transformData, transformRequest, arrayDictionaryToRecord } from '@/util
 // Local imports
 import {
   ConversationEventHelperManagerImpl,
-  buildConversationalAgentHeaders,
   type ConversationEventHelperManager
 } from '../helpers';
+import { buildConversationalAgentHeaders } from '../helpers/header';
 import { ExchangeService } from './exchanges';
 import { SessionManager } from './session';
 

@@ -29,7 +29,7 @@ import { transformData } from '@/utils/transform';
 
 // Local imports
 import { ConversationService } from './conversations';
-import { buildConversationalAgentHeaders } from './helpers';
+import { buildConversationalAgentHeaders } from './helpers/header';
 import { UserSettingsService } from './user';
 
 /**

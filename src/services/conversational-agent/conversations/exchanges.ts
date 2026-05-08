@@ -31,7 +31,8 @@ import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 
 // Local imports
-import { buildConversationalAgentHeaders, transformExchange } from '@/services/conversational-agent/helpers';
+import { transformExchange } from '@/services/conversational-agent/helpers';
+import { buildConversationalAgentHeaders } from '@/services/conversational-agent/helpers/header';
 
 /**
  * Service for exchange operations within a conversation
