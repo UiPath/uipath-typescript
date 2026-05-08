@@ -35,7 +35,6 @@ import { ConversationMap, createConversationWithMethods } from '@/models/convers
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
 import { CONVERSATION_ENDPOINTS, ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
-import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
@@ -46,6 +45,7 @@ import {
   ConversationEventHelperManagerImpl,
   type ConversationEventHelperManager
 } from '../helpers';
+import { buildConversationalAgentHeaders } from '../helpers/header';
 import { ExchangeService } from './exchanges';
 import { SessionManager } from './session';
 
@@ -101,7 +101,7 @@ export class ConversationService extends BaseService implements ConversationServ
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    super(instance, options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined);
+    super(instance, buildConversationalAgentHeaders(options));
 
     this._sessionManager = new SessionManager(instance, options);
     this._exchangeService = new ExchangeService(instance, options);

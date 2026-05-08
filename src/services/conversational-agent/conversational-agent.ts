@@ -25,11 +25,11 @@ import {
 
 // Utils
 import { FEATURE_ENDPOINTS, AGENT_ENDPOINTS } from '@/utils/constants/endpoints';
-import { EXTERNAL_USER_ID } from '@/utils/constants/headers';
 import { transformData } from '@/utils/transform';
 
 // Local imports
 import { ConversationService } from './conversations';
+import { buildConversationalAgentHeaders } from './helpers/header';
 import { UserSettingsService } from './user';
 
 /**
@@ -49,7 +49,7 @@ export class ConversationalAgentService extends BaseService implements Conversat
    * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
   constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
-    super(instance, options?.externalUserId ? { [EXTERNAL_USER_ID]: options.externalUserId } : undefined);
+    super(instance, buildConversationalAgentHeaders(options));
 
     // Create conversation service with WebSocket support
     this.conversations = new ConversationService(instance, options);
