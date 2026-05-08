@@ -7,7 +7,7 @@
  */
 
 import type { MakeRequired } from '..';
-import type { ErrorEndEvent, ErrorStartEvent, MetaEvent, ToolCallEndEvent, ToolCallEvent, ToolCallStartEvent } from './protocol.types';
+import type { ErrorEndEvent, ErrorStartEvent, MetaEvent, ToolCallConfirmationEvent, ToolCallEndEvent, ToolCallEvent, ToolCallStartEvent } from './protocol.types';
 
 /**
  * Aggregated data for a completed tool call
@@ -61,6 +61,36 @@ export type CompletedToolCall = ToolCallStartEvent & ToolCallEndEvent & {
  *   toolCall.sendToolCallEnd({
  *     output: JSON.stringify(result)
  *   });
+ * });
+ * ```
+ *
+ * @example Migrating from legacy interrupt-based confirmation
+ * ```typescript
+ * // BEFORE — legacy interrupt flow
+ * message.onInterruptStart(async ({ interruptId, startEvent }) => {
+ *   if (startEvent.type !== InterruptType.ToolCallConfirmation) return;
+ *   const { toolName, inputSchema, inputValue } = startEvent.value;
+ *
+ *   const decision = await showConfirmationDialog({
+ *     toolName, inputSchema, input: inputValue,
+ *   });
+ *   message.sendInterruptEnd(interruptId, {
+ *     approved: decision.approved,
+ *     input: decision.editedInput,
+ *   });
+ * });
+ *
+ * // AFTER — new tool-call confirmation flow
+ * message.onToolCallStart(async (toolCall) => {
+ *   const { toolName, input, requireConfirmation, inputSchema } = toolCall.startEvent;
+ *   if (!requireConfirmation) return;
+ *
+ *   const decision = await showConfirmationDialog({ toolName, inputSchema, input });
+ *   if (decision.approved) {
+ *     toolCall.sendToolCallConfirm({ approved: true, input: decision.editedInput });
+ *   } else {
+ *     toolCall.sendToolCallConfirm({ approved: false });
+ *   }
  * });
  * ```
  */
@@ -120,6 +150,24 @@ export interface ToolCallStream {
    */
   onToolCallEnd(cb: (endToolCall: ToolCallEndEvent) => void): () => void;
 
+  /**
+   * Registers a handler for tool call confirmation events. Fired when the
+   * peer responds to a tool call that was emitted with
+   * `requireConfirmation: true` on its start event.
+   *
+   * @param callback - Callback receiving the confirmation event
+   * @returns Cleanup function to remove the handler
+   *
+   * @example Handling a confirmation response (agent-side)
+   * ```typescript
+   * toolCall.onToolCallConfirm(({ approved, input }) => {
+   *   if (approved) executeTool(toolCall.startEvent.toolName, input);
+   *   else cancelToolCall();
+   * });
+   * ```
+   */
+  onToolCallConfirm(callback: (confirmToolCall: ToolCallConfirmationEvent) => void): () => void;
+
   // ==================== Sending ====================
 
   /**
@@ -135,6 +183,26 @@ export interface ToolCallStream {
    * ```
    */
   sendToolCallEnd(endToolCall?: ToolCallEndEvent): void;
+
+  /**
+   * Sends a tool call confirmation (approve or reject) for a tool call that
+   * was emitted with `requireConfirmation: true`. Replaces the legacy
+   * interrupt-based confirmation flow.
+   *
+   * @param confirmToolCall - The user's decision and (when approved) the
+   *   possibly-edited input the tool should execute with
+   *
+   * @example Approving a tool call
+   * ```typescript
+   * toolCall.sendToolCallConfirm({ approved: true, input: editedInput });
+   * ```
+   *
+   * @example Rejecting a tool call
+   * ```typescript
+   * toolCall.sendToolCallConfirm({ approved: false });
+   * ```
+   */
+  sendToolCallConfirm(confirmToolCall: ToolCallConfirmationEvent): void;
 
   // ==================== Advanced ====================
 
