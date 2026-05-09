@@ -14,6 +14,7 @@ import {
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { CONVERSATION_ENDPOINTS, ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
+import type { ConversationGetAllOptions } from '@/models/conversational-agent';
 
 // ===== MOCKING =====
 vi.mock('@/core/http/api-client');
@@ -297,7 +298,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       const mockResponse = createMockTransformedConversationCollection();
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const options = {
+      const options: ConversationGetAllOptions = {
         agentReleaseKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_RELEASE_KEY,
         agentReleaseId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_RELEASE_ID,
         search: CONVERSATIONAL_AGENT_TEST_CONSTANTS.SEARCH_QUERY
