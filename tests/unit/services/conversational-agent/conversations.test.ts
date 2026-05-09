@@ -293,6 +293,23 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       );
     });
 
+    it('should forward agentReleaseKey, agentReleaseId, and search to PaginationHelpers', async () => {
+      const mockResponse = createMockTransformedConversationCollection();
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const options = {
+        agentReleaseKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_RELEASE_KEY,
+        agentReleaseId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_RELEASE_ID,
+        search: CONVERSATIONAL_AGENT_TEST_CONSTANTS.SEARCH_QUERY
+      };
+      await conversationalAgent.conversations.getAll(options);
+
+      const [ config, forwardedOptions ] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      expect(forwardedOptions).toEqual(expect.objectContaining(options));
+      // Conversational params must be excluded from the OData $-prefix.
+      expect(config.excludeFromPrefix).toEqual(expect.arrayContaining([ 'agentReleaseKey', 'agentReleaseId', 'search' ]));
+    });
+
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);

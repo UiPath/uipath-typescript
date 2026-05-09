@@ -18,6 +18,11 @@ export const CONVERSATIONAL_AGENT_TEST_CONSTANTS = {
   STARTING_PROMPT_DISPLAY: 'Tell me about UiPath',
   STARTING_PROMPT_ACTUAL: 'What is UiPath and what does it do?',
 
+  // Agent release identifiers (used as filters on conversation list endpoints)
+  AGENT_RELEASE_KEY: '11111111-2222-3333-4444-555555555555',
+  AGENT_RELEASE_ID: 42,
+  SEARCH_QUERY: 'budget',
+
   // Conversation identifiers
   CONVERSATION_ID: '4cc1935e-bb8a-40fd-b00c-63a4d85112b2',
   CONVERSATION_LABEL: 'Test Conversation',
