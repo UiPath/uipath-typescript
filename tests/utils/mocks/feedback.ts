@@ -1,4 +1,4 @@
-import { FeedbackCategory, FeedbackCategoryResponse, FeedbackStatus } from '../../../src/models/agents/feedback/feedback.types';
+import { FeedbackCategory, FeedbackStatus } from '../../../src/models/agents/feedback/feedback.types';
 import { RawFeedbackResponse, RawFeedbackCategory, RawFeedbackCategoryListResponse } from '../../../src/models/agents/feedback/feedback.internal-types';
 import { FEEDBACK_TEST_CONSTANTS } from '../constants/feedback';
 import { CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '../constants/conversational-agent';
@@ -34,20 +34,6 @@ export const createMockFeedbackCategory = (overrides: Partial<FeedbackCategory> 
   id: FEEDBACK_TEST_CONSTANTS.CATEGORY_ID,
   category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME,
   createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
-  isDefault: true,
-  isPositive: true,
-  isNegative: false,
-  ...overrides,
-});
-
-/**
- * Creates a mock feedback get-category response (post-transform, has createdTime).
- * Used for createCategory / getCategories method assertions.
- */
-export const createMockFeedbackCategoryResponse = (overrides: Partial<FeedbackCategoryResponse> = {}): FeedbackCategoryResponse => ({
-  id: FEEDBACK_TEST_CONSTANTS.CATEGORY_ID,
-  category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME,
-  createdTime: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
   isDefault: true,
   isPositive: true,
   isNegative: false,

@@ -22,7 +22,7 @@ export interface RawFeedbackCategory {
 
 /**
  * Raw feedback response shape as returned by the API, before the transform pipeline
- * renames createdAt → createdTime, updatedAt → updatedTime.
+ * renames createdAt → createdTime and updatedAt → updatedTime.
  */
 export interface RawFeedbackResponse {
   id: string;

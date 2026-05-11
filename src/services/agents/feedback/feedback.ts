@@ -228,6 +228,33 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     );
   }
 
+  /**
+   * Creates a new feedback category.
+   *
+   * Custom categories can be used to label feedback entries beyond the default system categories.
+   * Once created, reference the category by its `id` when submitting or updating feedback.
+   * If `isPositive` and `isNegative` are omitted, the backend defaults both to `true`.
+   *
+   * @param category - Name of the category to create (max 256 characters, unique per tenant)
+   * @param options - Optional flags controlling whether the category applies to positive and/or negative feedback {@link FeedbackCreateCategoryOptions}
+   * @returns Promise resolving to the created {@link FeedbackCategoryResponse}
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * // Minimum — applies to both positive and negative feedback by default
+   * const category = await feedback.createCategory('Hallucination');
+   * console.log(category.id, category.category);
+   *
+   * // With explicit flags
+   * const negativeOnly = await feedback.createCategory('Off-topic', {
+   *   isPositive: false,
+   *   isNegative: true,
+   * });
+   * ```
+   */
   @track('Feedback.CreateCategory')
   async createCategory(category: string, options?: FeedbackCreateCategoryOptions): Promise<FeedbackCategoryResponse> {
     if (!category) throw new ValidationError({ message: 'category name is required for createCategory' });
@@ -243,6 +270,32 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     return transformData(response.data, FeedbackMap) as unknown as FeedbackCategoryResponse;
   }
 
+  /**
+   * Gets all feedback categories for the tenant.
+   *
+   * Returns both system default categories (Output, Agent Error, Agent Plan Execution)
+   * and any custom categories created for this tenant.
+   * When no pagination options are provided, the API returns up to 100 items. When pagination options are provided without a pageSize, the SDK defaults to 50 items per page.
+   *
+   * @param options - Optional filters and pagination options {@link FeedbackGetCategoriesOptions}
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackCategoryResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackCategoryResponse} when pagination options are used.
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * // Get all categories
+   * const categories = await feedback.getCategories();
+   * console.log(categories.items.map(c => c.category));
+   *
+   * // Get only categories applicable to negative feedback
+   * const negativeCategories = await feedback.getCategories({ isNegative: true });
+   *
+   * // Paginated
+   * const page1 = await feedback.getCategories({ pageSize: 10 });
+   * ```
+   */
   @track('Feedback.GetCategories')
   async getCategories<T extends FeedbackGetCategoriesOptions = FeedbackGetCategoriesOptions>(
     options?: T
