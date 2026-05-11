@@ -50,7 +50,6 @@ When upgrading between minor versions, users should review the list of breaking 
 The following components are considered part of the public API:
 
 - All classes and methods in the `src` directory
-- CLI commands and their interfaces
 
 ## Breaking Changes
 

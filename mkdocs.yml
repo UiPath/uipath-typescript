@@ -79,6 +79,7 @@ plugins:
           - coded-action-apps/interfaces/CodedActionAppsServiceModel.md: Coded Action Apps service methods
   - llmstxt:
       full_output: "llms-full-content.txt"
+      preprocess: "scripts/llms-preprocess.py"
       sections:
         Getting Started:
           - getting-started.md: Introduction to UiPath TypeScript SDK
@@ -86,10 +87,12 @@ plugins:
           - pagination.md: Pagination guide
         API Reference:
           - api/interfaces/AssetServiceModel.md: Asset service methods
+          - api/interfaces/JobServiceModel.md: Job service methods
           - api/interfaces/ProcessServiceModel.md: Process service methods
           - api/interfaces/QueueServiceModel.md: Queue service methods
           - api/interfaces/BucketServiceModel.md: Bucket service methods
           - api/interfaces/TaskServiceModel.md: Task service methods
+          - api/interfaces/attachments/index.md: Attachment service methods
           - api/interfaces/entity/index.md: Entity service methods
           - api/interfaces/ChoiceSetServiceModel.md: Choice set service methods
           - api/interfaces/MaestroProcessesServiceModel.md: Maestro process methods
@@ -100,6 +103,7 @@ plugins:
           - api/interfaces/ConversationServiceModel.md: Conversation service methods
           - api/interfaces/ExchangeServiceModel.md: Exchange service methods
           - api/interfaces/MessageServiceModel.md: Message service methods
+          - api/interfaces/UserSettingsServiceModel.md: User settings service methods
           - api/interfaces/SessionStream.md: Real-time WebSocket session
           - api/interfaces/ExchangeStream.md: Exchange streaming events
           - api/interfaces/MessageStream.md: Message streaming events
@@ -181,6 +185,10 @@ nav:
               - Session: api/interfaces/SessionStream.md
               - Exchanges: api/interfaces/ExchangeServiceModel.md
               - Messages: api/interfaces/MessageServiceModel.md
+              - User Settings: api/interfaces/UserSettingsServiceModel.md
+            - Feedback: api/interfaces/FeedbackServiceModel.md
+          - Attachments:
+            - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
           - Buckets: api/interfaces/BucketServiceModel.md
           - Entities:
@@ -191,9 +199,13 @@ nav:
             - Process Instances: api/interfaces/ProcessInstancesServiceModel.md
             - Cases: api/interfaces/CasesServiceModel.md
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
+          - Jobs: api/interfaces/JobServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md
+  - Coded Apps:
+      - Getting Started: coded-apps/getting-started.md
+      - CLI Reference: coded-apps/cli-reference.md
   - Coded Action Apps SDK:
       - Getting Started: coded-action-apps/getting-started.md
       - Coded Action Apps: coded-action-apps/interfaces/CodedActionAppsServiceModel.md

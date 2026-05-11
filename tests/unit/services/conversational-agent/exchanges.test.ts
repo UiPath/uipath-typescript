@@ -46,6 +46,36 @@ describe('ExchangeService Unit Tests', () => {
     vi.clearAllMocks();
   });
 
+  describe('constructor', () => {
+    it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ExchangeService(instance, { externalUserId: 'user-123' });
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { headers: { 'x-uipath-external-user-id': 'user-123' } }
+      );
+    });
+
+    it('should not pass external user id header when externalUserId is not set', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ExchangeService(instance);
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        {}
+      );
+    });
+  });
+
   describe('getAll', () => {
     it('should return all exchanges without pagination options', async () => {
       const mockResponse = createMockTransformedExchangeCollection();

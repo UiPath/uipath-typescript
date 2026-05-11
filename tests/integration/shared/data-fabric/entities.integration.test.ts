@@ -7,7 +7,136 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { generateRandomString } from '../../utils/helpers';
+import { generateRandomString, generateRandomInt, generateRandomFloat, hasValidPagination } from '../../utils/helpers';
+import {
+  EntityAggregateFunction,
+  EntityFieldDataType,
+  EntityRecord,
+  FieldDisplayType,
+  FieldMetaData,
+  RawEntityGetResponse,
+} from '../../../../src/models/data-fabric/entities.types';
+
+// Cache for choice set values to avoid repeated API calls within a test run
+const choiceSetValueCache = new Map<string, any[]>();
+
+/**
+ * Fetches and caches choice set values for a given choice set ID.
+ */
+async function getChoiceSetValues(choiceSetId: string): Promise<any[]> {
+  if (choiceSetValueCache.has(choiceSetId)) {
+    return choiceSetValueCache.get(choiceSetId)!;
+  }
+  const { choiceSets } = getServices();
+  const result = await choiceSets.getById(choiceSetId);
+  const values = result.items || [];
+  choiceSetValueCache.set(choiceSetId, values);
+  return values;
+}
+
+/**
+ * Generates a dummy value for a given entity field based on its data type.
+ * Handles all EntityFieldDataType values so tests work regardless of entity schema.
+ */
+function generateFieldValue(field: FieldMetaData): any {
+  const { fieldDataType } = field;
+
+  if (!fieldDataType) return `Test_${generateRandomString(6)}`;
+
+  switch (fieldDataType.name) {
+    case EntityFieldDataType.STRING:
+      return `Test_${generateRandomString(8)}`;
+    case EntityFieldDataType.MULTILINE_TEXT:
+      return `Test multiline\n${generateRandomString(12)}`;
+    case EntityFieldDataType.INTEGER: {
+      const max = fieldDataType.maxValue ?? 10000;
+      const min = fieldDataType.minValue ?? 0;
+      return generateRandomInt(min, max);
+    }
+    case EntityFieldDataType.BIG_INTEGER: {
+      const max = fieldDataType.maxValue ?? 100000;
+      const min = fieldDataType.minValue ?? 0;
+      return generateRandomInt(min, max);
+    }
+    case EntityFieldDataType.FLOAT:
+    case EntityFieldDataType.DOUBLE: {
+      const max = fieldDataType.maxValue ?? 1000;
+      const min = fieldDataType.minValue ?? 0;
+      return generateRandomFloat(min, max);
+    }
+    case EntityFieldDataType.DECIMAL: {
+      const precision = fieldDataType.decimalPrecision ?? 2;
+      const max = fieldDataType.maxValue ?? 1000;
+      const min = fieldDataType.minValue ?? 0;
+      return generateRandomFloat(min, max, precision);
+    }
+    case EntityFieldDataType.BOOLEAN:
+      return true;
+    case EntityFieldDataType.DATE:
+      return new Date().toISOString().split('T')[0];
+    case EntityFieldDataType.DATETIME:
+    case EntityFieldDataType.DATETIME_WITH_TZ:
+      return new Date().toISOString();
+    case EntityFieldDataType.UUID:
+      return undefined; // UUIDs are typically auto-generated
+    default:
+      return `Test_${generateRandomString(6)}`;
+  }
+}
+
+/**
+ * Returns only the fields that are safe to write to when inserting a record.
+ * Filters out system fields, primary keys, auto-numbers, relationships, and UUIDs.
+ * File fields are excluded because the SDK does not expose a file upload API.
+ */
+function getWritableFields(fields: FieldMetaData[]): FieldMetaData[] {
+  return fields.filter(
+    (f) =>
+      !f.isSystemField &&
+      !f.isPrimaryKey &&
+      !f.isHiddenField &&
+      f.fieldDisplayType !== FieldDisplayType.AutoNumber &&
+      f.fieldDisplayType !== FieldDisplayType.Relationship &&
+      f.fieldDisplayType !== FieldDisplayType.File &&
+      f.fieldDataType?.name !== EntityFieldDataType.UUID
+  );
+}
+
+/**
+ * Builds a dummy record object that conforms to the entity's schema.
+ * Discovers the schema dynamically and generates appropriate values, including
+ * looking up valid choice set values for ChoiceSetSingle/ChoiceSetMultiple fields.
+ */
+async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<Record<string, any>> {
+  const writableFields = getWritableFields(entityMetadata.fields);
+  const record: Record<string, any> = {};
+
+  for (const field of writableFields) {
+    if (
+      field.fieldDisplayType === FieldDisplayType.ChoiceSetSingle ||
+      field.fieldDisplayType === FieldDisplayType.ChoiceSetMultiple
+    ) {
+      const choiceSetId = field.choiceSetId || field.referenceChoiceSet?.id;
+      if (!choiceSetId) continue;
+
+      const values = await getChoiceSetValues(choiceSetId);
+      if (values.length === 0) continue;
+
+      if (field.fieldDisplayType === FieldDisplayType.ChoiceSetSingle) {
+        record[field.name] = values[0].numberId;
+      } else {
+        record[field.name] = [values[0].numberId];
+      }
+    } else {
+      const value = generateFieldValue(field);
+      if (value !== undefined) {
+        record[field.name] = value;
+      }
+    }
+  }
+
+  return record;
+}
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -15,7 +144,9 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   setupUnifiedTests(mode);
 
   let testEntityId: string | null = null;
+  let entityMetadata: RawEntityGetResponse | null = null;
   const createdRecordIds: string[] = [];
+  const createdEntityIds: string[] = [];
 
   describe('getAll', () => {
     it('should retrieve all entities', async () => {
@@ -37,8 +168,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const result = await entities.getAll();
 
       if (result.length === 0) {
-        console.log('No entities available to validate structure');
-        return;
+        throw new Error('No entities available to validate structure');
       }
 
       const entity = result[0];
@@ -46,6 +176,26 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(entity.name).toBeDefined();
       expect(typeof entity.id).toBe('string');
       expect(typeof entity.name).toBe('string');
+    });
+
+    it('should return entities with entity methods attached', async () => {
+      const { entities } = getServices();
+
+      const result = await entities.getAll();
+
+      if (result.length === 0) {
+        throw new Error('No entities available to validate methods');
+      }
+
+      const entity = result[0];
+      expect(typeof entity.insertRecord).toBe('function');
+      expect(typeof entity.insertRecords).toBe('function');
+      expect(typeof entity.updateRecords).toBe('function');
+      expect(typeof entity.deleteRecords).toBe('function');
+      expect(typeof entity.deleteRecord).toBe('function');
+      expect(typeof entity.getAllRecords).toBe('function');
+      expect(typeof entity.getRecord).toBe('function');
+      expect(typeof entity.downloadAttachment).toBe('function');
     });
   });
 
@@ -57,8 +207,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
       const result = await entities.getById(entityId);
@@ -68,40 +217,87 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(result.name).toBeDefined();
 
       testEntityId = entityId;
+      entityMetadata = result;
     });
-  });
 
-  describe('getRecordsById', () => {
-    it('should retrieve entity records with pagination', async () => {
+    it('should return entity with fields metadata', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
-      const result = await entities.getRecordsById(entityId);
+      const result = await entities.getById(entityId);
+
+      expect(result.fields).toBeDefined();
+      expect(Array.isArray(result.fields)).toBe(true);
+      expect(result.fields.length).toBeGreaterThan(0);
+
+      const field = result.fields[0];
+      expect(field.name).toBeDefined();
+      expect(field.fieldDataType).toBeDefined();
+      expect(field.fieldDataType?.name).toBeDefined();
+      expect(typeof field.isSystemField).toBe('boolean');
+      expect(typeof field.isRequired).toBe('boolean');
+
+      entityMetadata = result;
+    });
+
+    it('should have entity methods attached', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      const result = await entities.getById(entityId);
+
+      expect(typeof result.insertRecord).toBe('function');
+      expect(typeof result.insertRecords).toBe('function');
+      expect(typeof result.updateRecords).toBe('function');
+      expect(typeof result.deleteRecords).toBe('function');
+      expect(typeof result.deleteRecord).toBe('function');
+      expect(typeof result.getAllRecords).toBe('function');
+      expect(typeof result.getRecord).toBe('function');
+      expect(typeof result.downloadAttachment).toBe('function');
+    });
+  });
+
+  describe('getAllRecords', () => {
+    it('should retrieve entity records', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      const result = await entities.getAllRecords(entityId);
 
       expect(result).toBeDefined();
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
     });
 
-    it('should retrieve records with limit', async () => {
+    it('should retrieve records with pageSize', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
-      const result = await entities.getRecordsById(entityId, {
+      const result = await entities.getAllRecords(entityId, {
         pageSize: 5,
       });
 
@@ -117,11 +313,10 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
-      const firstPage = await entities.getRecordsById(entityId, {
+      const firstPage = await entities.getAllRecords(entityId, {
         pageSize: 2,
       });
 
@@ -129,7 +324,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(firstPage.items).toBeDefined();
 
       if (firstPage.hasNextPage && firstPage.nextCursor) {
-        const secondPage = await entities.getRecordsById(entityId, {
+        const secondPage = await entities.getAllRecords(entityId, {
           pageSize: 2,
           cursor: firstPage.nextCursor,
         });
@@ -141,123 +336,324 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  describe('Record CRUD operations', () => {
-    it('should insert a single record', async () => {
+  describe('getRecordById', () => {
+    it('should retrieve a single record by entity ID and record ID', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
-        return;
+        throw new Error('No entity ID available for testing');
       }
 
-      const testData = {
-        name: `IntegrationTest_${mode}_${generateRandomString(8)}`,
-        description: 'Integration test record',
-      };
+      const records = await entities.getAllRecords(entityId, { pageSize: 1 });
 
-      try {
-        const result = await entities.insertById(entityId, testData);
-
-        expect(result).toBeDefined();
-        if (result.id) {
-          createdRecordIds.push(result.id);
-          registerResource('entityRecords', {
-            entityId,
-            recordIds: [result.id],
-          });
-        }
-      } catch (error: any) {
-        console.log(
-          'Record insertion test failed. This may be due to entity schema constraints:',
-          error.message
-        );
+      if (records.items.length === 0) {
+        throw new Error('No records available to test getRecordById');
       }
+
+      const recordId = records.items[0].Id;
+      const record = await entities.getRecordById(entityId, recordId);
+
+      expect(record).toBeDefined();
+      expect(record.Id).toBe(recordId);
     });
+  });
 
-    it('should batch insert multiple records', async () => {
+  describe('Record CRUD operations (service-level)', () => {
+    const serviceLevelRecordIds: string[] = [];
+
+    it('should insert a single record using insertRecordById', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
       }
 
-      const testData = [
-        {
-          name: `IntegrationTest_${mode}_Batch1_${generateRandomString(8)}`,
-          description: 'Batch test record 1',
-        },
-        {
-          name: `IntegrationTest_${mode}_Batch2_${generateRandomString(8)}`,
-          description: 'Batch test record 2',
-        },
-      ];
+      // Fetch schema dynamically if not already loaded
+      if (entityMetadata?.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
+      }
 
-      try {
-        const result = await entities.batchInsertById(entityId, testData);
+      const testData = await buildDummyRecord(entityMetadata);
 
-        expect(result).toBeDefined();
-        if (result.items && Array.isArray(result.items) && result.items.length > 0) {
-          const insertedIds = result.items.filter((r: any) => r.id).map((r: any) => r.id);
-          createdRecordIds.push(...insertedIds);
-          registerResource('entityRecords', {
-            entityId,
-            recordIds: insertedIds,
-          });
+      const result = await entities.insertRecordById(entityId, testData);
+
+      expect(result).toBeDefined();
+      expect(result.Id).toBeDefined();
+
+      serviceLevelRecordIds.push(result.Id);
+      createdRecordIds.push(result.Id);
+      registerResource('entityRecords', {
+        entityId,
+        recordIds: [result.Id],
+      });
+    });
+
+    it('should verify inserted record via getRecordById', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId || serviceLevelRecordIds.length === 0) {
+        throw new Error('No inserted record available to verify');
+      }
+
+      const recordId = serviceLevelRecordIds[0];
+      const record = await entities.getRecordById(entityId, recordId);
+
+      expect(record).toBeDefined();
+      expect(record.Id).toBe(recordId);
+    });
+
+    it('should batch insert multiple records using insertRecordsById', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      if (entityMetadata?.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
+      }
+
+      const testData = await Promise.all([buildDummyRecord(entityMetadata), buildDummyRecord(entityMetadata)]);
+
+      const result = await entities.insertRecordsById(entityId, testData);
+
+      expect(result).toBeDefined();
+      expect(result.successRecords).toBeDefined();
+      expect(Array.isArray(result.successRecords)).toBe(true);
+
+      const insertedIds = result.successRecords
+        .filter((r) => r.Id)
+        .map((r) => r.Id);
+      serviceLevelRecordIds.push(...insertedIds);
+      createdRecordIds.push(...insertedIds);
+      registerResource('entityRecords', {
+        entityId,
+        recordIds: insertedIds,
+      });
+    });
+
+    it('should update records using updateRecordsById', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId || serviceLevelRecordIds.length === 0) {
+        throw new Error('No records available to update');
+      }
+
+      if (entityMetadata?.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
+      }
+
+      // Build update payloads: each must include `Id` plus at least one updated field
+      const writableFields = getWritableFields(entityMetadata.fields);
+      const updateData: EntityRecord[] = serviceLevelRecordIds.map((id) => {
+        const updates = { Id: id } as EntityRecord;
+        // Update the first writable field with a new value
+        if (writableFields.length > 0) {
+          const field = writableFields[0];
+          updates[field.name] = generateFieldValue(field);
         }
-      } catch (error: any) {
-        console.log('Batch insertion test failed:', error.message);
-      }
+        return updates;
+      });
+
+      const result = await entities.updateRecordsById(entityId, updateData);
+
+      expect(result).toBeDefined();
+      expect(result.successRecords).toBeDefined();
+      expect(Array.isArray(result.successRecords)).toBe(true);
     });
 
-    it('should update records', async () => {
+    it('should delete records using deleteRecordsById', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
-      if (!entityId || createdRecordIds.length === 0) {
-        console.log('No records available to update');
-        return;
+      if (!entityId || serviceLevelRecordIds.length === 0) {
+        throw new Error('No records available to delete');
       }
 
-      const updateData = createdRecordIds.map((id) => ({
-        Id: id,
-        description: 'Updated integration test record',
-      }));
+      const result = await entities.deleteRecordsById(entityId, serviceLevelRecordIds);
 
-      try {
-        const result = await entities.updateById(entityId, updateData);
-        expect(result).toBeDefined();
-      } catch (error: any) {
-        console.log('Record update test failed:', error.message);
+      expect(result).toBeDefined();
+      expect(result.successRecords).toBeDefined();
+
+      // Remove deleted IDs from the global tracking list
+      for (const id of serviceLevelRecordIds) {
+        const idx = createdRecordIds.indexOf(id);
+        if (idx !== -1) {
+          createdRecordIds.splice(idx, 1);
+        }
       }
+      serviceLevelRecordIds.length = 0;
     });
+  });
 
-    it('should delete records', async () => {
+  describe('Entity-level methods (via getById)', () => {
+    const entityMethodRecordIds: string[] = [];
+
+    it('should insert a single record via entity.insertRecord', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
-      if (!entityId || createdRecordIds.length === 0) {
-        console.log('No records available to delete');
-        return;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
       }
 
-      try {
-        await entities.deleteById(entityId, createdRecordIds);
-        console.log(`Deleted ${createdRecordIds.length} test records`);
-        createdRecordIds.length = 0;
-      } catch (error: any) {
-        console.log('Record deletion test failed:', error.message);
+      const entity = await entities.getById(entityId);
+      entityMetadata = entity;
+
+      const testData = await buildDummyRecord(entity);
+      const result = await entity.insertRecord(testData);
+
+      expect(result).toBeDefined();
+      expect(result.Id).toBeDefined();
+
+      entityMethodRecordIds.push(result.Id);
+      createdRecordIds.push(result.Id);
+      registerResource('entityRecords', {
+        entityId,
+        recordIds: [result.Id],
+      });
+    });
+
+    it('should insert multiple records via entity.insertRecords', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
       }
+
+      const entity = await entities.getById(entityId);
+      entityMetadata = entity;
+
+      const testData = await Promise.all([buildDummyRecord(entity), buildDummyRecord(entity)]);
+      const result = await entity.insertRecords(testData);
+
+      expect(result).toBeDefined();
+      expect(result.successRecords).toBeDefined();
+      expect(Array.isArray(result.successRecords)).toBe(true);
+
+      const insertedIds = result.successRecords
+        .filter((r) => r.Id)
+        .map((r) => r.Id);
+      entityMethodRecordIds.push(...insertedIds);
+      createdRecordIds.push(...insertedIds);
+      registerResource('entityRecords', {
+        entityId,
+        recordIds: insertedIds,
+      });
+    });
+
+    it('should retrieve all records via entity.getAllRecords', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      const entity = await entities.getById(entityId);
+      const result = await entity.getAllRecords({ pageSize: 5 });
+
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeLessThanOrEqual(5);
+    });
+
+    it('should retrieve a single record via entity.getRecord', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId || entityMethodRecordIds.length === 0) {
+        throw new Error('No records available to test getRecord');
+      }
+
+      const entity = await entities.getById(entityId);
+      const recordId = entityMethodRecordIds[0];
+      const record = await entity.getRecord(recordId);
+
+      expect(record).toBeDefined();
+      expect(record.Id).toBe(recordId);
+    });
+
+    it('should update records via entity.updateRecords', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId || entityMethodRecordIds.length === 0) {
+        throw new Error('No records available to update');
+      }
+
+      const entity = await entities.getById(entityId);
+      entityMetadata = entity;
+
+      const writableFields = getWritableFields(entity.fields);
+      const updateData: EntityRecord[] = entityMethodRecordIds.map((id) => {
+        const updates = { Id: id } as EntityRecord;
+        if (writableFields.length > 0) {
+          const field = writableFields[0];
+          updates[field.name] = generateFieldValue(field);
+        }
+        return updates;
+      });
+
+      const result = await entity.updateRecords(updateData);
+
+      expect(result).toBeDefined();
+      expect(result.successRecords).toBeDefined();
+      expect(Array.isArray(result.successRecords)).toBe(true);
+    });
+
+    it('should delete records via entity.deleteRecords', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId || entityMethodRecordIds.length === 0) {
+        throw new Error('No records available to delete');
+      }
+
+      const entity = await entities.getById(entityId);
+      const result = await entity.deleteRecords(entityMethodRecordIds);
+
+      expect(result).toBeDefined();
+      expect(result.successRecords).toBeDefined();
+
+      for (const id of entityMethodRecordIds) {
+        const idx = createdRecordIds.indexOf(id);
+        if (idx !== -1) {
+          createdRecordIds.splice(idx, 1);
+        }
+      }
+      entityMethodRecordIds.length = 0;
     });
   });
 
@@ -279,7 +675,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       };
 
       const inserted = await entities.insertRecordById(entityId, insertData);
-      const updateTestRecordId = inserted.id;
+      const updateTestRecordId = inserted.Id;
 
       if (!updateTestRecordId) {
         throw new Error('Could not get inserted record ID');
@@ -297,7 +693,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       });
 
       expect(result).toBeDefined();
-      expect(result.id).toBe(updateTestRecordId);
+      expect(result.Id).toBe(updateTestRecordId);
     });
 
     it('should handle API errors for non-existent record', async () => {
@@ -316,44 +712,620 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  describe('Attachment operations', () => {
-    it('should download attachment if available', async () => {
+  describe('queryRecordsById', () => {
+    it('should query records with no filters', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecordsById(entityId);
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(typeof result.totalCount).toBe('number');
+    });
+
+    it('should return paginated records when pageSize is provided', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecordsById(entityId, { pageSize: 2 });
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeLessThanOrEqual(2);
+      expect(hasValidPagination(result)).toBe(true);
+    });
+
+    it('should return aggregate count when aggregates is provided without groupBy', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      const result = await entities.queryRecordsById(entityId, {
+        aggregates: [
+          { function: EntityAggregateFunction.Count, field: 'Id', alias: 'total' },
+        ],
+      });
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBe(1);
+      const row = result.items[0] as Record<string, any>;
+      expect(row.total).toBeDefined();
+      expect(typeof row.total).toBe('number');
+      expect(row.total).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  // Bulk import requires DataFabric.Data.Write scope — not supported via PAT token yet
+  describe.skip('importRecordsById', () => {
+    it('should import records from a CSV blob', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
+      }
+
+      if (entityMetadata?.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
+      }
+
+      // Build CSV from writable string fields
+      const writableFields = getWritableFields(entityMetadata.fields).filter(
+        f => f.fieldDataType?.name === EntityFieldDataType.STRING
+      );
+
+      if (writableFields.length === 0) {
+        throw new Error('No string fields available for bulk import test');
+      }
+
+      const fieldName = writableFields[0].name;
+      const csvContent = `${fieldName}\nBulkImport_${generateRandomString(8)}\nBulkImport_${generateRandomString(8)}`;
+      const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+      const result = await entities.importRecordsById(entityId, csvBlob);
+
+      expect(result).toBeDefined();
+      expect(typeof result.totalRecords).toBe('number');
+      expect(typeof result.insertedRecords).toBe('number');
+      expect(result.totalRecords).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+
+  // ─── Schema Management ────────────────────────────────────────────────────
+
+  // Entity schema write operations require write-schema PAT scope — not supported yet
+  describe.skip('create', () => {
+    it('should create a new entity and return its ID', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+
+      const entityId = await entities.create(name, [
+        { fieldName: 'title', displayName: 'Title', type: EntityFieldDataType.STRING, isRequired: true },
+        { fieldName: 'count', displayName: 'Count', type: EntityFieldDataType.INTEGER },
+      ], { displayName: `SDK Test Entity ${name}`, description: 'Created by integration test' });
+
+      expect(typeof entityId).toBe('string');
+      expect(entityId.length).toBeGreaterThan(0);
+      createdEntityIds.push(entityId);
+    });
+
+    it('should reject an invalid entity name', async () => {
+      const { entities } = getServices();
+
+      await expect(
+        entities.create('Invalid Name', [])
+      ).rejects.toThrow(/Invalid entity name/);
+    });
+
+    it('should reject an invalid field name', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+
+      await expect(
+        entities.create(name, [
+          { fieldName: 'Invalid Field', type: EntityFieldDataType.STRING },
+        ])
+      ).rejects.toThrow(/Invalid field name/);
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('updateById', () => {
+    it('should update entity display name and description', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [], { displayName: `Original ${name}`, description: 'Original description' });
+      createdEntityIds.push(entityId);
+
+      const newDisplayName = `Updated ${name}`;
+      await entities.updateById(entityId, {
+        displayName: newDisplayName,
+        description: 'Updated description',
+      });
+
+      const updated = await entities.getById(entityId);
+      expect(updated.displayName).toBe(newDisplayName);
+      expect(updated.description).toBe('Updated description');
+    });
+
+    it('should add a new field to an existing entity', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'base_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      await entities.updateById(entityId, {
+        addFields: [{ fieldName: 'new_field', type: EntityFieldDataType.INTEGER }],
+      });
+
+      const updated = await entities.getById(entityId);
+      const fieldNames = updated.fields.map(f => f.name);
+      expect(fieldNames).toContain('new_field');
+    });
+
+    it('should remove a field from an existing entity', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'keep_field', type: EntityFieldDataType.STRING },
+        { fieldName: 'remove_me', type: EntityFieldDataType.INTEGER },
+      ]);
+      createdEntityIds.push(entityId);
+
+      await entities.updateById(entityId, {
+        removeFields: [{ fieldName: 'remove_me' }],
+      });
+
+      const updated = await entities.getById(entityId);
+      const fieldNames = updated.fields.map(f => f.name);
+      expect(fieldNames).not.toContain('remove_me');
+      expect(fieldNames).toContain('keep_field');
+    });
+
+    it('should update an existing field metadata', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'updatable_field', displayName: 'Original Name', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      // Get the raw entity to find the field ID (transformData renames sqlType but preserves id)
+      const before = await entities.getById(entityId);
+      const field = before.fields.find(f => f.name === 'updatable_field');
+      if (!field?.id) {
+        throw new Error('Could not find updatable_field id in entity schema');
+      }
+
+      await entities.updateById(entityId, {
+        updateFields: [{ id: field.id, displayName: 'Updated Name', isRequired: true }],
+      });
+
+      const after = await entities.getById(entityId);
+      const updatedField = after.fields.find(f => f.name === 'updatable_field');
+      expect(updatedField).toBeDefined();
+      expect(updatedField?.displayName).toBe('Updated Name');
+      expect(updatedField?.isRequired).toBe(true);
+    });
+
+    it('should add, update, and remove fields in a single call', async () => {
+      const { entities } = getServices();
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'to_update', displayName: 'Before Update', type: EntityFieldDataType.STRING },
+        { fieldName: 'to_remove', type: EntityFieldDataType.INTEGER },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const before = await entities.getById(entityId);
+      const fieldToUpdate = before.fields.find(f => f.name === 'to_update');
+      if (!fieldToUpdate?.id) {
+        throw new Error('Could not find to_update field id');
+      }
+
+      await entities.updateById(entityId, {
+        addFields: [{ fieldName: 'new_addition', type: EntityFieldDataType.BOOLEAN }],
+        updateFields: [{ id: fieldToUpdate.id, displayName: 'After Update' }],
+        removeFields: [{ fieldName: 'to_remove' }],
+      });
+
+      const after = await entities.getById(entityId);
+      const fieldNames = after.fields.map(f => f.name);
+
+      // new field was added
+      expect(fieldNames).toContain('new_addition');
+      // removed field is gone
+      expect(fieldNames).not.toContain('to_remove');
+      // updated field has new display name
+      const updated = after.fields.find(f => f.name === 'to_update');
+      expect(updated?.displayName).toBe('After Update');
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('sqlType constraint defaults', () => {
+    it('should create STRING field with default lengthLimit 200', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'str_field');
+      expect(field).toBeDefined();
+      expect(field?.fieldDataType.lengthLimit).toBe(200);
+    });
+
+    it('should create STRING field with user-provided lengthLimit', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 500 },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'str_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(500);
+    });
+
+    it('should create MULTILINE_TEXT field with default lengthLimit 200', async () => {
+      const { entities } = getServices();
+      const name = `sdk_ml_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'ml_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(200);
+    });
+
+    it('should create DECIMAL field with correct default constraints', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dec_field', type: EntityFieldDataType.DECIMAL },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dec_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+      expect(field?.fieldDataType.decimalPrecision).toBe(2);
+      expect(field?.fieldDataType.maxValue).toBe(1000000000000);
+      expect(field?.fieldDataType.minValue).toBe(-1000000000000);
+    });
+
+    it('should create DECIMAL field with user-provided constraints', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        {
+          fieldName: 'dec_field',
+          type: EntityFieldDataType.DECIMAL,
+          decimalPrecision: 4,
+          maxValue: 99999,
+          minValue: -99999,
+        },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dec_field');
+      expect(field?.fieldDataType.decimalPrecision).toBe(4);
+      expect(field?.fieldDataType.maxValue).toBe(99999);
+      expect(field?.fieldDataType.minValue).toBe(-99999);
+    });
+
+    it('should create BOOLEAN field with fixed lengthLimit 100', async () => {
+      const { entities } = getServices();
+      const name = `sdk_bit_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'bool_field', type: EntityFieldDataType.BOOLEAN },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'bool_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(100);
+    });
+
+    it('should create DATE field with fixed lengthLimit 1000', async () => {
+      const { entities } = getServices();
+      const name = `sdk_date_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'date_field', type: EntityFieldDataType.DATE },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'date_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+    });
+
+    it('should create DATETIME_WITH_TZ field with fixed lengthLimit 1000', async () => {
+      const { entities } = getServices();
+      const name = `sdk_dtz_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dtz_field', type: EntityFieldDataType.DATETIME_WITH_TZ },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'dtz_field');
+      expect(field?.fieldDataType.lengthLimit).toBe(1000);
+    });
+
+    it('should allow updating STRING field lengthLimit without "Field type cannot be changed" error', async () => {
+      const { entities } = getServices();
+      const name = `sdk_upd_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const before = await entities.getById(entityId);
+      const field = before.fields.find(f => f.name === 'str_field');
+      if (!field?.id) {
+        throw new Error('Could not find str_field id in entity schema');
+      }
+
+      // Must not throw "Field type cannot be changed"
+      await entities.updateById(entityId, {
+        updateFields: [{ id: field.id, lengthLimit: 500 }],
+      });
+
+      const after = await entities.getById(entityId);
+      const updated = after.fields.find(f => f.name === 'str_field');
+      expect(updated?.fieldDataType.lengthLimit).toBe(500);
+    });
+
+    it('should allow updating DECIMAL field constraints via updateById', async () => {
+      const { entities } = getServices();
+      const name = `sdk_upddec_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, [
+        { fieldName: 'dec_field', type: EntityFieldDataType.DECIMAL },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const before = await entities.getById(entityId);
+      const field = before.fields.find(f => f.name === 'dec_field');
+      if (!field?.id) {
+        throw new Error('Could not find dec_field id in entity schema');
+      }
+
+      await entities.updateById(entityId, {
+        updateFields: [{ id: field.id, decimalPrecision: 4, maxValue: 9999, minValue: -9999 }],
+      });
+
+      const after = await entities.getById(entityId);
+      const updated = after.fields.find(f => f.name === 'dec_field');
+      expect(updated?.fieldDataType.decimalPrecision).toBe(4);
+      expect(updated?.fieldDataType.maxValue).toBe(9999);
+      expect(updated?.fieldDataType.minValue).toBe(-9999);
+    });
+
+    it('should reject STRING with lengthLimit above max (5000) without hitting the API', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_oor_${generateRandomString(8).toLowerCase()}`;
+
+      // SDK validation must throw before any API call is made.
+      await expect(
+        entities.create(name, [
+          { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 5000 },
+        ]),
+      ).rejects.toThrow(/lengthLimit 5000 out of range \[1, 4000\]/);
+
+      // Verify no entity was created server-side
+      const all = await entities.getAll();
+      expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+
+    it('should reject MULTILINE_TEXT with lengthLimit above max (15000) without hitting the API', async () => {
+      const { entities } = getServices();
+      const name = `sdk_ml_oor_${generateRandomString(8).toLowerCase()}`;
+
+      await expect(
+        entities.create(name, [
+          { fieldName: 'ml_field', type: EntityFieldDataType.MULTILINE_TEXT, lengthLimit: 15000 },
+        ]),
+      ).rejects.toThrow(/lengthLimit 15000 out of range \[1, 10000\]/);
+
+      const all = await entities.getAll();
+      expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+
+    it('should reject STRING with lengthLimit below min (0) without hitting the API', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_zero_${generateRandomString(8).toLowerCase()}`;
+
+      await expect(
+        entities.create(name, [
+          { fieldName: 'str_field', type: EntityFieldDataType.STRING, lengthLimit: 0 },
+        ]),
+      ).rejects.toThrow(/lengthLimit 0 out of range \[1, 4000\]/);
+
+      const all = await entities.getAll();
+      expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+
+    it('should apply default lengthLimit (200) when STRING lengthLimit is omitted, confirmed via GET', async () => {
+      const { entities } = getServices();
+      const name = `sdk_str_default_${generateRandomString(8).toLowerCase()}`;
+
+      const entityId = await entities.create(name, [
+        { fieldName: 'str_field', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(entityId);
+
+      const entity = await entities.getById(entityId);
+      const field = entity.fields.find(f => f.name === 'str_field');
+      // Default is applied client-side and round-trips through the API as 200
+      expect(field?.fieldDataType.lengthLimit).toBe(200);
+    });
+
+    it('should reject INTEGER when minValue >= maxValue without hitting the API', async () => {
+      const { entities } = getServices();
+      const name = `sdk_int_minmax_${generateRandomString(8).toLowerCase()}`;
+
+      await expect(
+        entities.create(name, [
+          { fieldName: 'int_field', type: EntityFieldDataType.INTEGER, minValue: 100, maxValue: 50 },
+        ]),
+      ).rejects.toThrow(/minValue 100 >= maxValue 50/);
+
+      const all = await entities.getAll();
+      expect(all.find(e => e.name === name)).toBeUndefined();
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('deleteById', () => {
+    it('should delete an entity created for this test', async () => {
+      const { entities } = getServices();
+
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, []);
+
+      // Delete it immediately (not added to createdEntityIds so afterAll won't double-delete)
+      await entities.deleteById(entityId);
+
+      // Verify it no longer appears in getAll
+      const all = await entities.getAll();
+      const found = all.find(e => e.id === entityId);
+      expect(found).toBeUndefined();
+    });
+  });
+
+  // Skipped: requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('entity schema methods (bound)', () => {
+    it('should call deleteById via bound method on entity', async () => {
+      const { entities } = getServices();
+
+      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      const entityId = await entities.create(name, []);
+
+      const entity = await entities.getById(entityId);
+      expect(typeof entity.delete).toBe('function');
+      expect(typeof entity.update).toBe('function');
+
+      // Delete via bound method — do NOT add to createdEntityIds
+      await entity.delete();
+
+      const all = await entities.getAll();
+      expect(all.find(e => e.id === entityId)).toBeUndefined();
+    });
+  });
+
+  // ─── Single Record Delete ─────────────────────────────────────────────────
+
+  describe('deleteRecordById (service-level)', () => {
+    it('should delete a single record using deleteRecordById', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
 
       const entityId = config.dataFabricTestEntityId || testEntityId;
 
       if (!entityId) {
-        console.log('No entity ID available for testing');
-        return;
+        throw new Error('No entity ID available for testing. Set DATA_FABRIC_TEST_ENTITY_ID.');
       }
 
-      const records = await entities.getRecordsById(entityId, {
-        pageSize: 10,
-      });
-
-      const recordWithAttachment = records.items.find((record: any) => {
-        return Object.values(record).some(
-          (value: any) =>
-            value &&
-            typeof value === 'object' &&
-            (value.fileId || value.attachmentId)
-        );
-      });
-
-      if (!recordWithAttachment) {
-        console.log('No records with attachments found to test download');
-        return;
+      if (entityMetadata?.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
       }
 
-      console.log('Attachment download test requires specific entity configuration');
+      const testData = await buildDummyRecord(entityMetadata);
+      const inserted = await entities.insertRecordById(entityId, testData);
+
+      expect(inserted).toBeDefined();
+      expect(inserted.Id).toBeDefined();
+      createdRecordIds.push(inserted.Id);
+      registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
+
+      await entities.deleteRecordById(entityId, inserted.Id);
+
+      const idx = createdRecordIds.indexOf(inserted.Id);
+      if (idx !== -1) createdRecordIds.splice(idx, 1);
+    });
+
+    it('should throw for a non-existent record', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      await expect(
+        entities.deleteRecordById(entityId, '00000000-0000-0000-0000-000000000000')
+      ).rejects.toThrow();
     });
   });
 
+  describe('deleteRecord (entity-level method)', () => {
+    it('should delete a single record via entity.deleteRecord', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+
+      const entity = await entities.getById(entityId);
+
+      const testData = await buildDummyRecord(entity);
+      const inserted = await entity.insertRecord(testData);
+
+      expect(inserted).toBeDefined();
+      expect(inserted.Id).toBeDefined();
+      createdRecordIds.push(inserted.Id);
+      registerResource('entityRecords', { entityId, recordIds: [inserted.Id] });
+
+      await entity.deleteRecord(inserted.Id);
+
+      const idx = createdRecordIds.indexOf(inserted.Id);
+      if (idx !== -1) createdRecordIds.splice(idx, 1);
+    });
+  });
+
+  // ─── Cleanup ──────────────────────────────────────────────────────────────
+
   afterAll(async () => {
     const config = getTestConfig();
-    if (!config.skipCleanup && createdRecordIds.length > 0 && testEntityId) {
-      await cleanupTestEntityRecords(testEntityId, createdRecordIds);
+    if (!config.skipCleanup) {
+      if (createdRecordIds.length > 0 && testEntityId) {
+        await cleanupTestEntityRecords(testEntityId, createdRecordIds);
+      }
+      // Clean up any entities created by schema management tests (no-op when those tests are skipped)
+      if (createdEntityIds.length > 0) {
+        const { entities } = getServices();
+        await Promise.all(
+          createdEntityIds.map(entityId =>
+            entities.deleteById(entityId).catch(() => {
+              // Best-effort cleanup — entity may have already been deleted
+            })
+          )
+        );
+      }
     }
   });
 });

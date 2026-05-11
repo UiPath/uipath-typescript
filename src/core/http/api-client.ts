@@ -4,7 +4,7 @@ import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
-import { CONTENT_TYPES, RESPONSE_TYPES } from '../../utils/constants/headers';
+import { CONTENT_TYPES, RESPONSE_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
 
 export interface ApiClientConfig {
   headers?: Record<string, string>;
@@ -14,11 +14,10 @@ export class ApiClient {
   private readonly config: Config;
   private readonly executionContext: ExecutionContext;
   private readonly clientConfig: ApiClientConfig;
-  private defaultHeaders: Record<string, string> = {};
   private tokenManager: TokenManager;
   constructor(
-    config: Config, 
-    executionContext: ExecutionContext, 
+    config: Config,
+    executionContext: ExecutionContext,
     tokenManager: TokenManager,
     clientConfig: ApiClientConfig = {}
   ) {
@@ -26,10 +25,6 @@ export class ApiClient {
     this.executionContext = executionContext;
     this.clientConfig = clientConfig;
     this.tokenManager = tokenManager;
-  }
-
-  public setDefaultHeaders(headers: Record<string, string>): void {
-    this.defaultHeaders = { ...this.defaultHeaders, ...headers };
   }
 
   /**
@@ -49,7 +44,6 @@ export class ApiClient {
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': CONTENT_TYPES.JSON,
-      ...this.defaultHeaders,
       ...this.clientConfig.headers
     };
   }
@@ -70,8 +64,15 @@ export class ApiClient {
     if (isFormData) {
       delete defaultHeaders['Content-Type'];
     }
-    const headers = {
+
+    const traceId = crypto.randomUUID().replace(/-/g, '');
+    const spanId = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+    const traceparentValue = `00-${traceId}-${spanId}-01`;
+
+    const headers: Record<string, string> = {
       ...defaultHeaders,
+      [TRACEPARENT]: traceparentValue,
+      [UIPATH_TRACEPARENT_ID]: traceparentValue,
       ...options.headers
     };
 
@@ -120,7 +121,11 @@ export class ApiClient {
         return text as T;
       }
 
-      return response.json();
+      const text = await response.text();
+      if (!text) {
+        return undefined as T;
+      }
+      return JSON.parse(text);
     } catch (error: any) {
       // If it's already one of our errors, re-throw it
       if (error.type && error.type.includes('Error')) {

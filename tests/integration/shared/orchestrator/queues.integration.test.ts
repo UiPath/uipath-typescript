@@ -62,20 +62,14 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
         pageSize: 1,
       });
 
-      if (allQueues.items.length === 0) {
-        console.log('No queues available to test getById. Create a queue in the tenant first.');
-        return;
-      }
+      expect(allQueues.items.length, 'No queues available to test getById. Create a queue in the tenant first.').toBeGreaterThan(0);
 
       const queueId = allQueues.items[0].id;
       const folderId = config.folderId ? Number(config.folderId) : undefined;
 
-      if (!folderId) {
-        console.log('Skipping getById test: INTEGRATION_TEST_FOLDER_ID not configured.');
-        return;
-      }
+      expect(folderId, 'INTEGRATION_TEST_FOLDER_ID must be configured').toBeDefined();
 
-      const result = await queues.getById(queueId, folderId);
+      const result = await queues.getById(queueId, folderId!);
 
       expect(result).toBeDefined();
       expect(result.id).toBe(queueId);
@@ -94,10 +88,7 @@ describe.each(modes)('Orchestrator Queues - Integration Tests [%s]', (mode) => {
         pageSize: 1,
       });
 
-      if (result.items.length === 0) {
-        console.log('No queues available to validate structure');
-        return;
-      }
+      expect(result.items.length, 'No queues available to validate structure').toBeGreaterThan(0);
 
       const queue = result.items[0];
 

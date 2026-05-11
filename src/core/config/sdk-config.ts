@@ -30,4 +30,4 @@ export function hasOAuthConfig(config: { clientId?: string; redirectUri?: string
 // Type guard to check if config has secret
 export function hasSecretConfig(config: { secret?: string }): config is { secret: string } {
   return Boolean(config.secret);
-} 
+}

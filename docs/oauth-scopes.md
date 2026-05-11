@@ -8,6 +8,24 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `OR.Assets` or `OR.Assets.Read` |
 | `getById()` | `OR.Assets` or `OR.Assets.Read` |
+| `getByName()` | `OR.Assets` or `OR.Assets.Read` |
+
+## Jobs
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `OR.Jobs` or `OR.Jobs.Read` |
+| `getById()` | `OR.Jobs` or `OR.Jobs.Read` |
+| `getOutput()` | `OR.Jobs` or `OR.Jobs.Read`, `OR.Folders` or `OR.Folders.Read` |
+| `stop()` | `OR.Jobs` |
+| `resume()` | `OR.Jobs` or `OR.Jobs.Write` |
+| `restart()` | `OR.Jobs` |
+
+## Attachments
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getById()` | `OR.Folders` or `OR.Folders.Read` |
 
 ## Buckets
 
@@ -30,11 +48,14 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `insertRecordById()` / `insertRecord()` | `DataFabric.Data.Write` |
 | `insertRecordsById()` / `insertRecords()` | `DataFabric.Data.Write` |
 | `deleteRecordsById()` / `deleteRecords()` | `DataFabric.Data.Write` |
+| `deleteRecordById()` / `deleteRecord()` | `DataFabric.Data.Write` |
 | `updateRecordById()` / `updateRecord()` | `DataFabric.Data.Write` |
 | `updateRecordsById()` / `updateRecords()` | `DataFabric.Data.Write` |
 | `downloadAttachment()` | `DataFabric.Data.Read` |
 | `uploadAttachment()` | `DataFabric.Data.Write` |
 | `deleteAttachment()` | `DataFabric.Data.Write` |
+| `queryRecordsById()` / `queryRecords()` | `DataFabric.Data.Read` |
+| `importRecordsById()` / `importRecords()` | `DataFabric.Data.Write` |
 
 ## ChoiceSets
 
@@ -128,12 +149,27 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 | `getContentPartById()` | `OR.Execution` or `OR.Execution.Read`, `OR.Jobs` or `OR.Jobs.Read` |
 
+### User Settings
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getSettings()` | `OR.Users` or `OR.Users.Read` |
+| `updateSettings()` | `OR.Users` |
+
+### Feedback
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `Traces.Api` |
+| `getById()` | `Traces.Api` |
+
 ## Processes
 
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `OR.Execution` or `OR.Execution.Read` |
 | `getById()` | `OR.Execution` or `OR.Execution.Read` |
+| `getByName()` | `OR.Execution` or `OR.Execution.Read` |
 | `start()` | `OR.Jobs` or `OR.Jobs.Write` |
 
 ## Queues

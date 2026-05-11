@@ -1,6 +1,7 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ConversationalAgentService } from '@/services/conversational-agent/conversational-agent';
+import { ConversationService } from '@/services/conversational-agent/conversations';
 import { ApiClient } from '@/core/http/api-client';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import {
@@ -35,6 +36,7 @@ vi.mock('@/services/conversational-agent/conversations/session/session-manager',
     setLogLevel: vi.fn(),
     setEventDispatcher: vi.fn(),
     emitEvent: vi.fn(),
+    disconnect: vi.fn(),
   }))
 }));
 
@@ -57,6 +59,36 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('constructor', () => {
+    it('should pass externalUserId as x-uipath-external-user-id header in HTTP requests', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationService(instance, { externalUserId: 'user-123' });
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { headers: { 'x-uipath-external-user-id': 'user-123' } }
+      );
+    });
+
+    it('should not pass external user id header when externalUserId is not set', () => {
+      const { instance } = createServiceTestDependencies();
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+
+      const _service = new ConversationService(instance);
+
+      expect(ApiClient).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        {}
+      );
+    });
   });
 
   describe('create', () => {
@@ -135,6 +167,32 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       expect(result.exchanges).toBeDefined();
     });
 
+    it('should create a conversation with agentInput', async () => {
+      const agentInput = CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_INPUT;
+      const mockConversation = createMockRawConversation({ agentInput });
+      mockApiClient.post.mockResolvedValue(mockConversation);
+
+      const result = await conversationalAgent.conversations.create(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
+        TEST_CONSTANTS.FOLDER_ID,
+        { agentInput }
+      );
+
+      expect(result).toBeDefined();
+      expect(result.agentInput).toEqual(agentInput);
+
+      // Verify agentInput is passed through to the API unchanged
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        CONVERSATION_ENDPOINTS.CREATE,
+        expect.objectContaining({
+          agentReleaseId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID,
+          folderId: TEST_CONSTANTS.FOLDER_ID,
+          agentInput
+        }),
+        expect.any(Object)
+      );
+    });
+
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
@@ -190,6 +248,18 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       expect((result as any).agentReleaseId).toBeUndefined();
       expect((result as any).createdAt).toBeUndefined();
       expect((result as any).updatedAt).toBeUndefined();
+    });
+
+    it('should return agentInput from getById response', async () => {
+      const agentInput = CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_INPUT;
+      const mockConversation = createMockRawConversation({ agentInput });
+      mockApiClient.get.mockResolvedValue(mockConversation);
+
+      const result = await conversationalAgent.conversations.getById(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID
+      );
+
+      expect(result.agentInput).toEqual(agentInput);
     });
 
     it('should handle API errors', async () => {
@@ -330,6 +400,26 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       expect(typeof result.update).toBe('function');
       expect(typeof result.delete).toBe('function');
+    });
+
+    it('should update a conversation with agentInput', async () => {
+      const agentInput = CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_INPUT;
+      const mockConversation = createMockRawConversation({ agentInput });
+      mockApiClient.patch.mockResolvedValue(mockConversation);
+
+      const result = await conversationalAgent.conversations.updateById(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+        { agentInput }
+      );
+
+      expect(result).toBeDefined();
+      expect(result.agentInput).toEqual(agentInput);
+
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
+        CONVERSATION_ENDPOINTS.UPDATE(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
+        expect.objectContaining({ agentInput }),
+        expect.any(Object)
+      );
     });
 
     it('should handle API errors', async () => {
@@ -619,6 +709,14 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
 
       expect(cleanup).toBeDefined();
       expect(typeof cleanup).toBe('function');
+    });
+
+    it('should call disconnect on the session manager', () => {
+      const sessionManager = (conversationalAgent.conversations as any)._sessionManager;
+
+      conversationalAgent.conversations.disconnect();
+
+      expect(sessionManager.disconnect).toHaveBeenCalledTimes(1);
     });
   });
 });

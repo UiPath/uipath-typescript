@@ -1,3 +1,4 @@
+import { ValidationError } from '../../core/errors';
 import { BaseService } from '../base';
 import { EntityServiceModel, EntityGetResponse, createEntityWithMethods } from '../../models/data-fabric/entities.models';
 import {
@@ -10,31 +11,45 @@ import {
   EntityInsertRecordsOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
-  EntityUpdateOptions,
   EntityUpdateRecordOptions,
   EntityUpdateRecordResponse,
   EntityUpdateRecordsOptions,
   EntityUpdateResponse,
-  EntityDeleteOptions,
   EntityDeleteRecordsOptions,
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
-  EntityFieldDataType,
+  FieldMetaData,
   EntityFileType,
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
-  EntityDeleteAttachmentResponse
+  EntityDeleteAttachmentResponse,
+  EntityQueryRecordsOptions,
+  EntityImportRecordsResponse,
+  EntityCreateOptions,
+  EntityCreateFieldOptions,
+  EntityFieldDataType,
+  EntityUpdateByIdOptions,
+  SqlType,
+  FieldDisplayType,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS } from '../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints';
+import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../utils/constants/common';
+import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
-import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
-import { EntityFieldTypeMap, SqlFieldType, EntityMap } from '../../models/data-fabric/entities.constants';
+import { transformData } from '../../utils/transform';
+import {
+  EntityFieldTypeMap,
+  EntityMap,
+  EntitySchemaFieldTypeMap,
+  FieldDisplayTypeToDataType,
+  ENTITY_FIELD_CONSTRAINT_DEFAULTS,
+  ENTITY_FIELD_CONSTRAINT_SPEC,
+} from '../../models/data-fabric/entities.constants';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /**
@@ -178,13 +193,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    // Apply EntityMap transformations
-    const transformedResponse = transformData(camelResponse, EntityMap);
-    return transformedResponse;
+    return response.data;
   }
-   
+
   /**
    * Inserts a single record into an entity by entity ID
    *
@@ -223,9 +234,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -274,9 +283,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -318,9 +325,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -370,13 +375,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
    * Deletes data from an entity by entity ID
+   *
+   * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
    *
    * @param entityId - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
@@ -410,9 +415,32 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
+  }
+
+  /**
+   * Deletes a single record from an entity by entity ID and record ID
+   *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to delete
+   * @returns Promise resolving to void on success
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * await entities.deleteRecordById("<entityId>", "<recordId>");
+   * ```
+   */
+  @track('Entities.DeleteRecordById')
+  async deleteRecordById(entityId: string, recordId: string): Promise<void> {
+    await this.delete(
+      DATA_FABRIC_ENDPOINTS.ENTITY.DELETE_RECORD_BY_ID(entityId, recordId)
+    );
   }
 
   /**
@@ -452,6 +480,127 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
+   * Queries entity records with filters, sorting, aggregates, and pagination
+   *
+   * @param id - UUID of the entity
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
+   * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
+   *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
+   *
+   * @example
+   * ```typescript
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Non-paginated query with a filter
+   * const result = await entities.queryRecordsById("<entityId>", {
+   *   filterGroup: {
+   *     logicalOperator: LogicalOperator.And,
+   *     queryFilters: [
+   *       { fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }
+   *     ]
+   *   },
+   *   sortOptions: [{ fieldName: "created_at", isDescending: true }],
+   * });
+   * console.log(`Found ${result.totalCount} records`);
+   *
+   * // With pagination
+   * const page1 = await entities.queryRecordsById("<entityId>", {
+   *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
+   *   pageSize: 25,
+   * });
+   * if (page1.hasNextPage) {
+   *   const page2 = await entities.queryRecordsById("<entityId>", { cursor: page1.nextCursor });
+   * }
+   *
+   * // Aggregate: count of records per status
+   * await entities.queryRecordsById("<entityId>", {
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum and average across all records (no grouping)
+   * await entities.queryRecordsById("<entityId>", {
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
+   * ```
+   */
+  @track('Entities.QueryRecordsById')
+  async queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(
+    id: string,
+    options?: T
+  ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
+      method: HTTP_METHODS.POST,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
+        totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
+        }
+      },
+      excludeFromPrefix: ['expansionLevel', 'filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy']
+    }, options);
+  }
+
+  /**
+   * Imports records from a CSV file into an entity
+   *
+   * @param id - UUID of the entity
+   * @param file - CSV file to import (Blob, File, or Uint8Array)
+   * @returns Promise resolving to import result with record counts
+   *
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Browser: upload from file input
+   * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
+   * const result = await entities.importRecordsById("<entityId>", fileInput.files[0]);
+   *
+   * // Node.js: read from disk
+   * const fileBuffer = fs.readFileSync('records.csv');
+   * const result = await entities.importRecordsById("<entityId>", new Blob([fileBuffer], { type: 'text/csv' }));
+   *
+   * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   * if (result.errorFileLink) {
+   *   console.log(`Error file link: ${result.errorFileLink}`);
+   * }
+   * ```
+   * @internal
+   */
+  @track('Entities.ImportRecordsById')
+  async importRecordsById(id: string, file: EntityFileType): Promise<EntityImportRecordsResponse> {
+    const formData = new FormData();
+    if (file instanceof Uint8Array) {
+      formData.append('file', new Blob([file.buffer as ArrayBuffer]));
+    } else {
+      formData.append('file', file);
+    }
+
+    const response = await this.post<EntityImportRecordsResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.BULK_UPLOAD_BY_ID(id),
+      formData
+    );
+
+    return response.data;
+  }
+
+  /**
    * Downloads an attachment from an entity record field
    *
    * @param entityId - UUID of the entity
@@ -471,7 +620,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Download attachment for a specific record and field
    * const blob = await entities.downloadAttachment(entityId, recordId, 'Documents');
@@ -511,7 +660,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Upload a file attachment
    * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
@@ -534,9 +683,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    // Convert PascalCase response to camelCase
-    const camelResponse = pascalToCamelCaseKeys(response.data);
-    return camelResponse;
+    return response.data;
   }
 
   /**
@@ -559,7 +706,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Delete attachment for a specific record and field
    * await entities.deleteAttachment(entityId, recordId, 'Documents');
@@ -606,24 +753,221 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * @hidden
-   * @deprecated Use {@link updateRecordsById} instead.
+   * Creates a new Data Fabric entity with the given schema
+   *
+   * @param name - Entity name — must start with a letter and contain
+   *   only letters, numbers, and underscores (e.g., `"productCatalog"`).
+   * @param fields - Array of field definitions
+   * @param options - Optional entity-level settings ({@link EntityCreateOptions})
+   * @returns Promise resolving to the ID of the created entity
+   *
+   * @example
+   * ```typescript
+   * const entityId = await entities.create("product_catalog", [
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
+   * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+   *
+   * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+   * const ordersId = await entities.create("orders", [
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+   *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   * ]);
+   * ```
+   * @internal
    */
-  async updateById(id: string, data: EntityRecord[], options: EntityUpdateOptions = {}): Promise<EntityUpdateResponse> {
-    return this.updateRecordsById(id, data, options);
+  @track('Entities.Create')
+  async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
+    this.validateName(name, 'entity');
+    for (const field of fields) {
+      this.validateName(field.fieldName, 'field');
+    }
+    const opts = options ?? {};
+    const payload = {
+      ...(opts.description !== undefined && { description: opts.description }),
+      displayName: opts.displayName ?? name,
+      entityDefinition: {
+        name,
+        fields: fields.map(f => this.buildSchemaFieldPayload(f)),
+        folderId: opts.folderKey ?? DATA_FABRIC_TENANT_FOLDER_ID,
+        isRbacEnabled: opts.isRbacEnabled ?? false,
+        isInsightsEnabled: opts.isAnalyticsEnabled ?? false,
+        externalFields: opts.externalFields ?? [],
+      },
+    };
+    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, payload);
+    return response.data;
   }
 
   /**
-   * @hidden
-   * @deprecated Use {@link deleteRecordsById} instead.
+   * Deletes a Data Fabric entity and all its records
+   *
+   * @param id - UUID of the entity to delete
+   * @returns Promise resolving when the entity is deleted
+   *
+   * @example
+   * ```typescript
+   * await entities.deleteById("<entityId>");
+   * ```
+   * @internal
    */
-  async deleteById(id: string, recordIds: string[], options: EntityDeleteOptions = {}): Promise<EntityDeleteResponse> {
-    return this.deleteRecordsById(id, recordIds, options);
+  @track('Entities.DeleteById')
+  async deleteById(id: string): Promise<void> {
+    await this.delete(DATA_FABRIC_ENDPOINTS.ENTITY.DELETE(id));
+  }
+
+  /**
+   * Updates an existing Data Fabric entity — schema and/or metadata.
+   *
+   * Provide any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
+   * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
+   * only when the corresponding fields are present.
+   *
+   * **Warning:** Schema changes (`addFields`, `removeFields`, `updateFields`) use a
+   * read-modify-write pattern — concurrent calls on the same entity may silently
+   * overwrite each other's changes.
+   *
+   * @param id - UUID of the entity to update
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @returns Promise resolving when the update is complete
+   *
+   * @example
+   * ```typescript
+   * // Schema-only
+   * await entities.updateById("<entityId>", {
+   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   removeFields: [{ fieldName: "old_field" }],
+   * });
+   *
+   * // Metadata-only
+   * await entities.updateById("<entityId>", {
+   *   displayName: "My Updated Entity",
+   *   description: "Updated description",
+   * });
+   *
+   * // Combined
+   * await entities.updateById("<entityId>", {
+   *   updateFields: [{ id: "<fieldId>", displayName: "Unit Price", isRequired: true }],
+   *   displayName: "Price Catalog",
+   * });
+   *
+   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+   * await entities.updateById("<entityId>", {
+   *   addFields: [
+   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   ],
+   *   updateFields: [
+   *     { id: "<fieldId>", lengthLimit: 1000 },
+   *   ],
+   * });
+   * ```
+   * @internal
+   */
+  @track('Entities.UpdateById')
+  async updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void> {
+    const opts = options ?? {};
+    const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length);
+    const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined;
+
+    if (hasSchemaChanges) {
+      await this.applySchemaUpdate(id, opts);
+    }
+    if (hasMetadataChanges) {
+      await this.patch(DATA_FABRIC_ENDPOINTS.ENTITY.UPDATE_METADATA(id), {
+        ...(opts.displayName !== undefined && { displayName: opts.displayName }),
+        ...(opts.description !== undefined && { description: opts.description }),
+        ...(opts.isRbacEnabled !== undefined && { isRbacEnabled: opts.isRbacEnabled }),
+      });
+    }
+  }
+
+  /**
+   * Fetches the current entity schema, applies the field delta, then posts the full updated schema.
+   *
+   * @param entityId - UUID of the entity to update
+   * @param options - Field changes to apply
+   * @private
+   */
+  private async applySchemaUpdate(entityId: string, options: Pick<EntityUpdateByIdOptions, 'addFields' | 'removeFields' | 'updateFields'>): Promise<void> {
+    const entityResponse = await this.get<RawEntityGetResponse>(
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(entityId)
+    );
+    const raw = entityResponse.data;
+
+    // Carry forward existing non-system fields from GET response (skip system/primary-key fields)
+    let fields: FieldMetaData[] = (raw.fields ?? [])
+      .filter(f => !f.isSystemField && !f.isPrimaryKey);
+
+    // Filter out removed fields
+    if (options.removeFields?.length) {
+      const removeSet = new Set(options.removeFields.map(r => r.fieldName));
+      fields = fields.filter(f => !removeSet.has(f.name));
+    }
+
+    // Apply per-field metadata updates (matched by field ID)
+    if (options.updateFields?.length) {
+      const updateMap = new Map(options.updateFields.map(u => [u.id, u]));
+      fields = fields.map(f => {
+        const update = updateMap.get(f.id ?? '');
+        if (!update) return f;
+        const constraintUpdate = {
+          ...(update.lengthLimit !== undefined && { lengthLimit: update.lengthLimit }),
+          ...(update.maxValue !== undefined && { maxValue: update.maxValue }),
+          ...(update.minValue !== undefined && { minValue: update.minValue }),
+          ...(update.decimalPrecision !== undefined && { decimalPrecision: update.decimalPrecision }),
+        };
+        const hasConstraintUpdate = Object.keys(constraintUpdate).length > 0;
+        if (hasConstraintUpdate) {
+          if (!f.sqlType) {
+            throw new ValidationError({
+              message: `Cannot update constraints on field '${f.name}' (id: ${f.id}) — the field is missing sqlType metadata in the entity definition.`,
+            });
+          }
+          this.validateFieldConstraints(this.resolveFieldDataType(f), update, f.name);
+        }
+        return {
+          ...f,
+          ...(update.displayName !== undefined && { displayName: update.displayName }),
+          ...(update.description !== undefined && { description: update.description }),
+          ...(update.isRequired !== undefined && { isRequired: update.isRequired }),
+          ...(update.isUnique !== undefined && { isUnique: update.isUnique }),
+          ...(update.isRbacEnabled !== undefined && { isRbacEnabled: update.isRbacEnabled }),
+          ...(update.isEncrypted !== undefined && { isEncrypted: update.isEncrypted }),
+          ...(update.defaultValue !== undefined && { defaultValue: update.defaultValue }),
+          ...(hasConstraintUpdate && f.sqlType && { sqlType: { ...f.sqlType, ...constraintUpdate } }),
+        };
+      });
+    }
+
+    // Build and append new fields
+    const newFields: FieldSchemaPayload[] = [];
+    if (options.addFields?.length) {
+      for (const field of options.addFields) {
+        this.validateName(field.fieldName, 'field');
+      }
+      newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
+    }
+
+    await this.post(DATA_FABRIC_ENDPOINTS.ENTITY.UPSERT, {
+      displayName: raw.displayName,
+      description: raw.description,
+      entityDefinition: {
+        id: entityId,
+        name: raw.name,
+        fields: [...fields, ...newFields],
+        folderId: raw.folderId ?? DATA_FABRIC_TENANT_FOLDER_ID,
+        isRbacEnabled: raw.isRbacEnabled ?? false,
+        isInsightsEnabled: raw.isInsightsEnabled ?? false,
+        externalFields: raw.externalFields ?? [],
+      },
+    });
   }
 
   /**
    * Orchestrates all field mapping transformations
-   * 
+   *
    * @param metadata - Entity metadata to transform
    * @private
    */
@@ -640,29 +984,44 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   private mapFieldTypes(metadata: RawEntityGetResponse): void {
     if (!metadata.fields?.length) return;
-    
+
     metadata.fields = metadata.fields.map(field => {
       // Rename sqlType to fieldDataType
       let transformedField = transformData(field, EntityMap);
-      
-      // Map SQL field type to friendly name
+
+      // Map field type: prefer fieldDisplayType for types that share SQL types (File, ChoiceSet, AutoNumber)
       if (transformedField.fieldDataType?.name) {
-        const sqlTypeName = transformedField.fieldDataType.name as unknown as SqlFieldType;
-        if (EntityFieldTypeMap[sqlTypeName]) {
-          transformedField.fieldDataType.name = EntityFieldTypeMap[sqlTypeName] as unknown as EntityFieldDataType;
+        const mapped = this.tryResolveFieldDataType(transformedField.fieldDisplayType, field.sqlType?.name);
+        if (mapped) {
+          transformedField.fieldDataType.name = mapped;
         }
       }
-      
+
       this.transformNestedReferences(transformedField);
-      
+
       return transformedField;
     });
   }
 
   /**
+   * Resolves an {@link EntityFieldDataType} from a field's `fieldDisplayType` and
+   * raw SQL type name. Prefers `fieldDisplayType` to disambiguate types that
+   * share a SQL type (FILE, CHOICE_SET_*, AUTO_NUMBER, RELATIONSHIP); falls back
+   * to the SQL-type-name mapping. Returns `undefined` if neither resolves.
+   */
+  private tryResolveFieldDataType(
+    fieldDisplayType: FieldDisplayType | undefined,
+    sqlTypeName: string | undefined,
+  ): EntityFieldDataType | undefined {
+    const displayMapped = fieldDisplayType ? FieldDisplayTypeToDataType[fieldDisplayType] : undefined;
+    if (displayMapped) return displayMapped;
+    return sqlTypeName ? EntityFieldTypeMap[sqlTypeName as SqlFieldType] : undefined;
+  }
+
+  /**
    * Transforms nested reference objects in field metadata
    */
-  private transformNestedReferences(field: any): void {
+  private transformNestedReferences(field: FieldMetaData): void {
     if (field.referenceEntity) {
       field.referenceEntity = transformData(field.referenceEntity, EntityMap);
     }
@@ -676,13 +1035,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /**
    * Maps external field names to consistent naming
-   * 
+   *
    * @param metadata - Entity metadata with externalFields
    * @private
    */
   private mapExternalFields(metadata: RawEntityGetResponse): void {
     if (!metadata.externalFields?.length) return;
-    
+
     metadata.externalFields = metadata.externalFields.map(externalSource => {
       if (externalSource.fields?.length) {
         externalSource.fields = externalSource.fields.map(field => {
@@ -697,4 +1056,161 @@ export class EntityService extends BaseService implements EntityServiceModel {
       return externalSource;
     });
   }
+
+  /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
+  private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
+    this.validateName(field.fieldName, 'field');
+    const fieldType = field.type ?? EntityFieldDataType.STRING;
+    this.validateFieldConstraints(fieldType, field, field.fieldName);
+    const mapping = EntitySchemaFieldTypeMap[fieldType];
+    return {
+      name: field.fieldName,
+      displayName: field.displayName ?? field.fieldName,
+      sqlType: {
+        name: mapping.sqlTypeName,
+        ...this.buildSqlTypeConstraints(fieldType, field),
+      },
+      fieldDisplayType: mapping.fieldDisplayType,
+      description: field.description ?? '',
+      isRequired: field.isRequired ?? false,
+      isUnique: field.isUnique ?? false,
+      isRbacEnabled: field.isRbacEnabled ?? false,
+      isEncrypted: field.isEncrypted ?? false,
+      ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
+      ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
+      ...(field.referenceEntityName !== undefined && { referenceEntityName: field.referenceEntityName }),
+      ...(field.referenceFieldName !== undefined && { referenceFieldName: field.referenceFieldName }),
+    };
+  }
+
+  /**
+   * Derives the user-facing {@link EntityFieldDataType} for a field on the raw
+   * API response. Throws if the field's `fieldDisplayType` and `sqlType.name`
+   * are both unmappable.
+   */
+  private resolveFieldDataType(f: FieldMetaData): EntityFieldDataType {
+    const mapped = this.tryResolveFieldDataType(f.fieldDisplayType, f.sqlType?.name);
+    if (!mapped) {
+      throw new ValidationError({
+        message: `Cannot determine field type for '${f.name}' (id: ${f.id}) — sqlType '${f.sqlType?.name ?? '(missing)'}' and fieldDisplayType '${f.fieldDisplayType ?? '(missing)'}' are both unrecognized.`,
+      });
+    }
+    return mapped;
+  }
+
+  /**
+   * Validates that the user-supplied constraint properties on a field are
+   * supported by the field's data type. Throws a `ValidationError` listing
+   * any unsupported properties.
+   */
+  private validateFieldConstraints(
+    type: EntityFieldDataType,
+    field: Pick<EntityCreateFieldOptions, EntityFieldConstraint>,
+    fieldName: string,
+  ): void {
+    const spec = ENTITY_FIELD_CONSTRAINT_SPEC[type] ?? {};
+    const supported = Object.keys(spec) as EntityFieldConstraint[];
+    const provided = Object.values(EntityFieldConstraint).filter(name => field[name] !== undefined);
+
+    const unsupported = provided.filter(p => !(p in spec));
+    if (unsupported.length > 0) {
+      const allowedDesc = supported.length > 0 ? supported.join(', ') : 'none';
+      throw new ValidationError({
+        message: `Field '${fieldName}' of type ${type} does not accept ${unsupported.join(', ')}. Allowed constraints for this type: ${allowedDesc}.`,
+      });
+    }
+
+    // Range check: each user-supplied constraint must be within its allowed bounds.
+    for (const name of provided) {
+      const range = spec[name];
+      const value = field[name];
+      if (range && value !== undefined && (value < range.min || value > range.max)) {
+        throw new ValidationError({
+          message: `Field '${fieldName}' of type ${type} has ${name} ${value} out of range [${range.min}, ${range.max}].`,
+        });
+      }
+    }
+
+    // Cross-field check: when both bounds are user-supplied in the same call,
+    // minValue must be strictly less than maxValue.
+    if (field.minValue !== undefined && field.maxValue !== undefined && field.minValue >= field.maxValue) {
+      throw new ValidationError({
+        message: `Field '${fieldName}' of type ${type} has minValue ${field.minValue} >= maxValue ${field.maxValue}. minValue must be strictly less than maxValue.`,
+      });
+    }
+  }
+
+  /**
+   * Returns the sqlType constraint fields for a given field type.
+   *
+   * The API requires specific constraint properties to be set per SQL type;
+   * without them the field is stored in an incomplete state, causing
+   * "Field type cannot be changed" errors when the UI later tries to edit
+   * advanced options. User-supplied values from `EntityCreateFieldOptions`
+   * override the defaults where the type accepts overrides.
+   */
+  private buildSqlTypeConstraints(type: EntityFieldDataType, field: EntityCreateFieldOptions): Omit<SqlType, 'name'> {
+    const defaults = ENTITY_FIELD_CONSTRAINT_DEFAULTS;
+    switch (type) {
+      case EntityFieldDataType.STRING:
+        return { lengthLimit: field.lengthLimit ?? defaults.STRING_LENGTH_LIMIT };
+      case EntityFieldDataType.MULTILINE_TEXT:
+        return { lengthLimit: field.lengthLimit ?? defaults.MULTILINE_TEXT_LENGTH_LIMIT };
+      case EntityFieldDataType.DECIMAL:
+        return {
+          lengthLimit: defaults.DECIMAL_LENGTH_LIMIT,
+          decimalPrecision: field.decimalPrecision ?? defaults.DECIMAL_PRECISION,
+          maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
+          minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
+        };
+      case EntityFieldDataType.BOOLEAN:
+        return { lengthLimit: defaults.BOOLEAN_LENGTH_LIMIT };
+      case EntityFieldDataType.DATE:
+      case EntityFieldDataType.DATETIME_WITH_TZ:
+        return { lengthLimit: defaults.DATE_LENGTH_LIMIT };
+      case EntityFieldDataType.INTEGER:
+      case EntityFieldDataType.BIG_INTEGER:
+        return {
+          maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
+          minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
+        };
+      case EntityFieldDataType.FLOAT:
+      case EntityFieldDataType.DOUBLE:
+        return {
+          decimalPrecision: field.decimalPrecision ?? defaults.DECIMAL_PRECISION,
+          maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
+          minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
+        };
+      case EntityFieldDataType.FILE:
+      case EntityFieldDataType.RELATIONSHIP:
+        // UNIQUEIDENTIFIER fixed lengthLimit (300)
+        return { lengthLimit: defaults.UNIQUEIDENTIFIER_LENGTH_LIMIT };
+      case EntityFieldDataType.CHOICE_SET_MULTIPLE:
+        // CHOICE_SET_MULTIPLE fixed lengthLimit (4000)
+        return { lengthLimit: defaults.CHOICE_SET_MULTIPLE_LENGTH_LIMIT };
+      default:
+        // UUID, CHOICE_SET_SINGLE, AUTO_NUMBER, DATETIME — (sqlType: { name })
+        return {};
+    }
+  }
+
+  private static readonly RESERVED_FIELD_NAMES = new Set([
+    'Id', 'CreatedBy', 'CreateTime', 'UpdatedBy', 'UpdateTime'
+  ]);
+
+  private validateName(name: string, context: 'entity' | 'field'): void {
+    if (name.length < 3 || name.length > 100 || !/^[a-zA-Z]\w*$/.test(name)) {
+      const suggestion = name.replace(/\W/g, '').replace(/^[0-9_]+/, '');
+      const defaultName = `My${context.charAt(0).toUpperCase() + context.slice(1)}`;
+      throw new ValidationError({
+        message: `Invalid ${context} name '${name}'. Must start with a letter, contain only letters, numbers, and underscores, 3–100 characters (e.g., "${suggestion || defaultName}").`
+      });
+    }
+    if (context === 'field' && EntityService.RESERVED_FIELD_NAMES.has(name)) {
+      throw new ValidationError({
+        message: `Field name '${name}' is reserved. Reserved names: ${[...EntityService.RESERVED_FIELD_NAMES].join(', ')}.`
+      });
+    }
+  }
+
 }

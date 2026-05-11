@@ -14,6 +14,7 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
+  ConversationalAgentOptions,
   ConversationAttachmentCreateResponse,
   ConversationAttachmentUploadResponse,
   ConversationCreateResponse,
@@ -44,6 +45,7 @@ import {
   ConversationEventHelperManagerImpl,
   type ConversationEventHelperManager
 } from '../helpers';
+import { buildConversationalAgentHeaders } from '../helpers/header';
 import { ExchangeService } from './exchanges';
 import { SessionManager } from './session';
 
@@ -96,11 +98,13 @@ export class ConversationService extends BaseService implements ConversationServ
    * Creates an instance of the Conversations service.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
-  constructor(instance: IUiPath) {
-    super(instance);
-    this._sessionManager = new SessionManager(instance);
-    this._exchangeService = new ExchangeService(instance);
+  constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
+    super(instance, buildConversationalAgentHeaders(options));
+
+    this._sessionManager = new SessionManager(instance, options);
+    this._exchangeService = new ExchangeService(instance, options);
   }
 
   // ==================== Conversation CRUD Operations ====================
@@ -465,6 +469,23 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   onConnectionStatusChanged(handler: ConnectionStatusChangedHandler): () => void {
     return this._sessionManager.onConnectionStatusChanged(handler);
+  }
+
+  /**
+   * Closes the WebSocket connection and releases all session resources.
+   *
+   * In Node.js the WebSocket keeps the event loop alive until disconnected,
+   * so call this to allow the process to exit cleanly. In the browser the
+   * runtime handles socket cleanup on page unload, so this is effectively a no-op.
+   *
+   * @example
+   * ```typescript
+   * conversationalAgent.conversations.disconnect();
+   * ```
+   */
+  @track('ConversationalAgent.Conversations.Disconnect')
+  disconnect(): void {
+    this._sessionManager.disconnect();
   }
 
   // ==================== Private Methods ====================

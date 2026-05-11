@@ -1,5 +1,5 @@
 /**
- * Constants for User Service
+ * Constants for User Settings Service
  */
 
 import { CommonFieldMap } from '../common.constants';

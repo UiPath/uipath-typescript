@@ -7,11 +7,13 @@
  */
 
 // Core SDK imports
+import type { IUiPath } from '@/core/types';
 import { track } from '@/core/telemetry';
 import { BaseService } from '@/services/base';
 
 // Models
 import type {
+  ConversationalAgentOptions,
   ContentPart,
   ContentPartGetResponse,
   Message,
@@ -24,6 +26,7 @@ import { MESSAGE_ENDPOINTS } from '@/utils/constants/endpoints';
 
 // Local imports
 import { transformMessage, ContentPartHelper } from '@/services/conversational-agent/helpers';
+import { buildConversationalAgentHeaders } from '@/services/conversational-agent/helpers/header';
 
 /**
  * Service for message operations within a conversation
@@ -55,6 +58,16 @@ import { transformMessage, ContentPartHelper } from '@/services/conversational-a
  * ```
  */
 export class MessageService extends BaseService implements MessageServiceModel {
+  /**
+   * Creates an instance of the MessageService.
+   *
+   * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration (e.g. externalUserId for external app auth)
+   */
+  constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
+    super(instance, buildConversationalAgentHeaders(options));
+  }
+
   /**
    * Gets a message by ID
    *

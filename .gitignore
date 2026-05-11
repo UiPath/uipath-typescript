@@ -61,4 +61,5 @@ docs/api/
 site/
 .uipath/
 
-.claude
+# Python bytecode cache (created by the mkdocs-llmstxt preprocess hook)
+__pycache__/

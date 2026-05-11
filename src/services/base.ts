@@ -40,6 +40,12 @@ export class BaseService {
   #apiClient: ApiClient;
 
   /**
+   * SDK configuration (read-only). Available to subclasses so they can
+   * fall back to init-time defaults like `folderKey`.
+   */
+  protected readonly config: { folderKey?: string };
+
+  /**
    * Creates a base service instance with dependency injection.
    *
    * Extracts configuration, execution context, and token manager from the UiPath instance
@@ -48,6 +54,8 @@ export class BaseService {
    *
    * @param instance - UiPath SDK instance providing authentication and configuration.
    *                    Services receive this via dependency injection in the modular pattern.
+   * @param headers - Optional default headers to include in every request (e.g. `x-uipath-external-user-id` for
+   *                  CAS external-app auth)
    *
    * @example
    * ```typescript
@@ -67,9 +75,10 @@ export class BaseService {
    * const entities = new Entities(sdk);
    * ```
    */
-  constructor(instance: IUiPath) {
-    const { config, context, tokenManager } = SDKInternalsRegistry.get(instance);
-    this.#apiClient = new ApiClient(config, context, tokenManager);
+  constructor(instance: IUiPath, headers?: Record<string, string>) {
+    const { config, context, tokenManager, folderKey } = SDKInternalsRegistry.get(instance);
+    this.#apiClient = new ApiClient(config, context, tokenManager, headers ? { headers } : {});
+    this.config = { folderKey };
   }
 
   /**
@@ -162,7 +171,7 @@ export class BaseService {
     // Prepare request parameters based on pagination type
     const requestParams = this.preparePaginationRequestParams(paginationType, params, options.pagination);
 
-    // For POST requests, merge pagination params into body; for GET, use query params
+    // For POST requests, merge pagination params into body and set params to undefined; for GET, use query params
     if (method.toUpperCase() === 'POST') {
       const existingBody = (options.body && typeof options.body === 'object') ? options.body as Record<string, unknown> : {};
       options.body = {
@@ -170,6 +179,7 @@ export class BaseService {
         ...options.params,
         ...requestParams
       };
+      options.params = undefined;
     } else {
       // Merge pagination parameters with existing parameters
       options.params = {
@@ -228,7 +238,6 @@ export class BaseService {
         if (params.pageNumber && params.pageNumber > 1) {
           requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
         }
-        // Include total count for ODATA APIs
         if (countParam) {
           requestParams[countParam] = true;
         }
@@ -268,8 +277,9 @@ export class BaseService {
     const continuationTokenField = fields.continuationTokenField || 'continuationToken';
 
     // Extract items and metadata
-    const items = response.data[itemsField] || [];
-    const totalCount = response.data[totalCountField];
+    // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
+    const items = Array.isArray(response.data) ? response.data : (response.data[itemsField] || []);
+    const totalCount = Array.isArray(response.data) ? undefined : response.data[totalCountField];
     const continuationToken = response.data[continuationTokenField];
     
     // Determine if there are more pages

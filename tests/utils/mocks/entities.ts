@@ -205,8 +205,8 @@ export const createBasicEntity = (overrides: Partial<RawEntityGetResponse> = {})
     sourceJoinCriterias: [],
     isRbacEnabled: false,
     createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,  // TRANSFORMED field name
-    updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,  // TRANSFORMED field name
+    createdTime: ENTITY_TEST_CONSTANTS.CREATED_TIME,
+    updatedTime: ENTITY_TEST_CONSTANTS.UPDATED_TIME,
     updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
   }, overrides);
 };
@@ -234,13 +234,13 @@ export const createMockEntities = (count: number): RawEntityGetResponse[] => {
  */
 export const createMockEntityRecord = (overrides: Partial<EntityRecord> = {}): EntityRecord => {
   return createMockBaseResponse({
-    id: ENTITY_TEST_CONSTANTS.RECORD_ID,
+    Id: ENTITY_TEST_CONSTANTS.RECORD_ID,
     name: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.name,
     age: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.age,
     email: ENTITY_TEST_CONSTANTS.TEST_RECORD_DATA.email,
-    recordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
-    createdBy: ENTITY_TEST_CONSTANTS.USER_ID,
-    updatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+    RecordOwner: ENTITY_TEST_CONSTANTS.USER_ID,
+    CreatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
+    UpdatedBy: ENTITY_TEST_CONSTANTS.USER_ID,
   }, overrides);
 };
 
@@ -256,7 +256,7 @@ export const createMockEntityRecords = (
 ): EntityRecord[] => {
   const records = createMockCollection(count, (i) => 
     createMockEntityRecord({
-      id: `r${i}234567-e89b-12d3-a456-42661417400${i}`,
+      Id: `r${i}234567-e89b-12d3-a456-42661417400${i}`,
       name: `Record ${i + 1}`,
       age: 20 + i,
       email: `record${i + 1}@example.com`,
@@ -280,8 +280,8 @@ export const createMockEntityRecords = (
 export const expandRecordReferenceFields = (record: EntityRecord): EntityRecord => {
   const expanded: EntityRecord = { ...record };
   
-  // Expand reference fields that are typically string IDs
-  const referenceFields = ['recordOwner', 'createdBy', 'updatedBy'];
+  // Expand reference fields that are typically string IDs (PascalCase as returned by the API)
+  const referenceFields = ['RecordOwner', 'CreatedBy', 'UpdatedBy'];
   
   referenceFields.forEach(field => {
     if (expanded[field] && typeof expanded[field] === 'string') {
@@ -317,7 +317,7 @@ export const createMockSingleInsertResponse = (
 ): EntityInsertResponse => {
   let result: EntityInsertResponse = {
     ...requestData,
-    id: 'generated-id-1'
+    Id: 'generated-id-1'
   };
 
   // If expansionLevel is specified, expand reference fields in the response
@@ -368,11 +368,11 @@ export const createMockInsertResponse = (
 ): EntityBatchInsertResponse => {
   const successCount = options?.successCount ?? requestData.length;
   
-  let successRecords = requestData.slice(0, successCount).map((record, i) => ({
+  let successRecords: Record<string, any>[] = requestData.slice(0, successCount).map((record, i) => ({
     ...record,
-    id: `generated-id-${i + 1}`
+    Id: `generated-id-${i + 1}`
   }));
-  
+
   // If expansionLevel is specified, expand reference fields in the response
   if (options?.expansionLevel && options.expansionLevel > 0) {
     successRecords = successRecords.map(record => expandRecordReferenceFields(record));
@@ -498,11 +498,11 @@ export const createMockDeleteResponse = (
 ): EntityDeleteResponse => {
   const successCount = options?.successCount ?? requestIds.length;
   
-  const successRecords = requestIds.slice(0, successCount).map(id => ({ id }));
-  
+  const successRecords = requestIds.slice(0, successCount).map(id => ({ Id: id }));
+
   const failureRecords = requestIds.slice(successCount).map((id) => ({
     error: `${ENTITY_TEST_CONSTANTS.ERROR_MESSAGE} for id: ${id}`,
-    record: { id }
+    record: { Id: id }
   }));
 
   return { successRecords, failureRecords };
@@ -586,6 +586,47 @@ export const createMockEntityWithSqlFieldTypes = (): any => {
         }
       }
     ]
+  });
+};
+
+/**
+ * Creates a mock entity with special display-type fields (File, ChoiceSetSingle, ChoiceSetMultiple, AutoNumber)
+ * to test that fieldDisplayType takes precedence over SQL type during read-side mapping.
+ */
+export const createMockEntityWithDisplayTypeFields = (): { data: RawEntityGetResponse } => {
+  return createMockEntityResponse({
+    fields: [
+      // File field: sqlType=UNIQUEIDENTIFIER, displayType=File → EntityFieldDataType.File
+      {
+        ...createMockFieldMetaData({ id: 'field-file-id', name: 'attachment', displayName: 'Attachment' }),
+        sqlType: { name: 'UNIQUEIDENTIFIER' },
+        fieldDisplayType: FieldDisplayType.File,
+      },
+      // ChoiceSetSingle field: sqlType=INT, displayType=ChoiceSetSingle → EntityFieldDataType.ChoiceSetSingle
+      {
+        ...createMockFieldMetaData({ id: 'field-cs-single-id', name: 'category', displayName: 'Category' }),
+        sqlType: { name: 'INT' },
+        fieldDisplayType: FieldDisplayType.ChoiceSetSingle,
+      },
+      // ChoiceSetMultiple field: sqlType=NVARCHAR, displayType=ChoiceSetMultiple → EntityFieldDataType.ChoiceSetMultiple
+      {
+        ...createMockFieldMetaData({ id: 'field-cs-multi-id', name: 'tags', displayName: 'Tags' }),
+        sqlType: { name: 'NVARCHAR' },
+        fieldDisplayType: FieldDisplayType.ChoiceSetMultiple,
+      },
+      // AutoNumber field: sqlType=DECIMAL, displayType=AutoNumber → EntityFieldDataType.AutoNumber
+      {
+        ...createMockFieldMetaData({ id: 'field-autonumber-id', name: 'seq_no', displayName: 'Seq No' }),
+        sqlType: { name: 'DECIMAL' },
+        fieldDisplayType: FieldDisplayType.AutoNumber,
+      },
+      // Relationship field: sqlType=UNIQUEIDENTIFIER, displayType=Relationship → EntityFieldDataType.Relationship
+      {
+        ...createMockFieldMetaData({ id: 'field-rel-id', name: 'customer_id', displayName: 'Customer' }),
+        sqlType: { name: 'UNIQUEIDENTIFIER' },
+        fieldDisplayType: FieldDisplayType.Relationship,
+      },
+    ],
   });
 };
 

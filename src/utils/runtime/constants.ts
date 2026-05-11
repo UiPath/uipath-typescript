@@ -16,4 +16,7 @@ export enum UiPathMetaTags {
   // Asset resolution and routing
   CDN_BASE = 'uipath:cdn-base',
   APP_BASE = 'uipath:app-base',
+
+  // Folder context (injected during coded-app deployment)
+  FOLDER_KEY = 'uipath:folder-key',
 }

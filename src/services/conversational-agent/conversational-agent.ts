@@ -10,6 +10,7 @@ import { BaseService } from '@/services/base';
 
 // Models
 import type {
+  ConversationalAgentOptions,
   ConversationalAgentServiceModel,
   FeatureFlags,
   RawAgentGetResponse,
@@ -28,6 +29,8 @@ import { transformData } from '@/utils/transform';
 
 // Local imports
 import { ConversationService } from './conversations';
+import { buildConversationalAgentHeaders } from './helpers/header';
+import { UserSettingsService } from './user';
 
 /**
  * Service for interacting with UiPath Conversational Agent API
@@ -36,16 +39,21 @@ export class ConversationalAgentService extends BaseService implements Conversat
   /** Service for creating and managing conversations. See {@link ConversationServiceModel}. */
   public readonly conversations: ConversationService;
 
+  /** Service for reading and updating the current user's profile/context settings. See {@link UserSettingsServiceModel}. */
+  public readonly user: UserSettingsService;
+
   /**
    * Creates an instance of the ConversationalAgent service.
    *
    * @param instance - UiPath SDK instance providing authentication and configuration
+   * @param options - Optional configuration (e.g. externalUserId for external app auth)
    */
-  constructor(instance: IUiPath) {
-    super(instance);
+  constructor(instance: IUiPath, options?: ConversationalAgentOptions) {
+    super(instance, buildConversationalAgentHeaders(options));
 
     // Create conversation service with WebSocket support
-    this.conversations = new ConversationService(instance);
+    this.conversations = new ConversationService(instance, options);
+    this.user = new UserSettingsService(instance, options);
   }
 
   /**

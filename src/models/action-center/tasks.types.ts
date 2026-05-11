@@ -2,6 +2,21 @@ import { BaseOptions, RequestOptions } from "../common/types";
 import { PaginationOptions } from '../../utils/pagination';
 import { JobState } from "../common/types";
 
+export enum TaskUserType {
+  /** A user of this type is supposed to be used by a human. */
+  User = 'User',
+  /** A user of this type is automatically created when adding a robot, is associated with Robot role and it is used by a robot when communicating with Orchestrator. */
+  Robot = 'Robot',
+  /** A user of type Directory User */
+  DirectoryUser = 'DirectoryUser',
+  /** A user of type Directory Group */
+  DirectoryGroup = 'DirectoryGroup',
+  /** A user of type Directory Robot Account */
+  DirectoryRobot = 'DirectoryRobot',
+  /** A user of type Directory External Application */
+  DirectoryExternalApplication = 'DirectoryExternalApplication',
+}
+
 export interface UserLoginInfo {
   name: string;
   surname: string;
@@ -9,12 +24,26 @@ export interface UserLoginInfo {
   emailAddress: string;
   displayName: string;
   id: number;
+  type: TaskUserType;
 }
 
+/**
+ * Types of tasks available in Action Center.
+ * Each type determines the task's behavior, UI rendering, and completion requirements.
+ */
 export enum TaskType {
+  /** A form-based task that renders a UiPath form layout for user input */
   Form = 'FormTask',
+  /** An externally managed task handled outside of Action Center */
   External = 'ExternalTask',
-  App = 'AppTask'
+  /** A task powered by a UiPath App */
+  App = 'AppTask',
+  /** A document validation task for reviewing and correcting extracted document data */
+  DocumentValidation = 'DocumentValidationTask',
+  /** A document classification task for categorizing documents */
+  DocumentClassification = 'DocumentClassificationTask',
+  /** A data labeling task for annotating training data */
+  DataLabeling = 'DataLabelingTask'
 }
 
 export enum TaskPriority {
@@ -209,7 +238,11 @@ export interface TaskAssignmentResponse {
  */
 export type TaskCompleteOptions =
   | { type: TaskType.External; data?: any; action?: string }
-  | { type: Exclude<TaskType, TaskType.External>; data: any; action: string };
+  | { type: TaskType.DocumentValidation; data?: any; action?: string }
+  | { type: TaskType.DocumentClassification; data?: any; action?: string }
+  | { type: TaskType.DataLabeling; data?: any; action?: string }
+  | { type: TaskType.Form; data: any; action: string }
+  | { type: TaskType.App; data: any; action: string }
 
 /**
  * Options for completing a task when called from the service
@@ -236,9 +269,16 @@ export type TaskGetAllOptions = RequestOptions & PaginationOptions & {
 }
 
 /**
- * Query options for getting a task by ID 
+ * Query options for getting a task by ID
  */
-export type TaskGetByIdOptions = BaseOptions
+export interface TaskGetByIdOptions extends BaseOptions {
+  /**
+   * Optional task type. When not provided, method will automatically identify the 
+   * task type and resolve accordingly, but it will be slower.
+   * When provided, it will skip the step to identify the task type, so it will be faster.
+   */
+  taskType?: TaskType;
+}
 
 /**
  * Options for getting users with task permissions

@@ -1,5 +1,5 @@
 import { RequestOptions } from '../common/types';
-import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions } from './processes.types';
+import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions } from './processes.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -78,10 +78,34 @@ export interface ProcessServiceModel {
    * ```
    */
   getById(id: number, folderId: number, options?: ProcessGetByIdOptions): Promise<ProcessGetResponse>;
-  
+
+  /**
+   * Retrieves a single process by name.
+   *
+   * @param name - Process name to search for
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+   * @returns Promise resolving to a single process
+   * {@link ProcessGetResponse}
+   * @example
+   * ```typescript
+   * // By folder ID
+   * await processes.getByName('MyProcess', { folderId: 123 });
+   *
+   * // By folder key (GUID)
+   * await processes.getByName('MyProcess', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await processes.getByName('MyProcess', { folderPath: 'Shared/Finance' });
+   *
+   * // With expand
+   * await processes.getByName('MyProcess', { folderPath: 'Shared/Finance', expand: 'entryPoints' });
+   * ```
+   */
+  getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
+
   /**
    * Starts a process with the specified configuration
-   * 
+   *
    * @param request - Process start configuration
    * @param folderId - Required folder ID
    * @param options - Optional request options
@@ -101,4 +125,4 @@ export interface ProcessServiceModel {
    * ```
    */
   start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
-} 
+}

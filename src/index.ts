@@ -1,6 +1,6 @@
 /**
  * UiPath TypeScript SDK
- * 
+ *
  * A TypeScript SDK that enables programmatic interaction with UiPath Platform services.
  */
 
@@ -16,6 +16,8 @@ export * from './models/maestro';
 export * from './models/orchestrator';
 export * from './models/action-center';
 export * from './models/conversational-agent';
+export * from './models/agents';
+export * from './models/document-understanding';
 
 // Export error handling functionality (public API only)
 export * from './core/errors';

@@ -1,5 +1,5 @@
 /**
- * User Service Module
+ * User Settings Service Module
  */
 
-export { UserService as User, UserService } from './user';
+export { UserSettingsService as UserSettings, UserSettingsService } from './user';

@@ -5,11 +5,9 @@ import {
   EntityBatchInsertOptions,
   EntityInsertResponse,
   EntityBatchInsertResponse,
-  EntityUpdateOptions,
   EntityUpdateResponse,
   EntityUpdateRecordOptions,
   EntityUpdateRecordResponse,
-  EntityDeleteOptions,
   EntityDeleteResponse,
   EntityRecord,
   RawEntityGetResponse,
@@ -21,7 +19,12 @@ import {
   EntityUpdateRecordsOptions,
   EntityDeleteRecordsOptions,
   EntityGetAllRecordsOptions,
-  EntityInsertRecordOptions
+  EntityInsertRecordOptions,
+  EntityQueryRecordsOptions,
+  EntityImportRecordsResponse,
+  EntityCreateOptions,
+  EntityCreateFieldOptions,
+  EntityUpdateByIdOptions,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -93,7 +96,7 @@ export interface EntityServiceModel {
    * const choicesets = new ChoiceSets(sdk);
    *
    * // Get entity metadata with methods
-   * const entity = await entities.getById(<entityId>);
+   * const entity = await entities.getById("<entityId>");
    *
    * // Call operations directly on the entity
    * const records = await entity.getAllRecords();
@@ -126,7 +129,7 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // Basic usage (non-paginated)
-   * const records = await entities.getAllRecords(<entityId>);
+   * const records = await entities.getAllRecords("<entityId>");
    *
    * // With expansion level
    * const records = await entities.getAllRecords(<entityId>, {
@@ -173,9 +176,9 @@ export interface EntityServiceModel {
    * @example
    * ```typescript
    * // First, get records to obtain the record ID
-   * const records = await entities.getAllRecords(<entityId>);
+   * const records = await entities.getAllRecords("<entityId>");
    * // Get the recordId for the record
-   * const recordId = records.items[0].id;
+   * const recordId = records.items[0].Id;
    * // Get the record
    * const record = await entities.getRecordById(<entityId>, recordId);
    * 
@@ -285,7 +288,7 @@ export interface EntityServiceModel {
    * Note: Records updated using updateRecordsById will not trigger Data Fabric trigger events. Use {@link updateRecordById} if you need trigger events to fire for each updated record.
    *
    * @param id - UUID of the entity
-   * @param data - Array of records to update. Each record MUST contain the record Id.
+   * @param data - Array of records to update. Each record MUST contain the record id.
    * @param options - Update options
    * @returns Promise resolving to update response
    * {@link EntityUpdateResponse}
@@ -309,14 +312,11 @@ export interface EntityServiceModel {
    */
   updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
 
-  /**
-   * @deprecated Use {@link updateRecordsById} instead.
-   * @hidden
-   */
-  updateById(id: string, data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
 
   /**
    * Deletes data from an entity by entity ID
+   *
+   * Note: Records deleted using deleteRecordsById will not trigger Data Fabric trigger events. Use {@link deleteRecordById} if you need trigger events to fire for the deleted record.
    *
    * @param id - UUID of the entity
    * @param recordIds - Array of record UUIDs to delete
@@ -334,10 +334,94 @@ export interface EntityServiceModel {
   deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
 
   /**
-   * @deprecated Use {@link deleteRecordsById} instead.
-   * @hidden
+   * Deletes a single record from an entity by entity ID and record ID
+   *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
+   * @param entityId - UUID of the entity
+   * @param recordId - UUID of the record to delete
+   * @returns Promise resolving to void on success
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * await entities.deleteRecordById("<entityId>", "<recordId>");
+   * ```
    */
-  deleteById(id: string, recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+  deleteRecordById(entityId: string, recordId: string): Promise<void>;
+
+  /**
+   * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
+   *
+   * @param id - UUID of the entity
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
+   * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
+   *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
+   * @example
+   * ```typescript
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * // Non-paginated query with a filter
+   * const result = await entities.queryRecordsById(<id>, {
+   *   filterGroup: {
+   *     logicalOperator: LogicalOperator.And,
+   *     queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
+   *   },
+   *   sortOptions: [{ fieldName: "createdTime", isDescending: true }],
+   * });
+   * console.log(`Found ${result.totalCount} records`);
+   *
+   * // With pagination
+   * const page1 = await entities.queryRecordsById(<id>, { pageSize: 25 });
+   * if (page1.hasNextPage) {
+   *   const page2 = await entities.queryRecordsById(<id>, { cursor: page1.nextCursor });
+   * }
+   *
+   * // Aggregate: count of records per status
+   * await entities.queryRecordsById(<id>, {
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum and average across all records (no grouping)
+   * await entities.queryRecordsById(<id>, {
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
+   * ```
+   */
+  queryRecordsById<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(id: string, options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
+
+  /**
+   * Imports records from a CSV file into an entity
+   *
+   * @param id - UUID of the entity
+   * @param file - CSV file to import as a Blob or File or Uint8Array
+   * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
+   * @example
+   * ```typescript
+   * // Browser: upload from file input
+   * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
+   * const result = await entities.importRecordsById(<id>, fileInput.files[0]);
+   * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   * ```
+   * @internal
+   */
+  importRecordsById(id: string, file: EntityFileType): Promise<EntityImportRecordsResponse>;
 
   /**
    * Downloads an attachment stored in a File-type field of an entity record.
@@ -355,7 +439,7 @@ export interface EntityServiceModel {
    * // First, get records to obtain the record ID
    * const records = await entities.getAllRecords("<entityId>");
    * // Get the recordId for the record that contains the attachment
-   * const recordId = records.items[0].id;
+   * const recordId = records.items[0].Id;
    *
    * // Get the entityId from getAll()
    * const allEntities = await entities.getAll();
@@ -363,7 +447,7 @@ export interface EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Download attachment using service method
    * const response = await entities.downloadAttachment(entityId, recordId, 'Documents');
@@ -416,7 +500,7 @@ export interface EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Browser: Upload a file from an input element
    * const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -450,7 +534,7 @@ export interface EntityServiceModel {
    *
    * // Get the recordId from getAllRecords()
    * const records = await entities.getAllRecords(entityId);
-   * const recordId = records[0].id;
+   * const recordId = records[0].Id;
    *
    * // Delete attachment for a specific record and field
    * await entities.deleteAttachment(entityId, recordId, 'Documents');
@@ -461,6 +545,97 @@ export interface EntityServiceModel {
    * ```
    */
   deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
+
+  /**
+   * Creates a new Data Fabric entity with the given schema
+   *
+   * @param name - Entity name — must start with a letter, letters/numbers/underscores only
+   *   (e.g., `"productCatalog"`).
+   * @param fields - Array of field definitions
+   * @param options - Optional entity-level settings ({@link EntityCreateOptions})
+   * @returns Promise resolving to the ID of the created entity
+   * @example
+   * ```typescript
+   * import { Entities } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * const id = await entities.create("product_catalog", [
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true },
+   *   { fieldName: "price", type: EntityFieldDataType.INTEGER, defaultValue: "0" },
+   * ], { displayName: "Product Catalog", description: "Our product catalog", isRbacEnabled: true });
+   *
+   * // With advanced sqlType constraints (lengthLimit, decimalPrecision, maxValue, minValue) and defaultValue
+   * const ordersId = await entities.create("orders", [
+   *   { fieldName: "product_name", type: EntityFieldDataType.STRING, isRequired: true, isUnique: true, lengthLimit: 500 },
+   *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
+   * ]);
+   * ```
+   * @internal
+   */
+  create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string>;
+
+  /**
+   * Deletes a Data Fabric entity and all its records
+   *
+   * @param id - UUID of the entity to delete
+   * @returns Promise resolving when the entity is deleted
+   * @example
+   * ```typescript
+   * await entities.deleteById(<id>);
+   * ```
+   * @internal
+   */
+  deleteById(id: string): Promise<void>;
+
+  /**
+   * Updates an existing Data Fabric entity — schema and/or metadata.
+   *
+   * Pass any combination of schema fields (`addFields`, `removeFields`, `updateFields`) and
+   * metadata fields (`displayName`, `description`, `isRbacEnabled`). Each group is applied
+   * only when the corresponding fields are provided.
+   *
+   * @param id - UUID of the entity to update
+   * @param name - name of the entity (required by the API)
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @returns Promise resolving when the update is complete
+   *
+   * @example
+   * ```typescript
+   * // Schema-only: add a field and remove another
+   * await entities.updateById(<id>, {
+   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   *   removeFields: [{ fieldName: "old_field" }],
+   * });
+   *
+   * // Metadata-only: rename the entity
+   * await entities.updateById(<id>, {
+   *   displayName: "My Updated Entity",
+   *   description: "Updated description",
+   * });
+   *
+   * // Combined: update a field and rename at the same time
+   * await entities.updateById(<id>, {
+   *   updateFields: [{ id: <fieldId>, displayName: "Unit Price", isRequired: true }],
+   *   displayName: "Price Catalog",
+   * });
+   *
+   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints and defaultValue
+   * await entities.updateById(<id>, {
+   *   addFields: [
+   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "summary" },
+   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   ],
+   *   updateFields: [
+   *     { id: <fieldId>, lengthLimit: 1000 },
+   *   ],
+   * });
+   * ```
+   * @internal
+   */
+  updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void>;
+
 }
 
 /**
@@ -519,12 +694,25 @@ export interface EntityMethods {
 
   /**
    * Delete data from this entity
-   * 
+   *
+   * Note: Records deleted using deleteRecords will not trigger Data Fabric trigger events. Use {@link deleteRecord} if you need trigger events to fire for the deleted record.
+   *
    * @param recordIds - Array of record UUIDs to delete
    * @param options - Delete options
    * @returns Promise resolving to delete response
    */
   deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
+
+  /**
+   * Delete a single record from this entity
+   *
+   * Note: Data Fabric supports trigger events only on individual deletes, not on deleting multiple records.
+   * Use this method if you need trigger events to fire for the deleted record.
+   *
+   * @param recordId - UUID of the record to delete
+   * @returns Promise resolving to void on success
+   */
+  deleteRecord(recordId: string): Promise<void>;
 
   /**
    * Get all records from this entity
@@ -588,17 +776,66 @@ export interface EntityMethods {
    */
   batchInsert(data: Record<string, any>[], options?: EntityBatchInsertOptions): Promise<EntityBatchInsertResponse>;
 
-    /**
-   * @deprecated Use {@link updateRecords} instead.
-   * @hidden
+  /**
+   * Queries records in this entity with filters, sorting, aggregates, and SDK-managed pagination
+   *
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
+   * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
+   *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
+   * @example
+   * ```typescript
+   * import { Entities, LogicalOperator, QueryFilterOperator, EntityAggregateFunction } from '@uipath/uipath-typescript/entities';
+   *
+   * const entities = new Entities(sdk);
+   *
+   * const entity = await entities.getById(<entityId>);
+   * const result = await entity.queryRecords({
+   *   filterGroup: {
+   *     logicalOperator: LogicalOperator.And,
+   *     queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }]
+   *   },
+   *   sortOptions: [{ fieldName: "createdTime", isDescending: true }],
+   * });
+   * console.log(`Found ${result.totalCount} records`);
+   *
+   * // Aggregate: count of records per status
+   * await entity.queryRecords({
+   *   selectedFields: ["status"],
+   *   groupBy: ["status"],
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
+   *   ],
+   * });
+   *
+   * // Aggregate: total sum and average across all records (no grouping)
+   * await entity.queryRecords({
+   *   aggregates: [
+   *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
+   *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
+   *   ],
+   * });
+   * ```
    */
-  update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse>;
+  queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<EntityRecord>
+      : NonPaginatedResponse<EntityRecord>
+  >;
 
   /**
-   * @deprecated Use {@link deleteRecords} instead.
-   * @hidden
+   * Imports records from a CSV file into this entity
+   *
+   * @param file - CSV file to import as a Blob, File, or Uint8Array
+   * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
+   * @example
+   * ```typescript
+   * const entity = await entities.getById(<entityId>);
+   * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
+   * const result = await entity.importRecords(fileInput.files[0]);
+   * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   * ```
    */
-  delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse>;
+  importRecords(file: EntityFileType): Promise<EntityImportRecordsResponse>;
 
   /**
    * @deprecated Use {@link getAllRecords} instead.
@@ -609,6 +846,45 @@ export interface EntityMethods {
       ? PaginatedResponse<EntityRecord>
       : NonPaginatedResponse<EntityRecord>
   >;
+
+  /**
+   * Deletes this entity and all its records
+   *
+   * @returns Promise resolving when the entity is deleted
+   * @example
+   * ```typescript
+   * const entity = await entities.getById(<id>);
+   * await entity.delete();
+   * ```
+   * @internal
+   */
+  delete(): Promise<void>;
+
+  /**
+   * Updates this entity — schema and/or metadata.
+   *
+   * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
+   * @returns Promise resolving when the update is complete
+   * @example
+   * ```typescript
+   * const entity = await entities.getById(<id>);
+   * await entity.update({
+   *   displayName: "Updated Name",
+   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
+   * });
+   *
+   * // Add a STRING/DECIMAL field with explicit advanced sqlType constraints 
+   * await entity.update({
+   *   addFields: [
+   *     { fieldName: "summary", type: EntityFieldDataType.STRING, lengthLimit: 500, defaultValue: "string" },
+   *     { fieldName: "amount", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
+   *   ],
+   * });
+   * ```
+   * @internal
+   */
+  update(options?: EntityUpdateByIdOptions): Promise<void>;
+
 }
 
 /**
@@ -618,7 +894,7 @@ export type EntityGetResponse = RawEntityGetResponse & EntityMethods;
 
 /**
  * Creates entity methods that can be attached to entity data
- * 
+ *
  * @param entityData - The entity metadata
  * @param service - The entity service instance
  * @returns Object containing entity methods
@@ -627,33 +903,34 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
   return {
     async insertRecord(data: Record<string, any>, options?: EntityInsertRecordOptions): Promise<EntityInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.insertRecordById(entityData.id, data, options);
     },
 
     async insertRecords(data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.insertRecordsById(entityData.id, data, options);
     },
 
     async updateRecord(recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
-
       return service.updateRecordById(entityData.id, recordId, data, options);
     },
 
     async updateRecords(data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.updateRecordsById(entityData.id, data, options);
     },
 
     async deleteRecords(recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.deleteRecordsById(entityData.id, recordIds, options);
+    },
+
+    async deleteRecord(recordId: string): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      if (!recordId) throw new Error('Record ID is undefined');
+      return service.deleteRecordById(entityData.id, recordId);
     },
 
     async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<
@@ -662,33 +939,42 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
         : NonPaginatedResponse<EntityRecord>
     > {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
-      return service.getAllRecords(entityData.id, options) as any;
+      return service.getAllRecords<T>(entityData.id, options);
     },
 
     async getRecord(recordId: string, options?: EntityGetRecordByIdOptions): Promise<EntityRecord> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
-
       return service.getRecordById(entityData.id, recordId, options);
     },
 
     async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.downloadAttachment(entityData.id, recordId, fieldName);
     },
 
     async uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.uploadAttachment(entityData.id, recordId, fieldName, file, options);
     },
 
     async deleteAttachment(recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-
       return service.deleteAttachment(entityData.id, recordId, fieldName);
+    },
+
+    async queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<EntityRecord>
+        : NonPaginatedResponse<EntityRecord>
+    > {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.queryRecordsById(entityData.id, options);
+    },
+
+    async importRecords(file: EntityFileType): Promise<EntityImportRecordsResponse> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.importRecordsById(entityData.id, file);
     },
 
     async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
@@ -699,13 +985,6 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.insertRecords(data, options);
     },
 
-    async update(data: EntityRecord[], options?: EntityUpdateOptions): Promise<EntityUpdateResponse> {
-      return this.updateRecords(data, options);
-    },
-
-    async delete(recordIds: string[], options?: EntityDeleteOptions): Promise<EntityDeleteResponse> {
-      return this.deleteRecords(recordIds, options);
-    },
 
     async getRecords<T extends EntityGetRecordsByIdOptions = EntityGetRecordsByIdOptions>(options?: T): Promise<
       T extends HasPaginationOptions<T>
@@ -713,19 +992,29 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
         : NonPaginatedResponse<EntityRecord>
     > {
       return this.getAllRecords(options);
-    }
+    },
+
+    async delete(): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.deleteById(entityData.id);
+    },
+
+    async update(options: EntityUpdateByIdOptions): Promise<void> {
+      if (!entityData.id) throw new Error('Entity ID is undefined');
+      return service.updateById(entityData.id, options);
+    },
   };
 }
 
 /**
- * Creates an actionable entity metadata by combining entity with operational methods
- * 
- * @param entityData - Entity metadata
+ * Creates an actionable entity by combining entity metadata with data and management methods
+ *
+ * @param entityMetadata - Entity metadata
  * @param service - The entity service instance
  * @returns Entity metadata with added methods
  */
 export function createEntityWithMethods(
-  entityData: RawEntityGetResponse, 
+  entityData: RawEntityGetResponse,
   service: EntityServiceModel
 ): EntityGetResponse {
   const methods = createEntityMethods(entityData, service);

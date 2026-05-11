@@ -9,7 +9,7 @@
  */
 
 import { mkdirSync, readFileSync, writeFileSync, unlinkSync, existsSync } from 'fs';
-import { join, dirname, relative } from 'path';
+import { join, dirname, relative, sep } from 'path';
 
 const DOCS_DIR = join(process.cwd(), 'docs');
 
@@ -22,6 +22,12 @@ const sections = [
     source: 'api/interfaces/EntityServiceModel.md',
     dest: 'api/interfaces/entity/index.md',
     header: '---\ntitle: Entities\n---\n',
+    removeSource: true,
+  },
+  {
+    source: 'api/interfaces/AttachmentServiceModel.md',
+    dest: 'api/interfaces/attachments/index.md',
+    header: '---\ntitle: Attachments\n---\n',
     removeSource: true,
   },
   {
@@ -59,7 +65,7 @@ for (const { source, dest, header, removeSource } of sections) {
 
       const [linkPath, anchor] = link.split('#');
       const resolved = join(sourceDir, linkPath);
-      const rewritten = relative(destDir, resolved);
+      const rewritten = relative(destDir, resolved).split(sep).join('/');
 
       return `](${anchor ? `${rewritten}#${anchor}` : rewritten})`;
     },

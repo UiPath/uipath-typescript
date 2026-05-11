@@ -15,6 +15,8 @@ import { WEBSOCKET_LOGGER_PREFIX } from '../../constants';
  */
 export class WebSocketSession extends BaseWebSocket {
   private _externalUserId?: string;
+  private _surfaceName?: string;
+  private _surfaceVersion?: string;
 
   /**
    * Creates an instance of the WebSocketSession.
@@ -35,6 +37,8 @@ export class WebSocketSession extends BaseWebSocket {
     );
 
     this._externalUserId = options?.externalUserId;
+    this._surfaceName = options?.surfaceName;
+    this._surfaceVersion = options?.surfaceVersion;
   }
 
   /**
@@ -54,6 +58,12 @@ export class WebSocketSession extends BaseWebSocket {
     }
     if (this._externalUserId) {
       query[WEBSOCKET_QUERY_PARAMS.EXTERNAL_USER_ID] = this._externalUserId;
+    }
+    if (this._surfaceName) {
+      query[WEBSOCKET_QUERY_PARAMS.CONVERSATIONAL_SURFACE_NAME] = this._surfaceName;
+    }
+    if (this._surfaceVersion) {
+      query[WEBSOCKET_QUERY_PARAMS.CONVERSATIONAL_SURFACE_VERSION] = this._surfaceVersion;
     }
 
     this.connectWithOptions({ query });

@@ -16,7 +16,7 @@ import type {
 /**
  * Options for creating a conversation from an agent
  */
-export type AgentCreateConversationOptions = ConversationCreateOptions;
+export interface AgentCreateConversationOptions extends ConversationCreateOptions {}
 
 /**
  * Scoped conversation service for a specific agent.

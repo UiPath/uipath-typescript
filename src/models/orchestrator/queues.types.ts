@@ -38,4 +38,4 @@ export type QueueGetAllOptions = RequestOptions & PaginationOptions & {
   folderId?: number;
 }
 
-export type QueueGetByIdOptions = BaseOptions
+export interface QueueGetByIdOptions extends BaseOptions {}

@@ -85,10 +85,9 @@ export interface TaskServiceModel {
 
   /**
    * Gets a task by ID
-   * IMPORTANT: For form tasks, folderId must be provided.
    * @param id - The ID of the task to retrieve
-   * @param options - Optional query parameters
-   * @param folderId - Optional folder ID (REQUIRED for form tasks)
+   * @param options - Optional query parameters including taskType for faster retrieval {@link TaskGetByIdOptions}
+   * @param folderId - Optional folder ID (REQUIRED when options.taskType is provided)
    * @returns Promise resolving to the task
    * {@link TaskGetResponse}
    * @example
@@ -97,10 +96,13 @@ export interface TaskServiceModel {
    * const task = await tasks.getById(<taskId>);
    *
    * // Get a form task by ID
-   * const formTask = await tasks.getById(<taskId>, <folderId>);
+   * const formTask = await tasks.getById(<taskId>, {}, <folderId>);
    *
    * // Access form task properties
    * console.log(formTask.formLayout);
+   *
+   * // Get a document validation task by ID (faster with taskType provided in the options)
+   * const dvTask = await tasks.getById(<taskId>, { taskType: TaskType.DocumentValidation }, <folderId>);
    * ```
    */
   getById(id: number, options?: TaskGetByIdOptions, folderId?: number): Promise<TaskGetResponse>;
@@ -244,17 +246,17 @@ export interface TaskServiceModel {
   ): Promise<OperationResponse<TaskCompletionOptions>>;
 
   /**
-   * Gets users in the given folder who have Tasks.View and Tasks.Edit permissions
+   * Gets task users (users, robots, groups etc) in the given folder who have Tasks.View and Tasks.Edit permissions
    * Returns a NonPaginatedResponse with data and totalCount when no pagination parameters are provided,
    * or a PaginatedResponse when any pagination parameter is provided
    * 
-   * @param folderId - The folder ID to get users from
+   * @param folderId - The folder ID to get task users from
    * @param options - Optional query and pagination parameters
-   * @returns Promise resolving to either an array of users NonPaginatedResponse<UserLoginInfo> or a PaginatedResponse<UserLoginInfo> when pagination options are used. 
+   * @returns Promise resolving to either an array of task users NonPaginatedResponse<UserLoginInfo> or a PaginatedResponse<UserLoginInfo> when pagination options are used. 
    * {@link UserLoginInfo}
    * @example
    * ```typescript
-   * // Get users from a folder
+   * // Get task users from a folder
    * const users = await tasks.getUsers(<folderId>);
    *
    * // Access user properties

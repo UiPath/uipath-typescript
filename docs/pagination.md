@@ -118,8 +118,10 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Assets | `getAll()` | ✅ Yes |
 | Buckets | `getAll()` | ✅ Yes |
 | Buckets | `getFiles()` | ❌ No |
+| Jobs | `getAll()` | ✅ Yes |
 | Entities | `getAll()` | ✅ Yes |
 | Entities | `getAllRecords()` | ✅ Yes |
+| Entities | `queryRecordsById()` | ✅ Yes |
 | Processes | `getAll()` | ✅ Yes |
 | ProcessInstances | `getAll()` | ❌ No |
 | CaseInstances | `getAll()` | ❌ No |
@@ -129,3 +131,4 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Tasks | `getUsers()` | ✅ Yes |
 | ConversationalAgent.conversations | `getAll()` | ❌ No |
 | ConversationalAgent.exchanges | `getAll()` | ❌ No |
+| Feedback | `getAll()` | ✅ Yes |
