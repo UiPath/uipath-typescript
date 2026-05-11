@@ -4,6 +4,26 @@
  */
 
 /**
+ * Options for looking up a single case process by name.
+ *
+ * Maestro's `/processes/summary` endpoint only sends `folderKey` on the wire,
+ * but the SDK accepts `folderPath` and matches it client-side against the
+ * `folderName` field returned by `getAll()` for API parity with Orchestrator
+ * services. When neither is supplied, the SDK falls back to the init-time
+ * folderKey (e.g. from the `uipath:folder-key` meta tag in coded-app
+ * deployments).
+ */
+export interface CaseGetByNameOptions {
+  /**
+   * Folder path that scopes the lookup. Matched client-side against the
+   * `folderName` field returned by Maestro.
+   */
+  folderPath?: string;
+  /** Folder key (GUID) that scopes the lookup. */
+  folderKey?: string;
+}
+
+/**
  * Case information with instance statistics
  */
 export interface CaseGetAllResponse {

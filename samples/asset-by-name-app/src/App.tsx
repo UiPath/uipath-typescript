@@ -8,6 +8,10 @@ import { ProcessList } from './components/processes/ProcessList';
 import { ProcessesGetByName } from './components/processes/ProcessesGetByName';
 import { BucketList } from './components/buckets/BucketList';
 import { BucketsGetByName } from './components/buckets/BucketsGetByName';
+import { MaestroProcessList } from './components/maestro-processes/MaestroProcessList';
+import { MaestroProcessesGetByName } from './components/maestro-processes/MaestroProcessesGetByName';
+import { CaseList } from './components/cases/CaseList';
+import { CasesGetByName } from './components/cases/CasesGetByName';
 import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core';
 
 const authConfig: UiPathSDKConfig = {
@@ -19,7 +23,7 @@ const authConfig: UiPathSDKConfig = {
   scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access',
 };
 
-type ResourceTab = 'assets' | 'processes' | 'buckets';
+type ResourceTab = 'assets' | 'processes' | 'buckets' | 'maestro' | 'cases';
 
 interface TabState {
   name: string;
@@ -37,6 +41,8 @@ function AppContent() {
   const [assetState, setAssetState] = useState<TabState>(emptyState);
   const [processState, setProcessState] = useState<TabState>(emptyState);
   const [bucketState, setBucketState] = useState<TabState>(emptyState);
+  const [maestroState, setMaestroState] = useState<TabState>(emptyState);
+  const [caseState, setCaseState] = useState<TabState>(emptyState);
 
   if (isLoading) {
     return (
@@ -57,6 +63,8 @@ function AppContent() {
     { id: 'assets', label: 'Assets' },
     { id: 'processes', label: 'Processes' },
     { id: 'buckets', label: 'Buckets' },
+    { id: 'maestro', label: 'Maestro processes' },
+    { id: 'cases', label: 'Cases' },
   ];
 
   return (
@@ -131,6 +139,42 @@ function AppContent() {
               onNameChange={(name) => setBucketState((s) => ({ ...s, name }))}
               onFolderPathChange={(folderPath) => setBucketState((s) => ({ ...s, folderPath }))}
               onFolderKeyChange={(folderKey) => setBucketState((s) => ({ ...s, folderKey }))}
+            />
+          </>
+        )}
+
+        {activeTab === 'maestro' && (
+          <>
+            <MaestroProcessList
+              onPickProcess={(name, folderPath, folderKey) =>
+                setMaestroState({ name, folderPath, folderKey })
+              }
+            />
+            <MaestroProcessesGetByName
+              name={maestroState.name}
+              folderPath={maestroState.folderPath}
+              folderKey={maestroState.folderKey}
+              onNameChange={(name) => setMaestroState((s) => ({ ...s, name }))}
+              onFolderPathChange={(folderPath) => setMaestroState((s) => ({ ...s, folderPath }))}
+              onFolderKeyChange={(folderKey) => setMaestroState((s) => ({ ...s, folderKey }))}
+            />
+          </>
+        )}
+
+        {activeTab === 'cases' && (
+          <>
+            <CaseList
+              onPickCase={(name, folderPath, folderKey) =>
+                setCaseState({ name, folderPath, folderKey })
+              }
+            />
+            <CasesGetByName
+              name={caseState.name}
+              folderPath={caseState.folderPath}
+              folderKey={caseState.folderKey}
+              onNameChange={(name) => setCaseState((s) => ({ ...s, name }))}
+              onFolderPathChange={(folderPath) => setCaseState((s) => ({ ...s, folderPath }))}
+              onFolderKeyChange={(folderKey) => setCaseState((s) => ({ ...s, folderKey }))}
             />
           </>
         )}

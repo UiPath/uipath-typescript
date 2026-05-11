@@ -1,4 +1,5 @@
 import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse } from '../../../models/maestro';
+import { MaestroProcessGetByNameOptions } from '../../../models/maestro/processes.types';
 import { BaseService } from '../../base';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -8,6 +9,8 @@ import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_KEY } from '../../../utils/constants/headers';
+import { NotFoundError } from '../../../core/errors';
+import { validateGetByNameArgs } from '../../../utils/validation/name-validator';
 import { ProcessInstancesService } from './process-instances';
 
 /**
@@ -60,6 +63,71 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
 
     // Add methods to each process
     return processesWithName.map(process => createProcessWithMethods(process, this));
+  }
+
+  /**
+   * Retrieves a single Maestro process by name, optionally scoped to a folder.
+   *
+   * Implemented as a client-side filter over `getAll()` because the Maestro
+   * `/api/v1/processes/summary` endpoint returns the full list and exposes no
+   * name-based lookup. `folderPath` is matched against the `folderName` field
+   * returned by `getAll()`; `folderKey` is matched against `folderKey`. When
+   * neither is supplied, the SDK falls back to the init-time folderKey
+   * (e.g. `uipath:folder-key` meta tag in coded-app deployments). No extra
+   * network call; the data was already fetched.
+   *
+   * @param name - Process name to search for
+   * @param options - Optional folderPath / folderKey scoping
+   * @returns Promise resolving to a single Maestro process with bound methods
+   * @throws ValidationError when inputs are malformed; NotFoundError when no match
+   *
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * const process = await maestroProcesses.getByName('MyMaestroProcess', {
+   *   folderPath: 'Shared/Finance',
+   * });
+   * const incidents = await process.getIncidents();
+   * ```
+   */
+  @track('MaestroProcesses.GetByName')
+  async getByName(
+    name: string,
+    options: MaestroProcessGetByNameOptions = {},
+  ): Promise<MaestroProcessGetAllResponse> {
+    const validated = validateGetByNameArgs(
+      'MaestroProcess',
+      name,
+      options.folderPath,
+      options.folderKey,
+    );
+
+    // Fall back to init-time folderKey (e.g. uipath:folder-key meta tag) only
+    // when the caller didn't supply any folder context.
+    const effectiveFolderKey =
+      validated.folderKey ?? (validated.folderPath ? undefined : this.config.folderKey);
+
+    const all = await this.getAll();
+    const match = all.find(
+      (p) =>
+        p.name === validated.name &&
+        (validated.folderPath ? p.folderName === validated.folderPath : true) &&
+        (effectiveFolderKey ? p.folderKey === effectiveFolderKey : true),
+    );
+
+    if (!match) {
+      const folderHint =
+        validated.folderPath ? ` in folder '${validated.folderPath}'`
+        : effectiveFolderKey ? ` in folder (key: ${effectiveFolderKey})`
+        : '';
+      throw new NotFoundError({
+        message: `MaestroProcess '${validated.name}' not found${folderHint}.`,
+      });
+    }
+    return match;
   }
 
   /**

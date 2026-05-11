@@ -3,7 +3,7 @@
  * Model classes for Maestro processes
  */
 
-import { RawMaestroProcessGetAllResponse } from './processes.types';
+import { MaestroProcessGetByNameOptions, RawMaestroProcessGetAllResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
 
 /**
@@ -44,6 +44,38 @@ export interface MaestroProcessesServiceModel {
    * ```
    */
   getAll(): Promise<MaestroProcessGetAllResponse[]>;
+
+  /**
+   * Retrieves a single Maestro process by name, optionally scoped to a folder.
+   *
+   * Implemented as a client-side filter over `getAll()` because the Maestro
+   * API does not expose a name-based lookup endpoint. `folderPath` is matched
+   * client-side against the `folderName` field returned by `getAll()`;
+   * `folderKey` matches `folderKey`. When neither is supplied, the SDK falls
+   * back to the init-time folderKey (e.g. from the `uipath:folder-key` meta
+   * tag in coded-app deployments).
+   *
+   * Useful for bindings-driven code that has `name` (+ optional folder
+   * context) at design time and wants to resolve to the operational
+   * `processKey`.
+   *
+   * @param name - Process name (currently maps to `packageId`)
+   * @param options - Optional folderPath / folderKey scoping
+   * @returns Promise resolving to a single Maestro process with bound methods
+   * {@link MaestroProcessGetAllResponse}
+   * @throws NotFoundError if no process matches
+   * @example
+   * ```typescript
+   * // Get a process by name within a folder
+   * const process = await maestroProcesses.getByName('MyMaestroProcess', {
+   *   folderPath: 'Shared/Finance',
+   * });
+   *
+   * // Then operate on it
+   * const incidents = await process.getIncidents();
+   * ```
+   */
+  getByName(name: string, options?: MaestroProcessGetByNameOptions): Promise<MaestroProcessGetAllResponse>;
 
   /**
    * Get incidents for a specific process

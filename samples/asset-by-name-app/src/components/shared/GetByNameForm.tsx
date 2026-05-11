@@ -21,6 +21,8 @@ interface Props<TResponse> {
     name: string,
     options: { folderPath?: string; folderKey?: string },
   ) => Promise<TResponse>;
+  /** Optional help text rendered below the inputs. Defaults to Orchestrator-style guidance. */
+  helpText?: React.ReactNode;
 }
 
 type Result<T> =
@@ -41,6 +43,7 @@ export function GetByNameForm<TResponse>({
   onFolderPathChange,
   onFolderKeyChange,
   fetch,
+  helpText,
 }: Props<TResponse>) {
   const [result, setResult] = useState<Result<TResponse>>({ kind: 'idle' });
 
@@ -116,8 +119,12 @@ export function GetByNameForm<TResponse>({
           </label>
         </div>
         <p className="text-xs text-gray-500">
-          Pass <code>folderPath</code>, <code>folderKey</code>, or both — Orchestrator
-          prefers <code>folderPath</code> when both are present.
+          {helpText ?? (
+            <>
+              Pass <code>folderPath</code>, <code>folderKey</code>, or both — Orchestrator
+              prefers <code>folderPath</code> when both are present.
+            </>
+          )}
         </p>
 
         <div className="flex items-center gap-3">
