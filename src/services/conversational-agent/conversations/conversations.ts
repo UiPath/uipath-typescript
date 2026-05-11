@@ -30,7 +30,7 @@ import type {
   RawConversationGetResponse,
   SessionStream
 } from '@/models/conversational-agent';
-import { ConversationMap, createConversationWithMethods } from '@/models/conversational-agent';
+import { ConversationGetAllFilterMap, ConversationMap, createConversationWithMethods } from '@/models/conversational-agent';
 
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
@@ -186,11 +186,11 @@ export class ConversationService extends BaseService implements ConversationServ
    * });
    * ```
    *
-   * @example Filter by agent release and search by label
+   * @example Filter by agent and search by label
    * ```typescript
    * const filtered = await conversationalAgent.conversations.getAll({
-   *   agentReleaseId: <agentReleaseId>,
-   *   search: 'budget'
+   *   agentId: <agentId>,
+   *   label: 'budget'
    * });
    * ```
    */
@@ -208,6 +208,11 @@ export class ConversationService extends BaseService implements ConversationServ
       return createConversationWithMethods(transformedData, this, this, this._exchangeService);
     };
 
+    // Translate SDK filter names (agentKey/agentId/label) to backend names before forwarding
+    const apiOptions = options
+      ? transformRequest(options, ConversationGetAllFilterMap)
+      : undefined;
+
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => CONVERSATION_ENDPOINTS.LIST,
@@ -221,8 +226,8 @@ export class ConversationService extends BaseService implements ConversationServ
           tokenParam: CONVERSATIONAL_TOKEN_PARAMS.TOKEN_PARAM
         }
       },
-      excludeFromPrefix: Object.keys(options || {}) // Conversational params are not OData
-    }, options) as any;
+      excludeFromPrefix: Object.keys(apiOptions || {}) // Conversational params are not OData
+    }, apiOptions as T | undefined) as any;
   }
 
   /**

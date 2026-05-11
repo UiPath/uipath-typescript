@@ -142,11 +142,11 @@ export interface ConversationServiceModel {
    * });
    * ```
    *
-   * @example Filter by agent release and search by label
+   * @example Filter by agent and search by label
    * ```typescript
    * const filtered = await conversationalAgent.conversations.getAll({
-   *   agentReleaseId: <agentReleaseId>,
-   *   search: 'budget'
+   *   agentId: <agentId>,
+   *   label: 'budget'
    * });
    * ```
    */

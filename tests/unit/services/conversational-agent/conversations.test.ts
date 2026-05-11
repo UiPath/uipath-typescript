@@ -294,19 +294,27 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       );
     });
 
-    it('should forward agentReleaseKey, agentReleaseId, and search to PaginationHelpers', async () => {
+    it('should translate agentKey/agentId/label filters to backend names before forwarding', async () => {
       const mockResponse = createMockTransformedConversationCollection();
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const options: ConversationGetAllOptions = {
-        agentReleaseKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_RELEASE_KEY,
-        agentReleaseId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_RELEASE_ID,
-        search: CONVERSATIONAL_AGENT_TEST_CONSTANTS.SEARCH_QUERY
+        agentKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_KEY,
+        agentId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.FILTER_AGENT_ID,
+        label: CONVERSATIONAL_AGENT_TEST_CONSTANTS.LABEL_QUERY
       };
       await conversationalAgent.conversations.getAll(options);
 
       const [ config, forwardedOptions ] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
-      expect(forwardedOptions).toEqual(expect.objectContaining(options));
+      // SDK-facing names are mapped to backend names before forwarding to PaginationHelpers.
+      expect(forwardedOptions).toEqual(expect.objectContaining({
+        agentReleaseKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_KEY,
+        agentReleaseId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.FILTER_AGENT_ID,
+        search: CONVERSATIONAL_AGENT_TEST_CONSTANTS.LABEL_QUERY
+      }));
+      expect(forwardedOptions).not.toHaveProperty('agentKey');
+      expect(forwardedOptions).not.toHaveProperty('agentId');
+      expect(forwardedOptions).not.toHaveProperty('label');
       // Conversational params must be excluded from the OData $-prefix.
       expect(config.excludeFromPrefix).toEqual(expect.arrayContaining([ 'agentReleaseKey', 'agentReleaseId', 'search' ]));
     });
