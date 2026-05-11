@@ -14,7 +14,7 @@ const authConfig: UiPathSDKConfig = {
   tenantName: import.meta.env.VITE_UIPATH_TENANT_NAME || 'your-tenant',
   baseUrl: import.meta.env.VITE_UIPATH_BASE_URL,
   redirectUri: window.location.origin + window.location.pathname,
-  scope: import.meta.env.VITE_UIPATH_SCOPE || 'offline_access',
+  scope: import.meta.env.VITE_UIPATH_SCOPE
 };
 
 function AppContent() {
