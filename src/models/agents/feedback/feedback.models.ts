@@ -173,9 +173,10 @@ export interface FeedbackServiceModel {
    *
    * Custom categories can be used to label feedback entries beyond the default system categories.
    * Once created, reference the category by its `id` when submitting or updating feedback.
+   * If `isPositive` and `isNegative` are omitted, the backend defaults both to `true`.
    *
    * @param category - Name of the category to create (max 256 characters, unique per tenant)
-   * @param options - Whether the category applies to positive and/or negative feedback {@link FeedbackCreateCategoryOptions}
+   * @param options - Optional flags controlling whether the category applies to positive and/or negative feedback {@link FeedbackCreateCategoryOptions}
    * @returns Promise resolving to the created {@link FeedbackCategory}
    * @example
    * ```typescript
@@ -183,14 +184,18 @@ export interface FeedbackServiceModel {
    *
    * const feedback = new Feedback(sdk);
    *
-   * const category = await feedback.createCategory('Hallucination', {
+   * // Minimum — applies to both positive and negative feedback by default
+   * const category = await feedback.createCategory('Hallucination');
+   * console.log(category.id, category.category);
+   *
+   * // With explicit flags
+   * const negativeOnly = await feedback.createCategory('Off-topic', {
    *   isPositive: false,
    *   isNegative: true,
    * });
-   * console.log(category.id, category.category);
    * ```
    */
-  createCategory(category: string, options: FeedbackCreateCategoryOptions): Promise<FeedbackCategory>;
+  createCategory(category: string, options?: FeedbackCreateCategoryOptions): Promise<FeedbackCategory>;
 
   /**
    * Gets all feedback categories for the tenant.

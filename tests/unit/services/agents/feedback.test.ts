@@ -6,7 +6,7 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { FEEDBACK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { TEST_CONSTANTS, FEEDBACK_TEST_CONSTANTS, CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 import { createMockFeedback, createMockRawFeedbackCategory, createMockRawCategoryListResponse } from '../../../utils/mocks/feedback';
-import { FeedbackSubmitOptions, FeedbackUpdateOptions, FeedbackCreateCategoryOptions } from '../../../../src/models/agents/feedback/feedback.types';
+import { FeedbackSubmitOptions, FeedbackUpdateOptions } from '../../../../src/models/agents/feedback/feedback.types';
 
 // ===== MOCKING =====
 vi.mock('../../../../src/core/http/api-client');
@@ -278,12 +278,24 @@ describe('FeedbackService Unit Tests', () => {
   });
 
   describe('createCategory', () => {
-    const createOptions: FeedbackCreateCategoryOptions = {
-      isPositive: false,
-      isNegative: true,
-    };
+    it('should create a category with no options — only category name sent in body', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawFeedbackCategory({
+        category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM,
+        isDefault: false,
+      }));
 
-    it('should create a category successfully', async () => {
+      const result = await feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM);
+
+      expect(result).toBeDefined();
+      expect(result.category).toBe(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CATEGORY.CREATE,
+        { category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM },
+        expect.any(Object)
+      );
+    });
+
+    it('should create a category with explicit isPositive and isNegative', async () => {
       mockApiClient.post.mockResolvedValue(createMockRawFeedbackCategory({
         category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM,
         isDefault: false,
@@ -291,10 +303,12 @@ describe('FeedbackService Unit Tests', () => {
         isNegative: true,
       }));
 
-      const result = await feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM, createOptions);
+      const result = await feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM, {
+        isPositive: false,
+        isNegative: true,
+      });
 
       expect(result).toBeDefined();
-      expect(result.category).toBe(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         FEEDBACK_ENDPOINTS.CATEGORY.CREATE,
         expect.objectContaining({
@@ -309,22 +323,21 @@ describe('FeedbackService Unit Tests', () => {
     it('should transform createdAt to createdTime', async () => {
       mockApiClient.post.mockResolvedValue(createMockRawFeedbackCategory());
 
-      const result = await feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME, createOptions);
+      const result = await feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME);
 
       expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
       expect((result as any).createdAt).toBeUndefined();
     });
 
     it('should throw ValidationError when category name is empty', async () => {
-      await expect(feedbackService.createCategory('', createOptions))
-        .rejects.toThrow('category name is required');
+      await expect(feedbackService.createCategory('')).rejects.toThrow('category name is required');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw error when API call fails', async () => {
       mockApiClient.post.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_CATEGORY_NOT_FOUND));
 
-      await expect(feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM, createOptions))
+      await expect(feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM))
         .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_CATEGORY_NOT_FOUND);
     });
   });

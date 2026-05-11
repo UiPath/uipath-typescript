@@ -229,12 +229,16 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
   }
 
   @track('Feedback.CreateCategory')
-  async createCategory(category: string, options: FeedbackCreateCategoryOptions): Promise<FeedbackCategory> {
+  async createCategory(category: string, options?: FeedbackCreateCategoryOptions): Promise<FeedbackCategory> {
     if (!category) throw new ValidationError({ message: 'category name is required for createCategory' });
+
+    const body: Record<string, unknown> = { category };
+    if (options?.isPositive !== undefined) body.isPositive = options.isPositive;
+    if (options?.isNegative !== undefined) body.isNegative = options.isNegative;
 
     const response = await this.post<RawFeedbackCategory>(
       FEEDBACK_ENDPOINTS.CATEGORY.CREATE,
-      { category, isPositive: options.isPositive, isNegative: options.isNegative }
+      body
     );
     return transformData(response.data, FeedbackMap) as unknown as FeedbackCategory;
   }

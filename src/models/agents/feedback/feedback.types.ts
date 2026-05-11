@@ -141,10 +141,10 @@ export type FeedbackGetAllOptions = PaginationOptions & {
  * Options for creating a new feedback category
  */
 export interface FeedbackCreateCategoryOptions {
-  /** Whether the category applies to positive feedback */
-  isPositive: boolean;
-  /** Whether the category applies to negative feedback */
-  isNegative: boolean;
+  /** Whether the category applies to positive feedback (defaults to true) */
+  isPositive?: boolean;
+  /** Whether the category applies to negative feedback (defaults to true) */
+  isNegative?: boolean;
 }
 
 /**
