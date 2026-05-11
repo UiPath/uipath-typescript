@@ -168,21 +168,34 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       expect(result.items.every((c) => c.isNegative)).toBe(true);
     });
 
-    it('should create a category with minimum required fields', async () => {
+    it('should create a category with no options — defaults to isPositive and isNegative both true', async () => {
       const name = `TestCategory_${generateRandomString(6)}`;
-      const result = await feedback.createCategory(name, { isPositive: true, isNegative: false });
+      const result = await feedback.createCategory(name);
 
       createdCategoryIds.push(result.id);
+      registerResource('feedbackCategories', { id: result.id });
 
       expect(result).toBeDefined();
       expect(result.id).toBeDefined();
       expect(result.category).toBe(name);
       expect(result.isPositive).toBe(true);
-      expect(result.isNegative).toBe(false);
+      expect(result.isNegative).toBe(true);
       expect(result.isDefault).toBe(false);
       expect(result.createdTime).toBeDefined();
       expect((result as any).createdAt).toBeUndefined();
     });
+
+    it('should create a category with explicit options', async () => {
+      const name = `TestCategory_${generateRandomString(6)}`;
+      const result = await feedback.createCategory(name, { isPositive: true, isNegative: false });
+
+      createdCategoryIds.push(result.id);
+      registerResource('feedbackCategories', { id: result.id });
+
+      expect(result.isPositive).toBe(true);
+      expect(result.isNegative).toBe(false);
+    });
+
 
     it('should delete a custom category', async () => {
       const name = `TestCategory_${generateRandomString(6)}`;

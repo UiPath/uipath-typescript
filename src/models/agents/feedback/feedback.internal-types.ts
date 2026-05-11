@@ -9,7 +9,7 @@ export interface RawFeedbackCategoryListResponse {
 }
 
 /**
- * Raw category shape before createdAt → createdTime rename
+ * Raw category shape as returned by the API (used by getCategories / createCategory before transform)
  */
 export interface RawFeedbackCategory {
   id: string;
@@ -22,7 +22,7 @@ export interface RawFeedbackCategory {
 
 /**
  * Raw feedback response shape as returned by the API, before the transform pipeline
- * renames createdAt → createdTime and updatedAt → updatedTime.
+ * renames createdAt → createdTime, updatedAt → updatedTime.
  */
 export interface RawFeedbackResponse {
   id: string;

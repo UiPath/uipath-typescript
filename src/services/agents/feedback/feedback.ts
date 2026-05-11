@@ -1,7 +1,7 @@
 import { BaseService } from '../../base';
 import {
   FeedbackResponse,
-  FeedbackCategory,
+  FeedbackCategoryResponse,
   FeedbackGetAllOptions,
   FeedbackGetCategoriesOptions,
   FeedbackOptions,
@@ -229,7 +229,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
   }
 
   @track('Feedback.CreateCategory')
-  async createCategory(category: string, options?: FeedbackCreateCategoryOptions): Promise<FeedbackCategory> {
+  async createCategory(category: string, options?: FeedbackCreateCategoryOptions): Promise<FeedbackCategoryResponse> {
     if (!category) throw new ValidationError({ message: 'category name is required for createCategory' });
 
     const body: Record<string, unknown> = { category };
@@ -240,7 +240,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
       FEEDBACK_ENDPOINTS.CATEGORY.CREATE,
       body
     );
-    return transformData(response.data, FeedbackMap) as unknown as FeedbackCategory;
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackCategoryResponse;
   }
 
   @track('Feedback.GetCategories')
@@ -248,13 +248,13 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<FeedbackCategory>
-      : NonPaginatedResponse<FeedbackCategory>
+      ? PaginatedResponse<FeedbackCategoryResponse>
+      : NonPaginatedResponse<FeedbackCategoryResponse>
   > {
-    const transformCategory = (item: RawFeedbackCategory): FeedbackCategory =>
-      transformData(item, FeedbackMap) as unknown as FeedbackCategory;
+    const transformCategory = (item: RawFeedbackCategory): FeedbackCategoryResponse =>
+      transformData(item, FeedbackMap) as unknown as FeedbackCategoryResponse;
 
-    return PaginationHelpers.getAll<T, RawFeedbackCategory, FeedbackCategory>({
+    return PaginationHelpers.getAll<T, RawFeedbackCategory, FeedbackCategoryResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => FEEDBACK_ENDPOINTS.CATEGORY.GET_ALL,
       transformFn: transformCategory,
@@ -272,6 +272,33 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     }, options);
   }
 
+  /**
+   * Deletes a feedback category by its ID.
+   *
+   * System default categories (Output, Agent Error, Agent Plan Execution) cannot be deleted —
+   * attempting to do so throws a `409 Conflict` error.
+   * Use `forceDelete` to delete a custom category that already has feedback entries associated with it.
+   *
+   * @param id - Category ID (GUID) of the category to delete
+   * @param options - Optional deletion options {@link FeedbackDeleteCategoryOptions}
+   * @returns Promise resolving to void on success
+   * @example
+   * ```typescript
+   * import { Feedback } from '@uipath/uipath-typescript/feedback';
+   *
+   * const feedback = new Feedback(sdk);
+   *
+   * // Only custom categories (isDefault: false) can be deleted
+   * const categories = await feedback.getCategories();
+   * const customCategory = categories.items.find(c => !c.isDefault);
+   * if (customCategory) {
+   *   await feedback.deleteCategory(customCategory.id);
+   * }
+   *
+   * // Force-delete a custom category that has associated feedback entries
+   * await feedback.deleteCategory(customCategory.id, { forceDelete: true });
+   * ```
+   */
   @track('Feedback.DeleteCategory')
   async deleteCategory(id: string, options?: FeedbackDeleteCategoryOptions): Promise<void> {
     if (!id) throw new ValidationError({ message: 'Category ID is required for deleteCategory' });

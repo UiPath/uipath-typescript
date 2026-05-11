@@ -1,6 +1,6 @@
 import type {
   FeedbackResponse,
-  FeedbackCategory,
+  FeedbackCategoryResponse,
   FeedbackGetAllOptions,
   FeedbackGetCategoriesOptions,
   FeedbackOptions,
@@ -177,7 +177,7 @@ export interface FeedbackServiceModel {
    *
    * @param category - Name of the category to create (max 256 characters, unique per tenant)
    * @param options - Optional flags controlling whether the category applies to positive and/or negative feedback {@link FeedbackCreateCategoryOptions}
-   * @returns Promise resolving to the created {@link FeedbackCategory}
+   * @returns Promise resolving to the created {@link FeedbackCategoryResponse}
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
@@ -195,7 +195,7 @@ export interface FeedbackServiceModel {
    * });
    * ```
    */
-  createCategory(category: string, options?: FeedbackCreateCategoryOptions): Promise<FeedbackCategory>;
+  createCategory(category: string, options?: FeedbackCreateCategoryOptions): Promise<FeedbackCategoryResponse>;
 
   /**
    * Gets all feedback categories for the tenant.
@@ -205,7 +205,7 @@ export interface FeedbackServiceModel {
    * When no pagination options are provided, the API returns up to 100 items. When pagination options are provided without a pageSize, the SDK defaults to 50 items per page.
    *
    * @param options - Optional filters and pagination options {@link FeedbackGetCategoriesOptions}
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackCategory} without pagination options, or {@link PaginatedResponse} of {@link FeedbackCategory} when pagination options are used.
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackCategoryResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackCategoryResponse} when pagination options are used.
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
@@ -225,15 +225,16 @@ export interface FeedbackServiceModel {
    */
   getCategories<T extends FeedbackGetCategoriesOptions = FeedbackGetCategoriesOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<FeedbackCategory>
-      : NonPaginatedResponse<FeedbackCategory>
+      ? PaginatedResponse<FeedbackCategoryResponse>
+      : NonPaginatedResponse<FeedbackCategoryResponse>
   >;
 
   /**
    * Deletes a feedback category by its ID.
    *
-   * Default system categories cannot be deleted. Use `forceDelete` to delete a category
-   * that already has feedback entries associated with it.
+   * System default categories (Output, Agent Error, Agent Plan Execution) cannot be deleted —
+   * attempting to do so throws a `409 Conflict` error.
+   * Use `forceDelete` to delete a custom category that already has feedback entries associated with it.
    *
    * @param id - Category ID (GUID) of the category to delete
    * @param options - Optional deletion options {@link FeedbackDeleteCategoryOptions}
@@ -244,12 +245,15 @@ export interface FeedbackServiceModel {
    *
    * const feedback = new Feedback(sdk);
    *
-   * // Get categories to obtain the ID of the one to delete
+   * // Only custom categories (isDefault: false) can be deleted
    * const categories = await feedback.getCategories();
-   * const customCategory = categories.find(c => !c.isDefault);
+   * const customCategory = categories.items.find(c => !c.isDefault);
    * if (customCategory) {
    *   await feedback.deleteCategory(customCategory.id);
    * }
+   *
+   * // Force-delete a custom category that has associated feedback entries
+   * await feedback.deleteCategory(customCategory.id, { forceDelete: true });
    * ```
    */
   deleteCategory(id: string, options?: FeedbackDeleteCategoryOptions): Promise<void>;
