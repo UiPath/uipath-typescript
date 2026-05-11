@@ -346,10 +346,10 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * const customCategory = categories.items.find(c => !c.isDefault);
    * if (customCategory) {
    *   await feedback.deleteCategory(customCategory.id);
-   * }
    *
-   * // Force-delete a custom category that has associated feedback entries
-   * await feedback.deleteCategory(customCategory.id, { forceDelete: true });
+   *   // Force-delete a custom category that has associated feedback entries
+   *   await feedback.deleteCategory(customCategory.id, { forceDelete: true });
+   * }
    * ```
    */
   @track('Feedback.DeleteCategory')

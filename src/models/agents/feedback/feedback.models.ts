@@ -250,10 +250,10 @@ export interface FeedbackServiceModel {
    * const customCategory = categories.items.find(c => !c.isDefault);
    * if (customCategory) {
    *   await feedback.deleteCategory(customCategory.id);
-   * }
    *
-   * // Force-delete a custom category that has associated feedback entries
-   * await feedback.deleteCategory(customCategory.id, { forceDelete: true });
+   *   // Force-delete a custom category that has associated feedback entries
+   *   await feedback.deleteCategory(customCategory.id, { forceDelete: true });
+   * }
    * ```
    */
   deleteCategory(id: string, options?: FeedbackDeleteCategoryOptions): Promise<void>;
