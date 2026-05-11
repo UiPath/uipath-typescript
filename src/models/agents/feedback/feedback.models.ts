@@ -1,6 +1,5 @@
 import type {
   FeedbackResponse,
-  FeedbackGetResponse,
   FeedbackGetAllOptions,
   FeedbackOptions,
   FeedbackSubmitOptions,
@@ -35,7 +34,7 @@ export interface FeedbackServiceModel {
    * When no pagination options are provided, the API returns up to 100 items. When pagination options are provided without a pageSize, the SDK defaults to 50 items per page.
    *
    * @param options - Optional query parameters for filtering and pagination
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackResponse} when pagination options are used.
    * @example
    * ```typescript
    * import { Feedback, FeedbackStatus } from '@uipath/uipath-typescript/feedback';
@@ -67,8 +66,8 @@ export interface FeedbackServiceModel {
    */
   getAll<T extends FeedbackGetAllOptions = FeedbackGetAllOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<FeedbackGetResponse>
-      : NonPaginatedResponse<FeedbackGetResponse>
+      ? PaginatedResponse<FeedbackResponse>
+      : NonPaginatedResponse<FeedbackResponse>
   >;
 
   /**
@@ -76,7 +75,7 @@ export interface FeedbackServiceModel {
    *
    * @param id - Feedback ID (GUID) of the feedback entry
    * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
-   * @returns Promise resolving to {@link FeedbackGetResponse}
+   * @returns Promise resolving to {@link FeedbackResponse}
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
@@ -92,7 +91,7 @@ export interface FeedbackServiceModel {
    * console.log(item.isPositive, item.comment, item.status);
    * ```
    */
-  getById(id: string, options: FeedbackOptions): Promise<FeedbackGetResponse>;
+  getById(id: string, options: FeedbackOptions): Promise<FeedbackResponse>;
 
   /**
    * Submits a feedback entry.

@@ -1,7 +1,6 @@
 import { BaseService } from '../../base';
 import {
   FeedbackResponse,
-  FeedbackGetResponse,
   FeedbackGetAllOptions,
   FeedbackOptions,
   FeedbackSubmitOptions,
@@ -32,7 +31,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * When no pagination options are provided, the API returns up to 100 items. When pagination options are provided without a pageSize, the SDK defaults to 50 items per page.
    *
    * @param options - Optional query parameters for filtering and pagination
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackResponse} when pagination options are used.
    * @example
    * ```typescript
    * import { Feedback, FeedbackStatus } from '@uipath/uipath-typescript/feedback';
@@ -67,13 +66,13 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
     options?: T
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<FeedbackGetResponse>
-      : NonPaginatedResponse<FeedbackGetResponse>
+      ? PaginatedResponse<FeedbackResponse>
+      : NonPaginatedResponse<FeedbackResponse>
   > {
-    const transformFeedbackResponse = (item: RawFeedbackResponse): FeedbackGetResponse =>
-      transformData(item, FeedbackMap) as unknown as FeedbackGetResponse;
+    const transformFeedbackResponse = (item: RawFeedbackResponse): FeedbackResponse =>
+      transformData(item, FeedbackMap) as unknown as FeedbackResponse;
 
-    return PaginationHelpers.getAll<T, RawFeedbackResponse, FeedbackGetResponse>({
+    return PaginationHelpers.getAll<T, RawFeedbackResponse, FeedbackResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => FEEDBACK_ENDPOINTS.GET_ALL,
       transformFn: transformFeedbackResponse,
@@ -94,7 +93,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    *
    * @param id - Feedback ID (GUID) of the feedback entry
    * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
-   * @returns Promise resolving to {@link FeedbackGetResponse}
+   * @returns Promise resolving to {@link FeedbackResponse}
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
@@ -110,7 +109,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
    * ```
    */
   @track('Feedback.GetById')
-  async getById(id: string, options: FeedbackOptions): Promise<FeedbackGetResponse> {
+  async getById(id: string, options: FeedbackOptions): Promise<FeedbackResponse> {
     if (!id) throw new ValidationError({ message: 'Feedback ID is required for getById' });
     if (!options.folderKey) throw new ValidationError({ message: 'folderKey is required for getById' });
 
@@ -118,7 +117,7 @@ export class FeedbackService extends BaseService implements FeedbackServiceModel
       FEEDBACK_ENDPOINTS.GET_BY_ID(id),
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
     );
-    return transformData(response.data, FeedbackMap) as unknown as FeedbackGetResponse;
+    return transformData(response.data, FeedbackMap) as unknown as FeedbackResponse;
   }
 
   /**
