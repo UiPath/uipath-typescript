@@ -66,6 +66,12 @@ export interface FeedbackResponse {
 }
 
 /**
+ * Feedback object returned by getAll and getById.
+ * Extends {@link FeedbackResponse} — use this type for getAll/getById return values.
+ */
+export interface FeedbackGetResponse extends FeedbackResponse {}
+
+/**
  * Options shared across feedback operations
  */
 export interface FeedbackOptions {

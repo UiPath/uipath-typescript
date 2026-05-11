@@ -1,5 +1,6 @@
 import type {
   FeedbackResponse,
+  FeedbackGetResponse,
   FeedbackGetAllOptions,
   FeedbackOptions,
   FeedbackSubmitOptions,
@@ -34,7 +35,7 @@ export interface FeedbackServiceModel {
    * When no pagination options are provided, the API returns up to 100 items. When pagination options are provided without a pageSize, the SDK defaults to 50 items per page.
    *
    * @param options - Optional query parameters for filtering and pagination
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackResponse} when pagination options are used.
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link FeedbackGetResponse} without pagination options, or {@link PaginatedResponse} of {@link FeedbackGetResponse} when pagination options are used.
    * @example
    * ```typescript
    * import { Feedback, FeedbackStatus } from '@uipath/uipath-typescript/feedback';
@@ -66,8 +67,8 @@ export interface FeedbackServiceModel {
    */
   getAll<T extends FeedbackGetAllOptions = FeedbackGetAllOptions>(options?: T): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<FeedbackResponse>
-      : NonPaginatedResponse<FeedbackResponse>
+      ? PaginatedResponse<FeedbackGetResponse>
+      : NonPaginatedResponse<FeedbackGetResponse>
   >;
 
   /**
@@ -75,7 +76,7 @@ export interface FeedbackServiceModel {
    *
    * @param id - Feedback ID (GUID) of the feedback entry
    * @param options - Required options including folderKey for folder-level authorization {@link FeedbackOptions}
-   * @returns Promise resolving to {@link FeedbackResponse}
+   * @returns Promise resolving to {@link FeedbackGetResponse}
    * @example
    * ```typescript
    * import { Feedback } from '@uipath/uipath-typescript/feedback';
@@ -86,12 +87,12 @@ export interface FeedbackServiceModel {
    * const allFeedback = await feedback.getAll({ pageSize: 10 });
    * const feedbackId = allFeedback.items[0].id;
    * const folderKey = allFeedback.items[0].folderKey;
-   * 
+   *
    * const item = await feedback.getById(feedbackId, { folderKey });
    * console.log(item.isPositive, item.comment, item.status);
    * ```
    */
-  getById(id: string, options: FeedbackOptions): Promise<FeedbackResponse>;
+  getById(id: string, options: FeedbackOptions): Promise<FeedbackGetResponse>;
 
   /**
    * Submits a feedback entry.
