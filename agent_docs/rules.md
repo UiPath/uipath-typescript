@@ -21,6 +21,7 @@
 - **NEVER** create a separate `afterAll` per describe block if the file already has one — reuse the existing cleanup block by pushing to the shared `createdRecordIds` array.
 - **After a successful delete in an integration test, remove the resource from `createdRecordIds`** (or the equivalent cleanup array) — if cleanup runs after a delete test, trying to delete an already-deleted record produces a spurious error. Remove it immediately after the delete call succeeds: `createdRecordIds.splice(createdRecordIds.indexOf(id), 1)`.
 - **Consolidate service availability guards in `beforeAll`**, not inline in each test — if a service may be `undefined` (e.g., `getServices().feedback`), check once in `beforeAll` with `if (!service) throw new Error(...)` and assign to a non-nullable `let service!: ServiceType` variable. Repeating the guard in every `it` block is noise and can mask which test actually failed.
+- **Test all meaningful branches for boolean-like conditions** — when a method branches on `param === false` vs other values, add explicit tests for `true`, `false`, and `undefined`. Testing only the `false` branch leaves the `true` branch unverified; a later change from `=== false` to a truthy check would silently break behavior without failing any existing tests.
 - **Coverage**: 80% minimum for new code, 100% for critical paths (auth, API calls).
 - Remove unused mock methods. Extract repeated logic into shared helpers.
 
@@ -60,6 +61,8 @@ JSDoc comments in `src/models/{domain}/*.models.ts` are the **source of truth fo
 - **NEVER** assign a `void` return to a variable in JSDoc examples — if a method returns `Promise<void>`, write `await service.method()` not `const result = await service.method()`. Assigning void implies the return value is usable, which misleads users.
 - **When a new option or feature is added to one method, update related methods' `@example` blocks too** — if `create()` gains an `agentInput` option, `updateById()` (which accepts the same option) also needs a second `@example` showing it. Users look at examples to learn what's possible; a feature shown on one method but silently omitted from a parallel method is effectively invisible.
 - **Add JSDoc to non-obvious enum values** — if an enum has values whose meaning isn't clear from the name alone, add a brief comment to each value.
+- **JSDoc `@example` blocks that reference named types must include the import statement** — if an example uses `EntityAggregateFunction` or any other imported type, open the block with the necessary import so the example is self-contained and copy-pasteable without IDE assistance.
+- **Propagate `@internal` to every public layer that exposes the same API** — if an underlying service method is tagged `@internal`, the corresponding wrapper on the `UiPath` class (or any other public-facing class) must also carry `@internal`. TypeDoc runs directly on public class methods; a missing tag on one layer surfaces the method in generated docs even if the service layer correctly marks it.
 
 ## Post-implementation verification checklist
 
