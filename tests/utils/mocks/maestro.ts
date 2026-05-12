@@ -7,7 +7,7 @@ import { TEST_CONSTANTS } from '../constants/common';
 import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
-import type { SlaSummaryResponse, StageSummaryItem, StageSummaryStage } from '../../../src/models/maestro/case-instances.types';
+import type { SlaSummaryResponse, StageSummaryResponse, StageSummaryStage } from '../../../src/models/maestro/case-instances.types';
 
 // Maestro-Specific Mock Factories
 
@@ -572,11 +572,11 @@ export const createMockStageSummaryStage = (overrides: Partial<StageSummaryStage
 };
 
 /**
- * Creates a mock StageSummaryItem object
+ * Creates a mock StageSummaryResponse object
  * @param overrides - Optional overrides for specific fields
- * @returns Mock StageSummaryItem object
+ * @returns Mock StageSummaryResponse object
  */
-export const createMockStageSummaryItem = (overrides: Partial<StageSummaryItem> = {}): StageSummaryItem => {
+export const createMockStageSummaryResponse = (overrides: Partial<StageSummaryResponse> = {}): StageSummaryResponse => {
   return createMockBaseResponse({
     caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
     stages: [createMockStageSummaryStage()],

@@ -8,7 +8,7 @@ import {
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
-  StageSummaryItem,
+  StageSummaryResponse,
   StageSummaryOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
@@ -337,7 +337,7 @@ export interface CaseInstancesServiceModel {
    * lightweight summary across all instances.
    *
    * @param options - Optional filtering options
-   * @returns Promise resolving to an array of {@link StageSummaryItem}
+   * @returns Promise resolving to an array of {@link StageSummaryResponse}
    * @example
    * ```typescript
    * // Get stages summary for all case instances
@@ -355,7 +355,7 @@ export interface CaseInstancesServiceModel {
    * });
    * ```
    */
-  getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryItem[]>;
+  getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryResponse[]>;
 }
 
 // Method interface that will be added to case instance objects

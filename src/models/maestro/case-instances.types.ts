@@ -196,7 +196,7 @@ export interface StageSummaryStage {
 /**
  * Stages summary for a single case instance (from Insights RTM)
  */
-export interface StageSummaryItem {
+export interface StageSummaryResponse {
   /** Case instance identifier */
   caseInstanceId: string;
   /** Stages within this case instance */

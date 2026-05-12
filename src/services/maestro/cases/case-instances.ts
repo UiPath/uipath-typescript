@@ -15,7 +15,7 @@ import {
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
-  StageSummaryItem,
+  StageSummaryResponse,
   StageSummaryOptions,
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
@@ -654,7 +654,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * lightweight summary across all instances.
    *
    * @param options - Optional filtering options
-   * @returns Promise resolving to an array of {@link StageSummaryItem}
+   * @returns Promise resolving to an array of {@link StageSummaryResponse}
    * @example
    * ```typescript
    * // Get stages summary for all case instances
@@ -673,8 +673,8 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * ```
    */
   @track('CaseInstances.GetStagesSummary')
-  async getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryItem[]> {
-    const response = await this.post<StageSummaryItem[]>(
+  async getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryResponse[]> {
+    const response = await this.post<StageSummaryResponse[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
       {
         caseInstanceId: options?.caseInstanceId,

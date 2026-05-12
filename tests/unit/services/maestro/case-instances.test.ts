@@ -17,7 +17,7 @@ import {
   createMockMaestroApiOperationResponse,
   createMockActionTasksResponse,
   createMockSlaSummaryResponse,
-  createMockStageSummaryItem,
+  createMockStageSummaryResponse,
   createMockStageSummaryStage,
 } from '../../../utils/mocks';
 import { HTTP_METHODS } from '../../../../src/utils/constants/common';
@@ -920,8 +920,8 @@ describe('CaseInstancesService', () => {
   describe('getStagesSummary', () => {
     it('should return stages summary without options', async () => {
       const mockItems = [
-        createMockStageSummaryItem(),
-        createMockStageSummaryItem({
+        createMockStageSummaryResponse(),
+        createMockStageSummaryResponse({
           caseInstanceId: 'case-instance-456',
           stages: [createMockStageSummaryStage({ latestStatus: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_TERMINATED })]
         })
@@ -946,7 +946,7 @@ describe('CaseInstancesService', () => {
     });
 
     it('should pass filter options through', async () => {
-      const mockItems = [createMockStageSummaryItem()];
+      const mockItems = [createMockStageSummaryResponse()];
       mockApiClient.post.mockResolvedValue(mockItems);
 
       const options = {
@@ -985,7 +985,7 @@ describe('CaseInstancesService', () => {
 
     it('should return stages with SLA status from SlaSummaryStatus enum', async () => {
       const mockItems = [
-        createMockStageSummaryItem({
+        createMockStageSummaryResponse({
           stages: [createMockStageSummaryStage({ slaStatus: SlaSummaryStatus.ON_TRACK })]
         })
       ];
