@@ -4,7 +4,7 @@ import { FeedbackCategory, FeedbackStatus } from './feedback.types';
  * Raw feedback response shape as returned by the API, before the transform pipeline
  * renames createdAt → createdTime and updatedAt → updatedTime.
  */
-export interface RawFeedbackGetResponse {
+export interface RawFeedbackResponse {
   id: string;
   traceId: string;
   spanId: string;

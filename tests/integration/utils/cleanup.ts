@@ -11,6 +11,7 @@ interface ResourceRegistry {
   entityRecords: Array<{ entityId: string; recordIds: string[] }>;
   processInstances: Array<{ id: string; folderKey?: string }>;
   caseInstances: Array<{ id: string; folderKey?: string }>;
+  feedbackEntries: Array<{ id: string; folderKey?: string }>;
 }
 
 const resourceRegistry: ResourceRegistry = {
@@ -18,6 +19,7 @@ const resourceRegistry: ResourceRegistry = {
   entityRecords: [],
   processInstances: [],
   caseInstances: [],
+  feedbackEntries: [],
 };
 
 /**
@@ -126,6 +128,29 @@ export async function cleanupTestCaseInstance(
 }
 
 /**
+ * Deletes a test feedback entry.
+ *
+ * @param id - ID of the feedback entry
+ * @param folderKey - Optional folder key
+ */
+export async function cleanupTestFeedbackEntry(
+  id: string,
+  folderKey?: string
+): Promise<void> {
+  try {
+    const { feedback } = getServices();
+    if (!feedback) return;
+    if (!folderKey) return;
+    await retryWithBackoff(async () => {
+      await feedback.deleteById(id, { folderKey });
+    });
+    console.log(`Cleaned up test feedback entry: ${id}`);
+  } catch (error) {
+    console.warn(`Failed to cleanup feedback entry ${id}:`, error);
+  }
+}
+
+/**
  * Emergency cleanup function that attempts to delete all registered resources.
  * Should be called as a last resort in afterAll hooks.
  */
@@ -152,11 +177,17 @@ export async function cleanupAllTestResources(): Promise<void> {
     await cleanupTestCaseInstance(caseInstance.id, caseInstance.folderKey);
   }
 
+  // Cleanup feedback entries
+  for (const entry of resourceRegistry.feedbackEntries) {
+    await cleanupTestFeedbackEntry(entry.id, entry.folderKey);
+  }
+
   // Clear registry
   resourceRegistry.tasks = [];
   resourceRegistry.entityRecords = [];
   resourceRegistry.processInstances = [];
   resourceRegistry.caseInstances = [];
+  resourceRegistry.feedbackEntries = [];
 
   console.log('Emergency cleanup completed');
 }

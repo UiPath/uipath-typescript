@@ -34,7 +34,7 @@ export enum FeedbackStatus {
 /**
  * Complete feedback object returned from the API
  */
-export interface FeedbackGetResponse {
+export interface FeedbackResponse {
   /** Unique identifier of the feedback entry */
   id: string;
   /** Trace identifier linking feedback to a specific agent execution */
@@ -66,11 +66,59 @@ export interface FeedbackGetResponse {
 }
 
 /**
+ * Feedback object returned by getAll and getById.
+ * Extends {@link FeedbackResponse} — use this type for getAll/getById return values.
+ */
+export interface FeedbackGetResponse extends FeedbackResponse {}
+
+/**
  * Options shared across feedback operations
  */
 export interface FeedbackOptions {
   /** Folder key for authorization */
   folderKey: string;
+}
+
+/**
+ * A category reference used when creating or updating feedback
+ */
+export interface FeedbackCategoryInput {
+  /** Unique identifier of the category */
+  id: string;
+  /** Category name (e.g., 'Output', 'Agent Error', 'Agent Plan Execution') */
+  category: string;
+}
+
+/**
+ * Options for submitting a new feedback entry
+ */
+export interface FeedbackSubmitOptions extends FeedbackOptions {
+  /** Span identifier representing a specific operation within the trace */
+  spanId?: string;
+  /** Identifier of the agent that generated the response being reviewed */
+  agentId?: string;
+  /** Version of the agent at the time the feedback was given (max 100 characters) */
+  agentVersion?: string;
+  /** Span type (e.g., 'agentRun', 'llm', 'tool', 'retriever') (max 100 characters) */
+  spanType?: string;
+  /** Optional text comment provided by the user (max 4000 characters) */
+  comment?: string;
+  /** Optional metadata string associated with the feedback (max 4000 characters) */
+  metadata?: string;
+  /** Categories to associate with this feedback entry */
+  categories?: FeedbackCategoryInput[];
+}
+
+/**
+ * Options for updating an existing feedback entry
+ */
+export interface FeedbackUpdateOptions extends FeedbackOptions {
+  /** Optional text comment provided by the user (max 4000 characters) */
+  comment?: string;
+  /** Optional metadata string associated with the feedback (max 4000 characters) */
+  metadata?: string;
+  /** Categories to associate with this feedback entry */
+  categories?: FeedbackCategoryInput[];
 }
 
 /**
