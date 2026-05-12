@@ -434,6 +434,13 @@ export interface CaseInstanceMethods {
       ? PaginatedResponse<SlaSummaryResponse>
       : NonPaginatedResponse<SlaSummaryResponse>
   >;
+
+  /**
+   * Gets the stages summary for this case instance.
+   *
+   * @returns Promise resolving to an array of stage summary items for this case instance
+   */
+  getStagesSummary(): Promise<StageSummaryResponse[]>;
 }
 
 // Combined type for case instance data with methods
@@ -512,6 +519,12 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
 
       return service.getSlaSummary({ ...options, caseInstanceId: instanceData.instanceId } as CaseInstanceSlaSummaryOptions) as any;
+    },
+
+    async getStagesSummary(): Promise<StageSummaryResponse[]> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+
+      return service.getStagesSummary({ caseInstanceId: instanceData.instanceId });
     }
   };
 }

@@ -32,7 +32,8 @@ describe('Case Instance Models', () => {
       getExecutionHistory: vi.fn(),
       getStages: vi.fn(),
       getActionTasks: vi.fn(),
-      getSlaSummary: vi.fn()
+      getSlaSummary: vi.fn(),
+      getStagesSummary: vi.fn()
     } as any;
   });
 
@@ -423,6 +424,29 @@ describe('Case Instance Models', () => {
         await expect(invalidInstance.getSlaSummary()).rejects.toThrow('Case instance ID is undefined');
       });
     });
+
+    describe('caseInstance.getStagesSummary()', () => {
+      it('should call service.getStagesSummary with bound caseInstanceId', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const instance = createCaseInstanceWithMethods(mockInstanceData, mockService);
+
+        mockService.getStagesSummary = vi.fn().mockResolvedValue([]);
+
+        await instance.getStagesSummary();
+
+        expect(mockService.getStagesSummary).toHaveBeenCalledWith(
+          expect.objectContaining({ caseInstanceId: mockInstanceData.instanceId })
+        );
+      });
+
+      it('should throw when instanceId is undefined', async () => {
+        const mockInstanceData = createMockCaseInstance();
+        const invalidInstanceData = { ...mockInstanceData, instanceId: undefined as any };
+        const invalidInstance = createCaseInstanceWithMethods(invalidInstanceData, mockService);
+
+        await expect(invalidInstance.getStagesSummary()).rejects.toThrow('Case instance ID is undefined');
+      });
+    });
   });
 
   describe('createCaseInstanceWithMethods', () => {
@@ -441,6 +465,7 @@ describe('Case Instance Models', () => {
       expect(typeof instance.getStages).toBe('function');
       expect(typeof instance.getActionTasks).toBe('function');
       expect(typeof instance.getSlaSummary).toBe('function');
+      expect(typeof instance.getStagesSummary).toBe('function');
     });
 
     it('should preserve all original instance data', () => {

@@ -922,7 +922,7 @@ describe('CaseInstancesService', () => {
       const mockItems = [
         createMockStageSummaryResponse(),
         createMockStageSummaryResponse({
-          caseInstanceId: 'case-instance-456',
+          caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID_2,
           stages: [createMockStageSummaryStage({ latestStatus: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_COMPLETED })]
         })
       ];
