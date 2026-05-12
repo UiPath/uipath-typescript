@@ -168,7 +168,8 @@ export interface FeedbackCreateCategoryOptions {
 }
 
 /**
- * Options for deleting a feedback category
+ * Options for deleting a feedback category.
+ * Note: system default categories (Output, Agent Error, Agent Plan Execution) cannot be deleted — attempting to do so returns a 409 Conflict.
  */
 export interface FeedbackDeleteCategoryOptions {
   /** When true, deletes the category even if it has associated feedback entries */
