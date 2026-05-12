@@ -97,6 +97,7 @@ export interface ProcessInstancesServiceModel {
   /**
    * Get execution history (spans) for a process instance
    * @param instanceId The ID of the instance to get history for
+   * @param options Folder context options (folderKey, folderId, or folderPath)
    * @returns Promise resolving to execution history
    * {@link ProcessInstanceExecutionHistoryResponse}
    * @example
@@ -111,6 +112,7 @@ export interface ProcessInstancesServiceModel {
    * history.forEach(span => {
    *   console.log(`Activity: ${span.name}`);
    *   console.log(`Start: ${span.startedTime}`);
+   *   console.log(`End: ${span.endTime}`);
    * });
    * ```
    */

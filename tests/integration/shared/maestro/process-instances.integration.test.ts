@@ -242,25 +242,20 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
 
     it('should retrieve execution history', async () => {
       if (!testInstanceId) {
-        console.log('No instance ID available for testing');
-        return;
+        throw new Error('No instance ID available for testing');
       }
 
       const { processInstances } = getServices();
       const config = getTestConfig();
 
-      try {
-        const result = await processInstances.getExecutionHistory(testInstanceId, { folderKey: config.folderId || '' });
+      const result = await processInstances.getExecutionHistory(testInstanceId, { folderKey: config.folderId || '' });
 
-        expect(result).toBeDefined();
-        expect(Array.isArray(result)).toBe(true);
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
 
-        if (result.length > 0) {
-          const historyItem = result[0];
-          expect(historyItem).toBeDefined();
-        }
-      } catch (error: any) {
-        console.log('Get execution history test failed:', error.message);
+      if (result.length > 0) {
+        const historyItem = result[0];
+        expect(historyItem).toBeDefined();
       }
     });
   });
