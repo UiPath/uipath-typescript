@@ -69,7 +69,7 @@ export interface ProcessInstanceExecutionHistoryResponse {
   startedTime: string;
   endTime: string | null;
   attributes: string | null;
-  createdTime: string;
+  createdTime?: string;
   updatedTime?: string;
   expiredTime: string | null;
   // TO Do: Add status and attributes interface

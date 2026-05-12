@@ -14,3 +14,58 @@ export interface BpmnVariableMetadata {
   elementId: string;
   source: string;
 }
+
+/**
+ * Element run from the element-executions API response
+ * @internal
+ */
+export interface ElementExecutionRun {
+  status: string;
+  startedTimeUtc: string;
+  completedTimeUtc: string | null;
+  elementRunId: string;
+  workflowId: string | null;
+}
+
+/**
+ * Element execution from the element-executions API response
+ * @internal
+ */
+export interface ElementExecution {
+  completedTimeUtc: string | null;
+  elementId: string;
+  elementType: string;
+  elementExtensionType: string | null;
+  parentRunId: string | null;
+  parentElementId: string | null;
+  parentElementRunId: string | null;
+  runId: string;
+  startedTimeUtc: string;
+  status: string;
+  elementRuns: ElementExecutionRun[];
+}
+
+/**
+ * Top-level response from the element-executions API
+ * @internal
+ */
+export interface ElementExecutionsApiResponse {
+  instanceId: string;
+  elementExecutions: ElementExecution[];
+}
+
+/**
+ * Trace span from the LLMOps Traces/spans API
+ * @internal
+ */
+export interface TraceSpan {
+  Id: string;
+  TraceId: string;
+  ParentId: string | null;
+  Name: string;
+  StartTime: string;
+  EndTime: string | null;
+  Attributes: string | null;
+  ExpiryTimeUtc: string | null;
+  UpdatedAt: string;
+}
