@@ -78,7 +78,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `PIMS` |
 | `getById()` | `PIMS` |
-| `getExecutionHistory()` | `PIMS` |
+| `getExecutionHistory()` | `PIMS`, `Traces.Api` |
 | `getBpmn()` | `OR.Execution.Read` |
 | `getVariables()` | `PIMS` |
 | `getIncidents()` | `PIMS` |
