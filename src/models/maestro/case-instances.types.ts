@@ -181,7 +181,7 @@ export interface StageSummaryStage {
   elementId: string;
   /** Stage display name */
   name: string;
-  /** Current execution status of the stage (e.g., "InProgress", "Terminated", "Completed") */
+  /** Current execution status of the stage */
   latestStatus: string;
   /** Computed SLA due time for this stage */
   slaDueTime: string;
@@ -190,7 +190,7 @@ export interface StageSummaryStage {
   /** Index of the current escalation rule */
   escalationRuleIndex: string;
   /** Type of the current escalation rule */
-  escalationRuleType: string;
+  escalationRuleType: EscalationTriggerType;
 }
 
 /**

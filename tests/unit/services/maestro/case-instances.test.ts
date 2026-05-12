@@ -923,7 +923,7 @@ describe('CaseInstancesService', () => {
         createMockStageSummaryResponse(),
         createMockStageSummaryResponse({
           caseInstanceId: 'case-instance-456',
-          stages: [createMockStageSummaryStage({ latestStatus: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_TERMINATED })]
+          stages: [createMockStageSummaryStage({ latestStatus: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_COMPLETED })]
         })
       ];
       mockApiClient.post.mockResolvedValue(mockItems);
@@ -942,7 +942,7 @@ describe('CaseInstancesService', () => {
       expect(result[0].caseInstanceId).toBe(MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID);
       expect(result[0].stages[0].elementId).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_ELEMENT_ID);
       expect(result[0].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS);
-      expect(result[1].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_TERMINATED);
+      expect(result[1].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_COMPLETED);
     });
 
     it('should pass filter options through', async () => {

@@ -128,7 +128,7 @@ export const MAESTRO_TEST_CONSTANTS = {
   STAGES_SUMMARY_ELEMENT_ID: 'stage_1',
   STAGES_SUMMARY_STAGE_NAME: 'Stage 1',
   STAGES_SUMMARY_LATEST_STATUS: 'InProgress',
-  STAGES_SUMMARY_LATEST_STATUS_TERMINATED: 'Terminated',
+  STAGES_SUMMARY_LATEST_STATUS_COMPLETED: 'Completed',
   ERROR_STAGES_SUMMARY_FAILED: 'Failed to fetch stages summary',
 
   // Execution History constants
