@@ -2,7 +2,7 @@
  * Maestro Service Endpoints
  */
 
-import { PIMS_BASE } from './base';
+import { PIMS_BASE, INSIGHTS_RTM_BASE } from './base';
 
 /**
  * Maestro Process Service Endpoints
@@ -31,5 +31,9 @@ export const MAESTRO_ENDPOINTS = {
     GET_CASE_JSON: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/case-json`,
     GET_ELEMENT_EXECUTIONS: (instanceId: string) => `${PIMS_BASE}/api/v1/element-executions/case-instances/${instanceId}`,
     REOPEN: (instanceId: string) => `${PIMS_BASE}/api/v1/cases/${instanceId}/reopen`,
+  },
+  INSIGHTS: {
+    /** SLA summary for case instances */
+    SLA_SUMMARY: `${INSIGHTS_RTM_BASE}/caseManagement/slaSummary`,
   },
 } as const;

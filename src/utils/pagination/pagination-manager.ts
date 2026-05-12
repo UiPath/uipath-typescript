@@ -29,7 +29,7 @@ export class PaginationManager {
           cursorData.pageNumber = pageInfo.currentPage + 1;
         }
         break;
-      
+
       case PaginationType.TOKEN:
         if (pageInfo.continuationToken) {
           cursorData.continuationToken = pageInfo.continuationToken;

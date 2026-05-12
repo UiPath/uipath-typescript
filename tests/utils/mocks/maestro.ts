@@ -6,6 +6,8 @@
 import { TEST_CONSTANTS } from '../constants/common';
 import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
+import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
+import type { SlaSummaryResponse } from '../../../src/models/maestro/case-instances.types';
 
 // Maestro-Specific Mock Factories
 
@@ -495,6 +497,28 @@ export const createMockCaseStage = (overrides: Partial<any> = {}) => {
         }
       ]
     ]
+  }, overrides);
+};
+
+/**
+ * Creates a mock SLA summary item
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock SlaSummaryResponse object
+ */
+export const createMockSlaSummaryResponse = (overrides: Partial<SlaSummaryResponse> = {}) => {
+  return createMockBaseResponse({
+    caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
+    folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+    name: MAESTRO_TEST_CONSTANTS.SLA_CASE_NAME,
+    externalId: MAESTRO_TEST_CONSTANTS.SLA_EXTERNAL_ID,
+    caseSummary: '',
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+    slaDueTime: MAESTRO_TEST_CONSTANTS.SLA_DUE_TIME,
+    slaStatus: SlaSummaryStatus.ON_TRACK,
+    escalationRuleIndex: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_INDEX,
+    escalationRuleType: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_TYPE,
+    instanceStatus: InstanceStatus.RUNNING,
+    lastModifiedTime: MAESTRO_TEST_CONSTANTS.SLA_LAST_MODIFIED_TIME
   }, overrides);
 };
 

@@ -24,10 +24,10 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
         expect(result).toBeDefined();
         expect(hasValidPagination(result)).toBe(true);
-        expect(Array.isArray(result.data)).toBe(true);
+        expect(Array.isArray(result.items)).toBe(true);
 
-        if (result.data.length > 0) {
-          testCaseInstanceId = result.data[0].id;
+        if (result.items.length > 0) {
+          testCaseInstanceId = result.items[0].id;
         }
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
@@ -51,7 +51,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
 
         expect(result).toBeDefined();
         expect(hasValidPagination(result)).toBe(true);
-        expect(result.data.length).toBeLessThanOrEqual(5);
+        expect(result.items.length).toBeLessThanOrEqual(5);
       } catch (error: any) {
         if (error.message?.includes('Forbidden') || error.statusCode === 403) {
           console.log(
@@ -220,12 +220,12 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
           limit: 1,
         });
 
-        if (result.data.length === 0) {
+        if (result.items.length === 0) {
           console.log('No case instances available to validate structure');
           return;
         }
 
-        const instance = result.data[0];
+        const instance = result.items[0];
 
         expect(instance.id).toBeDefined();
         expect(typeof instance.id).toBe('string');
@@ -247,6 +247,41 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
         }
         console.log('Case instance structure validation failed:', error.message);
       }
+    });
+  });
+
+  describe('getSlaSummary', () => {
+    it('should retrieve SLA summary for case instances', async () => {
+      const { caseInstances } = getServices();
+
+      const result = await caseInstances.getSlaSummary();
+
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+
+      if (result.items.length === 0) {
+        throw new Error('No SLA data available — cannot validate response structure');
+      }
+
+      const item = result.items[0];
+      expect(item.caseInstanceId).toBeDefined();
+      expect(typeof item.caseInstanceId).toBe('string');
+      expect(item.slaStatus).toBeDefined();
+      expect(item.folderKey).toBeDefined();
+
+      // Validate transform pipeline: timestamps must be ISO 8601, not the raw "M/D/YYYY h:mm:ss AM" format
+      expect(item.slaDueTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(item.lastModifiedTime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    });
+
+    it('should support pagination with pageSize', async () => {
+      const { caseInstances } = getServices();
+
+      const result = await caseInstances.getSlaSummary({ pageSize: 5 });
+
+      expect(result).toBeDefined();
+      expect(result.items.length).toBeLessThanOrEqual(5);
     });
   });
 

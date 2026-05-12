@@ -1,4 +1,13 @@
 /**
+ * Converts a UTC timestamp string (e.g., "5/8/2026 11:20:17 AM") to ISO 8601 UTC format.
+ * Returns the original value if parsing fails.
+ */
+export function toISOUtc(value: string): string {
+  const date = new Date(value + ' UTC');
+  return isNaN(date.getTime()) ? value : date.toISOString();
+}
+
+/**
  * Type for field mapping configuration
  * Maps source field names to target field names
  */

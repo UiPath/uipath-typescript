@@ -98,7 +98,83 @@ export interface CaseAppConfig {
 }
 
 /**
- * Case stage task type 
+ * SLA status for a case instance
+ */
+export enum SlaSummaryStatus {
+  /** Case is within SLA deadline */
+  ON_TRACK = 'On Track',
+  /** Case is approaching SLA deadline based on at-risk percentage threshold */
+  AT_RISK = 'At Risk',
+  /** Case has exceeded SLA deadline */
+  OVERDUE = 'Overdue',
+  /** Case instance has completed */
+  COMPLETED = 'Completed',
+  /** SLA status cannot be determined (no SLA deadline defined) */
+  UNKNOWN = 'Unknown'
+}
+
+/**
+ * Instance status values for case instances and process instances
+ */
+export enum InstanceStatus {
+  /** Instance status not yet populated by the backend */
+  UNKNOWN = '',
+  CANCELLED = 'Cancelled',
+  CANCELING = 'Canceling',
+  COMPLETED = 'Completed',
+  FAULTED = 'Faulted',
+  PAUSED = 'Paused',
+  PAUSING = 'Pausing',
+  PENDING = 'Pending',
+  RESUMING = 'Resuming',
+  RETRYING = 'Retrying',
+  RUNNING = 'Running',
+  UPGRADING = 'Upgrading'
+}
+
+/**
+ * SLA summary response for a single case instance
+ */
+export interface SlaSummaryResponse {
+  /** Unique identifier of the case instance */
+  caseInstanceId: string;
+  /** Folder key that the case instance belongs to */
+  folderKey: string;
+  /** Display name of the SLA rule */
+  name: string;
+  /** Human-readable reference number for a case instance */
+  externalId: string;
+  /** Summary text for the case instance — may be empty */
+  caseSummary: string;
+  /** Unique key of the process associated with the case instance */
+  processKey: string;
+  /** SLA deadline timestamp in UTC (ISO 8601 format) */
+  slaDueTime: string;
+  /** Current SLA status indicating whether the deadline is met, at risk, or breached */
+  slaStatus: SlaSummaryStatus;
+  /** Index of the escalation rule currently applied to the SLA */
+  escalationRuleIndex: string;
+  escalationRuleType: EscalationTriggerType;
+  /** Current status of the case instance */
+  instanceStatus: InstanceStatus;
+  /** Last modification timestamp in UTC (ISO 8601 format) */
+  lastModifiedTime: string;
+}
+
+/**
+ * Options for querying SLA summary
+ */
+export type CaseInstanceSlaSummaryOptions = PaginationOptions & {
+  /** Filter to a specific case instance */
+  caseInstanceId?: string;
+  /** Filter by event start time in UTC */
+  startTimeUtc?: Date;
+  /** Filter by event end time in UTC */
+  endTimeUtc?: Date;
+};
+
+/**
+ * Case stage task type
  */
 export enum StageTaskType {
   EXTERNAL_AGENT = 'external-agent',
@@ -161,7 +237,9 @@ export interface EscalationAction {
  */
 export enum EscalationTriggerType {
   SLA_BREACHED = 'sla-breached',
-  AT_RISK = 'at-risk'
+  AT_RISK = 'at-risk',
+  /** Default value when no escalation rule is defined */
+  NONE = 'None'
 }
 
 /**

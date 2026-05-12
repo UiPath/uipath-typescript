@@ -13,6 +13,7 @@ import { PaginationManager } from '../utils/pagination/pagination-manager';
 import { PaginationHelpers } from '../utils/pagination/helpers';
 import { DEFAULT_PAGE_SIZE, getLimitedPageSize } from '../utils/pagination/constants';
 import { ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../utils/constants/common';
+import { resolveNestedField } from '../utils/object';
 import type { IUiPath } from '../core/types';
 import { SDKInternalsRegistry } from '../core/internals';
 
@@ -233,10 +234,17 @@ export class BaseService {
         const pageSizeParam = paginationParams?.pageSizeParam || ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM;
         const offsetParam = paginationParams?.offsetParam || ODATA_OFFSET_PARAMS.OFFSET_PARAM;
         const countParam = paginationParams?.countParam || ODATA_OFFSET_PARAMS.COUNT_PARAM;
-        
+        // When true (default), converts pageNumber to a skip/offset value (e.g., page 3 with pageSize 10 → skip 20).
+        // When false, passes pageNumber directly as the offset param — used by APIs that accept a page number instead of a record offset.
+        const convertToSkip = paginationParams?.convertToSkip ?? true;
+
         requestParams[pageSizeParam] = limitedPageSize;
-        if (params.pageNumber && params.pageNumber > 1) {
-          requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
+        if (convertToSkip) {
+          if (params.pageNumber && params.pageNumber > 1) {
+            requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
+          }
+        } else {
+          requestParams[offsetParam] = params.pageNumber || 1;
         }
         if (countParam) {
           requestParams[countParam] = true;
@@ -246,7 +254,7 @@ export class BaseService {
       case PaginationType.TOKEN:
         const tokenPageSizeParam = paginationParams?.pageSizeParam || BUCKET_TOKEN_PARAMS.PAGE_SIZE_PARAM;
         const tokenParam = paginationParams?.tokenParam || BUCKET_TOKEN_PARAMS.TOKEN_PARAM;
-        
+
         if (params.pageSize) {
           requestParams[tokenPageSizeParam] = getLimitedPageSize(params.pageSize);
         }
@@ -254,6 +262,7 @@ export class BaseService {
           requestParams[tokenParam] = params.continuationToken;
         }
         break;
+
     }
 
     return requestParams;
@@ -279,7 +288,8 @@ export class BaseService {
     // Extract items and metadata
     // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
     const items = Array.isArray(response.data) ? response.data : (response.data[itemsField] || []);
-    const totalCount = Array.isArray(response.data) ? undefined : response.data[totalCountField];
+    const rawTotalCount = Array.isArray(response.data) ? undefined : resolveNestedField(response.data, totalCountField);
+    const totalCount = typeof rawTotalCount === 'number' ? rawTotalCount : undefined;
     const continuationToken = response.data[continuationTokenField];
     
     // Determine if there are more pages
@@ -332,9 +342,10 @@ export class BaseService {
         
       case PaginationType.TOKEN:
         return !!info.continuationToken;
-        
+
       default:
         return false;
     }
   }
+
 }

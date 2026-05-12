@@ -5,7 +5,9 @@ import {
   CaseInstanceOperationResponse,
   CaseInstanceReopenOptions,
   CaseGetStageResponse,
-  CaseInstanceExecutionHistoryResponse
+  CaseInstanceExecutionHistoryResponse,
+  SlaSummaryResponse,
+  CaseInstanceSlaSummaryOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -281,6 +283,49 @@ export interface CaseInstancesServiceModel {
       ? PaginatedResponse<TaskGetResponse>
       : NonPaginatedResponse<TaskGetResponse>
   >;
+
+  /**
+   * Get SLA summary for all case instances across folders.
+   *
+   * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
+   * The default page size is 50, so only the top 50 items are returned when no pagination options are provided.
+   *
+   * @param options - Optional filtering and pagination options
+   * @returns Promise resolving to {@link SlaSummaryResponse}, paginated or non-paginated based on options
+   * @example
+   * ```typescript
+   * // Non-paginated (returns top 50 items by default)
+   * const summary = await caseInstances.getSlaSummary();
+   * console.log(`Found ${summary.totalCount} cases`);
+   *
+   * // Filter by case instance ID
+   * const filtered = await caseInstances.getSlaSummary({
+   *   caseInstanceId: '<caseInstanceId>'
+   * });
+   *
+   * // Filter by time range
+   * const timeFiltered = await caseInstances.getSlaSummary({
+   *   startTimeUtc: new Date('2026-01-01'),
+   *   endTimeUtc: new Date('2026-01-31')
+   * });
+   *
+   * // With pagination
+   * const page1 = await caseInstances.getSlaSummary({ pageSize: 25 });
+   * if (page1.hasNextPage) {
+   *   const page2 = await caseInstances.getSlaSummary({ cursor: page1.nextCursor });
+   * }
+   *
+   * // Jump to specific page
+   * const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
+   * ```
+   */
+  getSlaSummary<T extends CaseInstanceSlaSummaryOptions = CaseInstanceSlaSummaryOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<SlaSummaryResponse>
+      : NonPaginatedResponse<SlaSummaryResponse>
+  >;
 }
 
 // Method interface that will be added to case instance objects
@@ -343,6 +388,21 @@ export interface CaseInstanceMethods {
     T extends HasPaginationOptions<T>
       ? PaginatedResponse<TaskGetResponse>
       : NonPaginatedResponse<TaskGetResponse>
+  >;
+
+  /**
+   * Gets the SLA summary for this case instance.
+   * The default page size is 50, so only the top 50 items are returned when no pagination options are provided.
+   *
+   * @param options - Optional time range filtering and pagination options
+   * @returns Promise resolving to SLA summary items for this case instance
+   */
+  getSlaSummary<T extends Omit<CaseInstanceSlaSummaryOptions, 'caseInstanceId'> = Omit<CaseInstanceSlaSummaryOptions, 'caseInstanceId'>>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<SlaSummaryResponse>
+      : NonPaginatedResponse<SlaSummaryResponse>
   >;
 }
 
@@ -410,6 +470,18 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
 
       return service.getActionTasks(instanceData.instanceId, options);
+    },
+
+    async getSlaSummary<T extends Omit<CaseInstanceSlaSummaryOptions, 'caseInstanceId'> = Omit<CaseInstanceSlaSummaryOptions, 'caseInstanceId'>>(
+      options?: T
+    ): Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<SlaSummaryResponse>
+        : NonPaginatedResponse<SlaSummaryResponse>
+    > {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+
+      return service.getSlaSummary({ ...options, caseInstanceId: instanceData.instanceId } as CaseInstanceSlaSummaryOptions) as any;
     }
   };
 }

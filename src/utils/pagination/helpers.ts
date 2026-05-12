@@ -12,7 +12,7 @@ import { FOLDER_ID } from '../constants/headers';
 import { ODATA_PREFIX, HTTP_METHODS } from '../constants/common';
 import { addPrefixToKeys } from '../transform';
 import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './constants';
-import { filterUndefined } from '../object';
+import { filterUndefined, resolveNestedField } from '../object';
 import { decodeBase64 } from '../encoding/base64';
 
 /**
@@ -262,7 +262,8 @@ export class PaginationHelpers {
     // Extract and transform items from response
     // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
     const rawItems = Array.isArray(response.data) ? response.data : response.data?.[itemsField];
-    const totalCount = Array.isArray(response.data) ? undefined : response.data?.[totalCountField];
+    const rawTotalCount = Array.isArray(response.data) ? undefined : resolveNestedField(response.data, totalCountField);
+    const totalCount = typeof rawTotalCount === 'number' ? rawTotalCount : undefined;
 
     // Parse items - automatically handle JSON string responses
     const parsedItems: T[] = typeof rawItems === 'string' ? JSON.parse(rawItems) : (rawItems || []);

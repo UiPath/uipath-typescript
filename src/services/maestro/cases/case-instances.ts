@@ -12,7 +12,9 @@ import {
   CaseGetStageResponse,
   StageTask,
   ElementExecutionMetadata,
-  CaseInstanceExecutionHistoryResponse
+  CaseInstanceExecutionHistoryResponse,
+  SlaSummaryResponse,
+  CaseInstanceSlaSummaryOptions,
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
@@ -20,7 +22,7 @@ import {
 } from '../../../models/maestro/case-instances.internal-types';
 import { OperationResponse } from '../../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
-import { transformData } from '../../../utils/transform';
+import { transformData, toISOUtc } from '../../../utils/transform';
 import {
   CaseInstanceMap,
   CaseAppConfigMap,
@@ -33,7 +35,7 @@ import {
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
-import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
+import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS, HTTP_METHODS, SLA_SUMMARY_PAGINATION, SLA_SUMMARY_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { FOLDER_KEY } from '../../../utils/constants/headers';
@@ -538,7 +540,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    * @param caseInstanceId - The ID of the case instance
    * @param options - Optional filtering and pagination options
    * @returns Promise resolving to human in the loop tasks associated with the case instance
-   */ 
+   */
   @track('CaseInstances.GetActionTasks')
   async getActionTasks<T extends TaskGetAllOptions = TaskGetAllOptions>(
     caseInstanceId: string,
@@ -550,22 +552,95 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   > {
     // Build filter to match tasks by case instance ID using tags
     const tagFilter = CASE_INSTANCE_TASK_FILTER(caseInstanceId);
-    
+
     // Combine with any existing filter
-    const filter = options?.filter 
+    const filter = options?.filter
       ? `(${tagFilter}) and (${options.filter})`
       : tagFilter;
 
     // Add expand to include AssignedToUser and Activities
     const expand = CASE_INSTANCE_TASK_EXPAND;
-    
+
     // Prepare the enhanced options with proper typing
     const enhancedOptions: T = {
       ...options,
       filter,
       expand
     } as T;
-  
+
     return await this.taskService.getAll(enhancedOptions) as any;
+  }
+
+  /**
+   * Get SLA summary for all case instances across folders.
+   *
+   * Returns SLA status, due times, escalation info, and instance metadata for each case instance.
+   * The default page size is 50, so only the top 50 items are returned when no pagination options are provided.
+   *
+   * @param options - Optional filtering and pagination options
+   * @returns Promise resolving to {@link SlaSummaryResponse}, paginated or non-paginated based on options
+   * @example
+   * ```typescript
+   * // Non-paginated (returns top 50 items by default)
+   * const summary = await caseInstances.getSlaSummary();
+   * console.log(`Found ${summary.totalCount} cases`);
+   *
+   * // Filter by case instance ID
+   * const filtered = await caseInstances.getSlaSummary({
+   *   caseInstanceId: '<caseInstanceId>'
+   * });
+   *
+   * // Filter by time range
+   * const timeFiltered = await caseInstances.getSlaSummary({
+   *   startTimeUtc: new Date('2026-01-01'),
+   *   endTimeUtc: new Date('2026-01-31')
+   * });
+   *
+   * // With pagination
+   * const page1 = await caseInstances.getSlaSummary({ pageSize: 25 });
+   * if (page1.hasNextPage) {
+   *   const page2 = await caseInstances.getSlaSummary({ cursor: page1.nextCursor });
+   * }
+   *
+   * // Jump to specific page
+   * const page3 = await caseInstances.getSlaSummary({ jumpToPage: 3, pageSize: 25 });
+   * ```
+   */
+  @track('CaseInstances.GetSlaSummary')
+  async getSlaSummary<T extends CaseInstanceSlaSummaryOptions = CaseInstanceSlaSummaryOptions>(
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<SlaSummaryResponse>
+      : NonPaginatedResponse<SlaSummaryResponse>
+  > {
+    const apiOptions = options ? {
+      ...options,
+      startTimeUtc: options.startTimeUtc?.toISOString(),
+      endTimeUtc: options.endTimeUtc?.toISOString()
+    } : undefined;
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => MAESTRO_ENDPOINTS.INSIGHTS.SLA_SUMMARY,
+      method: HTTP_METHODS.POST,
+      excludeFromPrefix: ['caseInstanceId', 'startTimeUtc', 'endTimeUtc'],
+      transformFn: (item: SlaSummaryResponse): SlaSummaryResponse => ({
+        ...item,
+        slaDueTime: toISOUtc(item.slaDueTime),
+        lastModifiedTime: toISOUtc(item.lastModifiedTime)
+      }),
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: SLA_SUMMARY_PAGINATION.ITEMS_FIELD,
+        totalCountField: SLA_SUMMARY_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: SLA_SUMMARY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: SLA_SUMMARY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: SLA_SUMMARY_OFFSET_PARAMS.COUNT_PARAM,
+          convertToSkip: false
+        }
+      }
+    }, apiOptions) as any;
   }
 }
