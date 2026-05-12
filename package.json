@@ -195,7 +195,7 @@
         "test:coverage": "vitest --coverage"
     },
     "dependencies": {
-        "@opentelemetry/sdk-logs": "^0.204.0",
+        "@uipath/telemetry": "^0.0.6",
         "socket.io-client": "^4.8.1"
     },
     "peerDependencies": {

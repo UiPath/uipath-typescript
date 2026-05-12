@@ -32,7 +32,7 @@ jobs:
           SDK_VERSION=$(node -p "require('./package.json').version")
 
           # SDK core constants - uses SDK_VERSION from root package.json
-          sed -i 's|\$CONNECTION_STRING|${{ secrets.CONNECTION_STRING }}|g' src/core/telemetry/constants.ts
+          sed -i 's|\$CONNECTION_STRING|${{ secrets.CONNECTION_STRING }}|g' src/core/telemetry/client.ts
           sed -i "s|\$SDK_VERSION|$SDK_VERSION|g" src/core/telemetry/constants.ts
 
           echo "Updated telemetry constants with:"

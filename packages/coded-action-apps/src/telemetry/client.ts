@@ -14,14 +14,13 @@ import { TelemetryAttributes, TelemetryConfig } from './types';
 import { ApplicationInsightsTelemetryProvider } from './app-insights-provider';
 
 /**
- * Application Insights connection string — patched by the SDK publish
- * workflow. Kept here (not in `constants.ts`) so the SDK identity file
- * remains static and matches the shared shape used by other consumers.
+ * Application Insights connection string — patched by the CAA publish
+ * workflow before build. Kept here (not in `constants.ts`) so the identity
+ * file remains static and matches the shared shape used by other consumers.
  */
 const CONNECTION_STRING = '$CONNECTION_STRING';
 
-// Property keys attached to every emitted event. Held locally so the SDK
-// owns the wire format independently of `@uipath/telemetry`.
+// Property keys attached to every emitted event.
 const APP_NAME = 'ApplicationName';
 const VERSION = 'Version';
 const SERVICE = 'Service';
@@ -29,23 +28,18 @@ const CLOUD_URL = 'CloudUrl';
 const CLOUD_ORGANIZATION_NAME = 'CloudOrganizationName';
 const CLOUD_TENANT_NAME = 'CloudTenantName';
 const CLOUD_CLIENT_ID = 'CloudClientId';
-const CLOUD_REDIRECT_URI = 'CloudRedirectUri';
 const UNKNOWN = '';
 
 /**
- * SDK-facing telemetry singleton. Wraps `@uipath/telemetry`'s
- * `TelemetryService` so the SDK keeps its existing call site
- * (`telemetryClient.initialize({ baseUrl, orgName, ... })`) while routing
- * events through the shared package.
+ * Coded Action Apps telemetry singleton. Wraps `@uipath/telemetry`'s
+ * `TelemetryService` so the host can call
+ * `telemetryClient.initialize({ baseUrl, orgName, ... })` without dealing
+ * with provider construction.
  */
-class SdkTelemetryClient {
+class CodedActionAppsTelemetryClient {
     private service?: TelemetryService;
     private isInitialized = false;
 
-    /**
-     * Initialize telemetry with the consumer's per-tenant context. Safe to
-     * call once — subsequent calls are no-ops.
-     */
     public initialize(config?: TelemetryConfig): void {
         if (this.isInitialized) {
             return;
@@ -72,11 +66,6 @@ class SdkTelemetryClient {
         }
     }
 
-    /**
-     * Emit a telemetry event. `eventName` identifies the SDK operation
-     * (e.g. `Queue.GetAll`); `name` is the Application Insights event body
-     * (defaults to the same value).
-     */
     public track(eventName: string, name?: string, extraAttributes: TelemetryAttributes = {}): void {
         try {
             if (!this.service) {
@@ -88,15 +77,11 @@ class SdkTelemetryClient {
                 ...extraAttributes,
             });
         } catch (error) {
-            // Silent failure
             console.debug('Failed to track telemetry event:', error);
         }
     }
 
     private isValidConnectionString(connectionString: string): boolean {
-        // Build placeholders are emitted as `$CONNECTION_STRING` literally
-        // until the publish workflow patches them. Treat any unsubstituted
-        // placeholder as "no connection string available".
         return Boolean(connectionString) && !connectionString.startsWith('$');
     }
 
@@ -107,7 +92,6 @@ class SdkTelemetryClient {
             [CLOUD_URL]: this.createCloudUrl(config),
             [CLOUD_ORGANIZATION_NAME]: config?.orgName ?? UNKNOWN,
             [CLOUD_TENANT_NAME]: config?.tenantName ?? UNKNOWN,
-            [CLOUD_REDIRECT_URI]: config?.redirectUri ?? UNKNOWN,
             [CLOUD_CLIENT_ID]: config?.clientId ?? UNKNOWN,
         };
     }
@@ -120,4 +104,4 @@ class SdkTelemetryClient {
     }
 }
 
-export const telemetryClient = new SdkTelemetryClient();
+export const telemetryClient = new CodedActionAppsTelemetryClient();
