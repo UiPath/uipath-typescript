@@ -1,13 +1,34 @@
 import { FeedbackCategory, FeedbackStatus } from '../../../src/models/agents/feedback/feedback.types';
-import { RawFeedbackResponse } from '../../../src/models/agents/feedback/feedback.internal-types';
+import { RawFeedbackResponse, RawFeedbackCategory, RawFeedbackCategoryListResponse } from '../../../src/models/agents/feedback/feedback.internal-types';
 import { FEEDBACK_TEST_CONSTANTS } from '../constants/feedback';
 import { CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '../constants/conversational-agent';
 
 /**
- * Creates a mock feedback category.
- *
- * @param overrides - Optional overrides for specific fields
- * @returns Mock feedback category data
+ * Creates a mock raw feedback category (pre-transform, with createdAt).
+ */
+export const createMockRawFeedbackCategory = (overrides: Partial<RawFeedbackCategory> = {}): RawFeedbackCategory => ({
+  id: FEEDBACK_TEST_CONSTANTS.CATEGORY_ID,
+  category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME,
+  createdAt: CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT,
+  isDefault: true,
+  isPositive: true,
+  isNegative: false,
+  ...overrides,
+});
+
+/**
+ * Creates a mock raw category list response (pre-transform).
+ */
+export const createMockRawCategoryListResponse = (
+  overrides: Partial<RawFeedbackCategoryListResponse> = {}
+): RawFeedbackCategoryListResponse => ({
+  categories: [createMockRawFeedbackCategory()],
+  totalCount: 1,
+  ...overrides,
+});
+
+/**
+ * Creates a mock feedback category (nested inside FeedbackResponse, has createdAt).
  */
 export const createMockFeedbackCategory = (overrides: Partial<FeedbackCategory> = {}): FeedbackCategory => ({
   id: FEEDBACK_TEST_CONSTANTS.CATEGORY_ID,

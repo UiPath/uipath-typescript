@@ -3,6 +3,7 @@ import { PaginationOptions } from '../../../utils/pagination';
 /**
  * Represents a category that can be associated with feedback.
  * Default categories (Output, Agent Error, Agent Plan Execution) are auto-created per tenant.
+ * Used as nested objects inside {@link FeedbackResponse}.
  */
 export interface FeedbackCategory {
   /** Unique identifier of the feedback category */
@@ -11,6 +12,25 @@ export interface FeedbackCategory {
   category: string;
   /** Timestamp when the category was created */
   createdAt: string;
+  /** Whether this is a system default category (e.g., Output, Agent Error, Agent Plan Execution) */
+  isDefault: boolean;
+  /** Whether this category applies to positive feedback */
+  isPositive: boolean;
+  /** Whether this category applies to negative feedback */
+  isNegative: boolean;
+}
+
+/**
+ * A feedback category returned by {@link FeedbackServiceModel.getCategories}, {@link FeedbackServiceModel.createCategory}.
+ * Fields are transformed to camelCase SDK conventions (createdAt → createdTime).
+ */
+export interface FeedbackCategoryResponse {
+  /** Unique identifier of the feedback category */
+  id: string;
+  /** Category name (max 256 characters, unique per tenant) */
+  category: string;
+  /** Timestamp when the category was created */
+  createdTime: string;
   /** Whether this is a system default category (e.g., Output, Agent Error, Agent Plan Execution) */
   isDefault: boolean;
   /** Whether this category applies to positive feedback */
@@ -135,4 +155,33 @@ export type FeedbackGetAllOptions = PaginationOptions & {
   traceId?: string;
   /** Filter by OpenTelemetry span identifier */
   spanId?: string;
+}
+
+/**
+ * Options for creating a new feedback category
+ */
+export interface FeedbackCreateCategoryOptions {
+  /** Whether the category applies to positive feedback (defaults to true) */
+  isPositive?: boolean;
+  /** Whether the category applies to negative feedback (defaults to true) */
+  isNegative?: boolean;
+}
+
+/**
+ * Options for deleting a feedback category.
+ * Note: system default categories (Output, Agent Error, Agent Plan Execution) cannot be deleted — attempting to do so returns a 409 Conflict.
+ */
+export interface FeedbackDeleteCategoryOptions {
+  /** When true, deletes the category even if it has associated feedback entries */
+  forceDelete?: boolean;
+}
+
+/**
+ * Options for retrieving feedback categories
+ */
+export type FeedbackGetCategoriesOptions = PaginationOptions & {
+  /** Filter by whether the category applies to positive feedback */
+  isPositive?: boolean;
+  /** Filter by whether the category applies to negative feedback */
+  isNegative?: boolean;
 }

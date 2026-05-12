@@ -3,6 +3,7 @@ import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-s
 import { Feedback } from '../../../../src/services/agents/feedback';
 import { FeedbackStatus, FeedbackResponse } from '../../../../src/models/agents/feedback/feedback.types';
 import { registerResource } from '../../utils/cleanup';
+import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 
@@ -107,6 +108,102 @@ describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
       expect(result.updatedTime).toBeDefined();
       expect((result as any).createdAt).toBeUndefined();
       expect((result as any).updatedAt).toBeUndefined();
+    });
+  });
+
+  describe('createCategory / getCategories / deleteCategory', () => {
+    const createdCategoryIds: string[] = [];
+
+    afterAll(async () => {
+      for (const id of createdCategoryIds) {
+        await feedback.deleteCategory(id);
+      }
+    });
+
+    it('should retrieve all categories', async () => {
+      const result = await feedback.getCategories();
+
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+    });
+
+    it('should include default categories in results', async () => {
+      const result = await feedback.getCategories();
+
+      const defaultNames = ['Output', 'Agent Error', 'Agent Plan Execution'];
+      const names = result.items.map((c) => c.category);
+      for (const name of defaultNames) {
+        expect(names).toContain(name);
+      }
+    });
+
+    it('should have expected fields on each category', async () => {
+      const result = await feedback.getCategories();
+
+      if (result.items.length === 0) throw new Error('No categories returned');
+
+      const item = result.items[0];
+      expect(item.id).toBeDefined();
+      expect(item.category).toBeDefined();
+      expect(item.createdTime).toBeDefined();
+      expect(typeof item.isDefault).toBe('boolean');
+      expect(typeof item.isPositive).toBe('boolean');
+      expect(typeof item.isNegative).toBe('boolean');
+    });
+
+    it('should transform API fields — createdTime present, createdAt absent', async () => {
+      const result = await feedback.getCategories();
+
+      if (result.items.length === 0) throw new Error('No categories returned');
+
+      expect(result.items[0].createdTime).toBeDefined();
+      expect((result.items[0] as any).createdAt).toBeUndefined();
+    });
+
+    it('should support isNegative filter', async () => {
+      const result = await feedback.getCategories({ isNegative: true });
+
+      expect(result.items).toBeDefined();
+      expect(result.items.every((c) => c.isNegative)).toBe(true);
+    });
+
+    it('should create a category with no options — defaults to isPositive and isNegative both true', async () => {
+      const name = `TestCategory_${generateRandomString(6)}`;
+      const result = await feedback.createCategory(name);
+
+      createdCategoryIds.push(result.id);
+      registerResource('feedbackCategories', { id: result.id });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBeDefined();
+      expect(result.category).toBe(name);
+      expect(result.isPositive).toBe(true);
+      expect(result.isNegative).toBe(true);
+      expect(result.isDefault).toBe(false);
+      expect(result.createdTime).toBeDefined();
+      expect((result as any).createdAt).toBeUndefined();
+    });
+
+    it('should create a category with explicit options', async () => {
+      const name = `TestCategory_${generateRandomString(6)}`;
+      const result = await feedback.createCategory(name, { isPositive: true, isNegative: false });
+
+      createdCategoryIds.push(result.id);
+      registerResource('feedbackCategories', { id: result.id });
+
+      expect(result.isPositive).toBe(true);
+      expect(result.isNegative).toBe(false);
+    });
+
+
+    it('should delete a custom category', async () => {
+      const name = `TestCategory_${generateRandomString(6)}`;
+      const created = await feedback.createCategory(name, { isPositive: false, isNegative: true });
+      createdCategoryIds.push(created.id);
+
+      await feedback.deleteCategory(created.id);
+      createdCategoryIds.splice(createdCategoryIds.indexOf(created.id), 1);
     });
   });
 

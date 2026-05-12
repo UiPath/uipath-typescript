@@ -5,7 +5,7 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { FEEDBACK_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { TEST_CONSTANTS, FEEDBACK_TEST_CONSTANTS, CONVERSATIONAL_AGENT_TEST_CONSTANTS } from '../../../utils/constants';
-import { createMockFeedback } from '../../../utils/mocks/feedback';
+import { createMockFeedback, createMockRawFeedbackCategory, createMockRawCategoryListResponse } from '../../../utils/mocks/feedback';
 import { FeedbackSubmitOptions, FeedbackUpdateOptions } from '../../../../src/models/agents/feedback/feedback.types';
 
 // ===== MOCKING =====
@@ -274,6 +274,159 @@ describe('FeedbackService Unit Tests', () => {
 
       await expect(feedbackService.deleteById(FEEDBACK_TEST_CONSTANTS.FEEDBACK_ID, { folderKey: FEEDBACK_TEST_CONSTANTS.FOLDER_KEY }))
         .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
+    });
+  });
+
+  describe('createCategory', () => {
+    it('should create a category with no options — only category name sent in body', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawFeedbackCategory({
+        category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM,
+        isDefault: false,
+      }));
+
+      const result = await feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM);
+
+      expect(result).toBeDefined();
+      expect(result.category).toBe(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CATEGORY.CREATE,
+        { category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM },
+        expect.any(Object)
+      );
+    });
+
+    it('should create a category with explicit isPositive and isNegative', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawFeedbackCategory({
+        category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM,
+        isDefault: false,
+        isPositive: false,
+        isNegative: true,
+      }));
+
+      const result = await feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM, {
+        isPositive: false,
+        isNegative: true,
+      });
+
+      expect(result).toBeDefined();
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CATEGORY.CREATE,
+        expect.objectContaining({
+          category: FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM,
+          isPositive: false,
+          isNegative: true,
+        }),
+        expect.any(Object)
+      );
+    });
+
+    it('should transform createdAt to createdTime', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawFeedbackCategory());
+
+      const result = await feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME);
+
+      expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
+      expect((result as any).createdAt).toBeUndefined();
+    });
+
+    it('should throw ValidationError when category name is empty', async () => {
+      await expect(feedbackService.createCategory('')).rejects.toThrow('category name is required');
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('should throw error when API call fails', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_CATEGORY_NOT_FOUND));
+
+      await expect(feedbackService.createCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_NAME_CUSTOM))
+        .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_CATEGORY_NOT_FOUND);
+    });
+  });
+
+  describe('getCategories', () => {
+    it('should get all categories successfully', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawCategoryListResponse());
+
+      const result = await feedbackService.getCategories();
+
+      expect(result).toBeDefined();
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBe(1);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CATEGORY.GET_ALL,
+        expect.any(Object)
+      );
+    });
+
+    it('should transform createdAt to createdTime on each category', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawCategoryListResponse());
+
+      const result = await feedbackService.getCategories();
+
+      expect(result.items[0].createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
+      expect((result.items[0] as any).createdAt).toBeUndefined();
+    });
+
+    it('should return empty items when no categories exist', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawCategoryListResponse({ categories: [], totalCount: 0 }));
+
+      const result = await feedbackService.getCategories();
+
+      expect(result.items).toEqual([]);
+    });
+
+    it('should get paginated categories', async () => {
+      mockApiClient.get.mockResolvedValue(createMockRawCategoryListResponse());
+
+      const result = await feedbackService.getCategories({ pageSize: TEST_CONSTANTS.PAGE_SIZE });
+
+      expect(result.items).toBeDefined();
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CATEGORY.GET_ALL,
+        expect.objectContaining({ params: expect.objectContaining({ take: TEST_CONSTANTS.PAGE_SIZE }) })
+      );
+    });
+
+    it('should throw error when API call fails', async () => {
+      mockApiClient.get.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND));
+
+      await expect(feedbackService.getCategories()).rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_FEEDBACK_NOT_FOUND);
+    });
+  });
+
+  describe('deleteCategory', () => {
+    it('should delete a category successfully', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await feedbackService.deleteCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_ID);
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CATEGORY.DELETE(FEEDBACK_TEST_CONSTANTS.CATEGORY_ID),
+        expect.objectContaining({ params: undefined })
+      );
+    });
+
+    it('should pass forceDelete param when provided', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await feedbackService.deleteCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_ID, { forceDelete: true });
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        FEEDBACK_ENDPOINTS.CATEGORY.DELETE(FEEDBACK_TEST_CONSTANTS.CATEGORY_ID),
+        expect.objectContaining({ params: { forceDelete: true } })
+      );
+    });
+
+    it('should throw ValidationError when ID is empty', async () => {
+      await expect(feedbackService.deleteCategory('')).rejects.toThrow('Category ID is required');
+      expect(mockApiClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw error when category not found', async () => {
+      mockApiClient.delete.mockRejectedValue(new Error(FEEDBACK_TEST_CONSTANTS.ERROR_CATEGORY_NOT_FOUND));
+
+      await expect(feedbackService.deleteCategory(FEEDBACK_TEST_CONSTANTS.CATEGORY_ID))
+        .rejects.toThrow(FEEDBACK_TEST_CONSTANTS.ERROR_CATEGORY_NOT_FOUND);
     });
   });
 });
