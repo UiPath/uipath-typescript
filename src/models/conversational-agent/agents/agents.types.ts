@@ -40,8 +40,10 @@ export interface RawAgentGetResponse {
   description: string;
   /** Process version */
   processVersion: string;
-  /** Process key identifier */
+  /** Process key identifier (a dotted-path string like `Solution.Package.Agent`) */
   processKey: string;
+  /** GUID key of the agent release */
+  releaseKey?: string;
   /** Folder ID */
   folderId: number;
   /** Feed ID */

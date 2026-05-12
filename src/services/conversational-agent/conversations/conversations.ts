@@ -30,7 +30,7 @@ import type {
   RawConversationGetResponse,
   SessionStream
 } from '@/models/conversational-agent';
-import { ConversationMap, createConversationWithMethods } from '@/models/conversational-agent';
+import { ConversationGetAllFilterMap, ConversationMap, createConversationWithMethods } from '@/models/conversational-agent';
 
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
@@ -156,23 +156,42 @@ export class ConversationService extends BaseService implements ConversationServ
    * @param options - Options for querying conversations including optional pagination parameters
    * @returns Promise resolving to either an array of conversations {@link NonPaginatedResponse}<{@link ConversationGetResponse}> or a {@link PaginatedResponse}<{@link ConversationGetResponse}> when pagination options are used
    *
-   * @example
+   * @example Basic usage - get all conversations
    * ```typescript
-   * // Get all conversations (non-paginated)
    * const allConversations = await conversationalAgent.conversations.getAll();
    *
-   * // Get conversations with sorting
-   * const sortedConversations = await conversationalAgent.conversations.getAll({ sort: SortOrder.Descending });
+   * for (const conversation of allConversations.items) {
+   *   console.log(`${conversation.label} - created: ${conversation.createdTime}`);
+   * }
+   * ```
    *
-   * // First page with pagination
-   * const firstPageOfConversations = await conversationalAgent.conversations.getAll({ pageSize: 10 });
+   * @example With pagination
+   * ```typescript
+   * // First page
+   * const firstPage = await conversationalAgent.conversations.getAll({ pageSize: 10 });
    *
    * // Navigate using cursor
-   * if (firstPageOfConversations.hasNextPage) {
-   *   const nextPageOfConversations = await conversationalAgent.conversations.getAll({
-   *     cursor: firstPageOfConversations.nextCursor
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await conversationalAgent.conversations.getAll({
+   *     cursor: firstPage.nextCursor
    *   });
    * }
+   * ```
+   *
+   * @example Sorted with limit
+   * ```typescript
+   * const result = await conversationalAgent.conversations.getAll({
+   *   sort: SortOrder.Descending,
+   *   pageSize: 20
+   * });
+   * ```
+   *
+   * @example Filter by agent and search by label
+   * ```typescript
+   * const filtered = await conversationalAgent.conversations.getAll({
+   *   agentId: <agentId>,
+   *   label: 'budget'
+   * });
    * ```
    */
   @track('ConversationalAgent.Conversations.GetAll')
@@ -189,6 +208,11 @@ export class ConversationService extends BaseService implements ConversationServ
       return createConversationWithMethods(transformedData, this, this, this._exchangeService);
     };
 
+    // Translate SDK filter names (agentKey/agentId/label) to backend names before forwarding
+    const apiOptions = options
+      ? transformRequest(options, ConversationGetAllFilterMap)
+      : undefined;
+
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => CONVERSATION_ENDPOINTS.LIST,
@@ -202,8 +226,8 @@ export class ConversationService extends BaseService implements ConversationServ
           tokenParam: CONVERSATIONAL_TOKEN_PARAMS.TOKEN_PARAM
         }
       },
-      excludeFromPrefix: Object.keys(options || {}) // Conversational params are not OData
-    }, options) as any;
+      excludeFromPrefix: Object.keys(apiOptions || {}) // Conversational params are not OData
+    }, apiOptions as T | undefined) as any;
   }
 
   /**

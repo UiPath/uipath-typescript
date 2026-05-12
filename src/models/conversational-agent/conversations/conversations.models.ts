@@ -118,8 +118,12 @@ export interface ConversationServiceModel {
   /**
    * Gets all conversations with optional filtering and pagination
    *
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   *
    * @param options - Options for querying conversations including optional pagination parameters
-   * @returns Promise resolving to either an array of conversations NonPaginatedResponse<ConversationGetResponse> or a PaginatedResponse<ConversationGetResponse> when pagination options are used
+   * @returns Promise resolving to either an array of conversations {@link NonPaginatedResponse}<{@link ConversationGetResponse}> or a {@link PaginatedResponse}<{@link ConversationGetResponse}> when pagination options are used
    *
    * @example Basic usage - get all conversations
    * ```typescript
@@ -148,6 +152,14 @@ export interface ConversationServiceModel {
    * const result = await conversationalAgent.conversations.getAll({
    *   sort: SortOrder.Descending,
    *   pageSize: 20
+   * });
+   * ```
+   *
+   * @example Filter by agent and search by label
+   * ```typescript
+   * const filtered = await conversationalAgent.conversations.getAll({
+   *   agentId: <agentId>,
+   *   label: 'budget'
    * });
    * ```
    */

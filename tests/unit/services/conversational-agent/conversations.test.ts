@@ -14,6 +14,7 @@ import {
 } from '@tests/utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '@tests/utils/setup';
 import { CONVERSATION_ENDPOINTS, ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
+import type { ConversationGetAllOptions } from '@/models/conversational-agent';
 
 // ===== MOCKING =====
 vi.mock('@/core/http/api-client');
@@ -329,6 +330,31 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
           sort: 'descending'
         })
       );
+    });
+
+    it('should translate agentKey/agentId/label filters to backend names before forwarding', async () => {
+      const mockResponse = createMockTransformedConversationCollection();
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const options: ConversationGetAllOptions = {
+        agentKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_KEY,
+        agentId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.FILTER_AGENT_ID,
+        label: CONVERSATIONAL_AGENT_TEST_CONSTANTS.LABEL_QUERY
+      };
+      await conversationalAgent.conversations.getAll(options);
+
+      const [ config, forwardedOptions ] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      // SDK-facing names are mapped to backend names before forwarding to PaginationHelpers.
+      expect(forwardedOptions).toEqual(expect.objectContaining({
+        agentReleaseKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_KEY,
+        agentReleaseId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.FILTER_AGENT_ID,
+        search: CONVERSATIONAL_AGENT_TEST_CONSTANTS.LABEL_QUERY
+      }));
+      expect(forwardedOptions).not.toHaveProperty('agentKey');
+      expect(forwardedOptions).not.toHaveProperty('agentId');
+      expect(forwardedOptions).not.toHaveProperty('label');
+      // Conversational params must be excluded from the OData $-prefix.
+      expect(config.excludeFromPrefix).toEqual(expect.arrayContaining([ 'agentReleaseKey', 'agentReleaseId', 'search' ]));
     });
 
     it('should handle API errors', async () => {

@@ -17,6 +17,18 @@ export const ConversationMap: { [key: string]: string } = {
 };
 
 /**
+ * Maps API filter param names (left) to SDK-facing names (right) for the conversation list endpoint.
+ * Used by `getAll` to translate SDK filters to the field names the backend expects. Kept separate
+ * from `ConversationMap` because `label`/`search` would otherwise collide with the `label` field
+ * on create/update payloads.
+ */
+export const ConversationGetAllFilterMap: { [key: string]: string } = {
+  agentReleaseKey: 'agentKey',
+  agentReleaseId: 'agentId',
+  search: 'label'
+};
+
+/**
  * Maps fields for Exchange entity to ensure consistent SDK naming
  */
 export const ExchangeMap: { [key: string]: string } = {

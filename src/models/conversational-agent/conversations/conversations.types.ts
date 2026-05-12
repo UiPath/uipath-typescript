@@ -78,6 +78,14 @@ export interface ConversationUpdateOptions {
 export type ConversationGetAllOptions = PaginationOptions & {
   /** Sort order for conversations */
   sort?: SortOrder;
+  /** GUID key of the agent to filter conversations by. */
+  agentKey?: string;
+  /** Numeric ID of the agent to filter conversations by. */
+  agentId?: number;
+  /**
+   * Case-insensitive substring filter applied to conversation labels (1–100 chars).
+   */
+  label?: string;
 }
 
 // ==================== Attachment Types ====================
