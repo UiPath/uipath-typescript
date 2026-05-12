@@ -99,7 +99,7 @@ export interface FeedbackSubmitOptions extends FeedbackOptions {
   agentId?: string;
   /** Version of the agent at the time the feedback was given (max 100 characters) */
   agentVersion?: string;
-  /** Span type (e.g., 'agentRun', 'llm', 'tool', 'retriever') */
+  /** Span type (e.g., 'agentRun', 'llm', 'tool', 'retriever') (max 100 characters) */
   spanType?: string;
   /** Optional text comment provided by the user (max 4000 characters) */
   comment?: string;
