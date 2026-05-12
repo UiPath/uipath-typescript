@@ -3,19 +3,26 @@
  * Types and interfaces for Maestro case management
  */
 
+import { FolderKeyPathOptions } from '../common/types';
+
+/**
+ * Options for looking up a single case management process by name.
+ */
+export interface CaseGetByNameOptions extends FolderKeyPathOptions {}
+
 /**
  * Case information with instance statistics
  */
 export interface CaseGetAllResponse {
-  /** Unique key identifying the case process */
+  /** Unique key identifying the case management process */
   processKey: string;
   /** Package identifier */
   packageId: string;
   /** Case name */
   name: string;
-  /** Folder key of the folder where case process is located */
+  /** Folder key of the folder where case management process is located */
   folderKey: string;
-  /** Name of the folder where case process is located */
+  /** Name of the folder where case management process is located */
   folderName: string;
   /** Available package versions */
   packageVersions: string[];

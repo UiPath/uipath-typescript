@@ -42,6 +42,13 @@ export const MAESTRO_TEST_CONSTANTS = {
   CUSTOM_PACKAGE_ID: 'custom-package',
   OTHER_PROPERTY: 'value',
 
+  // getByName test data
+  FOLDER_KEY_OTHER: 'other-folder-key',
+  FOLDER_PATH: 'Shared/Finance',
+  FOLDER_PATH_OTHER: 'Shared/HR',
+  MISSING_PROCESS_NAME: 'NonexistentMaestroProcess',
+  MISSING_CASE_NAME: 'NonexistentCase',
+
   // Variable types
   VARIABLE_TYPE: 'string',
 

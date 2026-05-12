@@ -47,16 +47,24 @@ export interface RequestOptions extends BaseOptions {
 }
 
 /**
+ * Folder scoping by string identifiers only — `folderKey` (GUID) and
+ * `folderPath` (slash-delimited). Used by services that don't accept the
+ * numeric `folderId`, such as Maestro.
+ */
+export interface FolderKeyPathOptions {
+  /** Folder key (GUID-formatted string). */
+  folderKey?: string;
+  /** Slash-delimited folder path, e.g. `'Shared/Finance'`. */
+  folderPath?: string;
+}
+
+/**
  * Options that scope a name-based lookup (e.g. `getByName`) to a folder.
  * Provide one of `folderId`, `folderKey`, or `folderPath`. When more than
  * one is supplied, all are forwarded; the server applies precedence
  * `folderPath` > `folderKey` > `folderId`.
  */
-export interface FolderScopedOptions extends BaseOptions {
+export interface FolderScopedOptions extends BaseOptions, FolderKeyPathOptions {
   /** Numeric folder ID. */
   folderId?: number;
-  /** Folder key (GUID-formatted string). */
-  folderKey?: string;
-  /** Slash-delimited folder path, e.g. `'Shared/Finance'`. */
-  folderPath?: string;
 }

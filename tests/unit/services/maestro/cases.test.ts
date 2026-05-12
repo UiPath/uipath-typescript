@@ -3,15 +3,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CasesService } from '../../../../src/services/maestro/cases';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { 
+import {
   MAESTRO_TEST_CONSTANTS,
   TEST_CONSTANTS,
-  createMockCase, 
+  createMockCase,
   createMockCasesGetAllApiResponse,
-  createMockError 
+  createMockError
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
+import { NotFoundError, ValidationError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -150,7 +151,7 @@ describe('CasesService', () => {
     });
 
     it('should extract case name from packageId without CaseManagement prefix', async () => {
-      
+
       const mockApiResponse = createMockCasesGetAllApiResponse([
         createMockCase({
           processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
@@ -160,10 +161,76 @@ describe('CasesService', () => {
 
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
       expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_WITHOUT_PREFIX);
+    });
+  });
+
+  describe('getByName', () => {
+    it('should match against the name extracted from packageId by getAll', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockCasesGetAllApiResponse([
+          createMockCase({
+            processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          }),
+        ]),
+      );
+
+      const result = await service.getByName(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_DEFAULT, {
+        folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      expect(result.name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_DEFAULT);
+      expect(result.processKey).toBe(MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY);
+    });
+
+    it('should throw ValidationError without calling getAll when the name is empty', async () => {
+      await expect(service.getByName('   ')).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('should propagate NotFoundError from the shared filter when no case matches', async () => {
+      mockApiClient.get.mockResolvedValue(createMockCasesGetAllApiResponse([createMockCase()]));
+
+      await expect(
+        service.getByName(MAESTRO_TEST_CONSTANTS.MISSING_CASE_NAME, {
+          folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+        }),
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it('should wire the init-time folderKey into the fallback chain', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new CasesService(instance);
+
+      mockApiClient.get.mockResolvedValue(
+        createMockCasesGetAllApiResponse([
+          createMockCase({
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+            folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY_OTHER,
+          }),
+          createMockCase({
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+            folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY,
+          }),
+        ]),
+      );
+
+      const result = await scopedService.getByName(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_DEFAULT);
+
+      expect(result.folderKey).toBe(MAESTRO_TEST_CONSTANTS.FOLDER_KEY);
+    });
+
+    it('should propagate API errors from getAll', async () => {
+      mockApiClient.get.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getByName(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_DEFAULT),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

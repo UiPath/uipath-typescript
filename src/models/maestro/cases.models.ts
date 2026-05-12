@@ -3,7 +3,7 @@
  * Model classes for Maestro cases
  */
 
-import { CaseGetAllResponse} from './cases.types';
+import { CaseGetAllResponse, CaseGetByNameOptions } from './cases.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -39,4 +39,23 @@ export interface CasesServiceModel {
    * ```
    */
   getAll(): Promise<CaseGetAllResponse[]>;
+
+  /**
+   * Retrieves a single case management process by name.
+   *
+   * @param name - Case process name to search for
+   * @param options - Folder scoping (`folderKey` / `folderPath`)
+   * @returns Promise resolving to a single case management process
+   * {@link CaseGetAllResponse}
+   * @throws ValidationError when the name is empty; NotFoundError when no match
+   * @example
+   * ```typescript
+   * // By folder key (GUID)
+   * await cases.getByName('OnboardingCase', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await cases.getByName('OnboardingCase', { folderPath: 'Shared/Onboarding' });
+   * ```
+   */
+  getByName(name: string, options?: CaseGetByNameOptions): Promise<CaseGetAllResponse>;
 }

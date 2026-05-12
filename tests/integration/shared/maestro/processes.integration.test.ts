@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { isNotFoundError } from '../../../../src/core/errors';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -166,6 +167,58 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         }
         throw error;
       }
+    });
+  });
+
+  describe('getByName', () => {
+    let existing!: { name: string; folderKey: string; folderName: string };
+    let folderKey!: string;
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+      if (!config.folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY must be configured for Maestro getByName tests');
+      }
+      folderKey = config.folderKey;
+
+      const { maestroProcesses } = getServices();
+      const all = await maestroProcesses.getAll();
+      const match = all.find((p) => p.folderKey === folderKey);
+      if (!match) {
+        throw new Error(
+          `No Maestro processes found in folder ${folderKey} — seed at least one for getByName tests`,
+        );
+      }
+      existing = { name: match.name, folderKey: match.folderKey, folderName: match.folderName };
+    });
+
+    it('should retrieve a process by name using folderKey', async () => {
+      const { maestroProcesses } = getServices();
+
+      const result = await maestroProcesses.getByName(existing.name, { folderKey });
+
+      expect(result).toBeDefined();
+      expect(result.name).toBe(existing.name);
+      expect(result.folderKey).toBe(folderKey);
+    });
+
+    it('should retrieve a process by name using folderPath', async () => {
+      const { maestroProcesses } = getServices();
+
+      const result = await maestroProcesses.getByName(existing.name, { folderPath: existing.folderName });
+
+      expect(result).toBeDefined();
+      expect(result.name).toBe(existing.name);
+      expect(result.folderName).toBe(existing.folderName);
+    });
+
+    it('should throw NotFoundError for a nonexistent process name', async () => {
+      const { maestroProcesses } = getServices();
+
+      const missingName = `__uipath-sdk-nonexistent-process-${Date.now()}`;
+      await expect(
+        maestroProcesses.getByName(missingName, { folderKey }),
+      ).rejects.toSatisfy(isNotFoundError);
     });
   });
 });

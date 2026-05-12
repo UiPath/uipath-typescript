@@ -70,6 +70,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `PIMS` |
+| `getByName()` | `PIMS` |
 | `getIncidents()` | `PIMS` |
 
 ## Maestro Process Instances
@@ -91,6 +92,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `PIMS` |
+| `getByName()` | `PIMS` |
 
 ## Maestro Case Instances
 

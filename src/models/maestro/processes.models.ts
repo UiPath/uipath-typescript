@@ -3,7 +3,7 @@
  * Model classes for Maestro processes
  */
 
-import { RawMaestroProcessGetAllResponse } from './processes.types';
+import { MaestroProcessGetByNameOptions, RawMaestroProcessGetAllResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
 
 /**
@@ -44,6 +44,25 @@ export interface MaestroProcessesServiceModel {
    * ```
    */
   getAll(): Promise<MaestroProcessGetAllResponse[]>;
+
+  /**
+   * Retrieves a single Maestro process by name.
+   *
+   * @param name - Process name to search for
+   * @param options - Folder scoping (`folderKey` / `folderPath`)
+   * @returns Promise resolving to a single Maestro process with bound methods
+   * {@link MaestroProcessGetAllResponse}
+   * @throws ValidationError when the name is empty; NotFoundError when no match
+   * @example
+   * ```typescript
+   * // By folder key (GUID)
+   * await maestroProcesses.getByName('MyMaestroProcess', { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await maestroProcesses.getByName('MyMaestroProcess', { folderPath: 'Shared/Finance' });
+   * ```
+   */
+  getByName(name: string, options?: MaestroProcessGetByNameOptions): Promise<MaestroProcessGetAllResponse>;
 
   /**
    * Get incidents for a specific process

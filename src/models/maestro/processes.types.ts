@@ -3,6 +3,13 @@
  * Types and interfaces for Maestro process management
  */
 
+import { FolderKeyPathOptions } from '../common/types';
+
+/**
+ * Options for looking up a single Maestro process by name.
+ */
+export interface MaestroProcessGetByNameOptions extends FolderKeyPathOptions {}
+
 /**
  * Process information with instance statistics
  */
