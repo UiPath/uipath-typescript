@@ -4,6 +4,7 @@ import type {
   ProcessInstanceOperationOptions,
   ProcessInstanceOperationResponse,
   ProcessInstanceExecutionHistoryResponse,
+  ProcessInstanceGetExecutionHistoryOptions,
   BpmnXmlString,
   ProcessInstanceGetVariablesResponse,
   ProcessInstanceGetVariablesOptions
@@ -103,18 +104,17 @@ export interface ProcessInstancesServiceModel {
    * // Get execution history for a process instance
    * const history = await processInstances.getExecutionHistory(
    *   <instanceId>,
-   *   <folderKey>
+   *   { folderKey: <folderKey> }
    * );
    *
    * // Analyze execution timeline
    * history.forEach(span => {
    *   console.log(`Activity: ${span.name}`);
-   *   console.log(`Start: ${span.startTime}`);
-   *   console.log(`Duration: ${span.duration}ms`);
+   *   console.log(`Start: ${span.startedTime}`);
    * });
    * ```
    */
-  getExecutionHistory(instanceId: string, folderKey: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+  getExecutionHistory(instanceId: string, options: ProcessInstanceGetExecutionHistoryOptions): Promise<ProcessInstanceExecutionHistoryResponse[]>;
 
   /**
    * Get BPMN XML file for a process instance
@@ -358,7 +358,7 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
       if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
 
-      return service.getExecutionHistory(instanceData.instanceId, instanceData.folderKey);
+      return service.getExecutionHistory(instanceData.instanceId, { folderKey: instanceData.folderKey });
     },
 
     async getBpmn(): Promise<BpmnXmlString> {

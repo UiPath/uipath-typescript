@@ -4,6 +4,7 @@
  */
 
 import { PaginationOptions } from "../../utils/pagination";
+import { FolderScopedOptions } from "../common/types";
 
 /**
  * Response for getting a single process instance
@@ -42,6 +43,11 @@ export interface ProcessInstanceGetAllOptions {
  * Query options for getting process instances with pagination support
  */
 export type ProcessInstanceGetAllWithPaginationOptions = ProcessInstanceGetAllOptions & PaginationOptions;
+
+/**
+ * Options for getting execution history for a process instance
+ */
+export interface ProcessInstanceGetExecutionHistoryOptions extends FolderScopedOptions {}
 
 /**
  * Request for process instance operations (cancel, pause, resume)

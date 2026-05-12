@@ -241,7 +241,7 @@ describe('Process Instance Models', () => {
 
         expect(mockService.getExecutionHistory).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
-          MAESTRO_TEST_CONSTANTS.FOLDER_KEY
+          { folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY }
         );
         expect(result).toEqual(mockHistory);
       });

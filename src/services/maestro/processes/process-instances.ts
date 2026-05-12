@@ -6,6 +6,7 @@ import {
   ProcessInstanceOperationOptions,
   ProcessInstanceOperationResponse,
   ProcessInstanceExecutionHistoryResponse,
+  ProcessInstanceGetExecutionHistoryOptions,
   ProcessInstancesServiceModel,
   createProcessInstanceWithMethods,
   ProcessInstanceGetVariablesResponse,
@@ -17,6 +18,7 @@ import { BpmnHelpers } from './helpers';
 import { OperationResponse } from '../../../models/common/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { createHeaders } from '../../../utils/http/headers';
+import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../../utils/constants/headers';
 import { transformData } from '../../../utils/transform';
 import { ProcessInstanceMap } from '../../../models/maestro/process-instances.constants';
@@ -122,17 +124,26 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
    */
   @track('ProcessInstances.GetExecutionHistory')
-  async getExecutionHistory(instanceId: string, folderKey: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+  async getExecutionHistory(instanceId: string, options: ProcessInstanceGetExecutionHistoryOptions): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+    const { folderId, folderKey, folderPath } = options;
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'ProcessInstances.GetExecutionHistory',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
     const elementExecResponse = await this.get<ElementExecutionsApiResponse>(
       MAESTRO_ENDPOINTS.INSTANCES.GET_ELEMENT_EXECUTIONS(instanceId),
-      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+      { headers }
     );
 
     const traceId = elementExecResponse.data.instanceId;
 
     const spansResponse = await this.get<TraceSpan[]>(
       MAESTRO_ENDPOINTS.TRACES.GET_SPANS(traceId),
-      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
+      { headers }
     );
 
     const spanMap = new Map<string, TraceSpan>();
