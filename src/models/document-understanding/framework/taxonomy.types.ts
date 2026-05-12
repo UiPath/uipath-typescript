@@ -51,81 +51,81 @@ export enum RuleType {
 }
 
 export interface DataSource {
-    resourceId?: string | null;
-    elementFieldId?: string | null;
+    ResourceId?: string | null;
+    ElementFieldId?: string | null;
 }
 
 export interface DocumentGroup {
-    name?: string | null;
-    categories?: string[] | null;
+    Name?: string | null;
+    Categories?: string[] | null;
 }
 
 export interface DocumentTaxonomy {
-    dataContractVersion?: string | null;
-    documentTypes?: DocumentTypeEntity[] | null;
-    groups?: DocumentGroup[] | null;
-    supportedLanguages?: LanguageInfo[] | null;
-    reportAsExceptionSettings?: ReportAsExceptionSettings;
+    DataContractVersion?: string | null;
+    DocumentTypes?: DocumentTypeEntity[] | null;
+    Groups?: DocumentGroup[] | null;
+    SupportedLanguages?: LanguageInfo[] | null;
+    ReportAsExceptionSettings?: ReportAsExceptionSettings;
 }
 
 export interface DocumentTypeEntity {
-    documentTypeId?: string | null;
-    group?: string | null;
-    category?: string | null;
-    name?: string | null;
-    optionalUniqueIdentifier?: string | null;
-    typeField?: TypeField;
-    fields?: Field[] | null;
-    metadata?: MetadataEntry[] | null;
+    DocumentTypeId?: string | null;
+    Group?: string | null;
+    Category?: string | null;
+    Name?: string | null;
+    OptionalUniqueIdentifier?: string | null;
+    TypeField?: TypeField;
+    Fields?: Field[] | null;
+    Metadata?: MetadataEntry[] | null;
 }
 
 export interface ExceptionReasonOption {
-    exceptionReason?: string | null;
+    ExceptionReason?: string | null;
 }
 
 export interface Field {
-    fieldId?: string | null;
-    fieldName?: string | null;
-    isMultiValue?: boolean;
-    type?: FieldType;
-    deriveFieldsFormat?: string | null;
-    components?: Field[] | null;
-    setValues?: string[] | null;
-    metadata?: MetadataEntry[] | null;
-    ruleSet?: RuleSet;
-    defaultValue?: string | null;
-    dataSource?: DataSource;
+    FieldId?: string | null;
+    FieldName?: string | null;
+    IsMultiValue?: boolean;
+    Type?: FieldType;
+    DeriveFieldsFormat?: string | null;
+    Components?: Field[] | null;
+    SetValues?: string[] | null;
+    Metadata?: MetadataEntry[] | null;
+    RuleSet?: RuleSet;
+    DefaultValue?: string | null;
+    DataSource?: DataSource;
 }
 
 export interface LanguageInfo {
-    name?: string | null;
-    code?: string | null;
+    Name?: string | null;
+    Code?: string | null;
 }
 
 export interface MetadataEntry {
-    key?: string | null;
-    value?: string | null;
+    Key?: string | null;
+    Value?: string | null;
 }
 
 export interface ReportAsExceptionSettings {
-    exceptionReasonOptions?: ExceptionReasonOption[] | null;
+    ExceptionReasonOptions?: ExceptionReasonOption[] | null;
 }
 
 export interface Rule {
-    name?: string | null;
-    type?: RuleType;
-    logicalOperator?: LogicalOperator;
-    comparisonOperator?: ComparisonOperator;
-    expression?: string | null;
-    setValues?: string[] | null;
+    Name?: string | null;
+    Type?: RuleType;
+    LogicalOperator?: LogicalOperator;
+    ComparisonOperator?: ComparisonOperator;
+    Expression?: string | null;
+    SetValues?: string[] | null;
 }
 
 export interface RuleSet {
-    criticality?: Criticality;
-    rules?: Rule[] | null;
+    Criticality?: Criticality;
+    Rules?: Rule[] | null;
 }
 
 export interface TypeField {
-    fieldId?: string | null;
-    fieldName?: string | null;
+    FieldId?: string | null;
+    FieldName?: string | null;
 }

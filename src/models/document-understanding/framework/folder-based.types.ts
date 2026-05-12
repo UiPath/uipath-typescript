@@ -3,8 +3,8 @@
 import type { DocumentTaxonomy } from './taxonomy.types';
 
 export enum ModelKind {
-    Classifier = 'Classifier',
     Extractor = 'Extractor',
+    Classifier = 'Classifier',
 }
 
 export enum ModelType {
@@ -14,43 +14,45 @@ export enum ModelType {
 }
 
 export interface FolderBasedStartExtractionRequest {
-    documentId?: string;
-    documentTaxonomy?: DocumentTaxonomy;
-    pageRange?: string | null;
+    DocumentId?: string;
+    DocumentTaxonomy?: DocumentTaxonomy;
+    PageRange?: string | null;
 }
 
 export interface FolderBasedStartExtractionResponse {
-    operationId?: string;
-    resultUrl?: string | null;
+    OperationId?: string;
+    ResultUrl?: string | null;
 }
 
 export interface FolderModelsResponse {
-    folderKey?: string | null;
-    fullyQualifiedName?: string | null;
-    models?: ModelSummaryResponse[] | null;
+    FolderKey?: string | null;
+    FullyQualifiedName?: string | null;
+    Models?: ModelSummaryResponse[] | null;
 }
 
 export interface GetModelDetailsResponse {
-    fullyQualifiedName?: string | null;
-    kind?: ModelKind;
-    type?: ModelType;
-    description?: string | null;
-    asyncDigitizationUrl?: string | null;
-    asyncExtractionUrl?: string | null;
-    documentTaxonomy?: DocumentTaxonomy;
+    FullyQualifiedName?: string | null;
+    ModelDisplayName?: string | null;
+    Kind?: ModelKind;
+    Type?: ModelType;
+    Description?: string | null;
+    AsyncDigitizationUrl?: string | null;
+    AsyncExtractionUrl?: string | null;
+    DocumentTaxonomy?: DocumentTaxonomy;
 }
 
 export interface GetModelsResponse {
-    folders?: FolderModelsResponse[] | null;
+    Folders?: FolderModelsResponse[] | null;
 }
 
 export interface ModelSummaryResponse {
-    modelName?: string | null;
-    description?: string | null;
-    kind?: ModelKind;
-    type?: ModelType;
-    fullyQualifiedName?: string | null;
-    detailsUrl?: string | null;
-    asyncDigitizationUrl?: string | null;
-    asyncExtractionUrl?: string | null;
+    ModelName?: string | null;
+    ModelDisplayName?: string | null;
+    Description?: string | null;
+    Kind?: ModelKind;
+    Type?: ModelType;
+    FullyQualifiedName?: string | null;
+    DetailsUrl?: string | null;
+    AsyncDigitizationUrl?: string | null;
+    AsyncExtractionUrl?: string | null;
 }

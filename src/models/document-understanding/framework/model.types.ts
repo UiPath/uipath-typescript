@@ -31,108 +31,115 @@ export enum GptFieldType {
     Text = 'Text',
 }
 
+export enum JobStatus {
+    Succeeded = 'Succeeded',
+    Failed = 'Failed',
+    Running = 'Running',
+    NotStarted = 'NotStarted',
+}
+
 export enum ValidationDisplayMode {
     Classic = 'Classic',
     Compact = 'Compact',
 }
 
 export interface ClassificationPrompt {
-    name?: string | null;
-    description?: string | null;
+    Name?: string | null;
+    Description?: string | null;
 }
 
 export interface ClassificationValidationConfiguration {
-    enablePageReordering?: boolean;
+    EnablePageReordering?: boolean;
 }
 
 export interface ContentValidationData {
-    bucketName?: string | null;
-    bucketId?: number;
-    folderId?: number;
-    folderKey?: string;
-    documentId?: string;
-    encodedDocumentPath?: string | null;
-    textPath?: string | null;
-    documentObjectModelPath?: string | null;
-    taxonomyPath?: string | null;
-    automaticExtractionResultsPath?: string | null;
-    validatedExtractionResultsPath?: string | null;
-    customizationInfoPath?: string | null;
+    BucketName?: string | null;
+    BucketId?: number;
+    FolderId?: number;
+    FolderKey?: string;
+    DocumentId?: string;
+    EncodedDocumentPath?: string | null;
+    TextPath?: string | null;
+    DocumentObjectModelPath?: string | null;
+    TaxonomyPath?: string | null;
+    AutomaticExtractionResultsPath?: string | null;
+    ValidatedExtractionResultsPath?: string | null;
+    CustomizationInfoPath?: string | null;
 }
 
 export interface DocumentClassificationActionDataModel {
-    id?: number | null;
-    status?: DocumentActionStatus;
-    title?: string | null;
-    priority?: DocumentActionPriority;
-    taskCatalogName?: string | null;
-    taskUrl?: string | null;
-    folderPath?: string | null;
-    folderId?: number | null;
-    data?: unknown | null;
-    action?: string | null;
-    isDeleted?: boolean | null;
-    assignedToUser?: UserData;
-    creatorUser?: UserData;
-    deleterUser?: UserData;
-    lastModifierUser?: UserData;
-    completedByUser?: UserData;
-    creationTime?: string | null;
-    lastAssignedTime?: string | null;
-    completionTime?: string | null;
-    processingTime?: number | null;
-    type?: DocumentActionType;
+    Id?: number | null;
+    Status?: DocumentActionStatus;
+    Title?: string | null;
+    Priority?: DocumentActionPriority;
+    TaskCatalogName?: string | null;
+    TaskUrl?: string | null;
+    FolderPath?: string | null;
+    FolderId?: number | null;
+    Data?: unknown | null;
+    Action?: string | null;
+    IsDeleted?: boolean | null;
+    AssignedToUser?: UserData;
+    CreatorUser?: UserData;
+    DeleterUser?: UserData;
+    LastModifierUser?: UserData;
+    CompletedByUser?: UserData;
+    CreationTime?: string | null;
+    LastAssignedTime?: string | null;
+    CompletionTime?: string | null;
+    ProcessingTime?: number | null;
+    Type?: DocumentActionType;
 }
 
 export interface DocumentExtractionActionDataModel {
-    id?: number | null;
-    status?: DocumentActionStatus;
-    title?: string | null;
-    priority?: DocumentActionPriority;
-    taskCatalogName?: string | null;
-    taskUrl?: string | null;
-    folderPath?: string | null;
-    folderId?: number | null;
-    data?: unknown | null;
-    action?: string | null;
-    isDeleted?: boolean | null;
-    assignedToUser?: UserData;
-    creatorUser?: UserData;
-    deleterUser?: UserData;
-    lastModifierUser?: UserData;
-    completedByUser?: UserData;
-    creationTime?: string | null;
-    lastAssignedTime?: string | null;
-    completionTime?: string | null;
-    processingTime?: number | null;
-    type?: DocumentActionType;
+    Id?: number | null;
+    Status?: DocumentActionStatus;
+    Title?: string | null;
+    Priority?: DocumentActionPriority;
+    TaskCatalogName?: string | null;
+    TaskUrl?: string | null;
+    FolderPath?: string | null;
+    FolderId?: number | null;
+    Data?: unknown | null;
+    Action?: string | null;
+    IsDeleted?: boolean | null;
+    AssignedToUser?: UserData;
+    CreatorUser?: UserData;
+    DeleterUser?: UserData;
+    LastModifierUser?: UserData;
+    CompletedByUser?: UserData;
+    CreationTime?: string | null;
+    LastAssignedTime?: string | null;
+    CompletionTime?: string | null;
+    ProcessingTime?: number | null;
+    Type?: DocumentActionType;
 }
 
 export interface ExtractionPrompt {
-    id?: string | null;
-    question?: string | null;
-    fieldType?: GptFieldType;
-    multiValued?: boolean | null;
+    Id?: string | null;
+    Question?: string | null;
+    FieldType?: GptFieldType;
+    MultiValued?: boolean | null;
 }
 
 export interface ExtractionValidationConfigurationV2 {
-    enableRtlControls?: boolean;
-    displayMode?: ValidationDisplayMode;
-    fieldsValidationConfidence?: number | null;
-    allowChangeOfDocumentType?: boolean | null;
+    EnableRtlControls?: boolean;
+    DisplayMode?: ValidationDisplayMode;
+    FieldsValidationConfidence?: number | null;
+    AllowChangeOfDocumentType?: boolean | null;
 }
 
 export interface FieldGroupValueProjection {
-    fieldGroupName?: string | null;
-    fieldValues?: FieldValueProjection[] | null;
+    FieldGroupName?: string | null;
+    FieldValues?: FieldValueProjection[] | null;
 }
 
 export interface FieldValueProjection {
-    id?: string | null;
-    name?: string | null;
-    value?: string | null;
-    unformattedValue?: string | null;
-    confidence?: number | null;
-    ocrConfidence?: number | null;
-    type?: FieldType;
+    Id?: string | null;
+    Name?: string | null;
+    Value?: string | null;
+    UnformattedValue?: string | null;
+    Confidence?: number | null;
+    OcrConfidence?: number | null;
+    Type?: FieldType;
 }
