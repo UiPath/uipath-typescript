@@ -30,6 +30,11 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  * const caseInstances = new CaseInstances(sdk);
  * const allInstances = await caseInstances.getAll();
  * ```
+ *
+ * !!! note
+ *     Methods that rely on the Insights Real-Time Monitoring service (`getSlaSummary`, `getStagesSlaSummary`)
+ *     may have up to ~1 minute latency before reflecting the latest updates. See
+ *     [Real-Time Monitoring Overview](https://docs.uipath.com/insights/automation-cloud/latest/user-guide/real-time-monitoring-overview) for details.
  */
 export interface CaseInstancesServiceModel {
   /**
