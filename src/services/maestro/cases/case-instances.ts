@@ -20,7 +20,7 @@ import {
   ElementCountByStatus,
   ElementCountByStatusOptions
 } from '../../../models/maestro';
-import { ProcessInstancesService } from '../processes/process-instances';
+import { fetchElementCountByStatus } from '../insights';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
   CaseJsonResponse
@@ -50,7 +50,6 @@ import { TaskGetAllOptions } from '../../../models/action-center';
 
 export class CaseInstancesService extends BaseService implements CaseInstancesServiceModel {
   private taskService: TaskService;
-  private processInstancesService: ProcessInstancesService;
 
   /**
    * Creates an instance of the Case Instances service.
@@ -60,7 +59,6 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   constructor(instance: IUiPath) {
     super(instance);
     this.taskService = new TaskService(instance);
-    this.processInstancesService = new ProcessInstancesService(instance);
   }
 
   /**
@@ -202,7 +200,7 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
    */
   @track('CaseInstances.GetElementCountByStatus')
   async getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]> {
-    return this.processInstancesService.getElementCountByStatusImpl(options);
+    return fetchElementCountByStatus(this.post.bind(this), options);
   }
 
   /**

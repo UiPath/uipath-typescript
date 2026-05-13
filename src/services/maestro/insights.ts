@@ -1,5 +1,5 @@
 import { ApiResponse } from '../base';
-import { InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
+import { InstanceStatusTimelineResponse, TimelineOptions, ElementCountByStatus, ElementCountByStatusOptions } from '../../models/maestro';
 import type { TopQueryOptions } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
@@ -59,4 +59,35 @@ export async function fetchInstanceStatusTimeline(
   );
 
   return response.data ?? [];
+}
+
+/**
+ * Fetches element count by status from the Insights API.
+ * Shared implementation used by both ProcessInstancesService and CaseInstancesService.
+ *
+ * @param postFn - Bound post method from a BaseService subclass
+ * @param options - Options containing processKey, packageId, time range, and version
+ * @returns Promise resolving to an array of element count by status
+ * @internal
+ */
+export async function fetchElementCountByStatus(
+  postFn: <T>(path: string, data?: unknown) => Promise<ApiResponse<T>>,
+  options: ElementCountByStatusOptions
+): Promise<ElementCountByStatus[]> {
+  const requestBody = {
+    commonParams: {
+      processKey: options.processKey,
+      packageId: options.packageId,
+      startTime: options.startTime.getTime(),
+      endTime: options.endTime.getTime(),
+      version: options.version
+    }
+  };
+
+  const response = await postFn<ElementCountByStatus[]>(
+    MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+    requestBody
+  );
+
+  return response.data;
 }

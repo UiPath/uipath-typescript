@@ -29,6 +29,7 @@ import { PaginationType } from '../../../utils/pagination/internal-types';
 import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
 import { BpmnVariableMetadata } from '../../../models/maestro/process-instances.internal-types';
+import { fetchElementCountByStatus } from '../insights';
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
@@ -207,31 +208,6 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
 
   /**
    * Get element count by status for process instances
-   * @param options Options containing processKey, packageId, time range, and version
-   * @returns Promise resolving to an array of element count by status
-   * @internal
-   */
-  async getElementCountByStatusImpl(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]> {
-    const requestBody = {
-      commonParams: {
-        processKey: options.processKey,
-        packageId: options.packageId,
-        startTime: options.startTime.getTime(),
-        endTime: options.endTime.getTime(),
-        version: options.version
-      }
-    };
-
-    const response = await this.post<ElementCountByStatus[]>(
-      MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
-      requestBody
-    );
-
-    return response.data;
-  }
-
-  /**
-   * Get element count by status for process instances
    *
    * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
    * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a process.
@@ -259,7 +235,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    */
   @track('ProcessInstances.GetElementCountByStatus')
   async getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]> {
-    return this.getElementCountByStatusImpl(options);
+    return fetchElementCountByStatus(this.post.bind(this), options);
   }
 
   /**
