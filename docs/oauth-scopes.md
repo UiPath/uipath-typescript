@@ -31,11 +31,12 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getAll()` | `OR.Administration` or `OR.Administration.Read` |
-| `getById()` | `OR.Administration` or `OR.Administration.Read` |
-| `getFileMetaData()` | `OR.Administration` or `OR.Administration.Read` |
-| `getReadUri()` | `OR.Administration` or `OR.Administration.Read` |
-| `uploadFile()` | `OR.Administration` or `OR.Administration.Read` |
+| `getAll()` | `OR.Buckets` or `OR.Buckets.Read` |
+| `getById()` | `OR.Buckets` or `OR.Buckets.Read` |
+| `getByName()` | `OR.Buckets` or `OR.Buckets.Read` |
+| `getFileMetaData()` | `OR.Buckets` or `OR.Buckets.Read` |
+| `getReadUri()` | `OR.Buckets` or `OR.Buckets.Read` |
+| `uploadFile()` | `OR.Buckets` |
 
 ## Entities
 

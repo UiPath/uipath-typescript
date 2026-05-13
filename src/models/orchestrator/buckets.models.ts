@@ -1,4 +1,4 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetByNameOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -79,6 +79,27 @@ export interface BucketServiceModel {
    * ```
    */
   getById(bucketId: number, folderId: number, options?: BucketGetByIdOptions): Promise<BucketGetResponse>;
+
+  /**
+   * Retrieves a single orchestrator storage bucket by name.
+   *
+   * @param name - Bucket name to search for
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`)
+   * @returns Promise resolving to a single bucket
+   * {@link BucketGetResponse}
+   * @example
+   * ```typescript
+   * // By folder ID
+   * await buckets.getByName('MyBucket', { folderId: <folderId> });
+   *
+   * // By folder key (GUID)
+   * await buckets.getByName('MyBucket', { folderKey: '<folderKey>' });
+   *
+   * // By folder path
+   * await buckets.getByName('MyBucket', { folderPath: '<folderPath>' });
+   * ```
+   */
+  getByName(name: string, options?: BucketGetByNameOptions): Promise<BucketGetResponse>;
 
   /**
    * Gets metadata for files in a bucket with optional filtering and pagination
