@@ -7,7 +7,7 @@ import { TEST_CONSTANTS } from '../constants/common';
 import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
-import type { SlaSummaryResponse, StageSummaryResponse, StageSummaryStage } from '../../../src/models/maestro/case-instances.types';
+import type { SlaSummaryResponse, CaseInstanceStageSLAResponse, CaseInstanceStageSLAStage } from '../../../src/models/maestro/case-instances.types';
 
 // Maestro-Specific Mock Factories
 
@@ -555,15 +555,15 @@ export const createMockActionTasksResponse = (tasks: any[] = []) => {
 };
 
 /**
- * Creates a mock StageSummaryStage object
+ * Creates a mock CaseInstanceStageSLAStage object
  * @param overrides - Optional overrides for specific fields
- * @returns Mock StageSummaryStage object
+ * @returns Mock CaseInstanceStageSLAStage object
  */
-export const createMockStageSummaryStage = (overrides: Partial<StageSummaryStage> = {}): StageSummaryStage => {
+export const createMockCaseInstanceStageSLAStage = (overrides: Partial<CaseInstanceStageSLAStage> = {}): CaseInstanceStageSLAStage => {
   return createMockBaseResponse({
-    elementId: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_ELEMENT_ID,
-    name: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_STAGE_NAME,
-    latestStatus: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS,
+    elementId: MAESTRO_TEST_CONSTANTS.STAGE_SLA_ELEMENT_ID,
+    name: MAESTRO_TEST_CONSTANTS.STAGE_SLA_STAGE_NAME,
+    latestStatus: MAESTRO_TEST_CONSTANTS.STAGE_SLA_LATEST_STATUS,
     slaDueTime: '',
     slaStatus: SlaSummaryStatus.UNKNOWN,
     escalationRuleIndex: MAESTRO_TEST_CONSTANTS.SLA_ESCALATION_RULE_INDEX,
@@ -572,13 +572,13 @@ export const createMockStageSummaryStage = (overrides: Partial<StageSummaryStage
 };
 
 /**
- * Creates a mock StageSummaryResponse object
+ * Creates a mock CaseInstanceStageSLAResponse object
  * @param overrides - Optional overrides for specific fields
- * @returns Mock StageSummaryResponse object
+ * @returns Mock CaseInstanceStageSLAResponse object
  */
-export const createMockStageSummaryResponse = (overrides: Partial<StageSummaryResponse> = {}): StageSummaryResponse => {
+export const createMockCaseInstanceStageSLAResponse = (overrides: Partial<CaseInstanceStageSLAResponse> = {}): CaseInstanceStageSLAResponse => {
   return createMockBaseResponse({
     caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
-    stages: [createMockStageSummaryStage()],
+    stages: [createMockCaseInstanceStageSLAStage()],
   }, overrides);
 };

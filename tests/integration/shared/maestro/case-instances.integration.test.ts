@@ -285,17 +285,17 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  describe('getStagesSummary', () => {
-    it('should retrieve stages summary for case instances', async () => {
+  describe('getStagesSlaSummary', () => {
+    it('should retrieve stages SLA summary for case instances', async () => {
       const { caseInstances } = getServices();
 
-      const result = await caseInstances.getStagesSummary();
+      const result = await caseInstances.getStagesSlaSummary();
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
 
       if (result.length === 0) {
-        throw new Error('No stage summary items returned — cannot validate response structure');
+        throw new Error('No stage SLA summary items returned — cannot validate response structure');
       }
 
       const item = result[0];
@@ -321,14 +321,14 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       const { caseInstances } = getServices();
 
       // First get all to find a valid caseInstanceId
-      const allResults = await caseInstances.getStagesSummary();
+      const allResults = await caseInstances.getStagesSlaSummary();
 
       if (allResults.length === 0) {
-        throw new Error('No stage summary items returned — cannot test caseInstanceId filter');
+        throw new Error('No stage SLA summary items returned — cannot test caseInstanceId filter');
       }
 
       const targetId = allResults[0].caseInstanceId;
-      const filtered = await caseInstances.getStagesSummary({ caseInstanceId: targetId });
+      const filtered = await caseInstances.getStagesSlaSummary({ caseInstanceId: targetId });
 
       expect(filtered).toBeDefined();
       expect(Array.isArray(filtered)).toBe(true);

@@ -8,8 +8,8 @@ import {
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
-  StageSummaryResponse,
-  StageSummaryOptions
+  CaseInstanceStageSLAResponse,
+  CaseInstanceStageSLAOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -330,32 +330,30 @@ export interface CaseInstancesServiceModel {
   >;
 
   /**
-   * Get stages summary for all case instances across folders.
+   * Get stages SLA summary for case instances across folders.
    *
-   * Returns stage-level status and SLA information for each case instance, aggregated from Insights Real-Time Monitoring.
-   * Unlike {@link getStages}, which returns detailed task-level data for a single instance, this method returns a
-   * lightweight summary across all instances.
+   * Returns stage-level SLA status and escalation information for each case instance, aggregated from Insights Real-Time Monitoring.
    *
    * @param options - Optional filtering options
-   * @returns Promise resolving to an array of {@link StageSummaryResponse}
+   * @returns Promise resolving to an array of {@link CaseInstanceStageSLAResponse}
    * @example
    * ```typescript
-   * // Get stages summary for all case instances
-   * const stagesSummary = await caseInstances.getStagesSummary();
-   * for (const item of stagesSummary) {
+   * // Get stages SLA summary for all case instances
+   * const stagesSla = await caseInstances.getStagesSlaSummary();
+   * for (const item of stagesSla) {
    *   console.log(`Instance: ${item.caseInstanceId}`);
    *   for (const stage of item.stages) {
-   *     console.log(`  Stage: ${stage.name} - Status: ${stage.latestStatus}`);
+   *     console.log(`  Stage: ${stage.name} - SLA Status: ${stage.slaStatus}, Due: ${stage.slaDueTime}`);
    *   }
    * }
    *
    * // Filter by case instance ID
-   * const filtered = await caseInstances.getStagesSummary({
+   * const filtered = await caseInstances.getStagesSlaSummary({
    *   caseInstanceId: '<caseInstanceId>'
    * });
    * ```
    */
-  getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryResponse[]>;
+  getStagesSlaSummary(options?: CaseInstanceStageSLAOptions): Promise<CaseInstanceStageSLAResponse[]>;
 }
 
 // Method interface that will be added to case instance objects
@@ -436,11 +434,11 @@ export interface CaseInstanceMethods {
   >;
 
   /**
-   * Gets the stages summary for this case instance.
+   * Gets the stages SLA summary for this case instance.
    *
-   * @returns Promise resolving to an array of stage summary items for this case instance
+   * @returns Promise resolving to an array of stage SLA summary items for this case instance
    */
-  getStagesSummary(): Promise<StageSummaryResponse[]>;
+  getStagesSlaSummary(): Promise<CaseInstanceStageSLAResponse[]>;
 }
 
 // Combined type for case instance data with methods
@@ -521,10 +519,10 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       return service.getSlaSummary({ ...options, caseInstanceId: instanceData.instanceId } as CaseInstanceSlaSummaryOptions) as any;
     },
 
-    async getStagesSummary(): Promise<StageSummaryResponse[]> {
+    async getStagesSlaSummary(): Promise<CaseInstanceStageSLAResponse[]> {
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
 
-      return service.getStagesSummary({ caseInstanceId: instanceData.instanceId });
+      return service.getStagesSlaSummary({ caseInstanceId: instanceData.instanceId });
     }
   };
 }

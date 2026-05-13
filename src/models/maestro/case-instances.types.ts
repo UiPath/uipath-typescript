@@ -174,9 +174,9 @@ export type CaseInstanceSlaSummaryOptions = PaginationOptions & {
 };
 
 /**
- * Stage summary for a single stage within a case instance (from Insights RTM)
+ * Stage SLA summary for a single stage within a case instance (from Insights RTM)
  */
-export interface StageSummaryStage {
+export interface CaseInstanceStageSLAStage {
   /** Stage element identifier */
   elementId: string;
   /** Stage display name */
@@ -194,19 +194,19 @@ export interface StageSummaryStage {
 }
 
 /**
- * Stages summary for a single case instance (from Insights RTM)
+ * Stages SLA summary for a single case instance (from Insights RTM)
  */
-export interface StageSummaryResponse {
+export interface CaseInstanceStageSLAResponse {
   /** Case instance identifier */
   caseInstanceId: string;
   /** Stages within this case instance */
-  stages: StageSummaryStage[];
+  stages: CaseInstanceStageSLAStage[];
 }
 
 /**
- * Options for querying stages summary
+ * Options for querying stages SLA summary
  */
-export interface StageSummaryOptions {
+export interface CaseInstanceStageSLAOptions {
   /** Filter to a specific case instance */
   caseInstanceId?: string;
 }

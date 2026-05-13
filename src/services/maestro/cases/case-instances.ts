@@ -15,8 +15,8 @@ import {
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
-  StageSummaryResponse,
-  StageSummaryOptions,
+  CaseInstanceStageSLAResponse,
+  CaseInstanceStageSLAOptions,
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
@@ -647,34 +647,32 @@ export class CaseInstancesService extends BaseService implements CaseInstancesSe
   }
 
   /**
-   * Get stages summary for all case instances across folders.
+   * Get stages SLA summary for case instances across folders.
    *
-   * Returns stage-level status and SLA information for each case instance, aggregated from Insights Real-Time Monitoring.
-   * Unlike {@link getStages}, which returns detailed task-level data for a single instance, this method returns a
-   * lightweight summary across all instances.
+   * Returns stage-level SLA status and escalation information for each case instance, aggregated from Insights Real-Time Monitoring.
    *
    * @param options - Optional filtering options
-   * @returns Promise resolving to an array of {@link StageSummaryResponse}
+   * @returns Promise resolving to an array of {@link CaseInstanceStageSLAResponse}
    * @example
    * ```typescript
-   * // Get stages summary for all case instances
-   * const stagesSummary = await caseInstances.getStagesSummary();
-   * for (const item of stagesSummary) {
+   * // Get stages SLA summary for all case instances
+   * const stagesSla = await caseInstances.getStagesSlaSummary();
+   * for (const item of stagesSla) {
    *   console.log(`Instance: ${item.caseInstanceId}`);
    *   for (const stage of item.stages) {
-   *     console.log(`  Stage: ${stage.name} - Status: ${stage.latestStatus}`);
+   *     console.log(`  Stage: ${stage.name} - SLA Status: ${stage.slaStatus}, Due: ${stage.slaDueTime}`);
    *   }
    * }
    *
    * // Filter by case instance ID
-   * const filtered = await caseInstances.getStagesSummary({
+   * const filtered = await caseInstances.getStagesSlaSummary({
    *   caseInstanceId: '<caseInstanceId>'
    * });
    * ```
    */
-  @track('CaseInstances.GetStagesSummary')
-  async getStagesSummary(options?: StageSummaryOptions): Promise<StageSummaryResponse[]> {
-    const response = await this.post<StageSummaryResponse[]>(
+  @track('CaseInstances.GetStagesSlaSummary')
+  async getStagesSlaSummary(options?: CaseInstanceStageSLAOptions): Promise<CaseInstanceStageSLAResponse[]> {
+    const response = await this.post<CaseInstanceStageSLAResponse[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
       {
         caseInstanceId: options?.caseInstanceId,

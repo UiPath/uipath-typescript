@@ -17,8 +17,8 @@ import {
   createMockMaestroApiOperationResponse,
   createMockActionTasksResponse,
   createMockSlaSummaryResponse,
-  createMockStageSummaryResponse,
-  createMockStageSummaryStage,
+  createMockCaseInstanceStageSLAResponse,
+  createMockCaseInstanceStageSLAStage,
 } from '../../../utils/mocks';
 import { HTTP_METHODS } from '../../../../src/utils/constants/common';
 import { createMockBaseResponse } from '../../../utils/mocks/core';
@@ -917,18 +917,18 @@ describe('CaseInstancesService', () => {
     });
   });
 
-  describe('getStagesSummary', () => {
-    it('should return stages summary without options', async () => {
+  describe('getStagesSlaSummary', () => {
+    it('should return stages SLA summary without options', async () => {
       const mockItems = [
-        createMockStageSummaryResponse(),
-        createMockStageSummaryResponse({
+        createMockCaseInstanceStageSLAResponse(),
+        createMockCaseInstanceStageSLAResponse({
           caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID_2,
-          stages: [createMockStageSummaryStage({ latestStatus: MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_COMPLETED })]
+          stages: [createMockCaseInstanceStageSLAStage({ latestStatus: MAESTRO_TEST_CONSTANTS.STAGE_SLA_LATEST_STATUS_COMPLETED })]
         })
       ];
       mockApiClient.post.mockResolvedValue(mockItems);
 
-      const result = await service.getStagesSummary();
+      const result = await service.getStagesSlaSummary();
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
@@ -940,20 +940,20 @@ describe('CaseInstancesService', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0].caseInstanceId).toBe(MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID);
-      expect(result[0].stages[0].elementId).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_ELEMENT_ID);
-      expect(result[0].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS);
-      expect(result[1].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGES_SUMMARY_LATEST_STATUS_COMPLETED);
+      expect(result[0].stages[0].elementId).toBe(MAESTRO_TEST_CONSTANTS.STAGE_SLA_ELEMENT_ID);
+      expect(result[0].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGE_SLA_LATEST_STATUS);
+      expect(result[1].stages[0].latestStatus).toBe(MAESTRO_TEST_CONSTANTS.STAGE_SLA_LATEST_STATUS_COMPLETED);
     });
 
     it('should pass filter options through', async () => {
-      const mockItems = [createMockStageSummaryResponse()];
+      const mockItems = [createMockCaseInstanceStageSLAResponse()];
       mockApiClient.post.mockResolvedValue(mockItems);
 
       const options = {
         caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
       };
 
-      const result = await service.getStagesSummary(options);
+      const result = await service.getStagesSlaSummary(options);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.STAGES_SUMMARY,
@@ -967,31 +967,31 @@ describe('CaseInstancesService', () => {
     });
 
     it('should handle API errors', async () => {
-      const error = new Error(MAESTRO_TEST_CONSTANTS.ERROR_STAGES_SUMMARY_FAILED);
+      const error = new Error(MAESTRO_TEST_CONSTANTS.ERROR_STAGES_SLA_SUMMARY_FAILED);
       mockApiClient.post.mockRejectedValue(error);
 
-      await expect(service.getStagesSummary()).rejects.toThrow(
-        MAESTRO_TEST_CONSTANTS.ERROR_STAGES_SUMMARY_FAILED
+      await expect(service.getStagesSlaSummary()).rejects.toThrow(
+        MAESTRO_TEST_CONSTANTS.ERROR_STAGES_SLA_SUMMARY_FAILED
       );
     });
 
     it('should return empty array when no data exists', async () => {
       mockApiClient.post.mockResolvedValue(null);
 
-      const result = await service.getStagesSummary();
+      const result = await service.getStagesSlaSummary();
 
       expect(result).toEqual([]);
     });
 
     it('should return stages with SLA status from SlaSummaryStatus enum', async () => {
       const mockItems = [
-        createMockStageSummaryResponse({
-          stages: [createMockStageSummaryStage({ slaStatus: SlaSummaryStatus.ON_TRACK })]
+        createMockCaseInstanceStageSLAResponse({
+          stages: [createMockCaseInstanceStageSLAStage({ slaStatus: SlaSummaryStatus.ON_TRACK })]
         })
       ];
       mockApiClient.post.mockResolvedValue(mockItems);
 
-      const result = await service.getStagesSummary();
+      const result = await service.getStagesSlaSummary();
 
       expect(result[0].stages[0].slaStatus).toBe(SlaSummaryStatus.ON_TRACK);
     });
