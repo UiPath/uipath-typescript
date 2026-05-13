@@ -51,6 +51,7 @@ export interface ElementExecution {
  */
 export interface ElementExecutionsApiResponse {
   instanceId: string;
+  traceId: string;
   elementExecutions: ElementExecution[];
 }
 

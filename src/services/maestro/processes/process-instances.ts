@@ -139,16 +139,24 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
       { headers }
     );
 
-    const traceId = elementExecResponse.data.instanceId;
+    const traceId = elementExecResponse.data.traceId;
 
     const spansResponse = await this.get<TraceSpan[]>(
       MAESTRO_ENDPOINTS.TRACES.GET_SPANS(traceId),
       { headers }
     );
 
+    // Build span lookup keyed by elementRunId extracted from Attributes JSON
     const spanMap = new Map<string, TraceSpan>();
     for (const span of spansResponse.data) {
-      spanMap.set(span.Id, span);
+      try {
+        const attrs = span.Attributes ? JSON.parse(span.Attributes) : null;
+        if (attrs?.elementRunId) {
+          spanMap.set(attrs.elementRunId, span);
+        }
+      } catch {
+        // skip spans with unparseable Attributes — they won't match any elementRunId
+      }
     }
 
     const results: ProcessInstanceExecutionHistoryResponse[] = [];

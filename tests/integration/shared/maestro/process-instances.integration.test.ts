@@ -248,14 +248,19 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
       const { processInstances } = getServices();
       const config = getTestConfig();
 
-      const result = await processInstances.getExecutionHistory(testInstanceId, { folderKey: config.folderId || '' });
+      const result = await processInstances.getExecutionHistory(testInstanceId, { folderKey: config.folderKey || '' });
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
 
       if (result.length > 0) {
         const historyItem = result[0];
-        expect(historyItem).toBeDefined();
+        expect(typeof historyItem.id).toBe('string');
+        expect(typeof historyItem.traceId).toBe('string');
+        expect(typeof historyItem.name).toBe('string');
+        expect(typeof historyItem.startedTime).toBe('string');
+        expect(historyItem.parentId === null || typeof historyItem.parentId === 'string').toBe(true);
+        expect(historyItem.endTime === null || typeof historyItem.endTime === 'string').toBe(true);
       }
     });
   });

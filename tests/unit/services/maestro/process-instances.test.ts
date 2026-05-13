@@ -227,7 +227,7 @@ describe('ProcessInstancesService', () => {
       );
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.TRACES.GET_SPANS(instanceId),
+        MAESTRO_ENDPOINTS.TRACES.GET_SPANS(MAESTRO_TEST_CONSTANTS.TRACE_ID),
         {
           headers: expect.objectContaining({
             [FOLDER_KEY]: folderKey

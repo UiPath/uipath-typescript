@@ -100,6 +100,7 @@ export const createMockExecutionHistory = (overrides: Partial<any> = {}) => {
 export const createMockElementExecutionsResponse = (overrides: Partial<any> = {}) => {
   return createMockBaseResponse({
     instanceId: MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
+    traceId: MAESTRO_TEST_CONSTANTS.TRACE_ID,
     elementExecutions: [
       {
         elementId: 'Event_start',
@@ -134,7 +135,7 @@ export const createMockTraceSpan = (overrides: Partial<any> = {}) => {
     Name: MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME,
     StartTime: MAESTRO_TEST_CONSTANTS.START_TIME,
     EndTime: MAESTRO_TEST_CONSTANTS.END_TIME,
-    Attributes: MAESTRO_TEST_CONSTANTS.ATTRIBUTES,
+    Attributes: JSON.stringify({ spanType: 'ElementRun', elementRunId: MAESTRO_TEST_CONSTANTS.SPAN_ID }),
     ExpiryTimeUtc: null,
     UpdatedAt: MAESTRO_TEST_CONSTANTS.END_TIME
   }, overrides);
