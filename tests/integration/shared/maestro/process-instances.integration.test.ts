@@ -6,7 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { expectValidElementCountByStatus } from '../../utils/helpers';
+import { testGetElementCountByStatus } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -303,28 +303,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
   describe('getElementCountByStatus', () => {
     it('should retrieve element count by status for a process', async () => {
       const { processInstances } = getServices();
-
-      // First get a process instance to extract processKey, packageId, version
-      const instances = await processInstances.getAll({ pageSize: 1 });
-      if (instances.items.length === 0) {
-        throw new Error('No process instances available for testing getElementCountByStatus');
-      }
-
-      const instance = instances.items[0];
-      const result = await processInstances.getElementCountByStatus({
-        processKey: instance.processKey,
-        packageId: instance.packageId,
-        startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        endTime: new Date(),
-        version: instance.packageVersion
-      });
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-
-      if (result.length > 0) {
-        expectValidElementCountByStatus(result[0]);
-      }
+      await testGetElementCountByStatus(processInstances, 'process instances');
     });
   });
 

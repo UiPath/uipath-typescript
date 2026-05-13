@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
-import { GetTopRunCountResponse, ElementCountByStatus } from '../../../src/models/maestro/insights.types';
+import { GetTopRunCountResponse, ElementCountByStatus, ElementCountByStatusOptions } from '../../../src/models/maestro/insights.types';
 import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
@@ -216,4 +216,43 @@ export function expectValidElementCountByStatus(element: ElementCountByStatus): 
   expect(typeof element.p50DurationMs).toBe('number');
   expect(typeof element.p95DurationMs).toBe('number');
   expect(typeof element.p99DurationMs).toBe('number');
+}
+
+/** Minimal interface for services that support getElementCountByStatus integration testing */
+interface ElementCountByStatusService {
+  getAll(options: { pageSize: number }): Promise<{ items: Array<{ processKey: string; packageId: string; packageVersion: string }> }>;
+  getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]>;
+}
+
+/**
+ * Integration test helper: fetches an instance, calls getElementCountByStatus,
+ * and validates the response shape. Shared between ProcessInstances and CaseInstances.
+ *
+ * @param service - Service instance (processInstances or caseInstances)
+ * @param serviceName - Name for error messages (e.g., 'process instances')
+ */
+export async function testGetElementCountByStatus(
+  service: ElementCountByStatusService,
+  serviceName: string
+): Promise<void> {
+  const instances = await service.getAll({ pageSize: 1 });
+  if (instances.items.length === 0) {
+    throw new Error(`No ${serviceName} available for testing getElementCountByStatus`);
+  }
+
+  const instance = instances.items[0];
+  const result = await service.getElementCountByStatus({
+    processKey: instance.processKey,
+    packageId: instance.packageId,
+    startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endTime: new Date(),
+    version: instance.packageVersion
+  });
+
+  expect(result).toBeDefined();
+  expect(Array.isArray(result)).toBe(true);
+
+  if (result.length > 0) {
+    expectValidElementCountByStatus(result[0]);
+  }
 }

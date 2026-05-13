@@ -6,7 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { hasValidPagination, expectValidElementCountByStatus } from '../../utils/helpers';
+import { hasValidPagination, testGetElementCountByStatus } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -354,28 +354,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
   describe('getElementCountByStatus', () => {
     it('should retrieve element count by status for a case', async () => {
       const { caseInstances } = getServices();
-
-      // First get a case instance to extract processKey, packageId, version
-      const instances = await caseInstances.getAll({ pageSize: 1 });
-      if (instances.items.length === 0) {
-        throw new Error('No case instances available for testing getElementCountByStatus');
-      }
-
-      const instance = instances.items[0];
-      const result = await caseInstances.getElementCountByStatus({
-        processKey: instance.processKey,
-        packageId: instance.packageId,
-        startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        endTime: new Date(),
-        version: instance.packageVersion
-      });
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-
-      if (result.length > 0) {
-        expectValidElementCountByStatus(result[0]);
-      }
+      await testGetElementCountByStatus(caseInstances, 'case instances');
     });
   });
 
