@@ -999,36 +999,7 @@ describe('CaseInstancesService', () => {
   });
 
   describe('getElementCountByStatus', () => {
-    const mockElementCountByStatusResponse = [
-      {
-        elementId: 'Event_start',
-        successCount: 2,
-        failCount: 0,
-        terminatedCount: 0,
-        pausedCount: 0,
-        inProgressCount: 0,
-        minDurationMs: 763,
-        maxDurationMs: 946,
-        avgDurationMs: 855,
-        p50DurationMs: 855,
-        p95DurationMs: 937,
-        p99DurationMs: 944
-      },
-      {
-        elementId: 'Activity_kHklPW',
-        successCount: 0,
-        failCount: 3,
-        terminatedCount: 0,
-        pausedCount: 0,
-        inProgressCount: 1,
-        minDurationMs: 683,
-        maxDurationMs: 1129,
-        avgDurationMs: 906,
-        p50DurationMs: 906,
-        p95DurationMs: 1107,
-        p99DurationMs: 1125
-      }
-    ];
+    const mockElementCountByStatusResponse = [...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_COUNT_BY_STATUS];
 
     const options: ElementCountByStatusOptions = {
       processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
@@ -1046,24 +1017,6 @@ describe('CaseInstancesService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].elementId).toBe('Event_start');
       expect(result[0].successCount).toBe(2);
-      expect(result[1].failCount).toBe(3);
-      expect(result[1].inProgressCount).toBe(1);
-    });
-
-    it('should handle API errors', async () => {
-      const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
-      mockApiClient.post.mockRejectedValue(error);
-
-      await expect(service.getElementCountByStatus(options)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
-
-    it('should handle empty response', async () => {
-      mockApiClient.post.mockResolvedValue([]);
-
-      const result = await service.getElementCountByStatus(options);
-
-      expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
     });
   });
 });

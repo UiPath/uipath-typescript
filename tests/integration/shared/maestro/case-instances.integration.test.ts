@@ -6,7 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { hasValidPagination } from '../../utils/helpers';
+import { hasValidPagination, expectValidElementCountByStatus } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -374,15 +374,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       expect(Array.isArray(result)).toBe(true);
 
       if (result.length > 0) {
-        const element = result[0];
-        expect(element.elementId).toBeDefined();
-        expect(typeof element.successCount).toBe('number');
-        expect(typeof element.failCount).toBe('number');
-        expect(typeof element.terminatedCount).toBe('number');
-        expect(typeof element.pausedCount).toBe('number');
-        expect(typeof element.inProgressCount).toBe('number');
-        expect(typeof element.avgDurationMs).toBe('number');
-        expect(typeof element.p95DurationMs).toBe('number');
+        expectValidElementCountByStatus(result[0]);
       }
     });
   });

@@ -568,36 +568,7 @@ describe('ProcessInstancesService', () => {
   });
 
   describe('getElementCountByStatus', () => {
-    const mockElementCountByStatusResponse = [
-      {
-        elementId: 'Event_start',
-        successCount: 2,
-        failCount: 0,
-        terminatedCount: 0,
-        pausedCount: 0,
-        inProgressCount: 0,
-        minDurationMs: 763,
-        maxDurationMs: 946,
-        avgDurationMs: 855,
-        p50DurationMs: 855,
-        p95DurationMs: 937,
-        p99DurationMs: 944
-      },
-      {
-        elementId: 'Activity_kHklPW',
-        successCount: 2,
-        failCount: 1,
-        terminatedCount: 0,
-        pausedCount: 0,
-        inProgressCount: 0,
-        minDurationMs: 683,
-        maxDurationMs: 1129,
-        avgDurationMs: 906,
-        p50DurationMs: 906,
-        p95DurationMs: 1107,
-        p99DurationMs: 1125
-      }
-    ];
+    const mockElementCountByStatusResponse = [...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_COUNT_BY_STATUS];
 
     const startDate = new Date('2026-04-01T00:00:00Z');
     const endDate = new Date('2026-05-01T00:00:00Z');

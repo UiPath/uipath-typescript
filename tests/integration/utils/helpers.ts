@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
-import { GetTopRunCountResponse } from '../../../src/models/maestro/insights.types';
+import { GetTopRunCountResponse, ElementCountByStatus } from '../../../src/models/maestro/insights.types';
 import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
@@ -195,4 +195,25 @@ export async function testGetInstanceStatusTimeline(
     expect(entry.count).toBeDefined();
     expect(typeof entry.count).toBe('number');
   }
+}
+
+/**
+ * Validates that an ElementCountByStatus object has the expected shape
+ * with all required numeric fields.
+ *
+ * @param element - Element count by status object to validate
+ */
+export function expectValidElementCountByStatus(element: ElementCountByStatus): void {
+  expect(element.elementId).toBeDefined();
+  expect(typeof element.successCount).toBe('number');
+  expect(typeof element.failCount).toBe('number');
+  expect(typeof element.terminatedCount).toBe('number');
+  expect(typeof element.pausedCount).toBe('number');
+  expect(typeof element.inProgressCount).toBe('number');
+  expect(typeof element.minDurationMs).toBe('number');
+  expect(typeof element.maxDurationMs).toBe('number');
+  expect(typeof element.avgDurationMs).toBe('number');
+  expect(typeof element.p50DurationMs).toBe('number');
+  expect(typeof element.p95DurationMs).toBe('number');
+  expect(typeof element.p99DurationMs).toBe('number');
 }
