@@ -121,6 +121,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
   /**
    * Get execution history (spans) for a process instance
    * @param instanceId The ID of the instance to get history for
+   * @param options Folder context options (folderKey, folderId, or folderPath)
    * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
    */
   @track('ProcessInstances.GetExecutionHistory')
