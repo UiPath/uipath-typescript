@@ -7,7 +7,9 @@ import {
   CaseGetStageResponse,
   CaseInstanceExecutionHistoryResponse,
   SlaSummaryResponse,
-  CaseInstanceSlaSummaryOptions
+  CaseInstanceSlaSummaryOptions,
+  CaseInstanceStageSLAResponse,
+  CaseInstanceStageSLAOptions
 } from './case-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
@@ -28,6 +30,11 @@ import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
  * const caseInstances = new CaseInstances(sdk);
  * const allInstances = await caseInstances.getAll();
  * ```
+ *
+ * !!! note
+ *     Methods that rely on the Insights Real-Time Monitoring service (`getSlaSummary`, `getStagesSlaSummary`)
+ *     may have up to ~1 minute latency before reflecting the latest updates. See
+ *     [Real-Time Monitoring Overview](https://docs.uipath.com/insights/automation-cloud/latest/user-guide/real-time-monitoring-overview) for details.
  */
 export interface CaseInstancesServiceModel {
   /**
@@ -326,6 +333,36 @@ export interface CaseInstancesServiceModel {
       ? PaginatedResponse<SlaSummaryResponse>
       : NonPaginatedResponse<SlaSummaryResponse>
   >;
+
+  /**
+   * Get stages SLA summary for case instances across folders.
+   *
+   * Returns stage-level SLA status and escalation information for each case instance, aggregated from Insights Real-Time Monitoring.
+   *
+   * @param options - Optional filtering options
+   * @returns Promise resolving to an array of {@link CaseInstanceStageSLAResponse}
+   * @example
+   * ```typescript
+   * // Get stages SLA summary for all case instances
+   * const stagesSla = await caseInstances.getStagesSlaSummary();
+   * for (const item of stagesSla) {
+   *   console.log(`Instance: ${item.caseInstanceId}`);
+   *   for (const stage of item.stages) {
+   *     console.log(`  Stage: ${stage.name} - SLA Status: ${stage.slaStatus}, Due: ${stage.slaDueTime}`);
+   *   }
+   * }
+   *
+   * // Filter by case instance ID
+   * const filtered = await caseInstances.getStagesSlaSummary({
+   *   caseInstanceId: '<caseInstanceId>'
+   * });
+   *
+   * // Using bound method on a case instance
+   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+   * const stagesSla = await instance.getStagesSlaSummary();
+   * ```
+   */
+  getStagesSlaSummary(options?: CaseInstanceStageSLAOptions): Promise<CaseInstanceStageSLAResponse[]>;
 }
 
 // Method interface that will be added to case instance objects
@@ -404,6 +441,13 @@ export interface CaseInstanceMethods {
       ? PaginatedResponse<SlaSummaryResponse>
       : NonPaginatedResponse<SlaSummaryResponse>
   >;
+
+  /**
+   * Gets the stages SLA summary for this case instance.
+   *
+   * @returns Promise resolving to an array of stage SLA summary items for this case instance
+   */
+  getStagesSlaSummary(): Promise<CaseInstanceStageSLAResponse[]>;
 }
 
 // Combined type for case instance data with methods
@@ -482,6 +526,12 @@ function createCaseInstanceMethods(instanceData: RawCaseInstanceGetResponse, ser
       if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
 
       return service.getSlaSummary({ ...options, caseInstanceId: instanceData.instanceId } as CaseInstanceSlaSummaryOptions) as any;
+    },
+
+    async getStagesSlaSummary(): Promise<CaseInstanceStageSLAResponse[]> {
+      if (!instanceData.instanceId) throw new Error('Case instance ID is undefined');
+
+      return service.getStagesSlaSummary({ caseInstanceId: instanceData.instanceId });
     }
   };
 }

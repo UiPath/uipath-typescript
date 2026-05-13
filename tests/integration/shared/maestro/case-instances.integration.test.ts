@@ -285,6 +285,60 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
+  describe('getStagesSlaSummary', () => {
+    it('should retrieve stages SLA summary for case instances', async () => {
+      const { caseInstances } = getServices();
+
+      const result = await caseInstances.getStagesSlaSummary();
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No stage SLA summary items returned — cannot validate response structure');
+      }
+
+      const item = result[0];
+      expect(item.caseInstanceId).toBeDefined();
+      expect(typeof item.caseInstanceId).toBe('string');
+      expect(item.stages).toBeDefined();
+      expect(Array.isArray(item.stages)).toBe(true);
+
+      if (item.stages.length === 0) {
+        throw new Error('No stages returned for first item — cannot validate stage structure');
+      }
+
+      const stage = item.stages[0];
+      expect(stage.elementId).toBeDefined();
+      expect(stage.name).toBeDefined();
+      expect(stage.latestStatus).toBeDefined();
+      expect(typeof stage.slaStatus).toBe('string');
+      expect(typeof stage.escalationRuleIndex).toBe('string');
+      expect(typeof stage.escalationRuleType).toBe('string');
+    });
+
+    it('should support filtering by caseInstanceId', async () => {
+      const { caseInstances } = getServices();
+
+      // First get all to find a valid caseInstanceId
+      const allResults = await caseInstances.getStagesSlaSummary();
+
+      if (allResults.length === 0) {
+        throw new Error('No stage SLA summary items returned — cannot test caseInstanceId filter');
+      }
+
+      const targetId = allResults[0].caseInstanceId;
+      const filtered = await caseInstances.getStagesSlaSummary({ caseInstanceId: targetId });
+
+      expect(filtered).toBeDefined();
+      expect(Array.isArray(filtered)).toBe(true);
+      if (filtered.length === 0) {
+        throw new Error('Filter by caseInstanceId returned no results — expected at least one matching item');
+      }
+      expect(filtered[0].caseInstanceId).toBe(targetId);
+    });
+  });
+
   describe('Service verification', () => {
     it('should use the same SDK instance as other Maestro services', () => {
       const services = getServices();

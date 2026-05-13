@@ -120,6 +120,22 @@ Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browse
      |------|---------|
      | `<TypeName>` | <what it represents> |
 
+     ## Sample SDK Response
+
+     <For each newly added method, include a collapsible section with real response from E2E testing:>
+
+     <details>
+     <summary><code><methodName>()</code></summary>
+
+     ```json
+     <actual JSON response from E2E app — truncate to 2-3 representative items if array is large>
+     ```
+
+     *Truncated to N items — full response returns ...*
+
+     </details>
+     <repeat for each method>
+
      ## Files
 
      | Area | Files |
@@ -156,7 +172,7 @@ Add the new endpoint pattern to the Cloudflare Workers proxy whitelist so browse
 
 ### PR Body Rules (both modes)
 
-- **Every section is mandatory** — Method Added, Endpoint Called, Example Usage, API Response vs SDK Response, Files.
+- **Every section is mandatory** — Method Added, Endpoint Called, Example Usage, API Response vs SDK Response, Sample SDK Response, Files.
 - All fields in the tables must be filled from the actual implementation — never use placeholder values.
 - **Method Added** must include full return type in the signature (e.g., `Promise<PaginatedResponse<JobGetResponse>>`).
 - **Endpoint Called** must list every HTTP endpoint the method hits, with OAuth scope per endpoint.

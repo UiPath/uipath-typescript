@@ -35,5 +35,7 @@ export const MAESTRO_ENDPOINTS = {
   INSIGHTS: {
     /** SLA summary for case instances */
     SLA_SUMMARY: `${INSIGHTS_RTM_BASE}/caseManagement/slaSummary`,
+    /** Stages summary for case instances */
+    STAGES_SUMMARY: `${INSIGHTS_RTM_BASE}/caseManagement/stages`,
   },
 } as const;

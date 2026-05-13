@@ -124,6 +124,13 @@ export const MAESTRO_TEST_CONSTANTS = {
   SLA_LAST_MODIFIED_TIME: '4/28/2026 11:20:17 AM',
   ERROR_SLA_SUMMARY_FAILED: 'Failed to fetch SLA summary',
 
+  // Stages SLA Summary constants
+  STAGE_SLA_ELEMENT_ID: 'stage_1',
+  STAGE_SLA_STAGE_NAME: 'Stage 1',
+  STAGE_SLA_LATEST_STATUS: 'InProgress',
+  STAGE_SLA_LATEST_STATUS_COMPLETED: 'Completed',
+  ERROR_STAGES_SLA_SUMMARY_FAILED: 'Failed to fetch stages SLA summary',
+
   // Execution History constants
   ELEMENT_RUN_ID: 'run-1',
   EXTERNAL_LINK: 'https://test.uipath.com/task/123',

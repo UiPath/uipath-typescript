@@ -161,9 +161,19 @@ import App from './App.tsx'
 createRoot(document.getElementById('root')!).render(<App />)
 ```
 
-### SDK initialization — PAT auth
+### SDK initialization — choosing auth mode
 
-The app uses **PAT (secret-based) auth**, not OAuth. The SDK is ready immediately on construction — no `sdk.initialize()`, no redirect flow, no login screen.
+- **PAT auth (default)** — for most APIs. SDK is ready immediately, no login screen.
+- **OAuth auth** — required when the API only supports OAuth (e.g., Insights RTM endpoints like `getSlaSummary`, `getStagesSummary`). Uses browser login flow.
+
+When OAuth is needed, use the `useAuth` hook pattern from `samples/process-app-v1/src/hooks/useAuth.tsx` instead of `useSdk`. Key differences from PAT:
+
+1. **`baseUrl` must be the real API URL** (e.g., `https://alpha.api.uipath.com`), NOT `window.location.origin` — OAuth redirects must reach the real identity server
+2. **`redirectUri` is `window.location.origin`** (localhost) — where OAuth sends the user back after login
+3. **`http://localhost:5173` must be registered as a redirect URL** in the external app config on UiPath Cloud (Admin > External Applications). Error code 218 on the login page means it's not registered. Sometimes works on retry even without changes — likely a caching/propagation delay.
+4. **Vite proxy only handles API data calls** (`/{orgName}`), not auth redirects (`/identity_/`)
+
+#### PAT auth
 
 **`src/hooks/useSdk.tsx`**
 
@@ -416,15 +426,19 @@ These caused failures during real E2E runs:
 | **CORS error** — `Access to fetch blocked by CORS policy` | Vite proxy is configured by default (see vite.config.ts above). Ensure `baseUrl` is `window.location.origin` so requests go through the proxy |
 | **npm uses cached tarball** — old version of SDK loads despite rebuilding | Change the version before packing (`npm version 1.0.0-test.N`) to bust npm cache |
 | **Port 5173 in use** — Vite starts on 5174, proxy doesn't match | `lsof -ti:5173 \| xargs kill -9` before starting dev server |
+| **OAuth error 218** — login page shows `errorCode=218` | `http://localhost:5173` not registered as redirect URL in the external app (Admin > External Applications). Sometimes resolves on retry due to caching. |
+| **OAuth redirect stays on localhost** — blank page after clicking login | `baseUrl` is `window.location.origin` instead of the real API URL. OAuth needs the real URL for auth redirects; only API data calls go through the Vite proxy. |
 
 ## Quick Reference
 
 | Item | Detail |
 |------|--------|
 | App location | `samples/e2e-test/` (temporary, deleted after) |
-| Auth type | PAT / secret-based (auto-initializes, no login flow) |
+| Auth type | PAT (default) or OAuth (when API requires it) |
 | PAT source | `.env` in repo root (same token used for live API curl) |
-| baseUrl | `window.location.origin` (routes through Vite proxy) |
+| OAuth source | `OAUTH_CLIENT_ID` from `.env`, scopes from `docs/oauth-scopes.md` |
+| baseUrl (PAT) | `window.location.origin` (routes through Vite proxy) |
+| baseUrl (OAuth) | Real API URL (e.g., `https://alpha.api.uipath.com`) — auth redirects need real server |
 | Vite proxy | `/{orgName}` → `{BASE_URL}` with `changeOrigin: true` |
 | SDK dependency | `"file:../../uipath-uipath-typescript-{version}.tgz"` |
 | Dev server | `npm run dev` → `http://localhost:5173` |
