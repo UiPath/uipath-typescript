@@ -124,8 +124,8 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
    */
   @track('ProcessInstances.GetExecutionHistory')
-  async getExecutionHistory(instanceId: string, options: ProcessInstanceGetExecutionHistoryOptions): Promise<ProcessInstanceExecutionHistoryResponse[]> {
-    const { folderId, folderKey, folderPath } = options;
+  async getExecutionHistory(instanceId: string, options?: ProcessInstanceGetExecutionHistoryOptions): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+    const { folderId, folderKey, folderPath } = options ?? {};
     const headers = resolveFolderHeaders({
       folderId,
       folderKey,

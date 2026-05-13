@@ -116,7 +116,7 @@ export interface ProcessInstancesServiceModel {
    * });
    * ```
    */
-  getExecutionHistory(instanceId: string, options: ProcessInstanceGetExecutionHistoryOptions): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+  getExecutionHistory(instanceId: string, options?: ProcessInstanceGetExecutionHistoryOptions): Promise<ProcessInstanceExecutionHistoryResponse[]>;
 
   /**
    * Get BPMN XML file for a process instance
@@ -358,9 +358,8 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
 
     async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
-      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
 
-      return service.getExecutionHistory(instanceData.instanceId, { folderKey: instanceData.folderKey });
+      return service.getExecutionHistory(instanceData.instanceId, instanceData.folderKey ? { folderKey: instanceData.folderKey } : undefined);
     },
 
     async getBpmn(): Promise<BpmnXmlString> {

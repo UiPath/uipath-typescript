@@ -254,12 +254,20 @@ describe('Process Instance Models', () => {
         await expect(invalidInstance.getExecutionHistory()).rejects.toThrow('Process instance ID is undefined');
       });
 
-      it('should throw error if folderKey is undefined', async () => {
+      it('should call getExecutionHistory with undefined options when folderKey is absent', async () => {
         const mockInstanceData = createMockProcessInstance();
-        const invalidInstanceData = { ...mockInstanceData, folderKey: undefined as any };
-        const invalidInstance = createProcessInstanceWithMethods(invalidInstanceData, mockService);
+        const instanceDataWithoutFolderKey = { ...mockInstanceData, folderKey: undefined as any };
+        const instance = createProcessInstanceWithMethods(instanceDataWithoutFolderKey, mockService);
 
-        await expect(invalidInstance.getExecutionHistory()).rejects.toThrow('Process instance folder key is undefined');
+        const mockHistory = [createMockExecutionHistory()];
+        mockService.getExecutionHistory = vi.fn().mockResolvedValue(mockHistory);
+
+        await instance.getExecutionHistory();
+
+        expect(mockService.getExecutionHistory).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.INSTANCE_ID,
+          undefined
+        );
       });
     });
 
