@@ -209,6 +209,7 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * Get element count by status for process instances
    * @param options Options containing processKey, packageId, time range, and version
    * @returns Promise resolving to an array of element count by status
+   * @internal
    */
   async getElementCountByStatusImpl(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]> {
     const requestBody = {
@@ -229,6 +230,33 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     return response.data;
   }
 
+  /**
+   * Get element count by status for process instances
+   *
+   * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
+   * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a process.
+   *
+   * @param options - Options containing processKey, packageId, time range, and version
+   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   * @example
+   * ```typescript
+   * // Get element metrics for a process
+   * const elements = await processInstances.getElementCountByStatus({
+   *   processKey: '<processKey>',
+   *   packageId: '<packageId>',
+   *   startTime: new Date('2026-04-01'),
+   *   endTime: new Date(),
+   *   version: '1.0.1'
+   * });
+   *
+   * // Analyze element performance
+   * for (const element of elements) {
+   *   console.log(`Element: ${element.elementId}`);
+   *   console.log(`  Success: ${element.successCount}, Failed: ${element.failCount}`);
+   *   console.log(`  Avg duration: ${element.avgDurationMs}ms, P95: ${element.p95DurationMs}ms`);
+   * }
+   * ```
+   */
   @track('ProcessInstances.GetElementCountByStatus')
   async getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]> {
     return this.getElementCountByStatusImpl(options);
