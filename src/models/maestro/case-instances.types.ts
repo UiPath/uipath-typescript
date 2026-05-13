@@ -183,7 +183,7 @@ export interface CaseInstanceStageSLAStage {
   name: string;
   /** Current execution status of the stage */
   latestStatus: string;
-  /** Computed SLA due time for this stage */
+  /** SLA deadline timestamp in UTC (e.g. `"9/17/2025 8:35:38 PM"`) or empty string if no SLA is configured */
   slaDueTime: string;
   /** SLA status for this stage */
   slaStatus: SlaSummaryStatus;

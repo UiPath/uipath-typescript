@@ -356,6 +356,10 @@ export interface CaseInstancesServiceModel {
    * const filtered = await caseInstances.getStagesSlaSummary({
    *   caseInstanceId: '<caseInstanceId>'
    * });
+   *
+   * // Using bound method on a case instance
+   * const instance = await caseInstances.getById('<instanceId>', '<folderKey>');
+   * const stagesSla = await instance.getStagesSlaSummary();
    * ```
    */
   getStagesSlaSummary(options?: CaseInstanceStageSLAOptions): Promise<CaseInstanceStageSLAResponse[]>;
