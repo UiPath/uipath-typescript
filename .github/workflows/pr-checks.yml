@@ -13,6 +13,8 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  checks: write
+  statuses: write
 
 jobs:
   test-and-build:
@@ -21,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,7 +43,7 @@ jobs:
 
       - name: Upload unit test coverage
         uses: actions/upload-artifact@v4
-        if: always()
+        if: github.base_ref == 'main'
         with:
           name: unit-coverage
           path: coverage/lcov.info
@@ -92,7 +96,7 @@ jobs:
 
       - name: Run Integration Tests
         if: github.base_ref == 'main'
-        run: npm run test:integration -- --run --coverage
+        run: npm run test:integration:coverage -- --run
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4
@@ -103,7 +107,7 @@ jobs:
 
       - name: SonarCloud Scan
         if: github.base_ref == 'main'
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
