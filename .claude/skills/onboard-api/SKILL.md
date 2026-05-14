@@ -29,8 +29,9 @@ Single skill that handles the full onboarding lifecycle for new SDK endpoints �
 - [ ] Step 4g: Docs updated (oauth-scopes.md, pagination.md, mkdocs.yml if new service)
 - [ ] Step 5: npm run typecheck + lint + test:unit + build — ALL four pass
 - [ ] Step 6: E2E app scaffolded, tested in browser, cleaned up
-- [ ] Step 7: Cloudflare whitelist added (or explicitly noted as skipped)
-- [ ] Step 8: Committed & PR raised
+- [ ] Step 7: Convention review — sdk-review loop clean
+- [ ] Step 8: Cloudflare whitelist added (or explicitly noted as skipped)
+- [ ] Step 9: Committed & PR raised
 ```
 
 **For Composite tickets (with or without reference):**
@@ -52,13 +53,14 @@ Single skill that handles the full onboarding lifecycle for new SDK endpoints �
 - [ ] Step 4h: Docs updated (oauth-scopes.md, pagination.md, mkdocs.yml if new service)
 - [ ] Step 5: npm run typecheck + lint + test:unit + build — ALL four pass
 - [ ] Step 6: E2E app scaffolded, tested in browser, cleaned up
-- [ ] Step 7: Cloudflare whitelist for ALL internal endpoints (or explicitly noted as skipped)
-- [ ] Step 8: Committed & PR raised
+- [ ] Step 7: Convention review — sdk-review loop clean
+- [ ] Step 8: Cloudflare whitelist for ALL internal endpoints (or explicitly noted as skipped)
+- [ ] Step 9: Committed & PR raised
 ```
 
 Use the appropriate checklist based on the ticket type detected in Step 1. You may detect the type first, then create the checklist.
 
-**If a step is skipped**, mark it with a note explaining why (e.g., "Step 7: skipped — Cloudflare Workers not accessible"). Do NOT leave items unmarked.
+**If a step is skipped**, mark it with a note explaining why (e.g., "Step 8: skipped — Cloudflare Workers not accessible"). Do NOT leave items unmarked.
 
 **If a step fails**, stop and resolve before proceeding. Do NOT mark as complete and move on.
 
@@ -140,7 +142,7 @@ Without a real response, you cannot reliably decide: which fields are optional, 
 
 **If Composite:** Make the five design decisions: flow decomposition, response composition, intermediate type design, error handling strategy, and implementation pattern. **MANDATORY — Read** [`references/composite-methods.md`](references/composite-methods.md) before proceeding. Also read [`references/onboarding.md`](references/onboarding.md) for any sub-endpoints within the composite flow that need standard transform pipelines.
 
-**Do NOT load** `e2e-testing.md` or `cloudflare-whitelist.md` yet — those are for Steps 6-7.
+**Do NOT load** `e2e-testing.md` or `cloudflare-whitelist.md` yet — those are for Steps 6 and 8.
 
 ---
 
@@ -171,11 +173,27 @@ If `sdk-verify` reports failures:
 3. Re-invoke `sdk-verify`
 4. Repeat until all checks pass
 
-Do not proceed to Step 7-8 until verification passes.
+Do not proceed to Step 7 until verification passes.
 
 ---
 
-## Step 7-8: Ship (Cloudflare + Commit + PR)
+## Step 7: Convention Review
+
+Invoke the `sdk-review` skill. It reviews all changes on the branch against CLAUDE.md and agent_docs/ conventions, fixes critical and important issues, and re-reviews in a loop (max 3 iterations) until clean.
+
+### Fix loop
+
+If `sdk-review` reports issues it could not auto-fix:
+1. Read the remaining issues
+2. Fix them manually
+3. Re-invoke `sdk-review`
+4. Repeat until clean
+
+Do not proceed to Step 8-9 until the review is clean.
+
+---
+
+## Step 8-9: Ship (Cloudflare + Commit + PR)
 
 Invoke the `sdk-ship` skill. It handles Cloudflare whitelisting, committing, and PR creation.
 
