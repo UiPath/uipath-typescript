@@ -12,11 +12,9 @@ import { AgentMonitoring } from '../../../../src/services/agents/monitoring';
  *   npx vitest run tests/integration/shared/agents/monitoring.integration.test.ts --config vitest.integration.config.ts
  */
 
-const hasAgentMonitoringConfig = !!process.env.AGENT_MONITORING_TEST_TENANT_ID;
-
 const modes: InitMode[] = ['v1'];
 
-describe.skipIf(!hasAgentMonitoringConfig).each(modes)(
+describe.each(modes)(
   'Agent Monitoring - Integration Tests [%s]',
   (mode) => {
     setupUnifiedTests(mode);
@@ -29,8 +27,12 @@ describe.skipIf(!hasAgentMonitoringConfig).each(modes)(
       if (!services.agentMonitoring) {
         throw new Error('AgentMonitoring service not initialized');
       }
+      const configuredTenantId = getTestConfig().agentMonitoringTestTenantId;
+      if (!configuredTenantId) {
+        throw new Error('AGENT_MONITORING_TEST_TENANT_ID env var is required');
+      }
       agentMonitoring = services.agentMonitoring;
-      tenantId = getTestConfig().agentMonitoringTestTenantId!;
+      tenantId = configuredTenantId;
     });
 
     describe('getNames', () => {
