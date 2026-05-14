@@ -53,7 +53,7 @@ jobs:
         run: npm install -g npm@^11.5.0
 
       - name: Install commitlint
-        run: npm install @commitlint/cli @commitlint/config-conventional
+        run: npm install @commitlint/cli@^19 @commitlint/config-conventional@^19
 
       - name: Validate commits
         run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
