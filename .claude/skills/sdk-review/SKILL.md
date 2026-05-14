@@ -30,21 +30,24 @@ digraph review_loop {
     "Run review agent" [shape=box];
     "Issues found?" [shape=diamond];
     "Fix critical + important" [shape=box];
-    "typecheck + lint pass?" [shape=diamond];
+    "typecheck + lint + test pass?" [shape=diamond];
     "Fix build errors" [shape=box];
     "iteration < 3?" [shape=diamond];
+    "Fixes made in any iteration?" [shape=diamond];
     "Commit fixes" [shape=box];
     "Report" [shape=doublecircle];
 
     "Run review agent" -> "Issues found?";
-    "Issues found?" -> "Report" [label="no — clean"];
+    "Issues found?" -> "Fixes made in any iteration?" [label="no — clean"];
     "Issues found?" -> "Fix critical + important" [label="yes"];
-    "Fix critical + important" -> "typecheck + lint pass?";
-    "typecheck + lint pass?" -> "iteration < 3?" [label="yes"];
-    "typecheck + lint pass?" -> "Fix build errors" [label="no"];
+    "Fix critical + important" -> "typecheck + lint + test pass?";
+    "typecheck + lint + test pass?" -> "iteration < 3?" [label="yes"];
+    "typecheck + lint + test pass?" -> "Fix build errors" [label="no"];
     "Fix build errors" -> "iteration < 3?";
     "iteration < 3?" -> "Run review agent" [label="yes"];
     "iteration < 3?" -> "Commit fixes" [label="no — max reached"];
+    "Fixes made in any iteration?" -> "Commit fixes" [label="yes"];
+    "Fixes made in any iteration?" -> "Report" [label="no — nothing to commit"];
     "Commit fixes" -> "Report";
 }
 ```
@@ -92,7 +95,7 @@ Fix in priority order: **Critical** first, then **Important**.
 - **Public API type signatures** — changing return types or parameter types can break consumers; report instead
 - **Test assertions** — changing what tests assert can mask real failures; report instead
 
-After fixing, run `npm run typecheck` and `npm run lint`. If either fails, fix the build error before the next review iteration. If a build error persists after 2 attempts, stop and report it — don't loop on the same failure.
+After fixing, run `npm run typecheck`, `npm run lint`, and `npm run test:unit`. If any fail, fix the error before the next review iteration. If an error persists after 2 attempts, stop and report it — don't loop on the same failure.
 
 ---
 
@@ -134,6 +137,6 @@ git commit -m "fix: address convention review comments"
 - **NEVER review files not in the diff** — pre-existing issues are not this skill's job
 - **NEVER fix and re-review in the same iteration** — fix first, THEN re-run the review agent fresh
 - **NEVER auto-fix the same issue differently across iterations** — if iteration 1 fixed X one way and iteration 2 flags X again, stop and report; don't oscillate
-- **NEVER suppress typecheck/lint failures** — if a fix breaks the build, the fix is wrong
-- **NEVER commit if no files were modified** — if review is clean from the start, skip commit entirely
+- **NEVER suppress typecheck/lint/test failures** — if a fix breaks the build or tests, the fix is wrong
+- **NEVER commit if no files were modified** — if review is clean and no fixes were made in any iteration, skip commit entirely
 - **NEVER continue past 3 iterations** — if issues remain, report them; infinite loops waste tokens and patience

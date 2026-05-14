@@ -142,7 +142,7 @@ Without a real response, you cannot reliably decide: which fields are optional, 
 
 **If Composite:** Make the five design decisions: flow decomposition, response composition, intermediate type design, error handling strategy, and implementation pattern. **MANDATORY — Read** [`references/composite-methods.md`](references/composite-methods.md) before proceeding. Also read [`references/onboarding.md`](references/onboarding.md) for any sub-endpoints within the composite flow that need standard transform pipelines.
 
-**Do NOT load** `e2e-testing.md` or `cloudflare-whitelist.md` yet — those are for Steps 6-7.
+**Do NOT load** `e2e-testing.md` or `cloudflare-whitelist.md` yet — those are for Steps 6 and 8.
 
 ---
 
