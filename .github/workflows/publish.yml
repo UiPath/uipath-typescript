@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Ensure npm >= 11.5.0 (required for minimum-release-age)
+        run: npm install -g npm@^11.5.0
+
       - name: Install Dependencies
         run: npm ci
 

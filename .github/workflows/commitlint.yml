@@ -49,6 +49,9 @@ jobs:
           registry-url: "https://npm.pkg.github.com"
           scope: "@uipath"
 
+      - name: Ensure npm >= 11.5.0 (required for minimum-release-age)
+        run: npm install -g npm@^11.5.0
+
       - name: Install commitlint
         run: npm install @commitlint/cli @commitlint/config-conventional
 
