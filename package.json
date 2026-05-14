@@ -165,6 +165,16 @@
                 "types": "./dist/document-understanding/index.d.ts",
                 "default": "./dist/document-understanding/index.cjs"
             }
+        },
+        "./agent-monitoring": {
+            "import": {
+                "types": "./dist/agent-monitoring/index.d.ts",
+                "default": "./dist/agent-monitoring/index.mjs"
+            },
+            "require": {
+                "types": "./dist/agent-monitoring/index.d.ts",
+                "default": "./dist/agent-monitoring/index.cjs"
+            }
         }
     },
     "files": [

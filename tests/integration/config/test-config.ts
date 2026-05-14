@@ -21,6 +21,7 @@ export interface IntegrationConfig {
   dataFabricTestAttachmentField?: string;
   orchestratorAttachmentId?: string;
   jobsTestFolderId?: string;
+  agentMonitoringTestTenantId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -73,6 +74,7 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
+    agentMonitoringTestTenantId: typeof rawConfig.agentMonitoringTestTenantId === 'string' ? rawConfig.agentMonitoringTestTenantId : undefined,
   };
 }
 
@@ -109,6 +111,7 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestAttachmentField: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
+    agentMonitoringTestTenantId: process.env.AGENT_MONITORING_TEST_TENANT_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);
