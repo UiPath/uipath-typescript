@@ -13,7 +13,7 @@ vi.mock('../../../../src/core/http/api-client');
 // ===== TEST SUITE =====
 describe('AgentMonitoringService Unit Tests', () => {
   let agentMonitoringService: AgentMonitoringService;
-  let mockApiClient: any;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
