@@ -1019,7 +1019,7 @@ describe('CaseInstancesService', () => {
       expect(result[0].successCount).toBe(2);
     });
 
-    it('should propagate errors from ProcessInstancesService', async () => {
+    it('should handle API errors', async () => {
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.post.mockRejectedValue(error);
 
