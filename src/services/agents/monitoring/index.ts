@@ -1,8 +1,7 @@
 /**
  * Agent Monitoring Module
  *
- * Provides access to runtime monitoring data for UiPath Agents — names, summary metrics,
- * error timelines, incidents, latency, and consumption.
+ * Provides access to runtime monitoring data for UiPath Agents — agent name discovery.
  *
  * @example
  * ```typescript
