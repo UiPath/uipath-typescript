@@ -31,17 +31,21 @@ digraph review_loop {
     "Fix critical + important" [shape=box];
     "typecheck + lint" [shape=box];
     "iteration < 3?" [shape=diamond];
+    "Files modified?" [shape=diamond];
     "Commit fixes" [shape=box];
+    "Report clean" [shape=doublecircle];
     "Report" [shape=doublecircle];
 
     "Detect changed files" -> "Run review agent";
     "Run review agent" -> "Issues found?";
-    "Issues found?" -> "Commit fixes" [label="no — clean"];
+    "Issues found?" -> "Files modified?" [label="no — clean"];
     "Issues found?" -> "Fix critical + important" [label="yes"];
     "Fix critical + important" -> "typecheck + lint";
     "typecheck + lint" -> "iteration < 3?";
     "iteration < 3?" -> "Run review agent" [label="yes"];
-    "iteration < 3?" -> "Commit fixes" [label="no — max reached"];
+    "iteration < 3?" -> "Files modified?" [label="no — max reached"];
+    "Files modified?" -> "Commit fixes" [label="yes"];
+    "Files modified?" -> "Report clean" [label="no — nothing to commit"];
     "Commit fixes" -> "Report";
 }
 ```
@@ -87,12 +91,19 @@ After fixing, run `npm run typecheck` and `npm run lint`. If either fails, fix b
 
 ## Step 3: Commit
 
-After the loop ends (clean or max iterations reached), if any files were modified:
+After the loop ends, check if any files were actually modified during the fix iterations:
 
 ```bash
-git add <fixed files>
-git commit -m "fix: address convention review comments"
+git diff --name-only        # unstaged changes from fixes
+git diff --name-only --cached  # staged changes from fixes
 ```
+
+- **If files were modified** → stage and commit:
+  ```bash
+  git add <fixed files>
+  git commit -m "fix: address convention review comments"
+  ```
+- **If no files were modified** (review was clean from the start, or all issues were suggestions) → skip commit, nothing to do.
 
 **Do NOT push.** The user or calling skill (e.g., sdk-ship) decides when to push.
 
