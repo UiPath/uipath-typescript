@@ -53,7 +53,9 @@ digraph review_loop {
 
 ## Step 1: Review
 
-Launch an agent that reads CLAUDE.md (which loads Agents.md and agent_docs/ via `@` references), gets the full diff (`git diff main...HEAD` + `git diff --cached` + `git diff`), reads each changed file in full, and returns a structured report classifying issues as **Critical**, **Important**, or **Suggestion** with file:line, violated rule, and recommended fix.
+Launch an agent that reads CLAUDE.md (which loads Agents.md and agent_docs/ via `@` references), gets the full diff (`git diff main...HEAD` + `git diff --cached` + `git diff`), and returns a structured report classifying issues as **Critical**, **Important**, or **Suggestion** with file:line, violated rule, and recommended fix.
+
+**Review scope: diff lines only.** Read full files for context (imports, class structure, surrounding code) but ONLY flag issues on lines that appear in the diff. Pre-existing issues on unchanged lines are out of scope — even if they violate conventions.
 
 ### Review agent calibration — what agents get wrong in this codebase
 
