@@ -37,6 +37,13 @@ jobs:
       - name: Run SDK Tests
         run: npm run test:coverage -- --run
 
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-coverage
+          path: coverage/lcov.info
+
       - name: Build Project
         run: npm run build
 
@@ -85,7 +92,21 @@ jobs:
 
       - name: Run Integration Tests
         if: github.base_ref == 'main'
-        run: npm run test:integration -- --run
+        run: npm run test:integration -- --run --coverage
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        if: github.base_ref == 'main'
+        with:
+          name: integration-coverage
+          path: coverage-integration/lcov.info
+
+      - name: SonarCloud Scan
+        if: github.base_ref == 'main'
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Generate Summary
         if: success()
