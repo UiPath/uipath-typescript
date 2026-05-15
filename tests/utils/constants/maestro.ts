@@ -138,8 +138,6 @@ export const MAESTRO_TEST_CONSTANTS = {
   ERROR_STAGES_SLA_SUMMARY_FAILED: 'Failed to fetch stages SLA summary',
 
   // Insights InstanceStatusByDate constants
-  INSIGHTS_START_TIME: 1778224276339,
-  INSIGHTS_END_TIME: 1778829076339,
   INSIGHTS_STATUS_COMPLETED: InsightInstanceStatus.Completed,
   INSIGHTS_STATUS_FAULTED: InsightInstanceStatus.Faulted,
   INSIGHTS_STATUS_CANCELLED: InsightInstanceStatus.Cancelled,

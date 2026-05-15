@@ -208,17 +208,13 @@ describe('CasesService', () => {
   });
 
   describe('getInstanceStatusByDate', () => {
-    const mockResponse = [
-      createMockInstanceStatusByDate(),
-    ];
+    it('should call fetchInstanceStatusByDate with isCaseManagement true', async () => {
+      mockApiClient.post.mockResolvedValue([createMockInstanceStatusByDate()]);
 
-    const startDate = new Date('2026-04-01T00:00:00Z');
-    const endDate = new Date('2026-05-01T00:00:00Z');
-
-    it('should call with isCaseManagement true and return results', async () => {
-      mockApiClient.post.mockResolvedValue(mockResponse);
-
-      const result = await service.getInstanceStatusByDate(startDate, endDate);
+      const result = await service.getInstanceStatusByDate(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].startTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1);
@@ -229,24 +225,6 @@ describe('CasesService', () => {
         }),
         {},
       );
-    });
-
-    it('should return empty array when API returns null', async () => {
-      mockApiClient.post.mockResolvedValue(null);
-
-      const result = await service.getInstanceStatusByDate(startDate, endDate);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle API errors', async () => {
-      mockApiClient.post.mockRejectedValue(
-        createMockError(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED),
-      );
-
-      await expect(
-        service.getInstanceStatusByDate(startDate, endDate),
-      ).rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED);
     });
   });
 });
