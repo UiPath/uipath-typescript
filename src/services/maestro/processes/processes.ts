@@ -1,9 +1,10 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, TopProcessesResponse } from '../../../models/maestro';
 import { BaseService } from '../../base';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
+import { fetchTopProcesses } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
@@ -77,4 +78,35 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     // Fetch BPMN XML and add element name/type to each incident
     return BpmnHelpers.enrichIncidentsWithBpmnData(rawResponse.data || [], folderKey, this.processInstancesService);
   }
-} 
+
+  /**
+   * Get the top processes ranked by run count within a time range.
+   *
+   * Returns an array of processes sorted by how many times they were executed,
+   * useful for identifying the most active processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @returns Promise resolving to an array of {@link TopProcessesResponse}
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * // Get top processes by run count for the last 7 days
+   * const topProcesses = await maestroProcesses.getTop(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.runCount} runs`);
+   * }
+   * ```
+   */
+  @track('MaestroProcesses.GetTop')
+  async getTop(startTime: Date, endTime: Date): Promise<TopProcessesResponse[]> {
+    return fetchTopProcesses(this.post.bind(this), startTime, endTime, false);
+  }
+}

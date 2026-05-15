@@ -150,7 +150,7 @@ describe('CasesService', () => {
     });
 
     it('should extract case name from packageId without CaseManagement prefix', async () => {
-      
+
       const mockApiResponse = createMockCasesGetAllApiResponse([
         createMockCase({
           processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
@@ -160,10 +160,61 @@ describe('CasesService', () => {
 
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
       expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_WITHOUT_PREFIX);
+    });
+  });
+
+  describe('getTop', () => {
+    const mockResponse = [
+      {
+        packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        runCount: 10,
+        processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY
+      }
+    ];
+
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
+
+    it('should retrieve top case processes by run count', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getTop(startDate, endDate);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES,
+        {
+          commonParams: {
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
+            isCaseManagement: true
+          },
+          timezoneOffset: 0
+        },
+        {}
+      );
+      expect(result).toEqual(mockResponse);
+      expect(result).toHaveLength(1);
+      expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID);
+    });
+
+    it('should return empty array when no processes found', async () => {
+      mockApiClient.post.mockResolvedValue([]);
+
+      const result = await service.getTop(startDate, endDate);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getTop(startDate, endDate)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

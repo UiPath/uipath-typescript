@@ -364,4 +364,4 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
     return BpmnHelpers.enrichIncidentsWithBpmnData(rawResponse.data || [], folderKey, this);
   }
 
-} 
+}

@@ -1,4 +1,5 @@
 import { randomBytes, randomInt } from 'crypto';
+import { TopProcessesResponse } from '../../../src/models/maestro/processes.types';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -124,4 +125,37 @@ export function generateRandomFloat(min: number, max: number, precision: number 
  */
 export function createTestFileContent(filename: string): string {
   return `This is a test file: ${filename}\nCreated at: ${new Date().toISOString()}\nRandom data: ${generateRandomString(32)}`;
+}
+
+/** Minimal interface for services that support getTop integration testing */
+interface TopProcessesService {
+  getTop(startTime: Date, endTime: Date): Promise<TopProcessesResponse[]>;
+}
+
+/**
+ * Integration test helper: calls getTop and validates the response shape.
+ * Shared between ProcessInstances and CaseInstances.
+ *
+ * @param service - Service instance (processInstances or caseInstances)
+ */
+export async function testGetTopProcesses(
+  service: TopProcessesService
+): Promise<void> {
+  const now = new Date();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const result = await service.getTop(sevenDaysAgo, now);
+
+  expect(result).toBeDefined();
+  expect(Array.isArray(result)).toBe(true);
+
+  if (result.length > 0) {
+    const topProcess = result[0];
+    expect(topProcess.packageId).toBeDefined();
+    expect(typeof topProcess.packageId).toBe('string');
+    expect(topProcess.runCount).toBeDefined();
+    expect(typeof topProcess.runCount).toBe('number');
+    expect(topProcess.processKey).toBeDefined();
+    expect(typeof topProcess.processKey).toBe('string');
+  }
 }

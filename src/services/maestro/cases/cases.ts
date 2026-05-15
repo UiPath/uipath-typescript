@@ -1,8 +1,9 @@
-import { CaseGetAllResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, TopProcessesResponse } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { BaseService } from '../../base';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
+import { fetchTopProcesses } from '../insights';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
 
@@ -68,5 +69,36 @@ export class CasesService extends BaseService implements CasesServiceModel {
     
     // If no "CaseManagement.", return the whole packageId
     return packageId;
+  }
+
+  /**
+   * Get the top case processes ranked by run count within a time range.
+   *
+   * Returns an array of case processes sorted by how many times they were executed,
+   * useful for identifying the most active case processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @returns Promise resolving to an array of {@link TopProcessesResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top case processes by run count for the last 7 days
+   * const topProcesses = await cases.getTop(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.runCount} runs`);
+   * }
+   * ```
+   */
+  @track('Cases.GetTop')
+  async getTop(startTime: Date, endTime: Date): Promise<TopProcessesResponse[]> {
+    return fetchTopProcesses(this.post.bind(this), startTime, endTime, true);
   }
 }
