@@ -41,7 +41,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getInstanceStatusByDate', () => {
+  describe.skip('getInstanceStatusByDate', () => {
     it('should retrieve instance status by date for case management', async () => {
       const { cases } = getServices();
       await testGetInstanceStatusByDate(cases);

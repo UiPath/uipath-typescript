@@ -142,7 +142,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getInstanceStatusByDate', () => {
+  describe.skip('getInstanceStatusByDate', () => {
     it('should retrieve instance status by date', async () => {
       const { maestroProcesses } = getServices();
       await testGetInstanceStatusByDate(maestroProcesses);

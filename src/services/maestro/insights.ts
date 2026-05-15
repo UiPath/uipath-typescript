@@ -26,8 +26,8 @@ export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManag
  * Shared implementation used by both MaestroProcessesService and CasesService.
  *
  * @param postFn - Bound post method from a BaseService subclass
- * @param startTime - Start of the time range in epoch milliseconds
- * @param endTime - End of the time range in epoch milliseconds
+ * @param startTime - Start of the time range to query
+ * @param endTime - End of the time range to query
  * @param isCaseManagement - Whether to filter for case management processes
  * @param options - Optional settings for time bucketing granularity
  * @returns Promise resolving to an array of instance status by date entries
@@ -35,8 +35,8 @@ export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManag
  */
 export async function fetchInstanceStatusByDate(
   postFn: <T>(path: string, data?: unknown) => Promise<ApiResponse<T>>,
-  startTime: number,
-  endTime: number,
+  startTime: Date,
+  endTime: Date,
   isCaseManagement: boolean,
   options?: MaestroInsightsOptions,
 ): Promise<InstanceStatusByDateResponse[]> {
@@ -44,8 +44,8 @@ export async function fetchInstanceStatusByDate(
     MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
     {
       commonParams: {
-        startTime,
-        endTime,
+        startTime: startTime.getTime(),
+        endTime: endTime.getTime(),
         isCaseManagement,
       },
       timeSliceUnit: options?.timeSliceUnit,

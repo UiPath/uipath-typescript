@@ -75,16 +75,16 @@ export interface CasesServiceModel {
    * Returns time-bucketed counts of case instances grouped by status (Completed, Faulted, Cancelled),
    * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
    *
-   * @param startTime - Start of the time range in epoch milliseconds
-   * @param endTime - End of the time range in epoch milliseconds
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
    * @param options - Optional settings for time bucketing granularity
    * @returns Promise resolving to an array of {@link InstanceStatusByDateResponse}
    *
    * @example
    * ```typescript
    * // Get daily instance status for the last 7 days
-   * const now = Date.now();
-   * const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+   * const now = new Date();
+   * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
    * const statuses = await cases.getInstanceStatusByDate(sevenDaysAgo, now);
    *
    * for (const entry of statuses) {
@@ -103,8 +103,8 @@ export interface CasesServiceModel {
    * ```
    */
   getInstanceStatusByDate(
-    startTime: number,
-    endTime: number,
+    startTime: Date,
+    endTime: Date,
     options?: MaestroInsightsOptions,
   ): Promise<InstanceStatusByDateResponse[]>;
 }

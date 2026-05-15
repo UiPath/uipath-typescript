@@ -219,20 +219,20 @@ describe('MaestroProcessesService', () => {
       }),
     ];
 
-    const startTime = MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME;
-    const endTime = MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME;
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
 
     it('should retrieve instance status by date', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getInstanceStatusByDate(startTime, endTime);
+      const result = await service.getInstanceStatusByDate(startDate, endDate);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
         {
           commonParams: {
-            startTime,
-            endTime,
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
             isCaseManagement: false,
           },
           timeSliceUnit: undefined,
@@ -249,7 +249,7 @@ describe('MaestroProcessesService', () => {
     it('should pass timeSliceUnit when provided', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      await service.getInstanceStatusByDate(startTime, endTime, {
+      await service.getInstanceStatusByDate(startDate, endDate, {
         timeSliceUnit: TimeSliceUnit.Hour,
       });
 
@@ -265,7 +265,7 @@ describe('MaestroProcessesService', () => {
     it('should return empty array when API returns null', async () => {
       mockApiClient.post.mockResolvedValue(null);
 
-      const result = await service.getInstanceStatusByDate(startTime, endTime);
+      const result = await service.getInstanceStatusByDate(startDate, endDate);
 
       expect(result).toEqual([]);
     });
@@ -276,7 +276,7 @@ describe('MaestroProcessesService', () => {
       );
 
       await expect(
-        service.getInstanceStatusByDate(startTime, endTime),
+        service.getInstanceStatusByDate(startDate, endDate),
       ).rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED);
     });
   });

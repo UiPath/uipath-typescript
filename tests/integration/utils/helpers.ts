@@ -166,7 +166,7 @@ export async function testGetTopRunCount(
 
 /** Minimal interface for services that support getInstanceStatusByDate integration testing */
 interface InstanceStatusByDateService {
-  getInstanceStatusByDate(startTime: number, endTime: number): Promise<InstanceStatusByDateResponse[]>;
+  getInstanceStatusByDate(startTime: Date, endTime: Date): Promise<InstanceStatusByDateResponse[]>;
 }
 
 /**
@@ -178,8 +178,8 @@ interface InstanceStatusByDateService {
 export async function testGetInstanceStatusByDate(
   service: InstanceStatusByDateService,
 ): Promise<void> {
-  const now = Date.now();
-  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const now = new Date();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const result = await service.getInstanceStatusByDate(sevenDaysAgo, now);
 
