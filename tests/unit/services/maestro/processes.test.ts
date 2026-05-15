@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MaestroProcessesService } from '../../../../src/services/maestro/processes';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { TimeSliceUnit } from '../../../../src/models/common';
+import { TimeSliceUnit } from '../../../../src/models/maestro';
 import {
   MAESTRO_TEST_CONSTANTS,
   createMockProcess,

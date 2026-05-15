@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse } from './cases.types';
-import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../common';
+import { InstanceStatusByDateResponse, MaestroInsightsOptions } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases

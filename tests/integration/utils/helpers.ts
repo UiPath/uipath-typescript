@@ -1,7 +1,7 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
 import { GetTopRunCountResponse } from '../../../src/models/maestro/insights.types';
-import type { InstanceStatusByDateResponse } from '../../../src/models/common';
+import type { InstanceStatusByDateResponse } from '../../../src/models/maestro';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.

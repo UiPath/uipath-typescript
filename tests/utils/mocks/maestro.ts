@@ -8,7 +8,7 @@ import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
 import type { SlaSummaryResponse, CaseInstanceStageSLAResponse, CaseInstanceStageSLAStage } from '../../../src/models/maestro/case-instances.types';
-import type { InstanceStatusByDateResponse } from '../../../src/models/common/insights.types';
+import type { InstanceStatusByDateResponse } from '../../../src/models/maestro/insights.types';
 
 // Maestro-Specific Mock Factories
 

@@ -1,9 +1,9 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
-import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../../../models/common';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, GetTopRunCountResponse, InstanceStatusByDateResponse } from '../../../models/maestro';
+import type { MaestroInsightsOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
-import { buildInsightsTopBody } from '../insights';
+import { buildInsightsTopBody, fetchInstanceStatusByDate } from '../insights';
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
@@ -36,12 +36,12 @@ export class CasesService extends BaseService implements CasesServiceModel {
     const params = createParams({
       processType: ProcessType.CaseManagement
     });
-    
+
     const response = await this.get<{ processes: Omit<CaseGetAllResponse, 'name'>[] }>(
       MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
       { params }
     );
-    
+
     // Extract processes array from response data and add name field
     const cases = response.data?.processes || [];
     return cases.map(caseItem => ({
@@ -102,20 +102,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
     endTime: number,
     options?: MaestroInsightsOptions,
   ): Promise<InstanceStatusByDateResponse[]> {
-    const response = await this.post<InstanceStatusByDateResponse[]>(
-      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
-      {
-        commonParams: {
-          startTime,
-          endTime,
-          isCaseManagement: true,
-        },
-        timeSliceUnit: options?.timeSliceUnit,
-        timezoneOffset: new Date().getTimezoneOffset() * -1,
-      },
-    );
-
-    return response.data ?? [];
+    return fetchInstanceStatusByDate(this.post.bind(this), startTime, endTime, true, options);
   }
 
   /**

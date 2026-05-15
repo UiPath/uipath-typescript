@@ -1,3 +1,7 @@
+import { ApiResponse } from '../base';
+import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../../models/maestro';
+import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
+
 /**
  * Builds the request body for Insights RTM "top" endpoints.
  *
@@ -15,4 +19,39 @@ export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManag
       isCaseManagement
     }
   };
+}
+
+/**
+ * Fetches instance status counts by date from the Insights API.
+ * Shared implementation used by both MaestroProcessesService and CasesService.
+ *
+ * @param postFn - Bound post method from a BaseService subclass
+ * @param startTime - Start of the time range in epoch milliseconds
+ * @param endTime - End of the time range in epoch milliseconds
+ * @param isCaseManagement - Whether to filter for case management processes
+ * @param options - Optional settings for time bucketing granularity
+ * @returns Promise resolving to an array of instance status by date entries
+ * @internal
+ */
+export async function fetchInstanceStatusByDate(
+  postFn: <T>(path: string, data?: unknown) => Promise<ApiResponse<T>>,
+  startTime: number,
+  endTime: number,
+  isCaseManagement: boolean,
+  options?: MaestroInsightsOptions,
+): Promise<InstanceStatusByDateResponse[]> {
+  const response = await postFn<InstanceStatusByDateResponse[]>(
+    MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+    {
+      commonParams: {
+        startTime,
+        endTime,
+        isCaseManagement,
+      },
+      timeSliceUnit: options?.timeSliceUnit,
+      timezoneOffset: new Date().getTimezoneOffset() * -1,
+    },
+  );
+
+  return response.data ?? [];
 }

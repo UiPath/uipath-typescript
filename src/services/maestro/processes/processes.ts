@@ -1,10 +1,10 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
-import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../../../models/common';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, GetTopRunCountResponse, InstanceStatusByDateResponse } from '../../../models/maestro';
+import type { MaestroInsightsOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
-import { buildInsightsTopBody } from '../insights';
+import { buildInsightsTopBody, fetchInstanceStatusByDate } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
@@ -52,7 +52,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     const response = await this.get<{ processes: Omit<MaestroProcessGetAllResponse, 'name'>[] }>(
       MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
     );
-    
+
     // Extract processes array from response data and add name field
     const processes = response.data?.processes || [];
     const processesWithName = processes.map(process => ({
@@ -132,19 +132,6 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     endTime: number,
     options?: MaestroInsightsOptions,
   ): Promise<InstanceStatusByDateResponse[]> {
-    const response = await this.post<InstanceStatusByDateResponse[]>(
-      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
-      {
-        commonParams: {
-          startTime,
-          endTime,
-          isCaseManagement: false,
-        },
-        timeSliceUnit: options?.timeSliceUnit,
-        timezoneOffset: new Date().getTimezoneOffset() * -1,
-      },
-    );
-
-    return response.data ?? [];
+    return fetchInstanceStatusByDate(this.post.bind(this), startTime, endTime, false, options);
   }
 }

@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../common';
+import { InstanceStatusByDateResponse, MaestroInsightsOptions } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
