@@ -3,11 +3,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MaestroProcessesService } from '../../../../src/services/maestro/processes';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { 
+import { TimeSliceUnit } from '../../../../src/models/common';
+import {
   MAESTRO_TEST_CONSTANTS,
   createMockProcess,
   createMockProcessesApiResponse,
   createMockTopRunCountResponse,
+  createMockInstanceStatusByDate,
   createMockError,
   TEST_CONSTANTS
 } from '../../../utils/mocks';
@@ -39,21 +41,21 @@ describe('MaestroProcessesService', () => {
 
   describe('getAll', () => {
     it('should return all processes with instance statistics', async () => {
-      
+
       const mockApiResponse = createMockProcessesApiResponse([
         createMockProcess(),
-        createMockProcess({ 
-          processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY_2, 
+        createMockProcess({
+          processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY_2,
           packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID_2,
           name: MAESTRO_TEST_CONSTANTS.PACKAGE_ID_2
         })
       ]);
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
-      
+
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
         {}
@@ -78,14 +80,14 @@ describe('MaestroProcessesService', () => {
     });
 
     it('should handle empty processes array', async () => {
-      
+
       const mockApiResponse = { processes: [] };
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
-      
+
       expect(result).toEqual([]);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
@@ -94,19 +96,19 @@ describe('MaestroProcessesService', () => {
     });
 
     it('should handle undefined processes in response', async () => {
-      
+
       const mockApiResponse = {};
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
-      
+
       expect(result).toEqual([]);
     });
 
     it('should handle response without processes property', async () => {
-      
+
       const mockApiResponse = {
         // Response has data but no processes property
         someOtherProperty: MAESTRO_TEST_CONSTANTS.OTHER_PROPERTY,
@@ -114,10 +116,10 @@ describe('MaestroProcessesService', () => {
       };
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
-      
+
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
         {}
@@ -128,11 +130,11 @@ describe('MaestroProcessesService', () => {
     });
 
     it('should handle API errors', async () => {
-      
+
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      
+
       await expect(service.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
@@ -204,6 +206,78 @@ describe('MaestroProcessesService', () => {
       await expect(
         service.getTopRunCount(startDate, endDate)
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getInstanceStatusByDate', () => {
+    const mockResponse = [
+      createMockInstanceStatusByDate(),
+      createMockInstanceStatusByDate({
+        startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_2,
+        status: MAESTRO_TEST_CONSTANTS.INSIGHTS_STATUS_FAULTED,
+        count: MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_1,
+      }),
+    ];
+
+    const startTime = MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME;
+    const endTime = MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME;
+
+    it('should retrieve instance status by date', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getInstanceStatusByDate(startTime, endTime);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+        {
+          commonParams: {
+            startTime,
+            endTime,
+            isCaseManagement: false,
+          },
+          timeSliceUnit: undefined,
+          timezoneOffset: new Date().getTimezoneOffset() * -1,
+        },
+        {},
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].startTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1);
+      expect(result[0].status).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_STATUS_COMPLETED);
+      expect(result[0].count).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_2);
+    });
+
+    it('should pass timeSliceUnit when provided', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      await service.getInstanceStatusByDate(startTime, endTime, {
+        timeSliceUnit: TimeSliceUnit.Hour,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+        expect.objectContaining({
+          timeSliceUnit: TimeSliceUnit.Hour,
+        }),
+        {},
+      );
+    });
+
+    it('should return empty array when API returns null', async () => {
+      mockApiClient.post.mockResolvedValue(null);
+
+      const result = await service.getInstanceStatusByDate(startTime, endTime);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(
+        createMockError(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED),
+      );
+
+      await expect(
+        service.getInstanceStatusByDate(startTime, endTime),
+      ).rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED);
     });
   });
 });

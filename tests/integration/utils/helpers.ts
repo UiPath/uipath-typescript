@@ -1,6 +1,7 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
 import { GetTopRunCountResponse } from '../../../src/models/maestro/insights.types';
+import type { InstanceStatusByDateResponse } from '../../../src/models/common';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -161,4 +162,37 @@ export async function testGetTopRunCount(
   expect(typeof topProcess.runCount).toBe('number');
   expect(topProcess.processKey).toBeDefined();
   expect(typeof topProcess.processKey).toBe('string');
+}
+
+/** Minimal interface for services that support getInstanceStatusByDate integration testing */
+interface InstanceStatusByDateService {
+  getInstanceStatusByDate(startTime: number, endTime: number): Promise<InstanceStatusByDateResponse[]>;
+}
+
+/**
+ * Integration test helper: calls getInstanceStatusByDate and validates the response shape.
+ * Shared between MaestroProcessesService and CasesService.
+ *
+ * @param service - Service instance (maestroProcesses or cases)
+ */
+export async function testGetInstanceStatusByDate(
+  service: InstanceStatusByDateService,
+): Promise<void> {
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+  const result = await service.getInstanceStatusByDate(sevenDaysAgo, now);
+
+  expect(result).toBeDefined();
+  expect(Array.isArray(result)).toBe(true);
+
+  if (result.length > 0) {
+    const entry = result[0];
+    expect(entry.startTime).toBeDefined();
+    expect(typeof entry.startTime).toBe('string');
+    expect(entry.status).toBeDefined();
+    expect(typeof entry.status).toBe('string');
+    expect(entry.count).toBeDefined();
+    expect(typeof entry.count).toBe('number');
+  }
 }

@@ -3,12 +3,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CasesService } from '../../../../src/services/maestro/cases';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { 
+import {
   MAESTRO_TEST_CONSTANTS,
   TEST_CONSTANTS,
   createMockCase,
   createMockCasesGetAllApiResponse,
   createMockTopRunCountResponse,
+  createMockInstanceStatusByDate,
   createMockError
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -40,21 +41,21 @@ describe('CasesService', () => {
 
   describe('getAll', () => {
     it('should return all case management processes with instance statistics', async () => {
-      
+
       const mockApiResponse = createMockCasesGetAllApiResponse([
         createMockCase(),
-        createMockCase({ 
-          processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY, 
+        createMockCase({
+          processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
           packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
           name: MAESTRO_TEST_CONSTANTS.CASE_NAME
         })
       ]);
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
-      
+
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
         {
@@ -83,11 +84,11 @@ describe('CasesService', () => {
     });
 
     it('should handle empty cases array', async () => {
-      
+
       const mockApiResponse = { processes: [] };
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
       expect(result).toEqual([]);
@@ -102,7 +103,7 @@ describe('CasesService', () => {
     });
 
     it('should handle response without processes property', async () => {
-      
+
       const mockApiResponse = {
         // Response has data but no processes property
         someOtherProperty: MAESTRO_TEST_CONSTANTS.OTHER_PROPERTY,
@@ -125,16 +126,16 @@ describe('CasesService', () => {
     });
 
     it('should handle API errors', async () => {
-      
+
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      
+
       await expect(service.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
 
     it('should extract case name from packageId with CaseManagement prefix', async () => {
-      
+
       const mockApiResponse = createMockCasesGetAllApiResponse([
         createMockCase({
           processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
@@ -144,7 +145,7 @@ describe('CasesService', () => {
 
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
       expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_WITH_PREFIX);
@@ -203,6 +204,44 @@ describe('CasesService', () => {
       await expect(
         service.getTopRunCount(new Date(), new Date())
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getInstanceStatusByDate', () => {
+    const mockResponse = [
+      createMockInstanceStatusByDate(),
+    ];
+
+    it('should call with isCaseManagement true and return results', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getInstanceStatusByDate(
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME,
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].startTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          commonParams: expect.objectContaining({ isCaseManagement: true }),
+        }),
+        {},
+      );
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(
+        createMockError(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED),
+      );
+
+      await expect(
+        service.getInstanceStatusByDate(
+          MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+          MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME,
+        ),
+      ).rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED);
     });
   });
 });
