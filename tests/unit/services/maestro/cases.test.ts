@@ -223,12 +223,23 @@ describe('CasesService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].startTime).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1);
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        expect.any(String),
+        MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
         expect.objectContaining({
           commonParams: expect.objectContaining({ isCaseManagement: true }),
         }),
         {},
       );
+    });
+
+    it('should return empty array when API returns null', async () => {
+      mockApiClient.post.mockResolvedValue(null);
+
+      const result = await service.getInstanceStatusByDate(
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_START_TIME,
+        MAESTRO_TEST_CONSTANTS.INSIGHTS_END_TIME,
+      );
+
+      expect(result).toEqual([]);
     });
 
     it('should handle API errors', async () => {
