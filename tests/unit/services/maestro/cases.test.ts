@@ -209,6 +209,14 @@ describe('CasesService', () => {
       expect(result).toEqual([]);
     });
 
+    it('should return empty array when API returns null', async () => {
+      mockApiClient.post.mockResolvedValue(null);
+
+      const result = await service.getTop(startDate, endDate);
+
+      expect(result).toEqual([]);
+    });
+
     it('should handle API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 

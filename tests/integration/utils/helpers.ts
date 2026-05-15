@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from 'crypto';
-import { TopProcessesResponse } from '../../../src/models/maestro/processes.types';
+import { TopProcessesResponse } from '../../../src/models/maestro/insights.types';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.

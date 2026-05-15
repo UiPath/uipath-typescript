@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse } from './cases.types';
-import { TopProcessesResponse } from './processes.types';
+import { TopProcessesResponse } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases

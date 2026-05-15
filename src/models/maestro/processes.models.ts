@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopProcessesResponse } from './processes.types';
+import { TopProcessesResponse } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
