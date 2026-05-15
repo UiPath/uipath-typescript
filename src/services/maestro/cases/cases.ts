@@ -1,4 +1,4 @@
-import { CaseGetAllResponse, TopProcessesResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, ProcessGetTopResponse } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { BaseService } from '../../base';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -79,7 +79,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link TopProcessesResponse}
+   * @returns Promise resolving to an array of {@link ProcessGetTopResponse}
    * @example
    * ```typescript
    * import { Cases } from '@uipath/uipath-typescript/cases';
@@ -98,7 +98,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * ```
    */
   @track('Cases.GetTop')
-  async getTop(startTime: Date, endTime: Date): Promise<TopProcessesResponse[]> {
+  async getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]> {
     return fetchTopProcesses(this.post.bind(this), startTime, endTime, true);
   }
 }

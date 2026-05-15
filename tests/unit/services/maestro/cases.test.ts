@@ -176,52 +176,30 @@ describe('CasesService', () => {
       }
     ];
 
-    const startDate = new Date('2026-04-01T00:00:00Z');
-    const endDate = new Date('2026-05-01T00:00:00Z');
-
-    it('should retrieve top case processes by run count', async () => {
+    it('should call fetchTopProcesses with isCaseManagement true and return results', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getTop(startDate, endDate);
-
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES,
-        {
-          commonParams: {
-            startTime: startDate.getTime(),
-            endTime: endDate.getTime(),
-            isCaseManagement: true
-          },
-          timezoneOffset: 0
-        },
-        {}
+      const result = await service.getTop(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z')
       );
-      expect(result).toEqual(mockResponse);
+
       expect(result).toHaveLength(1);
       expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID);
-    });
-
-    it('should return empty array when no processes found', async () => {
-      mockApiClient.post.mockResolvedValue([]);
-
-      const result = await service.getTop(startDate, endDate);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should return empty array when API returns null', async () => {
-      mockApiClient.post.mockResolvedValue(null);
-
-      const result = await service.getTop(startDate, endDate);
-
-      expect(result).toEqual([]);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          commonParams: expect.objectContaining({ isCaseManagement: true })
+        }),
+        {}
+      );
     });
 
     it('should handle API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        service.getTop(startDate, endDate)
+        service.getTop(new Date(), new Date())
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

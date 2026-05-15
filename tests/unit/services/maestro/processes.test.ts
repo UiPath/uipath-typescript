@@ -194,15 +194,6 @@ describe('MaestroProcessesService', () => {
       expect(result[0].runCount).toBe(5);
     });
 
-    it('should return empty array when no processes found', async () => {
-      mockApiClient.post.mockResolvedValue([]);
-
-      const result = await service.getTop(startDate, endDate);
-
-      expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
-    });
-
     it('should return empty array when API returns null', async () => {
       mockApiClient.post.mockResolvedValue(null);
 

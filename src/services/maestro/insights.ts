@@ -1,10 +1,10 @@
 import { ApiResponse } from '../base';
-import { TopProcessesResponse } from '../../models/maestro';
+import { ProcessGetTopResponse } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
  * Fetches top processes by run count from the Insights API.
- * Shared implementation used by both ProcessInstancesService and CaseInstancesService.
+ * Shared implementation used by both MaestroProcessesService and CasesService.
  *
  * @param postFn - Bound post method from a BaseService subclass
  * @param startTime - Start of the time range to query
@@ -18,8 +18,8 @@ export async function fetchTopProcesses(
   startTime: Date,
   endTime: Date,
   isCaseManagement: boolean
-): Promise<TopProcessesResponse[]> {
-  const response = await postFn<TopProcessesResponse[]>(
+): Promise<ProcessGetTopResponse[]> {
+  const response = await postFn<ProcessGetTopResponse[]>(
     MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES,
     {
       commonParams: {

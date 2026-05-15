@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse } from './cases.types';
-import { TopProcessesResponse } from './insights.types';
+import { ProcessGetTopResponse } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -49,7 +49,7 @@ export interface CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link TopProcessesResponse}
+   * @returns Promise resolving to an array of {@link ProcessGetTopResponse}
    * @example
    * ```typescript
    * import { Cases } from '@uipath/uipath-typescript/cases';
@@ -67,5 +67,5 @@ export interface CasesServiceModel {
    * }
    * ```
    */
-  getTop(startTime: Date, endTime: Date): Promise<TopProcessesResponse[]>;
+  getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]>;
 }

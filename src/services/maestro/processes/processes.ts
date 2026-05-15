@@ -1,4 +1,4 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, TopProcessesResponse } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopResponse } from '../../../models/maestro';
 import { BaseService } from '../../base';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -87,7 +87,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link TopProcessesResponse}
+   * @returns Promise resolving to an array of {@link ProcessGetTopResponse}
    * @example
    * ```typescript
    * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
@@ -106,7 +106,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * ```
    */
   @track('MaestroProcesses.GetTop')
-  async getTop(startTime: Date, endTime: Date): Promise<TopProcessesResponse[]> {
+  async getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]> {
     return fetchTopProcesses(this.post.bind(this), startTime, endTime, false);
   }
 }

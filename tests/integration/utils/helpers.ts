@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from 'crypto';
-import { TopProcessesResponse } from '../../../src/models/maestro/insights.types';
+import { ProcessGetTopResponse } from '../../../src/models/maestro/insights.types';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -129,14 +129,14 @@ export function createTestFileContent(filename: string): string {
 
 /** Minimal interface for services that support getTop integration testing */
 interface TopProcessesService {
-  getTop(startTime: Date, endTime: Date): Promise<TopProcessesResponse[]>;
+  getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]>;
 }
 
 /**
  * Integration test helper: calls getTop and validates the response shape.
- * Shared between ProcessInstances and CaseInstances.
+ * Shared between MaestroProcessesService and CasesService.
  *
- * @param service - Service instance (processInstances or caseInstances)
+ * @param service - Service instance (maestroProcesses or cases)
  */
 export async function testGetTopProcesses(
   service: TopProcessesService
