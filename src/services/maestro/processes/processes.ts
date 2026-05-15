@@ -125,6 +125,28 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * @param endTime - End of the time range in epoch milliseconds
    * @param options - Optional settings for time bucketing granularity
    * @returns Promise resolving to an array of {@link InstanceStatusByDateResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get daily instance status for the last 7 days
+   * const now = Date.now();
+   * const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+   * const statuses = await maestroProcesses.getInstanceStatusByDate(sevenDaysAgo, now);
+   *
+   * for (const entry of statuses) {
+   *   console.log(`${entry.startTime} — ${entry.status}: ${entry.count}`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { TimeSliceUnit } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * // Get hourly breakdown
+   * const statuses = await maestroProcesses.getInstanceStatusByDate(startTime, endTime, {
+   *   timeSliceUnit: TimeSliceUnit.Hour,
+   * });
+   * ```
    */
   @track('MaestroProcesses.GetInstanceStatusByDate')
   async getInstanceStatusByDate(
