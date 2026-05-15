@@ -149,13 +149,15 @@ export async function testGetTopProcesses(
   expect(result).toBeDefined();
   expect(Array.isArray(result)).toBe(true);
 
-  if (result.length > 0) {
-    const topProcess = result[0];
-    expect(topProcess.packageId).toBeDefined();
-    expect(typeof topProcess.packageId).toBe('string');
-    expect(topProcess.runCount).toBeDefined();
-    expect(typeof topProcess.runCount).toBe('number');
-    expect(topProcess.processKey).toBeDefined();
-    expect(typeof topProcess.processKey).toBe('string');
+  if (result.length === 0) {
+    throw new Error('No top processes returned — cannot validate response structure');
   }
+
+  const topProcess = result[0];
+  expect(topProcess.packageId).toBeDefined();
+  expect(typeof topProcess.packageId).toBe('string');
+  expect(topProcess.runCount).toBeDefined();
+  expect(typeof topProcess.runCount).toBe('number');
+  expect(topProcess.processKey).toBeDefined();
+  expect(typeof topProcess.processKey).toBe('string');
 }

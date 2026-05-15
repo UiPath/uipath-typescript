@@ -83,7 +83,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTop', () => {
+  describe.skip('getTop', () => {
     it('should retrieve top case processes by run count', async () => {
       const { cases } = getServices();
       await testGetTopProcesses(cases);

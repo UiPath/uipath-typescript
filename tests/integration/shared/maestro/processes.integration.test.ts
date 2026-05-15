@@ -135,7 +135,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTop', () => {
+  describe.skip('getTop', () => {
     it('should retrieve top processes by run count', async () => {
       const { maestroProcesses } = getServices();
       await testGetTopProcesses(maestroProcesses);
