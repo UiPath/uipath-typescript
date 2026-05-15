@@ -136,6 +136,18 @@ export const MAESTRO_TEST_CONSTANTS = {
   STAGE_SLA_LATEST_STATUS_COMPLETED: 'Completed',
   ERROR_STAGES_SLA_SUMMARY_FAILED: 'Failed to fetch stages SLA summary',
 
+  // Insights InstanceStatusByDate constants
+  INSIGHTS_START_TIME: 1778224276339,
+  INSIGHTS_END_TIME: 1778829076339,
+  INSIGHTS_STATUS_COMPLETED: 'Completed',
+  INSIGHTS_STATUS_FAULTED: 'Faulted',
+  INSIGHTS_STATUS_CANCELLED: 'Cancelled',
+  INSIGHTS_DATE_1: '5/8/2026 12:00:00 AM',
+  INSIGHTS_DATE_2: '5/9/2026 12:00:00 AM',
+  INSIGHTS_COUNT_2: 2,
+  INSIGHTS_COUNT_1: 1,
+  ERROR_INSIGHTS_FAILED: 'Failed to fetch instance status by date',
+
   // Execution History constants
   ELEMENT_RUN_ID: 'run-1',
   EXTERNAL_LINK: 'https://test.uipath.com/task/123',

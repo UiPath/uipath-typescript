@@ -4,6 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse } from './cases.types';
+import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../common';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -67,4 +68,43 @@ export interface CasesServiceModel {
    * ```
    */
   getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]>;
+
+  /**
+   * Get instance status counts aggregated by date for case management.
+   *
+   * Returns time-bucketed counts of case instances grouped by status (Completed, Faulted, Cancelled),
+   * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
+   *
+   * @param startTime - Start of the time range in epoch milliseconds
+   * @param endTime - End of the time range in epoch milliseconds
+   * @param options - Optional settings for time bucketing granularity
+   * @returns Promise resolving to an array of {@link InstanceStatusByDateResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get daily instance status for the last 7 days
+   * const now = Date.now();
+   * const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+   * const statuses = await cases.getInstanceStatusByDate(sevenDaysAgo, now);
+   *
+   * for (const entry of statuses) {
+   *   console.log(`${entry.startTime} — ${entry.status}: ${entry.count}`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { TimeSliceUnit } from '@uipath/uipath-typescript/cases';
+   *
+   * // Get weekly breakdown
+   * const statuses = await cases.getInstanceStatusByDate(startTime, endTime, {
+   *   timeSliceUnit: TimeSliceUnit.Week,
+   * });
+   * ```
+   */
+  getInstanceStatusByDate(
+    startTime: number,
+    endTime: number,
+    options?: MaestroInsightsOptions,
+  ): Promise<InstanceStatusByDateResponse[]>;
 }

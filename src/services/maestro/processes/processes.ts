@@ -1,4 +1,5 @@
 import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
+import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../../../models/common';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
@@ -112,5 +113,38 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
       buildInsightsTopBody(startTime, endTime, false)
     );
     return (data ?? []).map(process => ({ ...process, name: process.packageId }));
+  }
+
+  /**
+   * Get instance status counts aggregated by date for process orchestration.
+   *
+   * Returns time-bucketed counts of instances grouped by status (Completed, Faulted, Cancelled),
+   * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
+   *
+   * @param startTime - Start of the time range in epoch milliseconds
+   * @param endTime - End of the time range in epoch milliseconds
+   * @param options - Optional settings for time bucketing granularity
+   * @returns Promise resolving to an array of {@link InstanceStatusByDateResponse}
+   */
+  @track('MaestroProcesses.GetInstanceStatusByDate')
+  async getInstanceStatusByDate(
+    startTime: number,
+    endTime: number,
+    options?: MaestroInsightsOptions,
+  ): Promise<InstanceStatusByDateResponse[]> {
+    const response = await this.post<InstanceStatusByDateResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+      {
+        commonParams: {
+          startTime,
+          endTime,
+          isCaseManagement: false,
+        },
+        timeSliceUnit: options?.timeSliceUnit,
+        timezoneOffset: new Date().getTimezoneOffset() * -1,
+      },
+    );
+
+    return response.data ?? [];
   }
 }

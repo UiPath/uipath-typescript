@@ -41,6 +41,45 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('getInstanceStatusByDate', () => {
+    it('should retrieve instance status by date for case management', async () => {
+      const { cases } = getServices();
+
+      const now = Date.now();
+      const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+      const result = await cases.getInstanceStatusByDate(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length > 0) {
+        const entry = result[0];
+        expect(entry.startTime).toBeDefined();
+        expect(typeof entry.startTime).toBe('string');
+        expect(entry.status).toBeDefined();
+        expect(typeof entry.status).toBe('string');
+        expect(entry.count).toBeDefined();
+        expect(typeof entry.count).toBe('number');
+      }
+    });
+
+    it('should support timeSliceUnit option', async () => {
+      const { cases } = getServices();
+      const { TimeSliceUnit } = await import('../../../../src/models/common');
+
+      const now = Date.now();
+      const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+      const result = await cases.getInstanceStatusByDate(sevenDaysAgo, now, {
+        timeSliceUnit: TimeSliceUnit.Hour,
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
   describe('Case CRUD operations', () => {
     it('should support case definition operations', async () => {
       const { cases } = getServices();

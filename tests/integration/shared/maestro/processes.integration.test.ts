@@ -142,6 +142,45 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('getInstanceStatusByDate', () => {
+    it('should retrieve instance status by date', async () => {
+      const { maestroProcesses } = getServices();
+
+      const now = Date.now();
+      const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+      const result = await maestroProcesses.getInstanceStatusByDate(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length > 0) {
+        const entry = result[0];
+        expect(entry.startTime).toBeDefined();
+        expect(typeof entry.startTime).toBe('string');
+        expect(entry.status).toBeDefined();
+        expect(typeof entry.status).toBe('string');
+        expect(entry.count).toBeDefined();
+        expect(typeof entry.count).toBe('number');
+      }
+    });
+
+    it('should support timeSliceUnit option', async () => {
+      const { maestroProcesses } = getServices();
+      const { TimeSliceUnit } = await import('../../../../src/models/common');
+
+      const now = Date.now();
+      const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+      const result = await maestroProcesses.getInstanceStatusByDate(sevenDaysAgo, now, {
+        timeSliceUnit: TimeSliceUnit.Week,
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
   describe('Process metadata validation', () => {
     it('should have expected fields in process objects', async () => {
       const { maestroProcesses } = getServices();

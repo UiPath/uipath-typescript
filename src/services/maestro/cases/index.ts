@@ -30,3 +30,5 @@ export * from '../../../models/maestro/cases.models';
 export * from '../../../models/maestro/case-instances.types';
 export * from '../../../models/maestro/case-instances.models';
 export * from '../../../models/maestro/insights.types';
+export { TimeSliceUnit } from '../../../models/common';
+export type { MaestroInsightsOptions, InstanceStatusByDateResponse } from '../../../models/common';

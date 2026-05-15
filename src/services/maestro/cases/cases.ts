@@ -1,4 +1,5 @@
 import { CaseGetAllResponse, CaseGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
+import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../../../models/common';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
@@ -82,6 +83,39 @@ export class CasesService extends BaseService implements CasesServiceModel {
       buildInsightsTopBody(startTime, endTime, true)
     );
     return (data ?? []).map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
+  }
+
+  /**
+   * Get instance status counts aggregated by date for case management.
+   *
+   * Returns time-bucketed counts of case instances grouped by status (Completed, Faulted, Cancelled),
+   * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
+   *
+   * @param startTime - Start of the time range in epoch milliseconds
+   * @param endTime - End of the time range in epoch milliseconds
+   * @param options - Optional settings for time bucketing granularity
+   * @returns Promise resolving to an array of {@link InstanceStatusByDateResponse}
+   */
+  @track('Cases.GetInstanceStatusByDate')
+  async getInstanceStatusByDate(
+    startTime: number,
+    endTime: number,
+    options?: MaestroInsightsOptions,
+  ): Promise<InstanceStatusByDateResponse[]> {
+    const response = await this.post<InstanceStatusByDateResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+      {
+        commonParams: {
+          startTime,
+          endTime,
+          isCaseManagement: true,
+        },
+        timeSliceUnit: options?.timeSliceUnit,
+        timezoneOffset: new Date().getTimezoneOffset() * -1,
+      },
+    );
+
+    return response.data ?? [];
   }
 
   /**
