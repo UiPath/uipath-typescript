@@ -44,6 +44,21 @@ export interface MaestroInsightsOptions {
 }
 
 /**
+ * Terminal instance statuses returned by the InstanceStatusByDate endpoint.
+ *
+ * This is a subset of the full instance status set — the backend SQL query
+ * filters to only these three terminal statuses.
+ */
+export enum InsightInstanceStatus {
+  /** Instance completed successfully */
+  Completed = 'Completed',
+  /** Instance encountered an error */
+  Faulted = 'Faulted',
+  /** Instance was cancelled */
+  Cancelled = 'Cancelled',
+}
+
+/**
  * A single data point from the InstanceStatusByDate insights query.
  *
  * Each entry represents the count of instances with a given status
@@ -52,8 +67,8 @@ export interface MaestroInsightsOptions {
 export interface InstanceStatusByDateResponse {
   /** Start of the time bucket (formatted date string) */
   startTime: string;
-  /** Instance status (e.g., "Completed", "Faulted", "Cancelled") */
-  status: string;
+  /** Instance status */
+  status: InsightInstanceStatus;
   /** Number of instances with this status in the time bucket */
   count: number;
 }

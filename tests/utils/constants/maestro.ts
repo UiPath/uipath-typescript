@@ -4,6 +4,7 @@
  */
 
 import { EscalationTriggerType } from '../../../src/models/maestro/case-instances.types';
+import { InsightInstanceStatus } from '../../../src/models/maestro/insights.types';
 
 export const MAESTRO_TEST_CONSTANTS = {
   // Maestro-specific identifiers
@@ -139,9 +140,9 @@ export const MAESTRO_TEST_CONSTANTS = {
   // Insights InstanceStatusByDate constants
   INSIGHTS_START_TIME: 1778224276339,
   INSIGHTS_END_TIME: 1778829076339,
-  INSIGHTS_STATUS_COMPLETED: 'Completed',
-  INSIGHTS_STATUS_FAULTED: 'Faulted',
-  INSIGHTS_STATUS_CANCELLED: 'Cancelled',
+  INSIGHTS_STATUS_COMPLETED: InsightInstanceStatus.Completed,
+  INSIGHTS_STATUS_FAULTED: InsightInstanceStatus.Faulted,
+  INSIGHTS_STATUS_CANCELLED: InsightInstanceStatus.Cancelled,
   INSIGHTS_DATE_1: '5/8/2026 12:00:00 AM',
   INSIGHTS_DATE_2: '5/9/2026 12:00:00 AM',
   INSIGHTS_COUNT_2: 2,
