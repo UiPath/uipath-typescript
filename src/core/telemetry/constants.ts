@@ -3,9 +3,9 @@
  *
  * Only the SDK's identity (version, service name, role name, …) lives
  * here. The Application Insights connection string is injected into
- * `@uipath/telemetry` itself at publish time, and the generic attribute
+ * `@uipath/common` itself at publish time, and the generic attribute
  * keys (`Version`, `Service`, `CloudOrganizationName`, …) are owned by
- * `@uipath/telemetry` and consumed there — they are not part of the
+ * `@uipath/common` and consumed there — they are not part of the
  * SDK's public API.
  */
 

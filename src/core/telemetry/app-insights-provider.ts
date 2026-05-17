@@ -1,4 +1,4 @@
-import type { ITelemetryProvider, TelemetryProperties } from '@uipath/telemetry';
+import type { ITelemetryProvider, TelemetryProperties } from '@uipath/common/telemetry';
 
 /**
  * Application Insights ingestion payload shape (subset).
@@ -34,7 +34,7 @@ const INGESTION_ENDPOINT_RE = /IngestionEndpoint=([^;]+)/;
 /**
  * `ITelemetryProvider` implementation that ships every event to the
  * Application Insights `/v2/track` endpoint as a custom event. Plugged into
- * `@uipath/telemetry`'s `TelemetryService` — the service handles property
+ * `@uipath/common`'s `TelemetryService` — the service handles property
  * merging and correlation, this class handles transport.
  */
 export class ApplicationInsightsTelemetryProvider implements ITelemetryProvider {

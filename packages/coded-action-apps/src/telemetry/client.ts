@@ -3,7 +3,7 @@ import {
     TelemetryService,
     type TelemetryContext,
     type TelemetryProperties,
-} from '@uipath/telemetry';
+} from '@uipath/common/telemetry';
 
 import {
     SDK_VERSION,
@@ -31,7 +31,7 @@ const CLOUD_CLIENT_ID = 'CloudClientId';
 const UNKNOWN = '';
 
 /**
- * Coded Action Apps telemetry singleton. Wraps `@uipath/telemetry`'s
+ * Coded Action Apps telemetry singleton. Wraps `@uipath/common`'s
  * `TelemetryService` so the host can call
  * `telemetryClient.initialize({ baseUrl, orgName, ... })` without dealing
  * with provider construction.

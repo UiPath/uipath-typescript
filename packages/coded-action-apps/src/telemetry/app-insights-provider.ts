@@ -1,4 +1,4 @@
-import type { ITelemetryProvider, TelemetryProperties } from '@uipath/telemetry';
+import type { ITelemetryProvider, TelemetryProperties } from '@uipath/common/telemetry';
 
 /**
  * Application Insights ingestion payload shape (subset).

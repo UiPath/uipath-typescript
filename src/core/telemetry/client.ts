@@ -3,7 +3,7 @@ import {
     TelemetryService,
     type TelemetryContext,
     type TelemetryProperties,
-} from '@uipath/telemetry';
+} from '@uipath/common/telemetry';
 
 import {
     SDK_VERSION,
@@ -21,7 +21,7 @@ import { ApplicationInsightsTelemetryProvider } from './app-insights-provider';
 const CONNECTION_STRING = '$CONNECTION_STRING';
 
 // Property keys attached to every emitted event. Held locally so the SDK
-// owns the wire format independently of `@uipath/telemetry`.
+// owns the wire format independently of `@uipath/common`.
 const APP_NAME = 'ApplicationName';
 const VERSION = 'Version';
 const SERVICE = 'Service';
@@ -33,7 +33,7 @@ const CLOUD_REDIRECT_URI = 'CloudRedirectUri';
 const UNKNOWN = '';
 
 /**
- * SDK-facing telemetry singleton. Wraps `@uipath/telemetry`'s
+ * SDK-facing telemetry singleton. Wraps `@uipath/common`'s
  * `TelemetryService` so the SDK keeps its existing call site
  * (`telemetryClient.initialize({ baseUrl, orgName, ... })`) while routing
  * events through the shared package.
