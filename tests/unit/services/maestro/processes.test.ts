@@ -183,14 +183,13 @@ describe('MaestroProcessesService', () => {
             startTime: startDate.getTime(),
             endTime: endDate.getTime(),
             isCaseManagement: false
-          },
-          timezoneOffset: 0
+          }
         },
         {}
       );
-      expect(result).toEqual(mockResponse);
       expect(result).toHaveLength(2);
       expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
+      expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
       expect(result[0].runCount).toBe(5);
     });
 

@@ -1,16 +1,15 @@
-import { CaseGetAllResponse, ProcessGetTopResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopResponse } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
-import { BaseService } from '../../base';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
-import { fetchTopProcesses } from '../insights';
+import { MaestroInsightsService } from '../insights';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
 
 /**
  * Service for interacting with UiPath Maestro Cases
  */
-export class CasesService extends BaseService implements CasesServiceModel {
+export class CasesService extends MaestroInsightsService implements CasesServiceModel {
   /**
    * Get all case management processes with their instance statistics
    * @returns Promise resolving to array of Case objects
@@ -79,7 +78,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link ProcessGetTopResponse}
+   * @returns Promise resolving to an array of {@link CaseGetTopResponse}
    * @example
    * ```typescript
    * import { Cases } from '@uipath/uipath-typescript/cases';
@@ -98,7 +97,8 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * ```
    */
   @track('Cases.GetTop')
-  async getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]> {
-    return fetchTopProcesses(this.post.bind(this), startTime, endTime, true);
+  async getTop(startTime: Date, endTime: Date): Promise<CaseGetTopResponse[]> {
+    const results = await this.fetchTopProcesses(startTime, endTime, true);
+    return results.map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
   }
 }

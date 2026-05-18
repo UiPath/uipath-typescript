@@ -1,10 +1,9 @@
 import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopResponse } from '../../../models/maestro';
-import { BaseService } from '../../base';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
-import { fetchTopProcesses } from '../insights';
+import { MaestroInsightsService } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
@@ -14,7 +13,7 @@ import { ProcessInstancesService } from './process-instances';
 /**
  * Service for interacting with Maestro Processes
  */
-export class MaestroProcessesService extends BaseService implements MaestroProcessesServiceModel {
+export class MaestroProcessesService extends MaestroInsightsService implements MaestroProcessesServiceModel {
   private processInstancesService: ProcessInstancesService;
 
   /**
@@ -107,6 +106,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    */
   @track('MaestroProcesses.GetTop')
   async getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]> {
-    return fetchTopProcesses(this.post.bind(this), startTime, endTime, false);
+    const results = await this.fetchTopProcesses(startTime, endTime, false);
+    return results.map(process => ({ ...process, name: process.packageId }));
   }
 }

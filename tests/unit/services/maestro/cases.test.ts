@@ -186,6 +186,7 @@ describe('CasesService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID);
+      expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_DEFAULT);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
