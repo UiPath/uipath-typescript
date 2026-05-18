@@ -155,6 +155,7 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
+  - pymdownx.tilde
   - pymdownx.inlinehilite
   - pymdownx.magiclink
   - pymdownx.snippets
