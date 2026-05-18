@@ -64,6 +64,9 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `DataFabric.Schema.Read` |
 | `getById()` | `DataFabric.Data.Read` |
+| `insertValueById()` | `DataFabric.Data.Write` |
+| `updateValueById()` | `DataFabric.Data.Write` |
+| `deleteValuesById()` | `DataFabric.Data.Write` |
 
 ## Maestro Processes
 

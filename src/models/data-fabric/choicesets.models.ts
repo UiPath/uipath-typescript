@@ -1,7 +1,12 @@
 import {
   ChoiceSetGetAllResponse,
   ChoiceSetGetResponse,
-  ChoiceSetGetByIdOptions
+  ChoiceSetGetByIdOptions,
+  ChoiceSetCreateOptions,
+  ChoiceSetUpdateOptions,
+  ChoiceSetValueInsertOptions,
+  ChoiceSetValueInsertResponse,
+  ChoiceSetValueUpdateResponse
 } from './choicesets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -94,5 +99,144 @@ export interface ChoiceSetServiceModel {
       ? PaginatedResponse<ChoiceSetGetResponse>
       : NonPaginatedResponse<ChoiceSetGetResponse>
   >;
+
+  /**
+   * Creates a new Data Fabric choice set
+   *
+   * @param name - Choice set name. Server-enforced rules: must start with a
+   *   letter, may contain only letters, numbers, and underscores, length
+   *   3–100 characters (e.g., `"expenseTypes"`).
+   * @param options - Optional choice-set-level settings ({@link ChoiceSetCreateOptions})
+   * @returns Promise resolving to the UUID of the created choice set
+   *
+   * @example
+   * ```typescript
+   * // Minimal create
+   * const expenseTypesId = await choicesets.create("expense_types");
+   *
+   * // With display name and description
+   * const priorityLevelsId = await choicesets.create("priority_levels", {
+   *   displayName: "Priority Levels",
+   *   description: "Ticket priority categories",
+   * });
+   * ```
+   * @internal
+   */
+  create(name: string, options?: ChoiceSetCreateOptions): Promise<string>;
+
+  /**
+   * Updates an existing choice set's metadata (display name and/or description).
+   *
+   * **At least one of `displayName` or `description` must be provided** —
+   * the call throws `ValidationError` if both are omitted.
+   *
+   * @param choiceSetId - UUID of the choice set to update
+   * @param options - Metadata fields to change ({@link ChoiceSetUpdateOptions})
+   * @returns Promise resolving when the update is complete
+   *
+   * @example
+   * ```typescript
+   * // First, get the choice set ID using getAll()
+   * const allChoiceSets = await choicesets.getAll();
+   * const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+   *
+   * await choicesets.updateById(expenseTypes.id, {
+   *   displayName: "Expense Categories",
+   *   description: "Updated description",
+   * });
+   * ```
+   * @internal
+   */
+  updateById(choiceSetId: string, options: ChoiceSetUpdateOptions): Promise<void>;
+
+  /**
+   * Deletes a Data Fabric choice set and all its values.
+   *
+   * @param choiceSetId - UUID of the choice set to delete
+   * @returns Promise resolving when the choice set is deleted
+   *
+   * @example
+   * ```typescript
+   * // First, get the choice set ID using getAll()
+   * const allChoiceSets = await choicesets.getAll();
+   * const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+   *
+   * await choicesets.deleteById(expenseTypes.id);
+   * ```
+   * @internal
+   */
+  deleteById(choiceSetId: string): Promise<void>;
+
+  /**
+   * Inserts a single value into a choice set.
+   *
+   * @param choiceSetId - UUID of the parent choice set
+   * @param name - Identifier name of the new value (e.g., `"TRAVEL"`)
+   * @param options - Optional fields ({@link ChoiceSetValueInsertOptions})
+   * @returns Promise resolving to the inserted value ({@link ChoiceSetValueInsertResponse})
+   *
+   * @example
+   * ```typescript
+   * // First, get the choice set ID using getAll()
+   * const allChoiceSets = await choicesets.getAll();
+   * const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+   *
+   * const inserted = await choicesets.insertValueById(expenseTypes.id, 'TRAVEL', {
+   *   displayName: 'Travel',
+   * });
+   * console.log(inserted.id);
+   * ```
+   */
+  insertValueById(
+    choiceSetId: string,
+    name: string,
+    options?: ChoiceSetValueInsertOptions,
+  ): Promise<ChoiceSetValueInsertResponse>;
+
+  /**
+   * Updates an existing choice-set value's display name.
+   *
+   * Only `displayName` is mutable; the value's `name` (identifier) is fixed at
+   * insert time and cannot be changed.
+   *
+   * @param choiceSetId - UUID of the parent choice set
+   * @param valueId - UUID of the value to update
+   * @param displayName - New human-readable display name for the value
+   * @returns Promise resolving to the updated value ({@link ChoiceSetValueUpdateResponse})
+   *
+   * @example
+   * ```typescript
+   * // Get the choice set ID from getAll() and the value ID from getById()
+   * const allChoiceSets = await choicesets.getAll();
+   * const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
+   * const values = await choicesets.getById(expenseTypes.id);
+   * const travel = values.items.find(v => v.name === 'TRAVEL');
+   *
+   * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel');
+   * ```
+   */
+  updateValueById(
+    choiceSetId: string,
+    valueId: string,
+    displayName: string,
+  ): Promise<ChoiceSetValueUpdateResponse>;
+
+  /**
+   * Deletes one or more values from a choice set.
+   *
+   * @param choiceSetId - UUID of the parent choice set
+   * @param valueIds - Array of value UUIDs to delete
+   * @returns Promise resolving when the values are deleted
+   *
+   * @example
+   * ```typescript
+   * // Get the value IDs from getById()
+   * const values = await choicesets.getById('<choiceSetId>');
+   * const idsToDelete = values.items.slice(0, 2).map(v => v.id);
+   *
+   * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete);
+   * ```
+   */
+  deleteValuesById(choiceSetId: string, valueIds: string[]): Promise<void>;
 }
 

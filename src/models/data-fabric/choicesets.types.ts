@@ -5,6 +5,8 @@ import { PaginationOptions } from '../../utils/pagination/types';
  * Only exposes essential fields to SDK users
  */
 export interface ChoiceSetGetAllResponse {
+  /** UUID of the choice set */
+  id: string;
   /** Name identifier of the choice set */
   name: string;
   /** Human-readable display name of the choice set*/
@@ -51,4 +53,47 @@ export interface ChoiceSetGetResponse {
  * Options for getting choice set values by choice set ID
  */
 export type ChoiceSetGetByIdOptions = PaginationOptions;
+
+/**
+ * Options for creating a new choice set
+ */
+export interface ChoiceSetCreateOptions {
+  /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
+  displayName?: string;
+  /** Optional choice set description */
+  description?: string;
+  /** UUID of the folder to place the choice set in (defaults to the tenant-level folder) */
+  folderKey?: string;
+}
+
+/**
+ * Options for updating an existing choice set's metadata
+ */
+export interface ChoiceSetUpdateOptions {
+  /** New display name for the choice set */
+  displayName?: string;
+  /** New description for the choice set */
+  description?: string;
+}
+
+/**
+ * Optional fields when inserting a single value into a choice set.
+ *
+ * The required `name` identifier is passed as a positional argument to
+ * `insertValueById`.
+ */
+export interface ChoiceSetValueInsertOptions {
+  /** Human-readable display name (defaults to `name` if omitted) */
+  displayName?: string;
+}
+
+/**
+ * Response returned after inserting a choice-set value — the full value object.
+ */
+export interface ChoiceSetValueInsertResponse extends ChoiceSetGetResponse {}
+
+/**
+ * Response returned after updating a choice-set value — the full value object.
+ */
+export interface ChoiceSetValueUpdateResponse extends ChoiceSetGetResponse {}
 
