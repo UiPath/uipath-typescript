@@ -9,7 +9,7 @@ import {
   createMockCase,
   createMockCasesGetAllApiResponse,
   createMockTopRunCountResponse,
-  createMockInstanceStatusByDate,
+  createMockInstanceStatusTimeline,
   createMockError
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -207,11 +207,11 @@ describe('CasesService', () => {
     });
   });
 
-  describe('getInstanceStatusByDate', () => {
-    it('should call fetchInstanceStatusByDate with isCaseManagement true', async () => {
-      mockApiClient.post.mockResolvedValue([createMockInstanceStatusByDate()]);
+  describe('getInstanceStatusTimeline', () => {
+    it('should call fetchInstanceStatusTimeline with isCaseManagement true', async () => {
+      mockApiClient.post.mockResolvedValue([createMockInstanceStatusTimeline()]);
 
-      const result = await service.getInstanceStatusByDate(
+      const result = await service.getInstanceStatusTimeline(
         new Date('2026-04-01T00:00:00Z'),
         new Date('2026-05-01T00:00:00Z'),
       );

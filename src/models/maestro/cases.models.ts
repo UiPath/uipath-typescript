@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse } from './cases.types';
-import { InstanceStatusByDateResponse, MaestroInsightsOptions } from './insights.types';
+import { InstanceStatusTimelineResponse, MaestroInsightsOptions } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -70,7 +70,7 @@ export interface CasesServiceModel {
   getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]>;
 
   /**
-   * Get instance status counts aggregated by date for case management.
+   * Get instance status counts aggregated by date for case management processes.
    *
    * Returns time-bucketed counts of case instances grouped by status (Completed, Faulted, Cancelled),
    * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
@@ -78,14 +78,14 @@ export interface CasesServiceModel {
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param options - Optional settings for time bucketing granularity
-   * @returns Promise resolving to an array of {@link InstanceStatusByDateResponse}
+   * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
    * ```typescript
    * // Get daily instance status for the last 7 days
    * const now = new Date();
    * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-   * const statuses = await cases.getInstanceStatusByDate(sevenDaysAgo, now);
+   * const statuses = await cases.getInstanceStatusTimeline(sevenDaysAgo, now);
    *
    * for (const entry of statuses) {
    *   console.log(`${entry.startTime} — ${entry.status}: ${entry.count}`);
@@ -97,14 +97,14 @@ export interface CasesServiceModel {
    * import { TimeSliceUnit } from '@uipath/uipath-typescript/cases';
    *
    * // Get weekly breakdown
-   * const statuses = await cases.getInstanceStatusByDate(startTime, endTime, {
+   * const statuses = await cases.getInstanceStatusTimeline(startTime, endTime, {
    *   timeSliceUnit: TimeSliceUnit.Week,
    * });
    * ```
    */
-  getInstanceStatusByDate(
+  getInstanceStatusTimeline(
     startTime: Date,
     endTime: Date,
     options?: MaestroInsightsOptions,
-  ): Promise<InstanceStatusByDateResponse[]>;
+  ): Promise<InstanceStatusTimelineResponse[]>;
 }

@@ -1,7 +1,7 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
 import { GetTopRunCountResponse } from '../../../src/models/maestro/insights.types';
-import type { InstanceStatusByDateResponse } from '../../../src/models/maestro';
+import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -164,24 +164,24 @@ export async function testGetTopRunCount(
   expect(typeof topProcess.processKey).toBe('string');
 }
 
-/** Minimal interface for services that support getInstanceStatusByDate integration testing */
-interface InstanceStatusByDateService {
-  getInstanceStatusByDate(startTime: Date, endTime: Date): Promise<InstanceStatusByDateResponse[]>;
+/** Minimal interface for services that support getInstanceStatusTimeline integration testing */
+interface InstanceStatusTimelineService {
+  getInstanceStatusTimeline(startTime: Date, endTime: Date): Promise<InstanceStatusTimelineResponse[]>;
 }
 
 /**
- * Integration test helper: calls getInstanceStatusByDate and validates the response shape.
+ * Integration test helper: calls getInstanceStatusTimeline and validates the response shape.
  * Shared between MaestroProcessesService and CasesService.
  *
  * @param service - Service instance (maestroProcesses or cases)
  */
-export async function testGetInstanceStatusByDate(
-  service: InstanceStatusByDateService,
+export async function testGetInstanceStatusTimeline(
+  service: InstanceStatusTimelineService,
 ): Promise<void> {
   const now = new Date();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const result = await service.getInstanceStatusByDate(sevenDaysAgo, now);
+  const result = await service.getInstanceStatusTimeline(sevenDaysAgo, now);
 
   expect(result).toBeDefined();
   expect(Array.isArray(result)).toBe(true);

@@ -1,10 +1,10 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, GetTopRunCountResponse, InstanceStatusByDateResponse } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, GetTopRunCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
 import type { MaestroInsightsOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
-import { buildInsightsTopBody, fetchInstanceStatusByDate } from '../insights';
+import { buildInsightsTopBody, fetchInstanceStatusTimeline } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
@@ -116,7 +116,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   }
 
   /**
-   * Get instance status counts aggregated by date for process orchestration.
+   * Get instance status counts aggregated by date for maestro processes.
    *
    * Returns time-bucketed counts of instances grouped by status (Completed, Faulted, Cancelled),
    * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
@@ -124,14 +124,14 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param options - Optional settings for time bucketing granularity
-   * @returns Promise resolving to an array of {@link InstanceStatusByDateResponse}
+   * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
    * ```typescript
    * // Get daily instance status for the last 7 days
    * const now = new Date();
    * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-   * const statuses = await maestroProcesses.getInstanceStatusByDate(sevenDaysAgo, now);
+   * const statuses = await maestroProcesses.getInstanceStatusTimeline(sevenDaysAgo, now);
    *
    * for (const entry of statuses) {
    *   console.log(`${entry.startTime} — ${entry.status}: ${entry.count}`);
@@ -143,17 +143,17 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * import { TimeSliceUnit } from '@uipath/uipath-typescript/maestro-processes';
    *
    * // Get hourly breakdown
-   * const statuses = await maestroProcesses.getInstanceStatusByDate(startTime, endTime, {
+   * const statuses = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
    *   timeSliceUnit: TimeSliceUnit.Hour,
    * });
    * ```
    */
-  @track('MaestroProcesses.GetInstanceStatusByDate')
-  async getInstanceStatusByDate(
+  @track('MaestroProcesses.GetInstanceStatusTimeline')
+  async getInstanceStatusTimeline(
     startTime: Date,
     endTime: Date,
     options?: MaestroInsightsOptions,
-  ): Promise<InstanceStatusByDateResponse[]> {
-    return fetchInstanceStatusByDate(this.post.bind(this), startTime, endTime, false, options);
+  ): Promise<InstanceStatusTimelineResponse[]> {
+    return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, false, options);
   }
 }

@@ -1,5 +1,5 @@
 import { ApiResponse } from '../base';
-import { InstanceStatusByDateResponse, MaestroInsightsOptions } from '../../models/maestro';
+import { InstanceStatusTimelineResponse, MaestroInsightsOptions } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
@@ -22,7 +22,7 @@ export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManag
 }
 
 /**
- * Fetches instance status counts by date from the Insights API.
+ * Fetches instance status timeline from the Insights API.
  * Shared implementation used by both MaestroProcessesService and CasesService.
  *
  * @param postFn - Bound post method from a BaseService subclass
@@ -30,17 +30,17 @@ export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManag
  * @param endTime - End of the time range to query
  * @param isCaseManagement - Whether to filter for case management processes
  * @param options - Optional settings for time bucketing granularity
- * @returns Promise resolving to an array of instance status by date entries
+ * @returns Promise resolving to an array of instance status timeline entries
  * @internal
  */
-export async function fetchInstanceStatusByDate(
+export async function fetchInstanceStatusTimeline(
   postFn: <T>(path: string, data?: unknown) => Promise<ApiResponse<T>>,
   startTime: Date,
   endTime: Date,
   isCaseManagement: boolean,
   options?: MaestroInsightsOptions,
-): Promise<InstanceStatusByDateResponse[]> {
-  const response = await postFn<InstanceStatusByDateResponse[]>(
+): Promise<InstanceStatusTimelineResponse[]> {
+  const response = await postFn<InstanceStatusTimelineResponse[]>(
     MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
     {
       commonParams: {

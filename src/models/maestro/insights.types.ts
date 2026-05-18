@@ -44,7 +44,7 @@ export interface MaestroInsightsOptions {
 }
 
 /**
- * Terminal instance statuses returned by the InstanceStatusByDate endpoint.
+ * Terminal instance statuses returned by the instance status timeline endpoint.
  *
  * This is a subset of the full instance status set — the backend SQL query
  * filters to only these three terminal statuses.
@@ -59,13 +59,11 @@ export enum InsightInstanceStatus {
 }
 
 /**
- * A single data point from the InstanceStatusByDate insights query.
- *
- * Each entry represents the count of instances with a given status
+ * Instance count for a process with a given status
  * within a specific time bucket.
  */
-export interface InstanceStatusByDateResponse {
-  /** Start of the time bucket (formatted date string) */
+export interface InstanceStatusTimelineResponse {
+  /** Start of the time bucket (e.g. `"5/8/2026 12:00:00 AM"`) */
   startTime: string;
   /** Instance status */
   status: InsightInstanceStatus;

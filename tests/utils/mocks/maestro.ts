@@ -8,7 +8,7 @@ import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
 import type { SlaSummaryResponse, CaseInstanceStageSLAResponse, CaseInstanceStageSLAStage } from '../../../src/models/maestro/case-instances.types';
-import type { InstanceStatusByDateResponse } from '../../../src/models/maestro/insights.types';
+import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro/insights.types';
 
 // Maestro-Specific Mock Factories
 
@@ -600,11 +600,11 @@ export const createMockTopRunCountResponse = (overrides: Partial<any> = {}) => {
 };
 
 /**
- * Creates a mock InstanceStatusByDate response item
+ * Creates a mock InstanceStatusTimeline response item
  * @param overrides - Optional overrides for specific fields
- * @returns Mock InstanceStatusByDateResponse object
+ * @returns Mock InstanceStatusTimelineResponse object
  */
-export const createMockInstanceStatusByDate = (overrides: Partial<InstanceStatusByDateResponse> = {}): InstanceStatusByDateResponse => {
+export const createMockInstanceStatusTimeline = (overrides: Partial<InstanceStatusTimelineResponse> = {}): InstanceStatusTimelineResponse => {
   return createMockBaseResponse({
     startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1,
     status: MAESTRO_TEST_CONSTANTS.INSIGHTS_STATUS_COMPLETED,

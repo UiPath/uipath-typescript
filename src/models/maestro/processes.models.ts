@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { InstanceStatusByDateResponse, MaestroInsightsOptions } from './insights.types';
+import { InstanceStatusTimelineResponse, MaestroInsightsOptions } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -48,7 +48,7 @@ export interface MaestroProcessesServiceModel {
 
   /**
    * Get incidents for a specific process
-   * 
+   *
    * @param processKey The key of the process to get incidents for
    * @param folderKey The folder key for authorization
    * @returns Promise resolving to array of incidents for the process
@@ -97,7 +97,7 @@ export interface MaestroProcessesServiceModel {
   getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]>;
 
   /**
-   * Get instance status counts aggregated by date for process orchestration.
+   * Get instance status counts aggregated by date for maestro processes.
    *
    * Returns time-bucketed counts of instances grouped by status (Completed, Faulted, Cancelled),
    * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
@@ -105,14 +105,14 @@ export interface MaestroProcessesServiceModel {
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param options - Optional settings for time bucketing granularity
-   * @returns Promise resolving to an array of {@link InstanceStatusByDateResponse}
+   * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
    * ```typescript
    * // Get daily instance status for the last 7 days
    * const now = new Date();
    * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-   * const statuses = await maestroProcesses.getInstanceStatusByDate(sevenDaysAgo, now);
+   * const statuses = await maestroProcesses.getInstanceStatusTimeline(sevenDaysAgo, now);
    *
    * for (const entry of statuses) {
    *   console.log(`${entry.startTime} — ${entry.status}: ${entry.count}`);
@@ -124,23 +124,23 @@ export interface MaestroProcessesServiceModel {
    * import { TimeSliceUnit } from '@uipath/uipath-typescript/maestro-processes';
    *
    * // Get hourly breakdown
-   * const statuses = await maestroProcesses.getInstanceStatusByDate(startTime, endTime, {
+   * const statuses = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
    *   timeSliceUnit: TimeSliceUnit.Hour,
    * });
    * ```
    */
-  getInstanceStatusByDate(
+  getInstanceStatusTimeline(
     startTime: Date,
     endTime: Date,
     options?: MaestroInsightsOptions,
-  ): Promise<InstanceStatusByDateResponse[]>;
+  ): Promise<InstanceStatusTimelineResponse[]>;
 }
 
 // Method interface that will be added to process objects
 export interface ProcessMethods {
   /**
    * Gets incidents for this process
-   * 
+   *
    * @returns Promise resolving to array of process incidents
    */
   getIncidents(): Promise<ProcessIncidentGetResponse[]>;
@@ -151,7 +151,7 @@ export type MaestroProcessGetAllResponse = RawMaestroProcessGetAllResponse & Pro
 
 /**
  * Creates methods for a process object
- * 
+ *
  * @param processData - The process data (response from API)
  * @param service - The process service instance
  * @returns Object containing process methods
@@ -161,7 +161,7 @@ function createProcessMethods(processData: RawMaestroProcessGetAllResponse, serv
     async getIncidents(): Promise<ProcessIncidentGetResponse[]> {
       if (!processData.processKey) throw new Error('Process key is undefined');
       if (!processData.folderKey) throw new Error('Folder key is undefined');
-      
+
       return service.getIncidents(processData.processKey, processData.folderKey);
     }
   };
@@ -169,13 +169,13 @@ function createProcessMethods(processData: RawMaestroProcessGetAllResponse, serv
 
 /**
  * Creates an actionable process by combining API process data with operational methods.
- * 
+ *
  * @param processData - The process data from API
  * @param service - The process service instance
  * @returns A process object with added methods
  */
 export function createProcessWithMethods(
-  processData: MaestroProcessGetAllResponse, 
+  processData: MaestroProcessGetAllResponse,
   service: MaestroProcessesServiceModel
 ): MaestroProcessGetAllResponse {
   const methods = createProcessMethods(processData, service);

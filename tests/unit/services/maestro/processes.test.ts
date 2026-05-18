@@ -9,7 +9,7 @@ import {
   createMockProcess,
   createMockProcessesApiResponse,
   createMockTopRunCountResponse,
-  createMockInstanceStatusByDate,
+  createMockInstanceStatusTimeline,
   createMockError,
   TEST_CONSTANTS
 } from '../../../utils/mocks';
@@ -209,10 +209,10 @@ describe('MaestroProcessesService', () => {
     });
   });
 
-  describe('getInstanceStatusByDate', () => {
+  describe('getInstanceStatusTimeline', () => {
     const mockResponse = [
-      createMockInstanceStatusByDate(),
-      createMockInstanceStatusByDate({
+      createMockInstanceStatusTimeline(),
+      createMockInstanceStatusTimeline({
         startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_2,
         status: MAESTRO_TEST_CONSTANTS.INSIGHTS_STATUS_FAULTED,
         count: MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_1,
@@ -225,7 +225,7 @@ describe('MaestroProcessesService', () => {
     it('should retrieve instance status by date', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getInstanceStatusByDate(startDate, endDate);
+      const result = await service.getInstanceStatusTimeline(startDate, endDate);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
@@ -249,7 +249,7 @@ describe('MaestroProcessesService', () => {
     it('should pass timeSliceUnit when provided', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      await service.getInstanceStatusByDate(startDate, endDate, {
+      await service.getInstanceStatusTimeline(startDate, endDate, {
         timeSliceUnit: TimeSliceUnit.Hour,
       });
 
@@ -265,7 +265,7 @@ describe('MaestroProcessesService', () => {
     it('should return empty array when API returns null', async () => {
       mockApiClient.post.mockResolvedValue(null);
 
-      const result = await service.getInstanceStatusByDate(startDate, endDate);
+      const result = await service.getInstanceStatusTimeline(startDate, endDate);
 
       expect(result).toEqual([]);
     });
@@ -276,7 +276,7 @@ describe('MaestroProcessesService', () => {
       );
 
       await expect(
-        service.getInstanceStatusByDate(startDate, endDate),
+        service.getInstanceStatusTimeline(startDate, endDate),
       ).rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED);
     });
   });
