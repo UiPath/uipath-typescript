@@ -108,9 +108,10 @@ jobs:
       - name: SonarCloud Scan
         if: github.base_ref == 'main'
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d # v5.0.0
+        with:
+          host-url: https://sonarcloud.io
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
 
       - name: Generate Summary
         if: success()
