@@ -8,7 +8,7 @@
 - **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
 - Prefer `private` keyword over underscore prefix for private methods
 - No `any` type — use `unknown` if truly unknown, then validate.
-- **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change.
+- **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored.
 - Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return.
 - Use enums for fixed value sets — **NEVER** leave raw strings/numbers. Raw values lose type safety and autocomplete.
 - **NEVER** write `param || {}` for required parameters — this hides bugs by silently accepting missing required data at call sites.
@@ -128,6 +128,8 @@ Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g.
 2. **Request params**: `{ PAGE_SIZE_PARAM, OFFSET_PARAM, COUNT_PARAM }` (OFFSET) or `{ PAGE_SIZE_PARAM, TOKEN_PARAM }` (TOKEN)
 
 Naming: `{SERVICE}_PAGINATION` for response shape, `{SERVICE}_OFFSET_PARAMS` or `{SERVICE}_TOKEN_PARAMS` for request params.
+
+**`COUNT_PARAM` must be `undefined`, not `''`**: When a non-OData endpoint doesn't use a count param, set `COUNT_PARAM: undefined` — not `COUNT_PARAM: ''`. An empty string is falsy and causes `base.ts` to fall back to `ODATA_OFFSET_PARAMS.COUNT_PARAM` (`'$count'`) via the `||` operator, silently injecting `{ "$count": true }` into every request body the API never expects.
 
 **`excludeFromPrefix`** — pass to prevent specific keys from getting `$` prefix. Use when keys are service-specific (not OData) query params.
 
