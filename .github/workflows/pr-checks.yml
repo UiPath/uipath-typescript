@@ -113,7 +113,11 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
           PR_BASE: ${{ github.base_ref }}
         run: |
+          # sonarcloud-github-action v2/v3 bundles a scanner that calls /analysis/analyses
+          # which returns 404 on this org's plan — pinning CLI 5.0.1 directly as a workaround.
+          # SHA256 pinned for supply-chain integrity.
           curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          echo "350dbdb517c10fcb3ce70425db95c415b313cad7296c407d416d88f3d50121f8  sonar-scanner.zip" | sha256sum -c
           unzip -q sonar-scanner.zip
           ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
             -Dsonar.token=$SONAR_TOKEN \
