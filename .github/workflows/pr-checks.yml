@@ -105,12 +105,6 @@ jobs:
           name: integration-coverage
           path: coverage-integration/lcov.info
 
-      - name: Verify coverage reports exist
-        if: github.base_ref == 'main'
-        run: |
-          echo "=== Unit coverage ===" && cat coverage/lcov.info | head -5 || echo "coverage/lcov.info NOT FOUND"
-          echo "=== Integration coverage ===" && cat coverage-integration/lcov.info | head -5 || echo "coverage-integration/lcov.info NOT FOUND"
-
       - name: SonarCloud Scan
         if: github.base_ref == 'main'
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d # v5.0.0
