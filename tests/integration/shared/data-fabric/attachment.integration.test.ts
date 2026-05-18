@@ -133,8 +133,7 @@ describe.skipIf(!hasAttachmentConfig).each(modes)(
       });
     });
 
-    // TODO: skipped due to API bug returning 500 on download — re-enable once fixed
-    describe.skip('downloadAttachment', () => {
+    describe('downloadAttachment', () => {
       it('should upload and then download an attachment via service method', async () => {
         const { entities } = getServices();
 
