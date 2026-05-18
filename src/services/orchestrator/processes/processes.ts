@@ -7,6 +7,7 @@ import {
   ProcessStartResponse,
   ProcessGetByIdOptions,
   ProcessGetByNameOptions,
+  ProcessStartOptions,
 } from '../../../models/orchestrator/processes.types';
 import { ProcessServiceModel } from '../../../models/orchestrator/processes.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData, transformRequest } from '../../../utils/transform';
@@ -19,6 +20,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 
 /**
  * Service for interacting with UiPath Orchestrator Processes API
@@ -99,12 +101,15 @@ export class ProcessService extends FolderScopedService implements ProcessServic
   }
 
   /**
-   * Starts a process execution (job)
+   * Starts a process with the specified configuration.
    *
-   * @param request - Process start request body
-   * @param folderId - Required folder ID
-   * @param options - Optional query parameters
-   * @returns Promise resolving to the created jobs
+   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
+   * inside the options.
+   *
+   * @param request - Process start configuration
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`, `filter`, `orderby`)
+   * @returns Promise resolving to array of started process instances
+   * {@link ProcessStartResponse}
    *
    * @example
    * ```typescript
@@ -112,20 +117,67 @@ export class ProcessService extends FolderScopedService implements ProcessServic
    *
    * const processes = new Processes(sdk);
    *
-   * // Start a process by process key
-   * const jobs = await processes.start({
-   *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-   * }, 123); // folderId is required
+   * // By folder ID
+   * await processes.start({ processKey: '<processKey>' }, { folderId: <folderId> });
    *
-   * // Start a process by name with specific robots
-   * const jobs = await processes.start({
-   *   processName: "MyProcess"
-   * }, 123); // folderId is required
+   * // By folder key (GUID)
+   * await processes.start({ processKey: '<processKey>' }, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await processes.start({ processKey: '<processKey>' }, { folderPath: 'Shared/Finance' });
+   *
+   * // Start by process name (instead of processKey)
+   * await processes.start({ processName: 'MyProcess' }, { folderId: <folderId> });
+   *
+   * // With additional options
+   * await processes.start({ processKey: '<processKey>' }, { folderId: <folderId>, expand: 'Robot' });
    * ```
    */
+  start(request: ProcessStartRequest, options?: ProcessStartOptions): Promise<ProcessStartResponse[]>;
+  /**
+   * Starts a process — positional `folderId` form.
+   *
+   * @deprecated Use the options-object form: `start(request, { folderId })`. See {@link ProcessStartOptions} for the supported options.
+   *
+   * @param request - Process start configuration
+   * @param folderId - Required folder ID (numeric)
+   * @param options - Optional request options
+   * @returns Promise resolving to array of started process instances
+   * {@link ProcessStartResponse}
+   */
+  start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
   @track('Processes.Start')
-  async start(request: ProcessStartRequest, folderId: number, options: RequestOptions = {}): Promise<ProcessStartResponse[]> {
-    const headers = createHeaders({ [FOLDER_ID]: folderId });
+  async start(
+    request: ProcessStartRequest,
+    optionsOrFolderId?: ProcessStartOptions | number,
+    legacyOptions?: RequestOptions,
+  ): Promise<ProcessStartResponse[]> {
+    // Normalize the two overload forms into a single internal shape.
+    let folderId: number | undefined;
+    let folderKey: string | undefined;
+    let folderPath: string | undefined;
+    let queryOptions: RequestOptions;
+
+    if (typeof optionsOrFolderId === 'number') {
+      // Deprecated positional form: start(request, folderId, options?)
+      folderId = optionsOrFolderId;
+      queryOptions = legacyOptions ?? {};
+    } else {
+      // Preferred form: start(request, options?)
+      const { folderId: fid, folderKey: fkey, folderPath: fpath, ...rest } = optionsOrFolderId ?? {};
+      folderId = fid;
+      folderKey = fkey;
+      folderPath = fpath;
+      queryOptions = rest;
+    }
+
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'processes.start',
+      fallbackFolderKey: this.config.folderKey,
+    });
 
     // Transform SDK field names to API field names (e.g., processKey → releaseKey)
     const apiRequest = transformRequest(request, ProcessMap);
@@ -136,8 +188,8 @@ export class ProcessService extends FolderScopedService implements ProcessServic
     };
 
     // Prefix all query parameter keys with '$' for OData
-    const keysToPrefix = Object.keys(options);
-    const apiOptions = addPrefixToKeys(options, ODATA_PREFIX, keysToPrefix);
+    const keysToPrefix = Object.keys(queryOptions);
+    const apiOptions = addPrefixToKeys(queryOptions, ODATA_PREFIX, keysToPrefix);
 
     const response = await this.post<CollectionResponse<ProcessStartResponse>>(
       PROCESS_ENDPOINTS.START_PROCESS,

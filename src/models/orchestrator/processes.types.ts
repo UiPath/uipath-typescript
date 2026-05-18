@@ -386,3 +386,14 @@ export interface ProcessGetByIdOptions extends BaseOptions {}
  */
 export interface ProcessGetByNameOptions extends FolderScopedOptions {}
 
+/**
+ * Options for starting a process. Combines folder scoping
+ * (`folderId` / `folderKey` / `folderPath`) with the OData query options
+ * (`expand`, `select`, `filter`, `orderby`) accepted by the start endpoint.
+ *
+ * Folder scoping is optional in the type — the SDK falls back to the
+ * init-time folderKey (e.g. `<meta name="uipath:folder-key">` in coded-app
+ * deployments). A `ValidationError` is raised when neither is provided.
+ */
+export interface ProcessStartOptions extends FolderScopedOptions, RequestOptions {}
+
