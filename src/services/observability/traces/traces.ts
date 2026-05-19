@@ -38,6 +38,10 @@ import { TRACES_AGENT_PAGINATION, TRACES_AGENT_OFFSET_PARAMS } from '../../../ut
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
 
+const VALID_SPAN_STATUSES = new Set<string>(Object.values(SpanStatus));
+const VALID_SPAN_SOURCES = new Set<string>(Object.values(SpanSource));
+const VALID_SPAN_VERBOSITY_LEVELS = new Set<string>(Object.values(SpanVerbosityLevel));
+
 export class TracesService extends BaseService implements TracesServiceModel {
 
   private transformOtelSpan(raw: RawSpanOtelResponse): SpanResponse {
@@ -174,14 +178,14 @@ export class TracesService extends BaseService implements TracesServiceModel {
       startTime: raw.startTime,
       endTime: raw.endTime,
       attributes: raw.attributes,
-      status: (Object.values(SpanStatus) as string[]).includes(raw.status)
+      status: VALID_SPAN_STATUSES.has(raw.status)
         ? (raw.status as SpanStatus)
         : SpanStatus.Unset,
-      source: raw.source != null && (Object.values(SpanSource) as string[]).includes(raw.source)
+      source: raw.source != null && VALID_SPAN_SOURCES.has(raw.source)
         ? (raw.source as SpanSource)
         : null,
       spanType: raw.spanType,
-      verbosityLevel: raw.verbosityLevel != null && (Object.values(SpanVerbosityLevel) as string[]).includes(raw.verbosityLevel)
+      verbosityLevel: raw.verbosityLevel != null && VALID_SPAN_VERBOSITY_LEVELS.has(raw.verbosityLevel)
         ? (raw.verbosityLevel as SpanVerbosityLevel)
         : null,
       executionType: null,         // agent endpoint does not return this field
