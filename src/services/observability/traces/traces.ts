@@ -2,6 +2,8 @@ import { BaseService } from '../../base';
 import {
   SpanResponse,
   SpanStatus,
+  SpanAttachmentProvider,
+  SpanAttachmentDirection,
   TracesGetByTraceIdOptions,
   TracesGetByAgentIdOptions,
   TracesGetByReferenceIdOptions,
@@ -13,6 +15,8 @@ import {
   SpanVerbosityLevelMap,
   SpanExecutionTypeMap,
   SpanPermissionStatusMap,
+  SpanAttachmentProviderMap,
+  SpanAttachmentDirectionMap,
 } from '../../../models/observability/traces/traces.constants';
 import {
   RawSpanOtelResponse,
@@ -69,11 +73,11 @@ export class TracesService extends BaseService implements TracesServiceModel {
         : null,
       attachments: raw.Attachments
         ? raw.Attachments.map(a => ({
-            provider: String(a.Provider),
+            provider: SpanAttachmentProviderMap[a.Provider] ?? SpanAttachmentProvider.Orchestrator,
             id: a.Id,
             fileName: a.FileName,
             mimeType: a.MimeType,
-            direction: String(a.Direction),
+            direction: SpanAttachmentDirectionMap[a.Direction] ?? SpanAttachmentDirection.None,
           }))
         : null,
       permissionStatus: raw.PermissionStatus != null ? (SpanPermissionStatusMap[raw.PermissionStatus] ?? null) : null,

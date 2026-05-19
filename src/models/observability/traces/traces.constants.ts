@@ -1,4 +1,6 @@
 import {
+  SpanAttachmentDirection,
+  SpanAttachmentProvider,
   SpanExecutionType,
   SpanPermissionStatus,
   SpanSource,
@@ -57,4 +59,17 @@ export const SpanPermissionStatusMap: Record<number, SpanPermissionStatus> = {
   0: SpanPermissionStatus.Allow,
   1: SpanPermissionStatus.PartialBlock,
   2: SpanPermissionStatus.Block,
+};
+
+/** Maps integer Provider values from the otel API to {@link SpanAttachmentProvider} enum values. */
+export const SpanAttachmentProviderMap: Record<number, SpanAttachmentProvider> = {
+  0: SpanAttachmentProvider.Orchestrator,
+  1: SpanAttachmentProvider.LLMOps,
+};
+
+/** Maps integer Direction values from the otel API to {@link SpanAttachmentDirection} enum values. */
+export const SpanAttachmentDirectionMap: Record<number, SpanAttachmentDirection> = {
+  0: SpanAttachmentDirection.None,
+  1: SpanAttachmentDirection.In,
+  2: SpanAttachmentDirection.Out,
 };

@@ -61,6 +61,19 @@ export enum SpanPermissionStatus {
   Block = 'Block',
 }
 
+/** Storage provider that created or manages the attachment. */
+export enum SpanAttachmentProvider {
+  Orchestrator = 'Orchestrator',
+  LLMOps = 'LLMOps',
+}
+
+/** Whether the attachment is an input, output, or neither. */
+export enum SpanAttachmentDirection {
+  None = 'None',
+  In = 'In',
+  Out = 'Out',
+}
+
 /** One level in the reference hierarchy that produced this span. */
 export interface SpanReferenceHierarchyEntry {
   serviceType: string;
@@ -75,11 +88,11 @@ export interface SpanContext {
 
 /** File or payload attachment linked to the span. */
 export interface SpanAttachment {
-  provider: string;
+  provider: SpanAttachmentProvider;
   id: string;
   fileName: string;
   mimeType: string;
-  direction: string;
+  direction: SpanAttachmentDirection;
 }
 
 /** A single execution span returned by the Traces API. */
