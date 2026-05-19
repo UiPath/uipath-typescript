@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ApiClient } from '../../../../src/core/http/api-client';
+import { ServerError } from '../../../../src/core/errors/server';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
 
 const TRACEPARENT_REGEX = /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/;
@@ -87,5 +88,36 @@ describe('ApiClient traceparent', () => {
     await client.get('/test', { headers: { traceparent: custom } });
 
     expect(capturedHeaders['traceparent']).toBe(custom);
+  });
+});
+
+describe('ApiClient error handling', () => {
+  it('throws ServerError when server returns a non-JSON body on a successful response', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      url: 'https://example.com/api/test',
+      text: () => Promise.resolve('<html>Redirect</html>'),
+      blob: () => Promise.resolve(new Blob()),
+    });
+
+    const client = createClient();
+    await expect(client.get('/test')).rejects.toBeInstanceOf(ServerError);
+  });
+
+  it('includes the HTTP status code and URL in the ServerError message', async () => {
+    const testUrl = 'https://example.com/api/test';
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      url: testUrl,
+      text: () => Promise.resolve('<html>Error</html>'),
+      blob: () => Promise.resolve(new Blob()),
+    });
+
+    const client = createClient();
+    await expect(client.get('/test')).rejects.toMatchObject({
+      message: expect.stringContaining('non-JSON response'),
+    });
   });
 });
