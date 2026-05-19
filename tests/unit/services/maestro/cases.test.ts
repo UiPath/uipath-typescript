@@ -176,7 +176,7 @@ describe('CasesService', () => {
       }
     ];
 
-    it('should call fetchTopProcesses with isCaseManagement true and return results', async () => {
+    it('should retrieve top case processes by run count with isCaseManagement true', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
       const result = await service.getTopRunCount(
