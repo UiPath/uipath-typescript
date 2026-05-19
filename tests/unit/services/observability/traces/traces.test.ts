@@ -276,6 +276,14 @@ describe('TracesService Unit Tests', () => {
       expect(result.items[0].source).toBeNull();
     });
 
+    it('should fall back to null for unknown verbosityLevel from agent endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockAgentPageResponse([createMockRawAgentSpan({ verbosityLevel: 'UnknownLevel' })])
+      );
+      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      expect(result.items[0].verbosityLevel).toBeNull();
+    });
+
     it('should throw ValidationError when agentId is empty', async () => {
       await expect(tracesService.getByAgentId('')).rejects.toThrow('agentId is required');
     });
@@ -370,6 +378,14 @@ describe('TracesService Unit Tests', () => {
 
       expect(span.status).toBe(SpanStatus.Unset);
       expect(span.source).toBeNull();
+    });
+
+    it('should fall back to null for unknown verbosityLevel from reference endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockAgentPageResponse([createMockRawAgentSpan({ verbosityLevel: 'UnknownLevel' })])
+      );
+      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
+      expect(result.items[0].verbosityLevel).toBeNull();
     });
 
     it('should throw ValidationError when referenceId is empty', async () => {
