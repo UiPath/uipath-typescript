@@ -97,7 +97,7 @@ describe('TracesService Unit Tests', () => {
     });
 
     it('should return empty array when no spans', async () => {
-      mockApiClient.get.mockResolvedValue({ Spans: [], Tokens: '' });
+      mockApiClient.get.mockResolvedValue(createMockOtelPageResponse([]));
       const result = await tracesService.getByTraceId(TRACES_TEST_CONSTANTS.TRACE_ID);
       expect(result).toEqual([]);
     });

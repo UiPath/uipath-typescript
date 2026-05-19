@@ -2,6 +2,8 @@ import { BaseService } from '../../base';
 import {
   SpanResponse,
   SpanStatus,
+  SpanSource,
+  SpanVerbosityLevel,
   SpanAttachmentProvider,
   SpanAttachmentDirection,
   TracesGetByTraceIdOptions,
@@ -171,10 +173,16 @@ export class TracesService extends BaseService implements TracesServiceModel {
       startTime: raw.startTime,
       endTime: raw.endTime,
       attributes: raw.attributes,
-      status: raw.status as SpanResponse['status'],
-      source: (raw.source as SpanResponse['source']) ?? null,
+      status: (Object.values(SpanStatus) as string[]).includes(raw.status)
+        ? (raw.status as SpanStatus)
+        : SpanStatus.Unset,
+      source: raw.source != null && (Object.values(SpanSource) as string[]).includes(raw.source)
+        ? (raw.source as SpanSource)
+        : null,
       spanType: raw.spanType,
-      verbosityLevel: (raw.verbosityLevel as SpanResponse['verbosityLevel']) ?? null,
+      verbosityLevel: raw.verbosityLevel != null && (Object.values(SpanVerbosityLevel) as string[]).includes(raw.verbosityLevel)
+        ? (raw.verbosityLevel as SpanVerbosityLevel)
+        : null,
       executionType: null,         // agent endpoint does not return this field
       folderKey: raw.folderKey,
       referenceId: raw.referenceId,
