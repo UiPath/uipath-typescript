@@ -16,6 +16,8 @@ import {
   SpanVerbosityLevel,
   SpanExecutionType,
   SpanPermissionStatus,
+  SpanAttachmentProvider,
+  SpanAttachmentDirection,
 } from '../../../../../src/models/observability/traces/traces.types';
 
 vi.mock('../../../../../src/core/http/api-client');
@@ -94,6 +96,27 @@ describe('TracesService Unit Tests', () => {
       expect(span.verbosityLevel).toBe(SpanVerbosityLevel.Information);
       expect(span.executionType).toBe(SpanExecutionType.Debug);
       expect(span.permissionStatus).toBe(SpanPermissionStatus.Allow);
+    });
+
+    it('should map non-null attachments and context correctly', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockOtelPageResponse([
+          createMockRawOtelSpan({
+            Attachments: [{ Provider: 1, Id: 'att-id', FileName: 'file.txt', MimeType: 'text/plain', Direction: 2 }],
+            Context: {
+              ReferenceHierarchy: [{ ServiceType: 'Agent', ReferenceId: 'ref-id', Version: '1.0' }],
+            },
+          }),
+        ])
+      );
+
+      const result = await tracesService.getByTraceId(TRACES_TEST_CONSTANTS.TRACE_ID);
+      const span = result[0];
+
+      expect(span.attachments![0].provider).toBe(SpanAttachmentProvider.LLMOps);
+      expect(span.attachments![0].direction).toBe(SpanAttachmentDirection.Out);
+      expect(span.context!.referenceHierarchy[0].serviceType).toBe('Agent');
+      expect(span.context!.referenceHierarchy[0].referenceId).toBe('ref-id');
     });
 
     it('should return empty array when no spans', async () => {
@@ -224,6 +247,35 @@ describe('TracesService Unit Tests', () => {
       expect(span.attachments).toBeNull();
     });
 
+    it('should apply enum transforms from agent endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockAgentPageResponse([createMockRawAgentSpan({ status: 'Error', source: 'Testing', verbosityLevel: 'Warning' })])
+      );
+
+      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      const span = result.items[0];
+
+      expect(span.status).toBe(SpanStatus.Error);
+      expect(span.source).toBe(SpanSource.Testing);
+      expect(span.verbosityLevel).toBe(SpanVerbosityLevel.Warning);
+    });
+
+    it('should fall back to SpanStatus.Unset for unknown status from agent endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockAgentPageResponse([createMockRawAgentSpan({ status: 'UnknownFutureStatus' })])
+      );
+      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      expect(result.items[0].status).toBe(SpanStatus.Unset);
+    });
+
+    it('should fall back to null for unknown source from agent endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockAgentPageResponse([createMockRawAgentSpan({ source: 'UnknownSource' })])
+      );
+      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      expect(result.items[0].source).toBeNull();
+    });
+
     it('should throw ValidationError when agentId is empty', async () => {
       await expect(tracesService.getByAgentId('')).rejects.toThrow('agentId is required');
     });
@@ -293,6 +345,31 @@ describe('TracesService Unit Tests', () => {
       expect(span.referenceVersion).toBeNull();
       expect(span.context).toBeNull();
       expect(span.attachments).toBeNull();
+    });
+
+    it('should apply enum transforms from reference endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockAgentPageResponse([createMockRawAgentSpan({ status: 'Cancelled', source: 'Agents', verbosityLevel: 'Critical' })])
+      );
+
+      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
+      const span = result.items[0];
+
+      expect(span.status).toBe(SpanStatus.Cancelled);
+      expect(span.source).toBe(SpanSource.Agents);
+      expect(span.verbosityLevel).toBe(SpanVerbosityLevel.Critical);
+    });
+
+    it('should fall back for unknown status and source from reference endpoint', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockAgentPageResponse([createMockRawAgentSpan({ status: 'UnknownStatus', source: 'UnknownSource' })])
+      );
+
+      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
+      const span = result.items[0];
+
+      expect(span.status).toBe(SpanStatus.Unset);
+      expect(span.source).toBeNull();
     });
 
     it('should throw ValidationError when referenceId is empty', async () => {
