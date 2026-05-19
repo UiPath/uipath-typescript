@@ -156,8 +156,9 @@ export class TracesService extends BaseService implements TracesServiceModel {
     if (!traceId) throw new ValidationError({ message: 'traceId is required for getByIds' });
 
     const response = await this.post<RawSpanOtelResponse[]>(
-      TRACES_ENDPOINTS.POST_BY_IDS(traceId),
+      TRACES_ENDPOINTS.POST_BY_IDS,
       spanIds,
+      { params: { traceId } },
     );
 
     const spans = Array.isArray(response.data) ? response.data : [];

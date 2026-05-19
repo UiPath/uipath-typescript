@@ -64,6 +64,7 @@ export enum SpanPermissionStatus {
 /** Storage provider that created or manages the attachment. */
 export enum SpanAttachmentProvider {
   Orchestrator = 'Orchestrator',
+  /** Large Language Model Operations — span attachment stored by the LLMOps platform. */
   LLMOps = 'LLMOps',
 }
 

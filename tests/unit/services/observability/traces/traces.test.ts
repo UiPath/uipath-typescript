@@ -125,7 +125,7 @@ describe('TracesService Unit Tests', () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(1);
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        TRACES_ENDPOINTS.POST_BY_IDS(TRACES_TEST_CONSTANTS.TRACE_ID),
+        TRACES_ENDPOINTS.POST_BY_IDS,
         [TRACES_TEST_CONSTANTS.SPAN_ID_1],
         expect.anything()
       );
