@@ -26,7 +26,7 @@
 
 ## Type naming
 
-- **Response types**: `{Entity}GetResponse` for reads, `{Entity}GetAllResponse` for list-specific responses, `{Entity}Get{Operation}Response` for specialized queries with a different response shape (e.g., `ProcessGetTopResponse` for `getTop()`). Mutation responses: `{Entity}InsertResponse`, `{Entity}UpdateResponse`, `{Entity}DeleteResponse`, or generic `{Entity}OperationResponse`.
+- **Response types**: `{Entity}GetResponse` for reads, `{Entity}GetAllResponse` for list-specific responses, `{Entity}Get{Operation}Response` for specialized queries with a different response shape (e.g., `ProcessGetTopRunCountResponse` for `getTopRunCount()`). Mutation responses: `{Entity}InsertResponse`, `{Entity}UpdateResponse`, `{Entity}DeleteResponse`, or generic `{Entity}OperationResponse`.
 - **Raw types**: `Raw{Entity}GetResponse` for the internal shape before method attachment — these live in `*.types.ts`.
 - **Final response type**: `type {Entity}GetResponse = Raw{Entity}GetResponse & {Entity}Methods` — defined in `*.models.ts`, combining raw data with bound methods.
 - **Options types**: `{Entity}GetAllOptions`, `{Entity}GetByIdOptions`, `{Entity}{Operation}Options` (e.g., `TaskAssignmentOptions`, `ProcessInstanceOperationOptions`). Compose with `RequestOptions & PaginationOptions & { ... }` for list methods.

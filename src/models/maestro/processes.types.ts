@@ -3,6 +3,8 @@
  * Types and interfaces for Maestro process management
  */
 
+import { InsightsGetTopRunCountResponse } from './insights.types';
+
 /**
  * Process information with instance statistics
  */
@@ -41,5 +43,13 @@ export interface RawMaestroProcessGetAllResponse {
   pausingCount: number;
   /** Process instance count - canceling */
   cancelingCount: number;
+}
+
+/**
+ * Response for a single entry in top processes by run count
+ */
+export interface ProcessGetTopRunCountResponse extends InsightsGetTopRunCountResponse {
+  /** Human-readable process name */
+  name: string;
 }
 

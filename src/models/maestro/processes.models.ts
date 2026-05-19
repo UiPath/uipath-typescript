@@ -3,9 +3,8 @@
  * Model classes for Maestro processes
  */
 
-import { RawMaestroProcessGetAllResponse } from './processes.types';
+import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { ProcessGetTopResponse } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -76,7 +75,7 @@ export interface MaestroProcessesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link ProcessGetTopResponse}
+   * @returns Promise resolving to an array of {@link ProcessGetTopRunCountResponse}
    * @example
    * ```typescript
    * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
@@ -84,7 +83,7 @@ export interface MaestroProcessesServiceModel {
    * const maestroProcesses = new MaestroProcesses(sdk);
    *
    * // Get top processes by run count for the last 7 days
-   * const topProcesses = await maestroProcesses.getTop(
+   * const topProcesses = await maestroProcesses.getTopRunCount(
    *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
    *   new Date()
    * );
@@ -94,7 +93,7 @@ export interface MaestroProcessesServiceModel {
    * }
    * ```
    */
-  getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]>;
+  getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]>;
 }
 
 // Method interface that will be added to process objects

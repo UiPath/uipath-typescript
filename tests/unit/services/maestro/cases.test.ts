@@ -167,7 +167,7 @@ describe('CasesService', () => {
     });
   });
 
-  describe('getTop', () => {
+  describe('getTopRunCount', () => {
     const mockResponse = [
       {
         packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
@@ -179,7 +179,7 @@ describe('CasesService', () => {
     it('should call fetchTopProcesses with isCaseManagement true and return results', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getTop(
+      const result = await service.getTopRunCount(
         new Date('2026-04-01T00:00:00Z'),
         new Date('2026-05-01T00:00:00Z')
       );
@@ -200,7 +200,7 @@ describe('CasesService', () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        service.getTop(new Date(), new Date())
+        service.getTopRunCount(new Date(), new Date())
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

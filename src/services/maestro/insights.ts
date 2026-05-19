@@ -1,6 +1,5 @@
 import { BaseService } from '../base';
-import { RawGetTopResponse } from '../../models/maestro';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
+import { InsightsGetTopBaseResponse } from '../../models/maestro';
 
 /**
  * Base service for Maestro services that need Insights RTM functionality.
@@ -11,21 +10,23 @@ import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 export class MaestroInsightsService extends BaseService {
 
   /**
-   * Fetches top processes by run count from the Insights API.
+   * Fetches top processes from an Insights RTM endpoint.
    *
+   * @param endpoint - The Insights RTM endpoint to call
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param isCaseManagement - Whether to filter for case management processes
-   * @returns Promise resolving to an array of top processes by run count
+   * @returns Promise resolving to an array of top processes
    * @internal
    */
-  protected async fetchTopProcesses(
+  protected async fetchTop<T extends InsightsGetTopBaseResponse>(
+    endpoint: string,
     startTime: Date,
     endTime: Date,
     isCaseManagement: boolean
-  ): Promise<RawGetTopResponse[]> {
-    const response = await this.post<RawGetTopResponse[]>(
-      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES,
+  ): Promise<T[]> {
+    const response = await this.post<T[]>(
+      endpoint,
       {
         commonParams: {
           startTime: startTime.getTime(),

@@ -3,8 +3,7 @@
  * Model classes for Maestro cases
  */
 
-import { CaseGetAllResponse } from './cases.types';
-import { CaseGetTopResponse } from './insights.types';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse } from './cases.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -49,7 +48,7 @@ export interface CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link CaseGetTopResponse}
+   * @returns Promise resolving to an array of {@link CaseGetTopRunCountResponse}
    * @example
    * ```typescript
    * import { Cases } from '@uipath/uipath-typescript/cases';
@@ -57,7 +56,7 @@ export interface CasesServiceModel {
    * const cases = new Cases(sdk);
    *
    * // Get top case processes by run count for the last 7 days
-   * const topProcesses = await cases.getTop(
+   * const topProcesses = await cases.getTopRunCount(
    *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
    *   new Date()
    * );
@@ -67,5 +66,5 @@ export interface CasesServiceModel {
    * }
    * ```
    */
-  getTop(startTime: Date, endTime: Date): Promise<CaseGetTopResponse[]>;
+  getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]>;
 }

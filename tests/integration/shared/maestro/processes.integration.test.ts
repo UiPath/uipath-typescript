@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { testGetTopProcesses } from '../../utils/helpers';
+import { testGetTopRunCount } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -135,10 +135,10 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe.skip('getTop', () => {
+  describe.skip('getTopRunCount', () => {
     it('should retrieve top processes by run count', async () => {
       const { maestroProcesses } = getServices();
-      await testGetTopProcesses(maestroProcesses);
+      await testGetTopRunCount(maestroProcesses);
     });
   });
 

@@ -1,4 +1,4 @@
-import { CaseGetAllResponse, CaseGetTopResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, InsightsGetTopRunCountResponse } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
@@ -78,7 +78,7 @@ export class CasesService extends MaestroInsightsService implements CasesService
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link CaseGetTopResponse}
+   * @returns Promise resolving to an array of {@link CaseGetTopRunCountResponse}
    * @example
    * ```typescript
    * import { Cases } from '@uipath/uipath-typescript/cases';
@@ -86,7 +86,7 @@ export class CasesService extends MaestroInsightsService implements CasesService
    * const cases = new Cases(sdk);
    *
    * // Get top case processes by run count for the last 7 days
-   * const topProcesses = await cases.getTop(
+   * const topProcesses = await cases.getTopRunCount(
    *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
    *   new Date()
    * );
@@ -96,9 +96,11 @@ export class CasesService extends MaestroInsightsService implements CasesService
    * }
    * ```
    */
-  @track('Cases.GetTop')
-  async getTop(startTime: Date, endTime: Date): Promise<CaseGetTopResponse[]> {
-    const results = await this.fetchTopProcesses(startTime, endTime, true);
+  @track('Cases.GetTopRunCount')
+  async getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]> {
+    const results = await this.fetchTop<InsightsGetTopRunCountResponse>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT, startTime, endTime, true
+    );
     return results.map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
   }
 }

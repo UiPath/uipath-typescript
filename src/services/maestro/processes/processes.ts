@@ -1,4 +1,4 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopResponse } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, InsightsGetTopRunCountResponse } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
@@ -86,7 +86,7 @@ export class MaestroProcessesService extends MaestroInsightsService implements M
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link ProcessGetTopResponse}
+   * @returns Promise resolving to an array of {@link ProcessGetTopRunCountResponse}
    * @example
    * ```typescript
    * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
@@ -94,7 +94,7 @@ export class MaestroProcessesService extends MaestroInsightsService implements M
    * const maestroProcesses = new MaestroProcesses(sdk);
    *
    * // Get top processes by run count for the last 7 days
-   * const topProcesses = await maestroProcesses.getTop(
+   * const topProcesses = await maestroProcesses.getTopRunCount(
    *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
    *   new Date()
    * );
@@ -104,9 +104,11 @@ export class MaestroProcessesService extends MaestroInsightsService implements M
    * }
    * ```
    */
-  @track('MaestroProcesses.GetTop')
-  async getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]> {
-    const results = await this.fetchTopProcesses(startTime, endTime, false);
+  @track('MaestroProcesses.GetTopRunCount')
+  async getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]> {
+    const results = await this.fetchTop<InsightsGetTopRunCountResponse>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT, startTime, endTime, false
+    );
     return results.map(process => ({ ...process, name: process.packageId }));
   }
 }

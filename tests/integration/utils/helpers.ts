@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from 'crypto';
-import { ProcessGetTopResponse } from '../../../src/models/maestro/insights.types';
+import { ProcessGetTopRunCountResponse } from '../../../src/models/maestro/processes.types';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -127,24 +127,24 @@ export function createTestFileContent(filename: string): string {
   return `This is a test file: ${filename}\nCreated at: ${new Date().toISOString()}\nRandom data: ${generateRandomString(32)}`;
 }
 
-/** Minimal interface for services that support getTop integration testing */
-interface TopProcessesService {
-  getTop(startTime: Date, endTime: Date): Promise<ProcessGetTopResponse[]>;
+/** Minimal interface for services that support getTopRunCount integration testing */
+interface TopRunCountService {
+  getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]>;
 }
 
 /**
- * Integration test helper: calls getTop and validates the response shape.
+ * Integration test helper: calls getTopRunCount and validates the response shape.
  * Shared between MaestroProcessesService and CasesService.
  *
  * @param service - Service instance (maestroProcesses or cases)
  */
-export async function testGetTopProcesses(
-  service: TopProcessesService
+export async function testGetTopRunCount(
+  service: TopRunCountService
 ): Promise<void> {
   const now = new Date();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const result = await service.getTop(sevenDaysAgo, now);
+  const result = await service.getTopRunCount(sevenDaysAgo, now);
 
   expect(result).toBeDefined();
   expect(Array.isArray(result)).toBe(true);

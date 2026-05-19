@@ -154,7 +154,7 @@ describe('MaestroProcessesService', () => {
     });
   });
 
-  describe('getTop', () => {
+  describe('getTopRunCount', () => {
     const mockResponse = [
       {
         packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
@@ -174,10 +174,10 @@ describe('MaestroProcessesService', () => {
     it('should retrieve top processes by run count', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getTop(startDate, endDate);
+      const result = await service.getTopRunCount(startDate, endDate);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES,
+        MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT,
         {
           commonParams: {
             startTime: startDate.getTime(),
@@ -196,7 +196,7 @@ describe('MaestroProcessesService', () => {
     it('should return empty array when API returns null', async () => {
       mockApiClient.post.mockResolvedValue(null);
 
-      const result = await service.getTop(startDate, endDate);
+      const result = await service.getTopRunCount(startDate, endDate);
 
       expect(result).toEqual([]);
     });
@@ -205,7 +205,7 @@ describe('MaestroProcessesService', () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        service.getTop(startDate, endDate)
+        service.getTopRunCount(startDate, endDate)
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
