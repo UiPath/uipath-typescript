@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from 'crypto';
-import { ProcessGetTopRunCountResponse } from '../../../src/models/maestro/processes.types';
+import { InsightsGetTopRunCountResponse } from '../../../src/models/maestro/insights.types';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -129,7 +129,7 @@ export function createTestFileContent(filename: string): string {
 
 /** Minimal interface for services that support getTopRunCount integration testing */
 interface TopRunCountService {
-  getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]>;
+  getTopRunCount(startTime: Date, endTime: Date): Promise<InsightsGetTopRunCountResponse[]>;
 }
 
 /**
