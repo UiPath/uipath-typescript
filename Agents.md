@@ -8,7 +8,7 @@ TypeScript SDK for UiPath platform APIs. Provides typed clients for Action Cente
 npm install              # install deps
 npm run build            # rollup build → dist/ (ESM, CJS, UMD, .d.ts)
 npm test                 # vitest
-npm run test:unit        # unit tests only (tests/unit/)
+npm run test:unit        # unit tests (root tests/unit/ + packages/telemetry/tests/)
 npm run test:integration # integration tests (vitest.integration.config.ts)
 npm run test:all         # unit + integration tests
 npm run test:coverage    # with v8 coverage
