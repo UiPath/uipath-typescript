@@ -200,6 +200,11 @@ const serviceEntries = [
     output: 'feedback/index'
   },
   {
+    name: 'traces',
+    input: 'src/services/observability/traces/index.ts',
+    output: 'traces/index'
+  },
+  {
     name: 'document-understanding',
     input: 'src/models/document-understanding/index.ts',
     output: 'document-understanding/index'

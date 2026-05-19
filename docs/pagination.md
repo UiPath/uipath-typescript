@@ -134,3 +134,5 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | ConversationalAgent.exchanges | `getAll()` | ❌ No |
 | Feedback | `getAll()` | ✅ Yes |
 | Feedback | `getCategories()` | ✅ Yes |
+| Traces | `getByAgentId()` | ✅ Yes |
+| Traces | `getByReferenceId()` | ✅ Yes |

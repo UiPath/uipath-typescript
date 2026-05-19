@@ -19,6 +19,7 @@ export * from './pagination';
 export * from './conversational-agent';
 export * from './feedback';
 export * from './attachments';
+export * from './traces';
 
 // Re-export constants for convenience
 export * from '../constants';

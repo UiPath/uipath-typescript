@@ -156,6 +156,16 @@
                 "default": "./dist/feedback/index.cjs"
             }
         },
+        "./traces": {
+            "import": {
+                "types": "./dist/traces/index.d.ts",
+                "default": "./dist/traces/index.mjs"
+            },
+            "require": {
+                "types": "./dist/traces/index.d.ts",
+                "default": "./dist/traces/index.cjs"
+            }
+        },
         "./document-understanding": {
             "import": {
                 "types": "./dist/document-understanding/index.d.ts",

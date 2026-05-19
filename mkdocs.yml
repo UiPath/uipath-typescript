@@ -188,6 +188,7 @@ nav:
               - Messages: api/interfaces/MessageServiceModel.md
               - User Settings: api/interfaces/UserSettingsServiceModel.md
             - Feedback: api/interfaces/FeedbackServiceModel.md
+            - Traces: api/interfaces/TracesServiceModel.md
           - Attachments:
             - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md

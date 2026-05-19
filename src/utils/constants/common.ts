@@ -199,3 +199,23 @@ export const CONVERSATIONAL_TOKEN_PARAMS = {
   /** Conversational agent cursor parameter name */
   TOKEN_PARAM: 'cursor'
 };
+
+/**
+ * Traces agent/reference endpoint pagination shape.
+ * Response: { data: SpanBatchLayerResp[], pagination: { totalCount, pageNumber, pageSize } }
+ * Note: dot-notation in TOTAL_COUNT_FIELD is supported by resolveNestedField() in pagination/utils.
+ */
+export const TRACES_AGENT_PAGINATION = {
+  ITEMS_FIELD: 'data',
+  TOTAL_COUNT_FIELD: 'pagination.totalCount',
+} as const;
+
+/**
+ * Traces agent/reference endpoint pagination parameters.
+ * API uses 1-based pageNumber and pageSize (NOT OData $skip/$top).
+ */
+export const TRACES_AGENT_OFFSET_PARAMS = {
+  PAGE_SIZE_PARAM: 'pageSize',
+  OFFSET_PARAM: 'pageNumber',
+  COUNT_PARAM: undefined,
+} as const;
