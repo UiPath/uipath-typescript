@@ -29,6 +29,7 @@ export enum SpanSource {
   CodedAgents = 'CodedAgents',
   /** Intelligent Experience Platform — communications mining source. */
   IXPCommunicationsMining = 'IXPCommunicationsMining',
+  /** UiPath Context Grounding — span produced by the Enterprise Context Service for RAG/knowledge-base operations. */
   EnterpriseContextService = 'EnterpriseContextService',
   /** Model Context Protocol — span produced by an MCP server integration. */
   MCP = 'MCP',
