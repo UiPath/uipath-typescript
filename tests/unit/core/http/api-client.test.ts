@@ -117,11 +117,8 @@ describe('ApiClient error handling', () => {
 
     const client = createClient();
     await expect(client.get('/test')).rejects.toMatchObject({
-      message: expect.stringContaining('200'),
+      message: expect.stringContaining(`200 ${testUrl}`),
       statusCode: 200,
-    });
-    await expect(client.get('/test')).rejects.toMatchObject({
-      message: expect.stringContaining(testUrl),
     });
   });
 });
