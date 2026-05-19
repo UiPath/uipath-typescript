@@ -131,7 +131,6 @@ export class ApiClient {
       } catch {
         throw new ServerError({
           message: `Server returned non-JSON response (${response.status} ${response.url})`,
-          statusCode: response.status,
         });
       }
     } catch (error: any) {

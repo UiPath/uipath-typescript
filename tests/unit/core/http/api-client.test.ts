@@ -105,7 +105,7 @@ describe('ApiClient error handling', () => {
     await expect(client.get('/test')).rejects.toBeInstanceOf(ServerError);
   });
 
-  it('includes the HTTP status code and URL in the ServerError message', async () => {
+  it('includes the HTTP status and URL in the ServerError message', async () => {
     const testUrl = 'https://example.com/api/test';
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -117,7 +117,10 @@ describe('ApiClient error handling', () => {
 
     const client = createClient();
     await expect(client.get('/test')).rejects.toMatchObject({
-      message: expect.stringContaining('non-JSON response'),
+      message: expect.stringContaining('200'),
+    });
+    await expect(client.get('/test')).rejects.toMatchObject({
+      message: expect.stringContaining(testUrl),
     });
   });
 });
