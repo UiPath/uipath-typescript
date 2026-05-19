@@ -135,9 +135,27 @@ To improve the developer experience, the SDK collects basic usage data about met
 
 ## **Vibe Coding**
 
-The SDK is designed for rapid prototyping and development, making it perfect for vibe coding. Here are two ways to get started:
+The SDK is designed for rapid prototyping and development, making it perfect for vibe coding. Here are three ways to get started:
 
-### **Option 1: AI IDE Integration**
+### **Option 1: AI Agent Skills**
+
+Install the agent skill in your AI agent of choice to build, deploy, and create coded apps:
+
+=== "Install skill"
+
+    <!-- termynal -->
+
+    ```bash
+    # install uipath cli 
+    $ npm install -g @uipath/cli
+
+    # install all uipath skills
+    $ uip skills install
+    ```
+    This will install all uipath skills including the uipath-coded-apps skill.
+    See [UiPath Skills](https://github.com/uipath/skills) and [UiPath CLI](https://github.com/UiPath/cli) for more details.
+
+### **Option 2: AI IDE Integration**
 
 After installing the SDK, supercharge your development with AI IDEs:
 
@@ -153,7 +171,7 @@ After installing the SDK, supercharge your development with AI IDEs:
 
 ![Vibe Coding Demo](assets/vibe-coding-demo.gif)
 
-### **Option 2: Copy Documentation for LLMs**
+### **Option 3: Copy Documentation for LLMs**
 
 Give your AI assistant complete context by copying our documentation:
 
