@@ -11,6 +11,7 @@ import type {
     ExtractionPrompt,
     ExtractionValidationConfigurationV2,
     FieldGroupValueProjection,
+    JobStatus,
 } from './model.types';
 import type {
     ClassificationResult,
@@ -25,95 +26,93 @@ export enum ActionStatus {
 }
 
 export interface ClassificationValidationResult {
-    actionStatus?: ActionStatus;
-    actionData?: DocumentClassificationActionDataModel;
-    validatedClassificationResults?: ClassificationResult[] | null;
+    ActionStatus?: ActionStatus;
+    ActionData?: DocumentClassificationActionDataModel;
+    ValidatedClassificationResults?: ClassificationResult[] | null;
 }
 
 export interface ExtractionValidationArtifactsResult {
-    validatedExtractionResults?: ExtractionResult;
+    ValidatedExtractionResults?: ExtractionResult;
 }
 
 export interface ExtractionValidationResult {
-    actionStatus?: ActionStatus;
-    actionData?: DocumentExtractionActionDataModel;
-    validatedExtractionResults?: ExtractionResult;
-    dataProjection?: FieldGroupValueProjection[] | null;
+    ActionStatus?: ActionStatus;
+    ActionData?: DocumentExtractionActionDataModel;
+    ValidatedExtractionResults?: ExtractionResult;
+    DataProjection?: FieldGroupValueProjection[] | null;
 }
 
 export interface GetClassificationValidationTaskResponse {
-    status?: 'Succeeded' | 'Failed' | 'Running' | 'NotStarted';
-    error?: ErrorResponse;
-    createdAt?: string;
-    lastUpdatedAt?: string;
-    result?: ClassificationValidationResult;
+    Status?: JobStatus;
+    Error?: ErrorResponse;
+    CreatedAt?: string;
+    LastUpdatedAt?: string;
+    Result?: ClassificationValidationResult;
 }
 
 export interface GetExtractionValidationArtifactsResultTaskResponse {
-    result?: ExtractionValidationArtifactsResult;
+    Result?: ExtractionValidationArtifactsResult;
 }
 
 export interface GetExtractionValidationArtifactsTaskResponse {
-    status?: 'Succeeded' | 'Failed' | 'Running' | 'NotStarted';
-    error?: ErrorResponse;
-    createdAt?: string;
-    lastUpdatedAt?: string;
-    contentValidationData?: ContentValidationData;
+    Status?: JobStatus;
+    Error?: ErrorResponse;
+    CreatedAt?: string;
+    LastUpdatedAt?: string;
+    ContentValidationData?: ContentValidationData;
 }
 
 export interface GetExtractionValidationTaskResponse {
-    status?: 'Succeeded' | 'Failed' | 'Running' | 'NotStarted';
-    error?: ErrorResponse;
-    createdAt?: string;
-    lastUpdatedAt?: string;
-    result?: ExtractionValidationResult;
+    Status?: JobStatus;
+    Error?: ErrorResponse;
+    CreatedAt?: string;
+    LastUpdatedAt?: string;
+    Result?: ExtractionValidationResult;
 }
 
 export interface StartClassificationValidationTaskRequest {
-    documentId?: string | null;
-    actionTitle?: string | null;
-    actionPriority?: CreateTaskPriority;
-    actionCatalog?: string | null;
-    actionFolder?: string | null;
-    storageBucketName?: string | null;
-    storageBucketDirectoryPath?: string | null;
-    prompts?: ClassificationPrompt[] | null;
-    configuration?: ClassificationValidationConfiguration;
-    classificationResults?: ClassificationResult[] | null;
+    DocumentId?: string | null;
+    ActionTitle?: string | null;
+    ActionPriority?: CreateTaskPriority;
+    ActionCatalog?: string | null;
+    ActionFolder?: string | null;
+    StorageBucketName?: string | null;
+    StorageBucketDirectoryPath?: string | null;
+    Prompts?: ClassificationPrompt[] | null;
+    Configuration?: ClassificationValidationConfiguration;
+    ClassificationResults?: ClassificationResult[] | null;
 }
 
 export interface StartExtractionValidationArtifactsRequest {
-    documentId?: string;
-    extractionResult?: ExtractionResult;
-    documentTaxonomy?: DocumentTaxonomy;
-    folderName?: string | null;
-    storageBucketName?: string | null;
-    storageBucketDirectoryPath?: string | null;
+    DocumentId?: string;
+    ExtractionResult?: ExtractionResult;
+    DocumentTaxonomy?: DocumentTaxonomy;
+    FolderName?: string | null;
+    StorageBucketName?: string | null;
+    StorageBucketDirectoryPath?: string | null;
 }
 
 export interface StartExtractionValidationTaskRequestV2_0 {
-    documentId?: string | null;
-    actionTitle?: string | null;
-    actionPriority?: CreateTaskPriority;
-    actionCatalog?: string | null;
-    actionFolder?: string | null;
-    storageBucketName?: string | null;
-    storageBucketDirectoryPath?: string | null;
-    fieldsValidationConfidence?: number | null;
-    allowChangeOfDocumentType?: boolean | null;
-    prompts?: ExtractionPrompt[] | null;
-    extractionResult?: ExtractionResult;
-    configuration?: ExtractionValidationConfigurationV2;
-    documentTaxonomy?: DocumentTaxonomy;
+    DocumentId?: string | null;
+    ActionTitle?: string | null;
+    ActionPriority?: CreateTaskPriority;
+    ActionCatalog?: string | null;
+    ActionFolder?: string | null;
+    StorageBucketName?: string | null;
+    StorageBucketDirectoryPath?: string | null;
+    Prompts?: ExtractionPrompt[] | null;
+    ExtractionResult?: ExtractionResult;
+    Configuration?: ExtractionValidationConfigurationV2;
+    DocumentTaxonomy?: DocumentTaxonomy;
 }
 
 export interface StartValidationArtifactsTaskResponse {
-    operationId?: string;
-    artifactsUrl?: string | null;
-    resultUrl?: string | null;
+    OperationId?: string;
+    ArtifactsUrl?: string | null;
+    ResultUrl?: string | null;
 }
 
 export interface StartValidationTaskResponse {
-    operationId?: string;
-    resultUrl?: string | null;
+    OperationId?: string;
+    ResultUrl?: string | null;
 }

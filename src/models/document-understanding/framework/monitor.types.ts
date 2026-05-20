@@ -8,96 +8,96 @@ import type {
 import type { ActionStatus } from './validation.types';
 
 export interface ClassificationValidationFinishedTaskInfo {
-    id?: number;
-    title?: string | null;
-    priority?: DocumentActionPriority;
-    status?: ActionStatus;
-    creationTime?: string;
-    completionTime?: string | null;
-    lastAssignedTime?: string;
-    url?: string | null;
-    assignedToUser?: string | null;
-    completedByUser?: string | null;
-    lastModifierUser?: string | null;
-    documentRejectionReason?: string | null;
-    catalogName?: string | null;
-    folderName?: string | null;
-    processingTime?: number | null;
+    Id?: number;
+    Title?: string | null;
+    Priority?: DocumentActionPriority;
+    Status?: ActionStatus;
+    CreationTime?: string;
+    CompletionTime?: string | null;
+    LastAssignedTime?: string;
+    Url?: string | null;
+    AssignedToUser?: string | null;
+    CompletedByUser?: string | null;
+    LastModifierUser?: string | null;
+    DocumentRejectionReason?: string | null;
+    CatalogName?: string | null;
+    FolderName?: string | null;
+    ProcessingTime?: number | null;
 }
 
 export interface FinishExtractionValidationTaskInfo {
-    id?: number;
-    title?: string | null;
-    priority?: DocumentActionPriority;
-    status?: ActionStatus;
-    creationTime?: string;
-    completionTime?: string | null;
-    lastAssignedTime?: string;
-    url?: string | null;
-    assignedToUser?: string | null;
-    completedByUser?: string | null;
-    lastModifierUser?: string | null;
-    documentRejectionReason?: string | null;
-    catalogName?: string | null;
-    folderName?: string | null;
-    processingTime?: number | null;
+    Id?: number;
+    Title?: string | null;
+    Priority?: DocumentActionPriority;
+    Status?: ActionStatus;
+    CreationTime?: string;
+    CompletionTime?: string | null;
+    LastAssignedTime?: string;
+    Url?: string | null;
+    AssignedToUser?: string | null;
+    CompletedByUser?: string | null;
+    LastModifierUser?: string | null;
+    DocumentRejectionReason?: string | null;
+    CatalogName?: string | null;
+    FolderName?: string | null;
+    ProcessingTime?: number | null;
 }
 
 export interface StartClassificationValidationTaskInfo {
-    id?: number;
-    title?: string | null;
-    folderName?: string | null;
-    storageBucketName?: string | null;
-    storageBucketDirectoryPath?: string | null;
-    catalogName?: string | null;
-    priority?: DocumentActionPriority;
-    status?: ActionStatus;
+    Id?: number;
+    Title?: string | null;
+    FolderName?: string | null;
+    StorageBucketName?: string | null;
+    StorageBucketDirectoryPath?: string | null;
+    CatalogName?: string | null;
+    Priority?: DocumentActionPriority;
+    Status?: ActionStatus;
 }
 
 export interface StartExtractionValidationTaskInfo {
-    id?: number;
-    title?: string | null;
-    folderName?: string | null;
-    storageBucketName?: string | null;
-    storageBucketDirectoryPath?: string | null;
-    catalogName?: string | null;
-    priority?: DocumentActionPriority;
-    status?: ActionStatus;
+    Id?: number;
+    Title?: string | null;
+    FolderName?: string | null;
+    StorageBucketName?: string | null;
+    StorageBucketDirectoryPath?: string | null;
+    CatalogName?: string | null;
+    Priority?: DocumentActionPriority;
+    Status?: ActionStatus;
 }
 
 export interface TrackFinishClassificationValidationRequest {
-    classifierId?: string | null;
-    tag?: string | null;
-    documentId?: string;
-    task?: ClassificationValidationFinishedTaskInfo;
-    classificationResult?: ClassificationResult[] | null;
+    ClassifierId?: string | null;
+    Tag?: string | null;
+    DocumentId?: string;
+    Task?: ClassificationValidationFinishedTaskInfo;
+    ClassificationResult?: ClassificationResult[] | null;
 }
 
 export interface TrackFinishExtractionValidationRequest {
-    extractorId?: string | null;
-    tag?: string | null;
-    documentTypeId?: string | null;
-    documentId?: string;
-    task?: FinishExtractionValidationTaskInfo;
-    extractionResult?: ExtractionResult;
-    validatedExtractionResult?: ExtractionResult;
+    ExtractorId?: string | null;
+    Tag?: string | null;
+    DocumentTypeId?: string | null;
+    DocumentId?: string;
+    Task?: FinishExtractionValidationTaskInfo;
+    ExtractionResult?: ExtractionResult;
+    ValidatedExtractionResult?: ExtractionResult;
 }
 
 export interface TrackStartClassificationValidationRequest {
-    classifierId?: string | null;
-    tag?: string | null;
-    documentId?: string;
-    duration?: number;
-    task?: StartClassificationValidationTaskInfo;
-    classificationResult?: ClassificationResult[] | null;
+    ClassifierId?: string | null;
+    Tag?: string | null;
+    DocumentId?: string;
+    Duration?: number;
+    Task?: StartClassificationValidationTaskInfo;
+    ClassificationResult?: ClassificationResult[] | null;
 }
 
 export interface TrackStartExtractionValidationRequest {
-    extractorId?: string | null;
-    tag?: string | null;
-    documentTypeId?: string | null;
-    documentId?: string;
-    duration?: number;
-    task?: StartExtractionValidationTaskInfo;
-    extractionResult?: ExtractionResult;
+    ExtractorId?: string | null;
+    Tag?: string | null;
+    DocumentTypeId?: string | null;
+    DocumentId?: string;
+    Duration?: number;
+    Task?: StartExtractionValidationTaskInfo;
+    ExtractionResult?: ExtractionResult;
 }

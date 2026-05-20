@@ -1,8 +1,14 @@
 // Auto-generated from the OpenAPI spec — do not edit manually.
 
+export enum ErrorSeverity {
+    Info = 'Info',
+    Warning = 'Warning',
+    Error = 'Error',
+}
+
 export interface ErrorResponse {
-    message?: string | null;
-    severity?: 'Info' | 'Warning' | 'Error';
-    code?: string | null;
-    parameters?: string[] | null;
+    Message?: string | null;
+    Severity?: ErrorSeverity;
+    Code?: string | null;
+    Parameters?: string[] | null;
 }

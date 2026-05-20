@@ -19,6 +19,6 @@ export enum DocumentActionType {
 }
 
 export interface UserData {
-    id?: number | null;
-    emailAddress?: string | null;
+    Id?: number | null;
+    EmailAddress?: string | null;
 }

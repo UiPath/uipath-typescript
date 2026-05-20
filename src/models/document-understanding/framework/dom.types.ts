@@ -54,63 +54,63 @@ export enum WordGroupType {
 }
 
 export interface DocumentEntity {
-    documentId?: string | null;
-    contentType?: string | null;
-    length?: number;
-    pages?: Page[] | null;
-    documentMetadata?: Metadata[] | null;
+    DocumentId?: string | null;
+    ContentType?: string | null;
+    Length?: number;
+    Pages?: Page[] | null;
+    DocumentMetadata?: Metadata[] | null;
 }
 
 export interface Metadata {
-    key?: string | null;
-    value?: string | null;
+    Key?: string | null;
+    Value?: string | null;
 }
 
 export interface Page {
-    pageIndex?: number;
-    size?: number[];
-    sections?: PageSection[] | null;
-    pageMarkups?: PageMarkup[] | null;
-    processingSource?: ProcessingSource;
-    indexInText?: number;
-    textLength?: number;
-    skewAngle?: number;
-    rotation?: Rotation;
-    pageMetadata?: Metadata[] | null;
+    PageIndex?: number;
+    Size?: number[];
+    Sections?: PageSection[] | null;
+    PageMarkups?: PageMarkup[] | null;
+    ProcessingSource?: ProcessingSource;
+    IndexInText?: number;
+    TextLength?: number;
+    SkewAngle?: number;
+    Rotation?: Rotation;
+    PageMetadata?: Metadata[] | null;
 }
 
 export interface PageMarkup {
-    box?: number[];
-    polygon?: number[] | null;
-    ocrConfidence?: number;
-    text?: string | null;
-    markupType?: MarkupType;
+    Box?: number[];
+    Polygon?: number[] | null;
+    OcrConfidence?: number;
+    Text?: string | null;
+    MarkupType?: MarkupType;
 }
 
 export interface PageSection {
-    indexInText?: number;
-    language?: string | null;
-    length?: number;
-    rotation?: Rotation;
-    skewAngle?: number;
-    type?: SectionType;
-    wordGroups?: WordGroup[] | null;
+    IndexInText?: number;
+    Language?: string | null;
+    Length?: number;
+    Rotation?: Rotation;
+    SkewAngle?: number;
+    Type?: SectionType;
+    WordGroups?: WordGroup[] | null;
 }
 
 export interface Word {
-    box?: number[];
-    polygon?: number[] | null;
-    indexInText?: number;
-    ocrConfidence?: number;
-    text?: string | null;
-    visualLineNumber?: number;
-    textType?: TextType;
-    markupType?: MarkupType[] | null;
+    Box?: number[];
+    Polygon?: number[] | null;
+    IndexInText?: number;
+    OcrConfidence?: number;
+    Text?: string | null;
+    VisualLineNumber?: number;
+    TextType?: TextType;
+    MarkupType?: MarkupType[] | null;
 }
 
 export interface WordGroup {
-    indexInText?: number;
-    length?: number;
-    type?: WordGroupType;
-    words?: Word[] | null;
+    IndexInText?: number;
+    Length?: number;
+    Type?: WordGroupType;
+    Words?: Word[] | null;
 }
