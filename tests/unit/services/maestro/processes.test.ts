@@ -5,9 +5,10 @@ import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { 
   MAESTRO_TEST_CONSTANTS,
-  createMockProcess, 
+  createMockProcess,
   createMockProcessesApiResponse,
-  createMockError, 
+  createMockTopRunCountResponse,
+  createMockError,
   TEST_CONSTANTS
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -156,16 +157,12 @@ describe('MaestroProcessesService', () => {
 
   describe('getTopRunCount', () => {
     const mockResponse = [
-      {
-        packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
-        runCount: 5,
-        processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY
-      },
-      {
+      createMockTopRunCountResponse(),
+      createMockTopRunCountResponse({
         packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID_2,
-        runCount: 3,
+        runCount: MAESTRO_TEST_CONSTANTS.RUN_COUNT_PROCESS_2,
         processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY_2
-      }
+      })
     ];
 
     const startDate = new Date('2026-04-01T00:00:00Z');
@@ -190,7 +187,7 @@ describe('MaestroProcessesService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
       expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
-      expect(result[0].runCount).toBe(5);
+      expect(result[0].runCount).toBe(MAESTRO_TEST_CONSTANTS.RUN_COUNT_PROCESS_1);
     });
 
     it('should return empty array when API returns null', async () => {

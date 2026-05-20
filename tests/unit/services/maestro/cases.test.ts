@@ -6,9 +6,10 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { 
   MAESTRO_TEST_CONSTANTS,
   TEST_CONSTANTS,
-  createMockCase, 
+  createMockCase,
   createMockCasesGetAllApiResponse,
-  createMockError 
+  createMockTopRunCountResponse,
+  createMockError
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
@@ -169,11 +170,11 @@ describe('CasesService', () => {
 
   describe('getTopRunCount', () => {
     const mockResponse = [
-      {
+      createMockTopRunCountResponse({
         packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
-        runCount: 10,
+        runCount: MAESTRO_TEST_CONSTANTS.RUN_COUNT_CASE,
         processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY
-      }
+      })
     ];
 
     it('should retrieve top case processes by run count with isCaseManagement true', async () => {

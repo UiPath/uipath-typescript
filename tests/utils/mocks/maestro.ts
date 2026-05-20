@@ -582,3 +582,18 @@ export const createMockCaseInstanceStageSLAResponse = (overrides: Partial<CaseIn
     stages: [createMockCaseInstanceStageSLAStage()],
   }, overrides);
 };
+
+// Insights Mock Factories
+
+/**
+ * Creates a mock top run count response for processes
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock top run count response object
+ */
+export const createMockTopRunCountResponse = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+    runCount: MAESTRO_TEST_CONSTANTS.RUN_COUNT_PROCESS_1,
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY
+  }, overrides);
+};
