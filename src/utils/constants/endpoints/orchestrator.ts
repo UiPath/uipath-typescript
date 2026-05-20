@@ -34,6 +34,8 @@ export const BUCKET_ENDPOINTS = {
   GET_FILE_META_DATA: (id: number) => `${ORCHESTRATOR_BASE}/api/Buckets/${id}/ListFiles`,
   GET_READ_URI: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetReadUri`,
   GET_WRITE_URI: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetWriteUri`,
+  DELETE_FILE: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.DeleteFile`,
+  GET_FILES: (id: number) => `${ORCHESTRATOR_BASE}/odata/Buckets(${id})/UiPath.Server.Configuration.OData.GetFiles`,
 } as const;
 
 /**

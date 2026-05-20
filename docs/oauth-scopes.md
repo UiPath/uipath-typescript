@@ -37,6 +37,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getFileMetaData()` | `OR.Buckets` or `OR.Buckets.Read` |
 | `getReadUri()` | `OR.Buckets` or `OR.Buckets.Read` |
 | `uploadFile()` | `OR.Buckets` |
+| `deleteFile()` | `OR.Buckets` or `OR.Buckets.Write` |
+| `getFiles()` | `OR.Buckets` or `OR.Buckets.Read` |
 
 ## Entities
 

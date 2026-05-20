@@ -70,6 +70,8 @@ export interface GetAllPaginatedParams<T, R = T> {
   serviceAccess: PaginationServiceAccess;
   getEndpoint: (folderId?: number) => string;
   folderId?: number;
+  /** Pre-resolved request headers. Overrides the helper's auto-built folder header from `folderId`. */
+  headers?: Record<string, string>;
   paginationParams: PaginationOptions;
   additionalParams: Record<string, any>;
   /**
@@ -101,6 +103,8 @@ export interface GetAllNonPaginatedParams<T, R = T> {
   getAllEndpoint: string;
   getByFolderEndpoint: string;
   folderId?: number;
+  /** Pre-resolved request headers. Overrides the helper's auto-built folder header from `folderId`. */
+  headers?: Record<string, string>;
   additionalParams: Record<string, any>;
   /**
    * Optional function to transform API response items.
@@ -229,4 +233,7 @@ export interface GetAllConfig<TRaw, TTransformed = TRaw> {
 
   /** HTTP method to use for the request (default: 'GET') */
   method?: HttpMethodType;
+
+  /** Pre-resolved request headers. Overrides the helper's auto-built folder header from `folderId`. */
+  headers?: Record<string, string>;
 } 

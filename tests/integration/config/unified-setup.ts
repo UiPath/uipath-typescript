@@ -21,6 +21,7 @@ export {
   cleanupTestEntityRecords,
   cleanupTestProcessInstance,
   cleanupTestCaseInstance,
+  cleanupTestBucketFile,
   cleanupAllTestResources,
   registerResource,
 } from '../utils/cleanup';
