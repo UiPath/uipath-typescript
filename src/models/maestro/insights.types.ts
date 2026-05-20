@@ -39,15 +39,18 @@ export enum TimeInterval {
  * Options for insights time-series queries.
  */
 export interface TimelineOptions {
-  /** How to group data points on the time axis. Defaults to {@link TimeInterval.Day} if not provided. */
+  /**
+   * How to group data points on the time axis.
+   * @default TimeInterval.Day
+   */
   groupBy?: TimeInterval;
 }
 
 /**
- * Terminal instance statuses returned by the instance status timeline endpoint.
+ * Final instance statuses returned by the instance status timeline endpoint.
  *
- * This is a subset of the full instance status set — the backend SQL query
- * filters to only these three terminal statuses.
+ * Only includes statuses where the instance has finished execution — Completed, Faulted, or Cancelled.
+ * Active statuses like Running or Paused are not included.
  */
 export enum InstanceFinalStatus {
   /** Instance completed successfully */
@@ -63,7 +66,7 @@ export enum InstanceFinalStatus {
  * within a specific time bucket.
  */
 export interface InstanceStatusTimelineResponse {
-  /** Start of the time bucket (e.g. `"5/8/2026 12:00:00 AM"`) */
+  /** Start of the time bucket in local timezone (e.g. `"5/8/2026 12:00:00 AM"`) */
   startTime: string;
   /** Instance status */
   status: InstanceFinalStatus;

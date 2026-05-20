@@ -88,7 +88,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
   /**
    * Get all instances status counts aggregated by date for case management processes.
    *
-   * Returns time-bucketed counts of case instances grouped by status (Completed, Faulted, Cancelled),
+   * Returns time-grouped counts of case instances grouped by status (Completed, Faulted, Cancelled),
    * useful for rendering time-series charts. Use `groupBy` to control the time bucket size
    * (hour, day, or week) — defaults to day if not provided.
    *
