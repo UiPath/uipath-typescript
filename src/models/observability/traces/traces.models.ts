@@ -46,7 +46,7 @@ export interface TracesServiceModel {
    * @example
    * ```typescript
    * // Filter to a specific agent's spans
-   * const agentSpans = await traces.getByTraceId('<traceId>', {
+   * const agentSpans = await traces.getById('<traceId>', {
    *   agentId: '<agentId>',
    *   pageSize: 500,
    * });
