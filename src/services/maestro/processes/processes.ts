@@ -1,13 +1,14 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse } from '../../../models/maestro';
-import { BaseService } from '../../base';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
+import { buildInsightsTopBody } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_KEY } from '../../../utils/constants/headers';
+import { BaseService } from '../../base';
 import { ProcessInstancesService } from './process-instances';
 
 /**
@@ -77,4 +78,39 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     // Fetch BPMN XML and add element name/type to each incident
     return BpmnHelpers.enrichIncidentsWithBpmnData(rawResponse.data || [], folderKey, this.processInstancesService);
   }
-} 
+
+  /**
+   * Get the top 5 processes ranked by run count within a time range.
+   *
+   * Returns an array of up to 5 processes sorted by how many times they were executed,
+   * useful for identifying the most active processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @returns Promise resolving to an array of {@link ProcessGetTopRunCountResponse}
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * // Get top processes by run count for the last 7 days
+   * const topProcesses = await maestroProcesses.getTopRunCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.runCount} runs`);
+   * }
+   * ```
+   */
+  @track('MaestroProcesses.GetTopRunCount')
+  async getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]> {
+    const { data } = await this.post<GetTopRunCountResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT,
+      buildInsightsTopBody(startTime, endTime, false)
+    );
+    return (data ?? []).map(process => ({ ...process, name: process.packageId }));
+  }
+}

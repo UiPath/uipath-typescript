@@ -112,7 +112,12 @@ export const MAESTRO_TEST_CONSTANTS = {
   EXTRACTED_NAME_WITH_PREFIX: 'Test Case Process',
   EXTRACTED_NAME_WITHOUT_PREFIX: 'RegularPackageName',
   EXTRACTED_NAME_DEFAULT: 'TestCase',
-  
+
+  // Top run count constants
+  RUN_COUNT_PROCESS_1: 5,
+  RUN_COUNT_PROCESS_2: 3,
+  RUN_COUNT_CASE: 10,
+
   // SLA Summary constants
   SLA_CASE_INSTANCE_ID: '1238b9c9-37b6-4a69-bb67-042548d05c77',
   SLA_CASE_INSTANCE_ID_2: '15a1332a-5261-4b58-bbca-f847fa6c49de',

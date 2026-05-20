@@ -3,7 +3,7 @@
  * Model classes for Maestro cases
  */
 
-import { CaseGetAllResponse} from './cases.types';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse } from './cases.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -39,4 +39,32 @@ export interface CasesServiceModel {
    * ```
    */
   getAll(): Promise<CaseGetAllResponse[]>;
+
+  /**
+   * Get the top 5 case processes ranked by run count within a time range.
+   *
+   * Returns an array of up to 5 case processes sorted by how many times they were executed,
+   * useful for identifying the most active case processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @returns Promise resolving to an array of {@link CaseGetTopRunCountResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top case processes by run count for the last 7 days
+   * const topProcesses = await cases.getTopRunCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.runCount} runs`);
+   * }
+   * ```
+   */
+  getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]>;
 }

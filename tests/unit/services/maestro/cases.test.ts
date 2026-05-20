@@ -6,9 +6,10 @@ import { ApiClient } from '../../../../src/core/http/api-client';
 import { 
   MAESTRO_TEST_CONSTANTS,
   TEST_CONSTANTS,
-  createMockCase, 
+  createMockCase,
   createMockCasesGetAllApiResponse,
-  createMockError 
+  createMockTopRunCountResponse,
+  createMockError
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { ProcessType } from '../../../../src/models/maestro/cases.internal-types';
@@ -150,7 +151,7 @@ describe('CasesService', () => {
     });
 
     it('should extract case name from packageId without CaseManagement prefix', async () => {
-      
+
       const mockApiResponse = createMockCasesGetAllApiResponse([
         createMockCase({
           processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
@@ -160,10 +161,48 @@ describe('CasesService', () => {
 
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
       expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_WITHOUT_PREFIX);
+    });
+  });
+
+  describe('getTopRunCount', () => {
+    const mockResponse = [
+      createMockTopRunCountResponse({
+        packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        runCount: MAESTRO_TEST_CONSTANTS.RUN_COUNT_CASE,
+        processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY
+      })
+    ];
+
+    it('should retrieve top case processes by run count with isCaseManagement true', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getTopRunCount(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z')
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID);
+      expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_DEFAULT);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          commonParams: expect.objectContaining({ isCaseManagement: true })
+        }),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getTopRunCount(new Date(), new Date())
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

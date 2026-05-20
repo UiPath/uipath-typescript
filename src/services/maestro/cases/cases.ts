@@ -1,8 +1,9 @@
-import { CaseGetAllResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
-import { BaseService } from '../../base';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
+import { buildInsightsTopBody } from '../insights';
+import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
 
@@ -49,6 +50,41 @@ export class CasesService extends BaseService implements CasesServiceModel {
   }
 
   /**
+   * Get the top 5 case processes ranked by run count within a time range.
+   *
+   * Returns an array of up to 5 case processes sorted by how many times they were executed,
+   * useful for identifying the most active case processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @returns Promise resolving to an array of {@link CaseGetTopRunCountResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top case processes by run count for the last 7 days
+   * const topProcesses = await cases.getTopRunCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.runCount} runs`);
+   * }
+   * ```
+   */
+  @track('Cases.GetTopRunCount')
+  async getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]> {
+    const { data } = await this.post<GetTopRunCountResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT,
+      buildInsightsTopBody(startTime, endTime, true)
+    );
+    return (data ?? []).map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
+  }
+
+  /**
    * Extract a readable case name from the packageId
    * @param packageId - The full package identifier
    * @returns A human-readable case name
@@ -57,15 +93,15 @@ export class CasesService extends BaseService implements CasesServiceModel {
   private extractCaseName(packageId: string): string {
     // Check if packageId contains "CaseManagement."
     const caseManagementIndex = packageId.indexOf('CaseManagement.');
-    
+
     if (caseManagementIndex !== -1) {
       // Extract everything after "CaseManagement."
       const afterCaseManagement = packageId.substring(caseManagementIndex + 'CaseManagement.'.length);
-      
+
       // Replace hyphens with spaces for better readability
       return afterCaseManagement.replace(/-/g, ' ');
     }
-    
+
     // If no "CaseManagement.", return the whole packageId
     return packageId;
   }

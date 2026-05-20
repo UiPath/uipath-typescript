@@ -71,6 +71,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `PIMS` |
 | `getIncidents()` | `PIMS` |
+| `getTopRunCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Process Instances
 
@@ -91,6 +92,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `PIMS` |
+| `getTopRunCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Case Instances
 

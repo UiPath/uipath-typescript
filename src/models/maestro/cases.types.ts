@@ -3,6 +3,8 @@
  * Types and interfaces for Maestro case management
  */
 
+import { GetTopRunCountResponse } from './insights.types';
+
 /**
  * Case information with instance statistics
  */
@@ -41,4 +43,12 @@ export interface CaseGetAllResponse {
   pausingCount: number;
   /** Case instance count - canceling */
   cancelingCount: number;
+}
+
+/**
+ * Response for a single entry in top cases by run count
+ */
+export interface CaseGetTopRunCountResponse extends GetTopRunCountResponse {
+  /** Human-readable case name */
+  name: string;
 }

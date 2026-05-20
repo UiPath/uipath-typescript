@@ -38,3 +38,4 @@ export * from '../../../models/maestro/process-instances.types';
 export * from '../../../models/maestro/process-instances.models';
 export * from '../../../models/maestro/process-incidents.types';
 export * from '../../../models/maestro/process-incidents.models';
+export * from '../../../models/maestro/insights.types';

@@ -3,7 +3,7 @@
  * Model classes for Maestro processes
  */
 
-import { RawMaestroProcessGetAllResponse } from './processes.types';
+import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
 
 /**
@@ -66,6 +66,34 @@ export interface MaestroProcessesServiceModel {
    * ```
    */
   getIncidents(processKey: string, folderKey: string): Promise<ProcessIncidentGetResponse[]>;
+
+  /**
+   * Get the top 5 processes ranked by run count within a time range.
+   *
+   * Returns an array of up to 5 processes sorted by how many times they were executed,
+   * useful for identifying the most active processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @returns Promise resolving to an array of {@link ProcessGetTopRunCountResponse}
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * // Get top processes by run count for the last 7 days
+   * const topProcesses = await maestroProcesses.getTopRunCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.runCount} runs`);
+   * }
+   * ```
+   */
+  getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]>;
 }
 
 // Method interface that will be added to process objects

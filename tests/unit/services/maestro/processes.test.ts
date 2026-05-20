@@ -5,9 +5,10 @@ import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { 
   MAESTRO_TEST_CONSTANTS,
-  createMockProcess, 
+  createMockProcess,
   createMockProcessesApiResponse,
-  createMockError, 
+  createMockTopRunCountResponse,
+  createMockError,
   TEST_CONSTANTS
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -136,7 +137,7 @@ describe('MaestroProcessesService', () => {
     });
 
     it('should set name field to packageId for each process', async () => {
-      
+
       const mockApiResponse = createMockProcessesApiResponse([
         createMockProcess({
           processKey: MAESTRO_TEST_CONSTANTS.CUSTOM_PROCESS_KEY,
@@ -146,11 +147,63 @@ describe('MaestroProcessesService', () => {
 
       mockApiClient.get.mockResolvedValue(mockApiResponse);
 
-      
+
       const result = await service.getAll();
 
-      
+
       expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.CUSTOM_PACKAGE_ID);
+    });
+  });
+
+  describe('getTopRunCount', () => {
+    const mockResponse = [
+      createMockTopRunCountResponse(),
+      createMockTopRunCountResponse({
+        packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID_2,
+        runCount: MAESTRO_TEST_CONSTANTS.RUN_COUNT_PROCESS_2,
+        processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY_2
+      })
+    ];
+
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
+
+    it('should retrieve top processes by run count', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getTopRunCount(startDate, endDate);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT,
+        {
+          commonParams: {
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
+            isCaseManagement: false
+          }
+        },
+        {}
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
+      expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
+      expect(result[0].runCount).toBe(MAESTRO_TEST_CONSTANTS.RUN_COUNT_PROCESS_1);
+    });
+
+    it('should return empty array when API returns null', async () => {
+      mockApiClient.post.mockResolvedValue(null);
+
+      const result = await service.getTopRunCount(startDate, endDate);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getTopRunCount(startDate, endDate)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

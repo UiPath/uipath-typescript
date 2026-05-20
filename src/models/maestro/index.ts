@@ -19,3 +19,6 @@ export * from './cases.models';
 // Case instance types and models
 export * from './case-instances.types';
 export * from './case-instances.models';
+
+// Insights types (shared across process and case services)
+export * from './insights.types';
