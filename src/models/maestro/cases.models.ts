@@ -70,7 +70,7 @@ export interface CasesServiceModel {
   getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]>;
 
   /**
-   * Get instance status counts aggregated by date for case management processes.
+   * Get all instances status counts aggregated by date for case management processes.
    *
    * Returns time-bucketed counts of case instances grouped by status (Completed, Faulted, Cancelled),
    * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.

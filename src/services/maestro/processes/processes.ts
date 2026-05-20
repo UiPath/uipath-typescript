@@ -116,7 +116,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   }
 
   /**
-   * Get instance status counts aggregated by date for maestro processes.
+   * Get all instances status counts aggregated by date for maestro processes.
    *
    * Returns time-bucketed counts of instances grouped by status (Completed, Faulted, Cancelled),
    * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
