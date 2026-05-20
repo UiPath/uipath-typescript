@@ -21,6 +21,9 @@ export interface IntegrationConfig {
   dataFabricTestAttachmentField?: string;
   orchestratorAttachmentId?: string;
   jobsTestFolderId?: string;
+  tracesTestTraceId?: string;
+  tracesTestAgentId?: string;
+  tracesTestReferenceId?: string;
 }
 
 function isValidUrl(value: string): boolean {
@@ -73,6 +76,9 @@ function validateConfig(rawConfig: Record<string, unknown>): IntegrationConfig {
     dataFabricTestAttachmentField: typeof rawConfig.dataFabricTestAttachmentField === 'string' ? rawConfig.dataFabricTestAttachmentField : undefined,
     orchestratorAttachmentId: typeof rawConfig.orchestratorAttachmentId === 'string' ? rawConfig.orchestratorAttachmentId : undefined,
     jobsTestFolderId: typeof rawConfig.jobsTestFolderId === 'string' ? rawConfig.jobsTestFolderId : undefined,
+    tracesTestTraceId: typeof rawConfig.tracesTestTraceId === 'string' ? rawConfig.tracesTestTraceId : undefined,
+    tracesTestAgentId: typeof rawConfig.tracesTestAgentId === 'string' ? rawConfig.tracesTestAgentId : undefined,
+    tracesTestReferenceId: typeof rawConfig.tracesTestReferenceId === 'string' ? rawConfig.tracesTestReferenceId : undefined,
   };
 }
 
@@ -109,6 +115,9 @@ export function loadIntegrationConfig(): IntegrationConfig {
     dataFabricTestAttachmentField: process.env.DATA_FABRIC_TEST_ATTACHMENT_FIELD || undefined,
     orchestratorAttachmentId: process.env.ORCHESTRATOR_ATTACHMENT_ID || undefined,
     jobsTestFolderId: process.env.JOBS_TEST_FOLDER_ID || undefined,
+    tracesTestTraceId: process.env.TRACES_TEST_TRACE_ID || undefined,
+    tracesTestAgentId: process.env.TRACES_TEST_AGENT_ID || undefined,
+    tracesTestReferenceId: process.env.TRACES_TEST_REFERENCE_ID || undefined,
   };
 
   cachedConfig = validateConfig(rawConfig);

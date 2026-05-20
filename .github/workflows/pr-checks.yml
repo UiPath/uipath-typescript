@@ -59,6 +59,9 @@ jobs:
           echo "data_fabric_test_attachment_field=${{ secrets.UIPATH_DATA_FABRIC_TEST_ATTACHMENT_FIELD_DEV || secrets.UIPATH_DATA_FABRIC_TEST_ATTACHMENT_FIELD }}" >> $GITHUB_OUTPUT
           echo "orchestrator_attachment_id=${{ secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID_DEV || secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID }}" >> $GITHUB_OUTPUT
           echo "jobs_test_folder_id=${{ secrets.UIPATH_JOBS_TEST_FOLDER_ID_DEV || secrets.UIPATH_JOBS_TEST_FOLDER_ID }}" >> $GITHUB_OUTPUT
+          echo "traces_test_trace_id=${{ secrets.UIPATH_TRACES_TEST_TRACE_ID_DEV || secrets.UIPATH_TRACES_TEST_TRACE_ID }}" >> $GITHUB_OUTPUT
+          echo "traces_test_agent_id=${{ secrets.UIPATH_TRACES_TEST_AGENT_ID_DEV || secrets.UIPATH_TRACES_TEST_AGENT_ID }}" >> $GITHUB_OUTPUT
+          echo "traces_test_reference_id=${{ secrets.UIPATH_TRACES_TEST_REFERENCE_ID_DEV || secrets.UIPATH_TRACES_TEST_REFERENCE_ID }}" >> $GITHUB_OUTPUT
 
       - name: Create Integration Test Configuration
         if: github.base_ref == 'main'
@@ -81,6 +84,9 @@ jobs:
           ORCHESTRATOR_TEST_PROCESS_KEY=${{ steps.config.outputs.orchestrator_test_process_key }}
           ORCHESTRATOR_ATTACHMENT_ID=${{ steps.config.outputs.orchestrator_attachment_id }}
           JOBS_TEST_FOLDER_ID=${{ steps.config.outputs.jobs_test_folder_id }}
+          TRACES_TEST_TRACE_ID=${{ steps.config.outputs.traces_test_trace_id }}
+          TRACES_TEST_AGENT_ID=${{ steps.config.outputs.traces_test_agent_id }}
+          TRACES_TEST_REFERENCE_ID=${{ steps.config.outputs.traces_test_reference_id }}
           EOF
 
       - name: Run Integration Tests
