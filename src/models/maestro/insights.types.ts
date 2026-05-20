@@ -26,7 +26,7 @@ export interface GetTopRunCountResponse extends GetTopBaseResponse {
  *
  * Controls how data points are grouped on the time axis.
  */
-export enum TimeSliceUnit {
+export enum TimeInterval {
   /** Group data points by hour */
   Hour = 'HOUR',
   /** Group data points by day */
@@ -38,9 +38,9 @@ export enum TimeSliceUnit {
 /**
  * Options for insights time-series queries.
  */
-export interface MaestroInsightsOptions {
-  /** Time bucketing granularity. Defaults to {@link TimeSliceUnit.Day} if not provided. */
-  timeSliceUnit?: TimeSliceUnit;
+export interface TimelineOptions {
+  /** How to group data points on the time axis. Defaults to {@link TimeInterval.Day} if not provided. */
+  groupBy?: TimeInterval;
 }
 
 /**
@@ -49,7 +49,7 @@ export interface MaestroInsightsOptions {
  * This is a subset of the full instance status set — the backend SQL query
  * filters to only these three terminal statuses.
  */
-export enum InsightInstanceStatus {
+export enum InstanceFinalStatus {
   /** Instance completed successfully */
   Completed = 'Completed',
   /** Instance encountered an error */
@@ -66,7 +66,7 @@ export interface InstanceStatusTimelineResponse {
   /** Start of the time bucket (e.g. `"5/8/2026 12:00:00 AM"`) */
   startTime: string;
   /** Instance status */
-  status: InsightInstanceStatus;
+  status: InstanceFinalStatus;
   /** Number of instances with this status in the time bucket */
   count: number;
 }

@@ -1,5 +1,5 @@
 import { ApiResponse } from '../base';
-import { InstanceStatusTimelineResponse, MaestroInsightsOptions } from '../../models/maestro';
+import { InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
@@ -38,7 +38,7 @@ export async function fetchInstanceStatusTimeline(
   startTime: Date,
   endTime: Date,
   isCaseManagement: boolean,
-  options?: MaestroInsightsOptions,
+  options?: TimelineOptions,
 ): Promise<InstanceStatusTimelineResponse[]> {
   const response = await postFn<InstanceStatusTimelineResponse[]>(
     MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
@@ -48,7 +48,7 @@ export async function fetchInstanceStatusTimeline(
         endTime: endTime.getTime(),
         isCaseManagement,
       },
-      timeSliceUnit: options?.timeSliceUnit,
+      timeSliceUnit: options?.groupBy,
       timezoneOffset: new Date().getTimezoneOffset() * -1,
     },
   );

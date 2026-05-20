@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { InstanceStatusTimelineResponse, MaestroInsightsOptions } from './insights.types';
+import { InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -100,7 +100,8 @@ export interface MaestroProcessesServiceModel {
    * Get all instances status counts aggregated by date for maestro processes.
    *
    * Returns time-bucketed counts of instances grouped by status (Completed, Faulted, Cancelled),
-   * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
+   * useful for rendering time-series charts. Use `groupBy` to control the time bucket size
+   * (hour, day, or week) — defaults to day if not provided.
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
@@ -121,18 +122,18 @@ export interface MaestroProcessesServiceModel {
    *
    * @example
    * ```typescript
-   * import { TimeSliceUnit } from '@uipath/uipath-typescript/maestro-processes';
+   * import { TimeInterval } from '@uipath/uipath-typescript/maestro-processes';
    *
    * // Get hourly breakdown
    * const statuses = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
-   *   timeSliceUnit: TimeSliceUnit.Hour,
+   *   groupBy: TimeInterval.Hour,
    * });
    * ```
    */
   getInstanceStatusTimeline(
     startTime: Date,
     endTime: Date,
-    options?: MaestroInsightsOptions,
+    options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]>;
 }
 

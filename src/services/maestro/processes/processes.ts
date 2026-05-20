@@ -1,5 +1,5 @@
 import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, GetTopRunCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
-import type { MaestroInsightsOptions } from '../../../models/maestro';
+import type { TimelineOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
@@ -119,7 +119,8 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * Get all instances status counts aggregated by date for maestro processes.
    *
    * Returns time-bucketed counts of instances grouped by status (Completed, Faulted, Cancelled),
-   * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
+   * useful for rendering time-series charts. Use `groupBy` to control the time bucket size
+   * (hour, day, or week) — defaults to day if not provided.
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
@@ -140,11 +141,11 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @example
    * ```typescript
-   * import { TimeSliceUnit } from '@uipath/uipath-typescript/maestro-processes';
+   * import { TimeInterval } from '@uipath/uipath-typescript/maestro-processes';
    *
    * // Get hourly breakdown
    * const statuses = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
-   *   timeSliceUnit: TimeSliceUnit.Hour,
+   *   groupBy: TimeInterval.Hour,
    * });
    * ```
    */
@@ -152,7 +153,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   async getInstanceStatusTimeline(
     startTime: Date,
     endTime: Date,
-    options?: MaestroInsightsOptions,
+    options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]> {
     return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, false, options);
   }

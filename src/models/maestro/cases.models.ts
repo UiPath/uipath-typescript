@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse } from './cases.types';
-import { InstanceStatusTimelineResponse, MaestroInsightsOptions } from './insights.types';
+import { InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -73,7 +73,8 @@ export interface CasesServiceModel {
    * Get all instances status counts aggregated by date for case management processes.
    *
    * Returns time-bucketed counts of case instances grouped by status (Completed, Faulted, Cancelled),
-   * useful for rendering time-series charts. The time bucket granularity is controlled by `timeSliceUnit`.
+   * useful for rendering time-series charts. Use `groupBy` to control the time bucket size
+   * (hour, day, or week) — defaults to day if not provided.
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
@@ -94,17 +95,17 @@ export interface CasesServiceModel {
    *
    * @example
    * ```typescript
-   * import { TimeSliceUnit } from '@uipath/uipath-typescript/cases';
+   * import { TimeInterval } from '@uipath/uipath-typescript/cases';
    *
    * // Get weekly breakdown
    * const statuses = await cases.getInstanceStatusTimeline(startTime, endTime, {
-   *   timeSliceUnit: TimeSliceUnit.Week,
+   *   groupBy: TimeInterval.Week,
    * });
    * ```
    */
   getInstanceStatusTimeline(
     startTime: Date,
     endTime: Date,
-    options?: MaestroInsightsOptions,
+    options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]>;
 }

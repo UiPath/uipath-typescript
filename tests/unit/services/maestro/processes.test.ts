@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MaestroProcessesService } from '../../../../src/services/maestro/processes';
 import { MAESTRO_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { TimeSliceUnit } from '../../../../src/models/maestro';
+import { TimeInterval } from '../../../../src/models/maestro';
 import {
   MAESTRO_TEST_CONSTANTS,
   createMockProcess,
@@ -246,17 +246,17 @@ describe('MaestroProcessesService', () => {
       expect(result[0].count).toBe(MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_2);
     });
 
-    it('should pass timeSliceUnit when provided', async () => {
+    it('should pass groupBy as timeSliceUnit to the API', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
       await service.getInstanceStatusTimeline(startDate, endDate, {
-        timeSliceUnit: TimeSliceUnit.Hour,
+        groupBy: TimeInterval.Hour,
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
         expect.objectContaining({
-          timeSliceUnit: TimeSliceUnit.Hour,
+          timeSliceUnit: TimeInterval.Hour,
         }),
         {},
       );
