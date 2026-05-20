@@ -176,10 +176,10 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getByTraceId()` | `Traces.Api` |
-| `getByIds()` | `Traces.Api` |
-| `getByAgentId()` | `Traces.Api` |
-| `getByReferenceId()` | `Traces.Api` |
+| `getById()` | `Traces.Api` |
+| `getSpansByIds()` | `Traces.Api` |
+| `getSpansByAgentId()` | `Traces.Api` |
+| `getSpansByReferenceId()` | `Traces.Api` |
 
 ## Processes
 
