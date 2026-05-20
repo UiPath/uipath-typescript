@@ -79,6 +79,15 @@ jobs:
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
 
+  deploy-docs:
+    needs: publish-sdk
+    uses: ./.github/workflows/docs.yml
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+      deployments: write
+
   trigger-cf-worker:
     needs: publish-sdk
     runs-on: ubuntu-latest
