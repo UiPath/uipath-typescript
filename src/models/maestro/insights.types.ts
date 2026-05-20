@@ -39,7 +39,7 @@ export enum TimeSliceUnit {
  * Options for insights time-series queries.
  */
 export interface MaestroInsightsOptions {
-  /** Time bucketing granularity. If omitted, the API defaults to daily buckets. */
+  /** Time bucketing granularity. Defaults to {@link TimeSliceUnit.Day} if not provided. */
   timeSliceUnit?: TimeSliceUnit;
 }
 
