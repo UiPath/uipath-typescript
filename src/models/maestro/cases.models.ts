@@ -41,9 +41,9 @@ export interface CasesServiceModel {
   getAll(): Promise<CaseGetAllResponse[]>;
 
   /**
-   * Get the top case processes ranked by run count within a time range.
+   * Get the top 5 case processes ranked by run count within a time range.
    *
-   * Returns an array of case processes sorted by how many times they were executed,
+   * Returns an array of up to 5 case processes sorted by how many times they were executed,
    * useful for identifying the most active case processes in a given period.
    *
    * @param startTime - Start of the time range to query

@@ -68,9 +68,9 @@ export interface MaestroProcessesServiceModel {
   getIncidents(processKey: string, folderKey: string): Promise<ProcessIncidentGetResponse[]>;
 
   /**
-   * Get the top processes ranked by run count within a time range.
+   * Get the top 5 processes ranked by run count within a time range.
    *
-   * Returns an array of processes sorted by how many times they were executed,
+   * Returns an array of up to 5 processes sorted by how many times they were executed,
    * useful for identifying the most active processes in a given period.
    *
    * @param startTime - Start of the time range to query

@@ -6,7 +6,7 @@
 /**
  * Common fields returned by all Insights "top" endpoints
  */
-export interface InsightsGetTopBaseResponse {
+export interface GetTopBaseResponse {
   /** The package identifier */
   packageId: string;
   /** The unique process key */
@@ -16,7 +16,7 @@ export interface InsightsGetTopBaseResponse {
 /**
  * Response for the top run count Insights endpoint
  */
-export interface InsightsGetTopRunCountResponse extends InsightsGetTopBaseResponse {
+export interface GetTopRunCountResponse extends GetTopBaseResponse {
   /** Number of times the process was run in the given time range */
   runCount: number;
 }

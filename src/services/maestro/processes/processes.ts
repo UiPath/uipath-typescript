@@ -1,19 +1,20 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, InsightsGetTopRunCountResponse } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
-import { MaestroInsightsService } from '../insights';
+import { buildInsightsTopBody } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_KEY } from '../../../utils/constants/headers';
+import { BaseService } from '../../base';
 import { ProcessInstancesService } from './process-instances';
 
 /**
  * Service for interacting with Maestro Processes
  */
-export class MaestroProcessesService extends MaestroInsightsService implements MaestroProcessesServiceModel {
+export class MaestroProcessesService extends BaseService implements MaestroProcessesServiceModel {
   private processInstancesService: ProcessInstancesService;
 
   /**
@@ -79,9 +80,9 @@ export class MaestroProcessesService extends MaestroInsightsService implements M
   }
 
   /**
-   * Get the top processes ranked by run count within a time range.
+   * Get the top 5 processes ranked by run count within a time range.
    *
-   * Returns an array of processes sorted by how many times they were executed,
+   * Returns an array of up to 5 processes sorted by how many times they were executed,
    * useful for identifying the most active processes in a given period.
    *
    * @param startTime - Start of the time range to query
@@ -106,9 +107,10 @@ export class MaestroProcessesService extends MaestroInsightsService implements M
    */
   @track('MaestroProcesses.GetTopRunCount')
   async getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]> {
-    const results = await this.fetchTop<InsightsGetTopRunCountResponse>(
-      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT, startTime, endTime, false
+    const { data } = await this.post<GetTopRunCountResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT,
+      buildInsightsTopBody(startTime, endTime, false)
     );
-    return results.map(process => ({ ...process, name: process.packageId }));
+    return (data ?? []).map(process => ({ ...process, name: process.packageId }));
   }
 }

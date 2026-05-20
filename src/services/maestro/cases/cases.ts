@@ -1,15 +1,16 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, InsightsGetTopRunCountResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
-import { MaestroInsightsService } from '../insights';
+import { buildInsightsTopBody } from '../insights';
+import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
 
 /**
  * Service for interacting with UiPath Maestro Cases
  */
-export class CasesService extends MaestroInsightsService implements CasesServiceModel {
+export class CasesService extends BaseService implements CasesServiceModel {
   /**
    * Get all case management processes with their instance statistics
    * @returns Promise resolving to array of Case objects
@@ -49,31 +50,9 @@ export class CasesService extends MaestroInsightsService implements CasesService
   }
 
   /**
-   * Extract a readable case name from the packageId
-   * @param packageId - The full package identifier
-   * @returns A human-readable case name
-   * @private
-   */
-  private extractCaseName(packageId: string): string {
-    // Check if packageId contains "CaseManagement."
-    const caseManagementIndex = packageId.indexOf('CaseManagement.');
-    
-    if (caseManagementIndex !== -1) {
-      // Extract everything after "CaseManagement."
-      const afterCaseManagement = packageId.substring(caseManagementIndex + 'CaseManagement.'.length);
-      
-      // Replace hyphens with spaces for better readability
-      return afterCaseManagement.replace(/-/g, ' ');
-    }
-    
-    // If no "CaseManagement.", return the whole packageId
-    return packageId;
-  }
-
-  /**
-   * Get the top case processes ranked by run count within a time range.
+   * Get the top 5 case processes ranked by run count within a time range.
    *
-   * Returns an array of case processes sorted by how many times they were executed,
+   * Returns an array of up to 5 case processes sorted by how many times they were executed,
    * useful for identifying the most active case processes in a given period.
    *
    * @param startTime - Start of the time range to query
@@ -98,9 +77,32 @@ export class CasesService extends MaestroInsightsService implements CasesService
    */
   @track('Cases.GetTopRunCount')
   async getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]> {
-    const results = await this.fetchTop<InsightsGetTopRunCountResponse>(
-      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT, startTime, endTime, true
+    const { data } = await this.post<GetTopRunCountResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT,
+      buildInsightsTopBody(startTime, endTime, true)
     );
-    return results.map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
+    return (data ?? []).map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
+  }
+
+  /**
+   * Extract a readable case name from the packageId
+   * @param packageId - The full package identifier
+   * @returns A human-readable case name
+   * @private
+   */
+  private extractCaseName(packageId: string): string {
+    // Check if packageId contains "CaseManagement."
+    const caseManagementIndex = packageId.indexOf('CaseManagement.');
+
+    if (caseManagementIndex !== -1) {
+      // Extract everything after "CaseManagement."
+      const afterCaseManagement = packageId.substring(caseManagementIndex + 'CaseManagement.'.length);
+
+      // Replace hyphens with spaces for better readability
+      return afterCaseManagement.replace(/-/g, ' ');
+    }
+
+    // If no "CaseManagement.", return the whole packageId
+    return packageId;
   }
 }
