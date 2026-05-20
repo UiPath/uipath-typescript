@@ -1,6 +1,6 @@
 import type {
   SpanResponse,
-  TracesGetByTraceIdOptions,
+  TracesGetByIdOptions,
   TracesGetByAgentIdOptions,
   TracesGetByReferenceIdOptions,
 } from './traces.types';
@@ -22,7 +22,7 @@ import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } fr
  * await sdk.initialize();
  *
  * const traces = new Traces(sdk);
- * const spans = await traces.getByTraceId('<traceId>');
+ * const spans = await traces.getById('<traceId>');
  * ```
  */
 export interface TracesServiceModel {
@@ -33,14 +33,14 @@ export interface TracesServiceModel {
    * Accepts both GUID format and OTEL 32-char hex format — the API normalizes both.
    *
    * @param traceId - Trace identifier
-   * @param options - Optional filters {@link TracesGetByTraceIdOptions}
+   * @param options - Optional filters {@link TracesGetByIdOptions}
    * @returns Promise resolving to an array of {@link SpanResponse}
    * @example
    * ```typescript
    * import { Traces } from '@uipath/uipath-typescript/traces';
    *
    * const traces = new Traces(sdk);
-   * const spans = await traces.getByTraceId('<traceId>');
+   * const spans = await traces.getById('<traceId>');
    * console.log(spans.length, spans[0].spanType, spans[0].status);
    * ```
    * @example
@@ -52,7 +52,7 @@ export interface TracesServiceModel {
    * });
    * ```
    */
-  getByTraceId(traceId: string, options?: TracesGetByTraceIdOptions): Promise<SpanResponse[]>;
+  getById(traceId: string, options?: TracesGetByIdOptions): Promise<SpanResponse[]>;
 
   /**
    * Gets specific spans by trace ID and span IDs.
@@ -69,13 +69,13 @@ export interface TracesServiceModel {
    * const traces = new Traces(sdk);
    *
    * // First retrieve all spans to find the IDs you want
-   * const allSpans = await traces.getByTraceId('<traceId>');
+   * const allSpans = await traces.getById('<traceId>');
    * const spanIds = allSpans.slice(0, 3).map(s => s.id);
    *
-   * const subset = await traces.getByIds('<traceId>', spanIds);
+   * const subset = await traces.getSpansByIds('<traceId>', spanIds);
    * ```
    */
-  getByIds(traceId: string, spanIds: string[]): Promise<SpanResponse[]>;
+  getSpansByIds(traceId: string, spanIds: string[]): Promise<SpanResponse[]>;
 
   /**
    * Gets spans grouped by agent ID, with optional time range filtering and pagination.
@@ -91,23 +91,23 @@ export interface TracesServiceModel {
    * import { Traces } from '@uipath/uipath-typescript/traces';
    *
    * const traces = new Traces(sdk);
-   * const history = await traces.getByAgentId('<agentId>');
+   * const history = await traces.getSpansByAgentId('<agentId>');
    * console.log(history.totalCount, history.items[0].startTime);
    * ```
    * @example
    * ```typescript
    * // Paginated with time filter
-   * const page1 = await traces.getByAgentId('<agentId>', {
+   * const page1 = await traces.getSpansByAgentId('<agentId>', {
    *   pageSize: 10,
    *   startTime: '2026-01-01T00:00:00Z',
    *   endTime: '2026-02-01T00:00:00Z',
    * });
    * if (page1.hasNextPage) {
-   *   const page2 = await traces.getByAgentId('<agentId>', { cursor: page1.nextCursor });
+   *   const page2 = await traces.getSpansByAgentId('<agentId>', { cursor: page1.nextCursor });
    * }
    * ```
    */
-  getByAgentId<T extends TracesGetByAgentIdOptions = TracesGetByAgentIdOptions>(
+  getSpansByAgentId<T extends TracesGetByAgentIdOptions = TracesGetByAgentIdOptions>(
     agentId: string,
     options?: T
   ): Promise<
@@ -130,18 +130,18 @@ export interface TracesServiceModel {
    * import { Traces } from '@uipath/uipath-typescript/traces';
    *
    * const traces = new Traces(sdk);
-   * const spans = await traces.getByReferenceId('<referenceId>');
+   * const spans = await traces.getSpansByReferenceId('<referenceId>');
    * ```
    * @example
    * ```typescript
    * // Filter to a specific service type and version
-   * const agentSpans = await traces.getByReferenceId('<referenceId>', {
+   * const agentSpans = await traces.getSpansByReferenceId('<referenceId>', {
    *   serviceType: 'agent',
    *   version: '1.0.0',
    * });
    * ```
    */
-  getByReferenceId<T extends TracesGetByReferenceIdOptions = TracesGetByReferenceIdOptions>(
+  getSpansByReferenceId<T extends TracesGetByReferenceIdOptions = TracesGetByReferenceIdOptions>(
     referenceId: string,
     options?: T
   ): Promise<

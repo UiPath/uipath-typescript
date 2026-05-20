@@ -37,11 +37,11 @@ describe('TracesService Unit Tests', () => {
     vi.clearAllMocks();
   });
 
-  describe('getByTraceId', () => {
+  describe('getById', () => {
     it('should return spans for a valid traceId', async () => {
       mockApiClient.get.mockResolvedValue(createMockOtelPageResponse());
 
-      const result = await tracesService.getByTraceId(TRACES_TEST_CONSTANTS.TRACE_ID);
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(1);
@@ -57,7 +57,7 @@ describe('TracesService Unit Tests', () => {
     it('should pass options to query params', async () => {
       mockApiClient.get.mockResolvedValue(createMockOtelPageResponse());
 
-      await tracesService.getByTraceId(TRACES_TEST_CONSTANTS.TRACE_ID, {
+      await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID, {
         pageSize: 500,
         agentId: TRACES_TEST_CONSTANTS.AGENT_ID,
         isHistorical: true,
@@ -83,7 +83,7 @@ describe('TracesService Unit Tests', () => {
         ])
       );
 
-      const result = await tracesService.getByTraceId(TRACES_TEST_CONSTANTS.TRACE_ID);
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
       const span = result[0];
 
       // camelCase applied (PascalCase absent)
@@ -110,7 +110,7 @@ describe('TracesService Unit Tests', () => {
         ])
       );
 
-      const result = await tracesService.getByTraceId(TRACES_TEST_CONSTANTS.TRACE_ID);
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
       const span = result[0];
 
       expect(span.attachments![0].provider).toBe(SpanAttachmentProvider.LLMOps);
@@ -121,26 +121,26 @@ describe('TracesService Unit Tests', () => {
 
     it('should return empty array when no spans', async () => {
       mockApiClient.get.mockResolvedValue(createMockOtelPageResponse([]));
-      const result = await tracesService.getByTraceId(TRACES_TEST_CONSTANTS.TRACE_ID);
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
       expect(result).toEqual([]);
     });
 
     it('should throw ValidationError when traceId is empty', async () => {
-      await expect(tracesService.getByTraceId('')).rejects.toThrow('traceId is required');
+      await expect(tracesService.getById('')).rejects.toThrow('traceId is required');
     });
 
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(new Error(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND));
-      await expect(tracesService.getByTraceId(TRACES_TEST_CONSTANTS.TRACE_ID))
+      await expect(tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID))
         .rejects.toThrow(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND);
     });
   });
 
-  describe('getByIds', () => {
+  describe('getSpansByIds', () => {
     it('should return matching spans for given IDs', async () => {
       mockApiClient.post.mockResolvedValue([createMockRawOtelSpan()]);
 
-      const result = await tracesService.getByIds(
+      const result = await tracesService.getSpansByIds(
         TRACES_TEST_CONSTANTS.TRACE_ID,
         [TRACES_TEST_CONSTANTS.SPAN_ID_1]
       );
@@ -157,7 +157,7 @@ describe('TracesService Unit Tests', () => {
     it('should apply explicit field mapping and enum transforms', async () => {
       mockApiClient.post.mockResolvedValue([createMockRawOtelSpan({ Status: 2, Source: 2 })]);
 
-      const result = await tracesService.getByIds(
+      const result = await tracesService.getSpansByIds(
         TRACES_TEST_CONSTANTS.TRACE_ID,
         [TRACES_TEST_CONSTANTS.SPAN_ID_1]
       );
@@ -169,31 +169,31 @@ describe('TracesService Unit Tests', () => {
 
     it('should return empty array for empty spanIds', async () => {
       mockApiClient.post.mockResolvedValue([]);
-      const result = await tracesService.getByIds(TRACES_TEST_CONSTANTS.TRACE_ID, []);
+      const result = await tracesService.getSpansByIds(TRACES_TEST_CONSTANTS.TRACE_ID, []);
       expect(result).toEqual([]);
     });
 
     it('should throw ValidationError when traceId is empty', async () => {
       await expect(
-        tracesService.getByIds('', [TRACES_TEST_CONSTANTS.SPAN_ID_1])
+        tracesService.getSpansByIds('', [TRACES_TEST_CONSTANTS.SPAN_ID_1])
       ).rejects.toThrow('traceId is required');
     });
 
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(TRACES_TEST_CONSTANTS.ERROR_SPANS_NOT_FOUND));
       await expect(
-        tracesService.getByIds(TRACES_TEST_CONSTANTS.TRACE_ID, [TRACES_TEST_CONSTANTS.SPAN_ID_1])
+        tracesService.getSpansByIds(TRACES_TEST_CONSTANTS.TRACE_ID, [TRACES_TEST_CONSTANTS.SPAN_ID_1])
       ).rejects.toThrow(TRACES_TEST_CONSTANTS.ERROR_SPANS_NOT_FOUND);
     });
   });
 
-  // ─── getByAgentId ────────────────────────────────────────────────────────
+  // ─── getSpansByAgentId ────────────────────────────────────────────────────────
 
-  describe('getByAgentId', () => {
+  describe('getSpansByAgentId', () => {
     it('should return non-paginated response for valid agentId', async () => {
       mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
 
-      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
 
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
@@ -210,7 +210,7 @@ describe('TracesService Unit Tests', () => {
         createMockAgentPageResponse([createMockRawAgentSpan()], 100, 0, 10)
       );
 
-      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID, { pageSize: 10 });
+      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID, { pageSize: 10 });
 
       expect('hasNextPage' in result).toBe(true);
     });
@@ -218,7 +218,7 @@ describe('TracesService Unit Tests', () => {
     it('should pass filter options as query params', async () => {
       mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
 
-      await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID, {
+      await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID, {
         startTime: TRACES_TEST_CONSTANTS.START_TIME,
         endTime: TRACES_TEST_CONSTANTS.END_TIME,
       });
@@ -237,7 +237,7 @@ describe('TracesService Unit Tests', () => {
     it('should set fields absent from agent endpoint to null', async () => {
       mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
 
-      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
       const span = result.items[0];
 
       expect(span.executionType).toBeNull();
@@ -252,7 +252,7 @@ describe('TracesService Unit Tests', () => {
         createMockAgentPageResponse([createMockRawAgentSpan({ status: 'Error', source: 'Testing', verbosityLevel: 'Warning' })])
       );
 
-      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
       const span = result.items[0];
 
       expect(span.status).toBe(SpanStatus.Error);
@@ -264,7 +264,7 @@ describe('TracesService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue(
         createMockAgentPageResponse([createMockRawAgentSpan({ status: 'UnknownFutureStatus' })])
       );
-      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
       expect(result.items[0].status).toBe(SpanStatus.Unset);
     });
 
@@ -272,7 +272,7 @@ describe('TracesService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue(
         createMockAgentPageResponse([createMockRawAgentSpan({ source: 'UnknownSource' })])
       );
-      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
       expect(result.items[0].source).toBeNull();
     });
 
@@ -280,28 +280,28 @@ describe('TracesService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue(
         createMockAgentPageResponse([createMockRawAgentSpan({ verbosityLevel: 'UnknownLevel' })])
       );
-      const result = await tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
       expect(result.items[0].verbosityLevel).toBeNull();
     });
 
     it('should throw ValidationError when agentId is empty', async () => {
-      await expect(tracesService.getByAgentId('')).rejects.toThrow('agentId is required');
+      await expect(tracesService.getSpansByAgentId('')).rejects.toThrow('agentId is required');
     });
 
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(new Error(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND));
-      await expect(tracesService.getByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID))
+      await expect(tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID))
         .rejects.toThrow(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND);
     });
   });
 
-  // ─── getByReferenceId ───────────────────────────────────────────────────────
+  // ─── getSpansByReferenceId ───────────────────────────────────────────────────────
 
-  describe('getByReferenceId', () => {
+  describe('getSpansByReferenceId', () => {
     it('should return non-paginated response for valid referenceId', async () => {
       mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
 
-      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
+      const result = await tracesService.getSpansByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
 
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
@@ -316,7 +316,7 @@ describe('TracesService Unit Tests', () => {
         createMockAgentPageResponse([createMockRawAgentSpan()], 50, 0, 10)
       );
 
-      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID, { pageSize: 10 });
+      const result = await tracesService.getSpansByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID, { pageSize: 10 });
 
       expect('hasNextPage' in result).toBe(true);
     });
@@ -324,7 +324,7 @@ describe('TracesService Unit Tests', () => {
     it('should pass serviceType, version, traceId filter params', async () => {
       mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
 
-      await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID, {
+      await tracesService.getSpansByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID, {
         serviceType: 'agent',
         version: '1.0.0',
         traceId: TRACES_TEST_CONSTANTS.TRACE_ID,
@@ -345,7 +345,7 @@ describe('TracesService Unit Tests', () => {
     it('should set fields absent from agent endpoint to null', async () => {
       mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
 
-      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
+      const result = await tracesService.getSpansByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
       const span = result.items[0];
 
       expect(span.executionType).toBeNull();
@@ -360,7 +360,7 @@ describe('TracesService Unit Tests', () => {
         createMockAgentPageResponse([createMockRawAgentSpan({ status: 'Cancelled', source: 'Agents', verbosityLevel: 'Critical' })])
       );
 
-      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
+      const result = await tracesService.getSpansByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
       const span = result.items[0];
 
       expect(span.status).toBe(SpanStatus.Cancelled);
@@ -373,7 +373,7 @@ describe('TracesService Unit Tests', () => {
         createMockAgentPageResponse([createMockRawAgentSpan({ status: 'UnknownStatus', source: 'UnknownSource' })])
       );
 
-      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
+      const result = await tracesService.getSpansByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
       const span = result.items[0];
 
       expect(span.status).toBe(SpanStatus.Unset);
@@ -384,17 +384,17 @@ describe('TracesService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue(
         createMockAgentPageResponse([createMockRawAgentSpan({ verbosityLevel: 'UnknownLevel' })])
       );
-      const result = await tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
+      const result = await tracesService.getSpansByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID);
       expect(result.items[0].verbosityLevel).toBeNull();
     });
 
     it('should throw ValidationError when referenceId is empty', async () => {
-      await expect(tracesService.getByReferenceId('')).rejects.toThrow('referenceId is required');
+      await expect(tracesService.getSpansByReferenceId('')).rejects.toThrow('referenceId is required');
     });
 
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(new Error(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND));
-      await expect(tracesService.getByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID))
+      await expect(tracesService.getSpansByReferenceId(TRACES_TEST_CONSTANTS.REFERENCE_ID))
         .rejects.toThrow(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND);
     });
   });

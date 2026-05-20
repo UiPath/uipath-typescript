@@ -155,7 +155,7 @@ export interface SpanResponse {
 }
 
 /** Options for retrieving all spans belonging to a trace. */
-export interface TracesGetByTraceIdOptions {
+export interface TracesGetByIdOptions {
   /** Maximum number of spans to return. */
   pageSize?: number;
   /** Filter spans to those produced by a specific agent ID. */

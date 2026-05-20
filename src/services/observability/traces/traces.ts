@@ -6,7 +6,7 @@ import {
   SpanVerbosityLevel,
   SpanAttachmentProvider,
   SpanAttachmentDirection,
-  TracesGetByTraceIdOptions,
+  TracesGetByIdOptions,
   TracesGetByAgentIdOptions,
   TracesGetByReferenceIdOptions,
 } from '../../../models/observability/traces/traces.types';
@@ -97,28 +97,28 @@ export class TracesService extends BaseService implements TracesServiceModel {
    * Accepts both GUID format and OTEL 32-char hex format — the API normalizes both.
    *
    * @param traceId - Trace identifier
-   * @param options - Optional filters {@link TracesGetByTraceIdOptions}
+   * @param options - Optional filters {@link TracesGetByIdOptions}
    * @returns Promise resolving to an array of {@link SpanResponse}
    * @example
    * ```typescript
    * import { Traces } from '@uipath/uipath-typescript/traces';
    *
    * const traces = new Traces(sdk);
-   * const spans = await traces.getByTraceId('<traceId>');
+   * const spans = await traces.getById('<traceId>');
    * console.log(spans.length, spans[0].spanType, spans[0].status);
    * ```
    * @example
    * ```typescript
    * // Filter to a specific agent's spans
-   * const agentSpans = await traces.getByTraceId('<traceId>', {
+   * const agentSpans = await traces.getById('<traceId>', {
    *   agentId: '<agentId>',
    *   pageSize: 500,
    * });
    * ```
    */
-  @track('Traces.GetByTraceId')
-  async getByTraceId(traceId: string, options?: TracesGetByTraceIdOptions): Promise<SpanResponse[]> {
-    if (!traceId) throw new ValidationError({ message: 'traceId is required for getByTraceId' });
+  @track('Traces.GetById')
+  async getById(traceId: string, options?: TracesGetByIdOptions): Promise<SpanResponse[]> {
+    if (!traceId) throw new ValidationError({ message: 'traceId is required for getById' });
 
     const { pageSize = 1000, agentId, isHistorical } = options ?? {};
     const params: QueryParams = { traceId, pageSize };
@@ -149,15 +149,15 @@ export class TracesService extends BaseService implements TracesServiceModel {
    * const traces = new Traces(sdk);
    *
    * // First retrieve all spans to find the IDs you want
-   * const allSpans = await traces.getByTraceId('<traceId>');
+   * const allSpans = await traces.getById('<traceId>');
    * const spanIds = allSpans.slice(0, 3).map(s => s.id);
    *
-   * const subset = await traces.getByIds('<traceId>', spanIds);
+   * const subset = await traces.getSpansByIds('<traceId>', spanIds);
    * ```
    */
-  @track('Traces.GetByIds')
-  async getByIds(traceId: string, spanIds: string[]): Promise<SpanResponse[]> {
-    if (!traceId) throw new ValidationError({ message: 'traceId is required for getByIds' });
+  @track('Traces.GetSpansByIds')
+  async getSpansByIds(traceId: string, spanIds: string[]): Promise<SpanResponse[]> {
+    if (!traceId) throw new ValidationError({ message: 'traceId is required for getSpansByIds' });
 
     const response = await this.post<RawSpanOtelResponse[]>(
       TRACES_ENDPOINTS.POST_BY_IDS,
@@ -219,24 +219,24 @@ export class TracesService extends BaseService implements TracesServiceModel {
    * import { Traces } from '@uipath/uipath-typescript/traces';
    *
    * const traces = new Traces(sdk);
-   * const history = await traces.getByAgentId('<agentId>');
+   * const history = await traces.getSpansByAgentId('<agentId>');
    * console.log(history.totalCount, history.items[0].startTime);
    * ```
    * @example
    * ```typescript
    * // Paginated with time filter
-   * const page1 = await traces.getByAgentId('<agentId>', {
+   * const page1 = await traces.getSpansByAgentId('<agentId>', {
    *   pageSize: 10,
    *   startTime: '2026-01-01T00:00:00Z',
    *   endTime: '2026-02-01T00:00:00Z',
    * });
    * if (page1.hasNextPage) {
-   *   const page2 = await traces.getByAgentId('<agentId>', { cursor: page1.nextCursor });
+   *   const page2 = await traces.getSpansByAgentId('<agentId>', { cursor: page1.nextCursor });
    * }
    * ```
    */
-  @track('Traces.GetByAgentId')
-  async getByAgentId<T extends TracesGetByAgentIdOptions = TracesGetByAgentIdOptions>(
+  @track('Traces.GetSpansByAgentId')
+  async getSpansByAgentId<T extends TracesGetByAgentIdOptions = TracesGetByAgentIdOptions>(
     agentId: string,
     options?: T
   ): Promise<
@@ -244,7 +244,7 @@ export class TracesService extends BaseService implements TracesServiceModel {
       ? PaginatedResponse<SpanResponse>
       : NonPaginatedResponse<SpanResponse>
   > {
-    if (!agentId) throw new ValidationError({ message: 'agentId is required for getByAgentId' });
+    if (!agentId) throw new ValidationError({ message: 'agentId is required for getSpansByAgentId' });
 
     return PaginationHelpers.getAll<T, RawSpanAgentResponse, SpanResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -279,19 +279,19 @@ export class TracesService extends BaseService implements TracesServiceModel {
    * import { Traces } from '@uipath/uipath-typescript/traces';
    *
    * const traces = new Traces(sdk);
-   * const spans = await traces.getByReferenceId('<referenceId>');
+   * const spans = await traces.getSpansByReferenceId('<referenceId>');
    * ```
    * @example
    * ```typescript
    * // Filter to a specific service type and version
-   * const agentSpans = await traces.getByReferenceId('<referenceId>', {
+   * const agentSpans = await traces.getSpansByReferenceId('<referenceId>', {
    *   serviceType: 'agent',
    *   version: '1.0.0',
    * });
    * ```
    */
-  @track('Traces.GetByReferenceId')
-  async getByReferenceId<T extends TracesGetByReferenceIdOptions = TracesGetByReferenceIdOptions>(
+  @track('Traces.GetSpansByReferenceId')
+  async getSpansByReferenceId<T extends TracesGetByReferenceIdOptions = TracesGetByReferenceIdOptions>(
     referenceId: string,
     options?: T
   ): Promise<
@@ -299,7 +299,7 @@ export class TracesService extends BaseService implements TracesServiceModel {
       ? PaginatedResponse<SpanResponse>
       : NonPaginatedResponse<SpanResponse>
   > {
-    if (!referenceId) throw new ValidationError({ message: 'referenceId is required for getByReferenceId' });
+    if (!referenceId) throw new ValidationError({ message: 'referenceId is required for getSpansByReferenceId' });
 
     return PaginationHelpers.getAll<T, RawSpanAgentResponse, SpanResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
