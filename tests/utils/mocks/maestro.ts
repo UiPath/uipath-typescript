@@ -8,6 +8,7 @@ import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
 import type { SlaSummaryResponse, CaseInstanceStageSLAResponse, CaseInstanceStageSLAStage } from '../../../src/models/maestro/case-instances.types';
+import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro/insights.types';
 
 // Maestro-Specific Mock Factories
 
@@ -595,5 +596,18 @@ export const createMockTopRunCountResponse = (overrides: Partial<any> = {}) => {
     packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
     runCount: MAESTRO_TEST_CONSTANTS.RUN_COUNT_PROCESS_1,
     processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY
+  }, overrides);
+};
+
+/**
+ * Creates a mock InstanceStatusTimeline response item
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock InstanceStatusTimelineResponse object
+ */
+export const createMockInstanceStatusTimeline = (overrides: Partial<InstanceStatusTimelineResponse> = {}): InstanceStatusTimelineResponse => {
+  return createMockBaseResponse({
+    startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1,
+    status: MAESTRO_TEST_CONSTANTS.INSIGHTS_STATUS_COMPLETED,
+    count: MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_2,
   }, overrides);
 };

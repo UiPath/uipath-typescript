@@ -1,8 +1,9 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, GetTopRunCountResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, GetTopRunCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import type { TimelineOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
-import { buildInsightsTopBody } from '../insights';
+import { buildInsightsTopBody, fetchInstanceStatusTimeline } from '../insights';
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
@@ -35,12 +36,12 @@ export class CasesService extends BaseService implements CasesServiceModel {
     const params = createParams({
       processType: ProcessType.CaseManagement
     });
-    
+
     const response = await this.get<{ processes: Omit<CaseGetAllResponse, 'name'>[] }>(
       MAESTRO_ENDPOINTS.PROCESSES.GET_ALL,
       { params }
     );
-    
+
     // Extract processes array from response data and add name field
     const cases = response.data?.processes || [];
     return cases.map(caseItem => ({
@@ -82,6 +83,55 @@ export class CasesService extends BaseService implements CasesServiceModel {
       buildInsightsTopBody(startTime, endTime, true)
     );
     return (data ?? []).map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
+  }
+
+  /**
+   * Get all instances status counts aggregated by date for case management processes.
+   *
+   * Returns time-grouped counts of case instances grouped by status (Completed, Faulted, Cancelled),
+   * useful for rendering time-series charts. Use `groupBy` to control the time bucket size
+   * (hour, day, or week) — defaults to day if not provided.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for time bucketing granularity
+   * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
+   *
+   * @example
+   * ```typescript
+   * // Get daily instance status for the last 7 days
+   * const now = new Date();
+   * const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+   * const statuses = await cases.getInstanceStatusTimeline(sevenDaysAgo, now);
+   *
+   * for (const entry of statuses) {
+   *   console.log(`${entry.startTime} — ${entry.status}: ${entry.count}`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { TimeInterval } from '@uipath/uipath-typescript/cases';
+   *
+   * // Get weekly breakdown
+   * const statuses = await cases.getInstanceStatusTimeline(startTime, endTime, {
+   *   groupBy: TimeInterval.Week,
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get all-time data (from Unix epoch to now)
+   * const allTime = await cases.getInstanceStatusTimeline(new Date(0), new Date());
+   * ```
+   */
+  @track('Cases.GetInstanceStatusTimeline')
+  async getInstanceStatusTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: TimelineOptions,
+  ): Promise<InstanceStatusTimelineResponse[]> {
+    return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, true, options);
   }
 
   /**

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { testGetTopRunCount } from '../../utils/helpers';
+import { testGetTopRunCount, testGetInstanceStatusTimeline } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -38,6 +38,13 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
         }
         console.log('Case retrieval test:', error.message);
       }
+    });
+  });
+
+  describe.skip('getInstanceStatusTimeline', () => {
+    it('should retrieve instance status by date for case management', async () => {
+      const { cases } = getServices();
+      await testGetInstanceStatusTimeline(cases);
     });
   });
 

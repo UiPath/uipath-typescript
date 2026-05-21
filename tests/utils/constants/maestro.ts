@@ -4,6 +4,7 @@
  */
 
 import { EscalationTriggerType } from '../../../src/models/maestro/case-instances.types';
+import { InstanceFinalStatus } from '../../../src/models/maestro/insights.types';
 
 export const MAESTRO_TEST_CONSTANTS = {
   // Maestro-specific identifiers
@@ -135,6 +136,15 @@ export const MAESTRO_TEST_CONSTANTS = {
   STAGE_SLA_LATEST_STATUS: 'InProgress',
   STAGE_SLA_LATEST_STATUS_COMPLETED: 'Completed',
   ERROR_STAGES_SLA_SUMMARY_FAILED: 'Failed to fetch stages SLA summary',
+
+  // Insights InstanceStatusTimeline constants
+  INSIGHTS_STATUS_COMPLETED: InstanceFinalStatus.Completed,
+  INSIGHTS_STATUS_FAULTED: InstanceFinalStatus.Faulted,
+  INSIGHTS_DATE_1: '5/8/2026 12:00:00 AM',
+  INSIGHTS_DATE_2: '5/9/2026 12:00:00 AM',
+  INSIGHTS_COUNT_2: 2,
+  INSIGHTS_COUNT_1: 1,
+  ERROR_INSIGHTS_FAILED: 'Failed to fetch instance status by date',
 
   // Execution History constants
   ELEMENT_RUN_ID: 'run-1',
