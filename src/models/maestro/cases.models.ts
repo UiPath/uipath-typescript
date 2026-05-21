@@ -5,6 +5,7 @@
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
 import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
+import { ElementGetTopFailureCountResponse } from './processes.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -118,6 +119,34 @@ export interface CasesServiceModel {
    * ```
    */
   getTopFaultedCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopFaultedCountResponse[]>;
+
+  /**
+   * Get the top 10 BPMN elements ranked by failure count within a time range.
+   *
+   * Returns an array of up to 10 elements sorted by how many times they failed,
+   * useful for identifying the most error-prone activities in case processes.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @returns Promise resolving to an array of {@link ElementGetTopFailureCountResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top failing elements for the last 7 days
+   * const topFailing = await cases.getTopElementFailureCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const element of topFailing) {
+   *   console.log(`${element.elementName} (${element.elementType}): ${element.failureCount} failures`);
+   * }
+   * ```
+   */
+  getTopElementFailureCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailureCountResponse[]>;
 
   /**
    * Get all instances status counts aggregated by date for case management processes.

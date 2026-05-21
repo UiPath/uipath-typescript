@@ -12,6 +12,7 @@ import {
   createMockInstanceStatusTimeline,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
+  createMockTopElementFailureCountResponse,
   createMockError,
   TEST_CONSTANTS
 } from '../../../utils/mocks';
@@ -327,6 +328,53 @@ describe('MaestroProcessesService', () => {
 
       await expect(
         service.getTopFaultedCount(startDate, endDate)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getTopElementFailureCount', () => {
+    const mockResponse = [
+      createMockTopElementFailureCountResponse(),
+      createMockTopElementFailureCountResponse({
+        elementName: MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_2,
+        elementType: MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_2,
+        processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY_2,
+        count: MAESTRO_TEST_CONSTANTS.ELEMENT_FAILURE_COUNT_2,
+      })
+    ];
+
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
+
+    it('should retrieve top elements by failure count', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getTopElementFailureCount(startDate, endDate);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
+        {
+          commonParams: {
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
+            isCaseManagement: false
+          }
+        },
+        {}
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].elementName).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_1);
+      expect(result[0].elementType).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_1);
+      expect(result[0].failureCount).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_FAILURE_COUNT_1);
+      expect((result[0] as any).count).toBeUndefined();
+      expect(result[0].processKey).toBe(MAESTRO_TEST_CONSTANTS.PROCESS_KEY);
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getTopElementFailureCount(startDate, endDate)
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

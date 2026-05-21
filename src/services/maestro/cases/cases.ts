@@ -1,4 +1,4 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailureCountResponse, RawElementGetTopFailureCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -94,6 +94,46 @@ export class CasesService extends BaseService implements CasesServiceModel {
       buildInsightsTopBody(startTime, endTime, true, options)
     );
     return (data ?? []).map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
+  }
+
+  /**
+   * Get the top 10 BPMN elements ranked by failure count within a time range.
+   *
+   * Returns an array of up to 10 elements sorted by how many times they failed,
+   * useful for identifying the most error-prone activities in case processes.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @returns Promise resolving to an array of {@link ElementGetTopFailureCountResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top failing elements for the last 7 days
+   * const topFailing = await cases.getTopElementFailureCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const element of topFailing) {
+   *   console.log(`${element.elementName} (${element.elementType}): ${element.failureCount} failures`);
+   * }
+   * ```
+   */
+  @track('Cases.GetTopElementFailureCount')
+  async getTopElementFailureCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailureCountResponse[]> {
+    const { data } = await this.post<RawElementGetTopFailureCountResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
+      buildInsightsTopBody(startTime, endTime, true)
+    );
+    return (data ?? []).map(item => ({
+      elementName: item.elementName,
+      elementType: item.elementType,
+      processKey: item.processKey,
+      failureCount: item.count,
+    }));
   }
 
   /**

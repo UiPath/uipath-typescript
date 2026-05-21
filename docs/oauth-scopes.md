@@ -73,6 +73,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getIncidents()` | `PIMS` |
 | `getTopRunCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopElementFailureCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
@@ -97,6 +98,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getAll()` | `PIMS` |
 | `getTopRunCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopFaultedCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getTopElementFailureCount()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 

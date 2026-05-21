@@ -626,6 +626,20 @@ export const createMockTopFaultedCountResponse = (overrides: Partial<any> = {}) 
 };
 
 /**
+ * Creates a mock top element failure count response
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock top element failure count response object
+ */
+export const createMockTopElementFailureCountResponse = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    elementName: MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_1,
+    elementType: MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_1,
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+    count: MAESTRO_TEST_CONSTANTS.ELEMENT_FAILURE_COUNT_1,
+  }, overrides);
+};
+
+/**
  * Creates a mock top duration response for processes
  * @param overrides - Optional overrides for specific fields
  * @returns Mock top duration response object

@@ -43,6 +43,21 @@ export interface GetTopFaultedCountResponse extends GetTopBaseResponse {
 }
 
 /**
+ * Response for top elements with failure from the Insights endpoint.
+ * Returns BPMN elements ranked by failure count.
+ */
+export interface RawElementGetTopFailureCountResponse {
+  /** BPMN element name (falls back to element ID if name is empty) */
+  elementName: string;
+  /** BPMN element type (e.g. ServiceTask, ReceiveTask, IntermediateCatchEvent) */
+  elementType: string;
+  /** The unique process key this element belongs to */
+  processKey: string;
+  /** Number of failed executions */
+  count: number;
+}
+
+/**
  * Time bucketing granularity for insights time-series queries.
  *
  * Controls how data points are grouped on the time axis.
