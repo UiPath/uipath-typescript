@@ -118,6 +118,12 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *   groupBy: TimeInterval.Week,
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Get all-time data (from Unix epoch to now)
+   * const allTime = await cases.getInstanceStatusTimeline(new Date(0), new Date());
+   * ```
    */
   @track('Cases.GetInstanceStatusTimeline')
   async getInstanceStatusTimeline(

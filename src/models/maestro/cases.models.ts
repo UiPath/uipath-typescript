@@ -102,6 +102,12 @@ export interface CasesServiceModel {
    *   groupBy: TimeInterval.Week,
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Get all-time data (from Unix epoch to now)
+   * const allTime = await cases.getInstanceStatusTimeline(new Date(0), new Date());
+   * ```
    */
   getInstanceStatusTimeline(
     startTime: Date,

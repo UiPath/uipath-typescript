@@ -148,6 +148,12 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *   groupBy: TimeInterval.Hour,
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Get all-time data (from Unix epoch to now)
+   * const allTime = await maestroProcesses.getInstanceStatusTimeline(new Date(0), new Date());
+   * ```
    */
   @track('MaestroProcesses.GetInstanceStatusTimeline')
   async getInstanceStatusTimeline(
