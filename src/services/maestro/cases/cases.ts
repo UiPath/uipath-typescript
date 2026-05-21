@@ -1,4 +1,4 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -143,6 +143,57 @@ export class CasesService extends BaseService implements CasesServiceModel {
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]> {
     return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, true, options);
+  }
+
+  /**
+   * Get the top 10 case processes ranked by failure count within a time range.
+   *
+   * Returns an array of up to 10 case processes sorted by how many instances faulted,
+   * useful for identifying the most error-prone case processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
+   * @returns Promise resolving to an array of {@link CaseGetTopFaultedCountResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top case processes by faulted count for the last 7 days
+   * const topFailing = await cases.getTopFaultedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topFailing) {
+   *   console.log(`${process.packageId}: ${process.faultedCount} failures`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top case processes by faulted count for a specific package
+   * const filtered = await cases.getTopFaultedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
+   */
+  @track('Cases.GetTopFaultedCount')
+  async getTopFaultedCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopFaultedCountResponse[]> {
+    const { data } = await this.post<GetTopRunCountResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_WITH_FAILURE,
+      buildInsightsTopBody(startTime, endTime, true, options)
+    );
+    return (data ?? []).map(item => ({
+      packageId: item.packageId,
+      processKey: item.processKey,
+      faultedCount: item.runCount,
+      name: this.extractCaseName(item.packageId),
+    }));
   }
 
   /**

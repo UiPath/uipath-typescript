@@ -35,6 +35,14 @@ export interface GetTopRunCountResponse extends GetTopBaseResponse {
 }
 
 /**
+ * Response for the top failure count Insights endpoint
+ */
+export interface GetTopFaultedCountResponse extends GetTopBaseResponse {
+  /** Number of faulted instances in the given time range */
+  faultedCount: number;
+}
+
+/**
  * Time bucketing granularity for insights time-series queries.
  *
  * Controls how data points are grouped on the time axis.

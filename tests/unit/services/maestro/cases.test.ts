@@ -10,6 +10,7 @@ import {
   createMockCasesGetAllApiResponse,
   createMockTopRunCountResponse,
   createMockInstanceStatusTimeline,
+  createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
   createMockError
 } from '../../../utils/mocks';
@@ -226,6 +227,47 @@ describe('CasesService', () => {
         }),
         {},
       );
+    });
+  });
+
+  describe('getTopFaultedCount', () => {
+    it('should retrieve top case processes by failure count with isCaseManagement true', async () => {
+      mockApiClient.post.mockResolvedValue([
+        createMockTopFaultedCountResponse({
+          packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          runCount: MAESTRO_TEST_CONSTANTS.FAULTED_COUNT_CASE,
+        })
+      ]);
+
+      const result = await service.getTopFaultedCount(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+        { packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID }
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID);
+      expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_DEFAULT);
+      expect(result[0].faultedCount).toBe(MAESTRO_TEST_CONSTANTS.FAULTED_COUNT_CASE);
+      expect((result[0] as any).runCount).toBeUndefined();
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_WITH_FAILURE,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            isCaseManagement: true,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          })
+        }),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getTopFaultedCount(new Date(), new Date())
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 
