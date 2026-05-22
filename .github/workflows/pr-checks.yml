@@ -104,7 +104,7 @@ jobs:
           path: coverage-integration/lcov.info
 
       - name: SonarCloud Scan
-        if: github.base_ref == 'main'
+        if: github.base_ref == 'main' && github.event.pull_request.head.repo.fork == false
         uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d # v5.0.0
         with:
           host-url: https://sonarcloud.io
