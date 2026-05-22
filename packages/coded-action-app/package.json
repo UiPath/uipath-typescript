@@ -2,13 +2,21 @@
   "name": "@uipath/coded-action-app",
   "version": "1.0.0-beta.1",
   "description": "UiPath package to be used for viewing coded action apps in Action Center",
+  "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "files": [
@@ -16,9 +24,9 @@
     "README.md"
   ],
   "scripts": {
-    "clean": "rimraf dist tsconfig.tsbuildinfo",
-    "prebuild": "npm run clean",
-    "build": "tsc",
+    "clean": "rimraf dist && rimraf node_modules",
+    "prebuild": "rimraf dist",
+    "build": "rollup -c",
     "typecheck": "tsc --noEmit",
     "docs": "typedoc",
     "lint": "oxlint"
@@ -27,8 +35,15 @@
     "@uipath/core-telemetry": "^1.0.0-beta.1"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.2.0",
+    "@rollup/plugin-typescript": "^11.1.0",
+    "builtin-modules": "^3.3.0",
     "oxlint": "^1.43.0",
     "rimraf": "^6.0.1",
+    "rollup": "^4.60.2",
+    "rollup-plugin-dts": "^6.1.0",
+    "tslib": "^2.8.1",
     "typedoc": "^0.28.13",
     "typedoc-plugin-markdown": "^4.8.1",
     "typescript": "^5.3.3"
