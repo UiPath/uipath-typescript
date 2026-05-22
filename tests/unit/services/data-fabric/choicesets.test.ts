@@ -404,6 +404,18 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(call).not.toHaveProperty('description');
     });
 
+    it('should send only description when displayName is omitted', async () => {
+      mockApiClient.patch.mockResolvedValue(true);
+
+      await choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
+        description: 'Only Description',
+      });
+
+      const call = mockApiClient.patch.mock.calls[0][1];
+      expect(call.description).toBe('Only Description');
+      expect(call).not.toHaveProperty('displayName');
+    });
+
     it('should throw ValidationError when neither displayName nor description is provided', async () => {
       await expect(
         choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {}),
@@ -537,7 +549,16 @@ describe('ChoiceSetService Unit Tests', () => {
       );
 
       expect(result.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
+      expect(result.name).toBe(CHOICESET_TEST_CONSTANTS.VALUE_NAME);
       expect(result.displayName).toBe('Updated');
+      expect(result.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
+
+      // Raw PascalCase fields absent
+      expect((result as any).Id).toBeUndefined();
+      expect((result as any).Name).toBeUndefined();
+      expect((result as any).DisplayName).toBeUndefined();
+      expect((result as any).CreateTime).toBeUndefined();
+      expect((result as any).UpdateTime).toBeUndefined();
     });
 
     it('should throw NotFoundError when the choice-set id is not found', async () => {
