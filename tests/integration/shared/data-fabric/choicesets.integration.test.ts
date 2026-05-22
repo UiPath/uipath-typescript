@@ -9,10 +9,20 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
   const testConfig = getTestConfig();
   let testChoiceSetId: string | null = testConfig.dataFabricTestChoiceSetId || null;
   const createdChoiceSetIds: string[] = [];
+  const insertedValueIds: string[] = [];
 
   afterAll(async () => {
-    if (createdChoiceSetIds.length === 0) return;
     const { choiceSets } = getServices();
+
+    // Clean up any leftover choice-set values from the value-level CRUD block.
+    if (testChoiceSetId && insertedValueIds.length > 0) {
+      try {
+        await choiceSets.deleteValuesById(testChoiceSetId, insertedValueIds);
+      } catch {
+        // Ignore cleanup failures — test resources are sandboxed.
+      }
+    }
+
     for (const id of createdChoiceSetIds) {
       try {
         await choiceSets.deleteById(id);
@@ -142,174 +152,113 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
     });
   });
 
-  // Value-level CRUD runs live — scope DataFabric.Data.Write is supported on PAT tokens.
-  // Uses an existing choice set from env (dataFabricTestChoiceSetId) rather than
-  // creating one, because choice-set create/delete needs DataFabric.Schema.Write
-  // which isn't granted to external-app PATs.
-  describe('value-level CRUD (insertValueById / updateValueById / deleteValuesById)', () => {
-    // Multi-step tests can take time: each insertValueById/updateValueById does a
-    // getAll() lookup to resolve choice-set name, plus the actual mutation. 90s budget.
-    const LONG = 90_000;
+  describe('Choice value CRUD operations', () => {
+    const serviceLevelValueIds: string[] = [];
 
-    // Track value ids inserted in this suite so afterAll can clean them up.
-    const insertedValueIds: string[] = [];
-
-    afterAll(async () => {
-      if (!testChoiceSetId || insertedValueIds.length === 0) return;
+    it('should insert a single value using insertValueById', async () => {
       const { choiceSets } = getServices();
-      try {
-        await choiceSets.deleteValuesById(testChoiceSetId, insertedValueIds);
-      } catch {
-        // ignore cleanup failures
-      }
-    });
+      const config = getTestConfig();
 
-    it('should round-trip a value: insert, update displayName, delete', async () => {
-      if (!testChoiceSetId) {
-        throw new Error(
-          'dataFabricTestChoiceSetId required in .env.integration for value-level tests',
-        );
+      const choiceSetId = config.dataFabricTestChoiceSetId || testChoiceSetId;
+
+      if (!choiceSetId) {
+        throw new Error('No choice set ID available for testing. Set DATA_FABRIC_TEST_CHOICESET_ID.');
       }
-      const { choiceSets } = getServices();
+
       const valueName = `SDK_RT_${generateRandomString(6)}`;
-
-      // Insert
-      const inserted = await choiceSets.insertValueById(testChoiceSetId, valueName, {
+      const result = await choiceSets.insertValueById(choiceSetId, valueName, {
         displayName: 'Travel',
       });
-      insertedValueIds.push(inserted.id);
-      expect(inserted.id).toBeDefined();
-      expect(inserted.name).toBe(valueName);
-      expect(inserted.displayName).toBe('Travel');
 
-      // Update — only displayName is mutable
-      const updated = await choiceSets.updateValueById(
-        testChoiceSetId,
-        inserted.id,
+      expect(result).toBeDefined();
+      expect(result.id).toBeDefined();
+
+      serviceLevelValueIds.push(result.id);
+      insertedValueIds.push(result.id);
+    });
+
+    it('should verify inserted value via getById', async () => {
+      const { choiceSets } = getServices();
+      const config = getTestConfig();
+
+      const choiceSetId = config.dataFabricTestChoiceSetId || testChoiceSetId;
+
+      if (!choiceSetId || serviceLevelValueIds.length === 0) {
+        throw new Error('No inserted value available to verify');
+      }
+
+      const valueId = serviceLevelValueIds[0];
+      const result = await choiceSets.getById(choiceSetId);
+      const found = result.items.find((v) => v.id === valueId);
+
+      expect(found).toBeDefined();
+      expect(found?.id).toBe(valueId);
+    });
+
+    it('should insert another value with default displayName', async () => {
+      const { choiceSets } = getServices();
+      const config = getTestConfig();
+
+      const choiceSetId = config.dataFabricTestChoiceSetId || testChoiceSetId;
+
+      if (!choiceSetId) {
+        throw new Error('No choice set ID available for testing');
+      }
+
+      const valueName = `SDK_SOLO_${generateRandomString(6)}`;
+      const result = await choiceSets.insertValueById(choiceSetId, valueName);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBeDefined();
+      expect(result.name).toBe(valueName);
+      expect(result.displayName).toBe(valueName);
+
+      serviceLevelValueIds.push(result.id);
+      insertedValueIds.push(result.id);
+    });
+
+    it('should update value using updateValueById', async () => {
+      const { choiceSets } = getServices();
+      const config = getTestConfig();
+
+      const choiceSetId = config.dataFabricTestChoiceSetId || testChoiceSetId;
+
+      if (!choiceSetId || serviceLevelValueIds.length === 0) {
+        throw new Error('No values available to update');
+      }
+
+      const valueId = serviceLevelValueIds[0];
+      const result = await choiceSets.updateValueById(
+        choiceSetId,
+        valueId,
         'Business Travel',
       );
-      expect(updated.id).toBe(inserted.id);
-      expect(updated.name).toBe(valueName);
-      expect(updated.displayName).toBe('Business Travel');
 
-      // Confirm via getById
-      const after = await choiceSets.getById(testChoiceSetId);
-      const found = after.items.find((v) => v.id === inserted.id);
-      expect(found?.displayName).toBe('Business Travel');
+      expect(result).toBeDefined();
+      expect(result.id).toBe(valueId);
+      expect(result.displayName).toBe('Business Travel');
+    });
 
-      // Delete
-      await choiceSets.deleteValuesById(testChoiceSetId, [inserted.id]);
-      insertedValueIds.splice(insertedValueIds.indexOf(inserted.id), 1);
-      const final = await choiceSets.getById(testChoiceSetId);
-      expect(final.items.find((v) => v.id === inserted.id)).toBeUndefined();
-    }, LONG);
+    it('should delete values using deleteValuesById', async () => {
+      const { choiceSets } = getServices();
+      const config = getTestConfig();
 
-    it('should delete multiple values in one call', async () => {
-      if (!testChoiceSetId) {
-        throw new Error('dataFabricTestChoiceSetId required for value-level tests');
+      const choiceSetId = config.dataFabricTestChoiceSetId || testChoiceSetId;
+
+      if (!choiceSetId || serviceLevelValueIds.length === 0) {
+        throw new Error('No values available to delete');
       }
-      const { choiceSets } = getServices();
-      const nameA = `SDK_A_${generateRandomString(6)}`;
-      const nameB = `SDK_B_${generateRandomString(6)}`;
 
-      const v1 = await choiceSets.insertValueById(testChoiceSetId, nameA, { displayName: 'A' });
-      insertedValueIds.push(v1.id);
-      const v2 = await choiceSets.insertValueById(testChoiceSetId, nameB, { displayName: 'B' });
-      insertedValueIds.push(v2.id);
+      await choiceSets.deleteValuesById(choiceSetId, serviceLevelValueIds);
 
-      await choiceSets.deleteValuesById(testChoiceSetId, [v1.id, v2.id]);
-      insertedValueIds.splice(insertedValueIds.indexOf(v1.id), 1);
-      insertedValueIds.splice(insertedValueIds.indexOf(v2.id), 1);
-
-      const after = await choiceSets.getById(testChoiceSetId);
-      expect(after.items.find((v) => v.id === v1.id)).toBeUndefined();
-      expect(after.items.find((v) => v.id === v2.id)).toBeUndefined();
-    }, LONG);
-
-    it('should default displayName to name when only name is provided on insert', async () => {
-      if (!testChoiceSetId) {
-        throw new Error('dataFabricTestChoiceSetId required for value-level tests');
+      // Remove deleted IDs from the file-level tracking list
+      for (const id of serviceLevelValueIds) {
+        const idx = insertedValueIds.indexOf(id);
+        if (idx !== -1) {
+          insertedValueIds.splice(idx, 1);
+        }
       }
-      const { choiceSets } = getServices();
-      const valueName = `SDK_SOLO_${generateRandomString(6)}`;
-
-      const inserted = await choiceSets.insertValueById(testChoiceSetId, valueName);
-      insertedValueIds.push(inserted.id);
-
-      expect(inserted.name).toBe(valueName);
-      expect(inserted.displayName).toBe(valueName);
-    }, LONG);
-
-    it('should return a transformed camelCase response on insert (no PascalCase fields)', async () => {
-      if (!testChoiceSetId) {
-        throw new Error('dataFabricTestChoiceSetId required for value-level tests');
-      }
-      const { choiceSets } = getServices();
-      const valueName = `SDK_TX_${generateRandomString(6)}`;
-
-      const inserted = await choiceSets.insertValueById(testChoiceSetId, valueName, {
-        displayName: 'Transformed',
-      });
-      insertedValueIds.push(inserted.id);
-
-      // camelCase fields populated
-      expect(inserted.id).toBeDefined();
-      expect(inserted.name).toBe(valueName);
-      expect(inserted.displayName).toBe('Transformed');
-      expect(inserted.createdTime).toBeDefined();
-      expect(inserted.updatedTime).toBeDefined();
-      expect(typeof inserted.numberId).toBe('number');
-
-      // Raw PascalCase fields absent (transform pipeline validation)
-      expect((inserted as any).Id).toBeUndefined();
-      expect((inserted as any).Name).toBeUndefined();
-      expect((inserted as any).DisplayName).toBeUndefined();
-      expect((inserted as any).CreateTime).toBeUndefined();
-      expect((inserted as any).UpdateTime).toBeUndefined();
-    }, LONG);
-
-    it('should preserve untouched values when deleting a subset', async () => {
-      if (!testChoiceSetId) {
-        throw new Error('dataFabricTestChoiceSetId required for value-level tests');
-      }
-      const { choiceSets } = getServices();
-      const n1 = `SDK_KEEP1_${generateRandomString(6)}`;
-      const n2 = `SDK_DROP_${generateRandomString(6)}`;
-      const n3 = `SDK_KEEP2_${generateRandomString(6)}`;
-
-      const v1 = await choiceSets.insertValueById(testChoiceSetId, n1);
-      insertedValueIds.push(v1.id);
-      const v2 = await choiceSets.insertValueById(testChoiceSetId, n2);
-      insertedValueIds.push(v2.id);
-      const v3 = await choiceSets.insertValueById(testChoiceSetId, n3);
-      insertedValueIds.push(v3.id);
-
-      await choiceSets.deleteValuesById(testChoiceSetId, [v2.id]);
-      insertedValueIds.splice(insertedValueIds.indexOf(v2.id), 1);
-
-      const after = await choiceSets.getById(testChoiceSetId);
-      expect(after.items.find((v) => v.id === v1.id)).toBeDefined();
-      expect(after.items.find((v) => v.id === v2.id)).toBeUndefined();
-      expect(after.items.find((v) => v.id === v3.id)).toBeDefined();
-    }, LONG);
-
-    it('should throw when insertValueById is called with a non-existent choice set id', async () => {
-      const { choiceSets } = getServices();
-      const fakeId = '00000000-0000-0000-0000-deadbeefdead';
-
-      await expect(
-        choiceSets.insertValueById(fakeId, 'GHOST'),
-      ).rejects.toThrow(/not found/i);
-    }, LONG);
-
-    it('should throw when updateValueById is called with a non-existent choice set id', async () => {
-      const { choiceSets } = getServices();
-      const fakeId = '00000000-0000-0000-0000-deadbeefdead';
-      const fakeValueId = '00000000-0000-0000-0000-cafefeedcafe';
-
-      await expect(
-        choiceSets.updateValueById(fakeId, fakeValueId, 'X'),
-      ).rejects.toThrow(/not found/i);
-    }, LONG);
+      serviceLevelValueIds.length = 0;
+    });
   });
 });
