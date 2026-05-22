@@ -128,11 +128,14 @@ export class ApiClient {
       }
       try {
         return JSON.parse(text);
-      } catch {
-        throw new ServerError({
-          message: `Server returned non-JSON response (${response.status} ${response.url})`,
-          statusCode: response.status,
-        });
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          throw new ServerError({
+            message: `Server returned non-JSON response (${response.status} ${response.url}): ${error.message}`,
+            statusCode: response.status,
+          });
+        }
+        throw error;
       }
     } catch (error: any) {
       // If it's already one of our errors, re-throw it
