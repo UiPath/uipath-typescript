@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,6 +38,13 @@ jobs:
 
       - name: Run SDK Tests
         run: npm run test:coverage -- --run
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        if: github.base_ref == 'main'
+        with:
+          name: unit-coverage
+          path: coverage/lcov.info
 
       - name: Build Project
         run: npm run build
@@ -85,7 +94,20 @@ jobs:
 
       - name: Run Integration Tests
         if: github.base_ref == 'main'
-        run: npm run test:integration -- --run
+        run: npm run test:integration:coverage -- --run
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        if: github.base_ref == 'main'
+        with:
+          name: integration-coverage
+          path: coverage-integration/lcov.info
+
+      - name: SonarCloud Scan
+        if: github.base_ref == 'main' && github.event.pull_request.head.repo.fork == false
+        uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d # v5.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Generate Summary
         if: success()
