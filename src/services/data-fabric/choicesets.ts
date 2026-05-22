@@ -122,7 +122,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
   /**
    * Creates a new Data Fabric choice set
    *
-   * @param name - Choice set name. Server-enforced rules: must start with a
+   * @param name - Choice set name. Must start with a
    *   letter, may contain only letters, numbers, and underscores, length
    *   3–100 characters (e.g., `"expenseTypes"`).
    * @param options - Optional choice-set-level settings ({@link ChoiceSetCreateOptions})
@@ -247,7 +247,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
     const choiceSetName = await this.resolveChoiceSetName(choiceSetId);
     const payload = {
       Name: name,
-      DisplayName: options?.displayName ?? name,
+      ...(options?.displayName !== undefined && { DisplayName: options.displayName }),
     };
     const response = await this.post<RawChoiceSetGetResponse>(
       DATA_FABRIC_ENDPOINTS.CHOICESETS.INSERT_BY_NAME(choiceSetName),

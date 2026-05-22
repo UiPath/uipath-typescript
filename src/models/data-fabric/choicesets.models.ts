@@ -103,7 +103,7 @@ export interface ChoiceSetServiceModel {
   /**
    * Creates a new Data Fabric choice set
    *
-   * @param name - Choice set name. Server-enforced rules: must start with a
+   * @param name - Choice set name. Must start with a
    *   letter, may contain only letters, numbers, and underscores, length
    *   3–100 characters (e.g., `"expenseTypes"`).
    * @param options - Optional choice-set-level settings ({@link ChoiceSetCreateOptions})

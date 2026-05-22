@@ -58,7 +58,7 @@ export type ChoiceSetGetByIdOptions = PaginationOptions;
  * Options for creating a new choice set
  */
 export interface ChoiceSetCreateOptions {
-  /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
+  /** Human-readable display name */
   displayName?: string;
   /** Optional choice set description */
   description?: string;
@@ -83,7 +83,7 @@ export interface ChoiceSetUpdateOptions {
  * `insertValueById`.
  */
 export interface ChoiceSetValueInsertOptions {
-  /** Human-readable display name (defaults to `name` if omitted) */
+  /** Human-readable display name */
   displayName?: string;
 }
 

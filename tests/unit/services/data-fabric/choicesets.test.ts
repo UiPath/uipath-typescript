@@ -479,7 +479,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect((result as any).CreateTime).toBeUndefined();
     });
 
-    it('should default DisplayName to name when options.displayName is omitted', async () => {
+    it('should omit DisplayName from the body when options.displayName is omitted', async () => {
       mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
       mockApiClient.post.mockResolvedValue(createMockChoiceSetValueResponse());
 
@@ -490,7 +490,7 @@ describe('ChoiceSetService Unit Tests', () => {
 
       const body = mockApiClient.post.mock.calls[0][1];
       expect(body.Name).toBe('NEW_VAL');
-      expect(body.DisplayName).toBe('NEW_VAL');
+      expect(body.DisplayName).toBeUndefined();
     });
 
     it('should throw NotFoundError when the choice-set id is not found', async () => {
