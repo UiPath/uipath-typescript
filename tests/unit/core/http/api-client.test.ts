@@ -98,7 +98,6 @@ describe('ApiClient error handling', () => {
       status: 200,
       url: 'https://example.com/api/test',
       text: () => Promise.resolve('<html>Redirect</html>'),
-      blob: () => Promise.resolve(new Blob()),
     });
 
     const client = createClient();
@@ -112,7 +111,6 @@ describe('ApiClient error handling', () => {
       status: 200,
       url: testUrl,
       text: () => Promise.resolve('<html>Error</html>'),
-      blob: () => Promise.resolve(new Blob()),
     });
 
     const client = createClient();
