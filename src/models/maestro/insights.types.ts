@@ -4,6 +4,19 @@
  */
 
 /**
+ * Optional filters for Insights "top" endpoint queries.
+ * All fields are optional — pass any combination to narrow results.
+ */
+export interface TopQueryOptions {
+  /** Filter by package identifier */
+  packageId?: string;
+  /** Filter by process key */
+  processKey?: string;
+  /** Filter by package version */
+  version?: string;
+}
+
+/**
  * Common fields returned by all Insights "top" endpoints
  */
 export interface GetTopBaseResponse {
@@ -72,4 +85,12 @@ export interface InstanceStatusTimelineResponse {
   status: InstanceFinalStatus;
   /** Number of instances with this status in the time bucket */
   count: number;
+}
+
+/**
+ * Response for the top duration Insights endpoint
+ */
+export interface GetTopDurationResponse extends GetTopBaseResponse {
+  /** Total execution duration in milliseconds */
+  duration: number;
 }

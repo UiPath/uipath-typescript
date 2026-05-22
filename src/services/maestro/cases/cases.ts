@@ -1,5 +1,5 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, GetTopRunCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
-import type { TimelineOptions } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
@@ -58,6 +58,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
    * @returns Promise resolving to an array of {@link CaseGetTopRunCountResponse}
    * @example
    * ```typescript
@@ -75,12 +76,22 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *   console.log(`${process.packageId}: ${process.runCount} runs`);
    * }
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top case processes by run count for a specific package
+   * const filtered = await cases.getTopRunCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
    */
   @track('Cases.GetTopRunCount')
-  async getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]> {
+  async getTopRunCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopRunCountResponse[]> {
     const { data } = await this.post<GetTopRunCountResponse[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_RUN_COUNT,
-      buildInsightsTopBody(startTime, endTime, true)
+      buildInsightsTopBody(startTime, endTime, true, options)
     );
     return (data ?? []).map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
   }
@@ -132,6 +143,52 @@ export class CasesService extends BaseService implements CasesServiceModel {
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]> {
     return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, true, options);
+  }
+
+  /**
+   * Get the top 5 case processes ranked by total duration within a time range.
+   *
+   * Returns an array of up to 5 case processes sorted by their total execution time,
+   * useful for identifying the longest-running case processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
+   * @returns Promise resolving to an array of {@link CaseGetTopDurationResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top case processes by duration for the last 7 days
+   * const topProcesses = await cases.getTopExecutionDuration(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.duration}ms total`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top case processes by duration for a specific package
+   * const filtered = await cases.getTopExecutionDuration(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
+   */
+  @track('Cases.GetTopExecutionDuration')
+  async getTopExecutionDuration(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopDurationResponse[]> {
+    const { data } = await this.post<GetTopDurationResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_DURATION,
+      buildInsightsTopBody(startTime, endTime, true, options)
+    );
+    return (data ?? []).map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
   }
 
   /**

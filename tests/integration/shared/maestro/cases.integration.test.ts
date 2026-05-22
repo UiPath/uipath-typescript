@@ -97,6 +97,33 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe.skip('getTopExecutionDuration', () => {
+    it('should retrieve top case processes by duration', async () => {
+      const { cases } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await cases.getTopExecutionDuration(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top cases by duration returned — cannot validate response structure');
+      }
+
+      const topProcess = result[0];
+      expect(topProcess.packageId).toBeDefined();
+      expect(typeof topProcess.packageId).toBe('string');
+      expect(topProcess.duration).toBeDefined();
+      expect(typeof topProcess.duration).toBe('number');
+      expect(topProcess.processKey).toBeDefined();
+      expect(typeof topProcess.processKey).toBe('string');
+      expect(topProcess.name).toBeDefined();
+      expect(typeof topProcess.name).toBe('string');
+    });
+  });
+
   describe('Service verification', () => {
     it('should use the same SDK instance as other Maestro services', () => {
       const services = getServices();

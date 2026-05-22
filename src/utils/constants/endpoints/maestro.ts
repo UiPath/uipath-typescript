@@ -41,5 +41,7 @@ export const MAESTRO_ENDPOINTS = {
     TOP_PROCESSES_BY_RUN_COUNT: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/TopProcessesByRunCount`,
     /** Instance status aggregated by date for time-series charts */
     INSTANCE_STATUS_BY_DATE: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/InstanceStatusByDate`,
+    /** Top processes ranked by total duration */
+    TOP_PROCESSES_BY_DURATION: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/TopProcessesByDuration`,
   },
 } as const;

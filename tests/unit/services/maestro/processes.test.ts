@@ -10,6 +10,7 @@ import {
   createMockProcessesApiResponse,
   createMockTopRunCountResponse,
   createMockInstanceStatusTimeline,
+  createMockTopDurationResponse,
   createMockError,
   TEST_CONSTANTS
 } from '../../../utils/mocks';
@@ -278,6 +279,45 @@ describe('MaestroProcessesService', () => {
       await expect(
         service.getInstanceStatusTimeline(startDate, endDate),
       ).rejects.toThrow(MAESTRO_TEST_CONSTANTS.ERROR_INSIGHTS_FAILED);
+    });
+  });
+
+  describe('getTopExecutionDuration', () => {
+    const mockResponse = [
+      createMockTopDurationResponse(),
+      createMockTopDurationResponse({
+        packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID_2,
+        duration: MAESTRO_TEST_CONSTANTS.DURATION_PROCESS_2,
+        processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY_2
+      })
+    ];
+
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
+
+    it('should retrieve top processes by duration', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getTopExecutionDuration(startDate, endDate, {
+        packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.TOP_PROCESSES_BY_DURATION,
+        {
+          commonParams: {
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
+            isCaseManagement: false,
+            packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+          }
+        },
+        {}
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
+      expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.PACKAGE_ID);
+      expect(result[0].duration).toBe(MAESTRO_TEST_CONSTANTS.DURATION_PROCESS_1);
     });
   });
 });

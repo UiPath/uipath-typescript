@@ -8,7 +8,7 @@ import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
 import type { SlaSummaryResponse, CaseInstanceStageSLAResponse, CaseInstanceStageSLAStage } from '../../../src/models/maestro/case-instances.types';
-import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro/insights.types';
+import type { InstanceStatusTimelineResponse, GetTopRunCountResponse, GetTopDurationResponse } from '../../../src/models/maestro/insights.types';
 
 // Maestro-Specific Mock Factories
 
@@ -591,7 +591,7 @@ export const createMockCaseInstanceStageSLAResponse = (overrides: Partial<CaseIn
  * @param overrides - Optional overrides for specific fields
  * @returns Mock top run count response object
  */
-export const createMockTopRunCountResponse = (overrides: Partial<any> = {}) => {
+export const createMockTopRunCountResponse = (overrides: Partial<GetTopRunCountResponse> = {}): GetTopRunCountResponse => {
   return createMockBaseResponse({
     packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
     runCount: MAESTRO_TEST_CONSTANTS.RUN_COUNT_PROCESS_1,
@@ -609,5 +609,18 @@ export const createMockInstanceStatusTimeline = (overrides: Partial<InstanceStat
     startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1,
     status: MAESTRO_TEST_CONSTANTS.INSIGHTS_STATUS_COMPLETED,
     count: MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_2,
+  }, overrides);
+};
+
+/**
+ * Creates a mock top duration response for processes
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock top duration response object
+ */
+export const createMockTopDurationResponse = (overrides: Partial<GetTopDurationResponse> = {}): GetTopDurationResponse => {
+  return createMockBaseResponse({
+    packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+    duration: MAESTRO_TEST_CONSTANTS.DURATION_PROCESS_1,
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY
   }, overrides);
 };

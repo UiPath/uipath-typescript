@@ -1,5 +1,6 @@
 import { ApiResponse } from '../base';
 import { InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
+import type { TopQueryOptions } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
@@ -8,15 +9,19 @@ import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
  * @param startTime - Start of the time range to query
  * @param endTime - End of the time range to query
  * @param isCaseManagement - Whether to filter for case management processes
+ * @param options - Optional filters (packageId, processKey, version)
  * @returns Request body for the Insights RTM endpoint
  * @internal
  */
-export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManagement: boolean) {
+export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManagement: boolean, options?: TopQueryOptions) {
   return {
     commonParams: {
       startTime: startTime.getTime(),
       endTime: endTime.getTime(),
-      isCaseManagement
+      isCaseManagement,
+      ...(options?.packageId ? { packageId: options.packageId } : {}),
+      ...(options?.processKey ? { processKey: options.processKey } : {}),
+      ...(options?.version ? { version: options.version } : {}),
     }
   };
 }

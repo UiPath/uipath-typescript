@@ -3,8 +3,8 @@
  * Model classes for Maestro cases
  */
 
-import { CaseGetAllResponse, CaseGetTopRunCountResponse } from './cases.types';
-import { InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopDurationResponse } from './cases.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -49,6 +49,7 @@ export interface CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
    * @returns Promise resolving to an array of {@link CaseGetTopRunCountResponse}
    * @example
    * ```typescript
@@ -66,8 +67,18 @@ export interface CasesServiceModel {
    *   console.log(`${process.packageId}: ${process.runCount} runs`);
    * }
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top case processes by run count for a specific package
+   * const filtered = await cases.getTopRunCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
    */
-  getTopRunCount(startTime: Date, endTime: Date): Promise<CaseGetTopRunCountResponse[]>;
+  getTopRunCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopRunCountResponse[]>;
 
   /**
    * Get all instances status counts aggregated by date for case management processes.
@@ -114,4 +125,43 @@ export interface CasesServiceModel {
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]>;
+
+  /**
+   * Get the top 5 case processes ranked by total duration within a time range.
+   *
+   * Returns an array of up to 5 case processes sorted by their total execution time,
+   * useful for identifying the longest-running case processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
+   * @returns Promise resolving to an array of {@link CaseGetTopDurationResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top case processes by duration for the last 7 days
+   * const topProcesses = await cases.getTopExecutionDuration(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.duration}ms total`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top case processes by duration for a specific package
+   * const filtered = await cases.getTopExecutionDuration(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
+   */
+  getTopExecutionDuration(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopDurationResponse[]>;
 }
