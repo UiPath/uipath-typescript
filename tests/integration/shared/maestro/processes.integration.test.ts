@@ -149,6 +149,33 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe.skip('getTopExecutionDuration', () => {
+    it('should retrieve top processes by duration', async () => {
+      const { maestroProcesses } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await maestroProcesses.getTopExecutionDuration(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top processes by duration returned — cannot validate response structure');
+      }
+
+      const topProcess = result[0];
+      expect(topProcess.packageId).toBeDefined();
+      expect(typeof topProcess.packageId).toBe('string');
+      expect(topProcess.duration).toBeDefined();
+      expect(typeof topProcess.duration).toBe('number');
+      expect(topProcess.processKey).toBeDefined();
+      expect(typeof topProcess.processKey).toBe('string');
+      expect(topProcess.name).toBeDefined();
+      expect(topProcess.name).toBe(topProcess.packageId);
+    });
+  });
+
   describe('Process metadata validation', () => {
     it('should have expected fields in process objects', async () => {
       const { maestroProcesses } = getServices();

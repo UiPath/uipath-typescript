@@ -10,6 +10,7 @@ import {
   createMockCasesGetAllApiResponse,
   createMockTopRunCountResponse,
   createMockInstanceStatusTimeline,
+  createMockTopDurationResponse,
   createMockError
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -224,6 +225,40 @@ describe('CasesService', () => {
           commonParams: expect.objectContaining({ isCaseManagement: true }),
         }),
         {},
+      );
+    });
+  });
+
+  describe('getTopExecutionDuration', () => {
+    const mockResponse = [
+      createMockTopDurationResponse({
+        packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        duration: MAESTRO_TEST_CONSTANTS.DURATION_CASE,
+        processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY
+      })
+    ];
+
+    it('should retrieve top case processes by duration with isCaseManagement true', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getTopExecutionDuration(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+        { packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID }
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].packageId).toBe(MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID);
+      expect(result[0].name).toBe(MAESTRO_TEST_CONSTANTS.EXTRACTED_NAME_DEFAULT);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            isCaseManagement: true,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          })
+        }),
+        {}
       );
     });
   });

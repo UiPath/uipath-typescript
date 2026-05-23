@@ -3,9 +3,9 @@
  * Model classes for Maestro processes
  */
 
-import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse } from './processes.types';
+import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -76,6 +76,7 @@ export interface MaestroProcessesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
    * @returns Promise resolving to an array of {@link ProcessGetTopRunCountResponse}
    * @example
    * ```typescript
@@ -93,8 +94,18 @@ export interface MaestroProcessesServiceModel {
    *   console.log(`${process.packageId}: ${process.runCount} runs`);
    * }
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top processes by run count for a specific package
+   * const filtered = await maestroProcesses.getTopRunCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
    */
-  getTopRunCount(startTime: Date, endTime: Date): Promise<ProcessGetTopRunCountResponse[]>;
+  getTopRunCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ProcessGetTopRunCountResponse[]>;
 
   /**
    * Get all instances status counts aggregated by date for maestro processes.
@@ -141,6 +152,45 @@ export interface MaestroProcessesServiceModel {
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]>;
+
+  /**
+   * Get the top 5 processes ranked by total duration within a time range.
+   *
+   * Returns an array of up to 5 processes sorted by their total execution time,
+   * useful for identifying the longest-running processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
+   * @returns Promise resolving to an array of {@link ProcessGetTopDurationResponse}
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * // Get top processes by duration for the last 7 days
+   * const topProcesses = await maestroProcesses.getTopExecutionDuration(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topProcesses) {
+   *   console.log(`${process.packageId}: ${process.duration}ms total`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top processes by duration for a specific package
+   * const filtered = await maestroProcesses.getTopExecutionDuration(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
+   */
+  getTopExecutionDuration(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ProcessGetTopDurationResponse[]>;
 }
 
 // Method interface that will be added to process objects
