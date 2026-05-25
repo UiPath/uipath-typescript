@@ -152,7 +152,8 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
     });
   });
 
-  describe('Choice value CRUD operations', () => {
+  // Skipped: choice-value CRUD requires DataFabric.Schema.Write OAuth scope, not available in standard test environment
+  describe.skip('Choice value CRUD operations', () => {
     const serviceLevelValueIds: string[] = [];
 
     it('should insert a single value using insertValueById', async () => {
