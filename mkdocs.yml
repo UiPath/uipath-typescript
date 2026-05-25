@@ -75,8 +75,8 @@ plugins:
       full_output: "coded-action-apps/llms.txt"
       sections:
         Coded Action Apps:
-          - coded-action-apps/getting-started.md: Getting started with Coded Action Apps SDK
-          - coded-action-apps/interfaces/CodedActionAppsServiceModel.md: Coded Action Apps service methods
+          - coded-action-apps/getting-started.md: Getting started with Coded Action App SDK
+          - coded-action-apps/interfaces/CodedActionAppServiceModel.md: Coded Action App service methods
   - llmstxt:
       full_output: "llms-full-content.txt"
       preprocess: "scripts/llms-preprocess.py"
@@ -207,9 +207,9 @@ nav:
   - Coded Apps:
       - Getting Started: coded-apps/getting-started.md
       - CLI Reference: coded-apps/cli-reference.md
-  - Coded Action Apps SDK:
+  - Coded Action App SDK:
       - Getting Started: coded-action-apps/getting-started.md
-      - Coded Action Apps: coded-action-apps/interfaces/CodedActionAppsServiceModel.md
+      - Coded Action Apps: coded-action-apps/interfaces/CodedActionAppServiceModel.md
   - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md

@@ -31,6 +31,10 @@ jobs:
         run: |
           npm ci
 
+      - name: Install Coded Action Apps Dependencies
+        working-directory: packages/coded-action-app
+        run: npm ci
+
       - name: Setup Python Virtual Environment
         run: |
           python3 -m venv docs-env
@@ -39,10 +43,6 @@ jobs:
 
       - name: Generate API Documentation
         run: npm run docs:api
-
-      - name: Generate Documentation for coded action apps sdk
-        working-directory: packages/coded-action-apps
-        run: npm run docs
 
       - name: Build MkDocs Documentation
         run: |

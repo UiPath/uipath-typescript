@@ -32,7 +32,6 @@ export default defineConfig({
           include: ['tests/unit/**/*.test.ts'],
         },
       },
-      './packages/telemetry/vitest.config.ts',
     ],
   },
 });

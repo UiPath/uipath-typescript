@@ -60,7 +60,7 @@ def preprocess(soup: BeautifulSoup, _output: str) -> None:
 
     The plugin calls this once per included page per llmstxt block; we apply
     the same transformations to every page — the shrink is non-destructive
-    and benefits both the coded-action-apps and the large llms-full-content
+    and benefits both the coded-action-app and the large llms-full-content
     outputs.
 
     The second parameter (the per-page markdown output path) is required by

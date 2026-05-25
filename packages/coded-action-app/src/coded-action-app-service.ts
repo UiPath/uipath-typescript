@@ -3,17 +3,23 @@ import {
   MessageSeverity,
   TaskCompleteResponse,
 } from './types';
-import { CodedActionAppsServiceModel } from './coded-action-apps.models';
+import { CodedActionAppServiceModel } from './coded-action-app.models';
 import { ActionCenterEventNames, ActionCenterEventResponsePayload } from './types.internal';
+import { telemetryClient, track } from './telemetry';
+import { loadFromMetaTags } from './telemetry/runtime';
 
 const INIT_TIMEOUT = 3000;
 
 /**
  * Service for bi-directional communication between coded action apps and Action Center
  */
-export class CodedActionAppsService implements CodedActionAppsServiceModel {
+export class CodedActionAppService implements CodedActionAppServiceModel {
   private readonly parentOrigin = new URLSearchParams(window.location.search).get('basedomain');
   private isCompletingTask = false;
+
+  constructor() {
+    telemetryClient.initialize(loadFromMetaTags() ?? undefined);
+  }
 
   /**
    * Notifies Action Center that the task data has been changed by the user.
@@ -38,6 +44,7 @@ export class CodedActionAppsService implements CodedActionAppsServiceModel {
    * @throws {Error} If called from an untrusted origin.
    * @throws {Error} If a completeTask call is already in progress.
    */
+  @track('CodedActionApp.CompleteTask')
   completeTask(actionTaken: string, data: unknown): Promise<TaskCompleteResponse> {
     if (this.isCompletingTask) {
       throw new Error('A completeTask call is already in progress');
@@ -89,6 +96,7 @@ export class CodedActionAppsService implements CodedActionAppsServiceModel {
    * @throws {Error} If called from an untrusted origin.
    * @throws {Error} If Action Center does not respond within the allotted timeout.
    */
+  @track('CodedActionApp.GetTask')
   getTask(): Promise<Task> {
     return new Promise((resolve, reject) => {
       if (!this.isValidOrigin(this.parentOrigin)) {

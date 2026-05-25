@@ -142,3 +142,32 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Please review the logs above to identify and fix the issues." >> $GITHUB_STEP_SUMMARY
 
+  test-packages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - telemetry
+    defaults:
+      run:
+        working-directory: packages/${{ matrix.package }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/${{ matrix.package }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
