@@ -105,6 +105,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
    * @returns Promise resolving to an array of {@link ElementGetTopFailedCountResponse}
    * @example
    * ```typescript
@@ -122,12 +123,22 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *   console.log(`${element.elementName} (${element.elementType}): ${element.failedCount} failures`);
    * }
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top failing elements for a specific process
+   * const filtered = await cases.getTopElementFailedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { processKey: '<processKey>' }
+   * );
+   * ```
    */
   @track('Cases.GetTopElementFailedCount')
-  async getTopElementFailedCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailedCountResponse[]> {
+  async getTopElementFailedCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ElementGetTopFailedCountResponse[]> {
     const { data } = await this.post<RawElementGetTopFailedCountResponse[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
-      buildInsightsTopBody(startTime, endTime, true)
+      buildInsightsTopBody(startTime, endTime, true, options)
     );
     return (data ?? []).map(item => ({
       elementName: item.elementName,

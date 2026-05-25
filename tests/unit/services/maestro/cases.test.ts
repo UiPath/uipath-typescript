@@ -278,7 +278,8 @@ describe('CasesService', () => {
 
       const result = await service.getTopElementFailedCount(
         new Date('2026-04-01T00:00:00Z'),
-        new Date('2026-05-01T00:00:00Z')
+        new Date('2026-05-01T00:00:00Z'),
+        { processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY }
       );
 
       expect(result).toHaveLength(1);
@@ -290,7 +291,10 @@ describe('CasesService', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
         expect.objectContaining({
-          commonParams: expect.objectContaining({ isCaseManagement: true })
+          commonParams: expect.objectContaining({
+            isCaseManagement: true,
+            processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+          })
         }),
         {}
       );

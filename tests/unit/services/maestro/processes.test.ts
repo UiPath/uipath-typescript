@@ -349,7 +349,9 @@ describe('MaestroProcessesService', () => {
     it('should retrieve top elements by failure count', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getTopElementFailedCount(startDate, endDate);
+      const result = await service.getTopElementFailedCount(startDate, endDate, {
+        processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+      });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
@@ -357,7 +359,8 @@ describe('MaestroProcessesService', () => {
           commonParams: {
             startTime: startDate.getTime(),
             endTime: endDate.getTime(),
-            isCaseManagement: false
+            isCaseManagement: false,
+            processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
           }
         },
         {}
