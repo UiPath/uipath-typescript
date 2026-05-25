@@ -127,10 +127,10 @@ export const MAESTRO_TEST_CONSTANTS = {
   // Top element failure count constants
   ELEMENT_NAME_1: 'Get Email',
   ELEMENT_TYPE_1: 'ReceiveTask',
-  ELEMENT_FAILURE_COUNT_1: 5,
+  ELEMENT_FAILED_COUNT_1: 5,
   ELEMENT_NAME_2: 'RPA Workflow',
   ELEMENT_TYPE_2: 'ServiceTask',
-  ELEMENT_FAILURE_COUNT_2: 3,
+  ELEMENT_FAILED_COUNT_2: 3,
 
   // Top duration constants (milliseconds)
   DURATION_PROCESS_1: 1058190698729,

@@ -12,7 +12,7 @@ import {
   createMockInstanceStatusTimeline,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
-  createMockTopElementFailureCountResponse,
+  createMockTopElementFailedCountResponse,
   createMockError,
   TEST_CONSTANTS
 } from '../../../utils/mocks';
@@ -332,14 +332,14 @@ describe('MaestroProcessesService', () => {
     });
   });
 
-  describe('getTopElementFailureCount', () => {
+  describe('getTopElementFailedCount', () => {
     const mockResponse = [
-      createMockTopElementFailureCountResponse(),
-      createMockTopElementFailureCountResponse({
+      createMockTopElementFailedCountResponse(),
+      createMockTopElementFailedCountResponse({
         elementName: MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_2,
         elementType: MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_2,
         processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY_2,
-        count: MAESTRO_TEST_CONSTANTS.ELEMENT_FAILURE_COUNT_2,
+        count: MAESTRO_TEST_CONSTANTS.ELEMENT_FAILED_COUNT_2,
       })
     ];
 
@@ -349,7 +349,7 @@ describe('MaestroProcessesService', () => {
     it('should retrieve top elements by failure count', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getTopElementFailureCount(startDate, endDate);
+      const result = await service.getTopElementFailedCount(startDate, endDate);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
@@ -365,7 +365,7 @@ describe('MaestroProcessesService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].elementName).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_1);
       expect(result[0].elementType).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_1);
-      expect(result[0].failureCount).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_FAILURE_COUNT_1);
+      expect(result[0].failedCount).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_FAILED_COUNT_1);
       expect((result[0] as any).count).toBeUndefined();
       expect(result[0].processKey).toBe(MAESTRO_TEST_CONSTANTS.PROCESS_KEY);
     });
@@ -374,7 +374,7 @@ describe('MaestroProcessesService', () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        service.getTopElementFailureCount(startDate, endDate)
+        service.getTopElementFailedCount(startDate, endDate)
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

@@ -4,8 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
-import { ElementGetTopFailureCountResponse } from './processes.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -128,7 +127,7 @@ export interface CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link ElementGetTopFailureCountResponse}
+   * @returns Promise resolving to an array of {@link ElementGetTopFailedCountResponse}
    * @example
    * ```typescript
    * import { Cases } from '@uipath/uipath-typescript/cases';
@@ -136,17 +135,17 @@ export interface CasesServiceModel {
    * const cases = new Cases(sdk);
    *
    * // Get top failing elements for the last 7 days
-   * const topFailing = await cases.getTopElementFailureCount(
+   * const topFailing = await cases.getTopElementFailedCount(
    *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
    *   new Date()
    * );
    *
    * for (const element of topFailing) {
-   *   console.log(`${element.elementName} (${element.elementType}): ${element.failureCount} failures`);
+   *   console.log(`${element.elementName} (${element.elementType}): ${element.failedCount} failures`);
    * }
    * ```
    */
-  getTopElementFailureCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailureCountResponse[]>;
+  getTopElementFailedCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailedCountResponse[]>;
 
   /**
    * Get all instances status counts aggregated by date for case management processes.

@@ -630,12 +630,12 @@ export const createMockTopFaultedCountResponse = (overrides: Partial<any> = {}) 
  * @param overrides - Optional overrides for specific fields
  * @returns Mock top element failure count response object
  */
-export const createMockTopElementFailureCountResponse = (overrides: Partial<any> = {}) => {
+export const createMockTopElementFailedCountResponse = (overrides: Partial<any> = {}) => {
   return createMockBaseResponse({
     elementName: MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_1,
     elementType: MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_1,
     processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-    count: MAESTRO_TEST_CONSTANTS.ELEMENT_FAILURE_COUNT_1,
+    count: MAESTRO_TEST_CONSTANTS.ELEMENT_FAILED_COUNT_1,
   }, overrides);
 };
 

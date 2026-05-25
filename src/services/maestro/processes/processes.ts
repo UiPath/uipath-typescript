@@ -1,4 +1,5 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailureCountResponse, RawElementGetTopFailureCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -134,7 +135,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link ElementGetTopFailureCountResponse}
+   * @returns Promise resolving to an array of {@link ElementGetTopFailedCountResponse}
    * @example
    * ```typescript
    * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
@@ -142,19 +143,19 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * const maestroProcesses = new MaestroProcesses(sdk);
    *
    * // Get top failing elements for the last 7 days
-   * const topFailing = await maestroProcesses.getTopElementFailureCount(
+   * const topFailing = await maestroProcesses.getTopElementFailedCount(
    *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
    *   new Date()
    * );
    *
    * for (const element of topFailing) {
-   *   console.log(`${element.elementName} (${element.elementType}): ${element.failureCount} failures`);
+   *   console.log(`${element.elementName} (${element.elementType}): ${element.failedCount} failures`);
    * }
    * ```
    */
-  @track('MaestroProcesses.GetTopElementFailureCount')
-  async getTopElementFailureCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailureCountResponse[]> {
-    const { data } = await this.post<RawElementGetTopFailureCountResponse[]>(
+  @track('MaestroProcesses.GetTopElementFailedCount')
+  async getTopElementFailedCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailedCountResponse[]> {
+    const { data } = await this.post<RawElementGetTopFailedCountResponse[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
       buildInsightsTopBody(startTime, endTime, false)
     );
@@ -162,7 +163,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
       elementName: item.elementName,
       elementType: item.elementType,
       processKey: item.processKey,
-      failureCount: item.count,
+      failedCount: item.count,
     }));
   }
 

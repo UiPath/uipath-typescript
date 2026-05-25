@@ -120,13 +120,13 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe.skip('getTopElementFailureCount', () => {
+  describe.skip('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count for cases', async () => {
       const { cases } = getServices();
       const now = new Date();
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-      const result = await cases.getTopElementFailureCount(sevenDaysAgo, now);
+      const result = await cases.getTopElementFailedCount(sevenDaysAgo, now);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -139,7 +139,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
       expect(element.elementName).toBeDefined();
       expect(typeof element.elementName).toBe('string');
       expect(element.elementType).toBeDefined();
-      expect(typeof element.failureCount).toBe('number');
+      expect(typeof element.failedCount).toBe('number');
     });
   });
 

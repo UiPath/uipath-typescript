@@ -5,8 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
-import { ElementGetTopFailureCountResponse } from './processes.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -155,7 +154,7 @@ export interface MaestroProcessesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @returns Promise resolving to an array of {@link ElementGetTopFailureCountResponse}
+   * @returns Promise resolving to an array of {@link ElementGetTopFailedCountResponse}
    * @example
    * ```typescript
    * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
@@ -163,17 +162,17 @@ export interface MaestroProcessesServiceModel {
    * const maestroProcesses = new MaestroProcesses(sdk);
    *
    * // Get top failing elements for the last 7 days
-   * const topFailing = await maestroProcesses.getTopElementFailureCount(
+   * const topFailing = await maestroProcesses.getTopElementFailedCount(
    *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
    *   new Date()
    * );
    *
    * for (const element of topFailing) {
-   *   console.log(`${element.elementName} (${element.elementType}): ${element.failureCount} failures`);
+   *   console.log(`${element.elementName} (${element.elementType}): ${element.failedCount} failures`);
    * }
    * ```
    */
-  getTopElementFailureCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailureCountResponse[]>;
+  getTopElementFailedCount(startTime: Date, endTime: Date): Promise<ElementGetTopFailedCountResponse[]>;
 
   /**
    * Get all instances status counts aggregated by date for maestro processes.

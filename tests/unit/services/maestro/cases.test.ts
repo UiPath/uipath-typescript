@@ -12,7 +12,7 @@ import {
   createMockInstanceStatusTimeline,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
-  createMockTopElementFailureCountResponse,
+  createMockTopElementFailedCountResponse,
   createMockError
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -272,18 +272,18 @@ describe('CasesService', () => {
     });
   });
 
-  describe('getTopElementFailureCount', () => {
+  describe('getTopElementFailedCount', () => {
     it('should retrieve top elements by failure count with isCaseManagement true', async () => {
-      mockApiClient.post.mockResolvedValue([createMockTopElementFailureCountResponse()]);
+      mockApiClient.post.mockResolvedValue([createMockTopElementFailedCountResponse()]);
 
-      const result = await service.getTopElementFailureCount(
+      const result = await service.getTopElementFailedCount(
         new Date('2026-04-01T00:00:00Z'),
         new Date('2026-05-01T00:00:00Z')
       );
 
       expect(result).toHaveLength(1);
       expect(result[0].elementName).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_1);
-      expect(result[0].failureCount).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_FAILURE_COUNT_1);
+      expect(result[0].failedCount).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_FAILED_COUNT_1);
       expect((result[0] as any).count).toBeUndefined();
       expect(result[0].elementType).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_1);
       expect(result[0].processKey).toBe(MAESTRO_TEST_CONSTANTS.PROCESS_KEY);
@@ -300,7 +300,7 @@ describe('CasesService', () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        service.getTopElementFailureCount(new Date(), new Date())
+        service.getTopElementFailedCount(new Date(), new Date())
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

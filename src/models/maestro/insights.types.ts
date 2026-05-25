@@ -43,18 +43,18 @@ export interface GetTopFaultedCountResponse extends GetTopBaseResponse {
 }
 
 /**
- * Response for top elements with failure from the Insights endpoint.
- * Returns BPMN elements ranked by failure count.
+ * SDK response for top elements with failure.
+ * Shared by both MaestroProcesses and Cases — no service-specific enrichment.
  */
-export interface RawElementGetTopFailureCountResponse {
+export interface ElementGetTopFailedCountResponse {
   /** BPMN element name (falls back to element ID if name is empty) */
   elementName: string;
   /** BPMN element type (e.g. ServiceTask, ReceiveTask, IntermediateCatchEvent) */
   elementType: string;
   /** The unique process key this element belongs to */
   processKey: string;
-  /** Number of failed executions */
-  count: number;
+  /** Number of failed executions of this element in the given time range */
+  failedCount: number;
 }
 
 /**
