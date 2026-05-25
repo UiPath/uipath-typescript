@@ -3,7 +3,7 @@
  * Model classes for Maestro cases
  */
 
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopDurationResponse } from './cases.types';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
 import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
 
 /**
@@ -79,6 +79,45 @@ export interface CasesServiceModel {
    * ```
    */
   getTopRunCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopRunCountResponse[]>;
+
+  /**
+   * Get the top 10 case processes ranked by failure count within a time range.
+   *
+   * Returns an array of up to 10 case processes sorted by how many instances faulted,
+   * useful for identifying the most error-prone case processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
+   * @returns Promise resolving to an array of {@link CaseGetTopFaultedCountResponse}
+   * @example
+   * ```typescript
+   * import { Cases } from '@uipath/uipath-typescript/cases';
+   *
+   * const cases = new Cases(sdk);
+   *
+   * // Get top case processes by faulted count for the last 7 days
+   * const topFailing = await cases.getTopFaultedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topFailing) {
+   *   console.log(`${process.packageId}: ${process.faultedCount} failures`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top case processes by faulted count for a specific package
+   * const filtered = await cases.getTopFaultedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
+   */
+  getTopFaultedCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopFaultedCountResponse[]>;
 
   /**
    * Get all instances status counts aggregated by date for case management processes.

@@ -3,7 +3,7 @@
  * Model classes for Maestro processes
  */
 
-import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopDurationResponse } from './processes.types';
+import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
 import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
 
@@ -106,6 +106,45 @@ export interface MaestroProcessesServiceModel {
    * ```
    */
   getTopRunCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ProcessGetTopRunCountResponse[]>;
+
+  /**
+   * Get the top 10 processes ranked by failure count within a time range.
+   *
+   * Returns an array of up to 10 processes sorted by how many instances faulted,
+   * useful for identifying the most error-prone processes in a given period.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
+   * @returns Promise resolving to an array of {@link ProcessGetTopFaultedCountResponse}
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * // Get top processes by faulted count for the last 7 days
+   * const topFailing = await maestroProcesses.getTopFaultedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const process of topFailing) {
+   *   console.log(`${process.packageId}: ${process.faultedCount} failures`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top processes by faulted count for a specific package
+   * const filtered = await maestroProcesses.getTopFaultedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { packageId: '<packageId>' }
+   * );
+   * ```
+   */
+  getTopFaultedCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ProcessGetTopFaultedCountResponse[]>;
 
   /**
    * Get all instances status counts aggregated by date for maestro processes.

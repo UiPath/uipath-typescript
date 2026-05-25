@@ -97,6 +97,29 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe.skip('getTopFaultedCount', () => {
+    it('should retrieve top case processes by failure count', async () => {
+      const { cases } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await cases.getTopFaultedCount(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top cases by failure count returned — cannot validate response structure');
+      }
+
+      const topProcess = result[0];
+      expect(topProcess.packageId).toBeDefined();
+      expect(typeof topProcess.faultedCount).toBe('number');
+      expect(topProcess.name).toBeDefined();
+      expect(typeof topProcess.name).toBe('string');
+    });
+  });
+
   describe.skip('getTopExecutionDuration', () => {
     it('should retrieve top case processes by duration', async () => {
       const { cases } = getServices();

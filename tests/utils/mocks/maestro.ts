@@ -613,6 +613,19 @@ export const createMockInstanceStatusTimeline = (overrides: Partial<InstanceStat
 };
 
 /**
+ * Creates a mock top failure count response (raw API shape with runCount)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock top failure count response object
+ */
+export const createMockTopFaultedCountResponse = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+    runCount: MAESTRO_TEST_CONSTANTS.FAULTED_COUNT_PROCESS_1,
+    processKey: null
+  }, overrides);
+};
+
+/**
  * Creates a mock top duration response for processes
  * @param overrides - Optional overrides for specific fields
  * @returns Mock top duration response object
