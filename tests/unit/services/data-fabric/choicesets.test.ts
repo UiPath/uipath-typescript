@@ -68,6 +68,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result.length).toBe(1);
 
       // Verify public fields are exposed
+      expect(result[0].id).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
       expect(result[0].name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
       expect(result[0].displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
       expect(result[0].description).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION);
