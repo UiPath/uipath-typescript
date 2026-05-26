@@ -15,7 +15,7 @@ export const createMockRawPolicyTrace = (
   finalEnforcement: 'Deny',
   policyId: GOVERNANCE_TEST_CONSTANTS.POLICY_ID,
   policyEnforcement: 'Deny',
-  policyEvaluationResult: GOVERNANCE_TEST_CONSTANTS.EVALUATION_RESULT_ACTIVE_DENY,
+  policyEvaluationResult: GOVERNANCE_TEST_CONSTANTS.EVALUATION_RESULT_DENY,
   policyName: GOVERNANCE_TEST_CONSTANTS.POLICY_NAME,
   policyStatus: GOVERNANCE_TEST_CONSTANTS.POLICY_STATUS_ACTIVE,
   policyEvaluationDetails: GOVERNANCE_TEST_CONSTANTS.EVALUATION_DETAILS,
