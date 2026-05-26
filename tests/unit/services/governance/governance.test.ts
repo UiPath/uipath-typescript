@@ -141,7 +141,7 @@ describe('GovernanceService Unit Tests', () => {
     it('should set hasNextPage=true when page is exactly full', async () => {
       const pageSize = 2;
       const items = Array.from({ length: pageSize }, (_, i) =>
-        createMockRawPolicyEvaluationTrace({ TraceId: `trace-${i}` }),
+        createMockRawPolicyEvaluationTrace({ traceId: `trace-${i}` }),
       );
       mockApiClient.post.mockResolvedValue(createMockRawPolicyEvaluationTracesResponse(items));
 
@@ -170,7 +170,7 @@ describe('GovernanceService Unit Tests', () => {
     it('should round-trip pageNumber via cursor (next page → page 2 → API page 1)', async () => {
       const pageSize = 2;
       const fullPage = Array.from({ length: pageSize }, (_, i) =>
-        createMockRawPolicyEvaluationTrace({ TraceId: `trace-${i}` }),
+        createMockRawPolicyEvaluationTrace({ traceId: `trace-${i}` }),
       );
       mockApiClient.post.mockResolvedValueOnce(createMockRawPolicyEvaluationTracesResponse(fullPage));
 
