@@ -13,9 +13,10 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { createMockError } from '../../../utils/mocks/core';
 import { CHOICESET_TEST_CONSTANTS } from '../../../utils/constants/choicesets';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
-import { DATA_FABRIC_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
+import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import type { ChoiceSetGetResponse } from '../../../../src/models/data-fabric/choicesets.types';
+import { ValidationError, NotFoundError } from '../../../../src/core/errors';
 
 // ===== MOCKING =====
 // Mock the dependencies
@@ -67,6 +68,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result.length).toBe(1);
 
       // Verify public fields are exposed
+      expect(result[0].id).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
       expect(result[0].name).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME);
       expect(result[0].displayName).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DISPLAY_NAME);
       expect(result[0].description).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_DESCRIPTION);
@@ -312,6 +314,303 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result.items).toBeDefined();
       expect(result.items.length).toBe(0);
       expect(result.totalCount).toBe(0);
+    });
+  });
+
+  describe('create', () => {
+    it('should post choice-set payload and return created choice set ID', async () => {
+      mockApiClient.post.mockResolvedValue(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
+
+      const result = await choiceSetService.create('expense_types', {
+        displayName: 'Expense Types',
+        description: 'Categories of expenses for reimbursement',
+      });
+
+      expect(result).toBe(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.CREATE,
+        {
+          description: 'Categories of expenses for reimbursement',
+          displayName: 'Expense Types',
+          entityDefinition: {
+            name: 'expense_types',
+            fields: [],
+            folderId: DATA_FABRIC_TENANT_FOLDER_ID,
+          },
+        },
+        {},
+      );
+    });
+
+    it('should omit displayName from the payload when not provided (API decides default)', async () => {
+      mockApiClient.post.mockResolvedValue('new-cs-id');
+
+      await choiceSetService.create('expense_types');
+
+      const call = mockApiClient.post.mock.calls[0][1];
+      expect(call).not.toHaveProperty('displayName');
+      expect(call.entityDefinition.name).toBe('expense_types');
+      expect(call.description).toBeUndefined();
+    });
+
+    it('should pass custom folderKey to entityDefinition.folderId', async () => {
+      mockApiClient.post.mockResolvedValue(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
+
+      await choiceSetService.create('expense_types', {
+        folderKey: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+      });
+
+      const call = mockApiClient.post.mock.calls[0][1];
+      expect(call.entityDefinition.folderId).toBe('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(choiceSetService.create('expense_types')).rejects.toThrow(
+        TEST_CONSTANTS.ERROR_MESSAGE,
+      );
+    });
+  });
+
+  describe('updateById', () => {
+    it('should PATCH metadata with displayName and description', async () => {
+      mockApiClient.patch.mockResolvedValue(true);
+
+      await choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
+        displayName: 'Renamed Choice Set',
+        description: 'Updated description',
+      });
+
+      expect(mockApiClient.patch).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.UPDATE(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
+        {
+          displayName: 'Renamed Choice Set',
+          description: 'Updated description',
+        },
+        {},
+      );
+    });
+
+    it('should omit fields the caller did not provide', async () => {
+      mockApiClient.patch.mockResolvedValue(true);
+
+      await choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
+        displayName: 'Only Display Name',
+      });
+
+      const call = mockApiClient.patch.mock.calls[0][1];
+      expect(call.displayName).toBe('Only Display Name');
+      expect(call).not.toHaveProperty('description');
+    });
+
+    it('should send only description when displayName is omitted', async () => {
+      mockApiClient.patch.mockResolvedValue(true);
+
+      await choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {
+        description: 'Only Description',
+      });
+
+      const call = mockApiClient.patch.mock.calls[0][1];
+      expect(call.description).toBe('Only Description');
+      expect(call).not.toHaveProperty('displayName');
+    });
+
+    it('should throw ValidationError when neither displayName nor description is provided', async () => {
+      await expect(
+        choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {}),
+      ).rejects.toThrow(ValidationError);
+      await expect(
+        choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, {}),
+      ).rejects.toThrow(/at least one of displayName or description/);
+
+      expect(mockApiClient.patch).not.toHaveBeenCalled();
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.patch.mockRejectedValue(error);
+
+      await expect(
+        choiceSetService.updateById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, { displayName: 'x' }),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('deleteById', () => {
+    it('should POST to the delete endpoint with empty body', async () => {
+      mockApiClient.post.mockResolvedValue(true);
+
+      await choiceSetService.deleteById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
+        {},
+        {},
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        choiceSetService.deleteById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('insertValueById', () => {
+    it('should resolve choice-set name from id then POST to insert endpoint and transform response', async () => {
+      // getAll() is used internally to resolve the choice-set name from id
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      const rawValue = createMockChoiceSetValueResponse();
+      mockApiClient.post.mockResolvedValue(rawValue);
+
+      const result = await choiceSetService.insertValueById(
+        CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
+        'NEW_VAL',
+        { displayName: 'New Value' },
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.INSERT_BY_NAME(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME),
+        { Name: 'NEW_VAL', DisplayName: 'New Value' },
+        {},
+      );
+
+      expect(result.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
+      expect(result.name).toBe(CHOICESET_TEST_CONSTANTS.VALUE_NAME);
+      expect(result.displayName).toBe(CHOICESET_TEST_CONSTANTS.VALUE_DISPLAY_NAME);
+      expect(result.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
+
+      // Raw PascalCase fields absent
+      expect((result as any).Id).toBeUndefined();
+      expect((result as any).Name).toBeUndefined();
+      expect((result as any).CreateTime).toBeUndefined();
+    });
+
+    it('should omit DisplayName from the body when options.displayName is omitted', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+      mockApiClient.post.mockResolvedValue(createMockChoiceSetValueResponse());
+
+      await choiceSetService.insertValueById(
+        CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
+        'NEW_VAL',
+      );
+
+      const body = mockApiClient.post.mock.calls[0][1];
+      expect(body.Name).toBe('NEW_VAL');
+      expect(body.DisplayName).toBeUndefined();
+    });
+
+    it('should throw NotFoundError when the choice-set id is not found', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+
+      await expect(
+        choiceSetService.insertValueById('does-not-exist', 'X'),
+      ).rejects.toThrow(NotFoundError);
+      await expect(
+        choiceSetService.insertValueById('does-not-exist', 'X'),
+      ).rejects.toThrow("Choice set with id 'does-not-exist' not found");
+    });
+
+    it('should handle API errors from the insert call', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        choiceSetService.insertValueById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, 'NEW_VAL'),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('updateValueById', () => {
+    it('should resolve name from id then POST PascalCase DisplayName body and transform response', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+      const rawValue = createMockChoiceSetValueResponse({ DisplayName: 'Updated' });
+      mockApiClient.post.mockResolvedValue(rawValue);
+
+      const result = await choiceSetService.updateValueById(
+        CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
+        CHOICESET_TEST_CONSTANTS.VALUE_ID,
+        'Updated',
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.UPDATE_BY_NAME(
+          CHOICESET_TEST_CONSTANTS.CHOICESET_NAME,
+          CHOICESET_TEST_CONSTANTS.VALUE_ID,
+        ),
+        { DisplayName: 'Updated' },
+        {},
+      );
+
+      expect(result.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
+      expect(result.name).toBe(CHOICESET_TEST_CONSTANTS.VALUE_NAME);
+      expect(result.displayName).toBe('Updated');
+      expect(result.createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
+
+      // Raw PascalCase fields absent
+      expect((result as any).Id).toBeUndefined();
+      expect((result as any).Name).toBeUndefined();
+      expect((result as any).DisplayName).toBeUndefined();
+      expect((result as any).CreateTime).toBeUndefined();
+      expect((result as any).UpdateTime).toBeUndefined();
+    });
+
+    it('should throw NotFoundError when the choice-set id is not found', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+
+      await expect(
+        choiceSetService.updateValueById('does-not-exist', CHOICESET_TEST_CONSTANTS.VALUE_ID, 'x'),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should handle API errors from the update call', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        choiceSetService.updateValueById(
+          CHOICESET_TEST_CONSTANTS.CHOICESET_ID,
+          CHOICESET_TEST_CONSTANTS.VALUE_ID,
+          'x',
+        ),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('deleteValuesById', () => {
+    it('should POST the array of value ids to the value-delete endpoint', async () => {
+      mockApiClient.post.mockResolvedValue(true);
+      const valueIds = [
+        CHOICESET_TEST_CONSTANTS.VALUE_ID,
+        `${CHOICESET_TEST_CONSTANTS.VALUE_ID.slice(0, -1)}9`,
+      ];
+
+      await choiceSetService.deleteValuesById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, valueIds);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE_BY_ID(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
+        valueIds,
+        {},
+      );
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        choiceSetService.deleteValuesById(CHOICESET_TEST_CONSTANTS.CHOICESET_ID, [
+          CHOICESET_TEST_CONSTANTS.VALUE_ID,
+        ]),
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 });

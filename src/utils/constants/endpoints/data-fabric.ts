@@ -42,5 +42,11 @@ export const DATA_FABRIC_ENDPOINTS = {
   CHOICESETS: {
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity/choiceset`,
     GET_BY_ID: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choiceSetId}/query_expansion`,
+    CREATE: `${DATAFABRIC_BASE}/api/Entity/choiceset`,
+    UPDATE: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/Entity/${choiceSetId}/metadata`,
+    DELETE: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/Entity/${choiceSetId}/delete`,
+    INSERT_BY_NAME: (choiceSetName: string) => `${DATAFABRIC_BASE}/api/EntityService/${choiceSetName}/choiceset/insert`,
+    UPDATE_BY_NAME: (choiceSetName: string, valueId: string) => `${DATAFABRIC_BASE}/api/EntityService/${choiceSetName}/choiceset/${valueId}/update`,
+    DELETE_BY_ID: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choiceSetId}/choiceset/delete`,
   },
 } as const;
