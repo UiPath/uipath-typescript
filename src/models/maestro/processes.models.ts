@@ -280,7 +280,7 @@ export interface MaestroProcessesServiceModel {
    * @param packageId - Package identifier
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param version - Package version to filter by
+   * @param packageVersion - Package version to filter by
    * @returns Promise resolving to an array of {@link ElementCountByStatus}
    * @example
    * ```typescript
@@ -301,7 +301,7 @@ export interface MaestroProcessesServiceModel {
    * }
    * ```
    */
-  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
+  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]>;
 }
 
 // Method interface that will be added to process objects
@@ -318,10 +318,10 @@ export interface ProcessMethods {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param version - Package version to filter by
+   * @param packageVersion - Package version to filter by
    * @returns Promise resolving to an array of {@link ElementCountByStatus}
    */
-  getElementCountByStatus(startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
+  getElementCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]>;
 }
 
 // Combined type for process data with methods
@@ -342,11 +342,11 @@ function createProcessMethods(processData: RawMaestroProcessGetAllResponse, serv
 
       return service.getIncidents(processData.processKey, processData.folderKey);
     },
-    getElementCountByStatus(startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]> {
+    getElementCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]> {
       if (!processData.processKey) throw new Error('Process key is undefined');
       if (!processData.packageId) throw new Error('Package ID is undefined');
 
-      return service.getElementCountByStatus(processData.processKey, processData.packageId, startTime, endTime, version);
+      return service.getElementCountByStatus(processData.processKey, processData.packageId, startTime, endTime, packageVersion);
     }
   };
 }

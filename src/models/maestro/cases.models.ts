@@ -252,7 +252,7 @@ export interface CasesServiceModel {
    * @param packageId - Package identifier
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param version - Package version to filter by
+   * @param packageVersion - Package version to filter by
    * @returns Promise resolving to an array of {@link ElementCountByStatus}
    * @example
    * ```typescript
@@ -272,7 +272,7 @@ export interface CasesServiceModel {
    * }
    * ```
    */
-  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
+  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]>;
 }
 
 // Method interface that will be added to case objects
@@ -282,10 +282,10 @@ export interface CaseMethods {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param version - Package version to filter by
+   * @param packageVersion - Package version to filter by
    * @returns Promise resolving to an array of {@link ElementCountByStatus}
    */
-  getElementCountByStatus(startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
+  getElementCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]>;
 }
 
 // Combined type for case data with methods
@@ -300,11 +300,11 @@ export type CaseGetAllWithMethodsResponse = CaseGetAllResponse & CaseMethods;
  */
 function createCaseMethods(caseData: CaseGetAllResponse, service: CasesServiceModel): CaseMethods {
   return {
-    getElementCountByStatus(startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]> {
+    getElementCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]> {
       if (!caseData.processKey) throw new Error('Process key is undefined');
       if (!caseData.packageId) throw new Error('Package ID is undefined');
 
-      return service.getElementCountByStatus(caseData.processKey, caseData.packageId, startTime, endTime, version);
+      return service.getElementCountByStatus(caseData.processKey, caseData.packageId, startTime, endTime, packageVersion);
     }
   };
 }

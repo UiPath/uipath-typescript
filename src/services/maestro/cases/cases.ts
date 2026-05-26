@@ -307,14 +307,14 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * @param packageId - Package identifier
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param version - Package version to filter by
+   * @param packageVersion - Package version to filter by
    * @returns Promise resolving to an array of element count by status
    */
   @track('Cases.GetElementCountByStatus')
-  async getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]> {
+  async getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]> {
     const { data } = await this.post<ElementCountByStatus[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
-      buildElementCountByStatusBody(processKey, packageId, startTime, endTime, version)
+      buildElementCountByStatusBody(processKey, packageId, startTime, endTime, packageVersion)
     );
     return data ?? [];
   }
