@@ -11,7 +11,7 @@
 /**
  * Raw policy evaluation trace item as returned by the Insights RTM service.
  */
-export interface RawTraceItem {
+export interface RawPolicyTraceItem {
   tenantId?: string;
   startTime?: string;
   finalEnforcement?: string;
@@ -38,6 +38,6 @@ export interface RawTraceItem {
  * Only contains `items`; the API does not return a total count or
  * continuation token.
  */
-export interface RawTracesResponse {
-  items?: RawTraceItem[];
+export interface RawPolicyTracesResponse {
+  items?: RawPolicyTraceItem[];
 }

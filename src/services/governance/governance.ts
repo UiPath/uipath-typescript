@@ -13,11 +13,11 @@ import { PaginationManager } from '../../utils/pagination/pagination-manager';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import { getLimitedPageSize } from '../../utils/pagination/constants';
 import {
-  Trace,
-  TracesGetAllOptions,
+  PolicyTrace,
+  PolicyTracesGetAllOptions,
 } from '../../models/governance/governance.types';
 import { GovernanceServiceModel } from '../../models/governance/governance.models';
-import { RawTracesResponse } from '../../models/governance/governance.internal-types';
+import { RawPolicyTracesResponse } from '../../models/governance/governance.internal-types';
 
 /**
  * Service for inspecting governance policy enforcement on the UiPath platform.
@@ -33,9 +33,9 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    *
    * @param startTime - Inclusive lower bound on the trace start time. Required.
    * @param options - Optional filters and pagination options
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link Trace}
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link PolicyTrace}
    *          without pagination options, or {@link PaginatedResponse} of
-   *          {@link Trace} when pagination options are used.
+   *          {@link PolicyTrace} when pagination options are used.
    *
    * @example
    * ```typescript
@@ -44,11 +44,11 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    * const governance = new Governance(sdk);
    *
    * // Bare minimum — fetch using only the required start time
-   * const recent = await governance.getTraces(new Date('2024-01-01'));
+   * const recent = await governance.getPolicyTraces(new Date('2024-01-01'));
    * console.log(recent.items.length);
    *
    * // Filter denied decisions across the whole organization, paginated
-   * const page1 = await governance.getTraces(
+   * const page1 = await governance.getPolicyTraces(
    *   new Date('2024-01-01'),
    *   {
    *     endTime: new Date(),
@@ -59,24 +59,24 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    * );
    *
    * if (page1.hasNextPage) {
-   *   const page2 = await governance.getTraces(
+   *   const page2 = await governance.getPolicyTraces(
    *     new Date('2024-01-01'),
    *     { cursor: page1.nextCursor },
    *   );
    * }
    * ```
    */
-  @track('Governance.GetTraces')
-  async getTraces<T extends TracesGetAllOptions = TracesGetAllOptions>(
+  @track('Governance.GetPolicyTraces')
+  async getPolicyTraces<T extends PolicyTracesGetAllOptions = PolicyTracesGetAllOptions>(
     startTime: Date,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<Trace>
-      : NonPaginatedResponse<Trace>
+      ? PaginatedResponse<PolicyTrace>
+      : NonPaginatedResponse<PolicyTrace>
   > {
     if (!startTime) {
-      throw new ValidationError({ message: 'startTime is required for getTraces' });
+      throw new ValidationError({ message: 'startTime is required for getPolicyTraces' });
     }
 
     const isPaginated = !!(options?.cursor || options?.pageSize !== undefined || options?.jumpToPage !== undefined);
@@ -122,25 +122,25 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
       pageSize: limitedPageSize,
     });
 
-    const response = await this.post<RawTracesResponse>(
+    const response = await this.post<RawPolicyTracesResponse>(
       GOVERNANCE_ENDPOINTS.POLICY.TRACES,
       body,
     );
 
     // API returns camelCase keys directly — no case transform needed.
-    const items = (response.data?.items ?? []) as Trace[];
+    const items = (response.data?.items ?? []) as PolicyTrace[];
 
     if (!isPaginated) {
       return { items } as T extends HasPaginationOptions<T>
-        ? PaginatedResponse<Trace>
-        : NonPaginatedResponse<Trace>;
+        ? PaginatedResponse<PolicyTrace>
+        : NonPaginatedResponse<PolicyTrace>;
     }
 
     // The API does not return a total count or continuation token. A full page
     // implies more rows may exist; a partial page is definitely the last page.
     const hasMore = limitedPageSize !== undefined && items.length === limitedPageSize;
 
-    return PaginationManager.createPaginatedResponse<Trace>(
+    return PaginationManager.createPaginatedResponse<PolicyTrace>(
       {
         pageInfo: {
           hasMore,
@@ -151,7 +151,7 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
       },
       items,
     ) as T extends HasPaginationOptions<T>
-      ? PaginatedResponse<Trace>
-      : NonPaginatedResponse<Trace>;
+      ? PaginatedResponse<PolicyTrace>
+      : NonPaginatedResponse<PolicyTrace>;
   }
 }
