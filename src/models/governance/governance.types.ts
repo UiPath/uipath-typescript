@@ -8,7 +8,7 @@ import { PaginationOptions } from '../../utils/pagination/types';
 
 /**
  * Policy evaluation result, used as a filter on
- * {@link GovernanceServiceModel.getPolicyEvaluationTraces}.
+ * {@link GovernanceServiceModel.getTraces}.
  *
  * The server maps each value to its composite Snowflake key
  * (`PolicyStatus_EvaluationResult`):
@@ -30,14 +30,14 @@ export enum PolicyEvaluationResult {
 
 /**
  * Single policy evaluation trace returned by
- * {@link GovernanceServiceModel.getPolicyEvaluationTraces}.
+ * {@link GovernanceServiceModel.getTraces}.
  *
  * Each row represents one policy verdict (from a `policyEvaluation` span)
  * joined to its parent governance enforcement decision (a `governanceEvaluation`
  * span). One enforcement event can produce multiple trace rows when multiple
  * policies fed into the final verdict.
  */
-export interface PolicyEvaluationTrace {
+export interface Trace {
   /** Tenant the trace was recorded in. Present even when `fullOrganization` is `true`. */
   tenantId?: string;
   /**
@@ -86,12 +86,12 @@ export interface PolicyEvaluationTrace {
 
 /**
  * Filter and pagination options for
- * {@link GovernanceServiceModel.getPolicyEvaluationTraces}.
+ * {@link GovernanceServiceModel.getTraces}.
  *
  * All filters combine with AND semantics. Array filters match any value in
  * the array (OR within a single filter).
  */
-export type PolicyEvaluationTracesGetAllOptions = PaginationOptions & {
+export type TracesGetAllOptions = PaginationOptions & {
   /**
    * Inclusive upper bound on trace start time. When omitted, the upper bound
    * is open.

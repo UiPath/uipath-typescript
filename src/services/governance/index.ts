@@ -12,7 +12,7 @@
  * await sdk.initialize();
  *
  * const governance = new Governance(sdk);
- * const traces = await governance.getPolicyEvaluationTraces(new Date('2024-01-01'));
+ * const traces = await governance.getTraces(new Date('2024-01-01'));
  * ```
  *
  * @module

@@ -1,6 +1,6 @@
 import type {
-  PolicyEvaluationTrace,
-  PolicyEvaluationTracesGetAllOptions,
+  Trace,
+  TracesGetAllOptions,
 } from './governance.types';
 import type {
   PaginatedResponse,
@@ -26,7 +26,7 @@ import type {
  * import { Governance } from '@uipath/uipath-typescript/governance';
  *
  * const governance = new Governance(sdk);
- * const traces = await governance.getPolicyEvaluationTraces(new Date('2024-01-01'));
+ * const traces = await governance.getTraces(new Date('2024-01-01'));
  * ```
  */
 export interface GovernanceServiceModel {
@@ -40,9 +40,9 @@ export interface GovernanceServiceModel {
    *
    * @param startTime - Inclusive lower bound on the trace start time. Required.
    * @param options - Optional filters and pagination options
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link PolicyEvaluationTrace}
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link Trace}
    *          without pagination options, or {@link PaginatedResponse} of
-   *          {@link PolicyEvaluationTrace} when pagination options are used.
+   *          {@link Trace} when pagination options are used.
    *
    * @example
    * ```typescript
@@ -51,11 +51,11 @@ export interface GovernanceServiceModel {
    * const governance = new Governance(sdk);
    *
    * // Bare minimum — fetch using only the required start time
-   * const recent = await governance.getPolicyEvaluationTraces(new Date('2024-01-01'));
+   * const recent = await governance.getTraces(new Date('2024-01-01'));
    * console.log(recent.items.length);
    *
    * // Filter denied decisions across the whole organization, paginated
-   * const page1 = await governance.getPolicyEvaluationTraces(
+   * const page1 = await governance.getTraces(
    *   new Date('2024-01-01'),
    *   {
    *     endTime: new Date(),
@@ -66,19 +66,19 @@ export interface GovernanceServiceModel {
    * );
    *
    * if (page1.hasNextPage) {
-   *   const page2 = await governance.getPolicyEvaluationTraces(
+   *   const page2 = await governance.getTraces(
    *     new Date('2024-01-01'),
    *     { cursor: page1.nextCursor },
    *   );
    * }
    * ```
    */
-  getPolicyEvaluationTraces<T extends PolicyEvaluationTracesGetAllOptions = PolicyEvaluationTracesGetAllOptions>(
+  getTraces<T extends TracesGetAllOptions = TracesGetAllOptions>(
     startTime: Date,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<PolicyEvaluationTrace>
-      : NonPaginatedResponse<PolicyEvaluationTrace>
+      ? PaginatedResponse<Trace>
+      : NonPaginatedResponse<Trace>
   >;
 }
