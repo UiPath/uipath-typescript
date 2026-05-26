@@ -6,7 +6,6 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { testGetElementCountByStatus } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -297,13 +296,6 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
         }
         throw error;
       }
-    });
-  });
-
-  describe('getElementCountByStatus', () => {
-    it('should retrieve element count by status for a process', async () => {
-      const { processInstances } = getServices();
-      await testGetElementCountByStatus(processInstances, 'process instances');
     });
   });
 

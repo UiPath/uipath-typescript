@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { testGetTopRunCount, testGetInstanceStatusTimeline } from '../../utils/helpers';
+import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetElementCountByStatus } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -179,6 +179,13 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
       expect(services.caseInstances).toBeDefined();
       expect(services.maestroProcesses).toBeDefined();
       expect(services.sdk.isAuthenticated()).toBe(true);
+    });
+  });
+
+  describe('getElementCountByStatus', () => {
+    it('should retrieve element count by status for a case', async () => {
+      const { cases } = getServices();
+      await testGetElementCountByStatus(cases, 'cases');
     });
   });
 });

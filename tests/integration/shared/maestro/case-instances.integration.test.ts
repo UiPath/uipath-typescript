@@ -6,7 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
-import { hasValidPagination, testGetElementCountByStatus } from '../../utils/helpers';
+import { hasValidPagination } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -348,13 +348,6 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
       expect(services.cases).toBeDefined();
       expect(services.maestroProcesses).toBeDefined();
       expect(services.sdk.isAuthenticated()).toBe(true);
-    });
-  });
-
-  describe('getElementCountByStatus', () => {
-    it('should retrieve element count by status for a case', async () => {
-      const { caseInstances } = getServices();
-      await testGetElementCountByStatus(caseInstances, 'case instances');
     });
   });
 

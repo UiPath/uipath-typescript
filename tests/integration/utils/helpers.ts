@@ -220,12 +220,12 @@ export function expectValidElementCountByStatus(element: ElementCountByStatus): 
 
 /** Minimal interface for services that support getElementCountByStatus integration testing */
 interface ElementCountByStatusService {
-  getAll(options: { pageSize: number }): Promise<{ items: Array<{ processKey: string; packageId: string; packageVersion: string }> }>;
-  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
+  getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
+  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]>;
 }
 
 /**
- * Integration test helper: fetches an instance, calls getElementCountByStatus,
+ * Integration test helper: fetches a process/case, calls getElementCountByStatus,
  * and validates the response shape. Shared between MaestroProcesses and Cases.
  *
  * @param service - Service instance (maestroProcesses or cases)
@@ -235,18 +235,23 @@ export async function testGetElementCountByStatus(
   service: ElementCountByStatusService,
   serviceName: string
 ): Promise<void> {
-  const instances = await service.getAll({ pageSize: 1 });
-  if (instances.items.length === 0) {
+  const processes = await service.getAll();
+  if (processes.length === 0) {
     throw new Error(`No ${serviceName} available for testing getElementCountByStatus`);
   }
 
-  const instance = instances.items[0];
+  const process = processes[0];
+  const packageVersion = process.packageVersions[0];
+  if (!packageVersion) {
+    throw new Error(`No package versions available for ${serviceName} getElementCountByStatus test`);
+  }
+
   const result = await service.getElementCountByStatus(
-    instance.processKey,
-    instance.packageId,
+    process.processKey,
+    process.packageId,
     new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     new Date(),
-    instance.packageVersion
+    packageVersion
   );
 
   expect(result).toBeDefined();

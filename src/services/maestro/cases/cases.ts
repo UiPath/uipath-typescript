@@ -296,12 +296,6 @@ export class CasesService extends BaseService implements CasesServiceModel {
   }
 
   /**
-   * Extract a readable case name from the packageId
-   * @param packageId - The full package identifier
-   * @returns A human-readable case name
-   * @private
-   */
-  /**
    * Get element count by status for case instances
    *
    * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
@@ -340,6 +334,12 @@ export class CasesService extends BaseService implements CasesServiceModel {
     return data ?? [];
   }
 
+  /**
+   * Extract a readable case name from the packageId
+   * @param packageId - The full package identifier
+   * @returns A human-readable case name
+   * @private
+   */
   private extractCaseName(packageId: string): string {
     // Check if packageId contains "CaseManagement."
     const caseManagementIndex = packageId.indexOf('CaseManagement.');
