@@ -326,12 +326,34 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
 
   /**
    * Get element count by status for process instances
+   *
+   * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
+   * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a process.
+   *
    * @param processKey - Process key to filter by
    * @param packageId - Package identifier
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param packageVersion - Package version to filter by
-   * @returns Promise resolving to an array of element count by status
+   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   * @example
+   * ```typescript
+   * // Get element metrics for a process
+   * const elements = await maestroProcesses.getElementCountByStatus(
+   *   '<processKey>',
+   *   '<packageId>',
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   '1.0.1'
+   * );
+   *
+   * // Analyze element performance
+   * for (const element of elements) {
+   *   console.log(`Element: ${element.elementId}`);
+   *   console.log(`  Success: ${element.successCount}, Failed: ${element.failCount}`);
+   *   console.log(`  Avg duration: ${element.avgDurationMs}ms, P95: ${element.p95DurationMs}ms`);
+   * }
+   * ```
    */
   @track('MaestroProcesses.GetElementCountByStatus')
   async getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]> {
