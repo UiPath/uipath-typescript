@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { UiPath } from '../../src';
-import { NetworkError } from '../../src/core/errors/network';
+import { ServerError } from '../../src/core/errors/server';
 import { loadIntegrationConfig } from './config/test-config';
 
 /**
@@ -16,9 +16,8 @@ function isForbiddenError(error: any, keywords: string[] = []): boolean {
     error.statusCode === 401 ||
     error.status === 401 ||
     // Server may return HTML (redirect/error page) for invalid org/tenant,
-    // causing a JSON parse error — this still indicates rejection
-    (error instanceof SyntaxError && error.message?.includes('is not valid JSON')) ||
-    (error instanceof NetworkError && error.message?.includes('is not valid JSON')) ||
+    // causing a non-JSON parse error — this still indicates rejection
+    (error instanceof ServerError && error.message?.includes('non-JSON response')) ||
     allKeywords.some(kw => error.message?.toLowerCase().includes(kw))
   );
 }
