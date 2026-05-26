@@ -148,18 +148,3 @@ export interface ElementCountByStatus {
   p99DurationMs: number;
 }
 
-/**
- * Options for getting element count by status
- */
-export interface ElementCountByStatusOptions {
-  /** Process key to filter by */
-  processKey: string;
-  /** Package identifier */
-  packageId: string;
-  /** Start of the time range to query */
-  startTime: Date;
-  /** End of the time range to query */
-  endTime: Date;
-  /** Package version to filter by */
-  version: string;
-}

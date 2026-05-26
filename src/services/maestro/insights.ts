@@ -1,5 +1,5 @@
 import { ApiResponse } from '../base';
-import { InstanceStatusTimelineResponse, TimelineOptions, ElementCountByStatus, ElementCountByStatusOptions } from '../../models/maestro';
+import { InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
 import type { TopQueryOptions } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
@@ -62,32 +62,24 @@ export async function fetchInstanceStatusTimeline(
 }
 
 /**
- * Fetches element count by status from the Insights API.
- * Shared implementation used by both ProcessInstancesService and CaseInstancesService.
+ * Builds the request body for the ElementCountByStatus endpoint.
  *
- * @param postFn - Bound post method from a BaseService subclass
- * @param options - Options containing processKey, packageId, time range, and version
- * @returns Promise resolving to an array of element count by status
+ * @param processKey - Process key to filter by
+ * @param packageId - Package identifier
+ * @param startTime - Start of the time range to query
+ * @param endTime - End of the time range to query
+ * @param version - Package version to filter by
+ * @returns Request body for the ElementCountByStatus endpoint
  * @internal
  */
-export async function fetchElementCountByStatus(
-  postFn: <T>(path: string, data?: unknown) => Promise<ApiResponse<T>>,
-  options: ElementCountByStatusOptions
-): Promise<ElementCountByStatus[]> {
-  const requestBody = {
+export function buildElementCountByStatusBody(processKey: string, packageId: string, startTime: Date, endTime: Date, version: string) {
+  return {
     commonParams: {
-      processKey: options.processKey,
-      packageId: options.packageId,
-      startTime: options.startTime.getTime(),
-      endTime: options.endTime.getTime(),
-      version: options.version
+      processKey,
+      packageId,
+      startTime: startTime.getTime(),
+      endTime: endTime.getTime(),
+      version
     }
   };
-
-  const response = await postFn<ElementCountByStatus[]>(
-    MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
-    requestBody
-  );
-
-  return response.data;
 }

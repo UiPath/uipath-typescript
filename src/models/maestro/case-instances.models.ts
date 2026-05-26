@@ -14,7 +14,6 @@ import {
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 import { OperationResponse } from '../common/types';
 import { TaskGetResponse, TaskGetAllOptions } from '../action-center';
-import type { ElementCountByStatus, ElementCountByStatusOptions } from './insights.types';
 
 /**
  * Service model for managing Maestro Case Instances
@@ -364,34 +363,6 @@ export interface CaseInstancesServiceModel {
    * ```
    */
   getStagesSlaSummary(options?: CaseInstanceStageSLAOptions): Promise<CaseInstanceStageSLAResponse[]>;
-
-  /**
-   * Get element count by status for case instances
-   *
-   * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
-   * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a case.
-   *
-   * @param options - Options containing processKey, packageId, time range, and version
-   * @returns Promise resolving to an array of {@link ElementCountByStatus}
-   * @example
-   * ```typescript
-   * // Get element metrics for a case
-   * const elements = await caseInstances.getElementCountByStatus({
-   *   processKey: '<processKey>',
-   *   packageId: '<packageId>',
-   *   startTime: new Date('2026-04-01'),
-   *   endTime: new Date(),
-   *   version: '1.0.1'
-   * });
-   *
-   * // Find elements with failures
-   * const failedElements = elements.filter(e => e.failCount > 0);
-   * for (const element of failedElements) {
-   *   console.log(`Failed element: ${element.elementId}, failures: ${element.failCount}`);
-   * }
-   * ```
-   */
-  getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]>;
 }
 
 // Method interface that will be added to case instance objects

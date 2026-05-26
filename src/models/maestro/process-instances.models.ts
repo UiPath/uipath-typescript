@@ -9,7 +9,6 @@ import type {
   ProcessInstanceGetVariablesOptions
 } from './process-instances.types';
 import type { ProcessIncidentGetResponse } from './process-incidents.types';
-import type { ElementCountByStatus, ElementCountByStatusOptions } from './insights.types';
 import { OperationResponse } from '../common/types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
@@ -256,35 +255,6 @@ export interface ProcessInstancesServiceModel {
    * ```
    */
   getIncidents(instanceId: string, folderKey: string): Promise<ProcessIncidentGetResponse[]>;
-
-  /**
-   * Get element count by status for process instances
-   *
-   * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
-   * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a process.
-   *
-   * @param options - Options containing processKey, packageId, time range, and version
-   * @returns Promise resolving to an array of {@link ElementCountByStatus}
-   * @example
-   * ```typescript
-   * // Get element metrics for a process
-   * const elements = await processInstances.getElementCountByStatus({
-   *   processKey: '<processKey>',
-   *   packageId: '<packageId>',
-   *   startTime: new Date('2026-04-01'),
-   *   endTime: new Date(),
-   *   version: '1.0.1'
-   * });
-   *
-   * // Analyze element performance
-   * for (const element of elements) {
-   *   console.log(`Element: ${element.elementId}`);
-   *   console.log(`  Success: ${element.successCount}, Failed: ${element.failCount}`);
-   *   console.log(`  Avg duration: ${element.avgDurationMs}ms, P95: ${element.p95DurationMs}ms`);
-   * }
-   * ```
-   */
-  getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]>;
 }
 
 // Method interface that will be added to process instance objects

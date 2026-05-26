@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
-import { GetTopRunCountResponse, ElementCountByStatus, ElementCountByStatusOptions } from '../../../src/models/maestro/insights.types';
+import { GetTopRunCountResponse, ElementCountByStatus } from '../../../src/models/maestro/insights.types';
 import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
@@ -221,15 +221,15 @@ export function expectValidElementCountByStatus(element: ElementCountByStatus): 
 /** Minimal interface for services that support getElementCountByStatus integration testing */
 interface ElementCountByStatusService {
   getAll(options: { pageSize: number }): Promise<{ items: Array<{ processKey: string; packageId: string; packageVersion: string }> }>;
-  getElementCountByStatus(options: ElementCountByStatusOptions): Promise<ElementCountByStatus[]>;
+  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
 }
 
 /**
  * Integration test helper: fetches an instance, calls getElementCountByStatus,
- * and validates the response shape. Shared between ProcessInstances and CaseInstances.
+ * and validates the response shape. Shared between MaestroProcesses and Cases.
  *
- * @param service - Service instance (processInstances or caseInstances)
- * @param serviceName - Name for error messages (e.g., 'process instances')
+ * @param service - Service instance (maestroProcesses or cases)
+ * @param serviceName - Name for error messages (e.g., 'processes')
  */
 export async function testGetElementCountByStatus(
   service: ElementCountByStatusService,
@@ -241,13 +241,13 @@ export async function testGetElementCountByStatus(
   }
 
   const instance = instances.items[0];
-  const result = await service.getElementCountByStatus({
-    processKey: instance.processKey,
-    packageId: instance.packageId,
-    startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    endTime: new Date(),
-    version: instance.packageVersion
-  });
+  const result = await service.getElementCountByStatus(
+    instance.processKey,
+    instance.packageId,
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    new Date(),
+    instance.packageVersion
+  );
 
   expect(result).toBeDefined();
   expect(Array.isArray(result)).toBe(true);

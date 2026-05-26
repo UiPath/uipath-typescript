@@ -342,4 +342,46 @@ describe('CasesService', () => {
       );
     });
   });
+
+  describe('getElementCountByStatus', () => {
+    it('should retrieve element count by status for case instances', async () => {
+      mockApiClient.post.mockResolvedValue([...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_COUNT_BY_STATUS]);
+
+      const result = await service.getElementCountByStatus(
+        MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+        MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0].elementId).toBe('Event_start');
+      expect(result[0].successCount).toBe(2);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          })
+        }),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getElementCountByStatus(
+          MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+          MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          new Date(),
+          new Date(),
+          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
 });

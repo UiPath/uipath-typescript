@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementCountByStatus } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -269,6 +269,39 @@ export interface MaestroProcessesServiceModel {
    * ```
    */
   getTopExecutionDuration(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ProcessGetTopDurationResponse[]>;
+
+  /**
+   * Get element count by status for process instances
+   *
+   * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
+   * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a process.
+   *
+   * @param processKey - Process key to filter by
+   * @param packageId - Package identifier
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param version - Package version to filter by
+   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   * @example
+   * ```typescript
+   * // Get element metrics for a process
+   * const elements = await maestroProcesses.getElementCountByStatus(
+   *   '<processKey>',
+   *   '<packageId>',
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   '1.0.1'
+   * );
+   *
+   * // Analyze element performance
+   * for (const element of elements) {
+   *   console.log(`Element: ${element.elementId}`);
+   *   console.log(`  Success: ${element.successCount}, Failed: ${element.failCount}`);
+   *   console.log(`  Avg duration: ${element.avgDurationMs}ms, P95: ${element.p95DurationMs}ms`);
+   * }
+   * ```
+   */
+  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
 }
 
 // Method interface that will be added to process objects
@@ -279,6 +312,16 @@ export interface ProcessMethods {
    * @returns Promise resolving to array of process incidents
    */
   getIncidents(): Promise<ProcessIncidentGetResponse[]>;
+
+  /**
+   * Get element count by status for this process
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param version - Package version to filter by
+   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   */
+  getElementCountByStatus(startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
 }
 
 // Combined type for process data with methods
@@ -298,6 +341,12 @@ function createProcessMethods(processData: RawMaestroProcessGetAllResponse, serv
       if (!processData.folderKey) throw new Error('Folder key is undefined');
 
       return service.getIncidents(processData.processKey, processData.folderKey);
+    },
+    getElementCountByStatus(startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]> {
+      if (!processData.processKey) throw new Error('Process key is undefined');
+      if (!processData.packageId) throw new Error('Package ID is undefined');
+
+      return service.getElementCountByStatus(processData.processKey, processData.packageId, startTime, endTime, version);
     }
   };
 }

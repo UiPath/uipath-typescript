@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementCountByStatus } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -24,8 +24,7 @@ import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, Eleme
  */
 export interface CasesServiceModel {
   /**
-   * @returns Promise resolving to array of Case objects
-   * {@link CaseGetAllResponse}
+   * @returns Promise resolving to an array of {@link CaseGetAllWithMethodsResponse}
    * @example
    * ```typescript
    * // Get all case management processes
@@ -39,7 +38,7 @@ export interface CasesServiceModel {
    * }
    * ```
    */
-  getAll(): Promise<CaseGetAllResponse[]>;
+  getAll(): Promise<CaseGetAllWithMethodsResponse[]>;
 
   /**
    * Get the top 5 case processes ranked by run count within a time range.
@@ -242,4 +241,85 @@ export interface CasesServiceModel {
    * ```
    */
   getTopExecutionDuration(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopDurationResponse[]>;
+
+  /**
+   * Get element count by status for case instances
+   *
+   * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
+   * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a case.
+   *
+   * @param processKey - Process key to filter by
+   * @param packageId - Package identifier
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param version - Package version to filter by
+   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   * @example
+   * ```typescript
+   * // Get element metrics for a case
+   * const elements = await cases.getElementCountByStatus(
+   *   '<processKey>',
+   *   '<packageId>',
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   '1.0.1'
+   * );
+   *
+   * // Find elements with failures
+   * const failedElements = elements.filter(e => e.failCount > 0);
+   * for (const element of failedElements) {
+   *   console.log(`Failed element: ${element.elementId}, failures: ${element.failCount}`);
+   * }
+   * ```
+   */
+  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
+}
+
+// Method interface that will be added to case objects
+export interface CaseMethods {
+  /**
+   * Get element count by status for this case
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param version - Package version to filter by
+   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   */
+  getElementCountByStatus(startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]>;
+}
+
+// Combined type for case data with methods
+export type CaseGetAllWithMethodsResponse = CaseGetAllResponse & CaseMethods;
+
+/**
+ * Creates methods for a case object
+ *
+ * @param caseData - The case data (response from API)
+ * @param service - The cases service instance
+ * @returns Object containing case methods
+ */
+function createCaseMethods(caseData: CaseGetAllResponse, service: CasesServiceModel): CaseMethods {
+  return {
+    getElementCountByStatus(startTime: Date, endTime: Date, version: string): Promise<ElementCountByStatus[]> {
+      if (!caseData.processKey) throw new Error('Process key is undefined');
+      if (!caseData.packageId) throw new Error('Package ID is undefined');
+
+      return service.getElementCountByStatus(caseData.processKey, caseData.packageId, startTime, endTime, version);
+    }
+  };
+}
+
+/**
+ * Creates an actionable case by combining API case data with operational methods.
+ *
+ * @param caseData - The case data from API
+ * @param service - The cases service instance
+ * @returns A case object with added methods
+ */
+export function createCaseWithMethods(
+  caseData: CaseGetAllResponse,
+  service: CasesServiceModel
+): CaseGetAllWithMethodsResponse {
+  const methods = createCaseMethods(caseData, service);
+  return Object.assign({}, caseData, methods) as CaseGetAllWithMethodsResponse;
 }
