@@ -1,0 +1,121 @@
+/**
+ * Governance Service Types
+ *
+ * Public types exposed via `@uipath/uipath-typescript/governance`.
+ */
+
+import { PaginationOptions } from '../../utils/pagination/types';
+
+/**
+ * Policy evaluation result, used as a filter on
+ * {@link GovernanceServiceModel.getPolicyEvaluationTraces}.
+ *
+ * The server maps each value to its composite Snowflake key
+ * (`PolicyStatus_EvaluationResult`):
+ * - `Allow` → `Active_Allow`
+ * - `Deny` → `Active_Deny`
+ * - `SimulatedAllow` → `Simulated_Allow`
+ * - `SimulatedDeny` → `Simulated_Deny`
+ */
+export enum PolicyEvaluationResult {
+  /** Active policy permitted the action. */
+  Allow = 'Allow',
+  /** Active policy blocked the action. */
+  Deny = 'Deny',
+  /** Simulated (NoOp) policy would have permitted the action. */
+  SimulatedAllow = 'SimulatedAllow',
+  /** Simulated (NoOp) policy would have blocked the action. */
+  SimulatedDeny = 'SimulatedDeny',
+}
+
+/**
+ * Single policy evaluation trace returned by
+ * {@link GovernanceServiceModel.getPolicyEvaluationTraces}.
+ *
+ * Each row represents one policy verdict (from a `policyEvaluation` span)
+ * joined to its parent governance enforcement decision (a `governanceEvaluation`
+ * span). One enforcement event can produce multiple trace rows when multiple
+ * policies fed into the final verdict.
+ */
+export interface PolicyEvaluationTrace {
+  /** Tenant the trace was recorded in. Present even when `fullOrganization` is `true`. */
+  tenantId?: string;
+  /**
+   * When the parent governance enforcement event started, in ISO 8601 UTC.
+   *
+   * If the upstream source returned null for this row, the server substitutes
+   * `0001-01-01T00:00:00` — treat that sentinel as "unknown".
+   */
+  startTime?: string;
+  /** Final enforcement verdict for the parent governance event (e.g. `Allow`, `Deny`, `NoOp`). */
+  finalEnforcement?: string;
+  /** ID of the policy this trace row evaluates. */
+  policyId?: string;
+  /** This individual policy's enforcement contribution to the parent verdict. */
+  policyEnforcement?: string;
+  /**
+   * Composite policy verdict for this row. See {@link PolicyEvaluationResult}
+   * for the values accepted on the request-side `evaluationResult` filter.
+   */
+  policyEvaluationResult?: string;
+  /** Display name of the policy. */
+  policyName?: string;
+  /** `Active` or `Simulated`. */
+  policyStatus?: string;
+  /** Opaque details payload describing the evaluation result. */
+  policyEvaluationDetails?: string;
+  /** Process or executable that triggered the evaluation. */
+  actorProcessId?: string;
+  /** Type of the actor process (e.g. coded agent, RPA process). */
+  actorProcessType?: string;
+  /** Identity (user/principal) that triggered the evaluation. */
+  actorIdentityId?: string;
+  /** Resource being acted on. */
+  resourceId?: string;
+  /** Type of the resource being acted on. */
+  resourceType?: string;
+  /** Orchestrator folder key associated with the evaluation, if any. */
+  folderKey?: string;
+  /** Distributed-tracing ID covering the governance enforcement event. */
+  traceId?: string;
+  /** Process key associated with the evaluation, if any. */
+  processKey?: string;
+  /** Job key associated with the evaluation, if any. */
+  jobKey?: string;
+}
+
+/**
+ * Filter and pagination options for
+ * {@link GovernanceServiceModel.getPolicyEvaluationTraces}.
+ *
+ * All filters combine with AND semantics. Array filters match any value in
+ * the array (OR within a single filter).
+ */
+export type PolicyEvaluationTracesGetAllOptions = PaginationOptions & {
+  /**
+   * Inclusive upper bound on trace start time. When omitted, the upper bound
+   * is open.
+   */
+  endTime?: Date;
+  /** Filter by one or more policy evaluation results. */
+  evaluationResult?: PolicyEvaluationResult[];
+  /** Filter by one or more policy IDs. */
+  policyId?: string[];
+  /** Filter by one or more actor process IDs. */
+  actorProcessId?: string[];
+  /** Filter by one or more actor process types (e.g. coded agent, RPA process). */
+  actorProcessType?: string[];
+  /** Filter by one or more actor identity IDs. */
+  actorIdentityId?: string[];
+  /** Filter by one or more resource IDs. */
+  resourceId?: string[];
+  /** Filter by one or more resource types. */
+  resourceType?: string[];
+  /** Filter by one or more distributed-trace IDs. */
+  traceId?: string[];
+  /**
+   * When `true`, drops the tenant filter and queries the whole organization.
+   * Caller still has to be an organization admin.
+   */
+  fullOrganization?: boolean;
+};

@@ -12,6 +12,7 @@ import {
 } from '../../../src/services/maestro';
 import { Feedback } from '../../../src/services/agents/feedback';
 import { Traces } from '../../../src/services/observability/traces';
+import { Governance } from '../../../src/services/governance';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -48,6 +49,7 @@ export interface TestServices {
   caseInstances: CaseInstancesService;
   feedback?: Feedback;
   traces?: Traces;
+  governance?: Governance;
 }
 
 /**
@@ -129,6 +131,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     caseInstances: new CaseInstancesService(sdk),
     feedback: new Feedback(sdk),
     traces: new Traces(sdk),
+    governance: new Governance(sdk),
   };
 }
 

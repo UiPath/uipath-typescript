@@ -208,6 +208,11 @@ const serviceEntries = [
     name: 'document-understanding',
     input: 'src/models/document-understanding/index.ts',
     output: 'document-understanding/index'
+  },
+  {
+    name: 'governance',
+    input: 'src/services/governance/index.ts',
+    output: 'governance/index'
   }
 ];
 

@@ -175,6 +175,16 @@
                 "types": "./dist/document-understanding/index.d.ts",
                 "default": "./dist/document-understanding/index.cjs"
             }
+        },
+        "./governance": {
+            "import": {
+                "types": "./dist/governance/index.d.ts",
+                "default": "./dist/governance/index.mjs"
+            },
+            "require": {
+                "types": "./dist/governance/index.d.ts",
+                "default": "./dist/governance/index.cjs"
+            }
         }
     },
     "files": [
