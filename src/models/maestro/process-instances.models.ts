@@ -4,7 +4,6 @@ import type {
   ProcessInstanceOperationOptions,
   ProcessInstanceOperationResponse,
   ProcessInstanceExecutionHistoryResponse,
-  ProcessInstanceGetExecutionHistoryOptions,
   BpmnXmlString,
   ProcessInstanceGetVariablesResponse,
   ProcessInstanceGetVariablesOptions
@@ -97,7 +96,7 @@ export interface ProcessInstancesServiceModel {
   /**
    * Get execution history (spans) for a process instance
    * @param instanceId The ID of the instance to get history for
-   * @param options Folder context options (folderKey, folderId, or folderPath)
+   * @param folderKey The folder key for authorization
    * @returns Promise resolving to execution history
    * {@link ProcessInstanceExecutionHistoryResponse}
    * @example
@@ -105,7 +104,7 @@ export interface ProcessInstancesServiceModel {
    * // Get execution history for a process instance
    * const history = await processInstances.getExecutionHistory(
    *   <instanceId>,
-   *   { folderKey: <folderKey> }
+   *   <folderKey>
    * );
    *
    * // Analyze execution timeline
@@ -116,7 +115,7 @@ export interface ProcessInstancesServiceModel {
    * });
    * ```
    */
-  getExecutionHistory(instanceId: string, options?: ProcessInstanceGetExecutionHistoryOptions): Promise<ProcessInstanceExecutionHistoryResponse[]>;
+  getExecutionHistory(instanceId: string, folderKey: string): Promise<ProcessInstanceExecutionHistoryResponse[]>;
 
   /**
    * Get BPMN XML file for a process instance
@@ -358,8 +357,9 @@ function createProcessInstanceMethods(instanceData: RawProcessInstanceGetRespons
 
     async getExecutionHistory(): Promise<ProcessInstanceExecutionHistoryResponse[]> {
       if (!instanceData.instanceId) throw new Error('Process instance ID is undefined');
+      if (!instanceData.folderKey) throw new Error('Process instance folder key is undefined');
 
-      return service.getExecutionHistory(instanceData.instanceId, instanceData.folderKey ? { folderKey: instanceData.folderKey } : undefined);
+      return service.getExecutionHistory(instanceData.instanceId, instanceData.folderKey);
     },
 
     async getBpmn(): Promise<BpmnXmlString> {

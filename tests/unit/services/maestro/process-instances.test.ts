@@ -215,7 +215,7 @@ describe('ProcessInstancesService', () => {
         .mockResolvedValueOnce(createMockElementExecutionsResponse())
         .mockResolvedValueOnce([createMockTraceSpan()]);
 
-      const result = await service.getExecutionHistory(instanceId, { folderKey });
+      const result = await service.getExecutionHistory(instanceId, folderKey);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSTANCES.GET_ELEMENT_EXECUTIONS(instanceId),
@@ -255,7 +255,7 @@ describe('ProcessInstancesService', () => {
         .mockResolvedValueOnce(createMockElementExecutionsResponse())
         .mockResolvedValueOnce([createMockTraceSpan(), unmatchedSpan]);
 
-      const result = await service.getExecutionHistory(instanceId, { folderKey });
+      const result = await service.getExecutionHistory(instanceId, folderKey);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('id', MAESTRO_TEST_CONSTANTS.SPAN_ID);
@@ -265,7 +265,7 @@ describe('ProcessInstancesService', () => {
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, { folderKey: MAESTRO_TEST_CONSTANTS.FOLDER_KEY })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

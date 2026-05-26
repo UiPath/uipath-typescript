@@ -248,7 +248,7 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
       const { processInstances } = getServices();
       const config = getTestConfig();
 
-      const result = await processInstances.getExecutionHistory(testInstanceId, { folderKey: config.folderKey || '' });
+      const result = await processInstances.getExecutionHistory(testInstanceId, config.folderKey || '');
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
