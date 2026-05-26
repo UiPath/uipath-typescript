@@ -85,18 +85,32 @@ export interface PolicyTrace {
 }
 
 /**
+ * Common filter options shared across Governance APIs.
+ *
+ * Holds filters that are not specific to any single governance resource, so
+ * other governance endpoints can reuse them.
+ */
+export interface GovernanceFilterOptions {
+  /**
+   * Inclusive upper bound on trace start time. When omitted, the upper bound
+   * is open.
+   */
+  endTime?: Date;
+  /**
+   * When `true`, drops the tenant filter and queries the whole organization.
+   * Caller still has to be an organization admin.
+   */
+  fullOrganization?: boolean;
+}
+
+/**
  * Filter and pagination options for
  * {@link GovernanceServiceModel.getPolicyTraces}.
  *
  * All filters combine with AND semantics. Array filters match any value in
  * the array (OR within a single filter).
  */
-export type PolicyTracesGetAllOptions = PaginationOptions & {
-  /**
-   * Inclusive upper bound on trace start time. When omitted, the upper bound
-   * is open.
-   */
-  endTime?: Date;
+export type PolicyTracesGetAllOptions = PaginationOptions & GovernanceFilterOptions & {
   /** Filter by one or more policy evaluation results. */
   evaluationResult?: PolicyEvaluationResult[];
   /** Filter by one or more policy IDs. */
@@ -113,9 +127,4 @@ export type PolicyTracesGetAllOptions = PaginationOptions & {
   resourceType?: string[];
   /** Filter by one or more distributed-trace IDs. */
   traceId?: string[];
-  /**
-   * When `true`, drops the tenant filter and queries the whole organization.
-   * Caller still has to be an organization admin.
-   */
-  fullOrganization?: boolean;
 };
