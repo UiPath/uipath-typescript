@@ -186,6 +186,7 @@ export interface ChoiceSetServiceModel {
    * });
    * console.log(inserted.id);
    * ```
+   * @internal
    */
   insertValueById(
     choiceSetId: string,
@@ -214,6 +215,7 @@ export interface ChoiceSetServiceModel {
    *
    * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel');
    * ```
+   * @internal
    */
   updateValueById(
     choiceSetId: string,
@@ -236,6 +238,7 @@ export interface ChoiceSetServiceModel {
    *
    * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete);
    * ```
+   * @internal
    */
   deleteValuesById(choiceSetId: string, valueIds: string[]): Promise<void>;
 }

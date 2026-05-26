@@ -237,6 +237,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * });
    * console.log(inserted.id);
    * ```
+   * @internal
    */
   @track('Choicesets.InsertValueById')
   async insertValueById(
@@ -278,6 +279,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel');
    * ```
+   * @internal
    */
   @track('Choicesets.UpdateValueById')
   async updateValueById(
@@ -310,6 +312,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete);
    * ```
+   * @internal
    */
   @track('Choicesets.DeleteValuesById')
   async deleteValuesById(choiceSetId: string, valueIds: string[]): Promise<void> {
