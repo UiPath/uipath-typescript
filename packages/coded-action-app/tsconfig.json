@@ -9,14 +9,14 @@
     "declarationMap": true,
     "sourceMap": true,
     "strict": true,
+    "noImplicitAny": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "composite": true
+    "composite": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
