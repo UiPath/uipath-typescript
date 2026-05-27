@@ -34,10 +34,10 @@ describe.skipIf(!traceId)('Traces [v1]', () => {
 
     existingSpanId = spans[0].id;
 
-    const agentSpan = spans.find(s => s.referenceId && s.source === SpanSource.Agents);
+    const agentSpan = spans.find(s => s.referenceId && typeof s.attributes?.agentId === 'string');
     if (!agentSpan?.referenceId) {
       throw new Error(
-        `No agent-sourced span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (source must be 'Agents')`
+        `No agent-sourced span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (span must have attributes.agentId)`
       );
     }
     existingAgentId = agentSpan.referenceId;
