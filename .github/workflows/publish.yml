@@ -237,13 +237,13 @@ jobs:
       - name: Publish to npm
         run: |
           echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
-          npm publish --provenance --access public
+          npm publish --provenance --access public --tag latest
 
       - name: Publish to GitHub Packages
         run: |
           echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          npm publish
+          npm publish --tag latest
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
