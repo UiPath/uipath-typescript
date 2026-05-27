@@ -14,7 +14,7 @@ import { PaginationType } from '../../utils/pagination/internal-types';
 import { getLimitedPageSize } from '../../utils/pagination/constants';
 import {
   PolicyTrace,
-  PolicyTracesGetAllOptions,
+  PolicyTraceGetAllOptions,
 } from '../../models/governance/governance.types';
 import { GovernanceServiceModel } from '../../models/governance/governance.models';
 import { RawPolicyTracesResponse } from '../../models/governance/governance.internal-types';
@@ -67,7 +67,7 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    * ```
    */
   @track('Governance.GetPolicyTraces')
-  async getPolicyTraces<T extends PolicyTracesGetAllOptions = PolicyTracesGetAllOptions>(
+  async getPolicyTraces<T extends PolicyTraceGetAllOptions = PolicyTraceGetAllOptions>(
     startTime: Date,
     options?: T,
   ): Promise<

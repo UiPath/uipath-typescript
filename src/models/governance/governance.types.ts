@@ -110,7 +110,7 @@ export interface GovernanceFilterOptions {
  * All filters combine with AND semantics. Array filters match any value in
  * the array (OR within a single filter).
  */
-export type PolicyTracesGetAllOptions = PaginationOptions & GovernanceFilterOptions & {
+export type PolicyTraceGetAllOptions = PaginationOptions & GovernanceFilterOptions & {
   /** Filter by one or more policy evaluation results. */
   evaluationResult?: PolicyEvaluationResult[];
   /** Filter by one or more policy IDs. */

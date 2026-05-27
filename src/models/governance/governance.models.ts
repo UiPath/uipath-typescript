@@ -1,6 +1,6 @@
 import type {
   PolicyTrace,
-  PolicyTracesGetAllOptions,
+  PolicyTraceGetAllOptions,
 } from './governance.types';
 import type {
   PaginatedResponse,
@@ -73,7 +73,7 @@ export interface GovernanceServiceModel {
    * }
    * ```
    */
-  getPolicyTraces<T extends PolicyTracesGetAllOptions = PolicyTracesGetAllOptions>(
+  getPolicyTraces<T extends PolicyTraceGetAllOptions = PolicyTraceGetAllOptions>(
     startTime: Date,
     options?: T,
   ): Promise<

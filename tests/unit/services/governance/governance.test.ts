@@ -10,7 +10,7 @@ import {
 } from '../../../utils/mocks/governance';
 import {
   PolicyEvaluationResult,
-  PolicyTracesGetAllOptions,
+  PolicyTraceGetAllOptions,
 } from '../../../../src/models/governance/governance.types';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
 import type { PolicyTrace } from '../../../../src/models/governance/governance.types';
@@ -204,14 +204,14 @@ describe('GovernanceService Unit Tests', () => {
 
     it('should throw ValidationError when pageSize is zero', async () => {
       await expect(
-        governanceService.getPolicyTraces(startTime, { pageSize: 0 } as PolicyTracesGetAllOptions),
+        governanceService.getPolicyTraces(startTime, { pageSize: 0 } as PolicyTraceGetAllOptions),
       ).rejects.toThrow('pageSize must be a positive number');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw ValidationError when jumpToPage is zero', async () => {
       await expect(
-        governanceService.getPolicyTraces(startTime, { jumpToPage: 0 } as PolicyTracesGetAllOptions),
+        governanceService.getPolicyTraces(startTime, { jumpToPage: 0 } as PolicyTraceGetAllOptions),
       ).rejects.toThrow('jumpToPage must be a positive number');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
@@ -220,7 +220,7 @@ describe('GovernanceService Unit Tests', () => {
       await expect(
         governanceService.getPolicyTraces(startTime, {
           cursor: { value: 'not-a-valid-base64-json' },
-        } as PolicyTracesGetAllOptions),
+        } as PolicyTraceGetAllOptions),
       ).rejects.toThrow();
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
