@@ -45,38 +45,18 @@ const VALID_SPAN_VERBOSITY_LEVELS = new Set<string>(Object.values(SpanVerbosityL
 export class TracesService extends BaseService implements TracesServiceModel {
 
   private transformOtelSpan(raw: RawSpanOtelResponse): SpanResponse {
+    const { Attributes, ...rest } = raw;
+    const camel = pascalToCamelCaseKeys(rest) as SpanResponse;
     return {
-      id: raw.Id,
-      traceId: raw.TraceId,
-      parentId: raw.ParentId,
-      name: raw.Name,
-      startTime: raw.StartTime,
-      endTime: raw.EndTime,
-      attributes: raw.Attributes,
+      ...camel,
+      // Attributes keys are user-defined schema columns — must not be camelCased
+      attributes: Attributes,
+      // Integer enum fields require explicit mapping after camelCasing
       status: SpanStatusMap[raw.Status] ?? SpanStatus.Unset,
       source: raw.Source != null ? (SpanSourceMap[raw.Source] ?? null) : null,
-      spanType: raw.SpanType,
       verbosityLevel: raw.VerbosityLevel != null ? (SpanVerbosityLevelMap[raw.VerbosityLevel] ?? null) : null,
       executionType: raw.ExecutionType != null ? (SpanExecutionTypeMap[raw.ExecutionType] ?? null) : null,
-      folderKey: raw.FolderKey,
-      referenceId: raw.ReferenceId,
-      referenceVersion: raw.ReferenceVersion,
-      agentVersion: raw.AgentVersion,
-      organizationId: raw.OrganizationId,
-      tenantId: raw.TenantId,
-      processKey: raw.ProcessKey,
-      jobKey: raw.JobKey,
-      updatedAt: raw.UpdatedAt,
-      expiryTimeUtc: raw.ExpiryTimeUtc,
-      context: raw.Context
-        ? {
-            referenceHierarchy: raw.Context.ReferenceHierarchy.map(entry => ({
-              serviceType: entry.ServiceType,
-              referenceId: entry.ReferenceId,
-              version: entry.Version,
-            })),
-          }
-        : null,
+      permissionStatus: raw.PermissionStatus != null ? (SpanPermissionStatusMap[raw.PermissionStatus] ?? null) : null,
       attachments: raw.Attachments
         ? raw.Attachments.map(a => ({
             provider: SpanAttachmentProviderMap[a.Provider] ?? SpanAttachmentProvider.Orchestrator,
@@ -86,7 +66,6 @@ export class TracesService extends BaseService implements TracesServiceModel {
             direction: SpanAttachmentDirectionMap[a.Direction] ?? SpanAttachmentDirection.None,
           }))
         : null,
-      permissionStatus: raw.PermissionStatus != null ? (SpanPermissionStatusMap[raw.PermissionStatus] ?? null) : null,
     };
   }
 
