@@ -9,12 +9,13 @@ import {
 } from '../../../../src/models/observability/traces/traces.types';
 import { loadIntegrationConfig } from '../../config/test-config';
 
-describe('Traces - Integration Tests [v1]', () => {
+const traceId = process.env.TRACES_TEST_TRACE_ID;
+
+describe.skipIf(!traceId)('Traces - Integration Tests [v1]', () => {
   let traces: Traces;
   let existingTraceId!: string;
   let existingSpanId!: string;
   let existingAgentId!: string;
-  let existingReferenceId!: string;
 
   beforeAll(async () => {
     const config = loadIntegrationConfig();
@@ -27,14 +28,7 @@ describe('Traces - Integration Tests [v1]', () => {
 
     traces = new Traces(sdk);
 
-    const traceIdFromEnv = process.env.TRACES_TEST_TRACE_ID;
-    if (!traceIdFromEnv) {
-      throw new Error(
-        'TRACES_TEST_TRACE_ID env var is required — set it to a valid traceId from feedback.getAll'
-      );
-    }
-
-    existingTraceId = traceIdFromEnv;
+    existingTraceId = traceId!;
 
     const spans = await traces.getById(existingTraceId);
     if (spans.length === 0) {
@@ -44,14 +38,6 @@ describe('Traces - Integration Tests [v1]', () => {
     }
 
     existingSpanId = spans[0].id;
-
-    const seedSpan = spans.find(s => s.referenceId);
-    if (!seedSpan?.referenceId) {
-      throw new Error(
-        `No span with a referenceId found in trace ${existingTraceId} — cannot seed getSpansByReferenceId or getSpansByAgentId tests`
-      );
-    }
-    existingReferenceId = seedSpan.referenceId;
 
     const agentSpan = spans.find(s => s.referenceId && s.source === SpanSource.Agents);
     if (!agentSpan?.referenceId) {
@@ -215,47 +201,4 @@ describe('Traces - Integration Tests [v1]', () => {
     });
   });
 
-  // ─── getSpansByReferenceId ───────────────────────────────────────────────────
-
-  describe('getSpansByReferenceId', () => {
-    it('should retrieve spans for a reference entity', async () => {
-      const result = await traces.getSpansByReferenceId(existingReferenceId);
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result.items)).toBe(true);
-      expect(result.items.length).toBeGreaterThan(0);
-    });
-
-    it('should return SpanResponse objects with required fields', async () => {
-      const result = await traces.getSpansByReferenceId(existingReferenceId, { pageSize: 1 });
-
-      expect(result.items.length).toBeGreaterThan(0);
-      const span = result.items[0];
-
-      expect(span.id).toBeDefined();
-      expect(span.traceId).toBeDefined();
-      expect(span.startTime).toBeDefined();
-      expect(span.status).toBeDefined();
-    });
-
-    it('should respect pageSize option', async () => {
-      const result = await traces.getSpansByReferenceId(existingReferenceId, { pageSize: 1 });
-
-      expect(result.items.length).toBeLessThanOrEqual(1);
-    });
-
-    it('should support time range filtering', async () => {
-      const result = await traces.getSpansByReferenceId(existingReferenceId, {
-        startTime: '2020-01-01T00:00:00Z',
-        endTime: new Date().toISOString(),
-      });
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result.items)).toBe(true);
-    });
-
-    it('should throw ValidationError when referenceId is empty', async () => {
-      await expect(traces.getSpansByReferenceId('')).rejects.toThrow('referenceId is required');
-    });
-  });
 });

@@ -176,18 +176,3 @@ export type TracesGetByAgentIdOptions = PaginationOptions & {
   executionType?: SpanExecutionType;
 };
 
-/** Options for retrieving paginated spans associated with a reference entity. */
-export type TracesGetByReferenceIdOptions = PaginationOptions & {
-  /** Maximum number of spans per page. */
-  pageSize?: number;
-  /** Filter spans by service type (e.g. `"Agent"`). */
-  serviceType?: string;
-  /** Filter spans by entity version. */
-  version?: string;
-  /** ISO-8601 UTC lower bound for span start time. */
-  startTime?: string;
-  /** ISO-8601 UTC upper bound for span start time. */
-  endTime?: string;
-  /** Filter spans belonging to a specific trace ID. */
-  traceId?: string;
-};

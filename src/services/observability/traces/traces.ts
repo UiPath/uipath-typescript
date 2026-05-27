@@ -8,7 +8,6 @@ import {
   SpanAttachmentDirection,
   TracesGetByIdOptions,
   TracesGetByAgentIdOptions,
-  TracesGetByReferenceIdOptions,
 } from '../../../models/observability/traces/traces.types';
 import { TracesServiceModel } from '../../../models/observability/traces/traces.models';
 import {
@@ -265,58 +264,4 @@ export class TracesService extends BaseService implements TracesServiceModel {
     }, options);
   }
 
-  /**
-   * Gets spans associated with a reference entity (agent, process, etc.), with pagination.
-   *
-   * When no pagination options are provided, returns all matching results as {@link NonPaginatedResponse}.
-   * When pagination options are provided, returns a {@link PaginatedResponse}.
-   *
-   * @param referenceId - Reference entity identifier (GUID)
-   * @param options - Optional filters and pagination {@link TracesGetByReferenceIdOptions}
-   * @returns Promise resolving to paginated or non-paginated {@link SpanResponse} collection
-   * @example
-   * ```typescript
-   * import { Traces } from '@uipath/uipath-typescript/traces';
-   *
-   * const traces = new Traces(sdk);
-   * const spans = await traces.getSpansByReferenceId('<referenceId>');
-   * ```
-   * @example
-   * ```typescript
-   * // Filter to a specific service type and version
-   * const agentSpans = await traces.getSpansByReferenceId('<referenceId>', {
-   *   serviceType: 'agent',
-   *   version: '1.0.0',
-   * });
-   * ```
-   */
-  @track('Traces.GetSpansByReferenceId')
-  async getSpansByReferenceId<T extends TracesGetByReferenceIdOptions = TracesGetByReferenceIdOptions>(
-    referenceId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SpanResponse>
-      : NonPaginatedResponse<SpanResponse>
-  > {
-    if (!referenceId) throw new ValidationError({ message: 'referenceId is required for getSpansByReferenceId' });
-
-    return PaginationHelpers.getAll<T, RawSpanAgentResponse, SpanResponse>({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => TRACES_ENDPOINTS.GET_BY_REFERENCE_ID(referenceId),
-      transformFn: (raw) => this.transformAgentSpan(raw),
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: TRACES_AGENT_PAGINATION.ITEMS_FIELD,
-        totalCountField: TRACES_AGENT_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: TRACES_AGENT_OFFSET_PARAMS.PAGE_SIZE_PARAM,
-          offsetParam: TRACES_AGENT_OFFSET_PARAMS.OFFSET_PARAM,
-          countParam: TRACES_AGENT_OFFSET_PARAMS.COUNT_PARAM,
-          convertToSkip: false,
-        },
-      },
-      excludeFromPrefix: Object.keys(options ?? {}),
-    }, options);
-  }
 }

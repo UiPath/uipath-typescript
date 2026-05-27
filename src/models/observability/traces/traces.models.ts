@@ -2,7 +2,6 @@ import type {
   SpanResponse,
   TracesGetByIdOptions,
   TracesGetByAgentIdOptions,
-  TracesGetByReferenceIdOptions,
 } from './traces.types';
 import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 
@@ -116,37 +115,4 @@ export interface TracesServiceModel {
       : NonPaginatedResponse<SpanResponse>
   >;
 
-  /**
-   * Gets spans associated with a reference entity (agent, process, etc.), with pagination.
-   *
-   * When no pagination options are provided, returns all matching results as {@link NonPaginatedResponse}.
-   * When pagination options are provided, returns a {@link PaginatedResponse}.
-   *
-   * @param referenceId - Reference entity identifier (GUID)
-   * @param options - Optional filters and pagination {@link TracesGetByReferenceIdOptions}
-   * @returns Promise resolving to paginated or non-paginated {@link SpanResponse} collection
-   * @example
-   * ```typescript
-   * import { Traces } from '@uipath/uipath-typescript/traces';
-   *
-   * const traces = new Traces(sdk);
-   * const spans = await traces.getSpansByReferenceId('<referenceId>');
-   * ```
-   * @example
-   * ```typescript
-   * // Filter to a specific service type and version
-   * const agentSpans = await traces.getSpansByReferenceId('<referenceId>', {
-   *   serviceType: 'agent',
-   *   version: '1.0.0',
-   * });
-   * ```
-   */
-  getSpansByReferenceId<T extends TracesGetByReferenceIdOptions = TracesGetByReferenceIdOptions>(
-    referenceId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SpanResponse>
-      : NonPaginatedResponse<SpanResponse>
-  >;
 }
