@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -145,6 +145,45 @@ export interface MaestroProcessesServiceModel {
    * ```
    */
   getTopFaultedCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ProcessGetTopFaultedCountResponse[]>;
+
+  /**
+   * Get the top 10 BPMN elements ranked by failure count within a time range.
+   *
+   * Returns an array of up to 10 elements sorted by how many times they failed,
+   * useful for identifying the most error-prone activities in processes.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
+   * @returns Promise resolving to an array of {@link ElementGetTopFailedCountResponse}
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * // Get top failing elements for the last 7 days
+   * const topFailing = await maestroProcesses.getTopElementFailedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const element of topFailing) {
+   *   console.log(`${element.elementName} (${element.elementType}): ${element.failedCount} failures`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top failing elements for a specific process
+   * const filtered = await maestroProcesses.getTopElementFailedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { processKey: '<processKey>' }
+   * );
+   * ```
+   */
+  getTopElementFailedCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ElementGetTopFailedCountResponse[]>;
 
   /**
    * Get all instances status counts aggregated by date for maestro processes.

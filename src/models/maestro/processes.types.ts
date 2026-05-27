@@ -68,4 +68,3 @@ export interface ProcessGetTopDurationResponse extends GetTopDurationResponse {
   /** Human-readable process name */
   name: string;
 }
-

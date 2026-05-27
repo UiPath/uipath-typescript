@@ -12,6 +12,7 @@ import {
   createMockInstanceStatusTimeline,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
+  createMockTopElementFailedCountResponse,
   createMockError
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
@@ -267,6 +268,43 @@ describe('CasesService', () => {
 
       await expect(
         service.getTopFaultedCount(new Date(), new Date())
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getTopElementFailedCount', () => {
+    it('should retrieve top elements by failure count with isCaseManagement true', async () => {
+      mockApiClient.post.mockResolvedValue([createMockTopElementFailedCountResponse()]);
+
+      const result = await service.getTopElementFailedCount(
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+        { processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY }
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].elementName).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_1);
+      expect(result[0].failedCount).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_FAILED_COUNT_1);
+      expect((result[0] as any).count).toBeUndefined();
+      expect(result[0].elementType).toBe(MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_1);
+      expect(result[0].processKey).toBe(MAESTRO_TEST_CONSTANTS.PROCESS_KEY);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            isCaseManagement: true,
+            processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+          })
+        }),
+        {}
+      );
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getTopElementFailedCount(new Date(), new Date())
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

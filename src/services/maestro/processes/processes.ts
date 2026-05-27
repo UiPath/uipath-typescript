@@ -1,4 +1,5 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -124,6 +125,57 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
       buildInsightsTopBody(startTime, endTime, false, options)
     );
     return (data ?? []).map(process => ({ ...process, name: process.packageId }));
+  }
+
+  /**
+   * Get the top 10 BPMN elements ranked by failure count within a time range.
+   *
+   * Returns an array of up to 10 elements sorted by how many times they failed,
+   * useful for identifying the most error-prone activities in processes.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional filters (packageId, processKey, version)
+   * @returns Promise resolving to an array of {@link ElementGetTopFailedCountResponse}
+   * @example
+   * ```typescript
+   * import { MaestroProcesses } from '@uipath/uipath-typescript/maestro-processes';
+   *
+   * const maestroProcesses = new MaestroProcesses(sdk);
+   *
+   * // Get top failing elements for the last 7 days
+   * const topFailing = await maestroProcesses.getTopElementFailedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   *
+   * for (const element of topFailing) {
+   *   console.log(`${element.elementName} (${element.elementType}): ${element.failedCount} failures`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Get top failing elements for a specific process
+   * const filtered = await maestroProcesses.getTopElementFailedCount(
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+   *   new Date(),
+   *   { processKey: '<processKey>' }
+   * );
+   * ```
+   */
+  @track('MaestroProcesses.GetTopElementFailedCount')
+  async getTopElementFailedCount(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<ElementGetTopFailedCountResponse[]> {
+    const { data } = await this.post<RawElementGetTopFailedCountResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.TOP_ELEMENTS_WITH_FAILURE,
+      buildInsightsTopBody(startTime, endTime, false, options)
+    );
+    return (data ?? []).map(item => ({
+      elementName: item.elementName,
+      elementType: item.elementType,
+      processKey: item.processKey,
+      failedCount: item.count,
+    }));
   }
 
   /**
