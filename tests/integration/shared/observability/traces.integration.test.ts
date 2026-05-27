@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { UiPath } from '../../../../src/core';
+import { getServices, setupUnifiedTests } from '../../config/unified-setup';
 import { Traces } from '../../../../src/services/observability/traces';
 import {
   SpanResponse,
@@ -7,26 +7,21 @@ import {
   SpanStatus,
   TracesGetByAgentIdOptions,
 } from '../../../../src/models/observability/traces/traces.types';
-import { loadIntegrationConfig } from '../../config/test-config';
 
 const traceId = process.env.TRACES_TEST_TRACE_ID;
 
-describe.skipIf(!traceId)('Traces - Integration Tests [v1]', () => {
-  let traces: Traces;
+describe.skipIf(!traceId)('Traces [v1]', () => {
+  setupUnifiedTests('v1');
+
+  let traces!: Traces;
   let existingTraceId!: string;
   let existingSpanId!: string;
   let existingAgentId!: string;
 
   beforeAll(async () => {
-    const config = loadIntegrationConfig();
-    const sdk = new UiPath({
-      baseUrl: config.baseUrl,
-      orgName: config.orgName,
-      tenantName: config.tenantName,
-      secret: config.secret,
-    });
-
-    traces = new Traces(sdk);
+    const services = await getServices();
+    if (!services.traces) throw new Error('Traces service not available');
+    traces = services.traces;
 
     existingTraceId = traceId!;
 
@@ -200,5 +195,4 @@ describe.skipIf(!traceId)('Traces - Integration Tests [v1]', () => {
       await expect(traces.getSpansByAgentId('')).rejects.toThrow('agentId is required');
     });
   });
-
 });

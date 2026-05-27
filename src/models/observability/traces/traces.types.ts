@@ -65,7 +65,7 @@ export enum SpanPermissionStatus {
 /** Storage provider that created or manages the attachment. */
 export enum SpanAttachmentProvider {
   Orchestrator = 'Orchestrator',
-  /** Large Language Model Operations — span attachment stored by the LLMOps platform. */
+  /** Span attachment stored by the observability platform. */
   LLMOps = 'LLMOps',
 }
 
@@ -160,8 +160,8 @@ export interface TracesGetByIdOptions {
   pageSize?: number;
   /** Filter spans to those produced by a specific agent ID. */
   agentId?: string;
-  /** When true, include historical (expired) spans. */
-  isHistorical?: boolean;
+  /** When true, include expired spans that are outside the default retention window. */
+  includeExpiredSpans?: boolean;
 }
 
 /** Options for retrieving paginated spans produced by a specific agent. */

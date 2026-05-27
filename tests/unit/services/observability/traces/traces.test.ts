@@ -60,7 +60,7 @@ describe('TracesService Unit Tests', () => {
       await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID, {
         pageSize: 500,
         agentId: TRACES_TEST_CONSTANTS.AGENT_ID,
-        isHistorical: true,
+        includeExpiredSpans: true,
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(

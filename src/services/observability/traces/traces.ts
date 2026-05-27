@@ -119,10 +119,10 @@ export class TracesService extends BaseService implements TracesServiceModel {
   async getById(traceId: string, options?: TracesGetByIdOptions): Promise<SpanResponse[]> {
     if (!traceId) throw new ValidationError({ message: 'traceId is required for getById' });
 
-    const { pageSize = 1000, agentId, isHistorical } = options ?? {};
+    const { pageSize = 1000, agentId, includeExpiredSpans } = options ?? {};
     const params: QueryParams = { traceId, pageSize };
     if (agentId !== undefined) params.agentId = agentId;
-    if (isHistorical !== undefined) params.isHistorical = isHistorical;
+    if (includeExpiredSpans !== undefined) params.isHistorical = includeExpiredSpans;
 
     const response = await this.get<RawSpanOtelPageResponse>(
       TRACES_ENDPOINTS.GET_BY_TRACE_ID,
