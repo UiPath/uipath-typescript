@@ -16,6 +16,6 @@ mkdocstrings==0.30.0
 mkdocstrings-python==1.18.2
 termynal==0.13.1
 typing_extensions==4.15.0
-pymdown-extensions==10.16.1
+pymdown-extensions==10.21.3
 python-dateutil==2.9.0.post0
 pygments==2.19.1
