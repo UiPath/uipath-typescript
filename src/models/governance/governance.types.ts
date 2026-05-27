@@ -46,7 +46,7 @@ export interface PolicyTrace {
    * If the upstream source returned null for this row, the server substitutes
    * `0001-01-01T00:00:00` — treat that sentinel as "unknown".
    */
-  startTime?: string;
+  startTime: string;
   /** Final enforcement verdict for the parent governance event (e.g. `Allow`, `Deny`, `NoOp`). */
   finalEnforcement?: string;
   /** ID of the policy this trace row evaluates. */

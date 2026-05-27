@@ -17,7 +17,7 @@ import {
   PolicyTraceGetAllOptions,
 } from '../../models/governance/governance.types';
 import { GovernanceServiceModel } from '../../models/governance/governance.models';
-import { RawPolicyTracesResponse } from '../../models/governance/governance.internal-types';
+import { RawPolicyTraceItem } from '../../models/governance/governance.internal-types';
 
 /**
  * Service for inspecting governance policy enforcement on the UiPath platform.
@@ -122,7 +122,7 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
       pageSize: limitedPageSize,
     });
 
-    const response = await this.post<RawPolicyTracesResponse>(
+    const response = await this.post<{ items: RawPolicyTraceItem[] }>(
       GOVERNANCE_ENDPOINTS.POLICY.TRACES,
       body,
     );
