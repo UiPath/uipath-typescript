@@ -3,7 +3,6 @@ import { getServices, setupUnifiedTests } from '../../config/unified-setup';
 import { Traces } from '../../../../src/services/observability/traces';
 import {
   SpanResponse,
-  SpanSource,
   SpanStatus,
   TracesGetByAgentIdOptions,
 } from '../../../../src/models/observability/traces/traces.types';
@@ -34,10 +33,10 @@ describe.skipIf(!traceId)('Traces [v1]', () => {
 
     existingSpanId = spans[0].id;
 
-    const agentSpan = spans.find(s => s.referenceId && typeof s.attributes?.agentId === 'string');
+    const agentSpan = spans.find(s => s.referenceId && s.spanType === 'agentRun');
     if (!agentSpan?.referenceId) {
       throw new Error(
-        `No agent-sourced span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (span must have attributes.agentId)`
+        `No agentRun span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (trace must contain a span with spanType 'agentRun')`
       );
     }
     existingAgentId = agentSpan.referenceId;
