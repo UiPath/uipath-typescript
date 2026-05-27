@@ -3,8 +3,9 @@ import { retryWithBackoff } from './helpers';
 
 /**
  * Registry to track created resources for emergency cleanup.
- * Note: Orchestrator services (queues, assets, buckets) are read-only in the SDK.
- * Only services with delete/cancel operations are tracked here.
+ * Note: The SDK exposes no bucket/queue/asset entity deletion, but bucket
+ * files can be deleted, so they are tracked here alongside other deletable
+ * resources.
  */
 interface ResourceRegistry {
   tasks: Array<{ id: number; folderId?: number }>;
@@ -13,6 +14,7 @@ interface ResourceRegistry {
   caseInstances: Array<{ id: string; folderKey?: string }>;
   feedbackEntries: Array<{ id: string; folderKey?: string }>;
   feedbackCategories: Array<{ id: string }>;
+  bucketFiles: Array<{ bucketId: number; path: string; folderId?: number }>;
 }
 
 const resourceRegistry: ResourceRegistry = {
@@ -22,6 +24,7 @@ const resourceRegistry: ResourceRegistry = {
   caseInstances: [],
   feedbackEntries: [],
   feedbackCategories: [],
+  bucketFiles: [],
 };
 
 /**
@@ -153,6 +156,33 @@ export async function cleanupTestFeedbackEntry(
 }
 
 /**
+ * Deletes a test file from a bucket.
+ *
+ * @param bucketId - ID of the bucket containing the file
+ * @param path - Path of the file within the bucket
+ * @param folderId - Optional Orchestrator folder ID
+ */
+export async function cleanupTestBucketFile(
+  bucketId: number,
+  path: string,
+  folderId?: number
+): Promise<void> {
+  try {
+    const { buckets } = getServices();
+    await retryWithBackoff(async () => {
+      await buckets.deleteFile(
+        bucketId,
+        path,
+        folderId !== undefined ? { folderId } : undefined
+      );
+    });
+    console.log(`Cleaned up test bucket file: ${path} (bucket ${bucketId})`);
+  } catch (error) {
+    console.warn(`Failed to cleanup bucket file ${path} in bucket ${bucketId}:`, error);
+  }
+}
+
+/**
  * Deletes a test feedback category.
  *
  * @param id - ID of the feedback category
@@ -207,6 +237,11 @@ export async function cleanupAllTestResources(): Promise<void> {
     await cleanupTestFeedbackCategory(category.id);
   }
 
+  // Cleanup bucket files
+  for (const file of resourceRegistry.bucketFiles) {
+    await cleanupTestBucketFile(file.bucketId, file.path, file.folderId);
+  }
+
   // Clear registry
   resourceRegistry.tasks = [];
   resourceRegistry.entityRecords = [];
@@ -214,6 +249,7 @@ export async function cleanupAllTestResources(): Promise<void> {
   resourceRegistry.caseInstances = [];
   resourceRegistry.feedbackEntries = [];
   resourceRegistry.feedbackCategories = [];
+  resourceRegistry.bucketFiles = [];
 
   console.log('Emergency cleanup completed');
 }
@@ -222,7 +258,9 @@ export async function cleanupAllTestResources(): Promise<void> {
 // the SDK does not provide delete methods for these services:
 // - cleanupTestQueue: sdk.queues has no delete method (read-only)
 // - cleanupTestAsset: sdk.assets has no delete method (read-only)
-// - cleanupTestBucket: sdk.buckets has no delete method (read-only)
+// - cleanupTestBucket: sdk.buckets exposes no method to delete the bucket
+//   entity itself. Files within a bucket can be cleaned up via
+//   cleanupTestBucketFile.
 // - cleanupTestChoiceSet: sdk.choiceSets has no delete method (read-only)
 //
 // These resources must be managed through the UiPath UI or other APIs.

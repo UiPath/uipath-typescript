@@ -1,5 +1,12 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import {
+  getServices,
+  getTestConfig,
+  setupUnifiedTests,
+  cleanupTestBucketFile,
+  InitMode,
+} from '../../config/unified-setup';
+import { registerResource } from '../../utils/cleanup';
 import { createTestFileContent } from '../../utils/helpers';
 import { isNotFoundError } from '../../../../src/core/errors';
 
@@ -37,6 +44,24 @@ async function getBucketForTest(testName: string): Promise<{ bucketId: number; f
 
 describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
+
+  const uploadedFiles: Array<{ bucketId: number; path: string; folderId: number }> = [];
+
+  function trackUploadedFile(bucketId: number, path: string, folderId: number): void {
+    uploadedFiles.push({ bucketId, path, folderId });
+    registerResource('bucketFiles', { bucketId, path, folderId });
+  }
+
+  function untrackUploadedFile(path: string): void {
+    const idx = uploadedFiles.findIndex((f) => f.path === path);
+    if (idx !== -1) uploadedFiles.splice(idx, 1);
+  }
+
+  afterAll(async () => {
+    for (const file of uploadedFiles.splice(0)) {
+      await cleanupTestBucketFile(file.bucketId, file.path, file.folderId);
+    }
+  });
 
   describe('getAll', () => {
     it('should retrieve all buckets', async () => {
@@ -184,6 +209,7 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
           path: fileName,
           content: buffer,
         });
+        trackUploadedFile(bucket.bucketId, fileName, bucket.folderId);
 
         expect(uploadResult).toBeDefined();
         expect(uploadResult.success).toBe(true);
@@ -221,6 +247,87 @@ describe.each(modes)('Orchestrator Buckets - Integration Tests [%s]', (mode) => 
       expect(result.uri).toBeDefined();
       expect(result.uri).toMatch(/^https?:\/\/.+/);
       console.log(`Got read URI for file: ${fileName}`);
+    });
+
+    it('should upload a file and then delete it', async () => {
+      const { buckets } = getServices();
+      const bucket = await getBucketForTest('delete file test');
+
+      const fileName = `/integration-delete-${mode}-${Date.now()}.txt`;
+      const fileContent = createTestFileContent(fileName);
+      const buffer = Buffer.from(fileContent, 'utf-8');
+
+      const uploadResult = await buckets.uploadFile({
+        bucketId: bucket.bucketId,
+        folderId: bucket.folderId,
+        path: fileName,
+        content: buffer,
+      });
+      trackUploadedFile(bucket.bucketId, fileName, bucket.folderId);
+      expect(uploadResult.success).toBe(true);
+
+      await buckets.deleteFile(bucket.bucketId, fileName, { folderId: bucket.folderId });
+      untrackUploadedFile(fileName);
+
+      const metadata = await buckets.getFileMetaData(bucket.bucketId, bucket.folderId, {
+        prefix: fileName,
+      });
+      const stillPresent = metadata.items.find((f) => f.path === fileName);
+      expect(stillPresent).toBeUndefined();
+    });
+
+    it('should list files via OData GetFiles', async () => {
+      const { buckets } = getServices();
+      const bucket = await getBucketForTest('OData GetFiles test');
+
+      const seedName = `/integration-getfiles-${mode}-${Date.now()}.txt`;
+      await buckets.uploadFile({
+        bucketId: bucket.bucketId,
+        folderId: bucket.folderId,
+        path: seedName,
+        content: Buffer.from(createTestFileContent(seedName), 'utf-8'),
+      });
+      trackUploadedFile(bucket.bucketId, seedName, bucket.folderId);
+
+      const result = await buckets.getFiles(bucket.bucketId, { folderId: bucket.folderId });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length, 'GetFiles returned an empty listing despite a seeded file').toBeGreaterThan(0);
+
+      const file = result.items[0];
+      expect(file.path).toBeDefined();
+      expect(typeof file.path).toBe('string');
+      expect(typeof file.isDirectory).toBe('boolean');
+      // PascalCase originals must be absent
+      expect((file as any).FullPath).toBeUndefined();
+      expect((file as any).IsDirectory).toBeUndefined();
+
+      await buckets.deleteFile(bucket.bucketId, seedName, { folderId: bucket.folderId });
+      untrackUploadedFile(seedName);
+    });
+
+    it('should paginate getFiles with pageSize', async () => {
+      const { buckets } = getServices();
+      const bucket = await getBucketForTest('OData GetFiles pagination test');
+
+      const page1 = await buckets.getFiles(bucket.bucketId, { folderId: bucket.folderId, pageSize: 2 });
+
+      expect(page1.items.length).toBeLessThanOrEqual(2);
+    });
+
+    it('should filter getFiles by fileNameRegex', async () => {
+      const { buckets } = getServices();
+      const bucket = await getBucketForTest('OData GetFiles regex test');
+
+      const result = await buckets.getFiles(bucket.bucketId, {
+        folderId: bucket.folderId,
+        fileNameRegex: '.*\\.txt$',
+        pageSize: 5,
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
     });
   });
 

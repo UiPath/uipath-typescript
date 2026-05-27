@@ -11,12 +11,16 @@ import {
   BucketUploadFileOptions,
   BucketUploadResponse,
   BlobItem,
-  BucketGetUriOptions
+  BucketGetUriOptions,
+  BucketGetFilesOptions,
+  BucketFile,
+  BucketDeleteFileOptions
 } from '../../../models/orchestrator/buckets.types';
 import { BucketServiceModel } from '../../../models/orchestrator/buckets.models';
 import { pascalToCamelCaseKeys, addPrefixToKeys, transformData, arrayDictionaryToRecord } from '../../../utils/transform';
 import { filterUndefined } from '../../../utils/object';
 import { createHeaders } from '../../../utils/http/headers';
+import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
 import { BUCKET_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, BUCKET_PAGINATION, ODATA_OFFSET_PARAMS, BUCKET_TOKEN_PARAMS } from '../../../utils/constants/common';
@@ -450,8 +454,144 @@ export class BucketService extends FolderScopedService implements BucketServiceM
   }
 
   /**
+   * Lists all files in a bucket.
+   *
+   * Returns a flat, recursive listing of all files in the bucket. Supports regex filtering
+   * and filter / orderby / select / expand. {@link BucketFile} entries include
+   * `isDirectory` so callers can distinguish folders from files.
+   *
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   *
+   * @param bucketId - The ID of the bucket
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination
+   * @returns Promise resolving to either an array of files NonPaginatedResponse<BucketFile> or a PaginatedResponse<BucketFile> when pagination options are used.
+   *
+   * @example
+   * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
+   * // List all files in the bucket
+   * const files = await buckets.getFiles(<bucketId>, { folderId: <folderId> });
+   *
+   * // Filter by regex pattern
+   * const pdfs = await buckets.getFiles(<bucketId>, {
+   *   folderId: <folderId>,
+   *   fileNameRegex: '.*\\.pdf$'
+   * });
+   *
+   * // First page with pagination
+   * const page1 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, pageSize: 10 });
+   *
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
+   * }
+   *
+   * // Jump to specific page
+   * const page5 = await buckets.getFiles(<bucketId>, {
+   *   folderId: <folderId>,
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
+   * ```
+   */
+  @track('Buckets.GetFiles')
+  async getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(
+    bucketId: number,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BucketFile>
+      : NonPaginatedResponse<BucketFile>
+  > {
+    if (!bucketId) {
+      throw new ValidationError({ message: 'bucketId is required for getFiles' });
+    }
+
+    const { folderId, folderKey, folderPath, ...restOptions } = options ?? {} as BucketGetFilesOptions;
+
+    const headers = resolveFolderHeaders({
+      folderId,
+      folderKey,
+      folderPath,
+      resourceType: 'Buckets.getFiles',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
+    const transformBucketFile = (file: Record<string, unknown>) =>
+      transformData(pascalToCamelCaseKeys(file), BucketMap) as BucketFile;
+
+    return PaginationHelpers.getAll({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => BUCKET_ENDPOINTS.GET_FILES(bucketId),
+      transformFn: transformBucketFile,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+        totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: ODATA_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ODATA_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ODATA_OFFSET_PARAMS.COUNT_PARAM,
+        },
+      },
+      excludeFromPrefix: ['directory', 'recursive', 'fileNameRegex'],
+      headers,
+    }, { ...restOptions, directory: '/', recursive: true }) as any;
+  }
+
+  /**
+   * Deletes a file from a bucket
+   *
+   * @param bucketId - The ID of the bucket
+   * @param path - The full path to the file to delete
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
+   * @returns Promise resolving when the file is deleted
+   *
+   * @example
+   * ```typescript
+   * import { Buckets } from '@uipath/uipath-typescript/buckets';
+   *
+   * const buckets = new Buckets(sdk);
+   *
+   * // Delete a file from a bucket
+   * await buckets.deleteFile(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
+   * ```
+   */
+  @track('Buckets.DeleteFile')
+  async deleteFile(bucketId: number, path: string, options?: BucketDeleteFileOptions): Promise<void> {
+    if (!bucketId) {
+      throw new ValidationError({ message: 'bucketId is required for deleteFile' });
+    }
+
+    if (!path) {
+      throw new ValidationError({ message: 'path is required for deleteFile' });
+    }
+
+    const headers = resolveFolderHeaders({
+      folderId: options?.folderId,
+      folderKey: options?.folderKey,
+      folderPath: options?.folderPath,
+      resourceType: 'Buckets.deleteFile',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
+    await this.delete(
+      BUCKET_ENDPOINTS.DELETE_FILE(bucketId),
+      {
+        params: { path },
+        headers,
+      }
+    );
+  }
+
+  /**
    * Gets a direct upload URL for a file in the bucket
-   * 
+   *
    * @param options - Contains bucketId, folderId, file path, optional expiry time
    * @returns Promise resolving to blob file access information
    */

@@ -175,6 +175,7 @@ export class PaginationHelpers {
       serviceAccess,
       getEndpoint,
       folderId,
+      headers: providedHeaders,
       paginationParams,
       additionalParams,
       transformFn,
@@ -183,7 +184,7 @@ export class PaginationHelpers {
     } = params;
 
     const endpoint = getEndpoint(folderId);
-    const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
+    const headers = providedHeaders ?? (folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {});
 
     const paginatedResponse = await serviceAccess.requestWithPagination<T>(
       method,
@@ -227,6 +228,7 @@ export class PaginationHelpers {
       getAllEndpoint,
       getByFolderEndpoint,
       folderId,
+      headers: providedHeaders,
       additionalParams,
       transformFn,
       method = HTTP_METHODS.GET,
@@ -239,7 +241,7 @@ export class PaginationHelpers {
 
     // Determine endpoint and headers based on folderId
     const endpoint = folderId ? getByFolderEndpoint : getAllEndpoint;
-    const headers = folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {};
+    const headers = providedHeaders ?? (folderId ? createHeaders({ [FOLDER_ID]: folderId }) : {});
 
     // Make the API call based on method
     let response: { data: any };
@@ -321,6 +323,7 @@ export class PaginationHelpers {
         serviceAccess: config.serviceAccess,
         getEndpoint: config.getEndpoint,
         folderId,
+        headers: config.headers,
         paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
         transformFn: config.transformFn,
@@ -339,6 +342,7 @@ export class PaginationHelpers {
       getAllEndpoint: config.getEndpoint(),
       getByFolderEndpoint: byFolderEndpoint,
       folderId,
+      headers: config.headers,
       additionalParams: prefixedOptions,
       transformFn: config.transformFn,
       method: config.method,
