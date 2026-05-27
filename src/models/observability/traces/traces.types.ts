@@ -26,6 +26,7 @@ export enum SpanSource {
   Governance = 'Governance',
   /** Intelligent Experience Platform — unstructured and complex document processing source. */
   IXPUnstructuredAndComplexDocuments = 'IXPUnstructuredAndComplexDocuments',
+  /** Agents authored in code (as opposed to visual/no-code designers). */
   CodedAgents = 'CodedAgents',
   /** Intelligent Experience Platform — communications mining source. */
   IXPCommunicationsMining = 'IXPCommunicationsMining',
