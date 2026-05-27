@@ -63,3 +63,4 @@ site/
 
 # Python bytecode cache (created by the mkdocs-llmstxt preprocess hook)
 __pycache__/
+docs/traces-integration-tests.md
