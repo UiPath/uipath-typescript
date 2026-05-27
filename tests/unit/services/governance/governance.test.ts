@@ -7,6 +7,7 @@ import { GOVERNANCE_TEST_CONSTANTS, TEST_CONSTANTS } from '../../../utils/consta
 import {
   createMockRawGovernancePolicyTrace,
   createMockRawGovernancePolicyTracesResponse,
+  createMockRawGovernanceOperationSummary,
 } from '../../../utils/mocks/governance';
 import {
   PolicyEvaluationResult,
@@ -232,6 +233,80 @@ describe('GovernanceService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(new Error(GOVERNANCE_TEST_CONSTANTS.ERROR_GOVERNANCE_REQUEST_FAILED));
 
       await expect(governanceService.getPolicyTraces(startTime)).rejects.toThrow(
+        GOVERNANCE_TEST_CONSTANTS.ERROR_GOVERNANCE_REQUEST_FAILED,
+      );
+    });
+  });
+
+  describe('getOperationSummary - success', () => {
+    it('should return camelCase aggregate counts from the API', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawGovernanceOperationSummary());
+
+      const result = await governanceService.getOperationSummary(startTime);
+
+      expect(result.totalEvaluations).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_TOTAL_EVALUATIONS);
+      expect(result.allow).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_ALLOW);
+      expect(result.deny).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_DENY);
+      expect(result.noOp).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_NOOP);
+    });
+
+    it('should send required startTime and use the operation summary endpoint', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawGovernanceOperationSummary());
+
+      await governanceService.getOperationSummary(startTime);
+
+      expect(mockApiClient.post).toHaveBeenCalledTimes(1);
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(GOVERNANCE_ENDPOINTS.OPERATION.SUMMARY);
+      expect(body.startTime).toBe(GOVERNANCE_TEST_CONSTANTS.START_TIME_ISO);
+      expect(body.endTime).toBeUndefined();
+      expect(body.fullOrganization).toBeUndefined();
+    });
+
+    it('should serialize endTime Date to ISO and forward fullOrganization', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawGovernanceOperationSummary());
+
+      const endTime = new Date(GOVERNANCE_TEST_CONSTANTS.END_TIME_ISO);
+      await governanceService.getOperationSummary(startTime, { endTime, fullOrganization: true });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.endTime).toBe(GOVERNANCE_TEST_CONSTANTS.END_TIME_ISO);
+      expect(body.fullOrganization).toBe(true);
+    });
+
+    it('should forward fullOrganization=false rather than dropping it', async () => {
+      mockApiClient.post.mockResolvedValue(createMockRawGovernanceOperationSummary());
+
+      await governanceService.getOperationSummary(startTime, { fullOrganization: false });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.fullOrganization).toBe(false);
+    });
+
+    it('should coalesce missing counts to 0 when the API returns an empty body', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await governanceService.getOperationSummary(startTime);
+
+      expect(result).toEqual({ totalEvaluations: 0, allow: 0, deny: 0, noOp: 0 });
+    });
+  });
+
+  describe('getOperationSummary - validation', () => {
+    it('should throw ValidationError when startTime is undefined', async () => {
+      const callWithoutStartTime = governanceService.getOperationSummary.bind(
+        governanceService,
+      ) as (startTime?: Date) => Promise<unknown>;
+      await expect(callWithoutStartTime()).rejects.toThrow('startTime is required');
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getOperationSummary - error propagation', () => {
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(GOVERNANCE_TEST_CONSTANTS.ERROR_GOVERNANCE_REQUEST_FAILED));
+
+      await expect(governanceService.getOperationSummary(startTime)).rejects.toThrow(
         GOVERNANCE_TEST_CONSTANTS.ERROR_GOVERNANCE_REQUEST_FAILED,
       );
     });

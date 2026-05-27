@@ -21,3 +21,16 @@ export interface RawGovernancePolicyTraceItem {
   processKey?: string;
   jobKey?: string;
 }
+
+/**
+ * Raw governed operation summary response as returned by the Insights RTM
+ * service. Counts are camelCase on the wire and may be absent on auth or
+ * rate-limit error bodies, so each is optional here and coalesced to `0`
+ * in the service.
+ */
+export interface RawGovernanceOperationSummaryResponse {
+  totalEvaluations?: number;
+  allow?: number;
+  deny?: number;
+  noOp?: number;
+}

@@ -14,11 +14,17 @@ import {
 } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
+import { filterUndefined } from '../../utils/object';
 import {
   GovernancePolicyTrace,
   GovernancePolicyTraceGetAllOptions,
+  GovernanceFilterOptions,
+  GovernanceOperationSummary,
 } from '../../models/governance/governance.types';
 import { GovernanceServiceModel } from '../../models/governance/governance.models';
+import {
+  RawGovernanceOperationSummaryResponse,
+} from '../../models/governance/governance.internal-types';
 
 /**
  * Service for inspecting governance policy enforcement on the UiPath platform.
@@ -106,5 +112,65 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
         ? PaginatedResponse<GovernancePolicyTrace>
         : NonPaginatedResponse<GovernancePolicyTrace>
     >;
+  }
+
+  /**
+   * Gets aggregate governance enforcement counts across the requested time range.
+   *
+   * Returns the total number of governance enforcement evaluations along with
+   * how many resolved to `Allow`, `Deny`, or `NoOp`. Counts reflect one row per
+   * AuthZ enforcement verdict, regardless of how many underlying policies fed
+   * into each verdict.
+   *
+   * @param startTime - Inclusive lower bound on the evaluation time. Required.
+   * @param options - Optional `endTime` upper bound and `fullOrganization` flag
+   * @returns Promise resolving to {@link GovernanceOperationSummary}
+   *
+   * @example
+   * ```typescript
+   * import { Governance } from '@uipath/uipath-typescript/governance';
+   *
+   * const governance = new Governance(sdk);
+   *
+   * // Bare minimum — counts from the given start time onward
+   * const summary = await governance.getOperationSummary(new Date('2024-01-01'));
+   * console.log(summary.totalEvaluations, summary.allow, summary.deny, summary.noOp);
+   *
+   * // Bounded range across the whole organization
+   * const ranged = await governance.getOperationSummary(
+   *   new Date('2024-01-01'),
+   *   { endTime: new Date(), fullOrganization: true },
+   * );
+   * ```
+   */
+  @track('Governance.GetOperationSummary')
+  async getOperationSummary(
+    startTime: Date,
+    options?: GovernanceFilterOptions,
+  ): Promise<GovernanceOperationSummary> {
+    if (!startTime) {
+      throw new ValidationError({ message: 'startTime is required for getOperationSummary' });
+    }
+
+    const body = filterUndefined({
+      startTime: startTime.toISOString(),
+      endTime: options?.endTime?.toISOString(),
+      fullOrganization: options?.fullOrganization,
+    });
+
+    const response = await this.post<RawGovernanceOperationSummaryResponse>(
+      GOVERNANCE_ENDPOINTS.OPERATION.SUMMARY,
+      body,
+    );
+
+    // API returns camelCase keys directly. Error bodies (401/403/429) can omit
+    // counts, so coalesce each to 0 for a stable numeric contract.
+    const data = response.data;
+    return {
+      totalEvaluations: data?.totalEvaluations ?? 0,
+      allow: data?.allow ?? 0,
+      deny: data?.deny ?? 0,
+      noOp: data?.noOp ?? 0,
+    };
   }
 }
