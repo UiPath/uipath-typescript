@@ -1,5 +1,5 @@
 import { RequestOptions } from '../common/types';
-import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions } from './processes.types';
+import { ProcessGetAllOptions, ProcessGetResponse, ProcessStartRequest, ProcessStartResponse, ProcessGetByIdOptions, ProcessGetByNameOptions, ProcessStartOptions } from './processes.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -104,25 +104,44 @@ export interface ProcessServiceModel {
   getByName(name: string, options?: ProcessGetByNameOptions): Promise<ProcessGetResponse>;
 
   /**
-   * Starts a process with the specified configuration
+   * Starts a process with the specified configuration.
+   *
+   * Folder context can be supplied as `folderId`, `folderKey`, or `folderPath`
+   * inside the options.
    *
    * @param request - Process start configuration
-   * @param folderId - Required folder ID
-   * @param options - Optional request options
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional query parameters (`expand`, `select`, `filter`, `orderby`)
    * @returns Promise resolving to array of started process instances
    * {@link ProcessStartResponse}
    * @example
    * ```typescript
-   * // Start a process by process key
-   * const result = await processes.start({
-   *   processKey: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-   * }, <folderId>); // folderId is required
+   * // By folder ID
+   * await processes.start({ processKey: '<processKey>' }, { folderId: <folderId> });
    *
-   * // Start a process by name with specific robots
-   * const result = await processes.start({
-   *   processName: "MyProcess"
-   * }, <folderId>); // folderId is required
+   * // By folder key (GUID)
+   * await processes.start({ processKey: '<processKey>' }, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // By folder path
+   * await processes.start({ processKey: '<processKey>' }, { folderPath: 'Shared/Finance' });
+   *
+   * // Start by process name (instead of processKey)
+   * await processes.start({ processName: 'MyProcess' }, { folderId: <folderId> });
+   *
+   * // With additional options
+   * await processes.start({ processKey: '<processKey>' }, { folderId: <folderId>, expand: 'Robot' });
    * ```
+   */
+  start(request: ProcessStartRequest, options?: ProcessStartOptions): Promise<ProcessStartResponse[]>;
+  /**
+   * Starts a process — positional `folderId` form.
+   *
+   * @deprecated Use the options-object form: `start(request, { folderId })`. See {@link ProcessStartOptions} for the supported options.
+   *
+   * @param request - Process start configuration
+   * @param folderId - Required folder ID (numeric)
+   * @param options - Optional request options
+   * @returns Promise resolving to array of started process instances
+   * {@link ProcessStartResponse}
    */
   start(request: ProcessStartRequest, folderId: number, options?: RequestOptions): Promise<ProcessStartResponse[]>;
 }

@@ -342,6 +342,95 @@ describe('ProcessService Unit Tests', () => {
       await expect(service.start(request, TEST_CONSTANTS.FOLDER_ID))
         .rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
+
+    it('should accept the new options-object form with folderId', async () => {
+      const mockResponse = createMockProcessStartApiResponse([createMockProcessStartResponse()]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await service.start(request, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      const [, , requestSpec] = mockApiClient.post.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+      });
+      expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should route folderKey from the options object to X-UIPATH-FolderKey', async () => {
+      const mockResponse = createMockProcessStartApiResponse([createMockProcessStartResponse()]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await service.start(request, { folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+
+      const [, , requestSpec] = mockApiClient.post.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_KEY]: PROCESS_TEST_CONSTANTS.FOLDER_KEY,
+      });
+      expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
+      expect(requestSpec.headers[FOLDER_PATH_ENCODED]).toBeUndefined();
+    });
+
+    it('should route folderPath from the options object to X-UIPATH-FolderPath-Encoded', async () => {
+      const mockResponse = createMockProcessStartApiResponse([createMockProcessStartResponse()]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await service.start(request, { folderPath: PROCESS_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE });
+
+      const [, , requestSpec] = mockApiClient.post.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_PATH_ENCODED]: PROCESS_TEST_CONSTANTS.FOLDER_PATH_WITH_SPACE_ENCODED,
+      });
+      expect(requestSpec.headers[FOLDER_ID]).toBeUndefined();
+      expect(requestSpec.headers[FOLDER_KEY]).toBeUndefined();
+    });
+
+    it('should pass OData query options when using the new options-object form', async () => {
+      const mockResponse = createMockProcessStartApiResponse([createMockProcessStartResponse()]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await service.start(request, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        expand: PROCESS_TEST_CONSTANTS.EXPAND_ROBOT,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        PROCESS_ENDPOINTS.START_PROCESS,
+        expect.any(Object),
+        expect.objectContaining({
+          params: expect.objectContaining({
+            '$expand': PROCESS_TEST_CONSTANTS.EXPAND_ROBOT,
+          }),
+        }),
+      );
+    });
+
+    it('should fall back to the SDK init-time folderKey when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: PROCESS_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new ProcessService(instance);
+
+      const mockResponse = createMockProcessStartApiResponse([createMockProcessStartResponse()]);
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await scopedService.start(request);
+
+      const [, , requestSpec] = mockApiClient.post.mock.calls[0];
+      expect(requestSpec.headers).toMatchObject({
+        [FOLDER_KEY]: PROCESS_TEST_CONSTANTS.FOLDER_KEY,
+      });
+    });
+
+    it('should throw ValidationError when no folder context can be resolved', async () => {
+      const request = PROCESS_TEST_CONSTANTS.PROCESS_START_REQUEST as ProcessStartRequest;
+      await expect(service.start(request)).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.post).not.toHaveBeenCalled();
+    });
   });
 
   describe('getByName', () => {
