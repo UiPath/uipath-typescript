@@ -36,6 +36,7 @@ import { PaginationType } from '../../../utils/pagination/internal-types';
 import { TRACES_AGENT_PAGINATION, TRACES_AGENT_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
+import { pascalToCamelCaseKeys } from '../../../utils/transform';
 
 const VALID_SPAN_STATUSES = new Set<string>(Object.values(SpanStatus));
 const VALID_SPAN_SOURCES = new Set<string>(Object.values(SpanSource));
