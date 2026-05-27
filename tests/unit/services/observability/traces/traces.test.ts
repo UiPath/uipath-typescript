@@ -129,6 +129,24 @@ describe('TracesService Unit Tests', () => {
       await expect(tracesService.getById('')).rejects.toThrow('traceId is required');
     });
 
+    it('should fall back to SpanStatus.Unset for unknown Status integer', async () => {
+      mockApiClient.get.mockResolvedValue(createMockOtelPageResponse([createMockRawOtelSpan({ Status: 999 })]));
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
+      expect(result[0].status).toBe(SpanStatus.Unset);
+    });
+
+    it('should fall back to null for unknown Source integer', async () => {
+      mockApiClient.get.mockResolvedValue(createMockOtelPageResponse([createMockRawOtelSpan({ Source: 999 })]));
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
+      expect(result[0].source).toBeNull();
+    });
+
+    it('should fall back to null for unknown VerbosityLevel integer', async () => {
+      mockApiClient.get.mockResolvedValue(createMockOtelPageResponse([createMockRawOtelSpan({ VerbosityLevel: 999 })]));
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
+      expect(result[0].verbosityLevel).toBeNull();
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(new Error(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND));
       await expect(tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID))
@@ -177,6 +195,24 @@ describe('TracesService Unit Tests', () => {
       await expect(
         tracesService.getSpansByIds('', [TRACES_TEST_CONSTANTS.SPAN_ID_1])
       ).rejects.toThrow('traceId is required');
+    });
+
+    it('should fall back to SpanStatus.Unset for unknown Status integer', async () => {
+      mockApiClient.post.mockResolvedValue([createMockRawOtelSpan({ Status: 999 })]);
+      const result = await tracesService.getSpansByIds(TRACES_TEST_CONSTANTS.TRACE_ID, [TRACES_TEST_CONSTANTS.SPAN_ID_1]);
+      expect(result[0].status).toBe(SpanStatus.Unset);
+    });
+
+    it('should fall back to null for unknown Source integer', async () => {
+      mockApiClient.post.mockResolvedValue([createMockRawOtelSpan({ Source: 999 })]);
+      const result = await tracesService.getSpansByIds(TRACES_TEST_CONSTANTS.TRACE_ID, [TRACES_TEST_CONSTANTS.SPAN_ID_1]);
+      expect(result[0].source).toBeNull();
+    });
+
+    it('should fall back to null for unknown VerbosityLevel integer', async () => {
+      mockApiClient.post.mockResolvedValue([createMockRawOtelSpan({ VerbosityLevel: 999 })]);
+      const result = await tracesService.getSpansByIds(TRACES_TEST_CONSTANTS.TRACE_ID, [TRACES_TEST_CONSTANTS.SPAN_ID_1]);
+      expect(result[0].verbosityLevel).toBeNull();
     });
 
     it('should propagate API errors', async () => {
