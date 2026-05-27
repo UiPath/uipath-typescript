@@ -3,6 +3,7 @@ import { UiPath } from '../../../../src/core';
 import { Traces } from '../../../../src/services/observability/traces';
 import {
   SpanResponse,
+  SpanSource,
   SpanStatus,
   TracesGetByAgentIdOptions,
 } from '../../../../src/models/observability/traces/traces.types';
@@ -44,10 +45,21 @@ describe('Traces - Integration Tests [v1]', () => {
 
     existingSpanId = spans[0].id;
 
-    const seedSpan = spans.find(s => s.referenceId) ?? spans[0];
-    existingReferenceId = seedSpan.referenceId ?? '';
-    const agentSpan = spans.find(s => s.referenceId && s.source === 'Agents') ?? seedSpan;
-    existingAgentId = agentSpan.referenceId ?? process.env.TRACES_TEST_AGENT_ID ?? '';
+    const seedSpan = spans.find(s => s.referenceId);
+    if (!seedSpan?.referenceId) {
+      throw new Error(
+        `No span with a referenceId found in trace ${existingTraceId} — cannot seed getSpansByReferenceId or getSpansByAgentId tests`
+      );
+    }
+    existingReferenceId = seedSpan.referenceId;
+
+    const agentSpan = spans.find(s => s.referenceId && s.source === SpanSource.Agents);
+    if (!agentSpan?.referenceId) {
+      throw new Error(
+        `No agent-sourced span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (source must be 'Agents')`
+      );
+    }
+    existingAgentId = agentSpan.referenceId;
   });
 
   // ─── getById ────────────────────────────────────────────────────────────────
@@ -175,7 +187,11 @@ describe('Traces - Integration Tests [v1]', () => {
     it('should support cursor-based pagination', async () => {
       const page1 = await traces.getSpansByAgentId(existingAgentId, { pageSize: 1 });
 
-      if (!page1.hasNextPage) return;
+      if (!page1.hasNextPage) {
+        throw new Error(
+          `getSpansByAgentId returned only one page for agentId ${existingAgentId} — need at least 2 spans to test pagination`
+        );
+      }
 
       const page2Options: TracesGetByAgentIdOptions = { cursor: page1.nextCursor };
       const page2 = await traces.getSpansByAgentId(existingAgentId, page2Options);
