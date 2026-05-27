@@ -1,8 +1,5 @@
 import { GOVERNANCE_TEST_CONSTANTS } from '../constants/governance';
-import type {
-  RawPolicyTraceItem,
-  RawPolicyTracesResponse,
-} from '../../../src/models/governance/governance.internal-types';
+import type { RawPolicyTraceItem } from '../../../src/models/governance/governance.internal-types';
 
 /**
  * Creates a raw policy evaluation trace item (camelCase) matching the live API response shape.
@@ -36,6 +33,6 @@ export const createMockRawPolicyTrace = (
  */
 export const createMockRawPolicyTracesResponse = (
   items: RawPolicyTraceItem[] = [createMockRawPolicyTrace()],
-): RawPolicyTracesResponse => ({
+): { items: RawPolicyTraceItem[] } => ({
   items,
 });
