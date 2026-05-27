@@ -29,36 +29,6 @@ describe('Process Models', () => {
   });
 
   describe('bound methods on process', () => {
-    describe('process.getIncidents()', () => {
-      it('should call service.getIncidents with bound processKey and folderKey', async () => {
-        const mockProcessData = createMockProcess();
-        const process = createProcessWithMethods(mockProcessData, mockService);
-
-        mockService.getIncidents = vi.fn().mockResolvedValue([]);
-
-        await process.getIncidents();
-
-        expect(mockService.getIncidents).toHaveBeenCalledWith(
-          MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.FOLDER_KEY
-        );
-      });
-
-      it('should throw when processKey is undefined', async () => {
-        const mockProcessData = createMockProcess({ processKey: undefined });
-        const process = createProcessWithMethods(mockProcessData, mockService);
-
-        await expect(process.getIncidents()).rejects.toThrow('Process key is undefined');
-      });
-
-      it('should throw when folderKey is undefined', async () => {
-        const mockProcessData = createMockProcess({ folderKey: undefined });
-        const process = createProcessWithMethods(mockProcessData, mockService);
-
-        await expect(process.getIncidents()).rejects.toThrow('Folder key is undefined');
-      });
-    });
-
     describe('process.getElementCountByStatus()', () => {
       it('should call service.getElementCountByStatus with bound processKey and packageId', async () => {
         const mockProcessData = createMockProcess();

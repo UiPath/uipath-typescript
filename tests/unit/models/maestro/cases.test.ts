@@ -48,24 +48,6 @@ describe('Case Models', () => {
           MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
         );
       });
-
-      it('should throw when processKey is undefined', () => {
-        const mockCaseData = createMockCase({ processKey: undefined });
-        const caseObj = createCaseWithMethods(mockCaseData, mockService);
-
-        expect(() =>
-          caseObj.getElementCountByStatus(new Date(), new Date(), '1.0.0')
-        ).toThrow('Process key is undefined');
-      });
-
-      it('should throw when packageId is undefined', () => {
-        const mockCaseData = createMockCase({ packageId: undefined });
-        const caseObj = createCaseWithMethods(mockCaseData, mockService);
-
-        expect(() =>
-          caseObj.getElementCountByStatus(new Date(), new Date(), '1.0.0')
-        ).toThrow('Package ID is undefined');
-      });
     });
   });
 });

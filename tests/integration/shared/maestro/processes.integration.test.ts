@@ -256,7 +256,8 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getElementCountByStatus', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getElementCountByStatus', () => {
     it('should retrieve element count by status for a process', async () => {
       const { maestroProcesses } = getServices();
       await testGetElementCountByStatus(maestroProcesses, 'processes');

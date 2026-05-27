@@ -182,7 +182,8 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getElementCountByStatus', () => {
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getElementCountByStatus', () => {
     it('should retrieve element count by status for a case', async () => {
       const { cases } = getServices();
       await testGetElementCountByStatus(cases, 'cases');

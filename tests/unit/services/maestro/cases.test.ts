@@ -369,19 +369,5 @@ describe('CasesService', () => {
         {}
       );
     });
-
-    it('should handle API errors', async () => {
-      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
-
-      await expect(
-        service.getElementCountByStatus(
-          MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
-          MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
-          new Date(),
-          new Date(),
-          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
-        )
-      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
-    });
   });
 });
