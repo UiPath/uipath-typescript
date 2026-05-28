@@ -37,13 +37,17 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
 
     existingSpanId = spans[0].id;
 
-    const agentSpan = spans.find(s => s.referenceId && s.spanType === 'agentRun');
-    if (!agentSpan?.referenceId) {
-      throw new Error(
-        `No agentRun span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (trace must contain a span with spanType 'agentRun')`
-      );
+    if (process.env.TRACES_TEST_AGENT_ID) {
+      existingAgentId = process.env.TRACES_TEST_AGENT_ID;
+    } else {
+      const agentSpan = spans.find(s => s.referenceId && s.spanType === 'agentRun');
+      if (!agentSpan?.referenceId) {
+        throw new Error(
+          `No agentRun span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (trace must contain a span with spanType 'agentRun' or set TRACES_TEST_AGENT_ID env var)`
+        );
+      }
+      existingAgentId = agentSpan.referenceId;
     }
-    existingAgentId = agentSpan.referenceId;
   });
 
   // ─── getById ────────────────────────────────────────────────────────────────
