@@ -33,10 +33,10 @@ describe.skipIf(!traceId)('Traces [v1]', () => {
 
     existingSpanId = spans[0].id;
 
-    const agentSpan = spans.find(s => s.referenceId);
+    const agentSpan = spans.find(s => s.referenceId && s.spanType === 'agentRun');
     if (!agentSpan?.referenceId) {
       throw new Error(
-        `No span with referenceId found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests`
+        `No agentRun span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (trace must contain a span with spanType 'agentRun')`
       );
     }
     existingAgentId = agentSpan.referenceId;
