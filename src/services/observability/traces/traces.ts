@@ -157,15 +157,15 @@ export class TracesService extends BaseService implements TracesServiceModel {
       startTime: raw.startTime,
       endTime: raw.endTime,
       attributes: raw.attributes,
-      status: VALID_SPAN_STATUSES.has(raw.status)
-        ? (raw.status as SpanStatus)
-        : SpanStatus.Unset,
-      source: raw.source != null && VALID_SPAN_SOURCES.has(raw.source)
-        ? (raw.source as SpanSource)
+      // agent endpoint returns enum fields as numeric strings ("1", "10", "2") — map via integer lookup first,
+      // fall back to string enum check for forward-compatibility if the API ever returns string values
+      status: SpanStatusMap[parseInt(raw.status)] ?? (VALID_SPAN_STATUSES.has(raw.status) ? (raw.status as SpanStatus) : SpanStatus.Unset),
+      source: raw.source != null
+        ? (SpanSourceMap[parseInt(raw.source)] ?? (VALID_SPAN_SOURCES.has(raw.source) ? (raw.source as SpanSource) : null))
         : null,
       spanType: raw.spanType,
-      verbosityLevel: raw.verbosityLevel != null && VALID_SPAN_VERBOSITY_LEVELS.has(raw.verbosityLevel)
-        ? (raw.verbosityLevel as SpanVerbosityLevel)
+      verbosityLevel: raw.verbosityLevel != null
+        ? (SpanVerbosityLevelMap[parseInt(raw.verbosityLevel)] ?? (VALID_SPAN_VERBOSITY_LEVELS.has(raw.verbosityLevel) ? (raw.verbosityLevel as SpanVerbosityLevel) : null))
         : null,
       executionType: null,         // agent endpoint does not return this field
       folderKey: raw.folderKey,

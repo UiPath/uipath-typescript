@@ -307,7 +307,7 @@ describe('TracesService Unit Tests', () => {
       expect(span.attachments).toBeNull();
     });
 
-    it('should apply enum transforms from agent endpoint', async () => {
+    it('should apply enum transforms from agent endpoint (string values)', async () => {
       mockApiClient.get.mockResolvedValue(
         createMockAgentPageResponse([createMockRawAgentSpan({ status: 'Error', source: 'Testing', verbosityLevel: 'Warning' })])
       );
@@ -318,6 +318,20 @@ describe('TracesService Unit Tests', () => {
       expect(span.status).toBe(SpanStatus.Error);
       expect(span.source).toBe(SpanSource.Testing);
       expect(span.verbosityLevel).toBe(SpanVerbosityLevel.Warning);
+    });
+
+    it('should apply enum transforms from agent endpoint (numeric string values as returned by live API)', async () => {
+      // Live agent endpoint returns enum fields as numeric strings e.g. status="1", source="10", verbosityLevel="2"
+      mockApiClient.get.mockResolvedValue(
+        createMockAgentPageResponse([createMockRawAgentSpan({ status: '1', source: '10', verbosityLevel: '2' })])
+      );
+
+      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
+      const span = result.items[0];
+
+      expect(span.status).toBe(SpanStatus.Ok);
+      expect(span.source).toBe(SpanSource.CodedAgents);
+      expect(span.verbosityLevel).toBe(SpanVerbosityLevel.Information);
     });
 
     it('should fall back to SpanStatus.Unset for unknown status from agent endpoint', async () => {
