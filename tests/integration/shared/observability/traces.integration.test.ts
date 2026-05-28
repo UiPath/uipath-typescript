@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { getServices, setupUnifiedTests } from '../../config/unified-setup';
+import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Traces } from '../../../../src/services/observability/traces';
 import {
   SpanResponse,
@@ -7,10 +7,10 @@ import {
   TracesGetByAgentIdOptions,
 } from '../../../../src/models/observability/traces/traces.types';
 
-const traceId = process.env.TRACES_TEST_TRACE_ID;
+const modes: InitMode[] = ['v1'];
 
-describe.skipIf(!traceId)('Traces [v1]', () => {
-  setupUnifiedTests('v1');
+describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
+  setupUnifiedTests(mode);
 
   let traces!: Traces;
   let existingTraceId!: string;
@@ -18,11 +18,15 @@ describe.skipIf(!traceId)('Traces [v1]', () => {
   let existingAgentId!: string;
 
   beforeAll(async () => {
-    const services = await getServices();
+    if (!process.env.TRACES_TEST_TRACE_ID) {
+      throw new Error('TRACES_TEST_TRACE_ID env var required for Traces integration tests');
+    }
+
+    const services = getServices();
     if (!services.traces) throw new Error('Traces service not available');
     traces = services.traces;
 
-    existingTraceId = traceId!;
+    existingTraceId = process.env.TRACES_TEST_TRACE_ID;
 
     const spans = await traces.getById(existingTraceId);
     if (spans.length === 0) {
