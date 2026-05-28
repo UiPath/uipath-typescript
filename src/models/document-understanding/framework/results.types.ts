@@ -13,136 +13,133 @@ export enum ResultsDataSource {
 }
 
 export interface ClassificationResult {
-    documentTypeId?: string | null;
-    documentId?: string | null;
-    confidence?: number;
-    ocrConfidence?: number;
-    reference?: ResultsContentReference;
-    documentBounds?: ResultsDocumentBounds;
-    classifierName?: string | null;
+    DocumentTypeId?: string | null;
+    DocumentId?: string | null;
+    Confidence?: number;
+    OcrConfidence?: number;
+    Reference?: ResultsContentReference;
+    DocumentBounds?: ResultsDocumentBounds;
+    ClassifierName?: string | null;
 }
 
 export interface ExtractionResult {
-    documentId?: string | null;
-    resultsVersion?: number;
-    resultsDocument?: ResultsDocument;
-    extractorPayloads?: ExtractorPayload[] | null;
-    businessRulesResults?: RuleSetResult[] | null;
+    DocumentId?: string | null;
+    ResultsVersion?: number;
+    ResultsDocument?: ResultsDocument;
+    ExtractorPayloads?: ExtractorPayload[] | null;
+    BusinessRulesResults?: RuleSetResult[] | null;
 }
 
 export interface ExtractorPayload {
-    id?: string | null;
-    payload?: string | null;
-    savedPayloadId?: string | null;
-    taxonomySchemaMapping?: string | null;
+    Id?: string | null;
+    Payload?: string | null;
+    SavedPayloadId?: string | null;
+    TaxonomySchemaMapping?: string | null;
 }
 
 export interface ResultsContentReference {
-    textStartIndex?: number;
-    textLength?: number;
-    tokens?: ResultsValueTokens[] | null;
+    TextStartIndex?: number;
+    TextLength?: number;
+    Tokens?: ResultsValueTokens[] | null;
 }
 
 export interface ResultsDataPoint {
-    fieldId?: string | null;
-    fieldName?: string | null;
-    fieldType?: FieldType;
-    isMissing?: boolean;
-    dataSource?: ResultsDataSource;
-    values?: ResultsValue[] | null;
-    dataVersion?: number;
-    operatorConfirmed?: boolean;
-    validatorNotes?: string | null;
-    validatorNotesInfo?: string | null;
+    FieldId?: string | null;
+    FieldName?: string | null;
+    FieldType?: FieldType;
+    IsMissing?: boolean;
+    DataSource?: ResultsDataSource;
+    Values?: ResultsValue[] | null;
+    DataVersion?: number;
+    OperatorConfirmed?: boolean;
+    ValidatorNotes?: string | null;
+    ValidatorNotesInfo?: string | null;
 }
 
 export interface ResultsDerivedField {
-    fieldId?: string | null;
-    value?: string | null;
+    FieldId?: string | null;
+    Value?: string | null;
 }
 
 export interface ResultsDocument {
-    bounds?: ResultsDocumentBounds;
-    language?: string | null;
-    documentGroup?: string | null;
-    documentCategory?: string | null;
-    documentTypeId?: string | null;
-    documentTypeName?: string | null;
-    documentTypeDataVersion?: number;
-    dataVersion?: number;
-    documentTypeSource?: ResultsDataSource;
-    documentTypeField?: ResultsValue;
-    fields?: ResultsDataPoint[] | null;
-    tables?: ResultsTable[] | null;
+    Bounds?: ResultsDocumentBounds;
+    Language?: string | null;
+    DocumentGroup?: string | null;
+    DocumentCategory?: string | null;
+    DocumentTypeId?: string | null;
+    DocumentTypeName?: string | null;
+    DocumentTypeDataVersion?: number;
+    DataVersion?: number;
+    DocumentTypeSource?: ResultsDataSource;
+    DocumentTypeField?: ResultsValue;
+    Fields?: ResultsDataPoint[] | null;
+    Tables?: ResultsTable[] | null;
 }
 
 export interface ResultsDocumentBounds {
-    startPage?: number;
-    pageCount?: number;
-    textStartIndex?: number;
-    textLength?: number;
-    pageRange?: string | null;
+    PageCount?: number;
+    PageRange?: string | null;
 }
 
 export interface ResultsTable {
-    fieldId?: string | null;
-    fieldName?: string | null;
-    isMissing?: boolean;
-    dataSource?: ResultsDataSource;
-    dataVersion?: number;
-    operatorConfirmed?: boolean;
-    values?: ResultsTableValue[] | null;
-    validatorNotes?: string | null;
-    validatorNotesInfo?: string | null;
+    FieldId?: string | null;
+    FieldName?: string | null;
+    IsMissing?: boolean;
+    DataSource?: ResultsDataSource;
+    DataVersion?: number;
+    OperatorConfirmed?: boolean;
+    Values?: ResultsTableValue[] | null;
+    ValidatorNotes?: string | null;
+    ValidatorNotesInfo?: string | null;
 }
 
 export interface ResultsTableCell {
-    rowIndex?: number;
-    columnIndex?: number;
-    isHeader?: boolean;
-    isMissing?: boolean;
-    operatorConfirmed?: boolean;
-    dataSource?: ResultsDataSource;
-    dataVersion?: number;
-    values?: ResultsValue[] | null;
+    RowIndex?: number;
+    ColumnIndex?: number;
+    IsHeader?: boolean;
+    IsMissing?: boolean;
+    OperatorConfirmed?: boolean;
+    DataSource?: ResultsDataSource;
+    DataVersion?: number;
+    Values?: ResultsValue[] | null;
 }
 
 export interface ResultsTableColumnInfo {
-    fieldId?: string | null;
-    fieldName?: string | null;
-    fieldType?: FieldType;
+    FieldId?: string | null;
+    FieldName?: string | null;
+    FieldType?: FieldType;
 }
 
 export interface ResultsTableValue {
-    operatorConfirmed?: boolean;
-    confidence?: number;
-    ocrConfidence?: number;
-    cells?: ResultsTableCell[] | null;
-    columnInfo?: ResultsTableColumnInfo[] | null;
-    numberOfRows?: number;
-    validatorNotes?: string | null;
-    validatorNotesInfo?: string | null;
+    OperatorConfirmed?: boolean;
+    Confidence?: number;
+    OcrConfidence?: number;
+    Cells?: ResultsTableCell[] | null;
+    ColumnInfo?: ResultsTableColumnInfo[] | null;
+    NumberOfRows?: number;
+    ValidatorNotes?: string | null;
+    ValidatorNotesInfo?: string | null;
 }
 
 export interface ResultsValue {
-    components?: ResultsDataPoint[] | null;
-    value?: string | null;
-    unformattedValue?: string | null;
-    reference?: ResultsContentReference;
-    derivedFields?: ResultsDerivedField[] | null;
-    confidence?: number;
-    operatorConfirmed?: boolean;
-    ocrConfidence?: number;
-    textType?: TextType;
-    validatorNotes?: string | null;
-    validatorNotesInfo?: string | null;
+    Components?: ResultsDataPoint[] | null;
+    Value?: string | null;
+    UnformattedValue?: string | null;
+    Reference?: ResultsContentReference;
+    DerivedFields?: ResultsDerivedField[] | null;
+    Confidence?: number;
+    OperatorConfirmed?: boolean;
+    OcrConfidence?: number;
+    TextType?: TextType;
+    ValidatorNotes?: string | null;
+    ValidatorNotesInfo?: string | null;
 }
 
 export interface ResultsValueTokens {
-    textStartIndex?: number;
-    textLength?: number;
-    page?: number;
-    pageWidth?: number;
-    pageHeight?: number;
-    boxes?: number[][] | null;
+    TextStartIndex?: number;
+    TextLength?: number;
+    Page?: number;
+    PageWidth?: number;
+    PageHeight?: number;
+    Boxes?: number[][] | null;
 }

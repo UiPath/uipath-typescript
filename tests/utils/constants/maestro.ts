@@ -4,6 +4,7 @@
  */
 
 import { EscalationTriggerType } from '../../../src/models/maestro/case-instances.types';
+import { InstanceFinalStatus } from '../../../src/models/maestro/insights.types';
 
 export const MAESTRO_TEST_CONSTANTS = {
   // Maestro-specific identifiers
@@ -112,7 +113,30 @@ export const MAESTRO_TEST_CONSTANTS = {
   EXTRACTED_NAME_WITH_PREFIX: 'Test Case Process',
   EXTRACTED_NAME_WITHOUT_PREFIX: 'RegularPackageName',
   EXTRACTED_NAME_DEFAULT: 'TestCase',
-  
+
+  // Top run count constants
+  RUN_COUNT_PROCESS_1: 5,
+  RUN_COUNT_PROCESS_2: 3,
+  RUN_COUNT_CASE: 10,
+
+  // Top faulted count constants
+  FAULTED_COUNT_PROCESS_1: 2626,
+  FAULTED_COUNT_PROCESS_2: 508,
+  FAULTED_COUNT_CASE: 87,
+
+  // Top element failure count constants
+  ELEMENT_NAME_1: 'Get Email',
+  ELEMENT_TYPE_1: 'ReceiveTask',
+  ELEMENT_FAILED_COUNT_1: 5,
+  ELEMENT_NAME_2: 'RPA Workflow',
+  ELEMENT_TYPE_2: 'ServiceTask',
+  ELEMENT_FAILED_COUNT_2: 3,
+
+  // Top duration constants (milliseconds)
+  DURATION_PROCESS_1: 1058190698729,
+  DURATION_PROCESS_2: 749919406366,
+  DURATION_CASE: 628845382152,
+
   // SLA Summary constants
   SLA_CASE_INSTANCE_ID: '1238b9c9-37b6-4a69-bb67-042548d05c77',
   SLA_CASE_INSTANCE_ID_2: '15a1332a-5261-4b58-bbca-f847fa6c49de',
@@ -130,6 +154,15 @@ export const MAESTRO_TEST_CONSTANTS = {
   STAGE_SLA_LATEST_STATUS: 'InProgress',
   STAGE_SLA_LATEST_STATUS_COMPLETED: 'Completed',
   ERROR_STAGES_SLA_SUMMARY_FAILED: 'Failed to fetch stages SLA summary',
+
+  // Insights InstanceStatusTimeline constants
+  INSIGHTS_STATUS_COMPLETED: InstanceFinalStatus.Completed,
+  INSIGHTS_STATUS_FAULTED: InstanceFinalStatus.Faulted,
+  INSIGHTS_DATE_1: '5/8/2026 12:00:00 AM',
+  INSIGHTS_DATE_2: '5/9/2026 12:00:00 AM',
+  INSIGHTS_COUNT_2: 2,
+  INSIGHTS_COUNT_1: 1,
+  ERROR_INSIGHTS_FAILED: 'Failed to fetch instance status by date',
 
   // Execution History constants
   ELEMENT_RUN_ID: 'run-1',

@@ -2,28 +2,29 @@
 
 import type { DocumentEntity } from './dom.types';
 import type { ErrorResponse } from './helpers.types';
+import type { JobStatus } from './model.types';
 
 export interface StartDigitizationFromAttachmentModel {
-    attachmentId?: string;
-    folderId?: string | null;
-    fileName?: string | null;
-    mimeType?: string | null;
+    AttachmentId?: string;
+    FolderId?: string | null;
+    FileName?: string | null;
+    MimeType?: string | null;
 }
 
 export interface StartDigitizationResponse {
-    documentId?: string;
-    resultUrl?: string | null;
+    DocumentId?: string;
+    ResultUrl?: string | null;
 }
 
 export interface SwaggerGetDigitizeJobResponse {
-    status?: 'Succeeded' | 'Failed' | 'Running' | 'NotStarted';
-    error?: ErrorResponse;
-    result?: SwaggerGetDigitizeJobResult;
-    createdAt?: string;
-    lastUpdatedAt?: string;
+    Status?: JobStatus;
+    Error?: ErrorResponse;
+    Result?: SwaggerGetDigitizeJobResult;
+    CreatedAt?: string;
+    LastUpdatedAt?: string;
 }
 
 export interface SwaggerGetDigitizeJobResult {
-    documentObjectModel?: DocumentEntity;
-    documentText?: string | null;
+    DocumentObjectModel?: DocumentEntity;
+    DocumentText?: string | null;
 }

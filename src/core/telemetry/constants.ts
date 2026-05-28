@@ -1,29 +1,19 @@
 /**
- * SDK Telemetry constants
+ * SDK Telemetry constants.
+ *
+ * Only the SDK's identity (version, service name, role name, …) lives
+ * here. The Application Insights connection string is injected into
+ * `@uipath/core-telemetry` itself at publish time, and the generic attribute
+ * keys (`Version`, `Service`, `CloudOrganizationName`, …) are owned by
+ * `@uipath/core-telemetry` and consumed there — they are not part of the
+ * SDK's public API.
  */
 
-// Connection string placeholder that will be replaced during build
-export const CONNECTION_STRING = "$CONNECTION_STRING";
+/** SDK version placeholder — patched by the SDK publish workflow. */
+export const SDK_VERSION = '$SDK_VERSION';
 
-// SDK Version placeholder 
-export const SDK_VERSION = "$SDK_VERSION";
+export const CLOUD_ROLE_NAME = 'uipath-ts-sdk';
+export const SDK_SERVICE_NAME = 'UiPath.TypeScript.Sdk';
+export const SDK_LOGGER_NAME = 'uipath-ts-sdk-telemetry';
 
-export const VERSION = "Version";
-export const SERVICE = "Service";
-export const CLOUD_ORGANIZATION_NAME = "CloudOrganizationName";
-export const CLOUD_TENANT_NAME = "CloudTenantName";
-export const CLOUD_URL = "CloudUrl";
-export const CLOUD_CLIENT_ID = "CloudClientId";
-export const CLOUD_REDIRECT_URI = "CloudRedirectUri";
-export const APP_NAME = "ApplicationName";
-export const CLOUD_ROLE_NAME = "uipath-ts-sdk";
-
-// Service and logger names
-export const SDK_SERVICE_NAME = "UiPath.TypeScript.Sdk";
-export const SDK_LOGGER_NAME = "uipath-ts-sdk-telemetry";
-
-// Event names
-export const SDK_RUN_EVENT = "Sdk.Run";
-
-// Default value for unknown/empty attributes
-export const UNKNOWN = "";
+export const SDK_RUN_EVENT = 'Sdk.Run';

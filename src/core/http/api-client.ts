@@ -4,6 +4,7 @@ import { RequestSpec } from '../../models/common/request-spec';
 import { TokenManager } from '../auth/token-manager';
 import { errorResponseParser } from '../errors/parser';
 import { ErrorFactory } from '../errors/error-factory';
+import { ServerError } from '../errors/server';
 import { CONTENT_TYPES, RESPONSE_TYPES, TRACEPARENT, UIPATH_TRACEPARENT_ID } from '../../utils/constants/headers';
 
 export interface ApiClientConfig {
@@ -125,14 +126,24 @@ export class ApiClient {
       if (!text) {
         return undefined as T;
       }
-      return JSON.parse(text);
+      try {
+        return JSON.parse(text);
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          throw new ServerError({
+            message: `Server returned non-JSON response (${response.status} ${response.url}): ${error.message}`,
+            statusCode: response.status,
+          });
+        }
+        throw error;
+      }
     } catch (error: any) {
       // If it's already one of our errors, re-throw it
       if (error.type && error.type.includes('Error')) {
         throw error;
       }
-      
-      // Otherwise, it's likely a network error
+
+      // Otherwise, it's a genuine network/fetch failure
       throw ErrorFactory.createNetworkError(error);
     }
 

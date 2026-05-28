@@ -2,19 +2,11 @@ import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, './src'),
-      '@tests': resolve(__dirname, './tests'),
-    },
-  },
   test: {
-    globals: true,
-    environment: 'node',
-    include: ['tests/unit/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: 'coverage',
       exclude: [
         'node_modules/',
         'tests/',
@@ -26,5 +18,20 @@ export default defineConfig({
         '**/index.ts',
       ],
     },
+    projects: [
+      {
+        resolve: {
+          alias: {
+            '@': resolve(__dirname, './src'),
+            '@tests': resolve(__dirname, './tests'),
+          },
+        },
+        test: {
+          globals: true,
+          environment: 'node',
+          include: ['tests/unit/**/*.test.ts'],
+        },
+      },
+    ],
   },
 });

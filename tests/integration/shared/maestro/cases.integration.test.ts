@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { testGetTopRunCount, testGetInstanceStatusTimeline } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -37,6 +38,13 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
         }
         console.log('Case retrieval test:', error.message);
       }
+    });
+  });
+
+  describe.skip('getInstanceStatusTimeline', () => {
+    it('should retrieve instance status by date for case management', async () => {
+      const { cases } = getServices();
+      await testGetInstanceStatusTimeline(cases);
     });
   });
 
@@ -79,6 +87,86 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
       const { cases } = getServices();
 
       expect(typeof cases.getAll).toBe('function');
+    });
+  });
+
+  describe.skip('getTopRunCount', () => {
+    it('should retrieve top case processes by run count', async () => {
+      const { cases } = getServices();
+      await testGetTopRunCount(cases);
+    });
+  });
+
+  describe.skip('getTopFaultedCount', () => {
+    it('should retrieve top case processes by failure count', async () => {
+      const { cases } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await cases.getTopFaultedCount(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top cases by failure count returned — cannot validate response structure');
+      }
+
+      const topProcess = result[0];
+      expect(topProcess.packageId).toBeDefined();
+      expect(typeof topProcess.faultedCount).toBe('number');
+      expect(topProcess.name).toBeDefined();
+      expect(typeof topProcess.name).toBe('string');
+    });
+  });
+
+  describe.skip('getTopElementFailedCount', () => {
+    it('should retrieve top elements by failure count for cases', async () => {
+      const { cases } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await cases.getTopElementFailedCount(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top elements by failure count returned — cannot validate response structure');
+      }
+
+      const element = result[0];
+      expect(element.elementName).toBeDefined();
+      expect(typeof element.elementName).toBe('string');
+      expect(element.elementType).toBeDefined();
+      expect(typeof element.failedCount).toBe('number');
+    });
+  });
+
+  describe.skip('getTopExecutionDuration', () => {
+    it('should retrieve top case processes by duration', async () => {
+      const { cases } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await cases.getTopExecutionDuration(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top cases by duration returned — cannot validate response structure');
+      }
+
+      const topProcess = result[0];
+      expect(topProcess.packageId).toBeDefined();
+      expect(typeof topProcess.packageId).toBe('string');
+      expect(topProcess.duration).toBeDefined();
+      expect(typeof topProcess.duration).toBe('number');
+      expect(topProcess.processKey).toBeDefined();
+      expect(typeof topProcess.processKey).toBe('string');
+      expect(topProcess.name).toBeDefined();
+      expect(typeof topProcess.name).toBe('string');
     });
   });
 

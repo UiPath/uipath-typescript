@@ -8,6 +8,7 @@ import { MAESTRO_TEST_CONSTANTS } from '../constants/maestro';
 import { createMockBaseResponse } from './core';
 import { SlaSummaryStatus, InstanceStatus } from '../../../src/models/maestro/case-instances.types';
 import type { SlaSummaryResponse, CaseInstanceStageSLAResponse, CaseInstanceStageSLAStage } from '../../../src/models/maestro/case-instances.types';
+import type { InstanceStatusTimelineResponse, GetTopRunCountResponse, GetTopDurationResponse } from '../../../src/models/maestro/insights.types';
 
 // Maestro-Specific Mock Factories
 
@@ -580,5 +581,73 @@ export const createMockCaseInstanceStageSLAResponse = (overrides: Partial<CaseIn
   return createMockBaseResponse({
     caseInstanceId: MAESTRO_TEST_CONSTANTS.SLA_CASE_INSTANCE_ID,
     stages: [createMockCaseInstanceStageSLAStage()],
+  }, overrides);
+};
+
+// Insights Mock Factories
+
+/**
+ * Creates a mock top run count response for processes
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock top run count response object
+ */
+export const createMockTopRunCountResponse = (overrides: Partial<GetTopRunCountResponse> = {}): GetTopRunCountResponse => {
+  return createMockBaseResponse({
+    packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+    runCount: MAESTRO_TEST_CONSTANTS.RUN_COUNT_PROCESS_1,
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY
+  }, overrides);
+};
+
+/**
+ * Creates a mock InstanceStatusTimeline response item
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock InstanceStatusTimelineResponse object
+ */
+export const createMockInstanceStatusTimeline = (overrides: Partial<InstanceStatusTimelineResponse> = {}): InstanceStatusTimelineResponse => {
+  return createMockBaseResponse({
+    startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_DATE_1,
+    status: MAESTRO_TEST_CONSTANTS.INSIGHTS_STATUS_COMPLETED,
+    count: MAESTRO_TEST_CONSTANTS.INSIGHTS_COUNT_2,
+  }, overrides);
+};
+
+/**
+ * Creates a mock top failure count response (raw API shape with runCount)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock top failure count response object
+ */
+export const createMockTopFaultedCountResponse = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+    runCount: MAESTRO_TEST_CONSTANTS.FAULTED_COUNT_PROCESS_1,
+    processKey: null
+  }, overrides);
+};
+
+/**
+ * Creates a mock top element failure count response
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock top element failure count response object
+ */
+export const createMockTopElementFailedCountResponse = (overrides: Partial<any> = {}) => {
+  return createMockBaseResponse({
+    elementName: MAESTRO_TEST_CONSTANTS.ELEMENT_NAME_1,
+    elementType: MAESTRO_TEST_CONSTANTS.ELEMENT_TYPE_1,
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+    count: MAESTRO_TEST_CONSTANTS.ELEMENT_FAILED_COUNT_1,
+  }, overrides);
+};
+
+/**
+ * Creates a mock top duration response for processes
+ * @param overrides - Optional overrides for specific fields
+ * @returns Mock top duration response object
+ */
+export const createMockTopDurationResponse = (overrides: Partial<GetTopDurationResponse> = {}): GetTopDurationResponse => {
+  return createMockBaseResponse({
+    packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+    duration: MAESTRO_TEST_CONSTANTS.DURATION_PROCESS_1,
+    processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY
   }, overrides);
 };

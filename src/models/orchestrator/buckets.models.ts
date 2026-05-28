@@ -1,4 +1,4 @@
-import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetByNameOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem } from './buckets.types';
+import { BucketGetAllOptions, BucketGetByIdOptions, BucketGetByNameOptions, BucketGetResponse, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetUriResponse, BucketUploadFileOptions, BucketUploadResponse, BlobItem, BucketGetFilesOptions, BucketFile, BucketDeleteFileOptions } from './buckets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -188,4 +188,72 @@ export interface BucketServiceModel {
    * ```
    */
   uploadFile(options: BucketUploadFileOptions): Promise<BucketUploadResponse>;
-} 
+
+  /**
+   * Deletes a file from a bucket
+   *
+   * @param bucketId - The ID of the bucket
+   * @param path - The full path to the file to delete
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
+   * @returns Promise resolving when the file is deleted
+   * @example
+   * ```typescript
+   * // Delete a file from a bucket
+   * await buckets.deleteFile(<bucketId>, '/folder/file.pdf', { folderId: <folderId> });
+   * ```
+   */
+  deleteFile(bucketId: number, path: string, options?: BucketDeleteFileOptions): Promise<void>;
+
+  /**
+   * Lists all files in a bucket.
+   *
+   * Returns a flat, recursive listing of all files in the bucket. Supports regex filtering
+   * and filter / orderby / select / expand. {@link BucketFile} entries include
+   * `isDirectory` so callers can distinguish folders from files.
+   *
+   * The method returns either:
+   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
+   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   *
+   * @param bucketId - The ID of the bucket
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`) and optional parameters for regex filtering, query options, and pagination
+   * {@link BucketGetFilesOptions}
+   * @returns Promise resolving to either an array of files NonPaginatedResponse<BucketFile> or a PaginatedResponse<BucketFile> when pagination options are used.
+   * {@link BucketFile}
+   * @example
+   * ```typescript
+   * // List all files in the bucket
+   * const files = await buckets.getFiles(<bucketId>, { folderId: <folderId> });
+   *
+   * // Filter by regex pattern
+   * const pdfs = await buckets.getFiles(<bucketId>, {
+   *   folderId: <folderId>,
+   *   fileNameRegex: '.*\\.pdf$'
+   * });
+   *
+   * // First page with pagination
+   * const page1 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, pageSize: 10 });
+   *
+   * // Navigate using cursor
+   * if (page1.hasNextPage) {
+   *   const page2 = await buckets.getFiles(<bucketId>, { folderId: <folderId>, cursor: page1.nextCursor });
+   * }
+   *
+   * // Jump to specific page
+   * const page5 = await buckets.getFiles(<bucketId>, {
+   *   folderId: <folderId>,
+   *   jumpToPage: 5,
+   *   pageSize: 10
+   * });
+   * ```
+   */
+  getFiles<T extends BucketGetFilesOptions = BucketGetFilesOptions>(
+    bucketId: number,
+    options?: T
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<BucketFile>
+      : NonPaginatedResponse<BucketFile>
+  >;
+}
+

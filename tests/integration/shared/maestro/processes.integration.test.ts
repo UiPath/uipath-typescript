@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
+import { testGetTopRunCount, testGetInstanceStatusTimeline } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -131,6 +132,92 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
         }
         throw error;
       }
+    });
+  });
+
+  describe.skip('getTopRunCount', () => {
+    it('should retrieve top processes by run count', async () => {
+      const { maestroProcesses } = getServices();
+      await testGetTopRunCount(maestroProcesses);
+    });
+  });
+
+  describe.skip('getInstanceStatusTimeline', () => {
+    it('should retrieve instance status by date', async () => {
+      const { maestroProcesses } = getServices();
+      await testGetInstanceStatusTimeline(maestroProcesses);
+    });
+  });
+
+  describe.skip('getTopFaultedCount', () => {
+    it('should retrieve top processes by failure count', async () => {
+      const { maestroProcesses } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await maestroProcesses.getTopFaultedCount(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top processes by failure count returned — cannot validate response structure');
+      }
+
+      const topProcess = result[0];
+      expect(topProcess.packageId).toBeDefined();
+      expect(typeof topProcess.faultedCount).toBe('number');
+      expect(topProcess.name).toBe(topProcess.packageId);
+    });
+  });
+
+  describe.skip('getTopElementFailedCount', () => {
+    it('should retrieve top elements by failure count', async () => {
+      const { maestroProcesses } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await maestroProcesses.getTopElementFailedCount(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top elements by failure count returned — cannot validate response structure');
+      }
+
+      const element = result[0];
+      expect(element.elementName).toBeDefined();
+      expect(typeof element.elementName).toBe('string');
+      expect(element.elementType).toBeDefined();
+      expect(typeof element.failedCount).toBe('number');
+    });
+  });
+
+  describe.skip('getTopExecutionDuration', () => {
+    it('should retrieve top processes by duration', async () => {
+      const { maestroProcesses } = getServices();
+      const now = new Date();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const result = await maestroProcesses.getTopExecutionDuration(sevenDaysAgo, now);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length === 0) {
+        throw new Error('No top processes by duration returned — cannot validate response structure');
+      }
+
+      const topProcess = result[0];
+      expect(topProcess.packageId).toBeDefined();
+      expect(typeof topProcess.packageId).toBe('string');
+      expect(topProcess.duration).toBeDefined();
+      expect(typeof topProcess.duration).toBe('number');
+      expect(topProcess.processKey).toBeDefined();
+      expect(typeof topProcess.processKey).toBe('string');
+      expect(topProcess.name).toBeDefined();
+      expect(topProcess.name).toBe(topProcess.packageId);
     });
   });
 

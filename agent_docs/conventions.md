@@ -8,7 +8,7 @@
 - **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
 - Prefer `private` keyword over underscore prefix for private methods
 - No `any` type — use `unknown` if truly unknown, then validate.
-- **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change.
+- **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored.
 - Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return.
 - Use enums for fixed value sets — **NEVER** leave raw strings/numbers. Raw values lose type safety and autocomplete.
 - **NEVER** write `param || {}` for required parameters — this hides bugs by silently accepting missing required data at call sites.
@@ -19,14 +19,14 @@
 - Types live in `src/models/{domain}/{domain}.types.ts`. Internal-only types go in `*.internal-types.ts`.
 - Constants live in `src/utils/constants/`. Endpoints are split per domain in `src/utils/constants/endpoints/` (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`).
 - Subpath exports: when adding a new service module, add entries to `package.json` `exports` and `rollup.config.js`.
-- Every public service method must be decorated with `@track('ServiceName.MethodName')` for telemetry — gaps are invisible until production debugging, when they're expensive.
+- Every public service method that makes an HTTP API call must be decorated with `@track('ServiceName.MethodName')` for telemetry — gaps are invisible until production debugging, when they're expensive. **Exception**: methods that are event handlers, window/DOM interactions, or UI-only operations (no HTTP calls) must NOT be tracked — tracking non-API methods causes excessive log ingestion with no diagnostic value.
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
-- **Barrel files must use `export * from`**, not `export type * from`. Using `export type` re-exports only type declarations and silently drops runtime values (class constructors, enums), causing `undefined` errors for SDK consumers who import them.
+- **Barrel files must use `export * from`**, not `export type * from`. Using `export type *` silently drops runtime values (classes, enums), causing `undefined` errors for SDK consumers. Note: individual `export type { Name }` for specific type-only re-exports is fine — the prohibition is on the wildcard form.
 - When a service method makes multiple independent API calls (e.g., chunk-based key resolution), parallelize them with `Promise.all` — sequential calls compound latency unnecessarily.
 
 ## Type naming
 
-- **Response types**: `{Entity}GetResponse` for reads, `{Entity}GetAllResponse` for list-specific responses. Mutation responses: `{Entity}InsertResponse`, `{Entity}UpdateResponse`, `{Entity}DeleteResponse`, or generic `{Entity}OperationResponse`.
+- **Response types**: `{Entity}GetResponse` for reads, `{Entity}GetAllResponse` for list-specific responses, `{Entity}Get{Operation}Response` for specialized queries with a different response shape (e.g., `ProcessGetTopRunCountResponse` for `getTopRunCount()`). Mutation responses: `{Entity}InsertResponse`, `{Entity}UpdateResponse`, `{Entity}DeleteResponse`, or generic `{Entity}OperationResponse`.
 - **Raw types**: `Raw{Entity}GetResponse` for the internal shape before method attachment — these live in `*.types.ts`.
 - **Final response type**: `type {Entity}GetResponse = Raw{Entity}GetResponse & {Entity}Methods` — defined in `*.models.ts`, combining raw data with bound methods.
 - **Options types**: `{Entity}GetAllOptions`, `{Entity}GetByIdOptions`, `{Entity}{Operation}Options` (e.g., `TaskAssignmentOptions`, `ProcessInstanceOperationOptions`). Compose with `RequestOptions & PaginationOptions & { ... }` for list methods.
@@ -128,6 +128,8 @@ Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g.
 2. **Request params**: `{ PAGE_SIZE_PARAM, OFFSET_PARAM, COUNT_PARAM }` (OFFSET) or `{ PAGE_SIZE_PARAM, TOKEN_PARAM }` (TOKEN)
 
 Naming: `{SERVICE}_PAGINATION` for response shape, `{SERVICE}_OFFSET_PARAMS` or `{SERVICE}_TOKEN_PARAMS` for request params.
+
+**`COUNT_PARAM` must be `undefined`, not `''`**: When a non-OData endpoint doesn't use a count param, set `COUNT_PARAM: undefined` — not `COUNT_PARAM: ''`. An empty string is falsy and causes `base.ts` to fall back to `ODATA_OFFSET_PARAMS.COUNT_PARAM` (`'$count'`) via the `||` operator, silently injecting `{ "$count": true }` into every request body the API never expects.
 
 **`excludeFromPrefix`** — pass to prevent specific keys from getting `$` prefix. Use when keys are service-specific (not OData) query params.
 

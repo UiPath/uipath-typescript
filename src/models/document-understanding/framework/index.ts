@@ -11,5 +11,6 @@ export * from './helpers.types';
 export * from './model.types';
 export * from './monitor.types';
 export * from './results.types';
+export * from './swagger.types';
 export * from './taxonomy.types';
 export * from './validation.types';

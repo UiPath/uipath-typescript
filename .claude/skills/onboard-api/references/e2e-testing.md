@@ -80,10 +80,18 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      // Required for OAuth auth flow — proxies identity server requests
+      '/identity_': {
+        target: '__BASE_URL__',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
 })
 ```
+
+> **Note:** The `/identity_` proxy is required for OAuth apps. For PAT-only apps it's harmless but unnecessary. Both proxies route to the same target — the UiPath API server handles both paths.
 
 **`tsconfig.json`**
 ```json
@@ -168,10 +176,11 @@ createRoot(document.getElementById('root')!).render(<App />)
 
 When OAuth is needed, use the `useAuth` hook pattern from `samples/process-app-v1/src/hooks/useAuth.tsx` instead of `useSdk`. Key differences from PAT:
 
-1. **`baseUrl` must be the real API URL** (e.g., `https://alpha.api.uipath.com`), NOT `window.location.origin` — OAuth redirects must reach the real identity server
+1. **`baseUrl` is `window.location.origin`** (same as PAT) — the SDK uses `baseUrl` for both OAuth redirects AND API data calls. Using the real API URL causes CORS failures on data calls. Instead, proxy both `/identity_` and `/{orgName}` through Vite (see vite.config.ts below).
 2. **`redirectUri` is `window.location.origin`** (localhost) — where OAuth sends the user back after login
 3. **`http://localhost:5173` must be registered as a redirect URL** in the external app config on UiPath Cloud (Admin > External Applications). Error code 218 on the login page means it's not registered. Sometimes works on retry even without changes — likely a caching/propagation delay.
-4. **Vite proxy only handles API data calls** (`/{orgName}`), not auth redirects (`/identity_/`)
+4. **Vite proxy must handle BOTH** `/{orgName}` (API data calls) AND `/identity_` (OAuth auth flow). Without the `/identity_` proxy, the OAuth authorize redirect goes to localhost and 404s.
+5. **Use `scope` (singular)** in the config, not `scopes` — the SDK's `OAuthFields` interface defines `scope: string`. Using `scopes` silently fails `isCompleteConfig()`, causing a "configuration not found" error on `initialize()`.
 
 #### PAT auth
 
@@ -426,8 +435,10 @@ These caused failures during real E2E runs:
 | **CORS error** — `Access to fetch blocked by CORS policy` | Vite proxy is configured by default (see vite.config.ts above). Ensure `baseUrl` is `window.location.origin` so requests go through the proxy |
 | **npm uses cached tarball** — old version of SDK loads despite rebuilding | Change the version before packing (`npm version 1.0.0-test.N`) to bust npm cache |
 | **Port 5173 in use** — Vite starts on 5174, proxy doesn't match | `lsof -ti:5173 \| xargs kill -9` before starting dev server |
-| **OAuth error 218** — login page shows `errorCode=218` | `http://localhost:5173` not registered as redirect URL in the external app (Admin > External Applications). Sometimes resolves on retry due to caching. |
-| **OAuth redirect stays on localhost** — blank page after clicking login | `baseUrl` is `window.location.origin` instead of the real API URL. OAuth needs the real URL for auth redirects; only API data calls go through the Vite proxy. |
+| **OAuth error 218** — login page shows `errorCode=218` | `http://localhost:5173` not registered as redirect URL in the external app (Admin > External Applications). Sometimes resolves on retry due to caching/propagation delay. |
+| **OAuth redirect 404s on localhost** — `/identity_/connect/authorize` returns 404 | Missing `/identity_` proxy in `vite.config.ts`. The SDK sends OAuth requests to `baseUrl` (localhost), so Vite must proxy `/identity_` to the real API server alongside `/{orgName}`. |
+| **"configuration not found" on `initialize()`** — `UiPath SDK configuration not found` error | Used `scopes` (plural) instead of `scope` (singular) in OAuth config. The SDK's `OAuthFields` interface defines `scope: string` — `scopes` is silently ignored, `isCompleteConfig()` fails, and `initialize()` falls through to meta tag loading. |
+| **OAuth works but API returns empty data** — login succeeds, responses are `[]` | Wrong `tenantName` — data may live in a different tenant than the one configured. Check which tenant the curl used (e.g., `DefaultTenant` vs `adetenant`). |
 
 ## Quick Reference
 
@@ -438,8 +449,8 @@ These caused failures during real E2E runs:
 | PAT source | `.env` in repo root (same token used for live API curl) |
 | OAuth source | `OAUTH_CLIENT_ID` from `.env`, scopes from `docs/oauth-scopes.md` |
 | baseUrl (PAT) | `window.location.origin` (routes through Vite proxy) |
-| baseUrl (OAuth) | Real API URL (e.g., `https://alpha.api.uipath.com`) — auth redirects need real server |
-| Vite proxy | `/{orgName}` → `{BASE_URL}` with `changeOrigin: true` |
+| baseUrl (OAuth) | `window.location.origin` (same as PAT — Vite proxies both `/identity_` and `/{orgName}`) |
+| Vite proxy | `/{orgName}` + `/identity_` → `{BASE_URL}` with `changeOrigin: true` |
 | SDK dependency | `"file:../../uipath-uipath-typescript-{version}.tgz"` |
 | Dev server | `npm run dev` → `http://localhost:5173` |
 | Stack | React + Vite + Tailwind (same as other sample apps) |

@@ -15,7 +15,7 @@ import {
   createMockMaestroApiOperationResponse
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
-import type { 
+import type {
   ProcessInstanceGetAllWithPaginationOptions,
   ProcessInstanceOperationOptions,
   ProcessInstanceGetVariablesOptions,
@@ -557,11 +557,11 @@ describe('ProcessInstancesService', () => {
     });
 
     it('should handle API errors', async () => {
-      
+
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      
+
       await expect(service.getVariables(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });

@@ -10,7 +10,7 @@ npm install @uipath/coded-action-app
 
 ## Overview
 
-Action Center renders a coded action app within an iframe. `@uipath/coded-action-app` provides service CodedActionAppsService which offers below capabilities:
+Action Center renders a coded action app within an iframe. `@uipath/coded-action-app` provides service CodedActionAppService which offers below capabilities:
 
 - **Receive** - `getTask()` - On app load, UiPath Action Center provides the task details.
 - **Notify** - `setTaskData()` - Notify Action Center when task data changes (e.g. to enable the Save button).
@@ -22,17 +22,17 @@ Action Center renders a coded action app within an iframe. `@uipath/coded-action
 ### Initialise the service
 
 ```ts
-import { CodedActionAppsService } from '@uipath/coded-action-app';
+import { CodedActionAppService } from '@uipath/coded-action-app';
 
-const service = new CodedActionAppsService();
+const service = new CodedActionAppService();
 ```
 
-The class is also exported under the alias `CodedActionApps` for convenience:
+The class is also exported under the alias `CodedActionApp` for convenience:
 
 ```ts
-import { CodedActionApps } from '@uipath/coded-action-app';
+import { CodedActionApp } from '@uipath/coded-action-app';
 
-const service = new CodedActionApps();
+const service = new CodedActionApp();
 ```
 
 ---
@@ -101,7 +101,7 @@ service.showMessage('User information', MessageSeverity.Info);
 
 ## API Reference
 
-### `CodedActionAppsService`
+### `CodedActionAppService`
 
 | Method | Description |
 |---|---|

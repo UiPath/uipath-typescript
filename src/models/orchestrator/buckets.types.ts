@@ -136,22 +136,67 @@ export interface BlobItem {
    * Full path to the blob
    */
   path: string;
-  
+
   /**
    * Content type of the blob
    */
   contentType: string;
-  
+
   /**
    * Size of the blob in bytes
    */
   size: number;
-  
+
   /**
    * Last modified timestamp
    */
   lastModified: string | null;
 }
+
+/**
+ * Represents a file or directory entry in a bucket
+ */
+export interface BucketFile {
+  /**
+   * Full path to the file or directory
+   */
+  path: string;
+
+  /**
+   * Content type of the file (empty for directories)
+   */
+  contentType: string;
+
+  /**
+   * Size of the file in bytes
+   */
+  size: number;
+
+  /**
+   * Whether the entry is a directory
+   */
+  isDirectory: boolean;
+
+  /**
+   * Identifier of the file, when available
+   */
+  id: string | null;
+}
+
+/**
+ * Options for listing files in a bucket directory
+ */
+export type BucketGetFilesOptions = RequestOptions & PaginationOptions & FolderScopedOptions & {
+  /**
+   * Regex pattern to filter file names (e.g., '.*\\.pdf$')
+   */
+  fileNameRegex?: string;
+};
+
+/**
+ * Options for deleting a file from a bucket
+ */
+export interface BucketDeleteFileOptions extends FolderScopedOptions {}
 
 /**
  * Options for uploading files to a bucket

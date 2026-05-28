@@ -24,6 +24,7 @@ lib/
 
 # Test coverage
 coverage/
+coverage-integration/
 .nyc_output/
 
 # Logs

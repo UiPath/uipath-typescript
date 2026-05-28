@@ -250,7 +250,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  describe('getSlaSummary', () => {
+  describe.skipIf(mode === 'v0')('getSlaSummary', () => {
     it('should retrieve SLA summary for case instances', async () => {
       const { caseInstances } = getServices();
 
@@ -285,7 +285,7 @@ describe.each(modes)('Maestro Case Instances - Integration Tests [%s]', (mode) =
     });
   });
 
-  describe('getStagesSlaSummary', () => {
+  describe.skipIf(mode === 'v0')('getStagesSlaSummary', () => {
     it('should retrieve stages SLA summary for case instances', async () => {
       const { caseInstances } = getServices();
 

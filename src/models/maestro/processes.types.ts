@@ -3,6 +3,8 @@
  * Types and interfaces for Maestro process management
  */
 
+import { GetTopRunCountResponse, GetTopDurationResponse, GetTopFaultedCountResponse } from './insights.types';
+
 /**
  * Process information with instance statistics
  */
@@ -43,3 +45,26 @@ export interface RawMaestroProcessGetAllResponse {
   cancelingCount: number;
 }
 
+/**
+ * Response for a single entry in top processes by run count
+ */
+export interface ProcessGetTopRunCountResponse extends GetTopRunCountResponse {
+  /** Human-readable process name */
+  name: string;
+}
+
+/**
+ * Response for a single entry in top processes by failure count
+ */
+export interface ProcessGetTopFaultedCountResponse extends GetTopFaultedCountResponse {
+  /** Human-readable process name */
+  name: string;
+}
+
+/**
+ * Response for a single entry in top processes by duration
+ */
+export interface ProcessGetTopDurationResponse extends GetTopDurationResponse {
+  /** Human-readable process name */
+  name: string;
+}

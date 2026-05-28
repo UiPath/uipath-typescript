@@ -1,4 +1,7 @@
 import { randomBytes, randomInt } from 'crypto';
+import { expect } from 'vitest';
+import { GetTopRunCountResponse } from '../../../src/models/maestro/insights.types';
+import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -124,4 +127,72 @@ export function generateRandomFloat(min: number, max: number, precision: number 
  */
 export function createTestFileContent(filename: string): string {
   return `This is a test file: ${filename}\nCreated at: ${new Date().toISOString()}\nRandom data: ${generateRandomString(32)}`;
+}
+
+/** Minimal interface for services that support getTopRunCount integration testing */
+interface TopRunCountService {
+  getTopRunCount(startTime: Date, endTime: Date): Promise<GetTopRunCountResponse[]>;
+}
+
+/**
+ * Integration test helper: calls getTopRunCount and validates the response shape.
+ * Shared between MaestroProcessesService and CasesService.
+ *
+ * @param service - Service instance (maestroProcesses or cases)
+ */
+export async function testGetTopRunCount(
+  service: TopRunCountService
+): Promise<void> {
+  const now = new Date();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const result = await service.getTopRunCount(sevenDaysAgo, now);
+
+  expect(result).toBeDefined();
+  expect(Array.isArray(result)).toBe(true);
+
+  if (result.length === 0) {
+    throw new Error('No top processes returned — cannot validate response structure');
+  }
+
+  const topProcess = result[0];
+  expect(topProcess.packageId).toBeDefined();
+  expect(typeof topProcess.packageId).toBe('string');
+  expect(topProcess.runCount).toBeDefined();
+  expect(typeof topProcess.runCount).toBe('number');
+  expect(topProcess.processKey).toBeDefined();
+  expect(typeof topProcess.processKey).toBe('string');
+}
+
+/** Minimal interface for services that support getInstanceStatusTimeline integration testing */
+interface InstanceStatusTimelineService {
+  getInstanceStatusTimeline(startTime: Date, endTime: Date): Promise<InstanceStatusTimelineResponse[]>;
+}
+
+/**
+ * Integration test helper: calls getInstanceStatusTimeline and validates the response shape.
+ * Shared between MaestroProcessesService and CasesService.
+ *
+ * @param service - Service instance (maestroProcesses or cases)
+ */
+export async function testGetInstanceStatusTimeline(
+  service: InstanceStatusTimelineService,
+): Promise<void> {
+  const now = new Date();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const result = await service.getInstanceStatusTimeline(sevenDaysAgo, now);
+
+  expect(result).toBeDefined();
+  expect(Array.isArray(result)).toBe(true);
+
+  if (result.length > 0) {
+    const entry = result[0];
+    expect(entry.startTime).toBeDefined();
+    expect(typeof entry.startTime).toBe('string');
+    expect(entry.status).toBeDefined();
+    expect(typeof entry.status).toBe('string');
+    expect(entry.count).toBeDefined();
+    expect(typeof entry.count).toBe('number');
+  }
 }

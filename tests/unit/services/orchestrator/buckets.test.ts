@@ -14,7 +14,7 @@ import {
 } from '../../../utils/mocks';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { TEST_CONSTANTS } from '../../../utils/constants/common';
-import type { BucketGetByIdOptions, BucketGetAllOptions, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetResponse, BlobItem } from '../../../../src/models/orchestrator/buckets.types';
+import type { BucketGetByIdOptions, BucketGetAllOptions, BucketGetFileMetaDataWithPaginationOptions, BucketGetReadUriOptions, BucketGetResponse, BlobItem, BucketGetFilesOptions, BucketFile } from '../../../../src/models/orchestrator/buckets.types';
 import { BucketOptions } from '../../../../src/models/orchestrator/buckets.types';
 import { BUCKET_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 
@@ -852,4 +852,250 @@ describe('BucketService Unit Tests', () => {
       })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
+
+  describe('deleteFile', () => {
+    it('should delete a file from a bucket successfully', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await bucketService.deleteFile(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.DELETE_FILE(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          params: { path: BUCKET_TEST_CONSTANTS.FILE_PATH },
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
+      );
+    });
+
+    it('should resolve folderKey into the FolderKey header', async () => {
+      mockApiClient.delete.mockResolvedValue(undefined);
+
+      await bucketService.deleteFile(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY },
+      );
+
+      expect(mockApiClient.delete).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.DELETE_FILE(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY,
+          }),
+        }),
+      );
+    });
+
+    it('should throw ValidationError when bucketId is missing', async () => {
+      await expect(bucketService.deleteFile(
+        null as any,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toThrow('bucketId is required for deleteFile');
+      expect(mockApiClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when no folder context is provided', async () => {
+      await expect(bucketService.deleteFile(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+      )).rejects.toThrow(ValidationError);
+      expect(mockApiClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when path is missing', async () => {
+      await expect(bucketService.deleteFile(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        null as any,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toThrow('path is required for deleteFile');
+      expect(mockApiClient.delete).not.toHaveBeenCalled();
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.delete.mockRejectedValue(error);
+
+      await expect(bucketService.deleteFile(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getFiles', () => {
+    it('should return files without pagination', async () => {
+      const mockFiles: BucketFile[] = [
+        { path: 'file1.txt', contentType: 'text/plain', size: 10, isDirectory: false, id: null },
+        { path: 'folder1', contentType: '', size: 0, isDirectory: true, id: null },
+      ];
+      const mockResponse = { items: mockFiles, totalCount: undefined };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const result = await bucketService.getFiles(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serviceAccess: expect.any(Object),
+          getEndpoint: expect.toSatisfy((fn: () => string) =>
+            fn() === BUCKET_ENDPOINTS.GET_FILES(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+          ),
+          transformFn: expect.any(Function),
+          pagination: expect.objectContaining({
+            paginationType: PaginationType.OFFSET,
+            itemsField: ODATA_PAGINATION.ITEMS_FIELD,
+            totalCountField: ODATA_PAGINATION.TOTAL_COUNT_FIELD,
+          }),
+          excludeFromPrefix: ['directory', 'recursive', 'fileNameRegex'],
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
+        expect.objectContaining({
+          directory: '/',
+          recursive: true,
+        }),
+      );
+
+      expect(result).toEqual(mockResponse);
+      expect(result.items).toHaveLength(2);
+    });
+
+    it('should pass fileNameRegex through to the request', async () => {
+      const mockResponse = { items: [], totalCount: undefined };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const options: BucketGetFilesOptions = {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+        fileNameRegex: '.*\\.pdf$',
+      };
+
+      await bucketService.getFiles(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        options,
+      );
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          excludeFromPrefix: ['directory', 'recursive', 'fileNameRegex'],
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
+        expect.objectContaining({
+          directory: '/',
+          recursive: true,
+          fileNameRegex: '.*\\.pdf$',
+        }),
+      );
+    });
+
+    it('should resolve folderKey into the FolderKey header', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: undefined });
+
+      await bucketService.getFiles(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        { folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY },
+      );
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY,
+          }),
+        }),
+        expect.not.objectContaining({ folderKey: expect.anything() }),
+      );
+    });
+
+    it('should return paginated files when pagination options provided', async () => {
+      const mockFiles: BucketFile[] = [
+        { path: 'a.txt', contentType: 'text/plain', size: 5, isDirectory: false, id: null },
+      ];
+      const mockResponse = {
+        items: mockFiles,
+        totalCount: undefined,
+        hasNextPage: true,
+        nextCursor: TEST_CONSTANTS.NEXT_CURSOR,
+        previousCursor: null,
+        currentPage: 1,
+        totalPages: undefined,
+      };
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+
+      const result = await bucketService.getFiles(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        { folderId: TEST_CONSTANTS.FOLDER_ID, pageSize: TEST_CONSTANTS.PAGE_SIZE },
+      ) as PaginatedResponse<BucketFile>;
+
+      expect(result.hasNextPage).toBe(true);
+      expect(result.nextCursor).toBe(TEST_CONSTANTS.NEXT_CURSOR);
+    });
+
+    it('should transform PascalCase API response to camelCase with path rename', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockImplementation(async ({ transformFn }) => {
+        const raw = {
+          FullPath: 'docs/report.pdf',
+          ContentType: 'application/pdf',
+          Size: 12345,
+          IsDirectory: false,
+          Id: null,
+        };
+        const transformed = transformFn?.(raw);
+        return { items: [transformed], totalCount: undefined };
+      });
+
+      const result = await bucketService.getFiles(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      const file = result.items[0];
+      expect(file.path).toBe('docs/report.pdf');
+      expect(file.contentType).toBe('application/pdf');
+      expect(file.size).toBe(12345);
+      expect(file.isDirectory).toBe(false);
+      expect(file.id).toBeNull();
+      // PascalCase originals must be absent
+      expect((file as any).FullPath).toBeUndefined();
+      expect((file as any).ContentType).toBeUndefined();
+      expect((file as any).IsDirectory).toBeUndefined();
+      // fullPath (intermediate camelCase) was renamed to path via BucketMap
+      expect((file as any).fullPath).toBeUndefined();
+    });
+
+    it('should throw ValidationError when bucketId is missing', async () => {
+      await expect(bucketService.getFiles(null as any, { folderId: TEST_CONSTANTS.FOLDER_ID }))
+        .rejects.toThrow('bucketId is required for getFiles');
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when no folder context is provided', async () => {
+      await expect(bucketService.getFiles(BUCKET_TEST_CONSTANTS.BUCKET_ID))
+        .rejects.toThrow(ValidationError);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
+
+      await expect(bucketService.getFiles(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
 });
+

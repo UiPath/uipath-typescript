@@ -7,28 +7,28 @@ import type {
 } from './taxonomy.types';
 
 export interface FieldValue {
-    value?: string | null;
-    derivedValue?: string | null;
+    Value?: string | null;
+    DerivedValue?: string | null;
 }
 
 export interface FieldValueResult {
-    value?: FieldValue;
-    isValid?: boolean;
-    rules?: RuleResult[] | null;
+    Value?: FieldValue;
+    IsValid?: boolean;
+    Rules?: RuleResult[] | null;
 }
 
 export interface RuleResult {
-    rule?: Rule;
-    isValid?: boolean;
+    Rule?: Rule;
+    IsValid?: boolean;
 }
 
 export interface RuleSetResult {
-    fieldId?: string | null;
-    fieldType?: FieldType;
-    criticality?: Criticality;
-    isValid?: boolean;
-    results?: FieldValueResult[] | null;
-    brokenRules?: Rule[] | null;
-    rowIndex?: number | null;
-    tableFieldId?: string | null;
+    FieldId?: string | null;
+    FieldType?: FieldType;
+    Criticality?: Criticality;
+    IsValid?: boolean;
+    Results?: FieldValueResult[] | null;
+    BrokenRules?: Rule[] | null;
+    RowIndex?: number | null;
+    TableFieldId?: string | null;
 }

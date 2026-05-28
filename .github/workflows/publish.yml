@@ -2,16 +2,28 @@ name: Publish SDK package
 
 on:
   workflow_dispatch:
+    inputs:
+      package:
+        description: 'select package to publish'
+        required: true
+        default: 'ts-sdk'
+        type: choice
+        options:
+          - ts-sdk
+          - coded-action-app-sdk
+          - telemetry
 
-permissions:
-  contents: read
-  packages: write
-  id-token: write
+permissions: {}
 
 jobs:
   publish-sdk:
+    if: github.event.inputs.package == 'ts-sdk'
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,12 +43,9 @@ jobs:
         run: |
           SDK_VERSION=$(node -p "require('./package.json').version")
 
-          # SDK core constants - uses SDK_VERSION from root package.json
-          sed -i 's|\$CONNECTION_STRING|${{ secrets.CONNECTION_STRING }}|g' src/core/telemetry/constants.ts
           sed -i "s|\$SDK_VERSION|$SDK_VERSION|g" src/core/telemetry/constants.ts
 
           echo "Updated telemetry constants with:"
-          echo "CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}"
           echo "- SDK_VERSION (from root package): $SDK_VERSION"
 
       - name: Build
@@ -77,3 +86,181 @@ jobs:
           echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
           echo "- **Package:** @uipath/uipath-typescript" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
+
+  deploy-docs:
+    needs: publish-sdk
+    uses: ./.github/workflows/docs.yml
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+      deployments: write
+
+  trigger-cf-worker:
+    needs: publish-sdk
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Trigger API CORS Worker deploy (staging + production)
+        env:
+          GH_TOKEN: ${{ secrets.APPS_DEV_TOOLS_PAT }}
+        run: |
+          gh workflow run deploy-api-cors.yml \
+            --repo UiPath/apps-dev-tools \
+            --field environments="staging,production"
+
+          echo "### CF Worker Deploy Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "- Triggered deploy-api-cors.yml in UiPath/apps-dev-tools" >> $GITHUB_STEP_SUMMARY
+          echo "- Environments: staging, production" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Runs](https://github.com/UiPath/apps-dev-tools/actions/workflows/deploy-api-cors.yml)" >> $GITHUB_STEP_SUMMARY
+          
+  publish-coded-action-app-sdk:
+    if: github.event.inputs.package == 'coded-action-app-sdk'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    defaults:
+      run:
+        working-directory: packages/coded-action-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Update telemetry constants
+        shell: bash
+        run: |
+          SDK_VERSION=$(node -p "require('./package.json').version")
+
+          sed -i "s|\$CODED_ACTION_APP_SDK_VERSION|$SDK_VERSION|g" src/telemetry/constants.ts
+
+          echo "Updated telemetry constants with:"
+          echo "- CODED_ACTION_APP_SDK_VERSION: $SDK_VERSION"
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup registry for npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm
+        run: |
+          echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
+          npm publish --provenance --access public --tag latest
+
+      - name: Publish to GitHub Packages
+        run: |
+          echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          npm publish --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Summary
+        run: |
+          SDK_VERSION=$(node -p "require('./package.json').version")
+          echo "## Coded Action Apps SDK Published Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version: $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Completed Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "- Updated telemetry constants" >> $GITHUB_STEP_SUMMARY
+          echo "- Built coded-action-app package" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package:** @uipath/coded-action-app" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** $SDK_VERSION" >> $GITHUB_STEP_SUMMARY
+
+  publish-telemetry:
+    if: github.event.inputs.package == 'telemetry'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    defaults:
+      run:
+        working-directory: packages/telemetry
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Update telemetry constants
+        shell: bash
+        env:
+          CONNECTION_STRING_VALUE: ${{ secrets.CONNECTION_STRING }}
+        run: |
+          sed -i "s|\$CONNECTION_STRING|$CONNECTION_STRING_VALUE|g" src/constants.ts
+
+          echo "Replaced connection string"
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Setup registry for npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm
+        run: |
+          echo "@uipath:registry=https://registry.npmjs.org" > .npmrc
+          npm publish --provenance --access public --tag latest
+
+      - name: Publish to GitHub Packages
+        run: |
+          echo "@uipath:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          npm publish --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Summary
+        run: |
+          TELEMETRY_VERSION=$(node -p "require('./package.json').version")
+          echo "## Telemetry Published Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version: $TELEMETRY_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Completed Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "- Replaced connection string" >> $GITHUB_STEP_SUMMARY
+          echo "- Built telemetry package" >> $GITHUB_STEP_SUMMARY
+          echo "- Ran unit tests" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to npm registry (public access, with provenance)" >> $GITHUB_STEP_SUMMARY
+          echo "- Published to GitHub Packages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Package Details:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package:** @uipath/core-telemetry" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** $TELEMETRY_VERSION" >> $GITHUB_STEP_SUMMARY

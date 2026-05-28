@@ -44,7 +44,7 @@ export enum Theme {
   DarkHighContrast = 'dark-hc',
 }
 
-/** Response returned by Action Center after a task completion attempt. This type is used by coded-action-apps package */
+/** Response returned by Action Center after a task completion attempt. This type is used by coded-action-app package */
 export type TaskCompleteResponse = {
   /** Whether the task was completed successfully. */
   success: boolean,

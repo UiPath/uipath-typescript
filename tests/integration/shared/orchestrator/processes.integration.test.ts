@@ -138,6 +138,25 @@ describe.each(modes)('Orchestrator Processes - Integration Tests [%s]', (mode) =
         expect(result[0].id).toBeDefined();
       }
     });
+
+    it('should start a process using the options-object form with folderKey', async () => {
+      const { processes } = getServices();
+      const config = getTestConfig();
+
+      expect(config.orchestratorTestProcessKey, 'ORCHESTRATOR_TEST_PROCESS_KEY must be configured').toBeDefined();
+      expect(config.folderKey, 'INTEGRATION_TEST_FOLDER_KEY must be configured').toBeDefined();
+
+      const result = await processes.start(
+        { processKey: config.orchestratorTestProcessKey! },
+        { folderKey: config.folderKey },
+      );
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length > 0) {
+        expect(result[0].id).toBeDefined();
+      }
+    });
   });
 
   describe('getByName', () => {
