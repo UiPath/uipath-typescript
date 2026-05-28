@@ -1688,6 +1688,42 @@ describe("EntityService Unit Tests", () => {
       ).rejects.toThrow("Invalid field name 'Bad Field Name'");
     });
 
+    it("should throw if entity name is a C# reserved keyword", async () => {
+      await expect(entityService.create("Class", [])).rejects.toThrow(
+        /reserved keyword/,
+      );
+    });
+
+    it("should throw if entity name is a VB reserved keyword (case-insensitive)", async () => {
+      await expect(entityService.create("module", [])).rejects.toThrow(
+        /reserved keyword/,
+      );
+    });
+
+    it("should throw if field name matches reserved system field (case-insensitive)", async () => {
+      await expect(
+        entityService.create("myentity", [{ fieldName: "kmskeyid" }]),
+      ).rejects.toThrow(/reserved/i);
+    });
+
+    it("should throw if a field name matches the entity name", async () => {
+      await expect(
+        entityService.create("Employee", [{ fieldName: "employee" }]),
+      ).rejects.toThrow(/cannot match its entity name/);
+    });
+
+    it("should throw if entity displayName exceeds 128 characters", async () => {
+      await expect(
+        entityService.create("myentity", [], { displayName: "x".repeat(129) }),
+      ).rejects.toThrow(/displayName exceeds the 128-character limit/);
+    });
+
+    it("should throw if entity description exceeds 512 characters", async () => {
+      await expect(
+        entityService.create("myentity", [], { description: "x".repeat(513) }),
+      ).rejects.toThrow(/description exceeds the 512-character limit/);
+    });
+
     it("should pass custom folderKey to the entity definition", async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
@@ -2213,8 +2249,15 @@ describe("EntityService Unit Tests", () => {
         mockApiClient.get.mockResolvedValue(mockRawEntity);
         mockApiClient.post.mockResolvedValue(undefined);
 
+        const referenceIds =
+          type === EntityFieldDataType.RELATIONSHIP || type === EntityFieldDataType.FILE
+            ? {
+                referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+                referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+              }
+            : {};
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "new_field", type }],
+          addFields: [{ fieldName: "new_field", type, ...referenceIds }],
         });
 
         const call = mockApiClient.post.mock.calls[0][1];
@@ -2389,7 +2432,12 @@ describe("EntityService Unit Tests", () => {
 
       it("should set FILE lengthLimit to fixed value 300 (UNIQUEIDENTIFIER)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "file_field", type: EntityFieldDataType.FILE }],
+          addFields: [{
+            fieldName: "file_field",
+            type: EntityFieldDataType.FILE,
+            referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+            referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+          }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "file_field");
@@ -2398,11 +2446,41 @@ describe("EntityService Unit Tests", () => {
 
       it("should set RELATIONSHIP lengthLimit to fixed value 300 (UNIQUEIDENTIFIER)", async () => {
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-          addFields: [{ fieldName: "rel_field", type: EntityFieldDataType.RELATIONSHIP }],
+          addFields: [{
+            fieldName: "rel_field",
+            type: EntityFieldDataType.RELATIONSHIP,
+            referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+            referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+          }],
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "rel_field");
         expect(f.sqlType).toEqual({ name: "UNIQUEIDENTIFIER", lengthLimit: 300 });
+      });
+
+      it("should emit nested referenceEntity / referenceField objects and isForeignKey/referenceType on RELATIONSHIP fields", async () => {
+        await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          addFields: [{
+            fieldName: "rel_field",
+            type: EntityFieldDataType.RELATIONSHIP,
+            referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+            referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+          }],
+        });
+        const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
+        const f = fields.find((x: FieldSchemaPayload) => x.name === "rel_field");
+        expect(f.referenceEntity).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID });
+        expect(f.referenceField).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID });
+        expect(f.isForeignKey).toBe(true);
+        expect(f.referenceType).toBe("ManyToOne");
+      });
+
+      it("should throw ValidationError when RELATIONSHIP field is missing reference IDs", async () => {
+        await expect(
+          entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+            addFields: [{ fieldName: "rel_field", type: EntityFieldDataType.RELATIONSHIP }],
+          }),
+        ).rejects.toThrow(/requires both referenceEntityId and referenceFieldId/);
       });
 
       it("should set CHOICE_SET_MULTIPLE lengthLimit to fixed value 4000 (NVARCHAR)", async () => {
@@ -2485,7 +2563,13 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes lengthLimit for FILE", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "file_field", type: EntityFieldDataType.FILE, lengthLimit: 500 }],
+            addFields: [{
+              fieldName: "file_field",
+              type: EntityFieldDataType.FILE,
+              referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+              referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+              lengthLimit: 500,
+            }],
           }),
         ).rejects.toThrow(/does not accept lengthLimit/);
       });
@@ -2493,7 +2577,13 @@ describe("EntityService Unit Tests", () => {
       it("should throw ValidationError when user passes lengthLimit for RELATIONSHIP", async () => {
         await expect(
           entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
-            addFields: [{ fieldName: "rel_field", type: EntityFieldDataType.RELATIONSHIP, lengthLimit: 500 }],
+            addFields: [{
+              fieldName: "rel_field",
+              type: EntityFieldDataType.RELATIONSHIP,
+              referenceEntityId: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID,
+              referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
+              lengthLimit: 500,
+            }],
           }),
         ).rejects.toThrow(/does not accept lengthLimit/);
       });

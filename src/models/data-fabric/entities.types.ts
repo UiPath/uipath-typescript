@@ -16,6 +16,8 @@ export enum EntityFieldDataType {
   BOOLEAN = "BOOLEAN",
   BIG_INTEGER = "BIG_INTEGER",
   MULTILINE_TEXT = "MULTILINE_TEXT",
+  /** Multi-line text up to a 128 KB UTF-16 byte budget (default 131072, max 131072) */
+  MULTILINE_MAX_TEXT = "MULTILINE_MAX_TEXT",
   FILE = "FILE",
   CHOICE_SET_SINGLE = "CHOICE_SET_SINGLE",
   CHOICE_SET_MULTIPLE = "CHOICE_SET_MULTIPLE",
@@ -269,6 +271,8 @@ export interface EntityFieldBase {
   isRbacEnabled?: boolean;
   /** Whether the field value is encrypted at rest (default: false) */
   isEncrypted?: boolean;
+  /** Whether the field is hidden from the UI (default: false) */
+  isHiddenField?: boolean;
   /** Default value for the field */
   defaultValue?: string;
   /** Maximum character length for STRING fields (default: 200, range: 1–4000) and MULTILINE_TEXT fields (default: 200, range: 1–10000). */
@@ -294,10 +298,10 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
   type?: EntityFieldDataType;
   /** Choice set ID for choice-set fields */
   choiceSetId?: string;
-  /** Name of the referenced entity for relationship fields */
-  referenceEntityName?: string;
-  /** Name of the field in the referenced entity */
-  referenceFieldName?: string;
+  /** UUID of the referenced entity (required when `type` is `RELATIONSHIP` or `FILE`) */
+  referenceEntityId?: string;
+  /** UUID of the referenced field on the target entity (required when `type` is `RELATIONSHIP` or `FILE`) */
+  referenceFieldId?: string;
 }
 
 
@@ -548,10 +552,6 @@ export interface FieldMetaData {
   referenceType?: ReferenceType;
   choiceSetId?: string;
   defaultValue?: string;
-  /** Name of the referenced entity (used on write payloads for relationship fields) */
-  referenceEntityName?: string;
-  /** Name of the field in the referenced entity (used on write payloads for relationship fields) */
-  referenceFieldName?: string;
 }
 
 /**

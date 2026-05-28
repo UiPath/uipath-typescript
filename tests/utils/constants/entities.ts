@@ -32,6 +32,10 @@ export const ENTITY_TEST_CONSTANTS = {
   REFERENCE_ENTITY_CUSTOMER: 'Customer',
   REFERENCE_CHOICESET_STATUS: 'StatusChoiceSet',
   REFERENCE_FIELD_DEF: 'relatedFieldDef',
+
+  // Reference IDs (for relationship-type fields)
+  REFERENCE_ENTITY_ID: 'a1234567-e89b-12d3-a456-426614174000',
+  REFERENCE_FIELD_ID: 'b1234567-e89b-12d3-a456-426614174000',
   
   // Field Data Type Names (for assertions)
   FIELD_TYPE_UUID: 'UUID',
