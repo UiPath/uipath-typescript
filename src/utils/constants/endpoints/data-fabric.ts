@@ -52,4 +52,12 @@ export const DATA_FABRIC_ENDPOINTS = {
     UPDATE_BY_NAME: (choiceSetName: string, valueId: string) => `${DATAFABRIC_BASE}/api/EntityService/${choiceSetName}/choiceset/${valueId}/update`,
     DELETE_BY_ID: (choiceSetId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${choiceSetId}/choiceset/delete`,
   },
+  ROLES: {
+    GET_ALL: `${DATAFABRIC_BASE}/api/v2/Role`,
+  },
+  DIRECTORY: {
+    GET_ALL: `${DATAFABRIC_BASE}/api/Directory`,
+    ASSIGN_ROLES: `${DATAFABRIC_BASE}/api/Directory/Role`,
+    REVOKE_ROLES: `${DATAFABRIC_BASE}/api/Directory/RevokeRole`,
+  },
 } as const;

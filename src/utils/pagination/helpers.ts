@@ -11,7 +11,7 @@ import { createHeaders } from '../http/headers';
 import { FOLDER_ID } from '../constants/headers';
 import { ODATA_PREFIX, HTTP_METHODS } from '../constants/common';
 import { addPrefixToKeys } from '../transform';
-import { DEFAULT_ITEMS_FIELD, DEFAULT_TOTAL_COUNT_FIELD } from './constants';
+import { DEFAULT_ITEMS_FIELD, DEFAULT_PAGE_SIZE, DEFAULT_TOTAL_COUNT_FIELD } from './constants';
 import { filterUndefined, resolveNestedField } from '../object';
 import { decodeBase64 } from '../encoding/base64';
 
@@ -364,4 +364,41 @@ export class PaginationHelpers {
       }
     }) as any;
   }
-} 
+
+  /**
+   * Fetches every page for offset/token paginated APIs and returns a flat item array.
+   *
+   * Use this when a service must preserve an array-returning `getAll()` surface
+   * but the backend endpoint only exposes paginated responses.
+   *
+   * @param config - Configuration for the paginated operation
+   * @param options - Request options including pageSize and non-pagination filters
+   * @returns Promise resolving to all transformed items
+   */
+  static async getAllPages<TOptions extends Record<string, unknown>, TRaw, TTransformed = TRaw>(
+    config: GetAllConfig<TRaw, TTransformed>,
+    options: TOptions & { pageSize?: number } = {} as TOptions & { pageSize?: number }
+  ): Promise<TTransformed[]> {
+    const pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
+    const items: TTransformed[] = [];
+    let cursor: PaginationCursor | undefined;
+    let hasNextPage = true;
+
+    while (hasNextPage) {
+      const pageOptions = cursor
+        ? { ...options, pageSize, cursor }
+        : { ...options, pageSize };
+      const page = await PaginationHelpers.getAll<
+        TOptions & { pageSize: number; cursor?: PaginationCursor },
+        TRaw,
+        TTransformed
+      >(config, pageOptions) as PaginatedResponse<TTransformed>;
+
+      items.push(...page.items);
+      hasNextPage = page.hasNextPage;
+      cursor = page.nextCursor;
+    }
+
+    return items;
+  }
+}

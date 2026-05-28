@@ -1,5 +1,10 @@
 import { UiPath } from '../../../src/core';
-import { Entities, ChoiceSets } from '../../../src/services/data-fabric';
+import {
+  ChoiceSets,
+  DataFabricDirectoryService,
+  DataFabricRoleService,
+  Entities,
+} from '../../../src/services/data-fabric';
 import { Tasks } from '../../../src/services/action-center';
 import { Assets, Buckets, Jobs, Queues, Processes } from '../../../src/services/orchestrator';
 import { AttachmentService as Attachments } from '../../../src/services/orchestrator/attachments';
@@ -38,6 +43,8 @@ export interface TestServices {
   sdk: UiPath;
   entities: Entities;
   choiceSets: ChoiceSets;
+  dataFabricRoles: DataFabricRoleService;
+  dataFabricDirectory: DataFabricDirectoryService;
   tasks: Tasks;
   assets: Assets;
   buckets: Buckets;
@@ -90,6 +97,8 @@ function createV0Services(config: IntegrationConfig): TestServices {
     sdk: sdk as unknown as UiPath,
     entities: sdk.entities as unknown as Entities,
     choiceSets: sdk.entities.choicesets as unknown as ChoiceSets,
+    dataFabricRoles: sdk.entities.roles as unknown as DataFabricRoleService,
+    dataFabricDirectory: sdk.entities.directory as unknown as DataFabricDirectoryService,
     tasks: sdk.tasks as unknown as Tasks,
     assets: sdk.assets as unknown as Assets,
     buckets: sdk.buckets as unknown as Buckets,
@@ -123,6 +132,8 @@ function createV1Services(config: IntegrationConfig): TestServices {
     sdk,
     entities: new Entities(sdk),
     choiceSets: new ChoiceSets(sdk),
+    dataFabricRoles: new DataFabricRoleService(sdk),
+    dataFabricDirectory: new DataFabricDirectoryService(sdk),
     tasks: new Tasks(sdk),
     assets: new Assets(sdk),
     buckets: new Buckets(sdk),

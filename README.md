@@ -265,6 +265,7 @@ The SDK provides access to the following services through modular imports:
 - `CaseInstances` from `@uipath/uipath-typescript/cases` - Manage maestro case executions
 - `Tasks` from `@uipath/uipath-typescript/tasks` - Create and manage tasks
 - `Entities` from `@uipath/uipath-typescript/entities` - Data Fabric entity operations
+- `ChoiceSets` from `@uipath/uipath-typescript/entities` - Data Fabric choice set operations
 - `Processes` from `@uipath/uipath-typescript/processes` - Manage Orchestrator processes
 - `Buckets` from `@uipath/uipath-typescript/buckets` - Manage storage buckets in Orchestrator
 - `Queues` from `@uipath/uipath-typescript/queues` - Manage Orchestrator queues
@@ -281,7 +282,7 @@ import { Cases, CaseInstances } from '@uipath/uipath-typescript/cases';
 import { Tasks, TaskType } from '@uipath/uipath-typescript/tasks';
 import { Processes } from '@uipath/uipath-typescript/processes';
 import { Buckets } from '@uipath/uipath-typescript/buckets';
-import { Entities } from '@uipath/uipath-typescript/entities';
+import { ChoiceSets, Entities } from '@uipath/uipath-typescript/entities';
 
 // Initialize SDK
 const sdk = new UiPath({ /* config */ });
@@ -295,6 +296,7 @@ const tasks = new Tasks(sdk);
 const processes = new Processes(sdk);
 const buckets = new Buckets(sdk);
 const entities = new Entities(sdk);
+const choiceSets = new ChoiceSets(sdk);
 
 // Maestro - Get processes and their instances
 const allProcesses = await maestroProcesses.getAll();
@@ -367,6 +369,7 @@ const records = await entities.getAllRecords('entity-uuid', {
   pageSize: 100,
   expansionLevel: 1
 });
+const allChoiceSets = await choiceSets.getAll();
 
 // Insert records
 await entities.insertRecordsById('entity-uuid', [
