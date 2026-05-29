@@ -35,8 +35,7 @@ export enum PolicyEvaluationResult {
  * Each trace row represents one policy's verdict within a governance
  * enforcement event. One enforcement event can produce multiple trace rows
  * when multiple policies contributed to the final verdict.
- * joined to its parent governance enforcement decision (a `governanceEvaluation`
- * span). One enforcement event can produce multiple trace rows when multiple
+ * One enforcement event can produce multiple trace rows when multiple
  * policies fed into the final verdict.
  */
 export interface PolicyTrace {
