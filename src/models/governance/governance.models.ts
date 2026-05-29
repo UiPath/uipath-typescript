@@ -11,11 +11,6 @@ import type {
 /**
  * Service for inspecting governance policy enforcement on the UiPath platform.
  *
- * Backed by the Insights Real-Time Dashboards service. Surfaces the
- * `governanceEvaluation` and `policyEvaluation` spans recorded when UiPath
- * AuthZ evaluates access policies — use it to audit which policies allowed or
- * denied a given action, who triggered it, and which resource it targeted.
- *
  * All methods require the caller to be an organization administrator.
  *
  * ### Usage
