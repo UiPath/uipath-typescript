@@ -10,7 +10,7 @@ import { PaginationOptions } from '../../utils/pagination/types';
  * Policy evaluation result, used as a filter on
  * {@link GovernanceServiceModel.getPolicyTraces}.
  *
- * The server maps each value to its composite Snowflake key
+ * The server maps each filter value to a composite verdict string
  * (`PolicyStatus_EvaluationResult`):
  * - `Allow` → `Active_Allow`
  * - `Deny` → `Active_Deny`
