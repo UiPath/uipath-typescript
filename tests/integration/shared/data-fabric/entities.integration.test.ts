@@ -818,7 +818,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       createdEntityIds.push(entityId);
     });
 
-    it('should reject an invalid entity name', async () => {
+    it('should create entity with RELATIONSHIP field and verify FK metadata', async () => {
       const { entities } = getServices();
       const stamp = generateRandomString(8).toLowerCase();
 
