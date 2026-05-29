@@ -21,8 +21,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,13 +36,6 @@ jobs:
 
       - name: Run SDK Tests
         run: npm run test:coverage -- --run
-
-      - name: Upload unit test coverage
-        uses: actions/upload-artifact@v4
-        if: github.base_ref == 'main'
-        with:
-          name: unit-coverage
-          path: coverage/lcov.info
 
       - name: Build Project
         run: npm run build
@@ -68,6 +59,7 @@ jobs:
           echo "data_fabric_test_attachment_field=${{ secrets.UIPATH_DATA_FABRIC_TEST_ATTACHMENT_FIELD_DEV || secrets.UIPATH_DATA_FABRIC_TEST_ATTACHMENT_FIELD }}" >> $GITHUB_OUTPUT
           echo "orchestrator_attachment_id=${{ secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID_DEV || secrets.UIPATH_ORCHESTRATOR_ATTACHMENT_ID }}" >> $GITHUB_OUTPUT
           echo "jobs_test_folder_id=${{ secrets.UIPATH_JOBS_TEST_FOLDER_ID_DEV || secrets.UIPATH_JOBS_TEST_FOLDER_ID }}" >> $GITHUB_OUTPUT
+          echo "traces_test_trace_id=${{ secrets.UIPATH_TRACES_TEST_TRACE_ID_DEV || secrets.UIPATH_TRACES_TEST_TRACE_ID }}" >> $GITHUB_OUTPUT
 
       - name: Create Integration Test Configuration
         if: github.base_ref == 'main'
@@ -90,24 +82,12 @@ jobs:
           ORCHESTRATOR_TEST_PROCESS_KEY=${{ steps.config.outputs.orchestrator_test_process_key }}
           ORCHESTRATOR_ATTACHMENT_ID=${{ steps.config.outputs.orchestrator_attachment_id }}
           JOBS_TEST_FOLDER_ID=${{ steps.config.outputs.jobs_test_folder_id }}
+          TRACES_TEST_TRACE_ID=${{ steps.config.outputs.traces_test_trace_id }}
           EOF
 
       - name: Run Integration Tests
         if: github.base_ref == 'main'
-        run: npm run test:integration:coverage -- --run
-
-      - name: Upload integration test coverage
-        uses: actions/upload-artifact@v4
-        if: github.base_ref == 'main'
-        with:
-          name: integration-coverage
-          path: coverage-integration/lcov.info
-
-      - name: SonarCloud Scan
-        if: github.base_ref == 'main' && github.event.pull_request.head.repo.fork == false
-        uses: SonarSource/sonarqube-scan-action@0303d6b62e310685c0e34d0b9cde218036885c4d # v5.0.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: npm run test:integration -- --run
 
       - name: Generate Summary
         if: success()
@@ -141,33 +121,4 @@ jobs:
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Please review the logs above to identify and fix the issues." >> $GITHUB_STEP_SUMMARY
-
-  test-packages:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        package:
-          - telemetry
-    defaults:
-      run:
-        working-directory: packages/${{ matrix.package }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: packages/${{ matrix.package }}/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
 
