@@ -33,7 +33,6 @@ export const EntitySchemaFieldTypeMap: Record<EntityFieldDataType, EntitySchemaF
   [EntityFieldDataType.BOOLEAN]:        { sqlTypeName: SqlFieldType.BIT,              fieldDisplayType: FieldDisplayType.Basic },
   [EntityFieldDataType.BIG_INTEGER]:    { sqlTypeName: SqlFieldType.BIGINT,           fieldDisplayType: FieldDisplayType.Basic },
   [EntityFieldDataType.MULTILINE_TEXT]:    { sqlTypeName: SqlFieldType.MULTILINE,        fieldDisplayType: FieldDisplayType.Basic          },
-  [EntityFieldDataType.MULTILINE_MAX_TEXT]: { sqlTypeName: SqlFieldType.MULTILINE_MAX,    fieldDisplayType: FieldDisplayType.Basic          },
   [EntityFieldDataType.FILE]:              { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File           },
   [EntityFieldDataType.CHOICE_SET_SINGLE]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle  },
   [EntityFieldDataType.CHOICE_SET_MULTIPLE]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple },
@@ -74,8 +73,6 @@ export const ENTITY_FIELD_CONSTRAINT_DEFAULTS = {
   UNIQUEIDENTIFIER_LENGTH_LIMIT: 300,
   /** Fixed (non-overridable) length limit for CHOICE_SET_MULTIPLE fields */
   CHOICE_SET_MULTIPLE_LENGTH_LIMIT: 4000,
-  /** Default and maximum length limit (UTF-16 byte budget) for MULTILINE_MAX fields (128 KB) */
-  MULTILINE_MAX_LENGTH_LIMIT: 131072,
   NUMERIC_MAX_VALUE: 1_000_000_000_000,
   NUMERIC_MIN_VALUE: -1_000_000_000_000,
 } as const;
@@ -96,9 +93,6 @@ export const ENTITY_FIELD_CONSTRAINT_SPEC: Partial<Record<EntityFieldDataType, P
   },
   [EntityFieldDataType.MULTILINE_TEXT]: {
     [EntityFieldConstraint.LengthLimit]: { min: 1, max: 10000 },
-  },
-  [EntityFieldDataType.MULTILINE_MAX_TEXT]: {
-    [EntityFieldConstraint.LengthLimit]: { min: 1, max: 131072 },
   },
   [EntityFieldDataType.INTEGER]: {
     [EntityFieldConstraint.MaxValue]: { min: -Number.MAX_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER },
@@ -141,5 +135,4 @@ export const EntityFieldTypeMap: Record<SqlFieldType, EntityFieldDataType> = {
   [SqlFieldType.BIT]:              EntityFieldDataType.BOOLEAN,
   [SqlFieldType.DECIMAL]:          EntityFieldDataType.DECIMAL,
   [SqlFieldType.MULTILINE]:        EntityFieldDataType.MULTILINE_TEXT,
-  [SqlFieldType.MULTILINE_MAX]:    EntityFieldDataType.MULTILINE_MAX_TEXT,
 };

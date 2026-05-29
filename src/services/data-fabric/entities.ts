@@ -1159,8 +1159,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
         return { lengthLimit: field.lengthLimit ?? defaults.STRING_LENGTH_LIMIT };
       case EntityFieldDataType.MULTILINE_TEXT:
         return { lengthLimit: field.lengthLimit ?? defaults.MULTILINE_TEXT_LENGTH_LIMIT };
-      case EntityFieldDataType.MULTILINE_MAX_TEXT:
-        return { lengthLimit: field.lengthLimit ?? defaults.MULTILINE_MAX_LENGTH_LIMIT };
       case EntityFieldDataType.DECIMAL:
         return {
           lengthLimit: defaults.DECIMAL_LENGTH_LIMIT,
