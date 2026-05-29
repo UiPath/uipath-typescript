@@ -39,15 +39,18 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
   // ─── getById ────────────────────────────────────────────────────────────────
 
   describe('getById', () => {
-    it('should retrieve spans for a trace', async () => {
-      const spans = await traces.getById(existingTraceId);
+    let spans!: SpanResponse[];
 
+    beforeAll(async () => {
+      spans = await traces.getById(existingTraceId);
+    });
+
+    it('should retrieve spans for a trace', () => {
       expect(Array.isArray(spans)).toBe(true);
       expect(spans.length).toBeGreaterThan(0);
     });
 
-    it('should return SpanResponse objects with required fields', async () => {
-      const spans = await traces.getById(existingTraceId);
+    it('should return SpanResponse objects with required fields', () => {
       const span = spans[0];
 
       expect(span.id).toBeDefined();
@@ -60,8 +63,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
       expect(span.attributes).toBeDefined();
     });
 
-    it('should return camelCase fields — raw PascalCase fields absent', async () => {
-      const spans = await traces.getById(existingTraceId);
+    it('should return camelCase fields — raw PascalCase fields absent', () => {
       const span = spans[0] as SpanResponse & Record<string, unknown>;
 
       expect(span.traceId).toBeDefined();
@@ -71,13 +73,12 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
     });
 
     it('should respect pageSize option', async () => {
-      const spans = await traces.getById(existingTraceId, { pageSize: 1 });
+      const pagedSpans = await traces.getById(existingTraceId, { pageSize: 1 });
 
-      expect(spans.length).toBeLessThanOrEqual(1);
+      expect(pagedSpans.length).toBeLessThanOrEqual(1);
     });
 
-    it('should map status to a known SpanStatus enum value', async () => {
-      const spans = await traces.getById(existingTraceId);
+    it('should map status to a known SpanStatus enum value', () => {
       const validStatuses = Object.values(SpanStatus);
 
       for (const span of spans) {
@@ -93,17 +94,20 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
   // ─── getSpansByIds ───────────────────────────────────────────────────────────
 
   describe('getSpansByIds', () => {
-    it('should retrieve specific spans by span IDs', async () => {
-      const spans = await traces.getSpansByIds(existingTraceId, [existingSpanId]);
+    let spansByIds!: SpanResponse[];
 
-      expect(Array.isArray(spans)).toBe(true);
-      expect(spans.length).toBeGreaterThan(0);
-      expect(spans[0].id).toBe(existingSpanId);
+    beforeAll(async () => {
+      spansByIds = await traces.getSpansByIds(existingTraceId, [existingSpanId]);
     });
 
-    it('should return camelCase fields — raw PascalCase fields absent', async () => {
-      const spans = await traces.getSpansByIds(existingTraceId, [existingSpanId]);
-      const span = spans[0] as SpanResponse & Record<string, unknown>;
+    it('should retrieve specific spans by span IDs', () => {
+      expect(Array.isArray(spansByIds)).toBe(true);
+      expect(spansByIds.length).toBeGreaterThan(0);
+      expect(spansByIds[0].id).toBe(existingSpanId);
+    });
+
+    it('should return camelCase fields — raw PascalCase fields absent', () => {
+      const span = spansByIds[0] as SpanResponse & Record<string, unknown>;
 
       expect(span.traceId).toBeDefined();
       expect(span['TraceId']).toBeUndefined();
