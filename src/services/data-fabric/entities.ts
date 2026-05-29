@@ -49,9 +49,6 @@ import {
   FieldDisplayTypeToDataType,
   ENTITY_FIELD_CONSTRAINT_DEFAULTS,
   ENTITY_FIELD_CONSTRAINT_SPEC,
-  RESERVED_FIELD_NAMES,
-  RESERVED_LANGUAGE_KEYWORDS,
-  NAME_VALIDATION_LIMITS,
 } from '../../models/data-fabric/entities.constants';
 import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
@@ -783,21 +780,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
-    this.validateName(name, 'entity');
-    const entityNameLower = name.toLowerCase();
-    for (const field of fields) {
-      this.validateName(field.fieldName, 'field');
-      if (field.fieldName.toLowerCase() === entityNameLower) {
-        throw new ValidationError({
-          message: `Field name '${field.fieldName}' cannot match its entity name '${name}'.`,
-        });
-      }
-      this.validateDisplayName(field.displayName, 'field');
-      this.validateDescription(field.description, 'field');
-    }
     const opts = options ?? {};
-    this.validateDisplayName(opts.displayName, 'entity');
-    this.validateDescription(opts.description, 'entity');
     const payload = {
       ...(opts.description !== undefined && { description: opts.description }),
       displayName: opts.displayName ?? name,
@@ -882,12 +865,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.UpdateById')
   async updateById(id: string, options?: EntityUpdateByIdOptions): Promise<void> {
     const opts = options ?? {};
-    this.validateDisplayName(opts.displayName, 'entity');
-    this.validateDescription(opts.description, 'entity');
-    for (const f of opts.updateFields ?? []) {
-      this.validateDisplayName(f.displayName, 'field');
-      this.validateDescription(f.description, 'field');
-    }
     const hasSchemaChanges = !!(opts.addFields?.length || opts.removeFields?.length || opts.updateFields?.length);
     const hasMetadataChanges = opts.displayName !== undefined || opts.description !== undefined || opts.isRbacEnabled !== undefined;
 
@@ -964,17 +941,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // Build and append new fields
     const newFields: FieldSchemaPayload[] = [];
     if (options.addFields?.length) {
-      const entityNameLower = raw.name?.toLowerCase() ?? '';
-      for (const field of options.addFields) {
-        this.validateName(field.fieldName, 'field');
-        if (entityNameLower && field.fieldName.toLowerCase() === entityNameLower) {
-          throw new ValidationError({
-            message: `Field name '${field.fieldName}' cannot match its entity name '${raw.name}'.`,
-          });
-        }
-        this.validateDisplayName(field.displayName, 'field');
-        this.validateDescription(field.description, 'field');
-      }
       newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
     }
 
@@ -1087,7 +1053,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
   private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
-    this.validateName(field.fieldName, 'field');
     const fieldType = field.type ?? EntityFieldDataType.STRING;
     this.validateFieldConstraints(fieldType, field, field.fieldName);
     const isRelationship = fieldType === EntityFieldDataType.RELATIONSHIP;
@@ -1231,44 +1196,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
       default:
         // UUID, CHOICE_SET_SINGLE, AUTO_NUMBER, DATETIME — (sqlType: { name })
         return {};
-    }
-  }
-
-  private validateName(name: string, context: 'entity' | 'field'): void {
-    const { NAME_MIN, NAME_MAX } = NAME_VALIDATION_LIMITS;
-    if (name.length < NAME_MIN || name.length > NAME_MAX || !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(name)) {
-      const suggestion = name.replace(/[^a-zA-Z0-9_]/g, '').replace(/^[0-9_]+/, '');
-      const defaultName = `My${context.charAt(0).toUpperCase() + context.slice(1)}`;
-      throw new ValidationError({
-        message: `Invalid ${context} name '${name}'. Must start with a letter, contain only letters, numbers, and underscores, ${NAME_MIN}–${NAME_MAX} characters (e.g., "${suggestion || defaultName}").`,
-      });
-    }
-    const lower = name.toLowerCase();
-    if (RESERVED_LANGUAGE_KEYWORDS.has(lower)) {
-      throw new ValidationError({
-        message: `${context === 'entity' ? 'Entity' : 'Field'} name '${name}' is a C# or Visual Basic reserved keyword and cannot be used.`,
-      });
-    }
-    if (context === 'field' && RESERVED_FIELD_NAMES.has(lower)) {
-      throw new ValidationError({
-        message: `Field name '${name}' is reserved. Reserved system fields cannot be reused for user-defined fields.`,
-      });
-    }
-  }
-
-  private validateDisplayName(value: string | undefined, context: 'entity' | 'field'): void {
-    if (value !== undefined && value.length > NAME_VALIDATION_LIMITS.DISPLAY_NAME_MAX) {
-      throw new ValidationError({
-        message: `${context === 'entity' ? 'Entity' : 'Field'} displayName exceeds the ${NAME_VALIDATION_LIMITS.DISPLAY_NAME_MAX}-character limit (received ${value.length}).`,
-      });
-    }
-  }
-
-  private validateDescription(value: string | undefined, context: 'entity' | 'field'): void {
-    if (value !== undefined && value.length > NAME_VALIDATION_LIMITS.DESCRIPTION_MAX) {
-      throw new ValidationError({
-        message: `${context === 'entity' ? 'Entity' : 'Field'} description exceeds the ${NAME_VALIDATION_LIMITS.DESCRIPTION_MAX}-character limit (received ${value.length}).`,
-      });
     }
   }
 

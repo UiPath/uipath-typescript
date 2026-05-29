@@ -1670,60 +1670,6 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should throw if entity name has spaces", async () => {
-      await expect(
-        entityService.create("My New Entity", []),
-      ).rejects.toThrow("Invalid entity name 'My New Entity'");
-    });
-
-    it("should throw if entity name starts with a number", async () => {
-      await expect(entityService.create("1entity", [])).rejects.toThrow(
-        "Invalid entity name '1entity'",
-      );
-    });
-
-    it("should throw if field name is invalid", async () => {
-      await expect(
-        entityService.create("myentity", [{ fieldName: "Bad Field Name" }]),
-      ).rejects.toThrow("Invalid field name 'Bad Field Name'");
-    });
-
-    it("should throw if entity name is a C# reserved keyword", async () => {
-      await expect(entityService.create("Class", [])).rejects.toThrow(
-        /reserved keyword/,
-      );
-    });
-
-    it("should throw if entity name is a VB reserved keyword (case-insensitive)", async () => {
-      await expect(entityService.create("module", [])).rejects.toThrow(
-        /reserved keyword/,
-      );
-    });
-
-    it("should throw if field name matches reserved system field (case-insensitive)", async () => {
-      await expect(
-        entityService.create("myentity", [{ fieldName: "kmskeyid" }]),
-      ).rejects.toThrow(/reserved/i);
-    });
-
-    it("should throw if a field name matches the entity name", async () => {
-      await expect(
-        entityService.create("Employee", [{ fieldName: "employee" }]),
-      ).rejects.toThrow(/cannot match its entity name/);
-    });
-
-    it("should throw if entity displayName exceeds 128 characters", async () => {
-      await expect(
-        entityService.create("myentity", [], { displayName: "x".repeat(129) }),
-      ).rejects.toThrow(/displayName exceeds the 128-character limit/);
-    });
-
-    it("should throw if entity description exceeds 512 characters", async () => {
-      await expect(
-        entityService.create("myentity", [], { description: "x".repeat(513) }),
-      ).rejects.toThrow(/description exceeds the 512-character limit/);
-    });
-
     it("should pass custom folderKey to the entity definition", async () => {
       mockApiClient.post.mockResolvedValue(ENTITY_TEST_CONSTANTS.ENTITY_ID);
 
