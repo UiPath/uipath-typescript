@@ -97,7 +97,7 @@ describe('TracesService Unit Tests', () => {
       expect(call.params['isHistorical']).toBeUndefined();
     });
 
-    it('should apply explicit field mapping and enum transforms', async () => {
+    it('should apply pascalToCamelCaseKeys base transform and enum overrides', async () => {
       mockApiClient.get.mockResolvedValue(
         createMockOtelPageResponse([
           createMockRawOtelSpan({
@@ -236,7 +236,7 @@ describe('TracesService Unit Tests', () => {
       );
     });
 
-    it('should apply explicit field mapping and enum transforms', async () => {
+    it('should apply pascalToCamelCaseKeys base transform and enum overrides', async () => {
       mockApiClient.post.mockResolvedValue([createMockRawOtelSpan({ Status: 2, Source: 2 })]);
 
       const result = await tracesService.getSpansByIds(

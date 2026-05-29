@@ -1,4 +1,5 @@
 import { BaseService } from '../../base';
+import { pascalToCamelCaseKeys } from '../../../utils/transform';
 import {
   SpanResponse,
   SpanStatus,
@@ -28,38 +29,19 @@ import { ValidationError } from '../../../core/errors';
 export class TracesService extends BaseService implements TracesServiceModel {
 
   private transformOtelSpan(raw: RawSpanOtelResponse): SpanResponse {
+    const { Attributes, ExpiryTimeUtc, Attachments, ...rest } = raw;
+    const base = pascalToCamelCaseKeys(rest);
+
     return {
-      id: raw.Id,
-      traceId: raw.TraceId,
-      parentId: raw.ParentId,
-      name: raw.Name,
-      startTime: raw.StartTime,
-      endTime: raw.EndTime,
-      attributes: raw.Attributes,
+      ...base,
+      attributes: Attributes,
+      expiredTime: ExpiryTimeUtc,
       status: SpanStatusMap[raw.Status] ?? SpanStatus.Unset,
       source: raw.Source == null ? null : (SpanSourceMap[raw.Source] ?? null),
-      spanType: raw.SpanType,
       verbosityLevel: raw.VerbosityLevel == null ? null : (SpanVerbosityLevelMap[raw.VerbosityLevel] ?? null),
       executionType: raw.ExecutionType == null ? null : (SpanExecutionTypeMap[raw.ExecutionType] ?? null),
-      folderKey: raw.FolderKey,
-      referenceId: raw.ReferenceId,
-      referenceVersion: raw.ReferenceVersion,
-      agentVersion: raw.AgentVersion,
-      organizationId: raw.OrganizationId,
-      tenantId: raw.TenantId,
-      processKey: raw.ProcessKey,
-      jobKey: raw.JobKey,
-      updatedAt: raw.UpdatedAt,
-      expiredTime: raw.ExpiryTimeUtc,
       permissionStatus: raw.PermissionStatus == null ? null : (SpanPermissionStatusMap[raw.PermissionStatus] ?? null),
-      context: raw.Context ? {
-        referenceHierarchy: raw.Context.ReferenceHierarchy.map(h => ({
-          serviceType: h.ServiceType,
-          referenceId: h.ReferenceId,
-          version: h.Version,
-        })),
-      } : null,
-      attachments: raw.Attachments ? raw.Attachments.map(a => ({
+      attachments: Attachments ? Attachments.map(a => ({
         provider: SpanAttachmentProviderMap[a.Provider] ?? SpanAttachmentProvider.Orchestrator,
         id: a.Id,
         fileName: a.FileName,
