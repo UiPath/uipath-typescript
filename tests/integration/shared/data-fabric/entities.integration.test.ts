@@ -761,6 +761,55 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(typeof row.total).toBe('number');
       expect(row.total).toBeGreaterThanOrEqual(0);
     });
+
+    it('should return explicit expansion shape when expansions is provided', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      if (entityMetadata?.id !== entityId) {
+        entityMetadata = await entities.getById(entityId);
+      }
+      const relationshipField = entityMetadata.fields.find(f => f.isForeignKey && !f.isPrimaryKey);
+      if (!relationshipField) {
+        throw new Error(
+          `Test entity ${entityId} has no relationship (foreign-key) fields — expansions integration test cannot run. ` +
+          `Configure DATA_FABRIC_TEST_ENTITY_ID to point at an entity with at least one RELATIONSHIP field.`,
+        );
+      }
+
+      const result = await entities.queryRecordsById(entityId, {
+        pageSize: 1,
+        expansions: [{ expandedField: relationshipField.name, alias: 'related' }],
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      if (result.items.length > 0) {
+        const row = result.items[0] as Record<string, any>;
+        // The expanded field is returned under the alias as an object (or null if no FK target).
+        if (row.related !== null && row.related !== undefined) {
+          expect(typeof row.related).toBe('object');
+        }
+      }
+    });
+
+    it('should reject combining expansionLevel > 0 with a non-empty expansions array', async () => {
+      const { entities } = getServices();
+      const config = getTestConfig();
+      const entityId = config.dataFabricTestEntityId || testEntityId;
+      if (!entityId) {
+        throw new Error('No entity ID available for testing');
+      }
+      await expect(
+        entities.queryRecordsById(entityId, {
+          expansionLevel: 1,
+          expansions: [{ expandedField: 'irrelevant' }],
+        }),
+      ).rejects.toThrow(/mutually exclusive/);
+    });
   });
 
   // Bulk import requires DataFabric.Data.Write scope — not supported via PAT token yet
