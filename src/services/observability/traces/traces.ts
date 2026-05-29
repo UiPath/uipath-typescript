@@ -59,7 +59,7 @@ export class TracesService extends BaseService implements TracesServiceModel {
    *
    * @param traceId - Trace identifier
    * @param options - Optional filters {@link TracesGetByIdOptions}
-   * @returns Promise resolving to an array of {@link SpanGetResponse}
+   * @returns Promise resolving to an array of {@link SpanGetResponse}, each containing span identity, timing, status, source platform, attributes, verbosity, execution type, lineage context, and any file attachments.
    * @example
    * ```typescript
    * import { Traces } from '@uipath/uipath-typescript/traces';
