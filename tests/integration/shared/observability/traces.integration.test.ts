@@ -70,6 +70,8 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
       expect(span['TraceId']).toBeUndefined();
       expect(span['StartTime']).toBeUndefined();
       expect(span['OrganizationId']).toBeUndefined();
+      // ExpiryTimeUtc → expiredTime is the only standard field rename here; verify it against the live API
+      expect(span['ExpiryTimeUtc']).toBeUndefined();
     });
 
     it('should respect pageSize option', async () => {
@@ -112,6 +114,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
       expect(span.traceId).toBeDefined();
       expect(span['TraceId']).toBeUndefined();
       expect(span['StartTime']).toBeUndefined();
+      expect(span['ExpiryTimeUtc']).toBeUndefined();
     });
 
     it('should return empty array for unknown span IDs', async () => {
