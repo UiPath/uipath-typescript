@@ -135,3 +135,4 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Feedback | `getAll()` | ✅ Yes |
 | Feedback | `getCategories()` | ✅ Yes |
 | Traces | `getById()` | ❌ No |
+| Traces | `getSpansByIds()` | ❌ No |

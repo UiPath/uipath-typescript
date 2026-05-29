@@ -24,6 +24,7 @@ import { TRACES_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { QueryParams } from '../../../models/common/request-spec';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
+
 export class TracesService extends BaseService implements TracesServiceModel {
 
   private transformOtelSpan(raw: RawSpanOtelResponse): SpanResponse {
