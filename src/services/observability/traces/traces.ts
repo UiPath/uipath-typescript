@@ -144,7 +144,7 @@ export class TracesService extends BaseService implements TracesServiceModel {
       { params: { traceId } },
     );
 
-    const spans = Array.isArray(response.data) ? response.data : [];
+    const spans = response.data ?? [];
     return spans.map(span => this.transformOtelSpan(span));
   }
 
