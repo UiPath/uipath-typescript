@@ -62,6 +62,16 @@ export function isValidKey(key: string): key is ValidConfigKey {
   return validKeys.includes(key as ValidConfigKey)
 }
 
+// ===== String Conversion Utilities =====
+
+/**
+ * Convert a camelCase string to kebab-case.
+ * e.g. 'folderKey' → 'folder-key', 'cdnBase' → 'cdn-base'
+ */
+export function camelToKebab(str: string): string {
+  return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+}
+
 // ===== Error Utilities =====
 
 export function createPluginError(message: string): Error {

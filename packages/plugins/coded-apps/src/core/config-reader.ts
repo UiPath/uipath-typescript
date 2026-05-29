@@ -132,10 +132,10 @@ function validateKeyFormats(
     const matchingKey = findMatchingKey(key)
 
     if (matchingKey && matchingKey !== key) {
+      // Known SDK key in wrong format (e.g. client_id → clientId)
       collector.addError(MESSAGES.INVALID_KEY_FORMAT(key, matchingKey))
-    } else if (!matchingKey) {
-      collector.addWarning(MESSAGES.UNKNOWN_KEY(key))
     }
+    // Unknown keys are allowed — they are injected as uipath:<kebab-case> meta tags
   }
 }
 

@@ -26,10 +26,35 @@ export const CONFIG_FILE_NAME = 'uipath.json'
 export const PACKAGE_JSON_FILE_NAME = 'package.json'
 
 /**
- * Mapping from config keys to meta tag names
+ * Prefix for all injected meta tags: `<meta name="uipath:..." ...>`
  */
 export const META_TAG_PREFIX = 'uipath'
 
+/**
+ * Well-known SDK configuration keys and their meta tag suffixes.
+ *
+ * These are the keys the UiPath SDK reads at runtime. The plugin uses this
+ * mapping for exact suffix names; any key NOT listed here is still injected
+ * — its suffix is derived by converting camelCase to kebab-case automatically
+ * (e.g. `folderKey` → `uipath:folder-key`).
+ *
+ * ----- Deployment-time meta tags (server-side injection) -----
+ * At deployment, the Apps Service (process-coded-app-package.ts) injects
+ * the following meta tags into the published index.html:
+ *
+ *   uipath:client-id      — OAuth client ID (from uipath.json in the .nupkg)
+ *   uipath:scope           — OAuth scopes (from uipath.json in the .nupkg)
+ *   uipath:org-name        — Organization ID
+ *   uipath:tenant-name     — Tenant ID
+ *   uipath:base-url        — Portal base URL
+ *   uipath:redirect-uri    — OAuth redirect URI (computed from routing name)
+ *   uipath:cdn-base        — CDN base path (computed: /{systemName}/{folderKey}/{deployVersion}/)
+ *   uipath:app-base        — App base path (computed from routing name or legacy path)
+ *   uipath:folder-key      — Folder identifier where the app is deployed
+ *
+ * The plugin mirrors this for local dev: anything in uipath.json is injected
+ * so the SDK can read the same meta tags locally as it would in production.
+ */
 export const UIPATH_META_TAGS: Record<ValidConfigKey, string> = {
   clientId: 'client-id',
   scope: 'scope',
@@ -64,7 +89,6 @@ export const MESSAGES = {
   // Validation errors
   INVALID_KEY_FORMAT: (key: string, suggestion: string) =>
     `❌ Invalid key "${key}" - use camelCase: "${suggestion}"`,
-  UNKNOWN_KEY: (key: string) => `⚠️  Unknown key "${key}" will be ignored by the SDK`,
 
   // Validation warnings
   MISSING_DEV_KEYS: (keys: string[]) =>
