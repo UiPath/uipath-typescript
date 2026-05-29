@@ -144,8 +144,8 @@ export interface SpanResponse {
   jobKey: string | null;
   /** ISO-8601 UTC timestamp of last update. */
   updatedAt: string;
-  /** UTC expiry timestamp, or null if the span does not expire. */
-  expiryTimeUtc: string | null;
+  /** Expiry timestamp, or null if the span does not expire. */
+  expiredTime: string | null;
   /** Reference hierarchy context for this span. */
   context: SpanContext | null;
   /** File or payload attachments linked to this span. */

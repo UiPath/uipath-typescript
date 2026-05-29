@@ -36,10 +36,8 @@ export const createMockRawOtelSpan = (
 });
 
 export const createMockOtelPageResponse = (
-  spans: RawSpanOtelResponse[] = [createMockRawOtelSpan()],
-  tokens = ''
+  spans: RawSpanOtelResponse[] = [createMockRawOtelSpan()]
 ): RawSpanOtelPageResponse => ({
   Spans: spans,
-  Tokens: tokens,
 });
 

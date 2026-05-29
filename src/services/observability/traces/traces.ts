@@ -24,32 +24,47 @@ import { TRACES_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { QueryParams } from '../../../models/common/request-spec';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
-import { pascalToCamelCaseKeys } from '../../../utils/transform';
-
 export class TracesService extends BaseService implements TracesServiceModel {
 
   private transformOtelSpan(raw: RawSpanOtelResponse): SpanResponse {
-    const { Attributes, ...rest } = raw;
-    const camel = pascalToCamelCaseKeys(rest) as SpanResponse;
     return {
-      ...camel,
-      // Attributes keys are user-defined schema columns — must not be camelCased
-      attributes: Attributes,
-      // Integer enum fields require explicit mapping after camelCasing
+      id: raw.Id,
+      traceId: raw.TraceId,
+      parentId: raw.ParentId,
+      name: raw.Name,
+      startTime: raw.StartTime,
+      endTime: raw.EndTime,
+      attributes: raw.Attributes,
       status: SpanStatusMap[raw.Status] ?? SpanStatus.Unset,
       source: raw.Source != null ? (SpanSourceMap[raw.Source] ?? null) : null,
+      spanType: raw.SpanType,
       verbosityLevel: raw.VerbosityLevel != null ? (SpanVerbosityLevelMap[raw.VerbosityLevel] ?? null) : null,
       executionType: raw.ExecutionType != null ? (SpanExecutionTypeMap[raw.ExecutionType] ?? null) : null,
+      folderKey: raw.FolderKey,
+      referenceId: raw.ReferenceId,
+      referenceVersion: raw.ReferenceVersion,
+      agentVersion: raw.AgentVersion,
+      organizationId: raw.OrganizationId,
+      tenantId: raw.TenantId,
+      processKey: raw.ProcessKey,
+      jobKey: raw.JobKey,
+      updatedAt: raw.UpdatedAt,
+      expiredTime: raw.ExpiryTimeUtc,
       permissionStatus: raw.PermissionStatus != null ? (SpanPermissionStatusMap[raw.PermissionStatus] ?? null) : null,
-      attachments: raw.Attachments
-        ? raw.Attachments.map(a => ({
-            provider: SpanAttachmentProviderMap[a.Provider] ?? SpanAttachmentProvider.Orchestrator,
-            id: a.Id,
-            fileName: a.FileName,
-            mimeType: a.MimeType,
-            direction: SpanAttachmentDirectionMap[a.Direction] ?? SpanAttachmentDirection.None,
-          }))
-        : null,
+      context: raw.Context ? {
+        referenceHierarchy: raw.Context.ReferenceHierarchy.map(h => ({
+          serviceType: h.ServiceType,
+          referenceId: h.ReferenceId,
+          version: h.Version,
+        })),
+      } : null,
+      attachments: raw.Attachments ? raw.Attachments.map(a => ({
+        provider: SpanAttachmentProviderMap[a.Provider] ?? SpanAttachmentProvider.Orchestrator,
+        id: a.Id,
+        fileName: a.FileName,
+        mimeType: a.MimeType,
+        direction: SpanAttachmentDirectionMap[a.Direction] ?? SpanAttachmentDirection.None,
+      })) : null,
     };
   }
 

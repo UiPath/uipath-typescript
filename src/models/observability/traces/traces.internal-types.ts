@@ -51,7 +51,5 @@ export interface RawSpanOtelResponse {
 /** Raw paginated response from the otel token-based endpoints. */
 export interface RawSpanOtelPageResponse {
   Spans: RawSpanOtelResponse[];
-  /** Continuation token for the next page (empty string when no further pages). */
-  Tokens: string;
 }
 

@@ -184,13 +184,12 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getCategories()` | `Traces.Api` |
 | `deleteCategory()` | `Traces.Api` |
 
-### Traces
+## Traces
 
 | Method | OAuth Scope |
 |--------|-------------|
 | `getById()` | `Traces.Api` |
 | `getSpansByIds()` | `Traces.Api` |
-| `getSpansByAgentId()` | `Traces.Api` |
 
 ## Processes
 

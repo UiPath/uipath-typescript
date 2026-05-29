@@ -116,6 +116,24 @@ describe('TracesService Unit Tests', () => {
       expect(span.attachments![0].direction).toBe(SpanAttachmentDirection.Out);
       expect(span.context!.referenceHierarchy[0].serviceType).toBe('Agent');
       expect(span.context!.referenceHierarchy[0].referenceId).toBe('ref-id');
+      // verify PascalCase keys absent from nested context (transform completeness)
+      expect((span.context! as never as Record<string, unknown>)['ReferenceHierarchy']).toBeUndefined();
+      expect((span.context!.referenceHierarchy[0] as never as Record<string, unknown>)['ServiceType']).toBeUndefined();
+    });
+
+    it('should fall back to Orchestrator/None for unknown attachment Provider/Direction', async () => {
+      mockApiClient.get.mockResolvedValue(
+        createMockOtelPageResponse([
+          createMockRawOtelSpan({
+            Attachments: [{ Provider: 999, Id: 'att-id', FileName: 'f.txt', MimeType: 'text/plain', Direction: 999 }],
+          }),
+        ])
+      );
+
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
+
+      expect(result[0].attachments![0].provider).toBe(SpanAttachmentProvider.Orchestrator);
+      expect(result[0].attachments![0].direction).toBe(SpanAttachmentDirection.None);
     });
 
     it('should return empty array when no spans', async () => {
