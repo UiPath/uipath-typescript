@@ -932,6 +932,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           ...(update.isUnique !== undefined && { isUnique: update.isUnique }),
           ...(update.isRbacEnabled !== undefined && { isRbacEnabled: update.isRbacEnabled }),
           ...(update.isEncrypted !== undefined && { isEncrypted: update.isEncrypted }),
+          ...(update.isHiddenField !== undefined && { isHiddenField: update.isHiddenField }),
           ...(update.defaultValue !== undefined && { defaultValue: update.defaultValue }),
           ...(hasConstraintUpdate && f.sqlType && { sqlType: { ...f.sqlType, ...constraintUpdate } }),
         };

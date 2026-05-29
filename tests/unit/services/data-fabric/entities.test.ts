@@ -2144,6 +2144,21 @@ describe("EntityService Unit Tests", () => {
       expect(titleField.isRequired).toBe(true);
     });
 
+    it("should apply isHiddenField on updateFields", async () => {
+      mockApiClient.get.mockResolvedValue(mockRawEntity);
+      mockApiClient.post.mockResolvedValue(undefined);
+
+      await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        updateFields: [
+          { id: ENTITY_TEST_CONSTANTS.FIELD_ID, isHiddenField: true },
+        ],
+      });
+
+      const call = mockApiClient.post.mock.calls[0][1];
+      const titleField = call.entityDefinition.fields[0];
+      expect(titleField.isHiddenField).toBe(true);
+    });
+
     it("should preserve existing entity metadata when updating fields", async () => {
       mockApiClient.get.mockResolvedValue(mockRawEntity);
       mockApiClient.post.mockResolvedValue(undefined);
