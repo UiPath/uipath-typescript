@@ -75,6 +75,28 @@ describe('TracesService Unit Tests', () => {
       );
     });
 
+    it('should include isHistorical: false when includeExpiredSpans is false', async () => {
+      mockApiClient.get.mockResolvedValue(createMockOtelPageResponse());
+
+      await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID, { includeExpiredSpans: false });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        TRACES_ENDPOINTS.GET_BY_TRACE_ID,
+        expect.objectContaining({
+          params: expect.objectContaining({ isHistorical: false }),
+        })
+      );
+    });
+
+    it('should omit isHistorical when includeExpiredSpans is undefined', async () => {
+      mockApiClient.get.mockResolvedValue(createMockOtelPageResponse());
+
+      await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID, {});
+
+      const call = mockApiClient.get.mock.calls[0][1] as { params: Record<string, unknown> };
+      expect(call.params['isHistorical']).toBeUndefined();
+    });
+
     it('should apply explicit field mapping and enum transforms', async () => {
       mockApiClient.get.mockResolvedValue(
         createMockOtelPageResponse([
