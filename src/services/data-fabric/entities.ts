@@ -480,10 +480,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
   }
 
   /**
-   * Queries entity records with filters, sorting, aggregates, and pagination
+   * Queries entity records with filters, sorting, aggregates, expansion, and pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, expansionLevel,
+   *   expansions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    *
@@ -504,6 +505,22 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   sortOptions: [{ fieldName: "created_at", isDescending: true }],
    * });
    * console.log(`Found ${result.totalCount} records`);
+   *
+   * // Auto-expand every foreign-key two levels deep
+   * await entities.queryRecordsById("<entityId>", { expansionLevel: 2 });
+   *
+   * // Explicit expansions: only `department` (with `manager` inside it) and `avatar`
+   * await entities.queryRecordsById("<entityId>", {
+   *   expansions: [
+   *     {
+   *       expandedField: "department",
+   *       alias: "dept",
+   *       selectedFields: ["name", "location"],
+   *       expansions: [{ expandedField: "manager", selectedFields: ["fullName", "email"] }],
+   *     },
+   *     { expandedField: "avatar", selectedFields: ["name", "size"] },
+   *   ],
+   * });
    *
    * // With pagination
    * const page1 = await entities.queryRecordsById("<entityId>", {
@@ -537,6 +554,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
     id: string,
     options?: T
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
+    if (options && (options.expansionLevel ?? 0) > 0 && options.expansions && options.expansions.length > 0) {
+      throw new ValidationError({
+        message: '`expansionLevel` and `expansions` are mutually exclusive on queryRecordsById — pass one or the other.',
+      });
+    }
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
@@ -551,7 +573,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
-      excludeFromPrefix: ['expansionLevel', 'filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy']
+      excludeFromPrefix: ['expansionLevel', 'expansions', 'filterGroup', 'selectedFields', 'sortOptions', 'aggregates', 'groupBy']
     }, options);
   }
 

@@ -1516,6 +1516,63 @@ describe("EntityService Unit Tests", () => {
         }),
       );
     });
+
+    it("should pass explicit expansions through to PaginationHelpers.getAll", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      const expansions = [
+        {
+          expandedField: "department",
+          alias: "dept",
+          selectedFields: ["name", "location"],
+          expansions: [
+            { expandedField: "manager", selectedFields: ["fullName", "email"] },
+          ],
+        },
+        { expandedField: "avatar", selectedFields: ["name", "size"] },
+      ];
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, { expansions });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          excludeFromPrefix: expect.arrayContaining(["expansions"]),
+        }),
+        expect.objectContaining({ expansions }),
+      );
+    });
+
+    it("should throw if both expansionLevel > 0 and expansions are provided", async () => {
+      await expect(
+        entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+          expansionLevel: 2,
+          expansions: [{ expandedField: "department" }],
+        }),
+      ).rejects.toThrow(/mutually exclusive/);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
+    });
+
+    it("should allow expansionLevel = 0 alongside expansions", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        expansionLevel: 0,
+        expansions: [{ expandedField: "department" }],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalled();
+    });
+
+    it("should allow expansionLevel > 0 when expansions is empty", async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await entityService.queryRecordsById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
+        expansionLevel: 2,
+        expansions: [],
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalled();
+    });
   });
 
   describe("importRecordsById", () => {

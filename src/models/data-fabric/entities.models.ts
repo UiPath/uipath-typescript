@@ -354,10 +354,11 @@ export interface EntityServiceModel {
   deleteRecordById(entityId: string, recordId: string): Promise<void>;
 
   /**
-   * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
+   * Queries entity records with filters, sorting, aggregates, expansion, and SDK-managed pagination
    *
    * @param id - UUID of the entity
-   * @param options - Query options including filterGroup, selectedFields, sortOptions, aggregates, groupBy, and pagination
+   * @param options - Query options including filterGroup, selectedFields, sortOptions, expansionLevel,
+   *   expansions, aggregates, groupBy, and pagination
    * @returns Promise resolving to {@link NonPaginatedResponse} without pagination options,
    *   or {@link PaginatedResponse} when `pageSize`, `cursor`, or `jumpToPage` are provided
    * @example
@@ -375,6 +376,22 @@ export interface EntityServiceModel {
    *   sortOptions: [{ fieldName: "createdTime", isDescending: true }],
    * });
    * console.log(`Found ${result.totalCount} records`);
+   *
+   * // Auto-expand every foreign-key two levels deep
+   * await entities.queryRecordsById(<id>, { expansionLevel: 2 });
+   *
+   * // Explicit expansions: only `department` (with `manager` inside it) and `avatar`
+   * await entities.queryRecordsById(<id>, {
+   *   expansions: [
+   *     {
+   *       expandedField: "department",
+   *       alias: "dept",
+   *       selectedFields: ["name", "location"],
+   *       expansions: [{ expandedField: "manager", selectedFields: ["fullName", "email"] }],
+   *     },
+   *     { expandedField: "avatar", selectedFields: ["name", "size"] },
+   *   ],
+   * });
    *
    * // With pagination
    * const page1 = await entities.queryRecordsById(<id>, { pageSize: 25 });

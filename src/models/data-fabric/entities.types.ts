@@ -173,12 +173,39 @@ export interface EntityQueryFilter {
 }
 
 /**
- * A group of query filters combined with a logical operator
+ * A group of query filters combined with a logical operator.
+ *
+ * @example
+ * ```typescript
+ * import { LogicalOperator, QueryFilterOperator } from '@uipath/uipath-typescript/entities';
+ *
+ * // `IsActive = true AND (department = "X" OR department = "Y")`
+ * const filterGroup = {
+ *   logicalOperator: LogicalOperator.And,
+ *   queryFilters: [
+ *     { fieldName: "isActive", operator: QueryFilterOperator.Equals, value: "true" },
+ *   ],
+ *   filterGroups: [
+ *     {
+ *       logicalOperator: LogicalOperator.Or,
+ *       continueLogicalOperator: LogicalOperator.And,
+ *       queryFilters: [
+ *         { fieldName: "department", operator: QueryFilterOperator.Equals, value: "X" },
+ *         { fieldName: "department", operator: QueryFilterOperator.Equals, value: "Y" },
+ *       ],
+ *     },
+ *   ],
+ * };
+ * ```
  */
 export interface EntityQueryFilterGroup {
   /** Logical operator applied between filters in `queryFilters` (default: AND) */
   logicalOperator?: LogicalOperator;
-  /** Logical operator applied between sibling filter groups (default: AND) */
+  /**
+   * Logical operator joining this group to its sibling group(s) within the parent
+   * `filterGroups` array (default: AND). Has no effect on a root group or a group
+   * that has no siblings.
+   */
   continueLogicalOperator?: LogicalOperator;
   /** Array of filter conditions */
   queryFilters?: EntityQueryFilter[];
@@ -223,6 +250,24 @@ export interface EntityAggregate {
 }
 
 /**
+ * Explicit relationship expansion for a query.
+ *
+ * Mutually exclusive with `expansionLevel > 0` on the same query — when both are
+ * provided, the backend silently drops `expansions`, so the SDK rejects that
+ * combination up front.
+ */
+export interface EntityExpansion {
+  /** Name of the relationship (foreign-key) field to follow */
+  expandedField: string;
+  /** Response key for the expanded object (defaults to `expandedField`) */
+  alias?: string;
+  /** Fields to project from the expanded entity (returns all permitted fields if omitted) */
+  selectedFields?: string[];
+  /** Nested expansions to apply to the expanded entity. Recursive. */
+  expansions?: EntityExpansion[];
+}
+
+/**
  * Options for querying entity records with filters, sorting, aggregates, and pagination.
  *
  * Use `pageSize`, `cursor`, or `jumpToPage` for SDK-managed pagination.
@@ -235,8 +280,17 @@ export type EntityQueryRecordsOptions = {
   selectedFields?: string[];
   /** Sort options for the results */
   sortOptions?: EntityQuerySortOption[];
-  /** Level of entity expansion for related fields (default: 0) */
+  /**
+   * Auto-expand every foreign-key field to this depth (default: 0, server-capped at 3).
+   * Mutually exclusive with `expansions` — pass one or the other, not both.
+   */
   expansionLevel?: number;
+  /**
+   * Explicit, per-branch expansions giving fine-grained control over which related
+   * entities are joined and which of their fields are returned. Mutually exclusive
+   * with `expansionLevel > 0`.
+   */
+  expansions?: EntityExpansion[];
   /** Aggregate expressions (COUNT, SUM, AVG, MIN, MAX) to apply across the result set. */
   aggregates?: EntityAggregate[];
   /** Field names to group aggregate results by. */
