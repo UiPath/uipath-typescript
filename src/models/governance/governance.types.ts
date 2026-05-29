@@ -32,7 +32,9 @@ export enum PolicyEvaluationResult {
  * Single policy evaluation trace returned by
  * {@link GovernanceServiceModel.getPolicyTraces}.
  *
- * Each row represents one policy verdict (from a `policyEvaluation` span)
+ * Each trace row represents one policy's verdict within a governance
+ * enforcement event. One enforcement event can produce multiple trace rows
+ * when multiple policies contributed to the final verdict.
  * joined to its parent governance enforcement decision (a `governanceEvaluation`
  * span). One enforcement event can produce multiple trace rows when multiple
  * policies fed into the final verdict.
