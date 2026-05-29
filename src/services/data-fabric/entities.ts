@@ -1076,7 +1076,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       isUnique: field.isUnique ?? false,
       isRbacEnabled: field.isRbacEnabled ?? false,
       isEncrypted: field.isEncrypted ?? false,
-      ...(field.isHiddenField !== undefined && { isHiddenField: field.isHiddenField }),
+      isHiddenField: field.isHiddenField ?? false,
       ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
       ...((isRelationship || isFile) && { isForeignKey: true }),
