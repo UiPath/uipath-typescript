@@ -35,8 +35,6 @@ export enum PolicyEvaluationResult {
  * Each trace row represents one policy's verdict within a governance
  * enforcement event. One enforcement event can produce multiple trace rows
  * when multiple policies contributed to the final verdict.
- * One enforcement event can produce multiple trace rows when multiple
- * policies fed into the final verdict.
  */
 export interface PolicyTrace {
   /** Tenant the trace was recorded in. Present even when `fullOrganization` is `true`. */
