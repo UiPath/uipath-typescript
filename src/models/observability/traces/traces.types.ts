@@ -1,4 +1,3 @@
-import { PaginationOptions } from '../../../utils/pagination';
 
 /** Status of a span: whether it completed successfully, with an error, or was not set. */
 export enum SpanStatus {
