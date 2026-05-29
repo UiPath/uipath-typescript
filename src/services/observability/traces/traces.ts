@@ -1,7 +1,7 @@
 import { BaseService } from '../../base';
 import { pascalToCamelCaseKeys } from '../../../utils/transform';
 import {
-  SpanResponse,
+  SpanGetResponse,
   SpanStatus,
   SpanAttachmentProvider,
   SpanAttachmentDirection,
@@ -28,7 +28,7 @@ import { ValidationError } from '../../../core/errors';
 
 export class TracesService extends BaseService implements TracesServiceModel {
 
-  private transformOtelSpan(raw: RawSpanOtelResponse): SpanResponse {
+  private transformOtelSpan(raw: RawSpanOtelResponse): SpanGetResponse {
     const { Attributes, ExpiryTimeUtc, Attachments, ...rest } = raw;
     const base = pascalToCamelCaseKeys(rest);
 
@@ -59,7 +59,7 @@ export class TracesService extends BaseService implements TracesServiceModel {
    *
    * @param traceId - Trace identifier
    * @param options - Optional filters {@link TracesGetByIdOptions}
-   * @returns Promise resolving to an array of {@link SpanResponse}
+   * @returns Promise resolving to an array of {@link SpanGetResponse}
    * @example
    * ```typescript
    * import { Traces } from '@uipath/uipath-typescript/traces';
@@ -78,7 +78,7 @@ export class TracesService extends BaseService implements TracesServiceModel {
    * ```
    */
   @track('Traces.GetById')
-  async getById(traceId: string, options?: TracesGetByIdOptions): Promise<SpanResponse[]> {
+  async getById(traceId: string, options?: TracesGetByIdOptions): Promise<SpanGetResponse[]> {
     if (!traceId) throw new ValidationError({ message: 'traceId is required for getById' });
 
     const { pageSize = 1000, agentId, includeExpiredSpans } = options ?? {};
@@ -102,7 +102,7 @@ export class TracesService extends BaseService implements TracesServiceModel {
    *
    * @param traceId - Trace identifier
    * @param spanIds - List of span IDs to retrieve
-   * @returns Promise resolving to an array of matching {@link SpanResponse}
+   * @returns Promise resolving to an array of matching {@link SpanGetResponse}
    * @example
    * ```typescript
    * import { Traces } from '@uipath/uipath-typescript/traces';
@@ -117,7 +117,7 @@ export class TracesService extends BaseService implements TracesServiceModel {
    * ```
    */
   @track('Traces.GetSpansByIds')
-  async getSpansByIds(traceId: string, spanIds: string[]): Promise<SpanResponse[]> {
+  async getSpansByIds(traceId: string, spanIds: string[]): Promise<SpanGetResponse[]> {
     if (!traceId) throw new ValidationError({ message: 'traceId is required for getSpansByIds' });
 
     const response = await this.post<RawSpanOtelResponse[]>(

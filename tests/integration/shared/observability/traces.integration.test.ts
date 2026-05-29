@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Traces } from '../../../../src/services/observability/traces';
 import {
-  SpanResponse,
+  SpanGetResponse,
   SpanStatus,
 } from '../../../../src/models/observability/traces/traces.types';
 
@@ -39,7 +39,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
   // ─── getById ────────────────────────────────────────────────────────────────
 
   describe('getById', () => {
-    let spans!: SpanResponse[];
+    let spans!: SpanGetResponse[];
 
     beforeAll(async () => {
       spans = await traces.getById(existingTraceId);
@@ -50,7 +50,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
       expect(spans.length).toBeGreaterThan(0);
     });
 
-    it('should return SpanResponse objects with required fields', () => {
+    it('should return SpanGetResponse objects with required fields', () => {
       const span = spans[0];
 
       expect(span.id).toBeDefined();
@@ -64,7 +64,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
     });
 
     it('should return camelCase fields — raw PascalCase fields absent', () => {
-      const span = spans[0] as SpanResponse & Record<string, unknown>;
+      const span = spans[0] as SpanGetResponse & Record<string, unknown>;
 
       expect(span.traceId).toBeDefined();
       expect(span['TraceId']).toBeUndefined();
@@ -96,7 +96,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
   // ─── getSpansByIds ───────────────────────────────────────────────────────────
 
   describe('getSpansByIds', () => {
-    let spansByIds!: SpanResponse[];
+    let spansByIds!: SpanGetResponse[];
 
     beforeAll(async () => {
       spansByIds = await traces.getSpansByIds(existingTraceId, [existingSpanId]);
@@ -109,7 +109,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
     });
 
     it('should return camelCase fields — raw PascalCase fields absent', () => {
-      const span = spansByIds[0] as SpanResponse & Record<string, unknown>;
+      const span = spansByIds[0] as SpanGetResponse & Record<string, unknown>;
 
       expect(span.traceId).toBeDefined();
       expect(span['TraceId']).toBeUndefined();

@@ -100,7 +100,7 @@ export interface SpanAttachment {
 }
 
 /** A single execution span returned by the Traces API. */
-export interface SpanResponse {
+export interface SpanGetResponse {
   /** Unique identifier of this span (GUID). */
   id: string;
   /** Trace this span belongs to (GUID). */
