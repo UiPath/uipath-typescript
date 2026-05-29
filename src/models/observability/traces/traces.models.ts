@@ -1,9 +1,7 @@
 import type {
   SpanResponse,
   TracesGetByIdOptions,
-  TracesGetByAgentIdOptions,
 } from './traces.types';
-import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 
 /**
  * Service for querying UiPath execution traces (spans).
@@ -75,44 +73,5 @@ export interface TracesServiceModel {
    * ```
    */
   getSpansByIds(traceId: string, spanIds: string[]): Promise<SpanResponse[]>;
-
-  /**
-   * Gets spans grouped by agent ID, with optional time range filtering and pagination.
-   *
-   * When no pagination options are provided, returns all matching results as {@link NonPaginatedResponse}.
-   * When pagination options are provided, returns a {@link PaginatedResponse}.
-   *
-   * @param agentId - Agent identifier (GUID)
-   * @param options - Optional filters and pagination {@link TracesGetByAgentIdOptions}
-   * @returns Promise resolving to paginated or non-paginated {@link SpanResponse} collection
-   * @example
-   * ```typescript
-   * import { Traces } from '@uipath/uipath-typescript/traces';
-   *
-   * const traces = new Traces(sdk);
-   * const history = await traces.getSpansByAgentId('<agentId>');
-   * console.log(history.totalCount, history.items[0].startTime);
-   * ```
-   * @example
-   * ```typescript
-   * // Paginated with time filter
-   * const page1 = await traces.getSpansByAgentId('<agentId>', {
-   *   pageSize: 10,
-   *   startTime: '2026-01-01T00:00:00Z',
-   *   endTime: '2026-02-01T00:00:00Z',
-   * });
-   * if (page1.hasNextPage) {
-   *   const page2 = await traces.getSpansByAgentId('<agentId>', { cursor: page1.nextCursor });
-   * }
-   * ```
-   */
-  getSpansByAgentId<T extends TracesGetByAgentIdOptions = TracesGetByAgentIdOptions>(
-    agentId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SpanResponse>
-      : NonPaginatedResponse<SpanResponse>
-  >;
 
 }

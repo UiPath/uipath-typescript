@@ -1,10 +1,9 @@
-import { describe, it, expect, beforeAll, type TaskContext } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Traces } from '../../../../src/services/observability/traces';
 import {
   SpanResponse,
   SpanStatus,
-  TracesGetByAgentIdOptions,
 } from '../../../../src/models/observability/traces/traces.types';
 
 const modes: InitMode[] = ['v1'];
@@ -15,7 +14,6 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
   let traces!: Traces;
   let existingTraceId!: string;
   let existingSpanId!: string;
-  let existingAgentId!: string;
 
   beforeAll(async () => {
     if (!process.env.TRACES_TEST_TRACE_ID) {
@@ -36,18 +34,6 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
     }
 
     existingSpanId = spans[0].id;
-
-    if (process.env.TRACES_TEST_AGENT_ID) {
-      existingAgentId = process.env.TRACES_TEST_AGENT_ID;
-    } else {
-      const agentSpan = spans.find(s => s.referenceId && s.spanType === 'agentRun');
-      if (!agentSpan?.referenceId) {
-        throw new Error(
-          `No agentRun span found in trace ${existingTraceId} — cannot seed getSpansByAgentId tests (trace must contain a span with spanType 'agentRun' or set TRACES_TEST_AGENT_ID env var)`
-        );
-      }
-      existingAgentId = agentSpan.referenceId;
-    }
   });
 
   // ─── getById ────────────────────────────────────────────────────────────────
@@ -141,67 +127,4 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
     });
   });
 
-  // ─── getSpansByAgentId ───────────────────────────────────────────────────────
-
-  describe('getSpansByAgentId', () => {
-    it('should retrieve spans for an agent', async () => {
-      const result = await traces.getSpansByAgentId(existingAgentId);
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result.items)).toBe(true);
-      expect(typeof result.totalCount).toBe('number');
-      // items may be empty when the CI service account has no visible runs for this agent
-    });
-
-    it('should return SpanResponse objects with required fields', async (ctx: TaskContext) => {
-      const result = await traces.getSpansByAgentId(existingAgentId, { pageSize: 1 });
-
-      if (result.items.length === 0) {
-        ctx.skip(); // no agent runs visible to CI service account — set TRACES_TEST_AGENT_ID to an accessible agent
-        return;
-      }
-
-      const span = result.items[0];
-      expect(span.id).toBeDefined();
-      expect(span.traceId).toBeDefined();
-      expect(span.startTime).toBeDefined();
-      expect(span.status).toBeDefined();
-      expect(span.organizationId).toBeDefined();
-    });
-
-    it('should respect pageSize option', async () => {
-      const result = await traces.getSpansByAgentId(existingAgentId, { pageSize: 1 });
-
-      expect(result.items.length).toBeLessThanOrEqual(1);
-    });
-
-    it('should support cursor-based pagination', async (ctx: TaskContext) => {
-      const page1 = await traces.getSpansByAgentId(existingAgentId, { pageSize: 1 });
-
-      if (!page1.hasNextPage) {
-        ctx.skip(); // fewer than 2 spans visible for this agent in CI — set TRACES_TEST_AGENT_ID to an agent with multiple runs
-        return;
-      }
-
-      const page2Options: TracesGetByAgentIdOptions = { cursor: page1.nextCursor };
-      const page2 = await traces.getSpansByAgentId(existingAgentId, page2Options);
-
-      expect(page2.items.length).toBeGreaterThan(0);
-      expect(page2.items[0].id).not.toBe(page1.items[0].id);
-    });
-
-    it('should support time range filtering', async () => {
-      const result = await traces.getSpansByAgentId(existingAgentId, {
-        startTime: '2020-01-01T00:00:00Z',
-        endTime: new Date().toISOString(),
-      });
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result.items)).toBe(true);
-    });
-
-    it('should throw ValidationError when agentId is empty', async () => {
-      await expect(traces.getSpansByAgentId('')).rejects.toThrow('agentId is required');
-    });
-  });
 });

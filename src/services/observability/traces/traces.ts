@@ -2,12 +2,9 @@ import { BaseService } from '../../base';
 import {
   SpanResponse,
   SpanStatus,
-  SpanSource,
-  SpanVerbosityLevel,
   SpanAttachmentProvider,
   SpanAttachmentDirection,
   TracesGetByIdOptions,
-  TracesGetByAgentIdOptions,
 } from '../../../models/observability/traces/traces.types';
 import { TracesServiceModel } from '../../../models/observability/traces/traces.models';
 import {
@@ -22,25 +19,12 @@ import {
 import {
   RawSpanOtelResponse,
   RawSpanOtelPageResponse,
-  RawSpanAgentResponse,
 } from '../../../models/observability/traces/traces.internal-types';
 import { TRACES_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { QueryParams } from '../../../models/common/request-spec';
-import {
-  PaginatedResponse,
-  NonPaginatedResponse,
-  HasPaginationOptions,
-} from '../../../utils/pagination';
-import { PaginationHelpers } from '../../../utils/pagination/helpers';
-import { PaginationType } from '../../../utils/pagination/internal-types';
-import { TRACES_AGENT_PAGINATION, TRACES_AGENT_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
 import { ValidationError } from '../../../core/errors';
 import { pascalToCamelCaseKeys } from '../../../utils/transform';
-
-const VALID_SPAN_STATUSES = new Set<string>(Object.values(SpanStatus));
-const VALID_SPAN_SOURCES = new Set<string>(Object.values(SpanSource));
-const VALID_SPAN_VERBOSITY_LEVELS = new Set<string>(Object.values(SpanVerbosityLevel));
 
 export class TracesService extends BaseService implements TracesServiceModel {
 
@@ -146,102 +130,6 @@ export class TracesService extends BaseService implements TracesServiceModel {
 
     const spans = Array.isArray(response.data) ? response.data : [];
     return spans.map(span => this.transformOtelSpan(span));
-  }
-
-  private transformAgentSpan(raw: RawSpanAgentResponse): SpanResponse {
-    return {
-      id: raw.id,
-      traceId: raw.traceId,
-      parentId: raw.parentId,
-      name: raw.name,
-      startTime: raw.startTime,
-      endTime: raw.endTime,
-      attributes: raw.attributes,
-      // agent endpoint returns enum fields as numeric strings ("1", "10", "2") — map via integer lookup first,
-      // fall back to string enum check for forward-compatibility if the API ever returns string values
-      status: SpanStatusMap[parseInt(raw.status)] ?? (VALID_SPAN_STATUSES.has(raw.status) ? (raw.status as SpanStatus) : SpanStatus.Unset),
-      source: raw.source != null
-        ? (SpanSourceMap[parseInt(raw.source)] ?? (VALID_SPAN_SOURCES.has(raw.source) ? (raw.source as SpanSource) : null))
-        : null,
-      spanType: raw.spanType,
-      verbosityLevel: raw.verbosityLevel != null
-        ? (SpanVerbosityLevelMap[parseInt(raw.verbosityLevel)] ?? (VALID_SPAN_VERBOSITY_LEVELS.has(raw.verbosityLevel) ? (raw.verbosityLevel as SpanVerbosityLevel) : null))
-        : null,
-      executionType: null,         // agent endpoint does not return this field
-      folderKey: raw.folderKey,
-      referenceId: raw.referenceId,
-      referenceVersion: null,      // agent endpoint does not return this field
-      agentVersion: raw.agentVersion,
-      organizationId: raw.organizationId,
-      tenantId: raw.tenantId,
-      processKey: raw.processKey,
-      jobKey: raw.jobKey,
-      updatedAt: raw.updatedAt,
-      expiryTimeUtc: raw.expiryTimeUtc,
-      context: null,               // agent endpoint does not return this field
-      attachments: null,           // agent endpoint does not return this field
-      permissionStatus: null,      // agent endpoint does not return this field
-    };
-  }
-
-  /**
-   * Gets spans grouped by agent ID, with optional time range filtering and pagination.
-   *
-   * When no pagination options are provided, returns all matching results as {@link NonPaginatedResponse}.
-   * When pagination options are provided, returns a {@link PaginatedResponse}.
-   *
-   * @param agentId - Agent identifier (GUID)
-   * @param options - Optional filters and pagination {@link TracesGetByAgentIdOptions}
-   * @returns Promise resolving to paginated or non-paginated {@link SpanResponse} collection
-   * @example
-   * ```typescript
-   * import { Traces } from '@uipath/uipath-typescript/traces';
-   *
-   * const traces = new Traces(sdk);
-   * const history = await traces.getSpansByAgentId('<agentId>');
-   * console.log(history.totalCount, history.items[0].startTime);
-   * ```
-   * @example
-   * ```typescript
-   * // Paginated with time filter
-   * const page1 = await traces.getSpansByAgentId('<agentId>', {
-   *   pageSize: 10,
-   *   startTime: '2026-01-01T00:00:00Z',
-   *   endTime: '2026-02-01T00:00:00Z',
-   * });
-   * if (page1.hasNextPage) {
-   *   const page2 = await traces.getSpansByAgentId('<agentId>', { cursor: page1.nextCursor });
-   * }
-   * ```
-   */
-  @track('Traces.GetSpansByAgentId')
-  async getSpansByAgentId<T extends TracesGetByAgentIdOptions = TracesGetByAgentIdOptions>(
-    agentId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<SpanResponse>
-      : NonPaginatedResponse<SpanResponse>
-  > {
-    if (!agentId) throw new ValidationError({ message: 'agentId is required for getSpansByAgentId' });
-
-    return PaginationHelpers.getAll<T, RawSpanAgentResponse, SpanResponse>({
-      serviceAccess: this.createPaginationServiceAccess(),
-      getEndpoint: () => TRACES_ENDPOINTS.GET_BY_AGENT_ID(agentId),
-      transformFn: (raw) => this.transformAgentSpan(raw),
-      pagination: {
-        paginationType: PaginationType.OFFSET,
-        itemsField: TRACES_AGENT_PAGINATION.ITEMS_FIELD,
-        totalCountField: TRACES_AGENT_PAGINATION.TOTAL_COUNT_FIELD,
-        paginationParams: {
-          pageSizeParam: TRACES_AGENT_OFFSET_PARAMS.PAGE_SIZE_PARAM,
-          offsetParam: TRACES_AGENT_OFFSET_PARAMS.OFFSET_PARAM,
-          countParam: TRACES_AGENT_OFFSET_PARAMS.COUNT_PARAM,
-          convertToSkip: false,
-        },
-      },
-      excludeFromPrefix: Object.keys(options ?? {}),
-    }, options);
   }
 
 }

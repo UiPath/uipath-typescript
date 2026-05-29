@@ -7,8 +7,6 @@ import { TRACES_TEST_CONSTANTS } from '../../../../utils/constants/traces';
 import {
   createMockOtelPageResponse,
   createMockRawOtelSpan,
-  createMockAgentPageResponse,
-  createMockRawAgentSpan,
 } from '../../../../utils/mocks/traces';
 import {
   SpanStatus,
@@ -19,6 +17,7 @@ import {
   SpanAttachmentProvider,
   SpanAttachmentDirection,
 } from '../../../../../src/models/observability/traces/traces.types';
+
 
 vi.mock('../../../../../src/core/http/api-client');
 
@@ -244,128 +243,6 @@ describe('TracesService Unit Tests', () => {
       await expect(
         tracesService.getSpansByIds(TRACES_TEST_CONSTANTS.TRACE_ID, [TRACES_TEST_CONSTANTS.SPAN_ID_1])
       ).rejects.toThrow(TRACES_TEST_CONSTANTS.ERROR_SPANS_NOT_FOUND);
-    });
-  });
-
-  // ─── getSpansByAgentId ────────────────────────────────────────────────────────
-
-  describe('getSpansByAgentId', () => {
-    it('should return non-paginated response for valid agentId', async () => {
-      mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
-
-      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
-
-      expect(result.items).toBeDefined();
-      expect(Array.isArray(result.items)).toBe(true);
-      expect(result.items.length).toBe(1);
-      expect(result.items[0].id).toBe(TRACES_TEST_CONSTANTS.SPAN_ID_1);
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        TRACES_ENDPOINTS.GET_BY_AGENT_ID(TRACES_TEST_CONSTANTS.AGENT_ID),
-        expect.anything()
-      );
-    });
-
-    it('should return paginated response when pageSize is given', async () => {
-      mockApiClient.get.mockResolvedValue(
-        createMockAgentPageResponse([createMockRawAgentSpan()], 100, 0, 10)
-      );
-
-      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID, { pageSize: 10 });
-
-      expect('hasNextPage' in result).toBe(true);
-    });
-
-    it('should pass filter options as query params', async () => {
-      mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
-
-      await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID, {
-        startTime: TRACES_TEST_CONSTANTS.START_TIME,
-        endTime: TRACES_TEST_CONSTANTS.END_TIME,
-      });
-
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        TRACES_ENDPOINTS.GET_BY_AGENT_ID(TRACES_TEST_CONSTANTS.AGENT_ID),
-        expect.objectContaining({
-          params: expect.objectContaining({
-            startTime: TRACES_TEST_CONSTANTS.START_TIME,
-            endTime: TRACES_TEST_CONSTANTS.END_TIME,
-          }),
-        })
-      );
-    });
-
-    it('should set fields absent from agent endpoint to null', async () => {
-      mockApiClient.get.mockResolvedValue(createMockAgentPageResponse());
-
-      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
-      const span = result.items[0];
-
-      expect(span.executionType).toBeNull();
-      expect(span.permissionStatus).toBeNull();
-      expect(span.referenceVersion).toBeNull();
-      expect(span.context).toBeNull();
-      expect(span.attachments).toBeNull();
-    });
-
-    it('should apply enum transforms from agent endpoint (string values)', async () => {
-      mockApiClient.get.mockResolvedValue(
-        createMockAgentPageResponse([createMockRawAgentSpan({ status: 'Error', source: 'Testing', verbosityLevel: 'Warning' })])
-      );
-
-      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
-      const span = result.items[0];
-
-      expect(span.status).toBe(SpanStatus.Error);
-      expect(span.source).toBe(SpanSource.Testing);
-      expect(span.verbosityLevel).toBe(SpanVerbosityLevel.Warning);
-    });
-
-    it('should apply enum transforms from agent endpoint (numeric string values as returned by live API)', async () => {
-      // Live agent endpoint returns enum fields as numeric strings e.g. status="1", source="10", verbosityLevel="2"
-      mockApiClient.get.mockResolvedValue(
-        createMockAgentPageResponse([createMockRawAgentSpan({ status: '1', source: '10', verbosityLevel: '2' })])
-      );
-
-      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
-      const span = result.items[0];
-
-      expect(span.status).toBe(SpanStatus.Ok);
-      expect(span.source).toBe(SpanSource.CodedAgents);
-      expect(span.verbosityLevel).toBe(SpanVerbosityLevel.Information);
-    });
-
-    it('should fall back to SpanStatus.Unset for unknown status from agent endpoint', async () => {
-      mockApiClient.get.mockResolvedValue(
-        createMockAgentPageResponse([createMockRawAgentSpan({ status: 'UnknownFutureStatus' })])
-      );
-      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
-      expect(result.items[0].status).toBe(SpanStatus.Unset);
-    });
-
-    it('should fall back to null for unknown source from agent endpoint', async () => {
-      mockApiClient.get.mockResolvedValue(
-        createMockAgentPageResponse([createMockRawAgentSpan({ source: 'UnknownSource' })])
-      );
-      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
-      expect(result.items[0].source).toBeNull();
-    });
-
-    it('should fall back to null for unknown verbosityLevel from agent endpoint', async () => {
-      mockApiClient.get.mockResolvedValue(
-        createMockAgentPageResponse([createMockRawAgentSpan({ verbosityLevel: 'UnknownLevel' })])
-      );
-      const result = await tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID);
-      expect(result.items[0].verbosityLevel).toBeNull();
-    });
-
-    it('should throw ValidationError when agentId is empty', async () => {
-      await expect(tracesService.getSpansByAgentId('')).rejects.toThrow('agentId is required');
-    });
-
-    it('should propagate API errors', async () => {
-      mockApiClient.get.mockRejectedValue(new Error(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND));
-      await expect(tracesService.getSpansByAgentId(TRACES_TEST_CONSTANTS.AGENT_ID))
-        .rejects.toThrow(TRACES_TEST_CONSTANTS.ERROR_TRACE_NOT_FOUND);
     });
   });
 

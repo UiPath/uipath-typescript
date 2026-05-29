@@ -165,15 +165,4 @@ export interface TracesGetByIdOptions {
   includeExpiredSpans?: boolean;
 }
 
-/** Options for retrieving paginated spans produced by a specific agent. */
-export type TracesGetByAgentIdOptions = PaginationOptions & {
-  /** Maximum number of spans per page. */
-  pageSize?: number;
-  /** ISO-8601 UTC lower bound for span start time. */
-  startTime?: string;
-  /** ISO-8601 UTC upper bound for span start time. */
-  endTime?: string;
-  /** Filter spans by execution type. */
-  executionType?: SpanExecutionType;
-};
 

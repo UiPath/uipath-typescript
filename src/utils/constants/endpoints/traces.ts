@@ -10,8 +10,4 @@ export const TRACES_ENDPOINTS = {
   /** POST specific spans by ID. traceId in query via params, spanIds array in body */
   POST_BY_IDS: `${LLMOPS_BASE}/api/Traces/v2/spans/otel/byIds`,
 
-  /** GET execution-level spans for an agent with page-number pagination */
-  GET_BY_AGENT_ID: (agentId: string) =>
-    `${LLMOPS_BASE}/api/Traces/spans/agent/${agentId}`,
-
 } as const;
