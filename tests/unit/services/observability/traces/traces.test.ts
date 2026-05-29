@@ -78,7 +78,10 @@ describe('TracesService Unit Tests', () => {
     it('should apply explicit field mapping and enum transforms', async () => {
       mockApiClient.get.mockResolvedValue(
         createMockOtelPageResponse([
-          createMockRawOtelSpan({ Status: 1, Source: 1, VerbosityLevel: 2, ExecutionType: 0, PermissionStatus: 0 }),
+          createMockRawOtelSpan({
+            Status: 1, Source: 1, VerbosityLevel: 2, ExecutionType: 0, PermissionStatus: 0,
+            ExpiryTimeUtc: '2026-06-01T00:00:00.000Z',
+          }),
         ])
       );
 
@@ -88,6 +91,10 @@ describe('TracesService Unit Tests', () => {
       // camelCase applied (PascalCase absent)
       expect(span.traceId).toBe(TRACES_TEST_CONSTANTS.TRACE_ID);
       expect((span as never as Record<string, unknown>)['TraceId']).toBeUndefined();
+
+      // ExpiryTimeUtc → expiredTime semantic rename
+      expect(span.expiredTime).toBe('2026-06-01T00:00:00.000Z');
+      expect((span as never as Record<string, unknown>)['ExpiryTimeUtc']).toBeUndefined();
 
       // enum transforms
       expect(span.status).toBe(SpanStatus.Ok);
