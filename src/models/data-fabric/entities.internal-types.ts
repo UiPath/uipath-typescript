@@ -1,4 +1,4 @@
-import { FieldDisplayType, EntityRecord, SqlType } from './entities.types';
+import { FieldDisplayType, EntityRecord, ReferenceType, SqlType } from './entities.types';
 
 /**
  * Write-side payload shape for creating a new field in a schema upsert call.
@@ -15,10 +15,13 @@ export interface FieldSchemaPayload {
   isUnique?: boolean;
   isRbacEnabled?: boolean;
   isEncrypted?: boolean;
+  isHiddenField?: boolean;
+  isForeignKey?: boolean;
   defaultValue?: string;
   choiceSetId?: string;
-  referenceEntityName?: string;
-  referenceFieldName?: string;
+  referenceType?: ReferenceType;
+  referenceEntity?: { id: string };
+  referenceField?: { id: string };
 }
 
 /**
@@ -74,5 +77,5 @@ export enum SqlFieldType {
   DATE = 'DATE',
   BIT = 'BIT',
   DECIMAL = 'DECIMAL',
-  MULTILINE = 'MULTILINE'
+  MULTILINE = 'MULTILINE',
 }

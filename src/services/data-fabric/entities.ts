@@ -32,6 +32,7 @@ import {
   EntityUpdateByIdOptions,
   SqlType,
   FieldDisplayType,
+  ReferenceType,
 } from '../../models/data-fabric/entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 import { PaginationType } from '../../utils/pagination/internal-types';
@@ -779,10 +780,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
-    this.validateName(name, 'entity');
-    for (const field of fields) {
-      this.validateName(field.fieldName, 'field');
-    }
     const opts = options ?? {};
     const payload = {
       ...(opts.description !== undefined && { description: opts.description }),
@@ -935,6 +932,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
           ...(update.isUnique !== undefined && { isUnique: update.isUnique }),
           ...(update.isRbacEnabled !== undefined && { isRbacEnabled: update.isRbacEnabled }),
           ...(update.isEncrypted !== undefined && { isEncrypted: update.isEncrypted }),
+          ...(update.isHiddenField !== undefined && { isHiddenField: update.isHiddenField }),
           ...(update.defaultValue !== undefined && { defaultValue: update.defaultValue }),
           ...(hasConstraintUpdate && f.sqlType && { sqlType: { ...f.sqlType, ...constraintUpdate } }),
         };
@@ -944,9 +942,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
     // Build and append new fields
     const newFields: FieldSchemaPayload[] = [];
     if (options.addFields?.length) {
-      for (const field of options.addFields) {
-        this.validateName(field.fieldName, 'field');
-      }
       newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
     }
 
@@ -1059,9 +1054,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
 
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
   private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
-    this.validateName(field.fieldName, 'field');
     const fieldType = field.type ?? EntityFieldDataType.STRING;
     this.validateFieldConstraints(fieldType, field, field.fieldName);
+    const isRelationship = fieldType === EntityFieldDataType.RELATIONSHIP;
+    const isFile = fieldType === EntityFieldDataType.FILE;
+    if ((isRelationship || isFile) && (!field.referenceEntityId || !field.referenceFieldId)) {
+      throw new ValidationError({
+        message: `Field '${field.fieldName}' of type ${fieldType} requires both referenceEntityId and referenceFieldId (UUIDs of the target entity and field).`,
+      });
+    }
     const mapping = EntitySchemaFieldTypeMap[fieldType];
     return {
       name: field.fieldName,
@@ -1076,10 +1077,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
       isUnique: field.isUnique ?? false,
       isRbacEnabled: field.isRbacEnabled ?? false,
       isEncrypted: field.isEncrypted ?? false,
+      isHiddenField: field.isHiddenField ?? false,
       ...(field.defaultValue !== undefined && { defaultValue: field.defaultValue }),
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
-      ...(field.referenceEntityName !== undefined && { referenceEntityName: field.referenceEntityName }),
-      ...(field.referenceFieldName !== undefined && { referenceFieldName: field.referenceFieldName }),
+      ...((isRelationship || isFile) && { isForeignKey: true }),
+      ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
+      ...(field.referenceEntityId !== undefined && { referenceEntity: { id: field.referenceEntityId } }),
+      ...(field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
     };
   }
 
@@ -1191,25 +1195,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
       default:
         // UUID, CHOICE_SET_SINGLE, AUTO_NUMBER, DATETIME — (sqlType: { name })
         return {};
-    }
-  }
-
-  private static readonly RESERVED_FIELD_NAMES = new Set([
-    'Id', 'CreatedBy', 'CreateTime', 'UpdatedBy', 'UpdateTime'
-  ]);
-
-  private validateName(name: string, context: 'entity' | 'field'): void {
-    if (name.length < 3 || name.length > 100 || !/^[a-zA-Z]\w*$/.test(name)) {
-      const suggestion = name.replace(/\W/g, '').replace(/^[0-9_]+/, '');
-      const defaultName = `My${context.charAt(0).toUpperCase() + context.slice(1)}`;
-      throw new ValidationError({
-        message: `Invalid ${context} name '${name}'. Must start with a letter, contain only letters, numbers, and underscores, 3–100 characters (e.g., "${suggestion || defaultName}").`
-      });
-    }
-    if (context === 'field' && EntityService.RESERVED_FIELD_NAMES.has(name)) {
-      throw new ValidationError({
-        message: `Field name '${name}' is reserved. Reserved names: ${[...EntityService.RESERVED_FIELD_NAMES].join(', ')}.`
-      });
     }
   }
 
