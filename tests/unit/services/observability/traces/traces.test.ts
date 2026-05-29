@@ -158,6 +158,12 @@ describe('TracesService Unit Tests', () => {
       expect(result[0].source).toBeNull();
     });
 
+    it('should map Source 15 to SpanSource.Serverless', async () => {
+      mockApiClient.get.mockResolvedValue(createMockOtelPageResponse([createMockRawOtelSpan({ Source: 15 })]));
+      const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);
+      expect(result[0].source).toBe(SpanSource.Serverless);
+    });
+
     it('should fall back to null for unknown VerbosityLevel integer', async () => {
       mockApiClient.get.mockResolvedValue(createMockOtelPageResponse([createMockRawOtelSpan({ VerbosityLevel: 999 })]));
       const result = await tracesService.getById(TRACES_TEST_CONSTANTS.TRACE_ID);

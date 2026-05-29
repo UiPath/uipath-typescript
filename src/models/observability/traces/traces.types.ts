@@ -35,6 +35,8 @@ export enum SpanSource {
   MCP = 'MCP',
   /** Agent-to-Agent — span produced by an A2A protocol call between agents. */
   A2A = 'A2A',
+  /** Serverless — span produced by a serverless function execution. */
+  Serverless = 'Serverless',
 }
 
 /** Minimum severity level of events captured in the span. */

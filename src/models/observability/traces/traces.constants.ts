@@ -35,6 +35,7 @@ export const SpanSourceMap: Record<number, SpanSource> = {
   12: SpanSource.EnterpriseContextService,
   13: SpanSource.MCP,
   14: SpanSource.A2A,
+  15: SpanSource.Serverless,
 };
 
 /** Maps integer VerbosityLevel values from the otel API to {@link SpanVerbosityLevel} enum values. */
