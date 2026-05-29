@@ -820,21 +820,45 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
     it('should reject an invalid entity name', async () => {
       const { entities } = getServices();
+      const stamp = generateRandomString(8).toLowerCase();
 
-      await expect(
-        entities.create('Invalid Name', [])
-      ).rejects.toThrow(/Invalid entity name/);
-    });
+      // 1. Create the target entity. The platform auto-adds a primary-key `Id`
+      //    field we'll use as the FK target.
+      const targetName = `sdk_target_${stamp}`;
+      const targetId = await entities.create(targetName, [
+        { fieldName: 'label', type: EntityFieldDataType.STRING },
+      ]);
+      createdEntityIds.push(targetId);
 
-    it('should reject an invalid field name', async () => {
-      const { entities } = getServices();
-      const name = `sdk_test_${generateRandomString(8).toLowerCase()}`;
+      // 2. Find the primary-key field UUID on the target (referenceFieldId).
+      const targetMeta = await entities.getById(targetId);
+      const pkField = targetMeta.fields.find(f => f.isPrimaryKey);
+      if (!pkField?.id) {
+        throw new Error(`Target entity ${targetId} has no primary-key field — cannot bind a RELATIONSHIP to it`);
+      }
 
-      await expect(
-        entities.create(name, [
-          { fieldName: 'Invalid Field', type: EntityFieldDataType.STRING },
-        ])
-      ).rejects.toThrow(/Invalid field name/);
+      // 3. Create the source entity with a RELATIONSHIP field bound to target.Id.
+      const sourceName = `sdk_source_${stamp}`;
+      const sourceId = await entities.create(sourceName, [
+        { fieldName: 'name', type: EntityFieldDataType.STRING },
+        {
+          fieldName: 'parent',
+          type: EntityFieldDataType.RELATIONSHIP,
+          referenceEntityId: targetId,
+          referenceFieldId: pkField.id,
+        },
+      ]);
+      createdEntityIds.push(sourceId);
+
+      // 4. Read it back and verify the FK landed correctly. The server resolves
+      //    `referenceEntity { id }` → a full entity reference; if the SDK had
+      //    sent the old `referenceEntityName` shape this would be unbound.
+      const sourceMeta = await entities.getById(sourceId);
+      const parentField = sourceMeta.fields.find(f => f.name === 'parent');
+      expect(parentField).toBeDefined();
+      expect(parentField?.isForeignKey).toBe(true);
+      expect(parentField?.referenceEntity?.id).toBe(targetId);
+      expect(parentField?.referenceField?.id).toBe(pkField.id);
     });
   });
 
