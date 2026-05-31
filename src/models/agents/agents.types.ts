@@ -1,13 +1,13 @@
 /**
- * Response from {@link AgentMonitoringServiceModel.getNames}.
+ * Response from {@link AgentServiceModel.getNames}.
  */
 export interface AgentNamesGetAllResponse {
-  /** Distinct agent names visible to the caller */
+  /** Distinct agent names. */
   agents: string[];
 }
 
 /**
- * Options for {@link AgentMonitoringServiceModel.getNames}.
+ * Options for {@link AgentServiceModel.getNames}.
  */
 export interface AgentNamesGetAllOptions {
   /** Optional folder keys (GUIDs) to scope the agent name lookup */

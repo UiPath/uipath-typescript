@@ -205,9 +205,9 @@ const serviceEntries = [
     output: 'document-understanding/index'
   },
   {
-    name: 'agent-monitoring',
-    input: 'src/services/agents/monitoring/index.ts',
-    output: 'agent-monitoring/index'
+    name: 'agents',
+    input: 'src/services/agents/index.ts',
+    output: 'agents/index'
   }
 ];
 

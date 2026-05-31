@@ -24,5 +24,5 @@ export * from './conversational-agent';
 // Agent Feedback endpoints
 export * from './feedback';
 
-// Agent Monitoring endpoints
-export * from './agent-monitoring';
+// Agent endpoints
+export * from './agents';

@@ -5,4 +5,5 @@
  */
 
 export * from './feedback';
-export * from './monitoring';
+export * from './agents.types';
+export * from './agents.models';

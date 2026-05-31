@@ -15,4 +15,4 @@ export * from './pagination';
 export * from './conversational-agent';
 export * from './attachments';
 export * from './feedback';
-export * from './agent-monitoring';
+export * from './agents';

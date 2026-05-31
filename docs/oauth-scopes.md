@@ -172,11 +172,11 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getCategories()` | `Traces.Api` |
 | `deleteCategory()` | `Traces.Api` |
 
-## Agent Monitoring
+## Agents
 
 | Method | OAuth Scope |
 |--------|-------------|
-| `getNames()` | `Insights.RealTimeData Insights` |
+| `getNames()` | `Insights.RealTimeData Insights`, `OR.Folders.Read` |
 
 ## Processes
 
