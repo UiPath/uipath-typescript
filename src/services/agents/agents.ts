@@ -2,8 +2,11 @@ import { BaseService } from '../base';
 import {
   AgentErrorsTimelineOptions,
   AgentErrorsTimelineResponse,
+  AgentFilterOptions,
   AgentNamesGetAllOptions,
   AgentNamesGetAllResponse,
+  AgentTopErroredAgentsOptions,
+  AgentTopErroredAgentsResponse,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -99,13 +102,7 @@ export class AgentService extends BaseService implements AgentServiceModel {
     endTime: string,
     options?: AgentErrorsTimelineOptions,
   ): Promise<AgentErrorsTimelineResponse> {
-    const body: Record<string, unknown> = { startTime, endTime };
-    if (options?.folderKeys !== undefined) body.folderKeys = options.folderKeys;
-    if (options?.agentNames !== undefined) body.agentNames = options.agentNames;
-    if (options?.projectKeys !== undefined) body.projectKeys = options.projectKeys;
-    if (options?.agentId !== undefined) body.agentId = options.agentId;
-    if (options?.processVersion !== undefined) body.processVersion = options.processVersion;
-    if (options?.limit !== undefined) body.limit = options.limit;
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
 
     const response = await this.post<AgentErrorsTimelineResponse>(
       AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE,
@@ -113,5 +110,76 @@ export class AgentService extends BaseService implements AgentServiceModel {
     );
 
     return response.data;
+  }
+
+  /**
+   * Retrieves the top-N agents by error count over the requested window.
+   *
+   * Returns one entry per agent, ranked by error count, with the first and
+   * last failing jobs included to anchor the error window. Optionally filter
+   * by folder, agent name, project, or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentTopErroredAgentsOptions}
+   * @returns Promise resolving to {@link AgentTopErroredAgentsResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top errored agents in May 2025
+   * const result = await agents.getTopErroredAgents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * console.log(`Total errors: ${result.totalErrors}`);
+   * result.data?.forEach((agent) => {
+   *   console.log(`${agent.name}: ${agent.count} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Top 5 errored agents in specific folders
+   * const result = await agents.getTopErroredAgents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetTopErroredAgents')
+  async getTopErroredAgents(
+    startTime: string,
+    endTime: string,
+    options?: AgentTopErroredAgentsOptions,
+  ): Promise<AgentTopErroredAgentsResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<AgentTopErroredAgentsResponse>(
+      AGENTS_ENDPOINTS.GET_TOP_ERRORED_AGENTS,
+      body,
+    );
+
+    return response.data;
+  }
+
+  private buildAgentFilterBody(
+    startTime: string,
+    endTime: string,
+    options?: AgentFilterOptions & { limit?: number },
+  ): Record<string, unknown> {
+    const body: Record<string, unknown> = { startTime, endTime };
+    if (options?.folderKeys !== undefined) body.folderKeys = options.folderKeys;
+    if (options?.agentNames !== undefined) body.agentNames = options.agentNames;
+    if (options?.projectKeys !== undefined) body.projectKeys = options.projectKeys;
+    if (options?.agentId !== undefined) body.agentId = options.agentId;
+    if (options?.processVersion !== undefined) body.processVersion = options.processVersion;
+    if (options?.limit !== undefined) body.limit = options.limit;
+    return body;
   }
 }

@@ -3,6 +3,8 @@ import type {
   AgentNamesGetAllResponse,
   AgentErrorsTimelineOptions,
   AgentErrorsTimelineResponse,
+  AgentTopErroredAgentsOptions,
+  AgentTopErroredAgentsResponse,
 } from './agents.types';
 
 /**
@@ -82,4 +84,50 @@ export interface AgentServiceModel {
     endTime: string,
     options?: AgentErrorsTimelineOptions,
   ): Promise<AgentErrorsTimelineResponse>;
+
+  /**
+   * Retrieves the top-N agents by error count over the requested window.
+   *
+   * Returns one entry per agent, ranked by error count, with the first and
+   * last failing jobs included to anchor the error window. Optionally filter
+   * by folder, agent name, project, or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentTopErroredAgentsOptions}
+   * @returns Promise resolving to {@link AgentTopErroredAgentsResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top errored agents in May 2025
+   * const result = await agents.getTopErroredAgents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * console.log(`Total errors: ${result.totalErrors}`);
+   * result.data?.forEach((agent) => {
+   *   console.log(`${agent.name}: ${agent.count} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Top 5 errored agents in specific folders
+   * const result = await agents.getTopErroredAgents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  getTopErroredAgents(
+    startTime: string,
+    endTime: string,
+    options?: AgentTopErroredAgentsOptions,
+  ): Promise<AgentTopErroredAgentsResponse>;
 }

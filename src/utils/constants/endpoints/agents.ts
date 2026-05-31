@@ -9,4 +9,6 @@ export const AGENTS_ENDPOINTS = {
   GET_NAMES: `${INSIGHTS_RTM_BASE}/Agents/names`,
   /** Time-series of error counts grouped by agent over the requested window. */
   GET_ERRORS_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/errors`,
+  /** Top-N agents by error count over the requested window. */
+  GET_TOP_ERRORED_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/topErroredAgents`,
 } as const;

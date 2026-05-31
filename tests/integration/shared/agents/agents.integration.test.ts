@@ -70,4 +70,42 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('getTopErroredAgents', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve top-N agents ranked by error count', async () => {
+      const result = await agents.getTopErroredAgents(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (typeof result.totalErrors === 'number') {
+        expect(result.totalErrors).toBeGreaterThanOrEqual(0);
+      }
+      if (result.data && result.data.length > 0) {
+        const entry = result.data[0];
+        expect(typeof entry.name).toBe('string');
+        expect(typeof entry.count).toBe('number');
+        expect(typeof entry.agentId).toBe('string');
+        expect(entry.firstSeenJob).toBeDefined();
+        expect(typeof entry.firstSeenJob.jobKey).toBe('string');
+        expect(typeof entry.firstSeenJob.folderKey).toBe('string');
+        expect(entry.lastSeenJob).toBeDefined();
+      }
+    });
+
+    it('should respect limit option', async () => {
+      const result = await agents.getTopErroredAgents(startTime, endTime, {
+        limit: 3,
+      });
+
+      if (!result.data || result.data.length === 0) {
+        throw new Error(
+          'No errored agents in the test tenant for the configured window — ' +
+          'cannot verify limit option. Run errored agents in the tenant or widen the window.',
+        );
+      }
+      expect(result.data.length).toBeLessThanOrEqual(3);
+    });
+  });
 });

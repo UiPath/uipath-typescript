@@ -112,9 +112,9 @@ describe('AgentService Unit Tests', () => {
       await agentService.getErrorsTimeline(startTime, endTime, {
         folderKeys,
         agentNames,
-        projectKeys: ['proj-1'],
-        agentId: 'agent-uuid',
-        processVersion: '1.0.0',
+        projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
         limit: 5,
       });
 
@@ -125,9 +125,9 @@ describe('AgentService Unit Tests', () => {
           endTime,
           folderKeys,
           agentNames,
-          projectKeys: ['proj-1'],
-          agentId: 'agent-uuid',
-          processVersion: '1.0.0',
+          projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+          agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+          processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
           limit: 5,
         },
         expect.any(Object),
@@ -160,6 +160,107 @@ describe('AgentService Unit Tests', () => {
 
       await expect(
         agentService.getErrorsTimeline(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getTopErroredAgents', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+    const mockJob = {
+      jobKey: AGENT_TEST_CONSTANTS.JOB_KEY,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      folderName: AGENT_TEST_CONSTANTS.FOLDER_NAME,
+      folderPath: AGENT_TEST_CONSTANTS.FOLDER_PATH,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+    };
+
+    it('should send only startTime and endTime when no options are provided', async () => {
+      const mockResponse = {
+        totalErrors: 68,
+        data: [
+          {
+            name: AGENT_TEST_CONSTANTS.AGENT_NAME_1,
+            count: 27,
+            agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+            firstSeenJob: mockJob,
+            lastSeenJob: mockJob,
+          },
+        ],
+      };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await agentService.getTopErroredAgents(startTime, endTime);
+
+      expect(result.totalErrors).toBe(68);
+      expect(result.data).toEqual(mockResponse.data);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TOP_ERRORED_AGENTS,
+        { startTime, endTime },
+        expect.any(Object),
+      );
+    });
+
+    it('should send camelCase body fields with all options', async () => {
+      mockApiClient.post.mockResolvedValue({ totalErrors: 0, data: [] });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      const agentNames = [AGENT_TEST_CONSTANTS.AGENT_NAME_1];
+
+      await agentService.getTopErroredAgents(startTime, endTime, {
+        folderKeys,
+        agentNames,
+        projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+        limit: 5,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TOP_ERRORED_AGENTS,
+        {
+          startTime,
+          endTime,
+          folderKeys,
+          agentNames,
+          projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+          agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+          processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+          limit: 5,
+        },
+        expect.any(Object),
+      );
+    });
+
+    it('should omit undefined options from the request body', async () => {
+      mockApiClient.post.mockResolvedValue({ totalErrors: 0, data: [] });
+
+      await agentService.getTopErroredAgents(startTime, endTime, { limit: 5 });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TOP_ERRORED_AGENTS,
+        { startTime, endTime, limit: 5 },
+        expect.any(Object),
+      );
+    });
+
+    it('should return response with absent fields when API returns empty', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await agentService.getTopErroredAgents(startTime, endTime);
+
+      expect(result.totalErrors).toBeUndefined();
+      expect(result.data).toBeUndefined();
+    });
+
+    it('should propagate API errors', async () => {
+      const error = new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        agentService.getTopErroredAgents(startTime, endTime),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
