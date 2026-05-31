@@ -2,7 +2,7 @@
  * Response from {@link AgentServiceModel.getNames}.
  */
 export interface AgentNamesGetAllResponse {
-  /** Distinct agent names. */
+  /** Distinct agent names on the given tenant. */
   agents: string[];
 }
 

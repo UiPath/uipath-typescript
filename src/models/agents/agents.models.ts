@@ -5,7 +5,7 @@ import type { AgentNamesGetAllOptions, AgentNamesGetAllResponse } from './agents
  */
 export interface AgentServiceModel {
   /**
-   * Lists all distinct agent names.
+   * Lists all distinct agent names on the given tenant.
    *
    * The tenant is inferred from the authenticated JWT. Optionally scope the
    * lookup to a list of folder keys.
