@@ -1,4 +1,9 @@
-import type { AgentNamesGetAllOptions, AgentNamesGetAllResponse } from './agents.types';
+import type {
+  AgentNamesGetAllOptions,
+  AgentNamesGetAllResponse,
+  AgentErrorsTimelineOptions,
+  AgentErrorsTimelineResponse,
+} from './agents.types';
 
 /**
  * Service for retrieving runtime data for UiPath Agents.
@@ -31,4 +36,50 @@ export interface AgentServiceModel {
    * ```
    */
   getNames(options?: AgentNamesGetAllOptions): Promise<AgentNamesGetAllResponse>;
+
+  /**
+   * Retrieves a time-series of error counts grouped by agent over the requested window.
+   *
+   * Returns one data point per (agent, time bucket). Bucket size is chosen
+   * server-side based on the window length. Optionally filter by folder, agent
+   * name, project, or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentErrorsTimelineOptions}
+   * @returns Promise resolving to {@link AgentErrorsTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // All errors in May 2025
+   * const result = await agents.getErrorsTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and top 5 agents
+   * const result = await agents.getErrorsTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent', 'StoryAgent'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  getErrorsTimeline(
+    startTime: string,
+    endTime: string,
+    options?: AgentErrorsTimelineOptions,
+  ): Promise<AgentErrorsTimelineResponse>;
 }

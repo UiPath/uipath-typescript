@@ -8,5 +8,8 @@ export const AGENT_TEST_CONSTANTS = {
   AGENT_NAME_1: 'ITRReviewerUB',
   AGENT_NAME_2: 'JokeAgent',
   AGENT_NAME_3: 'StoryAgent',
+  START_TIME: '2025-05-01T00:00:00Z',
+  END_TIME: '2026-05-14T00:00:00Z',
+  TIMELINE_DATE: '2025-04-12T00:00:00Z',
   ERROR_GENERIC: 'Agents API error',
 } as const;

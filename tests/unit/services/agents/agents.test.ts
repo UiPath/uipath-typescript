@@ -79,4 +79,88 @@ describe('AgentService Unit Tests', () => {
       await expect(agentService.getNames()).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
+
+  describe('getErrorsTimeline', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should send only startTime and endTime when no options are provided', async () => {
+      const mockResponse = {
+        data: [
+          { name: AGENT_TEST_CONSTANTS.AGENT_NAME_1, value: 3, date: AGENT_TEST_CONSTANTS.TIMELINE_DATE },
+          { name: AGENT_TEST_CONSTANTS.AGENT_NAME_2, value: 0, date: AGENT_TEST_CONSTANTS.TIMELINE_DATE },
+        ],
+      };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await agentService.getErrorsTimeline(startTime, endTime);
+
+      expect(result.data).toEqual(mockResponse.data);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE,
+        { startTime, endTime },
+        expect.any(Object),
+      );
+    });
+
+    it('should send camelCase body fields (no PascalCase transform)', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      const agentNames = [AGENT_TEST_CONSTANTS.AGENT_NAME_1, AGENT_TEST_CONSTANTS.AGENT_NAME_2];
+
+      await agentService.getErrorsTimeline(startTime, endTime, {
+        folderKeys,
+        agentNames,
+        projectKeys: ['proj-1'],
+        agentId: 'agent-uuid',
+        processVersion: '1.0.0',
+        limit: 5,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE,
+        {
+          startTime,
+          endTime,
+          folderKeys,
+          agentNames,
+          projectKeys: ['proj-1'],
+          agentId: 'agent-uuid',
+          processVersion: '1.0.0',
+          limit: 5,
+        },
+        expect.any(Object),
+      );
+    });
+
+    it('should omit undefined options from the request body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      await agentService.getErrorsTimeline(startTime, endTime, { limit: 10 });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE,
+        { startTime, endTime, limit: 10 },
+        expect.any(Object),
+      );
+    });
+
+    it('should return response with absent data when API returns empty', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await agentService.getErrorsTimeline(startTime, endTime);
+
+      expect(result.data).toBeUndefined();
+    });
+
+    it('should propagate API errors', async () => {
+      const error = new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        agentService.getErrorsTimeline(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
 });

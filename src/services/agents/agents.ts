@@ -1,5 +1,10 @@
 import { BaseService } from '../base';
-import { AgentNamesGetAllOptions, AgentNamesGetAllResponse } from '../../models/agents/agents.types';
+import {
+  AgentErrorsTimelineOptions,
+  AgentErrorsTimelineResponse,
+  AgentNamesGetAllOptions,
+  AgentNamesGetAllResponse,
+} from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
 import { camelToPascalCaseKeys } from '../../utils/transform';
@@ -10,7 +15,7 @@ import { track } from '../../core/telemetry';
  */
 export class AgentService extends BaseService implements AgentServiceModel {
   /**
-   * Lists all distinct agent names.
+   * Lists all distinct agent names on the given tenant.
    *
    * The tenant is inferred from the authenticated JWT. Optionally scope the
    * lookup to a list of folder keys.
@@ -43,6 +48,68 @@ export class AgentService extends BaseService implements AgentServiceModel {
     const response = await this.post<AgentNamesGetAllResponse>(
       AGENTS_ENDPOINTS.GET_NAMES,
       camelToPascalCaseKeys(input)
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Retrieves a time-series of error counts grouped by agent over the requested window.
+   *
+   * Returns one data point per (agent, time bucket). Bucket size is chosen
+   * server-side based on the window length. Optionally filter by folder, agent
+   * name, project, or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentErrorsTimelineOptions}
+   * @returns Promise resolving to {@link AgentErrorsTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // All errors in May 2025
+   * const result = await agents.getErrorsTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and top 5 agents
+   * const result = await agents.getErrorsTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent', 'StoryAgent'],
+   *     limit: 5,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetErrorsTimeline')
+  async getErrorsTimeline(
+    startTime: string,
+    endTime: string,
+    options?: AgentErrorsTimelineOptions,
+  ): Promise<AgentErrorsTimelineResponse> {
+    const body: Record<string, unknown> = { startTime, endTime };
+    if (options?.folderKeys !== undefined) body.folderKeys = options.folderKeys;
+    if (options?.agentNames !== undefined) body.agentNames = options.agentNames;
+    if (options?.projectKeys !== undefined) body.projectKeys = options.projectKeys;
+    if (options?.agentId !== undefined) body.agentId = options.agentId;
+    if (options?.processVersion !== undefined) body.processVersion = options.processVersion;
+    if (options?.limit !== undefined) body.limit = options.limit;
+
+    const response = await this.post<AgentErrorsTimelineResponse>(
+      AGENTS_ENDPOINTS.GET_ERRORS_TIMELINE,
+      body,
     );
 
     return response.data;

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
+import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 /**
  * Integration tests for Agents (`/insightsrtm_/Agents/*`).
@@ -41,6 +42,32 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.agents)).toBe(true);
+    });
+  });
+
+  describe('getErrorsTimeline', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve a timeline of error counts grouped by agent', async () => {
+      const result = await agents.getErrorsTimeline(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (result.data && result.data.length > 0) {
+        const point = result.data[0];
+        expect(typeof point.name).toBe('string');
+        expect(typeof point.value).toBe('number');
+        expect(typeof point.date).toBe('string');
+      }
+    });
+
+    it('should accept optional filters without error', async () => {
+      const result = await agents.getErrorsTimeline(startTime, endTime, {
+        folderKeys: [],
+        limit: 5,
+      });
+
+      expect(result).toBeDefined();
     });
   });
 });
