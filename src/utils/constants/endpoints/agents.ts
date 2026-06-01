@@ -21,4 +21,6 @@ export const AGENTS_ENDPOINTS = {
   GET_LATENCY_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/latencyTimeline`,
   /** Distribution of incidents across types (errors, escalations, policy). */
   GET_INCIDENT_DISTRIBUTION: `${INSIGHTS_RTM_BASE}/Agents/incidentDistribution`,
+  /** Paginated list of agents with consumption and health metadata. */
+  GET_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/agents`,
 } as const;
