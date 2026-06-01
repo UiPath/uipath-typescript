@@ -11,4 +11,6 @@ export const AGENTS_ENDPOINTS = {
   GET_ERRORS_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/errors`,
   /** Top-N agents by error count over the requested window. */
   GET_TOP_ERRORED_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/topErroredAgents`,
+  /** Paginated list of incidents grouped/ordered by the requested column. */
+  GET_INCIDENTS: `${INSIGHTS_RTM_BASE}/Agents/incidents`,
 } as const;

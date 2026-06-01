@@ -1,3 +1,5 @@
+import type { PaginationOptions } from '../../utils/pagination/types';
+
 /**
  * Response from {@link AgentServiceModel.getNames}.
  */
@@ -61,7 +63,7 @@ export interface AgentErrorsTimelineOptions extends AgentFilterOptions {
 
 /**
  * Summary information about a single job execution — included on every
- * top-errored agent entry to anchor the error window.
+ * top-errored agent and incident entry to anchor the window.
  */
 export interface AgentJobInfo {
   /** Job key (GUID) */
@@ -74,10 +76,10 @@ export interface AgentJobInfo {
   folderPath: string;
   /** Job start time (ISO 8601, UTC) */
   startTime: string;
-  /** Job end time (ISO 8601, UTC). May be absent if the job is still running. */
-  endTime?: string;
-  /** Process key (GUID) the job was launched from. May be absent for ad-hoc jobs. */
-  processKey?: string;
+  /** Job end time (ISO 8601, UTC). `null` while the job is still running. */
+  endTime: string | null;
+  /** Process key (GUID) the job was launched from. `null` for ad-hoc jobs. */
+  processKey: string | null;
 }
 
 /**
@@ -114,3 +116,86 @@ export interface AgentTopErroredAgentsOptions extends AgentFilterOptions {
   /** Max number of agents to return. Defaults to 10 server-side. */
   limit?: number;
 }
+
+/**
+ * Columns available for ordering / grouping {@link AgentServiceModel.getIncidents} results.
+ */
+export enum AgentIncidentSortColumn {
+  AgentId = 'AgentId',
+  AgentName = 'AgentName',
+  ParentProcessName = 'ParentProcessName',
+  ErrorTitle = 'ErrorTitle',
+  FirstSeenStartTime = 'FirstSeenStartTime',
+  ExecutionCount = 'ExecutionCount',
+  Type = 'Type',
+  FirstSeenFolderName = 'FirstSeenFolderName',
+  FirstSeenFolderPath = 'FirstSeenFolderPath',
+  LastSeenStartTime = 'LastSeenStartTime',
+  LastSeenFolderName = 'LastSeenFolderName',
+  LastSeenFolderPath = 'LastSeenFolderPath',
+}
+
+/**
+ * Ordering directive for {@link AgentServiceModel.getIncidents}.
+ */
+export interface AgentIncidentOrderBy {
+  /** Column to sort by */
+  column: AgentIncidentSortColumn;
+  /** Sort descending. Defaults to false (ascending) server-side. */
+  desc?: boolean;
+}
+
+/**
+ * One incident in the agent incidents list — an error/error-class observed
+ * for an agent over the requested window.
+ */
+export interface AgentIncident {
+  /** Incident type (e.g., "Error") */
+  type: string;
+  /** Human-readable error description */
+  description: string;
+  /** Agent ID (GUID) */
+  agentId: string;
+  /** Agent display name. `null` if the agent has no friendly name set. */
+  agentName: string | null;
+  /** Job key (GUID) where the incident was first seen */
+  jobKey: string;
+  /** Parent process name. `null` for jobs not bound to a parent process. */
+  parentProcess: string | null;
+  /** First-seen timestamp (ISO 8601, UTC) */
+  firstSeen: string;
+  /** Folder key (GUID) where the incident was first observed */
+  folderKey: string;
+  /** Folder display name */
+  folderName: string;
+  /** Fully qualified folder path */
+  folderPath: string;
+  /** Number of error executions counted for this incident */
+  count: number;
+  /** First job in the window where this incident was observed */
+  firstSeenJob: AgentJobInfo;
+  /** Last job in the window where this incident was observed */
+  lastSeenJob: AgentJobInfo;
+}
+
+/**
+ * Extra envelope field returned by {@link AgentServiceModel.getIncidents} on top
+ * of the standard paginated response — the sum of error counts across all
+ * matching incidents, independent of pagination.
+ */
+export interface AgentIncidentsTotals {
+  /** Total error count across all incidents in the window (independent of pagination) */
+  totalErrorCount?: number;
+}
+
+/**
+ * Options for {@link AgentServiceModel.getIncidents}.
+ *
+ * Composes filter, pagination, and sort/group options.
+ */
+export type AgentIncidentsOptions = AgentFilterOptions & PaginationOptions & {
+  /** Sort order for the result set. */
+  orderBy?: AgentIncidentOrderBy;
+  /** Group results by one or more columns. */
+  groupBy?: AgentIncidentSortColumn[];
+};

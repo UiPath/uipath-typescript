@@ -3,6 +3,9 @@ import {
   AgentErrorsTimelineOptions,
   AgentErrorsTimelineResponse,
   AgentFilterOptions,
+  AgentIncident,
+  AgentIncidentsOptions,
+  AgentIncidentsTotals,
   AgentNamesGetAllOptions,
   AgentNamesGetAllResponse,
   AgentTopErroredAgentsOptions,
@@ -12,6 +15,28 @@ import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
 import { camelToPascalCaseKeys } from '../../utils/transform';
 import { track } from '../../core/telemetry';
+import { PaginationHelpers } from '../../utils/pagination/helpers';
+import { PaginationManager } from '../../utils/pagination/pagination-manager';
+import { PaginationType } from '../../utils/pagination/internal-types';
+import type {
+  HasPaginationOptions,
+  NonPaginatedResponse,
+  PaginatedResponse,
+} from '../../utils/pagination/types';
+
+/**
+ * Raw envelope returned by `POST /Agents/incidents` before SDK normalization.
+ * Internal — not exported from the agents barrel.
+ */
+interface RawAgentIncidentsResponse {
+  totalErrorCount?: number;
+  pagination?: {
+    totalCount?: number;
+    pageNumber?: number;
+    pageSize?: number;
+  };
+  data?: AgentIncident[];
+}
 
 /**
  * Service for interacting with the UiPath Agents API.
@@ -166,6 +191,140 @@ export class AgentService extends BaseService implements AgentServiceModel {
     );
 
     return response.data;
+  }
+
+  /**
+   * Retrieves agent incidents over the requested window.
+   *
+   * Each incident represents one error class observed for an agent, with a
+   * count, first/last seen jobs, and folder context. Returns a
+   * {@link PaginatedResponse} when pagination options (`pageSize`, `cursor`,
+   * or `jumpToPage`) are provided, otherwise a {@link NonPaginatedResponse}.
+   * Both shapes additionally carry `totalErrorCount` — the sum of error
+   * executions across the matching incidents.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional pagination, sort, group, and filters {@link AgentIncidentsOptions}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentIncident} plus {@link AgentIncidentsTotals}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Non-paginated — returns the server default page
+   * const result = await agents.getIncidents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * console.log(`Total error count: ${result.totalErrorCount}`);
+   * console.log(`Records on this page: ${result.items.length}`);
+   * result.items.forEach((incident) => {
+   *   console.log(`[${incident.type}] ${incident.description} (count=${incident.count})`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Paginated — first page, 25 per page, sorted by execution count desc
+   * import { AgentIncidentSortColumn } from '@uipath/uipath-typescript/agents';
+   *
+   * const page = await agents.getIncidents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     pageSize: 25,
+   *     orderBy: { column: AgentIncidentSortColumn.ExecutionCount, desc: true },
+   *     folderKeys: ['<folderKey1>'],
+   *   },
+   * );
+   *
+   * if (page.hasNextPage && page.nextCursor) {
+   *   const next = await agents.getIncidents(
+   *     '2025-05-01T00:00:00Z',
+   *     '2025-06-01T00:00:00Z',
+   *     { cursor: page.nextCursor },
+   *   );
+   * }
+   * ```
+   */
+  @track('Agents.GetIncidents')
+  async getIncidents<T extends AgentIncidentsOptions = AgentIncidentsOptions>(
+    startTime: string,
+    endTime: string,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<AgentIncident> & AgentIncidentsTotals
+      : NonPaginatedResponse<AgentIncident> & AgentIncidentsTotals
+  > {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.orderBy !== undefined) body.orderBy = options.orderBy;
+    if (options?.groupBy !== undefined) body.groupBy = options.groupBy;
+
+    const isPaginated = !!options && PaginationHelpers.hasPaginationParameters(options as Record<string, unknown>);
+
+    // Resolve API-side 0-indexed pageNumber from SDK 1-indexed pagination input.
+    let apiPageNumber: number | undefined;
+    let pageSize: number | undefined;
+    if (options?.cursor) {
+      const cursorData = PaginationHelpers.parseCursor(options.cursor.value);
+      apiPageNumber = (cursorData.pageNumber ?? 1) - 1;
+      pageSize = cursorData.pageSize ?? options.pageSize;
+    } else if (options?.jumpToPage !== undefined) {
+      apiPageNumber = options.jumpToPage - 1;
+      pageSize = options.pageSize;
+    } else if (options?.pageSize !== undefined) {
+      apiPageNumber = 0;
+      pageSize = options.pageSize;
+    }
+    if (apiPageNumber !== undefined) body.pageNumber = apiPageNumber;
+    if (pageSize !== undefined) body.pageSize = pageSize;
+
+    const response = await this.post<RawAgentIncidentsResponse>(
+      AGENTS_ENDPOINTS.GET_INCIDENTS,
+      body,
+    );
+    const raw = response.data;
+    const items = raw.data ?? [];
+    const totalCount = raw.pagination?.totalCount;
+    const totalErrorCount = raw.totalErrorCount;
+
+    if (!isPaginated) {
+      const nonPaginated: NonPaginatedResponse<AgentIncident> & AgentIncidentsTotals = {
+        items,
+        totalCount,
+        totalErrorCount,
+      };
+      return nonPaginated as any;
+    }
+
+    // Convert API's 0-indexed pageNumber to SDK's 1-indexed currentPage.
+    const sdkCurrentPage =
+      raw.pagination?.pageNumber !== undefined ? raw.pagination.pageNumber + 1 : undefined;
+    const effectivePageSize = raw.pagination?.pageSize ?? pageSize;
+    const hasMore =
+      totalCount !== undefined && sdkCurrentPage !== undefined && effectivePageSize
+        ? sdkCurrentPage * effectivePageSize < totalCount
+        : items.length === (effectivePageSize ?? -1);
+
+    const paginated = PaginationManager.createPaginatedResponse<AgentIncident>(
+      {
+        pageInfo: {
+          hasMore,
+          totalCount,
+          currentPage: sdkCurrentPage,
+          pageSize: effectivePageSize,
+        },
+        type: PaginationType.OFFSET,
+      },
+      items,
+    );
+    const withTotals: PaginatedResponse<AgentIncident> & AgentIncidentsTotals = {
+      ...paginated,
+      totalErrorCount,
+    };
+    return withTotals as any;
   }
 
   private buildAgentFilterBody(

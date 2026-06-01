@@ -5,7 +5,15 @@ import type {
   AgentErrorsTimelineResponse,
   AgentTopErroredAgentsOptions,
   AgentTopErroredAgentsResponse,
+  AgentIncident,
+  AgentIncidentsOptions,
+  AgentIncidentsTotals,
 } from './agents.types';
+import type {
+  HasPaginationOptions,
+  NonPaginatedResponse,
+  PaginatedResponse,
+} from '../../utils/pagination/types';
 
 /**
  * Service for retrieving runtime data for UiPath Agents.
@@ -130,4 +138,69 @@ export interface AgentServiceModel {
     endTime: string,
     options?: AgentTopErroredAgentsOptions,
   ): Promise<AgentTopErroredAgentsResponse>;
+
+  /**
+   * Retrieves agent incidents over the requested window.
+   *
+   * Each incident represents one error class observed for an agent, with a
+   * count, first/last seen jobs, and folder context. Returns a
+   * {@link PaginatedResponse} when pagination options (`pageSize`, `cursor`,
+   * or `jumpToPage`) are provided, otherwise a {@link NonPaginatedResponse}.
+   * Both shapes additionally carry `totalErrorCount` — the sum of error
+   * executions across the matching incidents.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional pagination, sort, group, and filters {@link AgentIncidentsOptions}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentIncident} plus {@link AgentIncidentsTotals}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Non-paginated — returns the server default page
+   * const result = await agents.getIncidents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * console.log(`Total error count: ${result.totalErrorCount}`);
+   * console.log(`Records on this page: ${result.items.length}`);
+   * result.items.forEach((incident) => {
+   *   console.log(`[${incident.type}] ${incident.description} (count=${incident.count})`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Paginated — first page, 25 per page, sorted by execution count desc
+   * import { AgentIncidentSortColumn } from '@uipath/uipath-typescript/agents';
+   *
+   * const page = await agents.getIncidents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     pageSize: 25,
+   *     orderBy: { column: AgentIncidentSortColumn.ExecutionCount, desc: true },
+   *     folderKeys: ['<folderKey1>'],
+   *   },
+   * );
+   *
+   * if (page.hasNextPage && page.nextCursor) {
+   *   const next = await agents.getIncidents(
+   *     '2025-05-01T00:00:00Z',
+   *     '2025-06-01T00:00:00Z',
+   *     { cursor: page.nextCursor },
+   *   );
+   * }
+   * ```
+   */
+  getIncidents<T extends AgentIncidentsOptions = AgentIncidentsOptions>(
+    startTime: string,
+    endTime: string,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<AgentIncident> & AgentIncidentsTotals
+      : NonPaginatedResponse<AgentIncident> & AgentIncidentsTotals
+  >;
 }
