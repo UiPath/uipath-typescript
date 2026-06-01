@@ -17,4 +17,6 @@ export const AGENTS_ENDPOINTS = {
   GET_TOP_CONSUMING_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/consumption`,
   /** Time-series of AGU consumption over the requested window. */
   GET_CONSUMPTION_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/consumptionTimeline`,
+  /** Time-series of agent latency (per-percentile, decimal) over the requested window. */
+  GET_LATENCY_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/latencyTimeline`,
 } as const;

@@ -632,4 +632,88 @@ describe('AgentService Unit Tests', () => {
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
+
+  describe('getLatencyTimeline', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should send only startTime and endTime when no options are provided', async () => {
+      const mockResponse = {
+        data: [
+          { name: AGENT_TEST_CONSTANTS.LATENCY_PERCENTILE_P50, value: 6.5, date: AGENT_TEST_CONSTANTS.TIMELINE_DATE },
+          { name: AGENT_TEST_CONSTANTS.LATENCY_PERCENTILE_P95, value: 8.75, date: AGENT_TEST_CONSTANTS.TIMELINE_DATE },
+        ],
+      };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await agentService.getLatencyTimeline(startTime, endTime);
+
+      expect(result.data).toEqual(mockResponse.data);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE,
+        { startTime, endTime },
+        expect.any(Object),
+      );
+    });
+
+    it('should send camelCase body with filter options', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      const agentNames = [AGENT_TEST_CONSTANTS.AGENT_NAME_1];
+
+      await agentService.getLatencyTimeline(startTime, endTime, {
+        folderKeys,
+        agentNames,
+        projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE,
+        {
+          startTime,
+          endTime,
+          folderKeys,
+          agentNames,
+          projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+          agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+          processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+        },
+        expect.any(Object),
+      );
+    });
+
+    it('should omit undefined options from the request body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      await agentService.getLatencyTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_LATENCY_TIMELINE,
+        { startTime, endTime, folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1] },
+        expect.any(Object),
+      );
+    });
+
+    it('should return response with absent data when API returns empty', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await agentService.getLatencyTimeline(startTime, endTime);
+
+      expect(result.data).toBeUndefined();
+    });
+
+    it('should propagate API errors', async () => {
+      const error = new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        agentService.getLatencyTimeline(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
 });

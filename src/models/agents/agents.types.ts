@@ -307,3 +307,40 @@ export interface AgentConsumptionTimelineResponse {
  * future per-method filters can be added without a breaking change.
  */
 export interface AgentConsumptionTimelineOptions extends AgentFilterOptions {}
+
+/**
+ * One point on an agent's latency timeline — a single (percentile, time bucket)
+ * combination. The API emits one row per percentile per bucket, so a typical
+ * response includes two points per bucket (one each for P50 and P95).
+ */
+export interface AgentLatencyTimelinePoint {
+  /**
+   * Percentile label for this point — observed values: `"P50"`, `"P95"`.
+   * The SDK leaves this as a plain string because the API does not publish a
+   * closed set of percentiles.
+   */
+  name: string;
+  /** Latency value in milliseconds. */
+  value: number;
+  /** Bucket timestamp (ISO 8601, UTC) */
+  date: string;
+}
+
+/**
+ * Response from {@link AgentServiceModel.getLatencyTimeline}.
+ */
+export interface AgentLatencyTimelineResponse {
+  /**
+   * Time-series points, two per bucket (one per percentile). May be absent
+   * when no data matches.
+   */
+  data?: AgentLatencyTimelinePoint[];
+}
+
+/**
+ * Options for {@link AgentServiceModel.getLatencyTimeline}.
+ *
+ * Currently identical to {@link AgentFilterOptions}; named distinctly so that
+ * future per-method filters can be added without a breaking change.
+ */
+export interface AgentLatencyTimelineOptions extends AgentFilterOptions {}

@@ -12,6 +12,8 @@ import type {
   AgentTopConsumingAgentsResponse,
   AgentConsumptionTimelineOptions,
   AgentConsumptionTimelineResponse,
+  AgentLatencyTimelineOptions,
+  AgentLatencyTimelineResponse,
 } from './agents.types';
 import type {
   HasPaginationOptions,
@@ -302,4 +304,51 @@ export interface AgentServiceModel {
     endTime: string,
     options?: AgentConsumptionTimelineOptions,
   ): Promise<AgentConsumptionTimelineResponse>;
+
+  /**
+   * Retrieves a time-series of agent latency (milliseconds) over the requested
+   * window.
+   *
+   * The API emits one row per percentile per time bucket — typically a P50 row
+   * and a P95 row per bucket. Bucket size is chosen server-side based on the
+   * window length. Optionally filter by folder, agent, project, or process
+   * version.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentLatencyTimelineOptions}
+   * @returns Promise resolving to {@link AgentLatencyTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Latency timeline in May 2025
+   * const result = await agents.getLatencyTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} ms`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and a single agent
+   * const result = await agents.getLatencyTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentId: '<agentId>',
+   *   },
+   * );
+   * ```
+   */
+  getLatencyTimeline(
+    startTime: string,
+    endTime: string,
+    options?: AgentLatencyTimelineOptions,
+  ): Promise<AgentLatencyTimelineResponse>;
 }

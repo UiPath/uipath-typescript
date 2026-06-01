@@ -247,4 +247,31 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('getLatencyTimeline', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve a latency timeline with percentile rows', async () => {
+      const result = await agents.getLatencyTimeline(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (result.data && result.data.length > 0) {
+        const point = result.data[0];
+        expect(typeof point.name).toBe('string');
+        expect(typeof point.value).toBe('number');
+        expect(typeof point.date).toBe('string');
+        // date should be ISO 8601 parseable by Date
+        expect(Number.isNaN(new Date(point.date).getTime())).toBe(false);
+      }
+    });
+
+    it('should accept folderKeys filter without error', async () => {
+      const result = await agents.getLatencyTimeline(startTime, endTime, {
+        folderKeys: [],
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
 });
