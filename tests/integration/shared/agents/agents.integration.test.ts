@@ -364,4 +364,53 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(second.previousCursor).toBeDefined();
     });
   });
+
+  describe('getSummary', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve aggregate stats and per-agent breakdown for the current period', async () => {
+      const result = await agents.getSummary(startTime, endTime);
+
+      expect(result).toBeDefined();
+      // Lookback omitted by default
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      if (result.currentPeriodSummary) {
+        const cur = result.currentPeriodSummary;
+        expect(typeof cur.totalJobs).toBe('number');
+        expect(typeof cur.successfulJobs).toBe('number');
+        expect(typeof cur.successRate).toBe('number');
+        expect(typeof cur.averageDurationSeconds).toBe('number');
+        expect(typeof cur.startTime).toBe('string');
+        expect(typeof cur.endTime).toBe('string');
+        expect(Array.isArray(cur.agents)).toBe(true);
+        if (cur.agents.length > 0) {
+          const entry = cur.agents[0];
+          expect(typeof entry.processKey).toBe('string');
+          expect(typeof entry.folderKey).toBe('string');
+          expect(typeof entry.totalJobs).toBe('number');
+          expect(typeof entry.lastJobStatus).toBe('string');
+        }
+      }
+    });
+
+    it('should include lookbackPeriodSummary when lookbackPeriodAnalysis is true', async () => {
+      const result = await agents.getSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+      });
+
+      if (!result.currentPeriodSummary) {
+        throw new Error(
+          'No summary data in the test tenant — cannot verify lookback period analysis. ' +
+          'Run agents in the tenant or widen the window.',
+        );
+      }
+      // lookback may still be undefined if the prior window has no data — that's a valid
+      // API response, just not a useful one for asserting structure
+      if (result.lookbackPeriodSummary) {
+        expect(typeof result.lookbackPeriodSummary.totalJobs).toBe('number');
+        expect(Array.isArray(result.lookbackPeriodSummary.agents)).toBe(true);
+      }
+    });
+  });
 });

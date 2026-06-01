@@ -23,4 +23,6 @@ export const AGENTS_ENDPOINTS = {
   GET_INCIDENT_DISTRIBUTION: `${INSIGHTS_RTM_BASE}/Agents/incidentDistribution`,
   /** Paginated list of agents with consumption and health metadata. */
   GET_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/agents`,
+  /** Aggregate per-agent and overall job/success/duration summary over the requested window. */
+  GET_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary`,
 } as const;

@@ -19,6 +19,8 @@ import type {
   AgentListItem,
   AgentListOptions,
   AgentListTotals,
+  AgentSummaryOptions,
+  AgentSummaryResponse,
 } from './agents.types';
 import type {
   HasPaginationOptions,
@@ -462,4 +464,63 @@ export interface AgentServiceModel {
       ? PaginatedResponse<AgentListItem> & AgentListTotals
       : NonPaginatedResponse<AgentListItem> & AgentListTotals
   >;
+
+  /**
+   * Retrieves an aggregate per-agent and overall job/success/duration summary
+   * for the requested window.
+   *
+   * Returns aggregate counts (total jobs, successful jobs, success rate,
+   * average duration) plus a per-agent breakdown for the current period.
+   * When `lookbackPeriodAnalysis: true` is set, the response also includes a
+   * `lookbackPeriodSummary` covering the prior window of equal length so the
+   * caller can compute deltas.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters and analysis flags {@link AgentSummaryOptions}
+   * @returns Promise resolving to {@link AgentSummaryResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Summary in May 2025
+   * const result = await agents.getSummary(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * const cur = result.currentPeriodSummary;
+   * console.log(`${cur?.totalJobs} jobs, ${cur?.successRate}% success`);
+   * cur?.agents.forEach((agent) => {
+   *   console.log(`  process=${agent.processKey} totalJobs=${agent.totalJobs} lastStatus=${agent.lastJobStatus}`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // With lookback period for delta analysis + Runtime-only filter
+   * import { AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const result = await agents.getSummary(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     lookbackPeriodAnalysis: true,
+   *     folderKey: '<folderKey>',
+   *     processKey: '<processKey>',
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * if (result.lookbackPeriodSummary) {
+   *   const delta = (result.currentPeriodSummary?.totalJobs ?? 0)
+   *     - result.lookbackPeriodSummary.totalJobs;
+   *   console.log(`Job count delta vs prior period: ${delta}`);
+   * }
+   * ```
+   */
+  getSummary(
+    startTime: string,
+    endTime: string,
+    options?: AgentSummaryOptions,
+  ): Promise<AgentSummaryResponse>;
 }

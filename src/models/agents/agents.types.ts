@@ -462,3 +462,103 @@ export type AgentListOptions = AgentFilterOptions & PaginationOptions & {
   /** Sort order for the result set. */
   orderBy?: AgentListOrderBy;
 };
+
+/**
+ * Per-agent (process + folder) stats within a {@link AgentSummaryPeriod}.
+ */
+export interface AgentSummaryEntry {
+  /** Process key (GUID) */
+  processKey: string;
+  /** Folder key (GUID) the agent ran in */
+  folderKey: string;
+  /** Process version */
+  processVersion: string;
+  /** Total job runs in the period */
+  totalJobs: number;
+  /** Number of successful runs in the period */
+  successfulJobs: number;
+  /** Success rate as a percentage (0-100) */
+  successRate: number;
+  /** Average run duration in seconds */
+  averageDurationSeconds: number;
+  /** First job completion timestamp (ISO 8601, UTC) */
+  firstJobFinished: string;
+  /** Last job completion timestamp (ISO 8601, UTC) */
+  lastJobFinished: string;
+  /** Status of the most recent run (e.g., "Success", "Faulted", "Running") */
+  lastJobStatus: string;
+}
+
+/**
+ * Aggregate stats for a single period within an
+ * {@link AgentSummaryResponse} — covers the requested window for either the
+ * current period or an optional lookback period.
+ */
+export interface AgentSummaryPeriod {
+  /** Total job runs across all agents in the period */
+  totalJobs: number;
+  /** Number of successful runs across all agents in the period */
+  successfulJobs: number;
+  /** Overall success rate as a percentage (0-100) */
+  successRate: number;
+  /** Average run duration in seconds across all agents in the period */
+  averageDurationSeconds: number;
+  /** Period start time (ISO 8601, UTC) */
+  startTime: string;
+  /** Period end time (ISO 8601, UTC) */
+  endTime: string;
+  /** Per-agent breakdown */
+  agents: AgentSummaryEntry[];
+}
+
+/**
+ * Response from {@link AgentServiceModel.getSummary}.
+ *
+ * The API wraps this payload in a `data` envelope; the SDK unwraps it so the
+ * period summaries are returned directly. `lookbackPeriodSummary` is only
+ * present when the request set `lookbackPeriodAnalysis: true` (the API uses
+ * Newtonsoft `NullValueHandling.Ignore` and omits the key otherwise).
+ */
+export interface AgentSummaryResponse {
+  /** Aggregate stats for the requested window */
+  currentPeriodSummary?: AgentSummaryPeriod;
+  /** Aggregate stats for the prior window of equal length. Only present when `lookbackPeriodAnalysis: true` was sent. */
+  lookbackPeriodSummary?: AgentSummaryPeriod;
+}
+
+/**
+ * Job execution mode filter accepted by {@link AgentServiceModel.getSummary}.
+ *
+ * Wire format is the string name (`"Debug"` / `"Runtime"`), per the API's
+ * `StringEnumConverter` serialization.
+ */
+export enum AgentExecutionType {
+  Debug = 'Debug',
+  Runtime = 'Runtime',
+}
+
+/**
+ * Options for {@link AgentServiceModel.getSummary}.
+ */
+export interface AgentSummaryOptions extends AgentFilterOptions {
+  /**
+   * When `true`, the API also computes a `lookbackPeriodSummary` for the
+   * prior window of equal length. Defaults to `false` server-side.
+   */
+  lookbackPeriodAnalysis?: boolean;
+  /** Filter to a specific process by key (GUID). */
+  processKey?: string;
+  /**
+   * Filter to a specific folder by key (GUID).
+   *
+   * Note: this is a distinct field from the inherited {@link AgentFilterOptions.folderKeys}
+   * (plural array). The summary endpoint accepts both — `folderKey` selects a
+   * single folder, `folderKeys` filters the lookup to a list of folders.
+   */
+  folderKey?: string;
+  /**
+   * Filter to a specific execution type — `Debug` (test runs) or
+   * `Runtime` (production runs).
+   */
+  executionType?: AgentExecutionType;
+}
