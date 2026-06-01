@@ -12,6 +12,7 @@ import {
 } from '../../../src/services/maestro';
 import { Feedback } from '../../../src/services/agents/feedback';
 import { Agents } from '../../../src/services/agents';
+import { Memory } from '../../../src/services/agents/memory';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
@@ -49,6 +50,7 @@ export interface TestServices {
   cases: CasesService;
   caseInstances: CaseInstancesService;
   feedback?: Feedback;
+  memory?: Memory;
   traces?: Traces;
   agents?: Agents;
   governance?: Governance;
@@ -132,6 +134,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     cases: new CasesService(sdk),
     caseInstances: new CaseInstancesService(sdk),
     feedback: new Feedback(sdk),
+    memory: new Memory(sdk),
     traces: new Traces(sdk),
     agents: new Agents(sdk),
     governance: new Governance(sdk),

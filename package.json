@@ -156,6 +156,16 @@
                 "default": "./dist/feedback/index.cjs"
             }
         },
+        "./memory": {
+            "import": {
+                "types": "./dist/memory/index.d.ts",
+                "default": "./dist/memory/index.mjs"
+            },
+            "require": {
+                "types": "./dist/memory/index.d.ts",
+                "default": "./dist/memory/index.cjs"
+            }
+        },
         "./traces": {
             "import": {
                 "types": "./dist/traces/index.d.ts",
