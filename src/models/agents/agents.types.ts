@@ -199,3 +199,84 @@ export type AgentIncidentsOptions = AgentFilterOptions & PaginationOptions & {
   /** Group results by one or more columns. */
   groupBy?: AgentIncidentSortColumn[];
 };
+
+/**
+ * Agent type filter. The API accepts one or more values combined into a
+ * comma-separated string; the SDK accepts an array and serializes it for you.
+ */
+export enum AgentType {
+  Autonomous = 'Autonomous',
+  Conversational = 'Conversational',
+  Coded = 'Coded',
+}
+
+/**
+ * Per-agent consumption entry returned by {@link AgentServiceModel.getTopConsumingAgents}.
+ */
+export interface AgentConsumption {
+  /** Agent ID (GUID) */
+  agentId: string;
+  /** Agent display name */
+  agentName: string;
+  /** Total quantity consumed by this agent. `null` if no consumption is recorded. */
+  consumedQuantity: number | null;
+  /** AGU quantity consumed. `null` if no consumption is recorded. */
+  consumedAGUQuantity: number | null;
+  /** PLTU quantity consumed. `null` if no consumption is recorded. */
+  consumedPLTUQuantity: number | null;
+  /** First job in the window where this agent recorded consumption */
+  firstSeenJob: AgentJobInfo;
+  /** Last job in the window where this agent recorded consumption */
+  lastSeenJob: AgentJobInfo;
+}
+
+/**
+ * Response from {@link AgentServiceModel.getTopConsumingAgents}.
+ *
+ * The API wraps this payload in a `data` envelope; the SDK unwraps it so the
+ * fields below are returned directly.
+ */
+export interface AgentTopConsumingAgentsResponse {
+  /**
+   * Window start date as the API returned it.
+   *
+   * Format: .NET default `M/d/yyyy h:mm:ss tt` (e.g., `"5/1/2025 12:00:00 AM"`)
+   * — NOT ISO 8601. Use `new Date(value)` to parse into a Date.
+   */
+  startDate?: string;
+  /** Window end date. Same format as `startDate`. */
+  endDate?: string;
+  /** Total quantity consumed across all matching agents in the window. */
+  totalConsumed?: number;
+  /** Total AGU quantity consumed. */
+  totalAGUConsumed?: number;
+  /** Total PLTU quantity consumed. */
+  totalPLTUConsumed?: number;
+  /** Limit applied (echoed from the request). */
+  limit?: number;
+  /** Top-N agents ranked by consumption. May be absent when no data matches. */
+  agents?: AgentConsumption[];
+}
+
+/**
+ * Options for {@link AgentServiceModel.getTopConsumingAgents}.
+ */
+export interface AgentTopConsumingAgentsOptions extends AgentFilterOptions {
+  /** Max number of agents to return. Defaults to 10 server-side. */
+  limit?: number;
+  /**
+   * Health-based filter. `true` returns only healthy agents, `false` only
+   * unhealthy. Omit to include both.
+   */
+  healthy?: boolean;
+  /**
+   * Health-score cutoff used when `healthy` is set. Defaults to 75.0
+   * server-side.
+   */
+  healthThreshold?: number;
+  /**
+   * Filter to specific agent types. Multiple types are combined with `OR` and
+   * sent to the API as a comma-separated string.
+   */
+  agentTypes?: AgentType[];
+}

@@ -4,7 +4,7 @@ import { AgentService } from '../../../../src/services/agents/agents';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { AGENTS_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { AgentIncidentSortColumn } from '../../../../src/models/agents/agents.types';
+import { AgentIncidentSortColumn, AgentType } from '../../../../src/models/agents/agents.types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 // ===== MOCKING =====
@@ -406,6 +406,145 @@ describe('AgentService Unit Tests', () => {
 
       await expect(
         agentService.getIncidents(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getTopConsumingAgents', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+    const mockJob = {
+      jobKey: AGENT_TEST_CONSTANTS.JOB_KEY,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      folderName: AGENT_TEST_CONSTANTS.FOLDER_NAME,
+      folderPath: AGENT_TEST_CONSTANTS.FOLDER_PATH,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+    };
+    const mockAgentConsumption = {
+      agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+      agentName: AGENT_TEST_CONSTANTS.AGENT_NAME_1,
+      consumedQuantity: 27.0,
+      consumedAGUQuantity: 27.0,
+      consumedPLTUQuantity: 0.0,
+      firstSeenJob: mockJob,
+      lastSeenJob: mockJob,
+    };
+
+    it('should unwrap the data envelope when no options are provided', async () => {
+      const mockEnvelope = {
+        data: {
+          startDate: AGENT_TEST_CONSTANTS.CONSUMPTION_START_DATE,
+          endDate: AGENT_TEST_CONSTANTS.CONSUMPTION_END_DATE,
+          totalConsumed: 282.0,
+          totalAGUConsumed: 282.0,
+          totalPLTUConsumed: 13.4,
+          limit: 10,
+          agents: [mockAgentConsumption],
+        },
+      };
+      mockApiClient.post.mockResolvedValue(mockEnvelope);
+
+      const result = await agentService.getTopConsumingAgents(startTime, endTime);
+
+      // SDK unwraps the .data envelope — fields are flat at the top level
+      expect(result.startDate).toBe(AGENT_TEST_CONSTANTS.CONSUMPTION_START_DATE);
+      expect(result.totalConsumed).toBe(282.0);
+      expect(result.agents).toEqual([mockAgentConsumption]);
+      // Sanity: no nested `data` wrapper on the SDK response
+      expect((result as { data?: unknown }).data).toBeUndefined();
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS,
+        { startTime, endTime },
+        expect.any(Object),
+      );
+    });
+
+    it('should send camelCase body with all filter and health options', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { agents: [] } });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+
+      await agentService.getTopConsumingAgents(startTime, endTime, {
+        folderKeys,
+        projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+        limit: 5,
+        healthy: true,
+        healthThreshold: 80,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS,
+        {
+          startTime,
+          endTime,
+          folderKeys,
+          projectKeys: [AGENT_TEST_CONSTANTS.PROJECT_KEY],
+          processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+          limit: 5,
+          healthy: true,
+          healthThreshold: 80,
+        },
+        expect.any(Object),
+      );
+    });
+
+    it('should join agentTypes array into a comma-separated string for the API', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { agents: [] } });
+
+      await agentService.getTopConsumingAgents(startTime, endTime, {
+        agentTypes: [AgentType.Autonomous, AgentType.Coded],
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS,
+        { startTime, endTime, agentTypes: 'Autonomous,Coded' },
+        expect.any(Object),
+      );
+    });
+
+    it('should send a single agentTypes value as a one-element comma-separated string', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { agents: [] } });
+
+      await agentService.getTopConsumingAgents(startTime, endTime, {
+        agentTypes: [AgentType.Conversational],
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS,
+        { startTime, endTime, agentTypes: 'Conversational' },
+        expect.any(Object),
+      );
+    });
+
+    it('should distinguish healthy=false from healthy not set', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { agents: [] } });
+
+      await agentService.getTopConsumingAgents(startTime, endTime, { healthy: false });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS,
+        { startTime, endTime, healthy: false },
+        expect.any(Object),
+      );
+    });
+
+    it('should return an empty object when the API returns an empty envelope', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await agentService.getTopConsumingAgents(startTime, endTime);
+
+      expect(result).toEqual({});
+    });
+
+    it('should propagate API errors', async () => {
+      const error = new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        agentService.getTopConsumingAgents(startTime, endTime),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });

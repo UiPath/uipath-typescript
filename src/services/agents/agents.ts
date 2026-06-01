@@ -8,6 +8,8 @@ import {
   AgentIncidentsTotals,
   AgentNamesGetAllOptions,
   AgentNamesGetAllResponse,
+  AgentTopConsumingAgentsOptions,
+  AgentTopConsumingAgentsResponse,
   AgentTopErroredAgentsOptions,
   AgentTopErroredAgentsResponse,
 } from '../../models/agents/agents.types';
@@ -36,6 +38,14 @@ interface RawAgentIncidentsResponse {
     pageSize?: number;
   };
   data?: AgentIncident[];
+}
+
+/**
+ * Raw envelope returned by `POST /Agents/consumption` — the SDK unwraps the
+ * `data` wrapper before returning to the caller.
+ */
+interface RawAgentTopConsumingEnvelope {
+  data?: AgentTopConsumingAgentsResponse;
 }
 
 /**
@@ -325,6 +335,69 @@ export class AgentService extends BaseService implements AgentServiceModel {
       totalErrorCount,
     };
     return withTotals as any;
+  }
+
+  /**
+   * Retrieves the top-N agents by unit consumption over the requested window.
+   *
+   * Returns aggregate consumption totals plus a ranked list of agents. Use
+   * `healthy` / `healthThreshold` to scope by health score, or `agentTypes`
+   * to filter by agent kind.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters and limit {@link AgentTopConsumingAgentsOptions}
+   * @returns Promise resolving to {@link AgentTopConsumingAgentsResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Top consuming agents in May 2025
+   * const result = await agents.getTopConsumingAgents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * console.log(`Total consumed: ${result.totalConsumed}`);
+   * result.agents?.forEach((agent) => {
+   *   console.log(`${agent.agentName}: ${agent.consumedQuantity} units`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Top 5 healthy autonomous + coded agents
+   * import { AgentType } from '@uipath/uipath-typescript/agents';
+   *
+   * const result = await agents.getTopConsumingAgents(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     limit: 5,
+   *     healthy: true,
+   *     healthThreshold: 80,
+   *     agentTypes: [AgentType.Autonomous, AgentType.Coded],
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetTopConsumingAgents')
+  async getTopConsumingAgents(
+    startTime: string,
+    endTime: string,
+    options?: AgentTopConsumingAgentsOptions,
+  ): Promise<AgentTopConsumingAgentsResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.healthy !== undefined) body.healthy = options.healthy;
+    if (options?.healthThreshold !== undefined) body.healthThreshold = options.healthThreshold;
+    if (options?.agentTypes !== undefined) body.agentTypes = options.agentTypes.join(',');
+
+    const response = await this.post<RawAgentTopConsumingEnvelope>(
+      AGENTS_ENDPOINTS.GET_TOP_CONSUMING_AGENTS,
+      body,
+    );
+
+    return response.data.data ?? {};
   }
 
   private buildAgentFilterBody(

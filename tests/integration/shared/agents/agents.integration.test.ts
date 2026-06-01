@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
+import { AgentType } from '../../../../src/models/agents/agents.types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 /**
@@ -168,6 +169,56 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(second.items.length).toBeGreaterThan(0);
       expect(second.currentPage).toBe(2);
       expect(second.previousCursor).toBeDefined();
+    });
+  });
+
+  describe('getTopConsumingAgents', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve top-N consuming agents with aggregate totals', async () => {
+      const result = await agents.getTopConsumingAgents(startTime, endTime);
+
+      expect(result).toBeDefined();
+      // Window dates are echoed as .NET-formatted strings (not ISO)
+      if (result.startDate !== undefined) expect(typeof result.startDate).toBe('string');
+      if (result.endDate !== undefined) expect(typeof result.endDate).toBe('string');
+      if (typeof result.totalConsumed === 'number') {
+        expect(result.totalConsumed).toBeGreaterThanOrEqual(0);
+      }
+      if (result.agents && result.agents.length > 0) {
+        const agent = result.agents[0];
+        expect(typeof agent.agentId).toBe('string');
+        expect(typeof agent.agentName).toBe('string');
+        expect(agent.firstSeenJob).toBeDefined();
+        expect(agent.lastSeenJob).toBeDefined();
+      }
+    });
+
+    it('should respect limit option', async () => {
+      const result = await agents.getTopConsumingAgents(startTime, endTime, {
+        limit: 3,
+      });
+
+      if (!result.agents || result.agents.length === 0) {
+        throw new Error(
+          'No consuming agents in the test tenant for the configured window — ' +
+          'cannot verify limit option. Run agents in the tenant or widen the window.',
+        );
+      }
+      expect(result.agents.length).toBeLessThanOrEqual(3);
+      expect(result.limit).toBe(3);
+    });
+
+    it('should accept agentTypes filter (sent as comma-separated string)', async () => {
+      const result = await agents.getTopConsumingAgents(startTime, endTime, {
+        limit: 5,
+        agentTypes: [AgentType.Autonomous, AgentType.Coded],
+      });
+
+      expect(result).toBeDefined();
+      // The API may return any number of agents (or zero) depending on the type filter;
+      // the contract here is only that the request was accepted without a 400.
     });
   });
 });

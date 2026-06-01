@@ -13,4 +13,6 @@ export const AGENTS_ENDPOINTS = {
   GET_TOP_ERRORED_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/topErroredAgents`,
   /** Paginated list of incidents grouped/ordered by the requested column. */
   GET_INCIDENTS: `${INSIGHTS_RTM_BASE}/Agents/incidents`,
+  /** Top-N agents by unit consumption over the requested window. */
+  GET_TOP_CONSUMING_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/consumption`,
 } as const;
