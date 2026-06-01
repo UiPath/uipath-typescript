@@ -8,7 +8,7 @@
 - **File names**: kebab-case for general files (`api-client.ts`), dot-separated for type/model files (`tasks.types.ts`, `tasks.models.ts`)
 - Prefer `private` keyword over underscore prefix for private methods
 - No `any` type — use `unknown` if truly unknown, then validate.
-- **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored.
+- **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored. **Refinement**: when `pascalToCamelCaseKeys()` precedes `transformData()` in the pipeline, `pascalToCamelCaseKeys()` returns `any`, which makes `transformData(camelCased, EntityMap)` also return `any`. In that case a single `as TargetType` cast is sufficient — drop the `as unknown` intermediate.
 - Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return.
 - Use enums for fixed value sets — **NEVER** leave raw strings/numbers. Raw values lose type safety and autocomplete.
 - **NEVER** write `param || {}` for required parameters — this hides bugs by silently accepting missing required data at call sites.
@@ -157,6 +157,8 @@ Types in `{domain}.types.ts` are public (re-exported through barrel). Types in `
 
 **NEVER** re-export `internal-types.ts` through `index.ts` — re-exporting pollutes the public API and creates breaking-change risk when internal formats change.
 
+**Avoid cross-domain type imports** — when a response type is used by multiple service domains (e.g., returned by both `cases` and `processes` methods), place it in the domain-level shared types file that fits semantically (e.g., `insights.types.ts` for insights-related types shared across Maestro services). **NEVER** import `{domainA}.types` from `{domainB}.models` — asymmetric cross-domain imports create hidden coupling that breaks when type ownership shifts.
+
 ## OData prefix pattern
 
 OData APIs require `$` prefix on query params. The SDK accepts clean camelCase keys and adds the prefix via `addPrefixToKeys()` from `src/utils/transform.ts`.
@@ -204,7 +206,7 @@ If the constructor only calls `super()` with no additional setup, omit it entire
 ## Error types
 
 - **`ValidationError`** — for **user input validation only**: missing required params, invalid option values, malformed user-provided data. Example: `if (!jobKey) throw new ValidationError(...)`. **NEVER** use for server-side issues like failed JSON parsing — use `ServerError` instead. Misusing it misrepresents the error source.
-- **`ServerError`** — for server-side issues: failed JSON parsing of API responses, unexpected response formats, API returning unparseable data. Example: `catch { throw new ServerError({ message: 'Failed to parse output as JSON' }) }`.
+- **`ServerError`** — for server-side issues: failed JSON parsing of API responses, unexpected response formats, API returning unparseable data. Example: `catch { throw new ServerError({ message: 'Failed to parse output as JSON' }) }`. When constructing a `ServerError` for an unexpected HTTP response (e.g., non-JSON body), always pass `statusCode: response.status` — without it, `error.statusCode` defaults to `500` even when the server returned `200`, misleading callers who inspect the status code programmatically.
 - **`ErrorFactory.createFromHttpStatus()`** — for HTTP error responses from external calls (blob downloads, etc.). Maps status codes to typed errors automatically.
 - **NEVER** add unnecessary type casts on already-typed values — if `blobAccess.headers` is already `Record<string, string>`, use a simple spread `{ ...blobAccess.headers }` instead of `arrayDictionaryToRecord()` with `as unknown as` casts.
 
