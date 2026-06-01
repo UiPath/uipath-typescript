@@ -23,6 +23,8 @@ import {
   AgentListTotals,
   AgentSummaryOptions,
   AgentSummaryResponse,
+  AgentUnitConsumptionSummaryOptions,
+  AgentUnitConsumptionSummaryResponse,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -100,6 +102,14 @@ interface RawAgentListEnvelope {
  */
 interface RawAgentSummaryEnvelope {
   data?: AgentSummaryResponse;
+}
+
+/**
+ * Raw envelope returned by `POST /Agents/summary/unit-consumption` — the SDK
+ * unwraps the `data` wrapper before returning to the caller.
+ */
+interface RawAgentUnitConsumptionSummaryEnvelope {
+  data?: AgentUnitConsumptionSummaryResponse;
 }
 
 /**
@@ -822,6 +832,78 @@ export class AgentService extends BaseService implements AgentServiceModel {
 
     const response = await this.post<RawAgentSummaryEnvelope>(
       AGENTS_ENDPOINTS.GET_SUMMARY,
+      body,
+    );
+
+    return response.data.data ?? {};
+  }
+
+  /**
+   * Retrieves an aggregate AGU/PLTU consumption summary per agent for the
+   * requested window.
+   *
+   * Returns totals for AGU and platform units (split between completed and
+   * in-progress jobs) plus a per-agent breakdown for the current period. When
+   * `lookbackPeriodAnalysis: true` is set, the response also includes a
+   * `lookbackPeriodSummary` covering the prior window of equal length so the
+   * caller can compute deltas.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters and analysis flags {@link AgentUnitConsumptionSummaryOptions}
+   * @returns Promise resolving to {@link AgentUnitConsumptionSummaryResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Unit consumption in May 2025
+   * const result = await agents.getUnitConsumptionSummary(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * const cur = result.currentPeriodSummary;
+   * console.log(`Total AGU (complete): ${cur?.totalAgentUnitConsumption.completeJobs}`);
+   * console.log(`Total PLTU (complete): ${cur?.totalPlatformUnitConsumption.completeJobs}`);
+   * cur?.agentConsumption.forEach((entry) => {
+   *   console.log(`  process=${entry.processKey} AGU=${entry.agentUnitConsumption.completeJobs}`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // With lookback period for delta analysis + Runtime-only filter
+   * import { AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const result = await agents.getUnitConsumptionSummary(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     lookbackPeriodAnalysis: true,
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * if (result.lookbackPeriodSummary) {
+   *   const delta = (result.currentPeriodSummary?.totalAgentUnitConsumption.completeJobs ?? 0)
+   *     - result.lookbackPeriodSummary.totalAgentUnitConsumption.completeJobs;
+   *   console.log(`AGU delta vs prior period: ${delta}`);
+   * }
+   * ```
+   */
+  @track('Agents.GetUnitConsumptionSummary')
+  async getUnitConsumptionSummary(
+    startTime: string,
+    endTime: string,
+    options?: AgentUnitConsumptionSummaryOptions,
+  ): Promise<AgentUnitConsumptionSummaryResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+    if (options?.lookbackPeriodAnalysis !== undefined) body.lookbackPeriodAnalysis = options.lookbackPeriodAnalysis;
+    if (options?.processKey !== undefined) body.processKey = options.processKey;
+    if (options?.folderKey !== undefined) body.folderKey = options.folderKey;
+    if (options?.executionType !== undefined) body.executionType = options.executionType;
+
+    const response = await this.post<RawAgentUnitConsumptionSummaryEnvelope>(
+      AGENTS_ENDPOINTS.GET_UNIT_CONSUMPTION_SUMMARY,
       body,
     );
 

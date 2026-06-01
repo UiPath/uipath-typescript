@@ -25,4 +25,6 @@ export const AGENTS_ENDPOINTS = {
   GET_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/agents`,
   /** Aggregate per-agent and overall job/success/duration summary over the requested window. */
   GET_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary`,
+  /** Aggregate AGU/PLTU consumption per agent over the requested window. */
+  GET_UNIT_CONSUMPTION_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary/unit-consumption`,
 } as const;

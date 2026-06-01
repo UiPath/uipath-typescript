@@ -562,3 +562,81 @@ export interface AgentSummaryOptions extends AgentFilterOptions {
    */
   executionType?: AgentExecutionType;
 }
+
+/**
+ * Job-type breakdown of unit consumption — completed jobs vs jobs still in
+ * progress at query time.
+ */
+export interface AgentJobConsumptionSummary {
+  /** Units consumed by jobs that have completed in the period */
+  completeJobs: number;
+  /** Units consumed by jobs still in progress at query time */
+  incompleteJobs: number;
+}
+
+/**
+ * Per-agent (process + folder) unit consumption entry within an
+ * {@link AgentUnitConsumptionPeriod}.
+ *
+ * Note: `firstJobFinished` and `lastJobFinished` come back as
+ * `"0001-01-01T00:00:00"` (.NET `DateTime.MinValue` sentinel) when the period
+ * had no completed jobs for this agent — treat that value as "no completion".
+ */
+export interface AgentUnitConsumptionEntry {
+  /** Folder key (GUID) the agent ran in */
+  folderKey: string;
+  /** Process key (GUID) */
+  processKey: string;
+  /** Process version */
+  processVersion: string;
+  /** First job completion timestamp (ISO 8601). `"0001-01-01T00:00:00"` if no completion in the period. */
+  firstJobFinished: string;
+  /** Last job completion timestamp (ISO 8601). `"0001-01-01T00:00:00"` if no completion in the period. */
+  lastJobFinished: string;
+  /** AGU consumption for this agent, split by job completion status */
+  agentUnitConsumption: AgentJobConsumptionSummary;
+  /** Platform unit (PLTU) consumption for this agent, split by job completion status */
+  platformUnitConsumption: AgentJobConsumptionSummary;
+}
+
+/**
+ * Aggregate AGU/PLTU consumption for a single period within an
+ * {@link AgentUnitConsumptionSummaryResponse} — covers the requested window
+ * for either the current period or an optional lookback period.
+ */
+export interface AgentUnitConsumptionPeriod {
+  /** Total AGU consumed across all agents in the period, split by job completion */
+  totalAgentUnitConsumption: AgentJobConsumptionSummary;
+  /** Total platform units (PLTU) consumed across all agents in the period, split by job completion */
+  totalPlatformUnitConsumption: AgentJobConsumptionSummary;
+  /** Period start time (ISO 8601, UTC) */
+  startTime: string;
+  /** Period end time (ISO 8601, UTC) */
+  endTime: string;
+  /** Per-agent consumption breakdown */
+  agentConsumption: AgentUnitConsumptionEntry[];
+}
+
+/**
+ * Response from {@link AgentServiceModel.getUnitConsumptionSummary}.
+ *
+ * The API wraps this payload in a `data` envelope; the SDK unwraps it so the
+ * period summaries are returned directly. `lookbackPeriodSummary` is only
+ * present when the request set `lookbackPeriodAnalysis: true` (the API uses
+ * Newtonsoft `NullValueHandling.Ignore` and omits the key otherwise).
+ */
+export interface AgentUnitConsumptionSummaryResponse {
+  /** Aggregate consumption for the requested window */
+  currentPeriodSummary?: AgentUnitConsumptionPeriod;
+  /** Aggregate consumption for the prior window of equal length. Only present when `lookbackPeriodAnalysis: true` was sent. */
+  lookbackPeriodSummary?: AgentUnitConsumptionPeriod;
+}
+
+/**
+ * Options for {@link AgentServiceModel.getUnitConsumptionSummary}.
+ *
+ * Currently identical to {@link AgentSummaryOptions} (the API uses the same
+ * `AgentsSummaryRequest` schema for both endpoints); named distinctly so that
+ * future per-method filters can be added without a breaking change.
+ */
+export interface AgentUnitConsumptionSummaryOptions extends AgentSummaryOptions {}

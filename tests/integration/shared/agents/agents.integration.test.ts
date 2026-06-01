@@ -413,4 +413,48 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       }
     });
   });
+
+  describe('getUnitConsumptionSummary', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve aggregate AGU/PLTU consumption with per-agent breakdown', async () => {
+      const result = await agents.getUnitConsumptionSummary(startTime, endTime);
+
+      expect(result).toBeDefined();
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      if (result.currentPeriodSummary) {
+        const cur = result.currentPeriodSummary;
+        expect(typeof cur.totalAgentUnitConsumption.completeJobs).toBe('number');
+        expect(typeof cur.totalAgentUnitConsumption.incompleteJobs).toBe('number');
+        expect(typeof cur.totalPlatformUnitConsumption.completeJobs).toBe('number');
+        expect(typeof cur.totalPlatformUnitConsumption.incompleteJobs).toBe('number');
+        expect(Array.isArray(cur.agentConsumption)).toBe(true);
+        if (cur.agentConsumption.length > 0) {
+          const entry = cur.agentConsumption[0];
+          expect(typeof entry.folderKey).toBe('string');
+          expect(typeof entry.processKey).toBe('string');
+          expect(typeof entry.agentUnitConsumption.completeJobs).toBe('number');
+          expect(typeof entry.platformUnitConsumption.completeJobs).toBe('number');
+        }
+      }
+    });
+
+    it('should include lookbackPeriodSummary when lookbackPeriodAnalysis is true', async () => {
+      const result = await agents.getUnitConsumptionSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+      });
+
+      if (!result.currentPeriodSummary) {
+        throw new Error(
+          'No unit consumption data in the test tenant — cannot verify lookback period analysis. ' +
+          'Run agents in the tenant or widen the window.',
+        );
+      }
+      if (result.lookbackPeriodSummary) {
+        expect(typeof result.lookbackPeriodSummary.totalAgentUnitConsumption.completeJobs).toBe('number');
+        expect(Array.isArray(result.lookbackPeriodSummary.agentConsumption)).toBe(true);
+      }
+    });
+  });
 });

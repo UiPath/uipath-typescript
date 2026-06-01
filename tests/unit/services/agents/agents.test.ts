@@ -1045,4 +1045,93 @@ describe('AgentService Unit Tests', () => {
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
+
+  describe('getUnitConsumptionSummary', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+    const mockEntry = {
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+      processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+      firstJobFinished: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      lastJobFinished: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      agentUnitConsumption: { completeJobs: 27.0, incompleteJobs: 3.0 },
+      platformUnitConsumption: { completeJobs: 0.5, incompleteJobs: 0.0 },
+    };
+    const mockPeriod = {
+      totalAgentUnitConsumption: { completeJobs: 241.0, incompleteJobs: 39.0 },
+      totalPlatformUnitConsumption: { completeJobs: 7.4, incompleteJobs: 6.0 },
+      startTime,
+      endTime,
+      agentConsumption: [mockEntry],
+    };
+
+    it('should unwrap the data envelope and return currentPeriodSummary', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod } });
+
+      const result = await agentService.getUnitConsumptionSummary(startTime, endTime);
+
+      expect(result.currentPeriodSummary).toEqual(mockPeriod);
+      expect(result.lookbackPeriodSummary).toBeUndefined();
+      // Sanity: SDK unwrapped the `data` wrapper
+      expect((result as { data?: unknown }).data).toBeUndefined();
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_UNIT_CONSUMPTION_SUMMARY,
+        { startTime, endTime },
+        expect.any(Object),
+      );
+    });
+
+    it('should send lookbackPeriodAnalysis, processKey, folderKey, and executionType when provided', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { currentPeriodSummary: mockPeriod, lookbackPeriodSummary: mockPeriod } });
+
+      await agentService.getUnitConsumptionSummary(startTime, endTime, {
+        lookbackPeriodAnalysis: true,
+        processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+        folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_UNIT_CONSUMPTION_SUMMARY,
+        {
+          startTime,
+          endTime,
+          lookbackPeriodAnalysis: true,
+          processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+          folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+          executionType: 'Runtime',
+        },
+        expect.any(Object),
+      );
+    });
+
+    it('should return both periods when the API includes lookbackPeriodSummary', async () => {
+      mockApiClient.post.mockResolvedValue({
+        data: { currentPeriodSummary: mockPeriod, lookbackPeriodSummary: mockPeriod },
+      });
+
+      const result = await agentService.getUnitConsumptionSummary(startTime, endTime, { lookbackPeriodAnalysis: true });
+
+      expect(result.currentPeriodSummary).toEqual(mockPeriod);
+      expect(result.lookbackPeriodSummary).toEqual(mockPeriod);
+    });
+
+    it('should return an empty object when the API returns an empty envelope', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await agentService.getUnitConsumptionSummary(startTime, endTime);
+
+      expect(result).toEqual({});
+    });
+
+    it('should propagate API errors', async () => {
+      const error = new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        agentService.getUnitConsumptionSummary(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
 });
