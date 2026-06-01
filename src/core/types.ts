@@ -53,6 +53,12 @@ export interface IUiPath {
   getToken(): string | undefined;
 
   /**
+   * Releases resources held by this SDK instance.
+   * Cancels any in-flight token-refresh request. Call this when the coded app is unmounted.
+   */
+  destroy(): void;
+
+  /**
    * Logout from the SDK, clearing all authentication state.
    * After calling this method, the user will need to re-initialize to authenticate again.
    */

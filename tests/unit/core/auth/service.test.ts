@@ -7,7 +7,9 @@ import { IDENTITY_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 // Mock platform detection for Node test environment
 vi.mock('../../../../src/utils/platform', () => ({
   isBrowser: false,
-  isInActionCenter: false
+  isInActionCenter: false,
+  isHostEmbedded: false,
+  embeddingOrigin: null,
 }));
 
 describe('AuthService', () => {

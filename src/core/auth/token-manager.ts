@@ -1,11 +1,13 @@
 import { ExecutionContext } from '../context/execution';
-import { isBrowser, isInActionCenter } from '../../utils/platform';
+import { isBrowser, isInActionCenter, embeddingOrigin, isHostEmbedded } from '../../utils/platform';
 import { AuthToken, TokenInfo } from './types';
 import { AUTH_STORAGE_KEYS } from './constants';
 import { hasOAuthConfig } from '../config/sdk-config';
 import { Config } from '../config/config';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { ActionCenterTokenManager } from './action-center-token-manager';
+import { EmbeddedTokenManager } from './embedded-token-manager';
+import { isValidHostOrigin } from './host-token-request';
 
 /**
  * TokenManager is responsible for managing authentication tokens.
@@ -17,6 +19,7 @@ export class TokenManager {
   private currentToken?: TokenInfo;
   private refreshPromise: Promise<AuthToken> | null = null;
   private readonly actionCenterTokenManager: ActionCenterTokenManager | null = null;
+  private readonly embeddedTokenManager: EmbeddedTokenManager | null = null;
 
   /**
    * Creates a new TokenManager instance
@@ -31,6 +34,9 @@ export class TokenManager {
   ) {
     if (isInActionCenter) {
       this.actionCenterTokenManager = new ActionCenterTokenManager(config, (tokenInfo) => this.setToken(tokenInfo));
+      this.isOAuth = false;
+    } else if (isHostEmbedded && embeddingOrigin && isValidHostOrigin(embeddingOrigin)) {
+      this.embeddedTokenManager = new EmbeddedTokenManager(embeddingOrigin, config, tokenInfo => this.setToken(tokenInfo));
       this.isOAuth = false;
     }
   }
@@ -67,6 +73,11 @@ export class TokenManager {
 
     if (this.actionCenterTokenManager) {
       return await this.actionCenterTokenManager.refreshAccessToken(tokenInfo);
+    }
+
+    // Generic embedded path — active whenever the app is embedded in a UiPath host page
+    if (this.embeddedTokenManager) {
+      return await this.embeddedTokenManager.refreshAccessToken(tokenInfo);
     }
 
     // For secret-based tokens, they never expire
@@ -229,6 +240,14 @@ export class TokenManager {
   }
 
   /**
+   * Releases resources held by this instance.
+   * Must be called when the TokenManager is no longer needed to prevent listener leaks.
+   */
+  destroy(): void {
+    this.embeddedTokenManager?.destroy();
+  }
+
+  /**
    * Clears the current token
    */
   clearToken(): void {
@@ -281,6 +300,10 @@ export class TokenManager {
    * Internal method to perform the actual token refresh
    */
   private async _doRefreshToken(): Promise<AuthToken> {
+    // Destructure before the type guard — hasOAuthConfig narrows this.config to
+    // { clientId, redirectUri, scope } which does not include BaseConfig fields.
+    const { orgName, baseUrl } = this.config;
+
     // Check if we're in OAuth flow
     if (!hasOAuthConfig(this.config)) {
       throw new Error('refreshAccessToken is only available in OAuth flow');
@@ -292,15 +315,13 @@ export class TokenManager {
       throw new Error('No refresh token available. User may need to re-authenticate.');
     }
 
-    const orgName = this.config.orgName;
-    
     const body = new URLSearchParams({
       grant_type: 'refresh_token',
       client_id: this.config.clientId,
       refresh_token: tokenInfo.refreshToken
     });
 
-    const response = await fetch(`${this.config.baseUrl}/${orgName}/identity_/connect/token`, {
+    const response = await fetch(`${baseUrl}/${orgName}/identity_/connect/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
