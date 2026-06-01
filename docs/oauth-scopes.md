@@ -189,6 +189,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getUnitConsumptionSummary()` | `Insights.RealTimeData Insights`, `OR.Folders.Read` |
 | `getTraceErrorsTimeline()` | `Insights.RealTimeData Insights`, `OR.Folders.Read` |
 | `getTraceLatencyTimeline()` | `Insights.RealTimeData Insights`, `OR.Folders.Read` |
+| `getTraceUnitConsumption()` | `Insights.RealTimeData Insights`, `OR.Folders.Read` |
 
 ## Processes
 

@@ -132,6 +132,36 @@ export interface AgentTraceLatencyTimelineResponse {
 export interface AgentTraceLatencyTimelineOptions extends AgentTraceFilterOptions {}
 
 /**
+ * Per-agent unit consumption totals over the requested window, as returned by
+ * {@link AgentServiceModel.getTraceUnitConsumption}.
+ */
+export interface AgentTraceUnitConsumption {
+  /** Agent ID these totals belong to. */
+  agentId: string;
+  /** Folder key (GUID) the consumption was recorded in. */
+  folderKey: string;
+  /** Agent version these totals belong to. */
+  agentVersion: string;
+  /** Agent units (AGU) consumed over the window. */
+  agentUnitsConsumed: number;
+  /** Platform units (PLTU) consumed over the window. */
+  platformUnitsConsumed: number;
+}
+
+/**
+ * Response from {@link AgentServiceModel.getTraceUnitConsumption}.
+ */
+export interface AgentTraceUnitConsumptionResponse {
+  /** Per-agent consumption totals. May be absent when no data matches. */
+  data?: AgentTraceUnitConsumption[];
+}
+
+/**
+ * Options for {@link AgentServiceModel.getTraceUnitConsumption}.
+ */
+export interface AgentTraceUnitConsumptionOptions extends AgentTraceFilterOptions {}
+
+/**
  * Summary information about a single job execution — included on every
  * top-errored agent and incident entry to anchor the window.
  */

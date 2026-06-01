@@ -22,6 +22,8 @@ export const AGENT_TEST_CONSTANTS = {
   PROCESS_VERSION: '1.0.0',
   AGENT_VERSION: '1.0.0',
   TRACE_ERROR_NAME: 'SystemDesignQuiz.agent.ConvSystemDesignAgent',
+  TRACE_AGENT_UNITS_CONSUMED: 1.4,
+  TRACE_PLATFORM_UNITS_CONSUMED: 0.6,
   INCIDENT_TYPE: 'Error',
   INCIDENT_DESCRIPTION: 'Input does not conform to schema',
   INCIDENT_FIRST_SEEN: '2025-05-14T06:14:28Z',

@@ -513,4 +513,34 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('getTraceUnitConsumption', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve per-agent trace-level unit consumption totals', async () => {
+      const result = await agents.getTraceUnitConsumption(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (result.data && result.data.length > 0) {
+        const row = result.data[0];
+        expect(typeof row.agentId).toBe('string');
+        expect(typeof row.folderKey).toBe('string');
+        expect(typeof row.agentVersion).toBe('string');
+        expect(typeof row.agentUnitsConsumed).toBe('number');
+        expect(typeof row.platformUnitsConsumed).toBe('number');
+      }
+    });
+
+    it('should accept Traceview-shaped filters without error', async () => {
+      const result = await agents.getTraceUnitConsumption(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
 });

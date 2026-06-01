@@ -7,6 +7,8 @@ import type {
   AgentTraceErrorsTimelineResponse,
   AgentTraceLatencyTimelineOptions,
   AgentTraceLatencyTimelineResponse,
+  AgentTraceUnitConsumptionOptions,
+  AgentTraceUnitConsumptionResponse,
   AgentTopErroredAgentsOptions,
   AgentTopErroredAgentsResponse,
   AgentIncident,
@@ -691,4 +693,57 @@ export interface AgentServiceModel {
     endTime: string,
     options?: AgentTraceLatencyTimelineOptions,
   ): Promise<AgentTraceLatencyTimelineResponse>;
+
+  /**
+   * Retrieves trace-level per-agent unit consumption totals over the requested
+   * window.
+   *
+   * Distinct from {@link AgentServiceModel.getUnitConsumptionSummary}, which
+   * returns an aggregate summary with overall totals and lookback analysis
+   * (`/Agents/summary/unit-consumption`); this returns a flat per-agent
+   * breakdown of agent units (AGU) and platform units (PLTU) consumed, one
+   * entry per (agent, version, folder). Optionally filter by folder, agent,
+   * agent version, or execution type.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentTraceUnitConsumptionOptions}
+   * @returns Promise resolving to {@link AgentTraceUnitConsumptionResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Per-agent unit consumption in May 2025
+   * const result = await agents.getTraceUnitConsumption(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * result.data?.forEach((row) => {
+   *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} AGU, ${row.platformUnitsConsumed} PLTU`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to one agent version in specific folders, runtime executions only
+   * import { AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const result = await agents.getTraceUnitConsumption(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentId: '<agentId>',
+   *     agentVersion: '1.0.0',
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * ```
+   */
+  getTraceUnitConsumption(
+    startTime: string,
+    endTime: string,
+    options?: AgentTraceUnitConsumptionOptions,
+  ): Promise<AgentTraceUnitConsumptionResponse>;
 }
