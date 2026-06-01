@@ -62,17 +62,18 @@ export async function fetchInstanceStatusTimeline(
 }
 
 /**
- * Builds the request body for the ElementCountByStatus endpoint.
+ * Builds the commonParams request body for Insights RTM endpoints
+ * that filter by process key, package, time range, and version.
  *
  * @param processKey - Process key to filter by
  * @param packageId - Package identifier
  * @param startTime - Start of the time range to query
  * @param endTime - End of the time range to query
  * @param packageVersion - Package version to filter by
- * @returns Request body for the ElementCountByStatus endpoint
+ * @returns Request body with commonParams
  * @internal
  */
-export function buildElementCountByStatusBody(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string) {
+export function buildInsightsCommonBody(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string) {
   return {
     commonParams: {
       processKey,

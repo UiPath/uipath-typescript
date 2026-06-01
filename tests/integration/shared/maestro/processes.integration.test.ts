@@ -263,4 +263,27 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
       await testGetElementStats(maestroProcesses, 'processes');
     });
   });
+
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getInstanceCountByStatus', () => {
+    it('should retrieve instance count by status for a process', async () => {
+      const { maestroProcesses } = getServices();
+      const processes = await maestroProcesses.getAll();
+      expect(processes.length).toBeGreaterThan(0);
+
+      const process = processes[0];
+      const result = await maestroProcesses.getInstanceCountByStatus(
+        process.processKey,
+        process.packageId,
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        new Date(),
+        process.packageVersions[0]
+      );
+
+      expect(result).toBeDefined();
+      expect(typeof result.countOfAllInstances).toBe('number');
+      expect(typeof result.countOfCompleted).toBe('number');
+      expect(typeof result.avgDurationInMs).toBe('number');
+    });
+  });
 });

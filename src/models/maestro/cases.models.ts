@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceCountByStatusResponse } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -273,6 +273,35 @@ export interface CasesServiceModel {
    * ```
    */
   getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
+
+  /**
+   * Get instance count aggregated by status for a case.
+   *
+   * Returns total instance counts broken down by status (running, completed, faulted, etc.)
+   * and the average execution duration for all instances of a case within a time range.
+   *
+   * @param processKey - Process key to filter by
+   * @param packageId - Package identifier
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param packageVersion - Package version to filter by
+   * @returns Promise resolving to {@link InstanceCountByStatusResponse}
+   * @example
+   * ```typescript
+   * // Get instance status breakdown for a case
+   * const counts = await cases.getInstanceCountByStatus(
+   *   '<processKey>',
+   *   '<packageId>',
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   '1.0.1'
+   * );
+   *
+   * console.log(`Total: ${counts.countOfAllInstances}`);
+   * console.log(`Completed: ${counts.countOfCompleted}, Faulted: ${counts.countOfFaulted}`);
+   * ```
+   */
+  getInstanceCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse>;
 }
 
 // Method interface that will be added to case objects
@@ -286,6 +315,16 @@ export interface CaseMethods {
    * @returns Promise resolving to an array of {@link ElementStats}
    */
   getElementStats(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
+
+  /**
+   * Get instance count aggregated by status for this case
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param packageVersion - Package version to filter by
+   * @returns Promise resolving to {@link InstanceCountByStatusResponse}
+   */
+  getInstanceCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse>;
 }
 
 // Combined type for case data with methods
@@ -305,6 +344,12 @@ function createCaseMethods(caseData: CaseGetAllResponse, service: CasesServiceMo
       if (!caseData.packageId) throw new Error('Package ID is undefined');
 
       return service.getElementStats(caseData.processKey, caseData.packageId, startTime, endTime, packageVersion);
+    },
+    getInstanceCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse> {
+      if (!caseData.processKey) throw new Error('Process key is undefined');
+      if (!caseData.packageId) throw new Error('Package ID is undefined');
+
+      return service.getInstanceCountByStatus(caseData.processKey, caseData.packageId, startTime, endTime, packageVersion);
     }
   };
 }

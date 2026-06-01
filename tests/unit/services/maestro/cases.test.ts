@@ -370,4 +370,31 @@ describe('CasesService', () => {
       );
     });
   });
+
+  describe('getInstanceCountByStatus', () => {
+    it('should retrieve instance count by status for case instances', async () => {
+      mockApiClient.post.mockResolvedValue(MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_COUNT_BY_STATUS);
+
+      const result = await service.getInstanceCountByStatus(
+        MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+        MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+      );
+
+      expect(result.countOfAllInstances).toBe(276);
+      expect(result.countOfCompleted).toBe(275);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          })
+        }),
+        {}
+      );
+    });
+  });
 });

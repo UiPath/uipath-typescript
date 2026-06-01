@@ -49,5 +49,27 @@ describe('Case Models', () => {
         );
       });
     });
+
+    describe('case.getInstanceCountByStatus()', () => {
+      it('should call service.getInstanceCountByStatus with bound processKey and packageId', async () => {
+        const mockCaseData = createMockCase();
+        const caseObj = createCaseWithMethods(mockCaseData, mockService);
+
+        const startTime = new Date('2026-04-01T00:00:00Z');
+        const endTime = new Date('2026-05-01T00:00:00Z');
+
+        mockService.getInstanceCountByStatus = vi.fn().mockResolvedValue({});
+
+        await caseObj.getInstanceCountByStatus(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
+
+        expect(mockService.getInstanceCountByStatus).toHaveBeenCalledWith(
+          MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+          MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          startTime,
+          endTime,
+          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+        );
+      });
+    });
   });
 });

@@ -119,6 +119,30 @@ export interface GetTopDurationResponse extends GetTopBaseResponse {
 }
 
 /**
+ * Instance count aggregated by status for a process or case within a time range.
+ */
+export interface InstanceCountByStatusResponse {
+  /** Total number of instances across all statuses */
+  countOfAllInstances: number;
+  /** Number of currently running instances */
+  countOfRunning: number;
+  /** Number of instances in transitioning state */
+  countOfTransitioning: number;
+  /** Number of paused instances */
+  countOfPaused: number;
+  /** Number of faulted instances */
+  countOfFaulted: number;
+  /** Number of completed instances */
+  countOfCompleted: number;
+  /** Number of cancelled instances */
+  countOfCancelled: number;
+  /** Number of deleted instances */
+  countOfDeleted: number;
+  /** Average execution duration in milliseconds */
+  avgDurationInMs: number;
+}
+
+/**
  * Element count by status for a BPMN element within a process or case
  */
 export interface ElementStats {

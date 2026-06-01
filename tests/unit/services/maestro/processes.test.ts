@@ -487,4 +487,55 @@ describe('MaestroProcessesService', () => {
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
+
+  describe('getInstanceCountByStatus', () => {
+    const mockResponse = MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_COUNT_BY_STATUS;
+
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
+
+    it('should retrieve instance count by status', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getInstanceCountByStatus(
+        MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+        MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+        startDate,
+        endDate,
+        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
+        {
+          commonParams: {
+            processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
+            version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+          }
+        },
+        {}
+      );
+      expect(result.countOfAllInstances).toBe(276);
+      expect(result.countOfCompleted).toBe(275);
+      expect(result.countOfTransitioning).toBe(1);
+      expect(result.avgDurationInMs).toBe(3992314);
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getInstanceCountByStatus(
+          MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+          MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+          startDate,
+          endDate,
+          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
 });

@@ -169,6 +169,19 @@ export const MAESTRO_TEST_CONSTANTS = {
     }
   ],
 
+  // Instance count by status mock response
+  MOCK_INSTANCE_COUNT_BY_STATUS: {
+    countOfAllInstances: 276,
+    countOfRunning: 0,
+    countOfTransitioning: 1,
+    countOfPaused: 0,
+    countOfFaulted: 0,
+    countOfCompleted: 275,
+    countOfCancelled: 0,
+    countOfDeleted: 0,
+    avgDurationInMs: 3992314
+  },
+
   // SLA Summary constants
   SLA_CASE_INSTANCE_ID: '1238b9c9-37b6-4a69-bb67-042548d05c77',
   SLA_CASE_INSTANCE_ID_2: '15a1332a-5261-4b58-bbca-f847fa6c49de',

@@ -189,4 +189,25 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
       await testGetElementStats(cases, 'cases');
     });
   });
+
+  // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
+  describe.skip('getInstanceCountByStatus', () => {
+    it('should retrieve instance count by status for a case', async () => {
+      const { cases } = getServices();
+      const allCases = await cases.getAll();
+      expect(allCases.length).toBeGreaterThan(0);
+
+      const caseItem = allCases[0];
+      const result = await cases.getInstanceCountByStatus(
+        caseItem.processKey,
+        caseItem.packageId,
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        new Date(),
+        caseItem.packageVersions[0]
+      );
+
+      expect(result).toBeDefined();
+      expect(typeof result.countOfAllInstances).toBe('number');
+    });
+  });
 });

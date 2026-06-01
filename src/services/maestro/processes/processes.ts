@@ -1,11 +1,11 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats, InstanceCountByStatusResponse } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
-import { buildInsightsTopBody, fetchInstanceStatusTimeline, buildElementCountByStatusBody } from '../insights';
+import { buildInsightsTopBody, fetchInstanceStatusTimeline, buildInsightsCommonBody } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
@@ -359,8 +359,45 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   async getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]> {
     const { data } = await this.post<ElementStats[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
-      buildElementCountByStatusBody(processKey, packageId, startTime, endTime, packageVersion)
+      buildInsightsCommonBody(processKey, packageId, startTime, endTime, packageVersion)
     );
     return data ?? [];
+  }
+
+  /**
+   * Get instance count aggregated by status for a process.
+   *
+   * Returns total instance counts broken down by status (running, completed, faulted, etc.)
+   * and the average execution duration for all instances of a process within a time range.
+   *
+   * @param processKey - Process key to filter by
+   * @param packageId - Package identifier
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param packageVersion - Package version to filter by
+   * @returns Promise resolving to {@link InstanceCountByStatusResponse}
+   * @example
+   * ```typescript
+   * // Get instance status breakdown for a process
+   * const counts = await maestroProcesses.getInstanceCountByStatus(
+   *   '<processKey>',
+   *   '<packageId>',
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   '1.0.1'
+   * );
+   *
+   * console.log(`Total: ${counts.countOfAllInstances}`);
+   * console.log(`Running: ${counts.countOfRunning}, Completed: ${counts.countOfCompleted}`);
+   * console.log(`Faulted: ${counts.countOfFaulted}, Avg duration: ${counts.avgDurationInMs}ms`);
+   * ```
+   */
+  @track('MaestroProcesses.GetInstanceCountByStatus')
+  async getInstanceCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse> {
+    const { data } = await this.post<InstanceCountByStatusResponse>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
+      buildInsightsCommonBody(processKey, packageId, startTime, endTime, packageVersion)
+    );
+    return data;
   }
 }
