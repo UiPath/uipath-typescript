@@ -157,7 +157,7 @@ Types in `{domain}.types.ts` are public (re-exported through barrel). Types in `
 
 **NEVER** re-export `internal-types.ts` through `index.ts` — re-exporting pollutes the public API and creates breaking-change risk when internal formats change.
 
-**Avoid cross-domain type imports** — when a response type is used by multiple service domains (e.g., returned by both `cases` and `processes` methods), place it in the domain-level shared types file that fits semantically (e.g., `insights.types.ts` for insights-related types shared across Maestro services). **NEVER** import `{domainA}.types` from `{domainB}.models` — asymmetric cross-domain imports create hidden coupling that breaks when type ownership shifts.
+**Avoid cross-domain type imports** — when a response type is used by multiple service domains (e.g., returned by both `cases` and `processes` methods), place it in the domain-level shared types file that fits semantically (e.g., `insights.types.ts` for insights-related types shared across Maestro services). **NEVER** import a type from a different service domain's types file (e.g., `cases.models` importing from `processes.types`) — such imports create hidden coupling that breaks when type ownership shifts.
 
 ## OData prefix pattern
 
