@@ -12,6 +12,8 @@ import {
   AgentTopConsumingAgentsResponse,
   AgentTopErroredAgentsOptions,
   AgentTopErroredAgentsResponse,
+  AgentConsumptionTimelineOptions,
+  AgentConsumptionTimelineResponse,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -398,6 +400,61 @@ export class AgentService extends BaseService implements AgentServiceModel {
     );
 
     return response.data.data ?? {};
+  }
+
+  /**
+   * Retrieves a time-series of AGU consumption over the requested window.
+   *
+   * Returns one data point per time bucket; bucket size is chosen server-side
+   * based on the window length. Optionally filter by folder, agent, project,
+   * or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentConsumptionTimelineOptions}
+   * @returns Promise resolving to {@link AgentConsumptionTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // AGU consumption timeline in May 2025
+   * const result = await agents.getConsumptionTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.timeSlice}: ${point.aguConsumption} AGU`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to specific folders and agents
+   * const result = await agents.getConsumptionTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentNames: ['JokeAgent'],
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetConsumptionTimeline')
+  async getConsumptionTimeline(
+    startTime: string,
+    endTime: string,
+    options?: AgentConsumptionTimelineOptions,
+  ): Promise<AgentConsumptionTimelineResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<AgentConsumptionTimelineResponse>(
+      AGENTS_ENDPOINTS.GET_CONSUMPTION_TIMELINE,
+      body,
+    );
+
+    return response.data;
   }
 
   private buildAgentFilterBody(

@@ -221,4 +221,30 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       // the contract here is only that the request was accepted without a 400.
     });
   });
+
+  describe('getConsumptionTimeline', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve a timeline of AGU consumption', async () => {
+      const result = await agents.getConsumptionTimeline(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (result.data && result.data.length > 0) {
+        const point = result.data[0];
+        expect(typeof point.timeSlice).toBe('string');
+        expect(typeof point.aguConsumption).toBe('number');
+        // timeSlice should be an ISO 8601 string parseable by Date
+        expect(Number.isNaN(new Date(point.timeSlice).getTime())).toBe(false);
+      }
+    });
+
+    it('should accept folderKeys filter without error', async () => {
+      const result = await agents.getConsumptionTimeline(startTime, endTime, {
+        folderKeys: [],
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
 });

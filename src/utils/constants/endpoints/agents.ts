@@ -15,4 +15,6 @@ export const AGENTS_ENDPOINTS = {
   GET_INCIDENTS: `${INSIGHTS_RTM_BASE}/Agents/incidents`,
   /** Top-N agents by unit consumption over the requested window. */
   GET_TOP_CONSUMING_AGENTS: `${INSIGHTS_RTM_BASE}/Agents/consumption`,
+  /** Time-series of AGU consumption over the requested window. */
+  GET_CONSUMPTION_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/consumptionTimeline`,
 } as const;

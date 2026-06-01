@@ -280,3 +280,30 @@ export interface AgentTopConsumingAgentsOptions extends AgentFilterOptions {
    */
   agentTypes?: AgentType[];
 }
+
+/**
+ * One point on an agent's consumption timeline — AGU consumption for a single
+ * time bucket.
+ */
+export interface AgentConsumptionTimelinePoint {
+  /** Bucket timestamp (ISO 8601, UTC) */
+  timeSlice: string;
+  /** AGU quantity consumed in this time bucket */
+  aguConsumption: number;
+}
+
+/**
+ * Response from {@link AgentServiceModel.getConsumptionTimeline}.
+ */
+export interface AgentConsumptionTimelineResponse {
+  /** Time-series points, one per bucket. May be absent when no data matches. */
+  data?: AgentConsumptionTimelinePoint[];
+}
+
+/**
+ * Options for {@link AgentServiceModel.getConsumptionTimeline}.
+ *
+ * Currently identical to {@link AgentFilterOptions}; named distinctly so that
+ * future per-method filters can be added without a breaking change.
+ */
+export interface AgentConsumptionTimelineOptions extends AgentFilterOptions {}
