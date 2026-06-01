@@ -16,6 +16,8 @@ import {
   AgentConsumptionTimelineResponse,
   AgentLatencyTimelineOptions,
   AgentLatencyTimelineResponse,
+  AgentIncidentDistributionOptions,
+  AgentIncidentDistributionResponse,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -50,6 +52,21 @@ interface RawAgentIncidentsResponse {
  */
 interface RawAgentTopConsumingEnvelope {
   data?: AgentTopConsumingAgentsResponse;
+}
+
+/**
+ * Raw envelope returned by `POST /Agents/incidentDistribution` — wraps the
+ * counts under `data` and emits a vestigial `pagination` field that the SDK
+ * intentionally drops (the endpoint is non-paginated; the field is leftover
+ * from a shared response shape).
+ */
+interface RawAgentIncidentDistributionEnvelope {
+  pagination?: {
+    totalCount?: number;
+    pageNumber?: number;
+    pageSize?: number;
+  };
+  data?: AgentIncidentDistributionResponse;
 }
 
 /**
@@ -514,6 +531,58 @@ export class AgentService extends BaseService implements AgentServiceModel {
     );
 
     return response.data;
+  }
+
+  /**
+   * Retrieves the distribution of incidents across types — errors,
+   * escalations, and policy violations — over the requested window.
+   *
+   * Returns a single aggregate object with one count per incident category.
+   * Optionally filter by folder, agent, project, or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentIncidentDistributionOptions}
+   * @returns Promise resolving to {@link AgentIncidentDistributionResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Incident distribution in May 2025
+   * const result = await agents.getIncidentDistribution(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * console.log(`Errors: ${result.errorCount}`);
+   * console.log(`Escalations: ${result.escalationCount}`);
+   * console.log(`Policy violations: ${result.policyCount}`);
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to a specific folder
+   * const result = await agents.getIncidentDistribution(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   { folderKeys: ['<folderKey1>'] },
+   * );
+   * ```
+   */
+  @track('Agents.GetIncidentDistribution')
+  async getIncidentDistribution(
+    startTime: string,
+    endTime: string,
+    options?: AgentIncidentDistributionOptions,
+  ): Promise<AgentIncidentDistributionResponse> {
+    const body = this.buildAgentFilterBody(startTime, endTime, options);
+
+    const response = await this.post<RawAgentIncidentDistributionEnvelope>(
+      AGENTS_ENDPOINTS.GET_INCIDENT_DISTRIBUTION,
+      body,
+    );
+
+    return response.data.data ?? {};
   }
 
   private buildAgentFilterBody(

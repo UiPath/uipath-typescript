@@ -716,4 +716,70 @@ describe('AgentService Unit Tests', () => {
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
+
+  describe('getIncidentDistribution', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should unwrap data and drop the vestigial pagination wrapper', async () => {
+      const mockEnvelope = {
+        pagination: { totalCount: 0, pageNumber: 1, pageSize: 0 },
+        data: { errorCount: 123, escalationCount: 5, policyCount: 2 },
+      };
+      mockApiClient.post.mockResolvedValue(mockEnvelope);
+
+      const result = await agentService.getIncidentDistribution(startTime, endTime);
+
+      // SDK returns the flat counts; pagination is dropped
+      expect(result.errorCount).toBe(123);
+      expect(result.escalationCount).toBe(5);
+      expect(result.policyCount).toBe(2);
+      expect((result as { pagination?: unknown }).pagination).toBeUndefined();
+      expect((result as { data?: unknown }).data).toBeUndefined();
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_INCIDENT_DISTRIBUTION,
+        { startTime, endTime },
+        expect.any(Object),
+      );
+    });
+
+    it('should send camelCase body with filter options', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { errorCount: 0, escalationCount: 0, policyCount: 0 } });
+
+      await agentService.getIncidentDistribution(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_INCIDENT_DISTRIBUTION,
+        {
+          startTime,
+          endTime,
+          folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+          agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+          processVersion: AGENT_TEST_CONSTANTS.PROCESS_VERSION,
+        },
+        expect.any(Object),
+      );
+    });
+
+    it('should return an empty object when the API returns an empty envelope', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await agentService.getIncidentDistribution(startTime, endTime);
+
+      expect(result).toEqual({});
+    });
+
+    it('should propagate API errors', async () => {
+      const error = new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        agentService.getIncidentDistribution(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
 });

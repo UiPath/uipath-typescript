@@ -19,4 +19,6 @@ export const AGENTS_ENDPOINTS = {
   GET_CONSUMPTION_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/consumptionTimeline`,
   /** Time-series of agent latency (per-percentile, decimal) over the requested window. */
   GET_LATENCY_TIMELINE: `${INSIGHTS_RTM_BASE}/Agents/latencyTimeline`,
+  /** Distribution of incidents across types (errors, escalations, policy). */
+  GET_INCIDENT_DISTRIBUTION: `${INSIGHTS_RTM_BASE}/Agents/incidentDistribution`,
 } as const;

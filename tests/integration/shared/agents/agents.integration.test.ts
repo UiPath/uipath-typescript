@@ -274,4 +274,34 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('getIncidentDistribution', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve incident counts across the three categories', async () => {
+      const result = await agents.getIncidentDistribution(startTime, endTime);
+
+      expect(result).toBeDefined();
+      // SDK drops the vestigial wire-level `pagination` field
+      expect((result as { pagination?: unknown }).pagination).toBeUndefined();
+      if (typeof result.errorCount === 'number') {
+        expect(result.errorCount).toBeGreaterThanOrEqual(0);
+      }
+      if (typeof result.escalationCount === 'number') {
+        expect(result.escalationCount).toBeGreaterThanOrEqual(0);
+      }
+      if (typeof result.policyCount === 'number') {
+        expect(result.policyCount).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should accept folderKeys filter without error', async () => {
+      const result = await agents.getIncidentDistribution(startTime, endTime, {
+        folderKeys: [],
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
 });

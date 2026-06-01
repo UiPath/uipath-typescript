@@ -14,6 +14,8 @@ import type {
   AgentConsumptionTimelineResponse,
   AgentLatencyTimelineOptions,
   AgentLatencyTimelineResponse,
+  AgentIncidentDistributionOptions,
+  AgentIncidentDistributionResponse,
 } from './agents.types';
 import type {
   HasPaginationOptions,
@@ -351,4 +353,46 @@ export interface AgentServiceModel {
     endTime: string,
     options?: AgentLatencyTimelineOptions,
   ): Promise<AgentLatencyTimelineResponse>;
+
+  /**
+   * Retrieves the distribution of incidents across types — errors,
+   * escalations, and policy violations — over the requested window.
+   *
+   * Returns a single aggregate object with one count per incident category.
+   * Optionally filter by folder, agent, project, or process version.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentIncidentDistributionOptions}
+   * @returns Promise resolving to {@link AgentIncidentDistributionResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Incident distribution in May 2025
+   * const result = await agents.getIncidentDistribution(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * console.log(`Errors: ${result.errorCount}`);
+   * console.log(`Escalations: ${result.escalationCount}`);
+   * console.log(`Policy violations: ${result.policyCount}`);
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to a specific folder
+   * const result = await agents.getIncidentDistribution(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   { folderKeys: ['<folderKey1>'] },
+   * );
+   * ```
+   */
+  getIncidentDistribution(
+    startTime: string,
+    endTime: string,
+    options?: AgentIncidentDistributionOptions,
+  ): Promise<AgentIncidentDistributionResponse>;
 }

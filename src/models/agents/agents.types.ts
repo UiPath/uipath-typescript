@@ -344,3 +344,28 @@ export interface AgentLatencyTimelineResponse {
  * future per-method filters can be added without a breaking change.
  */
 export interface AgentLatencyTimelineOptions extends AgentFilterOptions {}
+
+/**
+ * Response from {@link AgentServiceModel.getIncidentDistribution}.
+ *
+ * The API wraps this payload in a `data` envelope (and emits a vestigial
+ * `pagination` object alongside it that carries no useful information on this
+ * non-paginated endpoint); the SDK unwraps the `data` and drops `pagination`
+ * so the fields below are returned directly.
+ */
+export interface AgentIncidentDistributionResponse {
+  /** Number of error-type incidents in the window */
+  errorCount?: number;
+  /** Number of escalation-type incidents in the window */
+  escalationCount?: number;
+  /** Number of policy-type incidents in the window */
+  policyCount?: number;
+}
+
+/**
+ * Options for {@link AgentServiceModel.getIncidentDistribution}.
+ *
+ * Currently identical to {@link AgentFilterOptions}; named distinctly so that
+ * future per-method filters can be added without a breaking change.
+ */
+export interface AgentIncidentDistributionOptions extends AgentFilterOptions {}
