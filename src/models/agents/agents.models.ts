@@ -5,6 +5,8 @@ import type {
   AgentErrorsTimelineResponse,
   AgentTraceErrorsTimelineOptions,
   AgentTraceErrorsTimelineResponse,
+  AgentTraceLatencyTimelineOptions,
+  AgentTraceLatencyTimelineResponse,
   AgentTopErroredAgentsOptions,
   AgentTopErroredAgentsResponse,
   AgentIncident,
@@ -637,4 +639,56 @@ export interface AgentServiceModel {
     endTime: string,
     options?: AgentTraceErrorsTimelineOptions,
   ): Promise<AgentTraceErrorsTimelineResponse>;
+
+  /**
+   * Retrieves a trace-level time-series of latency over the requested window.
+   *
+   * Distinct from {@link AgentServiceModel.getLatencyTimeline}, which reports
+   * agent-run latency (`/Agents/latencyTimeline`); this reports latency
+   * observed in traces. The API emits one point per (series, time bucket) —
+   * typically a `P50` and a `P95` series per bucket — with `value` in decimal
+   * seconds. Bucket size is chosen server-side based on the window length.
+   * Optionally filter by folder, agent, agent version, or execution type.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentTraceLatencyTimelineOptions}
+   * @returns Promise resolving to {@link AgentTraceLatencyTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Trace-level latency in May 2025
+   * const result = await agents.getTraceLatencyTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value}s`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to one agent version in specific folders, runtime executions only
+   * import { AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const result = await agents.getTraceLatencyTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentId: '<agentId>',
+   *     agentVersion: '1.0.0',
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * ```
+   */
+  getTraceLatencyTimeline(
+    startTime: string,
+    endTime: string,
+    options?: AgentTraceLatencyTimelineOptions,
+  ): Promise<AgentTraceLatencyTimelineResponse>;
 }

@@ -485,4 +485,32 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('getTraceLatencyTimeline', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should retrieve a trace-level latency timeline grouped by series', async () => {
+      const result = await agents.getTraceLatencyTimeline(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (result.data && result.data.length > 0) {
+        const point = result.data[0];
+        expect(typeof point.name).toBe('string');
+        expect(typeof point.value).toBe('number');
+        expect(typeof point.date).toBe('string');
+      }
+    });
+
+    it('should accept Traceview-shaped filters without error', async () => {
+      const result = await agents.getTraceLatencyTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
 });

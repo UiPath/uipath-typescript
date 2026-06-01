@@ -106,6 +106,32 @@ export interface AgentTraceErrorsTimelineResponse {
 export interface AgentTraceErrorsTimelineOptions extends AgentTraceFilterOptions {}
 
 /**
+ * One point on the trace-level latency timeline — a latency value for a single
+ * (series, time bucket).
+ */
+export interface AgentTraceLatencyTimelinePoint {
+  /** Series/grouping name for this latency point — e.g. a percentile label such as `P50` or `P95`. */
+  name: string;
+  /** Latency value in decimal seconds for this series and time bucket. */
+  value: number;
+  /** Bucket timestamp (ISO 8601, UTC). */
+  date: string;
+}
+
+/**
+ * Response from {@link AgentServiceModel.getTraceLatencyTimeline}.
+ */
+export interface AgentTraceLatencyTimelineResponse {
+  /** Time-series points, one per (series, time bucket). May be absent when no data matches. */
+  data?: AgentTraceLatencyTimelinePoint[];
+}
+
+/**
+ * Options for {@link AgentServiceModel.getTraceLatencyTimeline}.
+ */
+export interface AgentTraceLatencyTimelineOptions extends AgentTraceFilterOptions {}
+
+/**
  * Summary information about a single job execution — included on every
  * top-errored agent and incident entry to anchor the window.
  */

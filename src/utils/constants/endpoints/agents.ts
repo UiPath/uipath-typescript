@@ -29,4 +29,6 @@ export const AGENTS_ENDPOINTS = {
   GET_UNIT_CONSUMPTION_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary/unit-consumption`,
   /** Trace-level time-series of error counts grouped by error name over the requested window. */
   GET_TRACE_ERRORS_TIMELINE: `${INSIGHTS_RTM_BASE}/Traceview/errorsTimeline`,
+  /** Trace-level time-series of latency (decimal seconds) grouped by series over the requested window. */
+  GET_TRACE_LATENCY_TIMELINE: `${INSIGHTS_RTM_BASE}/Traceview/latencyTimeline`,
 } as const;
