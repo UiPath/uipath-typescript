@@ -5,6 +5,8 @@
 import {
   MemoryTimelinePoint,
   MemoryTimelineResponse,
+  MemoryCallsTimelinePoint,
+  MemoryCallsTimelineResponse,
 } from '../../../src/models/agents/memory/memory.types';
 import { MEMORY_TEST_CONSTANTS } from '../constants/memory';
 
@@ -41,6 +43,36 @@ export function createMockMemoryTimelineResponse(
         totalCount: 5,
         enabledMemoryCount: 5,
         disabledMemoryCount: 0,
+      }),
+    ],
+  };
+}
+
+/**
+ * Creates a single memory-calls timeline point with overridable fields.
+ */
+export function createMockMemoryCallsTimelinePoint(
+  overrides: Partial<MemoryCallsTimelinePoint> = {},
+): MemoryCallsTimelinePoint {
+  return {
+    timeSlice: MEMORY_TEST_CONSTANTS.TIME_SLICE_1,
+    memoryCallsCount: 7,
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a memory-calls timeline response envelope with two points by default.
+ */
+export function createMockMemoryCallsTimelineResponse(
+  points?: MemoryCallsTimelinePoint[],
+): MemoryCallsTimelineResponse {
+  return {
+    data: points ?? [
+      createMockMemoryCallsTimelinePoint(),
+      createMockMemoryCallsTimelinePoint({
+        timeSlice: MEMORY_TEST_CONSTANTS.TIME_SLICE_2,
+        memoryCallsCount: 12,
       }),
     ],
   };

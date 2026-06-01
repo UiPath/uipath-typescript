@@ -192,6 +192,7 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | Method | OAuth Scope |
 |--------|-------------|
 | `getMemoryTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getMemoryCallsTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Traces
 

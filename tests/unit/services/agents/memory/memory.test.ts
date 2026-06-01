@@ -5,8 +5,15 @@ import { ApiClient } from '../../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../../utils/setup';
 import { MEMORY_ENDPOINTS } from '../../../../../src/utils/constants/endpoints';
 import { MEMORY_TEST_CONSTANTS } from '../../../../utils/constants';
-import { createMockMemoryTimelineResponse } from '../../../../utils/mocks/memory';
-import { ExecutionType, MemoryTimelineGetOptions } from '../../../../../src/models/agents/memory/memory.types';
+import {
+  createMockMemoryTimelineResponse,
+  createMockMemoryCallsTimelineResponse,
+} from '../../../../utils/mocks/memory';
+import {
+  ExecutionType,
+  MemoryTimelineGetOptions,
+  MemoryCallsTimelineGetOptions,
+} from '../../../../../src/models/agents/memory/memory.types';
 
 // ===== MOCKING =====
 vi.mock('../../../../../src/core/http/api-client');
@@ -96,6 +103,79 @@ describe('MemoryService Unit Tests', () => {
 
       await expect(memoryService.getMemoryTimeline()).rejects.toThrow(
         MEMORY_TEST_CONSTANTS.ERROR_MESSAGE,
+      );
+    });
+  });
+
+  describe('getMemoryCallsTimeline', () => {
+    it('should retrieve the memory calls timeline successfully', async () => {
+      const mockResponse = createMockMemoryCallsTimelineResponse();
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await memoryService.getMemoryCallsTimeline();
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data?.[0].timeSlice).toBe(MEMORY_TEST_CONSTANTS.TIME_SLICE_1);
+      expect(result.data?.[0].memoryCallsCount).toBe(7);
+      expect(result.data?.[1].memoryCallsCount).toBe(12);
+    });
+
+    it('should call the endpoint with an empty body when no options are provided', async () => {
+      mockApiClient.post.mockResolvedValue(createMockMemoryCallsTimelineResponse());
+
+      await memoryService.getMemoryCallsTimeline();
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MEMORY_ENDPOINTS.GET_MEMORY_CALLS_TIMELINE,
+        {},
+        expect.anything(),
+      );
+    });
+
+    it('should pass all provided filters into the request body', async () => {
+      mockApiClient.post.mockResolvedValue(createMockMemoryCallsTimelineResponse());
+
+      const options: MemoryCallsTimelineGetOptions = {
+        startTime: MEMORY_TEST_CONSTANTS.START_TIME,
+        endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+        agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
+        agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
+        folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
+        executionType: ExecutionType.Runtime,
+      };
+
+      await memoryService.getMemoryCallsTimeline(options);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MEMORY_ENDPOINTS.GET_MEMORY_CALLS_TIMELINE,
+        {
+          startTime: MEMORY_TEST_CONSTANTS.START_TIME,
+          endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+          agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
+          agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
+          folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
+          executionType: ExecutionType.Runtime,
+        },
+        expect.anything(),
+      );
+    });
+
+    it('should omit undefined filters from the request body', async () => {
+      mockApiClient.post.mockResolvedValue(createMockMemoryCallsTimelineResponse());
+
+      await memoryService.getMemoryCallsTimeline({ endTime: MEMORY_TEST_CONSTANTS.END_TIME });
+
+      const sentBody = mockApiClient.post.mock.calls[0][1];
+      expect(sentBody).toEqual({ endTime: MEMORY_TEST_CONSTANTS.END_TIME });
+      expect(sentBody).not.toHaveProperty('startTime');
+      expect(sentBody).not.toHaveProperty('folderKeys');
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(MEMORY_TEST_CONSTANTS.ERROR_MESSAGE_CALLS));
+
+      await expect(memoryService.getMemoryCallsTimeline()).rejects.toThrow(
+        MEMORY_TEST_CONSTANTS.ERROR_MESSAGE_CALLS,
       );
     });
   });

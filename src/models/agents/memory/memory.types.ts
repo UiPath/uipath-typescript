@@ -41,6 +41,11 @@ export interface MemoryFilterOptions {
 export interface MemoryTimelineGetOptions extends MemoryFilterOptions {}
 
 /**
+ * Options for {@link MemoryServiceModel.getMemoryCallsTimeline}.
+ */
+export interface MemoryCallsTimelineGetOptions extends MemoryFilterOptions {}
+
+/**
  * One point on the agent-memory state timeline — memory-state counts for a
  * single time bucket.
  */
@@ -65,4 +70,23 @@ export interface MemoryTimelinePoint {
 export interface MemoryTimelineResponse {
   /** Time-series points, one per bucket. May be absent when no data matches. */
   data?: MemoryTimelinePoint[];
+}
+
+/**
+ * One point on the memory-calls timeline — the count of memory calls for a
+ * single time bucket.
+ */
+export interface MemoryCallsTimelinePoint {
+  /** Bucket timestamp (ISO 8601, UTC). */
+  timeSlice: string;
+  /** Number of memory calls in this bucket. */
+  memoryCallsCount: number;
+}
+
+/**
+ * Response from {@link MemoryServiceModel.getMemoryCallsTimeline}.
+ */
+export interface MemoryCallsTimelineResponse {
+  /** Time-series points, one per bucket. May be absent when no data matches. */
+  data?: MemoryCallsTimelinePoint[];
 }

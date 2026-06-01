@@ -13,4 +13,5 @@ export const MEMORY_TEST_CONSTANTS = {
   FOLDER_KEY: '8709b9b7-5779-4952-b519-016db272da0a',
 
   ERROR_MESSAGE: 'Failed to retrieve memory timeline',
+  ERROR_MESSAGE_CALLS: 'Failed to retrieve memory calls timeline',
 } as const;
