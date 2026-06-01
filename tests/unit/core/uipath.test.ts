@@ -7,9 +7,11 @@ import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../uti
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 
 // ===== MOCKING =====
+const mockTokenManagerDestroy = vi.fn();
 const mockTokenManager = {
   getToken: () => 'mock-access-token',
-  hasValidToken: () => true
+  hasValidToken: () => true,
+  destroy: mockTokenManagerDestroy,
 };
 
 const mockLogout = vi.fn();
@@ -375,6 +377,25 @@ describe('UiPath Core', () => {
 
       expect(mockLogout).toHaveBeenCalledOnce();
       expect(sdk.isInitialized()).toBe(false);
+    });
+  });
+
+  describe('destroy()', () => {
+    beforeEach(() => {
+      mockTokenManagerDestroy.mockClear();
+    });
+
+    it('should delegate to TokenManager.destroy()', () => {
+      const sdk = new UiPath({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: TEST_CONSTANTS.ORGANIZATION_ID,
+        tenantName: TEST_CONSTANTS.TENANT_ID,
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
+      });
+
+      sdk.destroy();
+
+      expect(mockTokenManagerDestroy).toHaveBeenCalledOnce();
     });
   });
 

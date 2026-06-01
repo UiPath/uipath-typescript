@@ -19,4 +19,5 @@ export enum UiPathMetaTags {
 
   // Folder context (injected during coded-app deployment)
   FOLDER_KEY = 'uipath:folder-key',
+
 }

@@ -2,8 +2,7 @@ import { ActionCenterEventNames, ActionCenterEventResponsePayload } from '../../
 import { TokenInfo } from './types';
 import { AuthenticationError, HttpStatus } from '../errors';
 import { Config } from '../config/config';
-
-const AUTHENTICATION_TIMEOUT = 8000;
+import { HostTokenResponse, isTokenExpired, isValidHostOrigin, requestHostToken } from './host-token-request';
 
 export class ActionCenterTokenManager {
   private readonly parentOrigin = new URLSearchParams(window.location.search).get('basedomain');
@@ -15,7 +14,7 @@ export class ActionCenterTokenManager {
   ) {}
 
   async refreshAccessToken(tokenInfo: TokenInfo): Promise<string> {
-    if (!this.isTokenExpired(tokenInfo)) {
+    if (!isTokenExpired(tokenInfo)) {
       return tokenInfo.token;
     }
 
@@ -23,88 +22,58 @@ export class ActionCenterTokenManager {
       return this.refreshPromise;
     }
 
-    this.refreshPromise = new Promise<string>((resolve, reject) => {
-      const content = {
-        clientId: this.config.clientId,
-        scope: this.config.scope,
-      }
-      this.sendMessageToParent(ActionCenterEventNames.REFRESHTOKEN, content);
-
-      const messageListener = (event: MessageEvent<ActionCenterEventResponsePayload>) => {
-        if (event.origin !== this.parentOrigin) return;
-        if (event.data?.eventType !== ActionCenterEventNames.TOKENREFRESHED) return;
-
-        clearTimeout(timer);
-
-        if (event.data?.content?.token) {
-          const { accessToken, expiresAt } = event.data.content.token;
-          this.onTokenRefreshed({ token: accessToken, type: 'secret', expiresAt });
-          resolve(accessToken);
-        } else {
-          reject(new AuthenticationError({
-            message: 'Failed to fetch access token',
-            statusCode: HttpStatus.UNAUTHORIZED,
-          }));
-        }
-
-        this.refreshPromise = null;
-        this.cleanup(messageListener);
-      };
-
-      const timer = setTimeout(() => {
-        reject(new AuthenticationError({
-          message: 'Failed to fetch access token',
+    const parentOrigin = this.parentOrigin;
+    if (!parentOrigin) {
+      return Promise.reject(
+        new AuthenticationError({
+          message: 'Cannot refresh token: basedomain query parameter is missing',
           statusCode: HttpStatus.UNAUTHORIZED,
-        }));
-
-        this.refreshPromise = null;
-        this.cleanup(messageListener);
-      }, AUTHENTICATION_TIMEOUT);
-
-      window.addEventListener('message', messageListener);
-    });
-
-    return this.refreshPromise;
-  }
-
-  private isTokenExpired(tokenInfo: TokenInfo): boolean {
-    if (!tokenInfo?.expiresAt) {
-      return true;
+        })
+      );
     }
 
-    return new Date() >= tokenInfo.expiresAt;
+    // Guard before requestHostToken registers the inbound listener — an untrusted
+    // basedomain would otherwise leave the listener live for the full timeout window,
+    // accepting a forged TOKENREFRESHED from that origin.
+    if (!isValidHostOrigin(parentOrigin)) {
+      return Promise.reject(
+        new AuthenticationError({
+          message: 'Cannot refresh token: basedomain is not a trusted UiPath host origin',
+          statusCode: HttpStatus.UNAUTHORIZED,
+        })
+      );
+    }
+
+    const { promise } = requestHostToken({
+      pinnedOrigin: parentOrigin,
+      sendRequest: () => this.sendMessageToParent(ActionCenterEventNames.REFRESHTOKEN, {
+        clientId: this.config.clientId,
+        scope: this.config.scope,
+      }),
+      responseEventType: ActionCenterEventNames.TOKENREFRESHED,
+      extractToken: (data): HostTokenResponse | undefined => {
+        const token = (data as ActionCenterEventResponsePayload)?.content?.token;
+        if (!token?.accessToken) return undefined;
+        return { accessToken: token.accessToken, expiresAt: token.expiresAt };
+      },
+      onTokenRefreshed: this.onTokenRefreshed,
+    });
+
+    this.refreshPromise = promise;
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
   }
 
   private sendMessageToParent(eventType: string, content?: unknown): void {
-    if (window.parent && this.isValidOrigin(this.parentOrigin)) {
+    if (window.parent && isValidHostOrigin(this.parentOrigin)) {
       try {
         window.parent.postMessage({ eventType, content }, this.parentOrigin!);
       } catch (error) {
-        console.warn('Failed to send message to Action Center', JSON.stringify(error));
+        console.warn('ActionCenterTokenManager: postMessage to host failed', JSON.stringify(error));
       }
-    }
-  }
-
-  private cleanup(messageListener: (event: MessageEvent<ActionCenterEventResponsePayload>) => void): void {
-    window.removeEventListener('message', messageListener);
-  }
-
-  private isValidOrigin(origin: string | null): boolean {
-    const ALLOWED_ORIGINS = ['https://alpha.uipath.com', 'https://staging.uipath.com', 'https://cloud.uipath.com'];
-
-    if (!origin) {
-      return false;
-    }
-
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      return true;
-    }
-
-    try {
-      const url = new URL(origin);
-      return url.hostname === 'localhost';
-    } catch {
-      return false;
     }
   }
 }
