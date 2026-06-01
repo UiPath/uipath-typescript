@@ -115,4 +115,48 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       expect(typeof point.memoryCallsCount).toBe('number');
     });
   });
+
+  describe('getTopMemorySpaces', () => {
+    it('should retrieve the top memory spaces for the default window', async () => {
+      const result = await memory.getTopMemorySpaces();
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+    });
+
+    it('should respect the limit option', async () => {
+      const result = await memory.getTopMemorySpaces({ ...WINDOW, limit: 3 });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data?.length ?? 0).toBeLessThanOrEqual(3);
+    });
+
+    it('should accept agent, folder, and execution-type filters', async () => {
+      const result = await memory.getTopMemorySpaces({
+        ...WINDOW,
+        agentId: FILTER_AGENT_ID,
+        folderKeys: [FILTER_FOLDER_KEY],
+        executionType: ExecutionType.Runtime,
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+    });
+
+    it('should return spaces with the expected shape', async () => {
+      const result = await memory.getTopMemorySpaces(WINDOW);
+
+      if (!result.data || result.data.length === 0) {
+        throw new Error('No memory spaces returned for the requested window');
+      }
+
+      const space = result.data[0];
+      expect(typeof space.memorySpaceId).toBe('string');
+      expect(typeof space.memorySpaceName).toBe('string');
+      expect(typeof space.memoryCount).toBe('number');
+      expect(typeof space.enabledMemoryCount).toBe('number');
+      expect(typeof space.disabledMemoryCount).toBe('number');
+    });
+  });
 });

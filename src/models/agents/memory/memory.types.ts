@@ -46,6 +46,14 @@ export interface MemoryTimelineGetOptions extends MemoryFilterOptions {}
 export interface MemoryCallsTimelineGetOptions extends MemoryFilterOptions {}
 
 /**
+ * Options for {@link MemoryServiceModel.getTopMemorySpaces}.
+ */
+export interface TopMemorySpacesGetOptions extends MemoryFilterOptions {
+  /** Maximum number of memory spaces to return, ranked by memory count. Defaults to 5 server-side. */
+  limit?: number;
+}
+
+/**
  * One point on the agent-memory state timeline — memory-state counts for a
  * single time bucket.
  */
@@ -89,4 +97,29 @@ export interface MemoryCallsTimelinePoint {
 export interface MemoryCallsTimelineResponse {
   /** Time-series points, one per bucket. May be absent when no data matches. */
   data?: MemoryCallsTimelinePoint[];
+}
+
+/**
+ * A single memory space with its enabled/disabled memory-entry breakdown,
+ * as returned by {@link MemoryServiceModel.getTopMemorySpaces}.
+ */
+export interface MemorySpace {
+  /** Memory space identifier. */
+  memorySpaceId: string;
+  /** Memory space display name. */
+  memorySpaceName: string;
+  /** Total memory entries in this space over the requested window. */
+  memoryCount: number;
+  /** Count of enabled memory entries in this space. */
+  enabledMemoryCount: number;
+  /** Count of disabled memory entries in this space. */
+  disabledMemoryCount: number;
+}
+
+/**
+ * Response from {@link MemoryServiceModel.getTopMemorySpaces}.
+ */
+export interface TopMemorySpacesResponse {
+  /** Memory spaces ranked by memory count. May be absent when no data matches. */
+  data?: MemorySpace[];
 }

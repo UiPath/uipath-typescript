@@ -7,6 +7,8 @@ import {
   MemoryTimelineResponse,
   MemoryCallsTimelinePoint,
   MemoryCallsTimelineResponse,
+  MemorySpace,
+  TopMemorySpacesResponse,
 } from '../../../src/models/agents/memory/memory.types';
 import { MEMORY_TEST_CONSTANTS } from '../constants/memory';
 
@@ -73,6 +75,42 @@ export function createMockMemoryCallsTimelineResponse(
       createMockMemoryCallsTimelinePoint({
         timeSlice: MEMORY_TEST_CONSTANTS.TIME_SLICE_2,
         memoryCallsCount: 12,
+      }),
+    ],
+  };
+}
+
+/**
+ * Creates a single memory space with overridable fields.
+ */
+export function createMockMemorySpace(
+  overrides: Partial<MemorySpace> = {},
+): MemorySpace {
+  return {
+    memorySpaceId: MEMORY_TEST_CONSTANTS.MEMORY_SPACE_ID,
+    memorySpaceName: MEMORY_TEST_CONSTANTS.MEMORY_SPACE_NAME,
+    memoryCount: 9,
+    enabledMemoryCount: 6,
+    disabledMemoryCount: 3,
+    ...overrides,
+  };
+}
+
+/**
+ * Creates a top-memory-spaces response envelope with two spaces by default.
+ */
+export function createMockTopMemorySpacesResponse(
+  spaces?: MemorySpace[],
+): TopMemorySpacesResponse {
+  return {
+    data: spaces ?? [
+      createMockMemorySpace(),
+      createMockMemorySpace({
+        memorySpaceId: MEMORY_TEST_CONSTANTS.MEMORY_SPACE_ID_2,
+        memorySpaceName: MEMORY_TEST_CONSTANTS.MEMORY_SPACE_NAME_2,
+        memoryCount: 4,
+        enabledMemoryCount: 4,
+        disabledMemoryCount: 0,
       }),
     ],
   };
