@@ -27,4 +27,6 @@ export const AGENTS_ENDPOINTS = {
   GET_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary`,
   /** Aggregate AGU/PLTU consumption per agent over the requested window. */
   GET_UNIT_CONSUMPTION_SUMMARY: `${INSIGHTS_RTM_BASE}/Agents/summary/unit-consumption`,
+  /** Trace-level time-series of error counts grouped by error name over the requested window. */
+  GET_TRACE_ERRORS_TIMELINE: `${INSIGHTS_RTM_BASE}/Traceview/errorsTimeline`,
 } as const;

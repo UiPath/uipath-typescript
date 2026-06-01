@@ -62,6 +62,50 @@ export interface AgentErrorsTimelineOptions extends AgentFilterOptions {
 }
 
 /**
+ * Filter fields shared by Traceview (trace-level) agent insights endpoints
+ * (e.g. `/Traceview/errorsTimeline`).
+ *
+ * Distinct from {@link AgentFilterOptions}: Traceview DTOs scope by agent
+ * version and execution type rather than by agent names / project keys.
+ */
+export interface AgentTraceFilterOptions {
+  /** Folder keys (GUIDs) to scope the query. Intersected with the caller's accessible folders. */
+  folderKeys?: string[];
+  /** Filter to a single agent by ID. */
+  agentId?: string;
+  /** Filter to a specific agent version. */
+  agentVersion?: string;
+  /** Filter to a specific execution type — `Debug` (test runs) or `Runtime` (production runs). */
+  executionType?: AgentExecutionType;
+}
+
+/**
+ * One point on the trace-level errors timeline — error count for a single
+ * (error name, time bucket).
+ */
+export interface AgentTraceErrorsTimelinePoint {
+  /** Error name / category for this time-slice. */
+  name: string;
+  /** Count of errors in this time bucket for this name. */
+  value: number;
+  /** Bucket timestamp (ISO 8601, UTC). */
+  date: string;
+}
+
+/**
+ * Response from {@link AgentServiceModel.getTraceErrorsTimeline}.
+ */
+export interface AgentTraceErrorsTimelineResponse {
+  /** Time-series points, one per (error name, time bucket). May be absent when no data matches. */
+  data?: AgentTraceErrorsTimelinePoint[];
+}
+
+/**
+ * Options for {@link AgentServiceModel.getTraceErrorsTimeline}.
+ */
+export interface AgentTraceErrorsTimelineOptions extends AgentTraceFilterOptions {}
+
+/**
  * Summary information about a single job execution — included on every
  * top-errored agent and incident entry to anchor the window.
  */

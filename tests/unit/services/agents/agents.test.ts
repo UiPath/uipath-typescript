@@ -1134,4 +1134,85 @@ describe('AgentService Unit Tests', () => {
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
+
+  describe('getTraceErrorsTimeline', () => {
+    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
+    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+
+    it('should hit the Traceview endpoint with only startTime and endTime when no options are provided', async () => {
+      const mockResponse = {
+        data: [
+          { name: AGENT_TEST_CONSTANTS.TRACE_ERROR_NAME, value: 1, date: AGENT_TEST_CONSTANTS.TIMELINE_DATE },
+          { name: '', value: 0, date: AGENT_TEST_CONSTANTS.TIMELINE_DATE },
+        ],
+      };
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await agentService.getTraceErrorsTimeline(startTime, endTime);
+
+      expect(result.data).toEqual(mockResponse.data);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TRACE_ERRORS_TIMELINE,
+        { startTime, endTime },
+        expect.any(Object),
+      );
+    });
+
+    it('should send the Traceview-shaped filter fields in the request body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+
+      await agentService.getTraceErrorsTimeline(startTime, endTime, {
+        folderKeys,
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TRACE_ERRORS_TIMELINE,
+        {
+          startTime,
+          endTime,
+          folderKeys,
+          agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+          agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+          executionType: AgentExecutionType.Runtime,
+        },
+        expect.any(Object),
+      );
+    });
+
+    it('should omit undefined options from the request body', async () => {
+      mockApiClient.post.mockResolvedValue({ data: [] });
+
+      await agentService.getTraceErrorsTimeline(startTime, endTime, {
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_TRACE_ERRORS_TIMELINE,
+        { startTime, endTime, agentId: AGENT_TEST_CONSTANTS.AGENT_ID },
+        expect.any(Object),
+      );
+    });
+
+    it('should return response with absent data when API returns empty', async () => {
+      mockApiClient.post.mockResolvedValue({});
+
+      const result = await agentService.getTraceErrorsTimeline(startTime, endTime);
+
+      expect(result.data).toBeUndefined();
+    });
+
+    it('should propagate API errors', async () => {
+      const error = new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        agentService.getTraceErrorsTimeline(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
 });

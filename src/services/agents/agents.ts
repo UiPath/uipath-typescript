@@ -2,6 +2,9 @@ import { BaseService } from '../base';
 import {
   AgentErrorsTimelineOptions,
   AgentErrorsTimelineResponse,
+  AgentTraceErrorsTimelineOptions,
+  AgentTraceErrorsTimelineResponse,
+  AgentTraceFilterOptions,
   AgentFilterOptions,
   AgentIncident,
   AgentIncidentsOptions,
@@ -910,6 +913,68 @@ export class AgentService extends BaseService implements AgentServiceModel {
     return response.data.data ?? {};
   }
 
+  /**
+   * Retrieves a trace-level time-series of error counts grouped by error name
+   * over the requested window.
+   *
+   * Distinct from {@link AgentServiceModel.getErrorsTimeline}, which counts
+   * errors in agent runs (`/Agents/errors`); this counts errors observed in
+   * traces. Returns one data point per (error name, time bucket). Bucket size
+   * is chosen server-side based on the window length. Optionally filter by
+   * folder, agent, agent version, or execution type.
+   *
+   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
+   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param options - Optional filters {@link AgentTraceErrorsTimelineOptions}
+   * @returns Promise resolving to {@link AgentTraceErrorsTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Trace-level errors in May 2025
+   * const result = await agents.getTraceErrorsTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
+   * });
+   * ```
+   * @example
+   * ```typescript
+   * // Scope to one agent version in specific folders, runtime executions only
+   * import { AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const result = await agents.getTraceErrorsTimeline(
+   *   '2025-05-01T00:00:00Z',
+   *   '2025-06-01T00:00:00Z',
+   *   {
+   *     folderKeys: ['<folderKey1>'],
+   *     agentId: '<agentId>',
+   *     agentVersion: '1.0.0',
+   *     executionType: AgentExecutionType.Runtime,
+   *   },
+   * );
+   * ```
+   */
+  @track('Agents.GetTraceErrorsTimeline')
+  async getTraceErrorsTimeline(
+    startTime: string,
+    endTime: string,
+    options?: AgentTraceErrorsTimelineOptions,
+  ): Promise<AgentTraceErrorsTimelineResponse> {
+    const body = this.buildTraceFilterBody(startTime, endTime, options);
+
+    const response = await this.post<AgentTraceErrorsTimelineResponse>(
+      AGENTS_ENDPOINTS.GET_TRACE_ERRORS_TIMELINE,
+      body,
+    );
+
+    return response.data;
+  }
+
   private buildAgentFilterBody(
     startTime: string,
     endTime: string,
@@ -922,6 +987,19 @@ export class AgentService extends BaseService implements AgentServiceModel {
     if (options?.agentId !== undefined) body.agentId = options.agentId;
     if (options?.processVersion !== undefined) body.processVersion = options.processVersion;
     if (options?.limit !== undefined) body.limit = options.limit;
+    return body;
+  }
+
+  private buildTraceFilterBody(
+    startTime: string,
+    endTime: string,
+    options?: AgentTraceFilterOptions,
+  ): Record<string, unknown> {
+    const body: Record<string, unknown> = { startTime, endTime };
+    if (options?.folderKeys !== undefined) body.folderKeys = options.folderKeys;
+    if (options?.agentId !== undefined) body.agentId = options.agentId;
+    if (options?.agentVersion !== undefined) body.agentVersion = options.agentVersion;
+    if (options?.executionType !== undefined) body.executionType = options.executionType;
     return body;
   }
 }

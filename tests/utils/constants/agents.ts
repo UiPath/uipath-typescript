@@ -20,6 +20,8 @@ export const AGENT_TEST_CONSTANTS = {
   FOLDER_PATH: 'APPS_TestPass_Folder/conv_agent',
   PROJECT_KEY: 'proj-1',
   PROCESS_VERSION: '1.0.0',
+  AGENT_VERSION: '1.0.0',
+  TRACE_ERROR_NAME: 'SystemDesignQuiz.agent.ConvSystemDesignAgent',
   INCIDENT_TYPE: 'Error',
   INCIDENT_DESCRIPTION: 'Input does not conform to schema',
   INCIDENT_FIRST_SEEN: '2025-05-14T06:14:28Z',
