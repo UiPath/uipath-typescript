@@ -20,7 +20,8 @@ describe('Process Models', () => {
       getInstanceStatusTimeline: vi.fn(),
       getTopFaultedCount: vi.fn(),
       getTopExecutionDuration: vi.fn(),
-      getElementStats: vi.fn()
+      getElementStats: vi.fn(),
+      getInstanceStats: vi.fn()
     } as any;
   });
 
