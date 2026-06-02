@@ -69,7 +69,10 @@ export function isValidKey(key: string): key is ValidConfigKey {
  * e.g. 'folderKey' → 'folder-key', 'cdnBase' → 'cdn-base'
  */
 export function camelToKebab(str: string): string {
-  return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+const CAMEL_TO_KEBAB_RE = /([a-z0-9])([A-Z])/g
+
+export function camelToKebab(str: string): string {
+  return str.replace(CAMEL_TO_KEBAB_RE, '$1-$2').toLowerCase()
 }
 
 // ===== Error Utilities =====
