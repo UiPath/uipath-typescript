@@ -77,6 +77,7 @@ npm install @uipath/uipath-typescript
    VITE_UIPATH_CLIENT_ID=your-oauth-client-id
    VITE_UIPATH_ORG_NAME=your-organization-name
    VITE_UIPATH_TENANT_NAME=your-tenant-name
+   VITE_UIPATH_BASE_URL=https://api.uipath.com
    VITE_UIPATH_SCOPE=PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write
    ```
 
