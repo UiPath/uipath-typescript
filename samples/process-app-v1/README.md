@@ -80,6 +80,8 @@ npm install @uipath/uipath-typescript
    VITE_UIPATH_SCOPE=PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write
    ```
 
+### 4. Installation and Running
+
 1. Install dependencies:
    ```bash
    npm install
