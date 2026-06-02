@@ -117,3 +117,34 @@ export interface GetTopDurationResponse extends GetTopBaseResponse {
   /** Total execution duration in milliseconds */
   duration: number;
 }
+
+/**
+ * Element count by status for a BPMN element within a process or case
+ */
+export interface ElementStats {
+  /** BPMN element identifier */
+  elementId: string;
+  /** Number of successful executions */
+  successCount: number;
+  /** Number of failed executions */
+  failCount: number;
+  /** Number of terminated executions */
+  terminatedCount: number;
+  /** Number of paused executions */
+  pausedCount: number;
+  /** Number of in-progress executions */
+  inProgressCount: number;
+  /** Minimum duration in milliseconds */
+  minDurationMs: number;
+  /** Maximum duration in milliseconds */
+  maxDurationMs: number;
+  /** Average duration in milliseconds */
+  avgDurationMs: number;
+  /** 50th percentile (median) duration in milliseconds */
+  p50DurationMs: number;
+  /** 95th percentile duration in milliseconds */
+  p95DurationMs: number;
+  /** 99th percentile duration in milliseconds */
+  p99DurationMs: number;
+}
+

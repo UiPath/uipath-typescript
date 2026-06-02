@@ -137,6 +137,38 @@ export const MAESTRO_TEST_CONSTANTS = {
   DURATION_PROCESS_2: 749919406366,
   DURATION_CASE: 628845382152,
 
+  // Element stats mock responses
+  MOCK_ELEMENT_STATS: [
+    {
+      elementId: 'Event_start',
+      successCount: 2,
+      failCount: 0,
+      terminatedCount: 0,
+      pausedCount: 0,
+      inProgressCount: 0,
+      minDurationMs: 763,
+      maxDurationMs: 946,
+      avgDurationMs: 855,
+      p50DurationMs: 855,
+      p95DurationMs: 937,
+      p99DurationMs: 944
+    },
+    {
+      elementId: 'Activity_kHklPW',
+      successCount: 2,
+      failCount: 1,
+      terminatedCount: 0,
+      pausedCount: 0,
+      inProgressCount: 0,
+      minDurationMs: 683,
+      maxDurationMs: 1129,
+      avgDurationMs: 906,
+      p50DurationMs: 906,
+      p95DurationMs: 1107,
+      p99DurationMs: 1125
+    }
+  ],
+
   // SLA Summary constants
   SLA_CASE_INSTANCE_ID: '1238b9c9-37b6-4a69-bb67-042548d05c77',
   SLA_CASE_INSTANCE_ID_2: '15a1332a-5261-4b58-bbca-f847fa6c49de',

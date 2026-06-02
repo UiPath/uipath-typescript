@@ -342,4 +342,32 @@ describe('CasesService', () => {
       );
     });
   });
+
+  describe('getElementStats', () => {
+    it('should retrieve element stats for case instances', async () => {
+      mockApiClient.post.mockResolvedValue([...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_STATS]);
+
+      const result = await service.getElementStats(
+        MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+        MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+        new Date('2026-04-01T00:00:00Z'),
+        new Date('2026-05-01T00:00:00Z'),
+        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0].elementId).toBe('Event_start');
+      expect(result[0].successCount).toBe(2);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            processKey: MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
+          })
+        }),
+        {}
+      );
+    });
+  });
 });

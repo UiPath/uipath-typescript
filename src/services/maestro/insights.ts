@@ -60,3 +60,26 @@ export async function fetchInstanceStatusTimeline(
 
   return response.data ?? [];
 }
+
+/**
+ * Builds the request body for the ElementCountByStatus endpoint.
+ *
+ * @param processKey - Process key to filter by
+ * @param packageId - Package identifier
+ * @param startTime - Start of the time range to query
+ * @param endTime - End of the time range to query
+ * @param packageVersion - Package version to filter by
+ * @returns Request body for the ElementCountByStatus endpoint
+ * @internal
+ */
+export function buildElementCountByStatusBody(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string) {
+  return {
+    commonParams: {
+      processKey,
+      packageId,
+      startTime: startTime.getTime(),
+      endTime: endTime.getTime(),
+      version: packageVersion
+    }
+  };
+}

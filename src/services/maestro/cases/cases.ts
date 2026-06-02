@@ -1,10 +1,11 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
-import { buildInsightsTopBody, fetchInstanceStatusTimeline } from '../insights';
+import { createCaseWithMethods, CaseGetAllWithMethodsResponse } from '../../../models/maestro/cases.models';
+import { buildInsightsTopBody, fetchInstanceStatusTimeline, buildElementCountByStatusBody } from '../insights';
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
@@ -15,7 +16,7 @@ import { createParams } from '../../../utils/http/params';
 export class CasesService extends BaseService implements CasesServiceModel {
   /**
    * Get all case management processes with their instance statistics
-   * @returns Promise resolving to array of Case objects
+   * @returns Promise resolving to an array of {@link CaseGetAllWithMethodsResponse}
    *
    * @example
    * ```typescript
@@ -33,7 +34,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * ```
    */
   @track('Cases.GetAll')
-  async getAll(): Promise<CaseGetAllResponse[]> {
+  async getAll(): Promise<CaseGetAllWithMethodsResponse[]> {
     const params = createParams({
       processType: ProcessType.CaseManagement
     });
@@ -45,10 +46,10 @@ export class CasesService extends BaseService implements CasesServiceModel {
 
     // Extract processes array from response data and add name field
     const cases = response.data?.processes || [];
-    return cases.map(caseItem => ({
+    return cases.map(caseItem => createCaseWithMethods({
       ...caseItem,
       name: this.extractCaseName(caseItem.packageId)
-    }));
+    }, this));
   }
 
   /**
@@ -292,6 +293,45 @@ export class CasesService extends BaseService implements CasesServiceModel {
       buildInsightsTopBody(startTime, endTime, true, options)
     );
     return (data ?? []).map(process => ({ ...process, name: this.extractCaseName(process.packageId) }));
+  }
+
+  /**
+   * Get element stats for case instances
+   *
+   * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
+   * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a case.
+   *
+   * @param processKey - Process key to filter by
+   * @param packageId - Package identifier
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param packageVersion - Package version to filter by
+   * @returns Promise resolving to an array of {@link ElementStats}
+   * @example
+   * ```typescript
+   * // Get element metrics for a case
+   * const elements = await cases.getElementStats(
+   *   '<processKey>',
+   *   '<packageId>',
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   '1.0.1'
+   * );
+   *
+   * // Find elements with failures
+   * const failedElements = elements.filter(e => e.failCount > 0);
+   * for (const element of failedElements) {
+   *   console.log(`Failed element: ${element.elementId}, failures: ${element.failCount}`);
+   * }
+   * ```
+   */
+  @track('Cases.GetElementStats')
+  async getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]> {
+    const { data } = await this.post<ElementStats[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+      buildElementCountByStatusBody(processKey, packageId, startTime, endTime, packageVersion)
+    );
+    return data ?? [];
   }
 
   /**

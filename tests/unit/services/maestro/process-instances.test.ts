@@ -565,4 +565,5 @@ describe('ProcessInstancesService', () => {
       await expect(service.getVariables(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
+
 });

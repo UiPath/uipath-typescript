@@ -1,11 +1,11 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
-import { buildInsightsTopBody, fetchInstanceStatusTimeline } from '../insights';
+import { buildInsightsTopBody, fetchInstanceStatusTimeline, buildElementCountByStatusBody } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
@@ -322,5 +322,45 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
       buildInsightsTopBody(startTime, endTime, false, options)
     );
     return (data ?? []).map(process => ({ ...process, name: process.packageId }));
+  }
+
+  /**
+   * Get element stats for process instances
+   *
+   * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
+   * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a process.
+   *
+   * @param processKey - Process key to filter by
+   * @param packageId - Package identifier
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param packageVersion - Package version to filter by
+   * @returns Promise resolving to an array of {@link ElementStats}
+   * @example
+   * ```typescript
+   * // Get element metrics for a process
+   * const elements = await maestroProcesses.getElementStats(
+   *   '<processKey>',
+   *   '<packageId>',
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   '1.0.1'
+   * );
+   *
+   * // Analyze element performance
+   * for (const element of elements) {
+   *   console.log(`Element: ${element.elementId}`);
+   *   console.log(`  Success: ${element.successCount}, Failed: ${element.failCount}`);
+   *   console.log(`  Avg duration: ${element.avgDurationMs}ms, P95: ${element.p95DurationMs}ms`);
+   * }
+   * ```
+   */
+  @track('MaestroProcesses.GetElementStats')
+  async getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]> {
+    const { data } = await this.post<ElementStats[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+      buildElementCountByStatusBody(processKey, packageId, startTime, endTime, packageVersion)
+    );
+    return data ?? [];
   }
 }

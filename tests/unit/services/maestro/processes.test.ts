@@ -420,4 +420,71 @@ describe('MaestroProcessesService', () => {
       expect(result[0].duration).toBe(MAESTRO_TEST_CONSTANTS.DURATION_PROCESS_1);
     });
   });
+
+  describe('getElementStats', () => {
+    const mockResponse = [...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_STATS];
+
+    const startDate = new Date('2026-04-01T00:00:00Z');
+    const endDate = new Date('2026-05-01T00:00:00Z');
+
+    it('should retrieve element stats', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      const result = await service.getElementStats(
+        MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+        MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+        startDate,
+        endDate,
+        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+      );
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
+        {
+          commonParams: {
+            processKey: MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+            packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+            startTime: startDate.getTime(),
+            endTime: endDate.getTime(),
+            version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+          }
+        },
+        {}
+      );
+      expect(result).toHaveLength(2);
+      expect(result[0].elementId).toBe('Event_start');
+      expect(result[0].successCount).toBe(2);
+      expect(result[0].avgDurationMs).toBe(855);
+      expect(result[1].failCount).toBe(1);
+      expect(result[1].p95DurationMs).toBe(1107);
+    });
+
+    it('should return empty array when API returns null', async () => {
+      mockApiClient.post.mockResolvedValue(null);
+
+      const result = await service.getElementStats(
+        MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+        MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+        startDate,
+        endDate,
+        MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle API errors', async () => {
+      mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        service.getElementStats(
+          MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
+          MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+          startDate,
+          endDate,
+          MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
 });

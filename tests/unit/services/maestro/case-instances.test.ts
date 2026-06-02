@@ -996,4 +996,5 @@ describe('CaseInstancesService', () => {
       expect(result[0].stages[0].slaStatus).toBe(SlaSummaryStatus.ON_TRACK);
     });
   });
+
 });

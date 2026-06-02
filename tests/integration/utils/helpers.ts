@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
-import { GetTopRunCountResponse } from '../../../src/models/maestro/insights.types';
+import { GetTopRunCountResponse, ElementStats } from '../../../src/models/maestro/insights.types';
 import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
@@ -194,5 +194,70 @@ export async function testGetInstanceStatusTimeline(
     expect(typeof entry.status).toBe('string');
     expect(entry.count).toBeDefined();
     expect(typeof entry.count).toBe('number');
+  }
+}
+
+/**
+ * Validates that an ElementStats object has the expected shape
+ * with all required numeric fields.
+ *
+ * @param element - Element count by status object to validate
+ */
+export function expectValidElementStats(element: ElementStats): void {
+  expect(element.elementId).toBeDefined();
+  expect(typeof element.successCount).toBe('number');
+  expect(typeof element.failCount).toBe('number');
+  expect(typeof element.terminatedCount).toBe('number');
+  expect(typeof element.pausedCount).toBe('number');
+  expect(typeof element.inProgressCount).toBe('number');
+  expect(typeof element.minDurationMs).toBe('number');
+  expect(typeof element.maxDurationMs).toBe('number');
+  expect(typeof element.avgDurationMs).toBe('number');
+  expect(typeof element.p50DurationMs).toBe('number');
+  expect(typeof element.p95DurationMs).toBe('number');
+  expect(typeof element.p99DurationMs).toBe('number');
+}
+
+/** Minimal interface for services that support getElementStats integration testing */
+interface ElementStatsService {
+  getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
+  getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
+}
+
+/**
+ * Integration test helper: fetches a process/case, calls getElementStats,
+ * and validates the response shape. Shared between MaestroProcesses and Cases.
+ *
+ * @param service - Service instance (maestroProcesses or cases)
+ * @param serviceName - Name for error messages (e.g., 'processes')
+ */
+export async function testGetElementStats(
+  service: ElementStatsService,
+  serviceName: string
+): Promise<void> {
+  const processes = await service.getAll();
+  if (processes.length === 0) {
+    throw new Error(`No ${serviceName} available for testing getElementStats`);
+  }
+
+  const process = processes[0];
+  const packageVersion = process.packageVersions[0];
+  if (!packageVersion) {
+    throw new Error(`No package versions available for ${serviceName} getElementStats test`);
+  }
+
+  const result = await service.getElementStats(
+    process.processKey,
+    process.packageId,
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    new Date(),
+    packageVersion
+  );
+
+  expect(result).toBeDefined();
+  expect(Array.isArray(result)).toBe(true);
+
+  if (result.length > 0) {
+    expectValidElementStats(result[0]);
   }
 }

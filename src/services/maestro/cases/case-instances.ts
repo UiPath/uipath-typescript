@@ -16,7 +16,7 @@ import {
   SlaSummaryResponse,
   CaseInstanceSlaSummaryOptions,
   CaseInstanceStageSLAResponse,
-  CaseInstanceStageSLAOptions,
+  CaseInstanceStageSLAOptions
 } from '../../../models/maestro';
 import { TaskGetResponse } from '../../../models/action-center';
 import {
