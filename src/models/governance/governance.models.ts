@@ -49,7 +49,7 @@ export interface GovernanceServiceModel {
    * const recent = await governance.getPolicyTraces(new Date('2024-01-01'));
    * console.log(recent.items.length);
    *
-   * // Filter denied decisions across the whole organization, paginated
+   * // Get all denied decisions across the whole organization
    * const page1 = await governance.getPolicyTraces(
    *   new Date('2024-01-01'),
    *   {
