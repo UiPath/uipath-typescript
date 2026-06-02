@@ -45,7 +45,7 @@ export interface GovernanceServiceModel {
    *
    * const governance = new Governance(sdk);
    *
-   * // Bare minimum — fetch using only the required start time
+   * // Get all policy traces from the specified start time
    * const recent = await governance.getPolicyTraces(new Date('2024-01-01'));
    * console.log(recent.items.length);
    *
