@@ -77,27 +77,11 @@ npm install @uipath/uipath-typescript
    VITE_UIPATH_CLIENT_ID=your-oauth-client-id
    VITE_UIPATH_ORG_NAME=your-organization-name
    VITE_UIPATH_TENANT_NAME=your-tenant-name
-   VITE_UIPATH_BASE_URL=https://cloud.uipath.com
-   VITE_UIPATH_REDIRECT_URI=http://localhost:5173
+   VITE_UIPATH_BASE_URL=https://api.uipath.com
    VITE_UIPATH_SCOPE=PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write
    ```
 
 ### 4. Installation and Running
-
-Update your orgName in vite.config.ts in this section:
-```
- server: {
-    proxy: {
-      // Replace '/your-org' with your actual organization
-      '/your-org': {
-        target: 'https://cloud.uipath.com',
-        changeOrigin: true,
-        secure: true,
-      },
-    },
-  }
-```
-This above setup is for CORS Issue for local development, it creates a local proxy using vite server config
 
 1. Install dependencies:
    ```bash

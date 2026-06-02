@@ -40,27 +40,11 @@ npm install @uipath/uipath-typescript
    VITE_UIPATH_CLIENT_ID=your-oauth-client-id
    VITE_UIPATH_ORG_NAME=your-organization-name
    VITE_UIPATH_TENANT_NAME=your-tenant-name
-   VITE_UIPATH_BASE_URL=https://cloud.uipath.com
-   VITE_UIPATH_REDIRECT_URI=http://localhost:5173
-   VITE_UIPATH_SCOPE=OR.License OR.License.Read OR.License.Write OR.Settings OR.Settings.Read OR.Settings.Write OR.Robots OR.Robots.Read OR.Robots.Write OR.Machines OR.Machines.Read OR.Machines.Write OR.Execution OR.Execution.Read OR.Execution.Write OR.Assets OR.Assets.Read OR.Assets.Write OR.Queues OR.Queues.Read OR.Queues.Write OR.Jobs OR.Jobs.Read OR.Jobs.Write OR.Users OR.Users.Read OR.Users.Write OR.Administration OR.Administration.Read OR.Administration.Write OR.Audit OR.Audit.Read OR.Audit.Write OR.Webhooks OR.Webhooks.Read OR.Webhooks.Write OR.Monitoring OR.Monitoring.Read OR.Monitoring.Write OR.ML OR.ML.Read OR.ML.Write OR.Tasks OR.Tasks.Read OR.Tasks.Write OR.Analytics OR.Analytics.Read OR.Analytics.Write OR.Folders OR.Folders.Read OR.Folders.Write OR.BackgroundTasks OR.BackgroundTasks.Read OR.BackgroundTasks.Write OR.TestSets OR.TestSets.Read OR.TestSets.Write OR.TestSetExecutions OR.TestSetExecutions.Read OR.TestSetExecutions.Write OR.TestSetSchedules OR.TestSetSchedules.Read OR.TestSetSchedules.Write OR.TestDataQueues OR.TestDataQueues.Read OR.TestDataQueues.Write OR.Hypervisor OR.Hypervisor.Read OR.Hypervisor.Write OR.AutomationSolutions.Access PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write
+   VITE_UIPATH_BASE_URL=https://api.uipath.com
+   VITE_UIPATH_SCOPE=PIMS DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write
    ```
 
 ### 4. Installation and Running
-
-Update your orgName in vite.config.ts in this section:
-```
- server: {
-    proxy: {
-      // Replace '/your-org' with your actual organization
-      '/your-org': {
-        target: 'https://cloud.uipath.com',
-        changeOrigin: true,
-        secure: true,
-      },
-    },
-  }
-```
-This above setup is for CORS Issue for local development, it creates a local proxy using vite server config
 
 1. Install dependencies:
    ```bash
@@ -144,6 +128,6 @@ The built application will be in the `dist/` directory.
 
 ### Getting Help
 
-- Check the UiPath TypeScript SDK documentation[https://uipath.github.io/uipath-typescript/]
+- Check the [UiPath TypeScript SDK documentation](https://uipath.github.io/uipath-typescript/)
 - Verify your UiPath Cloud tenant configuration
 - Ensure proper scopes are granted to your OAuth application

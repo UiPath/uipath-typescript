@@ -15,14 +15,5 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@uipath/uipath-typescript'],
   },
-  server: {
-    proxy: {
-      // Replace '/your-org' with your actual organization
-      '/your-org': {
-        target: 'https://cloud.uipath.com',
-        changeOrigin: true,
-        secure: true,
-      },
-    },
-  }
+  base: './',
 })
