@@ -120,7 +120,23 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
    * Get execution history (spans) for a process instance
    * @param instanceId The ID of the instance to get history for
    * @param folderKey The folder key for authorization
-   * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
+   * @returns Promise resolving to execution history
+   * {@link ProcessInstanceExecutionHistoryResponse}
+   * @example
+   * ```typescript
+   * // Get execution history for a process instance
+   * const history = await processInstances.getExecutionHistory(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   *
+   * // Analyze execution timeline
+   * history.forEach(span => {
+   *   console.log(`Activity: ${span.name}`);
+   *   console.log(`Start: ${span.startedTime}`);
+   *   console.log(`End: ${span.endTime}`);
+   * });
+   * ```
    */
   @track('ProcessInstances.GetExecutionHistory')
   async getExecutionHistory(instanceId: string, folderKey: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
