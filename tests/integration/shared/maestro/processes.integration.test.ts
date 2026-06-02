@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, getTestConfig, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetElementStats } from '../../utils/helpers';
+import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetElementStats, testGetInstanceStats } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -268,27 +268,7 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
   describe.skip('getInstanceStats', () => {
     it('should retrieve instance stats for a process', async () => {
       const { maestroProcesses } = getServices();
-      const processes = await maestroProcesses.getAll();
-      expect(processes.length).toBeGreaterThan(0);
-
-      const process = processes[0];
-      const result = await maestroProcesses.getInstanceStats(
-        process.processKey,
-        process.packageId,
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        new Date(),
-        process.packageVersions[0]
-      );
-
-      expect(result).toBeDefined();
-      expect(typeof result.totalCount).toBe('number');
-      expect(typeof result.completedCount).toBe('number');
-      expect(typeof result.avgDurationMs).toBe('number');
-      expect(typeof result.minDurationMs).toBe('number');
-      expect(typeof result.maxDurationMs).toBe('number');
-      expect(typeof result.p50DurationMs).toBe('number');
-      expect(typeof result.p95DurationMs).toBe('number');
-      expect(typeof result.p99DurationMs).toBe('number');
+      await testGetInstanceStats(maestroProcesses, 'processes');
     });
   });
 });

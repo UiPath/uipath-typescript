@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetElementStats } from '../../utils/helpers';
+import { testGetTopRunCount, testGetInstanceStatusTimeline, testGetElementStats, testGetInstanceStats } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -194,20 +194,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
   describe.skip('getInstanceStats', () => {
     it('should retrieve instance stats for a case', async () => {
       const { cases } = getServices();
-      const allCases = await cases.getAll();
-      expect(allCases.length).toBeGreaterThan(0);
-
-      const caseItem = allCases[0];
-      const result = await cases.getInstanceStats(
-        caseItem.processKey,
-        caseItem.packageId,
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        new Date(),
-        caseItem.packageVersions[0]
-      );
-
-      expect(result).toBeDefined();
-      expect(typeof result.totalCount).toBe('number');
+      await testGetInstanceStats(cases, 'cases');
     });
   });
 });
