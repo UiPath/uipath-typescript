@@ -1,5 +1,7 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats, InstanceCountByStatusResponse } from '../../../models/maestro';
-import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
+import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
+import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
+import { transformData } from '../../../utils/transform';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -335,7 +337,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
   }
 
   /**
-   * Get instance count aggregated by status for a case.
+   * Get instance stats for a case.
    *
    * Returns total instance counts broken down by status (running, completed, faulted, etc.)
    * and the average execution duration for all instances of a case within a time range.
@@ -345,11 +347,11 @@ export class CasesService extends BaseService implements CasesServiceModel {
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param packageVersion - Package version to filter by
-   * @returns Promise resolving to {@link InstanceCountByStatusResponse}
+   * @returns Promise resolving to {@link InstanceStats}
    * @example
    * ```typescript
    * // Get instance status breakdown for a case
-   * const counts = await cases.getInstanceCountByStatus(
+   * const counts = await cases.getInstanceStats(
    *   '<processKey>',
    *   '<packageId>',
    *   new Date('2026-04-01'),
@@ -357,17 +359,17 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *   '1.0.1'
    * );
    *
-   * console.log(`Total: ${counts.countOfAllInstances}`);
-   * console.log(`Completed: ${counts.countOfCompleted}, Faulted: ${counts.countOfFaulted}`);
+   * console.log(`Total: ${counts.totalCount}`);
+   * console.log(`Completed: ${counts.completedCount}, Faulted: ${counts.faultedCount}`);
    * ```
    */
-  @track('Cases.GetInstanceCountByStatus')
-  async getInstanceCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse> {
-    const { data } = await this.post<InstanceCountByStatusResponse>(
+  @track('Cases.GetInstanceStats')
+  async getInstanceStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats> {
+    const { data } = await this.post<RawInstanceStats>(
       MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
       buildInsightsCommonBody(processKey, packageId, startTime, endTime, packageVersion)
     );
-    return data;
+    return transformData(data, InstanceStatsMap) as unknown as InstanceStats;
   }
 
   /**

@@ -169,8 +169,8 @@ export const MAESTRO_TEST_CONSTANTS = {
     }
   ],
 
-  // Instance count by status mock response
-  MOCK_INSTANCE_COUNT_BY_STATUS: {
+  // Instance stats mock response
+  MOCK_INSTANCE_STATS: {
     countOfAllInstances: 276,
     countOfRunning: 0,
     countOfTransitioning: 1,
@@ -179,7 +179,12 @@ export const MAESTRO_TEST_CONSTANTS = {
     countOfCompleted: 275,
     countOfCancelled: 0,
     countOfDeleted: 0,
-    avgDurationInMs: 3992314
+    avgDurationMs: 3992314,
+    minDurationMs: 763,
+    maxDurationMs: 8702314,
+    p50DurationMs: 3500000,
+    p95DurationMs: 6500000,
+    p99DurationMs: 8000000
   },
 
   // SLA Summary constants

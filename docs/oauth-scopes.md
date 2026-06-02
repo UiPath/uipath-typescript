@@ -80,7 +80,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getElementStats()` | `Insights.RealTimeData Insights PIMS OR.Folders.Read` |
-| `getInstanceCountByStatus()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Process Instances
 
@@ -107,7 +107,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getInstanceStatusTimeline()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getTopExecutionDuration()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getElementStats()` | `Insights.RealTimeData Insights PIMS OR.Folders.Read` |
-| `getInstanceCountByStatus()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getInstanceStats()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Maestro Case Instances
 

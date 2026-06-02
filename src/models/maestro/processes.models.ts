@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceCountByStatusResponse } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -304,7 +304,7 @@ export interface MaestroProcessesServiceModel {
   getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
 
   /**
-   * Get instance count aggregated by status for a process.
+   * Get instance stats for a process.
    *
    * Returns total instance counts broken down by status (running, completed, faulted, etc.)
    * and the average execution duration for all instances of a process within a time range.
@@ -314,11 +314,11 @@ export interface MaestroProcessesServiceModel {
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param packageVersion - Package version to filter by
-   * @returns Promise resolving to {@link InstanceCountByStatusResponse}
+   * @returns Promise resolving to {@link InstanceStats}
    * @example
    * ```typescript
    * // Get instance status breakdown for a process
-   * const counts = await maestroProcesses.getInstanceCountByStatus(
+   * const counts = await maestroProcesses.getInstanceStats(
    *   '<processKey>',
    *   '<packageId>',
    *   new Date('2026-04-01'),
@@ -326,12 +326,12 @@ export interface MaestroProcessesServiceModel {
    *   '1.0.1'
    * );
    *
-   * console.log(`Total: ${counts.countOfAllInstances}`);
-   * console.log(`Running: ${counts.countOfRunning}, Completed: ${counts.countOfCompleted}`);
-   * console.log(`Faulted: ${counts.countOfFaulted}, Avg duration: ${counts.avgDurationInMs}ms`);
+   * console.log(`Total: ${counts.totalCount}`);
+   * console.log(`Running: ${counts.runningCount}, Completed: ${counts.completedCount}`);
+   * console.log(`Faulted: ${counts.faultedCount}, Avg duration: ${counts.avgDurationMs}ms`);
    * ```
    */
-  getInstanceCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse>;
+  getInstanceStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats>;
 }
 
 // Method interface that will be added to process objects
@@ -354,14 +354,14 @@ export interface ProcessMethods {
   getElementStats(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
 
   /**
-   * Get instance count aggregated by status for this process
+   * Get instance stats for this process
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param packageVersion - Package version to filter by
-   * @returns Promise resolving to {@link InstanceCountByStatusResponse}
+   * @returns Promise resolving to {@link InstanceStats}
    */
-  getInstanceCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse>;
+  getInstanceStats(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats>;
 }
 
 // Combined type for process data with methods
@@ -388,11 +388,11 @@ function createProcessMethods(processData: RawMaestroProcessGetAllResponse, serv
 
       return service.getElementStats(processData.processKey, processData.packageId, startTime, endTime, packageVersion);
     },
-    getInstanceCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse> {
+    getInstanceStats(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats> {
       if (!processData.processKey) throw new Error('Process key is undefined');
       if (!processData.packageId) throw new Error('Package ID is undefined');
 
-      return service.getInstanceCountByStatus(processData.processKey, processData.packageId, startTime, endTime, packageVersion);
+      return service.getInstanceStats(processData.processKey, processData.packageId, startTime, endTime, packageVersion);
     }
   };
 }

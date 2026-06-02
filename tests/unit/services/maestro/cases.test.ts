@@ -371,11 +371,11 @@ describe('CasesService', () => {
     });
   });
 
-  describe('getInstanceCountByStatus', () => {
-    it('should retrieve instance count by status for case instances', async () => {
-      mockApiClient.post.mockResolvedValue(MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_COUNT_BY_STATUS);
+  describe('getInstanceStats', () => {
+    it('should retrieve instance stats for case instances', async () => {
+      mockApiClient.post.mockResolvedValue(MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_STATS);
 
-      const result = await service.getInstanceCountByStatus(
+      const result = await service.getInstanceStats(
         MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
         MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
         new Date('2026-04-01T00:00:00Z'),
@@ -383,8 +383,8 @@ describe('CasesService', () => {
         MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION
       );
 
-      expect(result.countOfAllInstances).toBe(276);
-      expect(result.countOfCompleted).toBe(275);
+      expect(result.totalCount).toBe(276);
+      expect(result.completedCount).toBe(275);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
         expect.objectContaining({

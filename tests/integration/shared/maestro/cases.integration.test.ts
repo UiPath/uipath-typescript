@@ -191,14 +191,14 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
   });
 
   // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getInstanceCountByStatus', () => {
-    it('should retrieve instance count by status for a case', async () => {
+  describe.skip('getInstanceStats', () => {
+    it('should retrieve instance stats for a case', async () => {
       const { cases } = getServices();
       const allCases = await cases.getAll();
       expect(allCases.length).toBeGreaterThan(0);
 
       const caseItem = allCases[0];
-      const result = await cases.getInstanceCountByStatus(
+      const result = await cases.getInstanceStats(
         caseItem.processKey,
         caseItem.packageId,
         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -207,7 +207,7 @@ describe.each(modes)('Maestro Cases - Integration Tests [%s]', (mode) => {
       );
 
       expect(result).toBeDefined();
-      expect(typeof result.countOfAllInstances).toBe('number');
+      expect(typeof result.totalCount).toBe('number');
     });
   });
 });

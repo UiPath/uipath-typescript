@@ -50,7 +50,7 @@ export const MAESTRO_ENDPOINTS = {
     INSTANCE_STATUS_BY_DATE: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/InstanceStatusByDate`,
     /** Top processes ranked by total duration */
     TOP_PROCESSES_BY_DURATION: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/TopProcessesByDuration`,
-    /** Instance count aggregated by status */
+    /** Instance stats (counts by status + duration percentiles) */
     INSTANCE_COUNT_BY_STATUS: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/InstanceCountByStatus`,
     /** Element count by status for agentic instances (process and case) */
     ELEMENT_COUNT_BY_STATUS: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/ElementCountByStatus`,

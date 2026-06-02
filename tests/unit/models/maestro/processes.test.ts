@@ -69,19 +69,19 @@ describe('Process Models', () => {
       });
     });
 
-    describe('process.getInstanceCountByStatus()', () => {
-      it('should call service.getInstanceCountByStatus with bound processKey and packageId', async () => {
+    describe('process.getInstanceStats()', () => {
+      it('should call service.getInstanceStats with bound processKey and packageId', async () => {
         const mockProcessData = createMockProcess();
         const process = createProcessWithMethods(mockProcessData, mockService);
 
         const startTime = new Date('2026-04-01T00:00:00Z');
         const endTime = new Date('2026-05-01T00:00:00Z');
 
-        mockService.getInstanceCountByStatus = vi.fn().mockResolvedValue({});
+        mockService.getInstanceStats = vi.fn().mockResolvedValue({});
 
-        await process.getInstanceCountByStatus(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
+        await process.getInstanceStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
-        expect(mockService.getInstanceCountByStatus).toHaveBeenCalledWith(
+        expect(mockService.getInstanceStats).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
           MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
           startTime,
@@ -95,7 +95,7 @@ describe('Process Models', () => {
         const process = createProcessWithMethods(mockProcessData, mockService);
 
         expect(() =>
-          process.getInstanceCountByStatus(new Date(), new Date(), '1.0.0')
+          process.getInstanceStats(new Date(), new Date(), '1.0.0')
         ).toThrow('Process key is undefined');
       });
 
@@ -104,7 +104,7 @@ describe('Process Models', () => {
         const process = createProcessWithMethods(mockProcessData, mockService);
 
         expect(() =>
-          process.getInstanceCountByStatus(new Date(), new Date(), '1.0.0')
+          process.getInstanceStats(new Date(), new Date(), '1.0.0')
         ).toThrow('Package ID is undefined');
       });
     });

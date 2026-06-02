@@ -265,14 +265,14 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
   });
 
   // skip: insightsrtm_ endpoints do not support PAT auth — requires OAuth
-  describe.skip('getInstanceCountByStatus', () => {
-    it('should retrieve instance count by status for a process', async () => {
+  describe.skip('getInstanceStats', () => {
+    it('should retrieve instance stats for a process', async () => {
       const { maestroProcesses } = getServices();
       const processes = await maestroProcesses.getAll();
       expect(processes.length).toBeGreaterThan(0);
 
       const process = processes[0];
-      const result = await maestroProcesses.getInstanceCountByStatus(
+      const result = await maestroProcesses.getInstanceStats(
         process.processKey,
         process.packageId,
         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -281,9 +281,14 @@ describe.each(modes)('Maestro Processes - Integration Tests [%s]', (mode) => {
       );
 
       expect(result).toBeDefined();
-      expect(typeof result.countOfAllInstances).toBe('number');
-      expect(typeof result.countOfCompleted).toBe('number');
-      expect(typeof result.avgDurationInMs).toBe('number');
+      expect(typeof result.totalCount).toBe('number');
+      expect(typeof result.completedCount).toBe('number');
+      expect(typeof result.avgDurationMs).toBe('number');
+      expect(typeof result.minDurationMs).toBe('number');
+      expect(typeof result.maxDurationMs).toBe('number');
+      expect(typeof result.p50DurationMs).toBe('number');
+      expect(typeof result.p95DurationMs).toBe('number');
+      expect(typeof result.p99DurationMs).toBe('number');
     });
   });
 });

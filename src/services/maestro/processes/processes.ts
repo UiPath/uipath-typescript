@@ -1,5 +1,7 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats, InstanceCountByStatusResponse } from '../../../models/maestro';
-import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
+import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
+import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
+import { transformData } from '../../../utils/transform';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -365,7 +367,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   }
 
   /**
-   * Get instance count aggregated by status for a process.
+   * Get instance stats for a process.
    *
    * Returns total instance counts broken down by status (running, completed, faulted, etc.)
    * and the average execution duration for all instances of a process within a time range.
@@ -375,11 +377,11 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param packageVersion - Package version to filter by
-   * @returns Promise resolving to {@link InstanceCountByStatusResponse}
+   * @returns Promise resolving to {@link InstanceStats}
    * @example
    * ```typescript
    * // Get instance status breakdown for a process
-   * const counts = await maestroProcesses.getInstanceCountByStatus(
+   * const counts = await maestroProcesses.getInstanceStats(
    *   '<processKey>',
    *   '<packageId>',
    *   new Date('2026-04-01'),
@@ -387,17 +389,17 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *   '1.0.1'
    * );
    *
-   * console.log(`Total: ${counts.countOfAllInstances}`);
-   * console.log(`Running: ${counts.countOfRunning}, Completed: ${counts.countOfCompleted}`);
-   * console.log(`Faulted: ${counts.countOfFaulted}, Avg duration: ${counts.avgDurationInMs}ms`);
+   * console.log(`Total: ${counts.totalCount}`);
+   * console.log(`Running: ${counts.runningCount}, Completed: ${counts.completedCount}`);
+   * console.log(`Faulted: ${counts.faultedCount}, Avg duration: ${counts.avgDurationMs}ms`);
    * ```
    */
-  @track('MaestroProcesses.GetInstanceCountByStatus')
-  async getInstanceCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceCountByStatusResponse> {
-    const { data } = await this.post<InstanceCountByStatusResponse>(
+  @track('MaestroProcesses.GetInstanceStats')
+  async getInstanceStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats> {
+    const { data } = await this.post<RawInstanceStats>(
       MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_COUNT_BY_STATUS,
       buildInsightsCommonBody(processKey, packageId, startTime, endTime, packageVersion)
     );
-    return data;
+    return transformData(data, InstanceStatsMap) as unknown as InstanceStats;
   }
 }

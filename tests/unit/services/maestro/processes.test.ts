@@ -488,16 +488,16 @@ describe('MaestroProcessesService', () => {
     });
   });
 
-  describe('getInstanceCountByStatus', () => {
-    const mockResponse = MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_COUNT_BY_STATUS;
+  describe('getInstanceStats', () => {
+    const mockResponse = MAESTRO_TEST_CONSTANTS.MOCK_INSTANCE_STATS;
 
     const startDate = new Date('2026-04-01T00:00:00Z');
     const endDate = new Date('2026-05-01T00:00:00Z');
 
-    it('should retrieve instance count by status', async () => {
+    it('should retrieve instance stats', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getInstanceCountByStatus(
+      const result = await service.getInstanceStats(
         MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
         MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
         startDate,
@@ -518,17 +518,22 @@ describe('MaestroProcessesService', () => {
         },
         {}
       );
-      expect(result.countOfAllInstances).toBe(276);
-      expect(result.countOfCompleted).toBe(275);
-      expect(result.countOfTransitioning).toBe(1);
-      expect(result.avgDurationInMs).toBe(3992314);
+      expect(result.totalCount).toBe(276);
+      expect(result.completedCount).toBe(275);
+      expect(result.transitioningCount).toBe(1);
+      expect(result.avgDurationMs).toBe(3992314);
+      expect(result.minDurationMs).toBe(763);
+      expect(result.maxDurationMs).toBe(8702314);
+      expect(result.p50DurationMs).toBe(3500000);
+      expect(result.p95DurationMs).toBe(6500000);
+      expect(result.p99DurationMs).toBe(8000000);
     });
 
     it('should handle API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        service.getInstanceCountByStatus(
+        service.getInstanceStats(
           MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
           MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
           startDate,
