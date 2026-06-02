@@ -137,8 +137,8 @@ export const MAESTRO_TEST_CONSTANTS = {
   DURATION_PROCESS_2: 749919406366,
   DURATION_CASE: 628845382152,
 
-  // Element count by status mock responses
-  MOCK_ELEMENT_COUNT_BY_STATUS: [
+  // Element stats mock responses
+  MOCK_ELEMENT_STATS: [
     {
       elementId: 'Event_start',
       successCount: 2,

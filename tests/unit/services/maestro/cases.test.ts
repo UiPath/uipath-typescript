@@ -343,11 +343,11 @@ describe('CasesService', () => {
     });
   });
 
-  describe('getElementCountByStatus', () => {
-    it('should retrieve element count by status for case instances', async () => {
-      mockApiClient.post.mockResolvedValue([...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_COUNT_BY_STATUS]);
+  describe('getElementStats', () => {
+    it('should retrieve element stats for case instances', async () => {
+      mockApiClient.post.mockResolvedValue([...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_STATS]);
 
-      const result = await service.getElementCountByStatus(
+      const result = await service.getElementStats(
         MAESTRO_TEST_CONSTANTS.CASE_PROCESS_KEY,
         MAESTRO_TEST_CONSTANTS.CASE_PACKAGE_ID,
         new Date('2026-04-01T00:00:00Z'),

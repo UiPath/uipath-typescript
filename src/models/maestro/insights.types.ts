@@ -121,7 +121,7 @@ export interface GetTopDurationResponse extends GetTopBaseResponse {
 /**
  * Element count by status for a BPMN element within a process or case
  */
-export interface ElementCountByStatus {
+export interface ElementStats {
   /** BPMN element identifier */
   elementId: string;
   /** Number of successful executions */

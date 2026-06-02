@@ -1,6 +1,6 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
-import { GetTopRunCountResponse, ElementCountByStatus } from '../../../src/models/maestro/insights.types';
+import { GetTopRunCountResponse, ElementStats } from '../../../src/models/maestro/insights.types';
 import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
@@ -198,12 +198,12 @@ export async function testGetInstanceStatusTimeline(
 }
 
 /**
- * Validates that an ElementCountByStatus object has the expected shape
+ * Validates that an ElementStats object has the expected shape
  * with all required numeric fields.
  *
  * @param element - Element count by status object to validate
  */
-export function expectValidElementCountByStatus(element: ElementCountByStatus): void {
+export function expectValidElementStats(element: ElementStats): void {
   expect(element.elementId).toBeDefined();
   expect(typeof element.successCount).toBe('number');
   expect(typeof element.failCount).toBe('number');
@@ -218,35 +218,35 @@ export function expectValidElementCountByStatus(element: ElementCountByStatus): 
   expect(typeof element.p99DurationMs).toBe('number');
 }
 
-/** Minimal interface for services that support getElementCountByStatus integration testing */
-interface ElementCountByStatusService {
+/** Minimal interface for services that support getElementStats integration testing */
+interface ElementStatsService {
   getAll(): Promise<Array<{ processKey: string; packageId: string; packageVersions: string[] }>>;
-  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]>;
+  getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
 }
 
 /**
- * Integration test helper: fetches a process/case, calls getElementCountByStatus,
+ * Integration test helper: fetches a process/case, calls getElementStats,
  * and validates the response shape. Shared between MaestroProcesses and Cases.
  *
  * @param service - Service instance (maestroProcesses or cases)
  * @param serviceName - Name for error messages (e.g., 'processes')
  */
-export async function testGetElementCountByStatus(
-  service: ElementCountByStatusService,
+export async function testGetElementStats(
+  service: ElementStatsService,
   serviceName: string
 ): Promise<void> {
   const processes = await service.getAll();
   if (processes.length === 0) {
-    throw new Error(`No ${serviceName} available for testing getElementCountByStatus`);
+    throw new Error(`No ${serviceName} available for testing getElementStats`);
   }
 
   const process = processes[0];
   const packageVersion = process.packageVersions[0];
   if (!packageVersion) {
-    throw new Error(`No package versions available for ${serviceName} getElementCountByStatus test`);
+    throw new Error(`No package versions available for ${serviceName} getElementStats test`);
   }
 
-  const result = await service.getElementCountByStatus(
+  const result = await service.getElementStats(
     process.processKey,
     process.packageId,
     new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -258,6 +258,6 @@ export async function testGetElementCountByStatus(
   expect(Array.isArray(result)).toBe(true);
 
   if (result.length > 0) {
-    expectValidElementCountByStatus(result[0]);
+    expectValidElementStats(result[0]);
   }
 }

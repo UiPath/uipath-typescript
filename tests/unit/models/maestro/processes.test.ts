@@ -20,7 +20,7 @@ describe('Process Models', () => {
       getInstanceStatusTimeline: vi.fn(),
       getTopFaultedCount: vi.fn(),
       getTopExecutionDuration: vi.fn(),
-      getElementCountByStatus: vi.fn()
+      getElementStats: vi.fn()
     } as any;
   });
 
@@ -29,19 +29,19 @@ describe('Process Models', () => {
   });
 
   describe('bound methods on process', () => {
-    describe('process.getElementCountByStatus()', () => {
-      it('should call service.getElementCountByStatus with bound processKey and packageId', async () => {
+    describe('process.getElementStats()', () => {
+      it('should call service.getElementStats with bound processKey and packageId', async () => {
         const mockProcessData = createMockProcess();
         const process = createProcessWithMethods(mockProcessData, mockService);
 
         const startTime = new Date('2026-04-01T00:00:00Z');
         const endTime = new Date('2026-05-01T00:00:00Z');
 
-        mockService.getElementCountByStatus = vi.fn().mockResolvedValue([]);
+        mockService.getElementStats = vi.fn().mockResolvedValue([]);
 
-        await process.getElementCountByStatus(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
+        await process.getElementStats(startTime, endTime, MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION);
 
-        expect(mockService.getElementCountByStatus).toHaveBeenCalledWith(
+        expect(mockService.getElementStats).toHaveBeenCalledWith(
           MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
           MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
           startTime,
@@ -55,7 +55,7 @@ describe('Process Models', () => {
         const process = createProcessWithMethods(mockProcessData, mockService);
 
         expect(() =>
-          process.getElementCountByStatus(new Date(), new Date(), '1.0.0')
+          process.getElementStats(new Date(), new Date(), '1.0.0')
         ).toThrow('Process key is undefined');
       });
 
@@ -64,7 +64,7 @@ describe('Process Models', () => {
         const process = createProcessWithMethods(mockProcessData, mockService);
 
         expect(() =>
-          process.getElementCountByStatus(new Date(), new Date(), '1.0.0')
+          process.getElementStats(new Date(), new Date(), '1.0.0')
         ).toThrow('Package ID is undefined');
       });
     });

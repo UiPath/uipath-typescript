@@ -1,4 +1,4 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementCountByStatus } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import type { IUiPath } from '../../../core/types';
@@ -325,7 +325,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
   }
 
   /**
-   * Get element count by status for process instances
+   * Get element stats for process instances
    *
    * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
    * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a process.
@@ -335,11 +335,11 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param packageVersion - Package version to filter by
-   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   * @returns Promise resolving to an array of {@link ElementStats}
    * @example
    * ```typescript
    * // Get element metrics for a process
-   * const elements = await maestroProcesses.getElementCountByStatus(
+   * const elements = await maestroProcesses.getElementStats(
    *   '<processKey>',
    *   '<packageId>',
    *   new Date('2026-04-01'),
@@ -355,9 +355,9 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * }
    * ```
    */
-  @track('MaestroProcesses.GetElementCountByStatus')
-  async getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]> {
-    const { data } = await this.post<ElementCountByStatus[]>(
+  @track('MaestroProcesses.GetElementStats')
+  async getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]> {
+    const { data } = await this.post<ElementStats[]>(
       MAESTRO_ENDPOINTS.INSIGHTS.ELEMENT_COUNT_BY_STATUS,
       buildElementCountByStatusBody(processKey, packageId, startTime, endTime, packageVersion)
     );

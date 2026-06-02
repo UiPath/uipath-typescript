@@ -421,16 +421,16 @@ describe('MaestroProcessesService', () => {
     });
   });
 
-  describe('getElementCountByStatus', () => {
-    const mockResponse = [...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_COUNT_BY_STATUS];
+  describe('getElementStats', () => {
+    const mockResponse = [...MAESTRO_TEST_CONSTANTS.MOCK_ELEMENT_STATS];
 
     const startDate = new Date('2026-04-01T00:00:00Z');
     const endDate = new Date('2026-05-01T00:00:00Z');
 
-    it('should retrieve element count by status', async () => {
+    it('should retrieve element stats', async () => {
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await service.getElementCountByStatus(
+      const result = await service.getElementStats(
         MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
         MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
         startDate,
@@ -462,7 +462,7 @@ describe('MaestroProcessesService', () => {
     it('should return empty array when API returns null', async () => {
       mockApiClient.post.mockResolvedValue(null);
 
-      const result = await service.getElementCountByStatus(
+      const result = await service.getElementStats(
         MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
         MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
         startDate,
@@ -477,7 +477,7 @@ describe('MaestroProcessesService', () => {
       mockApiClient.post.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(
-        service.getElementCountByStatus(
+        service.getElementStats(
           MAESTRO_TEST_CONSTANTS.PROCESS_KEY,
           MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
           startDate,

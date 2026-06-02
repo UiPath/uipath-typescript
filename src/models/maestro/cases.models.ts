@@ -4,7 +4,7 @@
  */
 
 import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse } from './cases.types';
-import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementCountByStatus } from './insights.types';
+import { TopQueryOptions, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Cases
@@ -243,7 +243,7 @@ export interface CasesServiceModel {
   getTopExecutionDuration(startTime: Date, endTime: Date, options?: TopQueryOptions): Promise<CaseGetTopDurationResponse[]>;
 
   /**
-   * Get element count by status for case instances
+   * Get element stats for case instances
    *
    * Returns per-element execution counts (success, fail, terminated, paused, in-progress) and
    * duration percentile metrics (min, max, avg, p50, p95, p99) for BPMN elements within a case.
@@ -253,11 +253,11 @@ export interface CasesServiceModel {
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param packageVersion - Package version to filter by
-   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   * @returns Promise resolving to an array of {@link ElementStats}
    * @example
    * ```typescript
    * // Get element metrics for a case
-   * const elements = await cases.getElementCountByStatus(
+   * const elements = await cases.getElementStats(
    *   '<processKey>',
    *   '<packageId>',
    *   new Date('2026-04-01'),
@@ -272,20 +272,20 @@ export interface CasesServiceModel {
    * }
    * ```
    */
-  getElementCountByStatus(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]>;
+  getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
 }
 
 // Method interface that will be added to case objects
 export interface CaseMethods {
   /**
-   * Get element count by status for this case
+   * Get element stats for this case
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param packageVersion - Package version to filter by
-   * @returns Promise resolving to an array of {@link ElementCountByStatus}
+   * @returns Promise resolving to an array of {@link ElementStats}
    */
-  getElementCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]>;
+  getElementStats(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
 }
 
 // Combined type for case data with methods
@@ -300,11 +300,11 @@ export type CaseGetAllWithMethodsResponse = CaseGetAllResponse & CaseMethods;
  */
 function createCaseMethods(caseData: CaseGetAllResponse, service: CasesServiceModel): CaseMethods {
   return {
-    getElementCountByStatus(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementCountByStatus[]> {
+    getElementStats(startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]> {
       if (!caseData.processKey) throw new Error('Process key is undefined');
       if (!caseData.packageId) throw new Error('Package ID is undefined');
 
-      return service.getElementCountByStatus(caseData.processKey, caseData.packageId, startTime, endTime, packageVersion);
+      return service.getElementStats(caseData.processKey, caseData.packageId, startTime, endTime, packageVersion);
     }
   };
 }
