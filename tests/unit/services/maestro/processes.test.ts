@@ -10,7 +10,7 @@ import {
   createMockProcessesApiResponse,
   createMockTopRunCountResponse,
   createMockInstanceStatusTimeline,
-  createMockIncidentTimelinePoint,
+  createMockIncidentTimelineResponse,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
   createMockTopElementFailedCountResponse,
@@ -288,8 +288,8 @@ describe('MaestroProcessesService', () => {
   describe('getIncidentsTimeline', () => {
     const mockApiResponse = {
       dataPoints: [
-        createMockIncidentTimelinePoint(),
-        createMockIncidentTimelinePoint({
+        createMockIncidentTimelineResponse(),
+        createMockIncidentTimelineResponse({
           startTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_BUCKET_START_2,
           endTime: MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_BUCKET_END_2,
           count: MAESTRO_TEST_CONSTANTS.INSIGHTS_INCIDENT_COUNT_2,

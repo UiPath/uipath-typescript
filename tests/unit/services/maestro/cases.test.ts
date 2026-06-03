@@ -10,7 +10,7 @@ import {
   createMockCasesGetAllApiResponse,
   createMockTopRunCountResponse,
   createMockInstanceStatusTimeline,
-  createMockIncidentTimelinePoint,
+  createMockIncidentTimelineResponse,
   createMockTopFaultedCountResponse,
   createMockTopDurationResponse,
   createMockTopElementFailedCountResponse,
@@ -235,7 +235,7 @@ describe('CasesService', () => {
   describe('getIncidentsTimeline', () => {
     it('should call fetchIncidentsTimeline with isCaseManagement true and unwrap dataPoints', async () => {
       mockApiClient.post.mockResolvedValue({
-        dataPoints: [createMockIncidentTimelinePoint()],
+        dataPoints: [createMockIncidentTimelineResponse()],
       });
 
       const result = await service.getIncidentsTimeline(

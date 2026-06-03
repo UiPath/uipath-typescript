@@ -1,7 +1,7 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
 import { GetTopRunCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from '../../../src/models/maestro/insights.types';
-import type { IncidentTimelinePoint, InstanceStatusTimelineResponse } from '../../../src/models/maestro';
+import type { IncidentTimelineResponse, InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -199,7 +199,7 @@ export async function testGetInstanceStatusTimeline(
 
 /** Minimal interface for services that support getIncidentsTimeline integration testing */
 interface IncidentsTimelineService {
-  getIncidentsTimeline(startTime: Date, endTime: Date): Promise<IncidentTimelinePoint[]>;
+  getIncidentsTimeline(startTime: Date, endTime: Date): Promise<IncidentTimelineResponse[]>;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { ApiResponse } from '../base';
-import { IncidentTimelinePoint, InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
+import { IncidentTimelineResponse, InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
 import type { MaestroProcessStatsRequest, TopQueryOptions } from '../../models/maestro';
 import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
@@ -79,8 +79,8 @@ export async function fetchIncidentsTimeline(
   endTime: Date,
   isCaseManagement: boolean,
   options?: TimelineOptions,
-): Promise<IncidentTimelinePoint[]> {
-  const response = await postFn<{ dataPoints?: IncidentTimelinePoint[] }>(
+): Promise<IncidentTimelineResponse[]> {
+  const response = await postFn<{ dataPoints?: IncidentTimelineResponse[] }>(
     MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
     {
       commonParams: {

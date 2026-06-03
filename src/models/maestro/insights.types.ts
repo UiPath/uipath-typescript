@@ -113,7 +113,7 @@ export interface InstanceStatusTimelineResponse {
 /**
  * Incident count within a specific time bucket.
  */
-export interface IncidentTimelinePoint {
+export interface IncidentTimelineResponse {
   /** Start of the time bucket (ISO timestamp, e.g. `"2026-05-04T00:00:00"`) */
   startTime: string;
   /** End of the time bucket (ISO timestamp, e.g. `"2026-05-11T00:00:00"`) */

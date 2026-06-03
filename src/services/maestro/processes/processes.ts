@@ -1,4 +1,4 @@
-import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelinePoint, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
+import { MaestroProcessGetAllResponse, ProcessIncidentGetResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, IncidentTimelineResponse, InstanceStatusTimelineResponse, ElementStats, InstanceStats } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse, RawInstanceStats } from '../../../models/maestro/insights.internal-types';
 import { InstanceStatsMap } from '../../../models/maestro/insights.constants';
 import { transformData } from '../../../utils/transform';
@@ -242,7 +242,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param options - Optional settings for time bucketing granularity
-   * @returns Promise resolving to an array of {@link IncidentTimelinePoint}
+   * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
    *
    * @example
    * ```typescript
@@ -271,7 +271,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     startTime: Date,
     endTime: Date,
     options?: TimelineOptions,
-  ): Promise<IncidentTimelinePoint[]> {
+  ): Promise<IncidentTimelineResponse[]> {
     return fetchIncidentsTimeline(this.post.bind(this), startTime, endTime, false, options);
   }
 

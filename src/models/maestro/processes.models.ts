@@ -5,7 +5,7 @@
 
 import { RawMaestroProcessGetAllResponse, ProcessGetTopRunCountResponse, ProcessGetTopFaultedCountResponse, ProcessGetTopDurationResponse } from './processes.types';
 import { ProcessIncidentGetResponse } from './process-incidents.types';
-import { TopQueryOptions, IncidentTimelinePoint, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
+import { TopQueryOptions, IncidentTimelineResponse, InstanceStatusTimelineResponse, TimelineOptions, ElementGetTopFailedCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from './insights.types';
 
 /**
  * Service for managing UiPath Maestro Processes
@@ -244,7 +244,7 @@ export interface MaestroProcessesServiceModel {
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param options - Optional settings for time bucketing granularity
-   * @returns Promise resolving to an array of {@link IncidentTimelinePoint}
+   * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
    *
    * @example
    * ```typescript
@@ -272,7 +272,7 @@ export interface MaestroProcessesServiceModel {
     startTime: Date,
     endTime: Date,
     options?: TimelineOptions,
-  ): Promise<IncidentTimelinePoint[]>;
+  ): Promise<IncidentTimelineResponse[]>;
 
   /**
    * Get the top 5 processes ranked by total duration within a time range.
