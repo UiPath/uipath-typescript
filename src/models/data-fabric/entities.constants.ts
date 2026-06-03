@@ -1,4 +1,4 @@
-import { EntityFieldDataType, FieldDisplayType } from "./entities.types";
+import { EntityApiFieldType, EntityFieldDataType, FieldDisplayType } from "./entities.types";
 import {
   EntitySchemaFieldMapping,
   SqlFieldType,
@@ -24,23 +24,23 @@ export const EntityMap = {
  * to match the UI's narrower FieldType enum and keep entities round-trippable through Manage Entity.
  */
 export const EntitySchemaFieldTypeMap: Record<EntityFieldDataType, EntitySchemaFieldMapping> = {
-  [EntityFieldDataType.UUID]:                { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'uniqueid'           },
-  [EntityFieldDataType.STRING]:              { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'text'               },
-  [EntityFieldDataType.INTEGER]:             { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
-  [EntityFieldDataType.DATETIME]:            { sqlTypeName: SqlFieldType.DATETIMEOFFSET,   fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'dateTime'           },
-  [EntityFieldDataType.DATETIME_WITH_TZ]:    { sqlTypeName: SqlFieldType.DATETIMEOFFSET,   fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'dateTime'           },
-  [EntityFieldDataType.DECIMAL]:             { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
-  [EntityFieldDataType.FLOAT]:               { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
-  [EntityFieldDataType.DOUBLE]:              { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
-  [EntityFieldDataType.DATE]:                { sqlTypeName: SqlFieldType.DATE,             fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'date'               },
-  [EntityFieldDataType.BOOLEAN]:             { sqlTypeName: SqlFieldType.BIT,              fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'boolean'            },
-  [EntityFieldDataType.BIG_INTEGER]:         { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
-  [EntityFieldDataType.MULTILINE_TEXT]:      { sqlTypeName: SqlFieldType.MULTILINE,        fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'multiline'          },
-  [EntityFieldDataType.FILE]:                { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File,               apiTypeName: 'relationship'       },
-  [EntityFieldDataType.CHOICE_SET_SINGLE]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle,    apiTypeName: 'choiceSetSingle'    },
-  [EntityFieldDataType.CHOICE_SET_MULTIPLE]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple,  apiTypeName: 'choiceSetMultiple'  },
-  [EntityFieldDataType.AUTO_NUMBER]:         { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.AutoNumber,         apiTypeName: 'autonumber'         },
-  [EntityFieldDataType.RELATIONSHIP]:        { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Relationship,       apiTypeName: 'relationship'       },
+  [EntityFieldDataType.UUID]:                { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.UniqueId          },
+  [EntityFieldDataType.STRING]:              { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Text              },
+  [EntityFieldDataType.INTEGER]:             { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Number            },
+  [EntityFieldDataType.DATETIME]:            { sqlTypeName: SqlFieldType.DATETIMEOFFSET,   fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.DateTime          },
+  [EntityFieldDataType.DATETIME_WITH_TZ]:    { sqlTypeName: SqlFieldType.DATETIMEOFFSET,   fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.DateTime          },
+  [EntityFieldDataType.DECIMAL]:             { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Number            },
+  [EntityFieldDataType.FLOAT]:               { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Number            },
+  [EntityFieldDataType.DOUBLE]:              { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Number            },
+  [EntityFieldDataType.DATE]:                { sqlTypeName: SqlFieldType.DATE,             fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Date              },
+  [EntityFieldDataType.BOOLEAN]:             { sqlTypeName: SqlFieldType.BIT,              fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Boolean           },
+  [EntityFieldDataType.BIG_INTEGER]:         { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Number            },
+  [EntityFieldDataType.MULTILINE_TEXT]:      { sqlTypeName: SqlFieldType.MULTILINE,        fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: EntityApiFieldType.Multiline         },
+  [EntityFieldDataType.FILE]:                { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File,               apiTypeName: EntityApiFieldType.Relationship      },
+  [EntityFieldDataType.CHOICE_SET_SINGLE]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle,    apiTypeName: EntityApiFieldType.ChoiceSetSingle   },
+  [EntityFieldDataType.CHOICE_SET_MULTIPLE]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple,  apiTypeName: EntityApiFieldType.ChoiceSetMultiple },
+  [EntityFieldDataType.AUTO_NUMBER]:         { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.AutoNumber,         apiTypeName: EntityApiFieldType.AutoNumber        },
+  [EntityFieldDataType.RELATIONSHIP]:        { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Relationship,       apiTypeName: EntityApiFieldType.Relationship      },
 };
 
 /**

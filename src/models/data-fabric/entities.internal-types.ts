@@ -1,4 +1,4 @@
-import { FieldDisplayType, EntityRecord, ReferenceType, SqlType } from './entities.types';
+import { EntityApiFieldType, FieldDisplayType, EntityRecord, ReferenceType, SqlType } from './entities.types';
 
 /**
  * Write-side payload shape for creating a new field in a schema upsert call.
@@ -9,8 +9,8 @@ export interface FieldSchemaPayload {
   name: string;
   displayName?: string;
   description?: string;
-  /** UI logical type (e.g. "text", "number", "dateTime"). Required for Manage Entity round-trip. */
-  type?: string;
+  /** UI logical type. Always populated — required for Manage Entity round-trip. */
+  type: EntityApiFieldType;
   sqlType: SqlType;
   fieldDisplayType: FieldDisplayType;
   isRequired?: boolean;
@@ -33,7 +33,7 @@ export interface EntitySchemaFieldMapping {
   sqlTypeName: SqlFieldType;
   fieldDisplayType: FieldDisplayType;
   /** Value emitted as the field's `type` on the wire. */
-  apiTypeName: string;
+  apiTypeName: EntityApiFieldType;
 }
 
 /**

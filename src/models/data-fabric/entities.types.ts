@@ -24,6 +24,29 @@ export enum EntityFieldDataType {
 }
 
 /**
+ * UI logical type emitted as the field-level `type` discriminator on outbound
+ * create/update payloads and preserved on read via {@link FieldMetaData.type}.
+ *
+ * The Manage Entity UI relies on this discriminator to recognise the field; if it
+ * is missing or unknown the UI silently rewrites the field to `text`, which makes
+ * subsequent saves fail with "Field type cannot be changed" because `SqlType.Name`
+ * is immutable on update.
+ */
+export enum EntityApiFieldType {
+  UniqueId = "uniqueid",
+  Text = "text",
+  Number = "number",
+  DateTime = "dateTime",
+  Date = "date",
+  Boolean = "boolean",
+  Multiline = "multiline",
+  Relationship = "relationship",
+  ChoiceSetSingle = "choiceSetSingle",
+  ChoiceSetMultiple = "choiceSetMultiple",
+  AutoNumber = "autonumber",
+}
+
+/**
  * Represents a single entity record
  */
 export interface EntityRecord {
@@ -535,8 +558,8 @@ export interface FieldMetaData {
   fieldDisplayType: FieldDisplayType;
   /** Transformed field data type — present after SDK transformation */
   fieldDataType: FieldDataType;
-  /** UI logical type (e.g. "text", "number", "dateTime") — preserved on read for round-trip. */
-  type?: string;
+  /** UI logical type — preserved on read so a re-upsert keeps the field's UI identity. */
+  type?: EntityApiFieldType;
   createdTime: string;
   createdBy: string;
   /** Raw SQL type from API — present on raw GET responses, used on write payloads */
