@@ -44,8 +44,8 @@ export const META_TAG_PREFIX = 'uipath'
  *
  *   uipath:client-id      — OAuth client ID (from uipath.json in the .nupkg)
  *   uipath:scope           — OAuth scopes (from uipath.json in the .nupkg)
- *   uipath:org-name        — Organization ID
- *   uipath:tenant-name     — Tenant ID
+ *   uipath:org-name        — Organization name
+ *   uipath:tenant-name     — Tenant name
  *   uipath:base-url        — Portal base URL
  *   uipath:redirect-uri    — OAuth redirect URI (computed from routing name)
  *   uipath:cdn-base        — CDN base path (computed: /{systemName}/{folderKey}/{deployVersion}/)
