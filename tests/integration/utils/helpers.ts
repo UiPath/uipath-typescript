@@ -1,7 +1,7 @@
 import { randomBytes, randomInt } from 'crypto';
 import { expect } from 'vitest';
 import { GetTopRunCountResponse, ElementStats, InstanceStats, MaestroProcessStatsRequest } from '../../../src/models/maestro/insights.types';
-import type { InstanceStatusTimelineResponse } from '../../../src/models/maestro';
+import type { IncidentTimelinePoint, InstanceStatusTimelineResponse } from '../../../src/models/maestro';
 
 /**
  * Generates a unique test resource name with timestamp and random ID.
@@ -192,6 +192,39 @@ export async function testGetInstanceStatusTimeline(
     expect(typeof entry.startTime).toBe('string');
     expect(entry.status).toBeDefined();
     expect(typeof entry.status).toBe('string');
+    expect(entry.count).toBeDefined();
+    expect(typeof entry.count).toBe('number');
+  }
+}
+
+/** Minimal interface for services that support getIncidentsTimeline integration testing */
+interface IncidentsTimelineService {
+  getIncidentsTimeline(startTime: Date, endTime: Date): Promise<IncidentTimelinePoint[]>;
+}
+
+/**
+ * Integration test helper: calls getIncidentsTimeline and validates the response shape.
+ * Shared between MaestroProcessesService and CasesService.
+ *
+ * @param service - Service instance (maestroProcesses or cases)
+ */
+export async function testGetIncidentsTimeline(
+  service: IncidentsTimelineService,
+): Promise<void> {
+  const now = new Date();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const result = await service.getIncidentsTimeline(sevenDaysAgo, now);
+
+  expect(result).toBeDefined();
+  expect(Array.isArray(result)).toBe(true);
+
+  if (result.length > 0) {
+    const entry = result[0];
+    expect(entry.startTime).toBeDefined();
+    expect(typeof entry.startTime).toBe('string');
+    expect(entry.endTime).toBeDefined();
+    expect(typeof entry.endTime).toBe('string');
     expect(entry.count).toBeDefined();
     expect(typeof entry.count).toBe('number');
   }

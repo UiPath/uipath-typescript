@@ -54,5 +54,7 @@ export const MAESTRO_ENDPOINTS = {
     INSTANCE_COUNT_BY_STATUS: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/InstanceCountByStatus`,
     /** Element count by status for agentic instances (process and case) */
     ELEMENT_COUNT_BY_STATUS: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/ElementCountByStatus`,
+    /** Incident counts aggregated by time bucket for time-series charts */
+    INCIDENTS_BY_TIME_WINDOW: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/IncidentsByTimeWindow`,
   },
 } as const;
