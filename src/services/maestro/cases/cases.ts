@@ -1,11 +1,11 @@
-import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats } from '../../../models/maestro';
+import { CaseGetAllResponse, CaseGetTopRunCountResponse, CaseGetTopFaultedCountResponse, CaseGetTopDurationResponse, GetTopRunCountResponse, GetTopDurationResponse, ElementGetTopFailedCountResponse, InstanceStatusTimelineResponse, ElementStats, IncidentTimelinePoint } from '../../../models/maestro';
 import type { RawElementGetTopFailedCountResponse } from '../../../models/maestro/insights.internal-types';
 import type { TimelineOptions, TopQueryOptions } from '../../../models/maestro';
 import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
 import { createCaseWithMethods, CaseGetAllWithMethodsResponse } from '../../../models/maestro/cases.models';
-import { buildInsightsTopBody, fetchInstanceStatusTimeline, buildElementCountByStatusBody } from '../insights';
+import { buildInsightsTopBody, fetchInstanceStatusTimeline, fetchIncidentsTimeline, buildElementCountByStatusBody } from '../insights';
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
@@ -196,6 +196,51 @@ export class CasesService extends BaseService implements CasesServiceModel {
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]> {
     return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, true, options);
+  }
+
+  /**
+   * Get incident counts over time for case management processes.
+   *
+   * Returns time-grouped incident counts, useful for rendering "incidents over time"
+   * monitoring charts. Use `groupBy` to control the time bucket size (hour, day, or week) —
+   * defaults to day if not provided. Each point includes the bucket's `startTime`, `endTime`,
+   * and incident `count`.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for time bucketing granularity and filters
+   * @returns Promise resolving to an array of {@link IncidentTimelinePoint}
+   *
+   * @example
+   * ```typescript
+   * // Get daily incident counts for the last 30 days
+   * const now = new Date();
+   * const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+   * const timeline = await cases.getIncidentsTimeline(thirtyDaysAgo, now);
+   *
+   * for (const point of timeline) {
+   *   console.log(`${point.startTime} — ${point.count} incidents`);
+   * }
+   * ```
+   *
+   * @example
+   * ```typescript
+   * import { TimeInterval } from '@uipath/uipath-typescript/cases';
+   *
+   * // Get a weekly breakdown filtered to a single process
+   * const timeline = await cases.getIncidentsTimeline(startTime, endTime, {
+   *   groupBy: TimeInterval.Week,
+   *   processKey: '<processKey>',
+   * });
+   * ```
+   */
+  @track('Cases.GetIncidentsTimeline')
+  async getIncidentsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: TimelineOptions,
+  ): Promise<IncidentTimelinePoint[]> {
+    return fetchIncidentsTimeline(this.post.bind(this), startTime, endTime, true, options);
   }
 
   /**

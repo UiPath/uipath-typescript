@@ -49,5 +49,7 @@ export const MAESTRO_ENDPOINTS = {
     TOP_PROCESSES_BY_DURATION: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/TopProcessesByDuration`,
     /** Element count by status for agentic instances (process and case) */
     ELEMENT_COUNT_BY_STATUS: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/ElementCountByStatus`,
+    /** Incident counts aggregated by time window for time-series charts */
+    INCIDENTS_BY_TIME_WINDOW: `${INSIGHTS_RTM_BASE}/agenticInstanceStatus/IncidentsByTimeWindow`,
   },
 } as const;
