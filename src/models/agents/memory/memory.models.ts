@@ -1,10 +1,10 @@
 import {
-  MemoryTimelineGetOptions,
-  MemoryTimelineResponse,
-  MemoryCallsTimelineGetOptions,
-  MemoryCallsTimelineResponse,
-  TopMemorySpacesGetOptions,
-  TopMemorySpacesResponse,
+  MemoryGetTimelineOptions,
+  MemoryGetTimelineResponse,
+  MemoryGetCallsTimelineOptions,
+  MemoryGetCallsTimelineResponse,
+  MemoryGetTopSpacesOptions,
+  MemoryGetTopSpacesResponse,
 } from './memory.types';
 
 /**
@@ -38,8 +38,8 @@ export interface MemoryServiceModel {
    * to now). Optionally filter by agent, agent version, folder, or execution
    * type.
    *
-   * @param options - Optional time window and scope filters {@link MemoryTimelineGetOptions}
-   * @returns Promise resolving to {@link MemoryTimelineResponse} — a `data` array of {@link MemoryTimelinePoint}, one per time bucket. The array may be absent when no data matches.
+   * @param options - Optional time window and scope filters {@link MemoryGetTimelineOptions}
+   * @returns Promise resolving to {@link MemoryGetTimelineResponse} — a `data` array of {@link MemoryTimelinePoint}, one per time bucket. The array may be absent when no data matches.
    * @example
    * ```typescript
    * import { Memory } from '@uipath/uipath-typescript/memory';
@@ -66,7 +66,7 @@ export interface MemoryServiceModel {
    * });
    * ```
    */
-  getMemoryTimeline(options?: MemoryTimelineGetOptions): Promise<MemoryTimelineResponse>;
+  getMemoryTimeline(options?: MemoryGetTimelineOptions): Promise<MemoryGetTimelineResponse>;
 
   /**
    * Retrieves a time-series of memory-call counts bucketed across the requested
@@ -78,8 +78,8 @@ export interface MemoryServiceModel {
    * upper bound defaulting to now). Optionally filter by agent, agent version,
    * folder, or execution type.
    *
-   * @param options - Optional time window and scope filters {@link MemoryCallsTimelineGetOptions}
-   * @returns Promise resolving to {@link MemoryCallsTimelineResponse} — a `data` array of {@link MemoryCallsTimelinePoint}, one per time bucket. The array may be absent when no data matches.
+   * @param options - Optional time window and scope filters {@link MemoryGetCallsTimelineOptions}
+   * @returns Promise resolving to {@link MemoryGetCallsTimelineResponse} — a `data` array of {@link MemoryCallsTimelinePoint}, one per time bucket. The array may be absent when no data matches.
    * @example
    * ```typescript
    * import { Memory } from '@uipath/uipath-typescript/memory';
@@ -106,7 +106,7 @@ export interface MemoryServiceModel {
    * });
    * ```
    */
-  getMemoryCallsTimeline(options?: MemoryCallsTimelineGetOptions): Promise<MemoryCallsTimelineResponse>;
+  getMemoryCallsTimeline(options?: MemoryGetCallsTimelineOptions): Promise<MemoryGetCallsTimelineResponse>;
 
   /**
    * Retrieves the top memory spaces ranked by memory count over the requested
@@ -118,8 +118,8 @@ export interface MemoryServiceModel {
    * server defaults to the last 24 hours (with the upper bound defaulting to
    * now). Optionally filter by agent, agent version, folder, or execution type.
    *
-   * @param options - Optional limit, time window, and scope filters {@link TopMemorySpacesGetOptions}
-   * @returns Promise resolving to {@link TopMemorySpacesResponse} — a `data` array of {@link MemorySpace}, ranked by memory count. The array may be absent when no data matches.
+   * @param options - Optional limit, time window, and scope filters {@link MemoryGetTopSpacesOptions}
+   * @returns Promise resolving to {@link MemoryGetTopSpacesResponse} — a `data` array of {@link MemorySpace}, ranked by memory count. The array may be absent when no data matches.
    * @example
    * ```typescript
    * import { Memory } from '@uipath/uipath-typescript/memory';
@@ -146,5 +146,5 @@ export interface MemoryServiceModel {
    * });
    * ```
    */
-  getTopMemorySpaces(options?: TopMemorySpacesGetOptions): Promise<TopMemorySpacesResponse>;
+  getTopMemorySpaces(options?: MemoryGetTopSpacesOptions): Promise<MemoryGetTopSpacesResponse>;
 }

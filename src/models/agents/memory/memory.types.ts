@@ -38,17 +38,17 @@ export interface MemoryFilterOptions {
 /**
  * Options for {@link MemoryServiceModel.getMemoryTimeline}.
  */
-export interface MemoryTimelineGetOptions extends MemoryFilterOptions {}
+export interface MemoryGetTimelineOptions extends MemoryFilterOptions {}
 
 /**
  * Options for {@link MemoryServiceModel.getMemoryCallsTimeline}.
  */
-export interface MemoryCallsTimelineGetOptions extends MemoryFilterOptions {}
+export interface MemoryGetCallsTimelineOptions extends MemoryFilterOptions {}
 
 /**
  * Options for {@link MemoryServiceModel.getTopMemorySpaces}.
  */
-export interface TopMemorySpacesGetOptions extends MemoryFilterOptions {
+export interface MemoryGetTopSpacesOptions extends MemoryFilterOptions {
   /** Maximum number of memory spaces to return, ranked by memory count. Defaults to 5 server-side. */
   limit?: number;
 }
@@ -75,7 +75,7 @@ export interface MemoryTimelinePoint {
 /**
  * Response from {@link MemoryServiceModel.getMemoryTimeline}.
  */
-export interface MemoryTimelineResponse {
+export interface MemoryGetTimelineResponse {
   /** Time-series points, one per bucket. May be absent when no data matches. */
   data?: MemoryTimelinePoint[];
 }
@@ -94,7 +94,7 @@ export interface MemoryCallsTimelinePoint {
 /**
  * Response from {@link MemoryServiceModel.getMemoryCallsTimeline}.
  */
-export interface MemoryCallsTimelineResponse {
+export interface MemoryGetCallsTimelineResponse {
   /** Time-series points, one per bucket. May be absent when no data matches. */
   data?: MemoryCallsTimelinePoint[];
 }
@@ -119,7 +119,7 @@ export interface MemorySpace {
 /**
  * Response from {@link MemoryServiceModel.getTopMemorySpaces}.
  */
-export interface TopMemorySpacesResponse {
+export interface MemoryGetTopSpacesResponse {
   /** Memory spaces ranked by memory count. May be absent when no data matches. */
   data?: MemorySpace[];
 }
