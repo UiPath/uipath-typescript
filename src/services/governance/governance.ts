@@ -27,7 +27,7 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
   /**
    * Gets per-policy enforcement decisions across the requested time range.
    *
-   * Each result row represents one policy's verdict within a single governance enforcement event,
+   * Each result row represents one policy's verdict within a single governance enforcement event.
    * A single user action can produce multiple rows when multiple policies were consulted.
    * Results are ordered by event start time, descending.
    *
