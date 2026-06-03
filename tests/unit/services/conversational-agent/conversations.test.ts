@@ -472,6 +472,20 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
         CONVERSATION_ENDPOINTS.DELETE(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID),
         expect.any(Object)
       );
+
+      // Transformed SDK fields are present
+      expect(result.id).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
+      expect(result.createdTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CREATED_AT);
+      expect(result.updatedTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.UPDATED_AT);
+      expect(result.lastActivityTime).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.LAST_ACTIVITY_AT);
+      expect(result.agentId).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_ID);
+
+      // Original API field names should not exist
+      expect((result as any).conversationId).toBeUndefined();
+      expect((result as any).createdAt).toBeUndefined();
+      expect((result as any).updatedAt).toBeUndefined();
+      expect((result as any).lastActivityAt).toBeUndefined();
+      expect((result as any).agentReleaseId).toBeUndefined();
     });
 
     it('should handle API errors', async () => {

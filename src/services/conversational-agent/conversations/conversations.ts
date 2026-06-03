@@ -270,10 +270,10 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   @track('ConversationalAgent.Conversations.DeleteById')
   async deleteById(id: string): Promise<ConversationDeleteResponse> {
-    const response = await this.delete<ConversationDeleteResponse>(
+    const response = await this.delete<RawConversationGetResponse>(
       CONVERSATION_ENDPOINTS.DELETE(id)
     );
-    return response.data;
+    return transformData(response.data, ConversationMap) as ConversationDeleteResponse;
   }
 
   // ==================== Attachments ====================
