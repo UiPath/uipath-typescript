@@ -18,26 +18,29 @@ export const EntityMap = {
 };
 
 /**
- * Maps EntityFieldDataType values to the API field payload components for create/update operations
+ * Maps EntityFieldDataType → SQL type / fieldDisplayType / API `type` for create payloads.
+ *
+ * INTEGER/BIG_INTEGER/FLOAT/DOUBLE collapse to DECIMAL, and DATETIME collapses to DATETIMEOFFSET,
+ * to match the UI's narrower FieldType enum and keep entities round-trippable through Manage Entity.
  */
 export const EntitySchemaFieldTypeMap: Record<EntityFieldDataType, EntitySchemaFieldMapping> = {
-  [EntityFieldDataType.UUID]:           { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.STRING]:         { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.INTEGER]:        { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.DATETIME]:       { sqlTypeName: SqlFieldType.DATETIME2,        fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.DATETIME_WITH_TZ]: { sqlTypeName: SqlFieldType.DATETIMEOFFSET, fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.DECIMAL]:        { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.FLOAT]:          { sqlTypeName: SqlFieldType.FLOAT,            fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.DOUBLE]:         { sqlTypeName: SqlFieldType.REAL,             fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.DATE]:           { sqlTypeName: SqlFieldType.DATE,             fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.BOOLEAN]:        { sqlTypeName: SqlFieldType.BIT,              fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.BIG_INTEGER]:    { sqlTypeName: SqlFieldType.BIGINT,           fieldDisplayType: FieldDisplayType.Basic },
-  [EntityFieldDataType.MULTILINE_TEXT]:    { sqlTypeName: SqlFieldType.MULTILINE,        fieldDisplayType: FieldDisplayType.Basic          },
-  [EntityFieldDataType.FILE]:              { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File           },
-  [EntityFieldDataType.CHOICE_SET_SINGLE]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle  },
-  [EntityFieldDataType.CHOICE_SET_MULTIPLE]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple },
-  [EntityFieldDataType.AUTO_NUMBER]:        { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.AutoNumber        },
-  [EntityFieldDataType.RELATIONSHIP]:      { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Relationship      },
+  [EntityFieldDataType.UUID]:                { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'uniqueid'           },
+  [EntityFieldDataType.STRING]:              { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'text'               },
+  [EntityFieldDataType.INTEGER]:             { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
+  [EntityFieldDataType.DATETIME]:            { sqlTypeName: SqlFieldType.DATETIMEOFFSET,   fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'dateTime'           },
+  [EntityFieldDataType.DATETIME_WITH_TZ]:    { sqlTypeName: SqlFieldType.DATETIMEOFFSET,   fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'dateTime'           },
+  [EntityFieldDataType.DECIMAL]:             { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
+  [EntityFieldDataType.FLOAT]:               { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
+  [EntityFieldDataType.DOUBLE]:              { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
+  [EntityFieldDataType.DATE]:                { sqlTypeName: SqlFieldType.DATE,             fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'date'               },
+  [EntityFieldDataType.BOOLEAN]:             { sqlTypeName: SqlFieldType.BIT,              fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'boolean'            },
+  [EntityFieldDataType.BIG_INTEGER]:         { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'number'             },
+  [EntityFieldDataType.MULTILINE_TEXT]:      { sqlTypeName: SqlFieldType.MULTILINE,        fieldDisplayType: FieldDisplayType.Basic,              apiTypeName: 'multiline'          },
+  [EntityFieldDataType.FILE]:                { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.File,               apiTypeName: 'relationship'       },
+  [EntityFieldDataType.CHOICE_SET_SINGLE]:   { sqlTypeName: SqlFieldType.INT,              fieldDisplayType: FieldDisplayType.ChoiceSetSingle,    apiTypeName: 'choiceSetSingle'    },
+  [EntityFieldDataType.CHOICE_SET_MULTIPLE]: { sqlTypeName: SqlFieldType.NVARCHAR,         fieldDisplayType: FieldDisplayType.ChoiceSetMultiple,  apiTypeName: 'choiceSetMultiple'  },
+  [EntityFieldDataType.AUTO_NUMBER]:         { sqlTypeName: SqlFieldType.DECIMAL,          fieldDisplayType: FieldDisplayType.AutoNumber,         apiTypeName: 'autonumber'         },
+  [EntityFieldDataType.RELATIONSHIP]:        { sqlTypeName: SqlFieldType.UNIQUEIDENTIFIER, fieldDisplayType: FieldDisplayType.Relationship,       apiTypeName: 'relationship'       },
 };
 
 /**
@@ -65,6 +68,8 @@ export const ENTITY_FIELD_CONSTRAINT_DEFAULTS = {
   /** Fixed (non-overridable) length limit on DECIMAL payloads*/
   DECIMAL_LENGTH_LIMIT: 1000,
   DECIMAL_PRECISION: 2,
+  /** Forces integer semantics when INTEGER / BIG_INTEGER are stored as DECIMAL. */
+  INTEGER_DECIMAL_PRECISION: 0,
   /** Fixed (non-overridable) length limit for BIT (BOOLEAN) fields */
   BOOLEAN_LENGTH_LIMIT: 100,
   /** Fixed (non-overridable) length limit for DATE / DATETIMEOFFSET fields */

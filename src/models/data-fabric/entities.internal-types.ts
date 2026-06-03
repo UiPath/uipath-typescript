@@ -9,6 +9,8 @@ export interface FieldSchemaPayload {
   name: string;
   displayName?: string;
   description?: string;
+  /** UI logical type (e.g. "text", "number", "dateTime"). Required for Manage Entity round-trip. */
+  type?: string;
   sqlType: SqlType;
   fieldDisplayType: FieldDisplayType;
   isRequired?: boolean;
@@ -30,6 +32,8 @@ export interface FieldSchemaPayload {
 export interface EntitySchemaFieldMapping {
   sqlTypeName: SqlFieldType;
   fieldDisplayType: FieldDisplayType;
+  /** Value emitted as the field's `type` on the wire. */
+  apiTypeName: string;
 }
 
 /**

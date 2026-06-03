@@ -1067,6 +1067,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return {
       name: field.fieldName,
       displayName: field.displayName ?? field.fieldName,
+      type: mapping.apiTypeName,
       sqlType: {
         name: mapping.sqlTypeName,
         ...this.buildSqlTypeConstraints(fieldType, field),
@@ -1160,31 +1161,32 @@ export class EntityService extends BaseService implements EntityServiceModel {
         return { lengthLimit: field.lengthLimit ?? defaults.STRING_LENGTH_LIMIT };
       case EntityFieldDataType.MULTILINE_TEXT:
         return { lengthLimit: field.lengthLimit ?? defaults.MULTILINE_TEXT_LENGTH_LIMIT };
+      // FLOAT/DOUBLE collapse to DECIMAL for UI round-trip.
       case EntityFieldDataType.DECIMAL:
+      case EntityFieldDataType.FLOAT:
+      case EntityFieldDataType.DOUBLE:
         return {
           lengthLimit: defaults.DECIMAL_LENGTH_LIMIT,
           decimalPrecision: field.decimalPrecision ?? defaults.DECIMAL_PRECISION,
           maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
           minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
         };
-      case EntityFieldDataType.BOOLEAN:
-        return { lengthLimit: defaults.BOOLEAN_LENGTH_LIMIT };
-      case EntityFieldDataType.DATE:
-      case EntityFieldDataType.DATETIME_WITH_TZ:
-        return { lengthLimit: defaults.DATE_LENGTH_LIMIT };
+      // INTEGER/BIG_INTEGER collapse to DECIMAL with precision 0 (UI round-trip + integer semantics).
       case EntityFieldDataType.INTEGER:
       case EntityFieldDataType.BIG_INTEGER:
         return {
+          lengthLimit: defaults.DECIMAL_LENGTH_LIMIT,
+          decimalPrecision: defaults.INTEGER_DECIMAL_PRECISION,
           maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
           minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
         };
-      case EntityFieldDataType.FLOAT:
-      case EntityFieldDataType.DOUBLE:
-        return {
-          decimalPrecision: field.decimalPrecision ?? defaults.DECIMAL_PRECISION,
-          maxValue: field.maxValue ?? defaults.NUMERIC_MAX_VALUE,
-          minValue: field.minValue ?? defaults.NUMERIC_MIN_VALUE,
-        };
+      case EntityFieldDataType.BOOLEAN:
+        return { lengthLimit: defaults.BOOLEAN_LENGTH_LIMIT };
+      // DATETIME (no TZ) collapses to DATETIMEOFFSET.
+      case EntityFieldDataType.DATE:
+      case EntityFieldDataType.DATETIME:
+      case EntityFieldDataType.DATETIME_WITH_TZ:
+        return { lengthLimit: defaults.DATE_LENGTH_LIMIT };
       case EntityFieldDataType.FILE:
       case EntityFieldDataType.RELATIONSHIP:
         // UNIQUEIDENTIFIER fixed lengthLimit (300)
@@ -1193,7 +1195,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
         // CHOICE_SET_MULTIPLE fixed lengthLimit (4000)
         return { lengthLimit: defaults.CHOICE_SET_MULTIPLE_LENGTH_LIMIT };
       default:
-        // UUID, CHOICE_SET_SINGLE, AUTO_NUMBER, DATETIME — (sqlType: { name })
+        // UUID, CHOICE_SET_SINGLE, AUTO_NUMBER — bare sqlType: { name } per UI spec.
         return {};
     }
   }

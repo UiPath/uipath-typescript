@@ -535,6 +535,8 @@ export interface FieldMetaData {
   fieldDisplayType: FieldDisplayType;
   /** Transformed field data type — present after SDK transformation */
   fieldDataType: FieldDataType;
+  /** UI logical type (e.g. "text", "number", "dateTime") — preserved on read for round-trip. */
+  type?: string;
   createdTime: string;
   createdBy: string;
   /** Raw SQL type from API — present on raw GET responses, used on write payloads */
