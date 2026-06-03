@@ -64,13 +64,12 @@ export function isValidKey(key: string): key is ValidConfigKey {
 
 // ===== String Conversion Utilities =====
 
+const CAMEL_TO_KEBAB_RE = /([a-z0-9])([A-Z])/g
+
 /**
  * Convert a camelCase string to kebab-case.
  * e.g. 'folderKey' → 'folder-key', 'cdnBase' → 'cdn-base'
  */
-export function camelToKebab(str: string): string {
-const CAMEL_TO_KEBAB_RE = /([a-z0-9])([A-Z])/g
-
 export function camelToKebab(str: string): string {
   return str.replace(CAMEL_TO_KEBAB_RE, '$1-$2').toLowerCase()
 }
