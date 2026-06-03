@@ -20,20 +20,6 @@ import {
 } from '../../models/governance/governance.types';
 import { GovernanceServiceModel } from '../../models/governance/governance.models';
 
-const POLICY_TRACE_BODY_KEYS = [
-  'startTime',
-  'endTime',
-  'evaluationResult',
-  'policyId',
-  'actorProcessId',
-  'actorProcessType',
-  'actorIdentityId',
-  'resourceId',
-  'resourceType',
-  'traceId',
-  'fullOrganization',
-];
-
 /**
  * Service for inspecting governance policy enforcement on the UiPath platform.
  */
@@ -103,7 +89,7 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => GOVERNANCE_ENDPOINTS.POLICY.TRACES,
       method: HTTP_METHODS.POST,
-      excludeFromPrefix: POLICY_TRACE_BODY_KEYS,
+      excludeFromPrefix: Object.keys(apiOptions),
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: GOVERNANCE_PAGINATION.ITEMS_FIELD,
