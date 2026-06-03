@@ -1,7 +1,11 @@
 import { BaseService } from '../base';
 import { ValidationError } from '../../core/errors';
 import { GOVERNANCE_ENDPOINTS } from '../../utils/constants/endpoints';
-import { filterUndefined } from '../../utils/object';
+import {
+  HTTP_METHODS,
+  GOVERNANCE_PAGINATION,
+  GOVERNANCE_OFFSET_PARAMS,
+} from '../../utils/constants/common';
 import { track } from '../../core/telemetry';
 import {
   PaginatedResponse,
@@ -9,15 +13,26 @@ import {
   HasPaginationOptions,
 } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
-import { PaginationManager } from '../../utils/pagination/pagination-manager';
 import { PaginationType } from '../../utils/pagination/internal-types';
-import { getLimitedPageSize } from '../../utils/pagination/constants';
 import {
   PolicyTrace,
   PolicyTraceGetAllOptions,
 } from '../../models/governance/governance.types';
 import { GovernanceServiceModel } from '../../models/governance/governance.models';
-import { RawPolicyTraceItem } from '../../models/governance/governance.internal-types';
+
+const POLICY_TRACE_BODY_KEYS = [
+  'startTime',
+  'endTime',
+  'evaluationResult',
+  'policyId',
+  'actorProcessId',
+  'actorProcessType',
+  'actorIdentityId',
+  'resourceId',
+  'resourceType',
+  'traceId',
+  'fullOrganization',
+];
 
 /**
  * Service for inspecting governance policy enforcement on the UiPath platform.
@@ -26,10 +41,9 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
   /**
    * Gets per-policy enforcement decisions across the requested time range.
    *
-   * Returns one row per policy evaluated within each governance enforcement
-   * event. Results are ordered by `startTime` descending; pagination is
-   * page-number based with no server-provided total count, so `hasNextPage`
-   * is inferred from whether the current page is full.
+   * Returns the detailed audit log of every policy check — who did what, 
+   * when it happened, which policy was applied, and whether that policy 
+   * allowed or blocked the action.
    *
    * @param startTime - Inclusive lower bound on the trace start time. Required.
    * @param options - Optional filters and pagination options
@@ -43,11 +57,11 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    *
    * const governance = new Governance(sdk);
    *
-   * // Bare minimum — fetch using only the required start time
+   * // Get all policy traces from the specified start time
    * const recent = await governance.getPolicyTraces(new Date('2024-01-01'));
    * console.log(recent.items.length);
    *
-   * // Filter denied decisions across the whole organization, paginated
+   * // Get all denied decisions across the whole organization
    * const page1 = await governance.getPolicyTraces(
    *   new Date('2024-01-01'),
    *   {
@@ -79,79 +93,32 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
       throw new ValidationError({ message: 'startTime is required for getPolicyTraces' });
     }
 
-    const isPaginated = !!(options?.cursor || options?.pageSize !== undefined || options?.jumpToPage !== undefined);
-
-    let currentPage = 1;
-    let pageSize: number | undefined = options?.pageSize;
-
-    if (options?.cursor) {
-      const cursorData = PaginationHelpers.parseCursor(options.cursor.value);
-      if (cursorData.type !== PaginationType.OFFSET) {
-        throw new ValidationError({
-          message: `Pagination type mismatch: cursor is for ${cursorData.type} but service uses ${PaginationType.OFFSET}`,
-        });
-      }
-      currentPage = cursorData.pageNumber ?? 1;
-      pageSize = cursorData.pageSize ?? pageSize;
-    } else if (options?.jumpToPage !== undefined) {
-      if (options.jumpToPage <= 0) {
-        throw new ValidationError({ message: 'jumpToPage must be a positive number' });
-      }
-      currentPage = options.jumpToPage;
-    }
-
-    if (pageSize !== undefined && pageSize <= 0) {
-      throw new ValidationError({ message: 'pageSize must be a positive number' });
-    }
-
-    const limitedPageSize = isPaginated ? getLimitedPageSize(pageSize) : undefined;
-
-    const body = filterUndefined({
+    const apiOptions = {
+      ...options,
       startTime: startTime.toISOString(),
       endTime: options?.endTime?.toISOString(),
-      evaluationResult: options?.evaluationResult,
-      policyId: options?.policyId,
-      actorProcessId: options?.actorProcessId,
-      actorProcessType: options?.actorProcessType,
-      actorIdentityId: options?.actorIdentityId,
-      resourceId: options?.resourceId,
-      resourceType: options?.resourceType,
-      traceId: options?.traceId,
-      fullOrganization: options?.fullOrganization,
-      pageNumber: isPaginated ? currentPage - 1 : undefined,
-      pageSize: limitedPageSize,
-    });
+    };
 
-    const response = await this.post<{ items: RawPolicyTraceItem[] }>(
-      GOVERNANCE_ENDPOINTS.POLICY.TRACES,
-      body,
-    );
-
-    // API returns camelCase keys directly — no case transform needed.
-    const items = (response.data?.items ?? []) as PolicyTrace[];
-
-    if (!isPaginated) {
-      return { items } as T extends HasPaginationOptions<T>
-        ? PaginatedResponse<PolicyTrace>
-        : NonPaginatedResponse<PolicyTrace>;
-    }
-
-    // The API does not return a total count or continuation token. A full page
-    // implies more rows may exist; a partial page is definitely the last page.
-    const hasMore = limitedPageSize !== undefined && items.length === limitedPageSize;
-
-    return PaginationManager.createPaginatedResponse<PolicyTrace>(
-      {
-        pageInfo: {
-          hasMore,
-          currentPage,
-          pageSize: limitedPageSize,
+    return PaginationHelpers.getAll<typeof apiOptions, PolicyTrace>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => GOVERNANCE_ENDPOINTS.POLICY.TRACES,
+      method: HTTP_METHODS.POST,
+      excludeFromPrefix: POLICY_TRACE_BODY_KEYS,
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: GOVERNANCE_PAGINATION.ITEMS_FIELD,
+        paginationParams: {
+          pageSizeParam: GOVERNANCE_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: GOVERNANCE_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: GOVERNANCE_OFFSET_PARAMS.COUNT_PARAM,
+          convertToSkip: false,
+          zeroBased: true,
         },
-        type: PaginationType.OFFSET,
       },
-      items,
-    ) as T extends HasPaginationOptions<T>
-      ? PaginatedResponse<PolicyTrace>
-      : NonPaginatedResponse<PolicyTrace>;
+    }, apiOptions) as Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<PolicyTrace>
+        : NonPaginatedResponse<PolicyTrace>
+    >;
   }
 }

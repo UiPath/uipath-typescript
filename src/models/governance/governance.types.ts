@@ -6,17 +6,6 @@
 
 import { PaginationOptions } from '../../utils/pagination/types';
 
-/**
- * Policy evaluation result, used as a filter on
- * {@link GovernanceServiceModel.getPolicyTraces}.
- *
- * The server maps each filter value to a composite verdict string
- * (`PolicyStatus_EvaluationResult`):
- * - `Allow` → `Active_Allow`
- * - `Deny` → `Active_Deny`
- * - `SimulatedAllow` → `Simulated_Allow`
- * - `SimulatedDeny` → `Simulated_Deny`
- */
 export enum PolicyEvaluationResult {
   /** Active policy permitted the action. */
   Allow = 'Allow',
@@ -29,9 +18,6 @@ export enum PolicyEvaluationResult {
 }
 
 /**
- * Single policy evaluation trace returned by
- * {@link GovernanceServiceModel.getPolicyTraces}.
- *
  * Each trace row represents one policy's verdict within a governance
  * enforcement event. One enforcement event can produce multiple trace rows
  * when multiple policies contributed to the final verdict.
@@ -39,12 +25,7 @@ export enum PolicyEvaluationResult {
 export interface PolicyTrace {
   /** Tenant the trace was recorded in. Present even when `fullOrganization` is `true`. */
   tenantId?: string;
-  /**
-   * When the parent governance enforcement event started, in ISO 8601 UTC.
-   *
-   * If the upstream source returned null for this row, the server substitutes
-   * `0001-01-01T00:00:00` — treat that sentinel as "unknown".
-   */
+  /** The start time of governance enforcement event. */
   startTime: string;
   /** Final enforcement verdict for the parent governance event (e.g. `Allow`, `Deny`, `NoOp`). */
   finalEnforcement?: string;
@@ -52,11 +33,8 @@ export interface PolicyTrace {
   policyId?: string;
   /** This individual policy's enforcement contribution to the parent verdict. */
   policyEnforcement?: string;
-  /**
-   * Composite policy verdict for this row. See {@link PolicyEvaluationResult}
-   * for the values accepted on the request-side `evaluationResult` filter.
-   */
-  policyEvaluationResult?: string;
+  /** The outcome of one policy evaluation — whether it allowed or denied the action, and whether that decision was actively enforced or just simulated (NoOp). */
+  policyEvaluationResult?: PolicyEvaluationResult;
   /** Display name of the policy. */
   policyName?: string;
   /** `Active` or `Simulated`. */
@@ -92,7 +70,7 @@ export interface PolicyTrace {
 export interface GovernanceFilterOptions {
   /**
    * Inclusive upper bound on trace start time. When omitted, the upper bound
-   * is open.
+   * is open. 
    */
   endTime?: Date;
   /**
@@ -103,8 +81,7 @@ export interface GovernanceFilterOptions {
 }
 
 /**
- * Filter and pagination options for
- * {@link GovernanceServiceModel.getPolicyTraces}.
+ * Filter and pagination options for fetching policy traces.
  *
  * All filters combine with AND semantics. Array filters match any value in
  * the array (OR within a single filter).

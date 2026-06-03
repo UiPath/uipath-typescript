@@ -45,6 +45,7 @@ describe('GovernanceService Unit Tests', () => {
       expect(item.policyId).toBe(GOVERNANCE_TEST_CONSTANTS.POLICY_ID);
       expect(item.policyName).toBe(GOVERNANCE_TEST_CONSTANTS.POLICY_NAME);
       expect(item.policyStatus).toBe(GOVERNANCE_TEST_CONSTANTS.POLICY_STATUS_ACTIVE);
+      expect(item.policyEvaluationResult).toBe(PolicyEvaluationResult.Deny);
       expect(item.finalEnforcement).toBe('Deny');
       expect(item.traceId).toBe(GOVERNANCE_TEST_CONSTANTS.TRACE_ID);
       expect(item.folderKey).toBe(GOVERNANCE_TEST_CONSTANTS.FOLDER_KEY);

@@ -237,6 +237,8 @@ export class BaseService {
         // When true (default), converts pageNumber to a skip/offset value (e.g., page 3 with pageSize 10 → skip 20).
         // When false, passes pageNumber directly as the offset param — used by APIs that accept a page number instead of a record offset.
         const convertToSkip = paginationParams?.convertToSkip ?? true;
+        // When true, sends pageNumber - 1 (for 0-based APIs). Default false (1-based).
+        const zeroBased = paginationParams?.zeroBased ?? false;
 
         requestParams[pageSizeParam] = limitedPageSize;
         if (convertToSkip) {
@@ -244,7 +246,8 @@ export class BaseService {
             requestParams[offsetParam] = (params.pageNumber - 1) * limitedPageSize;
           }
         } else {
-          requestParams[offsetParam] = params.pageNumber || 1;
+          const sdkPageNumber = params.pageNumber || 1;
+          requestParams[offsetParam] = zeroBased ? sdkPageNumber - 1 : sdkPageNumber;
         }
         if (countParam) {
           requestParams[countParam] = true;
