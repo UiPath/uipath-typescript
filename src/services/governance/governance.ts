@@ -27,11 +27,11 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
   /**
    * Gets per-policy enforcement decisions across the requested time range.
    *
-   * Returns the detailed audit log of every policy check — who did what, 
-   * when it happened, which policy was applied, and whether that policy 
-   * allowed or blocked the action.
+   * Each result row represents one policy's verdict within a single governance enforcement event,
+   * A single user action can produce multiple rows when multiple policies were consulted.
+   * Results are ordered by event start time, descending.
    *
-   * @param startTime - Inclusive lower bound on the trace start time. Required.
+   * @param startTime - Inclusive lower bound on the trace start time.
    * @param options - Optional filters and pagination options
    * @returns Promise resolving to {@link NonPaginatedResponse} of {@link PolicyTrace}
    *          without pagination options, or {@link PaginatedResponse} of

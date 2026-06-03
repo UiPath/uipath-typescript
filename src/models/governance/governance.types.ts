@@ -27,7 +27,7 @@ export interface PolicyTrace {
   tenantId?: string;
   /** The start time of governance enforcement event. */
   startTime: string;
-  /** Final enforcement verdict for the parent governance event (e.g. `Allow`, `Deny`, `NoOp`). */
+  /** Final enforcement verdict for the parent governance event. */
   finalEnforcement?: string;
   /** ID of the policy this trace row evaluates. */
   policyId?: string;
@@ -37,7 +37,7 @@ export interface PolicyTrace {
   policyEvaluationResult?: PolicyEvaluationResult;
   /** Display name of the policy. */
   policyName?: string;
-  /** `Active` or `Simulated`. */
+  /** Enforcement mode of the policy at the time of evaluation. */
   policyStatus?: string;
   /** Opaque details payload describing the evaluation result. */
   policyEvaluationDetails?: string;
