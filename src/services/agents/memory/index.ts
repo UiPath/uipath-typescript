@@ -1,7 +1,7 @@
 /**
  * Memory Module
  *
- * Provides access to UiPath Agent Memory analytics (Traceview).
+ * Provides access to UiPath Agent Memory analytics.
  *
  * @example
  * ```typescript
@@ -12,7 +12,7 @@
  * await sdk.initialize();
  *
  * const memory = new Memory(sdk);
- * const timeline = await memory.getMemoryTimeline();
+ * const timeline = await memory.getTimeline();
  * ```
  *
  * @module

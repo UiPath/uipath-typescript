@@ -1,5 +1,5 @@
 /**
- * Mock factories for Agent Memory (Traceview) service tests.
+ * Mock factories for Agent Memory service tests.
  */
 
 import {

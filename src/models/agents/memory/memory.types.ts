@@ -1,5 +1,5 @@
 /**
- * Types for the Agent Memory (Traceview) analytics service.
+ * Types for the Agent Memory analytics service.
  */
 
 /**
@@ -16,40 +16,39 @@ export enum ExecutionType {
 /**
  * Common time-window and scope filters shared by Agent Memory queries.
  *
- * All fields are optional. When `startTime`/`endTime` are omitted, the server
- * applies default bounds (typically the last 24 hours, with `endTime`
- * defaulting to now).
+ * All fields are optional. When `startTime`/`endTime` are omitted, the query
+ * defaults to the last 24 hours, with `endTime` defaulting to now.
  */
 export interface MemoryFilterOptions {
-  /** Inclusive lower bound for the query window (ISO 8601, UTC). Defaults server-side when omitted. */
+  /** Inclusive lower bound for the query window (ISO 8601, UTC). Defaults to 24 hours before `endTime` when omitted. */
   startTime?: string;
-  /** Exclusive upper bound for the query window (ISO 8601, UTC). Defaults to now server-side when omitted. */
+  /** Exclusive upper bound for the query window (ISO 8601, UTC). Defaults to now when omitted. */
   endTime?: string;
   /** Filter to a single agent by ID. */
   agentId?: string;
   /** Filter to a specific agent version. */
   agentVersion?: string;
-  /** Folder keys (GUIDs) to scope the query. Intersected with the caller's accessible folders. */
+  /** Folder keys (GUIDs) to scope the query. Results are limited to folders you can access. */
   folderKeys?: string[];
   /** Filter to a specific execution kind. Omit to include both Debug and Runtime. */
   executionType?: ExecutionType;
 }
 
 /**
- * Options for {@link MemoryServiceModel.getMemoryTimeline}.
+ * Options for {@link MemoryServiceModel.getTimeline}.
  */
 export interface MemoryGetTimelineOptions extends MemoryFilterOptions {}
 
 /**
- * Options for {@link MemoryServiceModel.getMemoryCallsTimeline}.
+ * Options for {@link MemoryServiceModel.getCallsTimeline}.
  */
 export interface MemoryGetCallsTimelineOptions extends MemoryFilterOptions {}
 
 /**
- * Options for {@link MemoryServiceModel.getTopMemorySpaces}.
+ * Options for {@link MemoryServiceModel.getTopSpaces}.
  */
 export interface MemoryGetTopSpacesOptions extends MemoryFilterOptions {
-  /** Maximum number of memory spaces to return, ranked by memory count. Defaults to 5 server-side. */
+  /** Maximum number of memory spaces to return, ranked by memory count. Defaults to 5 when omitted. */
   limit?: number;
 }
 
@@ -73,7 +72,7 @@ export interface MemoryTimelinePoint {
 }
 
 /**
- * Response from {@link MemoryServiceModel.getMemoryTimeline}.
+ * Response from {@link MemoryServiceModel.getTimeline}.
  */
 export interface MemoryGetTimelineResponse {
   /** Time-series points, one per bucket. May be absent when no data matches. */
@@ -92,7 +91,7 @@ export interface MemoryCallsTimelinePoint {
 }
 
 /**
- * Response from {@link MemoryServiceModel.getMemoryCallsTimeline}.
+ * Response from {@link MemoryServiceModel.getCallsTimeline}.
  */
 export interface MemoryGetCallsTimelineResponse {
   /** Time-series points, one per bucket. May be absent when no data matches. */
@@ -101,7 +100,7 @@ export interface MemoryGetCallsTimelineResponse {
 
 /**
  * A single memory space with its enabled/disabled memory-entry breakdown,
- * as returned by {@link MemoryServiceModel.getTopMemorySpaces}.
+ * as returned by {@link MemoryServiceModel.getTopSpaces}.
  */
 export interface MemorySpace {
   /** Memory space identifier. */
@@ -117,7 +116,7 @@ export interface MemorySpace {
 }
 
 /**
- * Response from {@link MemoryServiceModel.getTopMemorySpaces}.
+ * Response from {@link MemoryServiceModel.getTopSpaces}.
  */
 export interface MemoryGetTopSpacesResponse {
   /** Memory spaces ranked by memory count. May be absent when no data matches. */

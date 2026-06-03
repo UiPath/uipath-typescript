@@ -1,5 +1,5 @@
 /**
- * Memory (Agent Memory / Traceview) test constants used across memory service tests
+ * Agent Memory test constants used across memory service tests
  */
 
 export const MEMORY_TEST_CONSTANTS = {

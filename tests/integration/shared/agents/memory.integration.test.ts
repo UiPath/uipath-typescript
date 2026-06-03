@@ -2,19 +2,18 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Memory } from '../../../../src/services/agents/memory';
 import { ExecutionType } from '../../../../src/models/agents/memory/memory.types';
+import { MEMORY_TEST_CONSTANTS } from '../../../utils/constants';
 
 const modes: InitMode[] = ['v1'];
 
 const WINDOW = {
-  startTime: '2026-05-01T00:00:00Z',
-  endTime: '2026-06-01T00:00:00Z',
+  startTime: MEMORY_TEST_CONSTANTS.START_TIME,
+  endTime: MEMORY_TEST_CONSTANTS.END_TIME,
 };
 
-// Arbitrary well-formed identifiers used only to exercise the filter
-// body-building path against the live API. Filters narrow results, so
-// unmatched values simply yield empty/zero buckets (still HTTP 200).
-const FILTER_AGENT_ID = '6f0f123e-88db-4f2a-a632-5f315f631534';
-const FILTER_FOLDER_KEY = '8709b9b7-5779-4952-b519-016db272da0a';
+// The filter tests pass arbitrary well-formed identifiers (AGENT_ID / FOLDER_KEY)
+// only to exercise the filter body-building path against the live API. Filters
+// narrow results, so unmatched values simply yield empty/zero buckets (still HTTP 200).
 
 // skip: insightsrtm_ endpoints do not support PAT auth — they reject PAT tokens
 // with 401 regardless of scopes and require OAuth. Test bodies are kept intact
@@ -32,26 +31,26 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
     memory = service;
   });
 
-  describe('getMemoryTimeline', () => {
+  describe('getTimeline', () => {
     it('should retrieve the memory timeline for the default window', async () => {
-      const result = await memory.getMemoryTimeline();
+      const result = await memory.getTimeline();
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
     });
 
     it('should retrieve the memory timeline for an explicit window', async () => {
-      const result = await memory.getMemoryTimeline(WINDOW);
+      const result = await memory.getTimeline(WINDOW);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
     });
 
     it('should accept agent, folder, and execution-type filters', async () => {
-      const result = await memory.getMemoryTimeline({
+      const result = await memory.getTimeline({
         ...WINDOW,
-        agentId: FILTER_AGENT_ID,
-        folderKeys: [FILTER_FOLDER_KEY],
+        agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
+        folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
         executionType: ExecutionType.Runtime,
       });
 
@@ -60,7 +59,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
     });
 
     it('should return points with the expected numeric shape', async () => {
-      const result = await memory.getMemoryTimeline(WINDOW);
+      const result = await memory.getTimeline(WINDOW);
 
       if (!result.data || result.data.length === 0) {
         throw new Error('No memory timeline points returned for the requested window');
@@ -76,26 +75,26 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getMemoryCallsTimeline', () => {
+  describe('getCallsTimeline', () => {
     it('should retrieve the memory calls timeline for the default window', async () => {
-      const result = await memory.getMemoryCallsTimeline();
+      const result = await memory.getCallsTimeline();
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
     });
 
     it('should retrieve the memory calls timeline for an explicit window', async () => {
-      const result = await memory.getMemoryCallsTimeline(WINDOW);
+      const result = await memory.getCallsTimeline(WINDOW);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
     });
 
     it('should accept agent, folder, and execution-type filters', async () => {
-      const result = await memory.getMemoryCallsTimeline({
+      const result = await memory.getCallsTimeline({
         ...WINDOW,
-        agentId: FILTER_AGENT_ID,
-        folderKeys: [FILTER_FOLDER_KEY],
+        agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
+        folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
         executionType: ExecutionType.Runtime,
       });
 
@@ -104,7 +103,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
     });
 
     it('should return points with the expected numeric shape', async () => {
-      const result = await memory.getMemoryCallsTimeline(WINDOW);
+      const result = await memory.getCallsTimeline(WINDOW);
 
       if (!result.data || result.data.length === 0) {
         throw new Error('No memory calls timeline points returned for the requested window');
@@ -116,16 +115,16 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getTopMemorySpaces', () => {
+  describe('getTopSpaces', () => {
     it('should retrieve the top memory spaces for the default window', async () => {
-      const result = await memory.getTopMemorySpaces();
+      const result = await memory.getTopSpaces();
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
     });
 
     it('should respect the limit option', async () => {
-      const result = await memory.getTopMemorySpaces({ ...WINDOW, limit: 3 });
+      const result = await memory.getTopSpaces({ ...WINDOW, limit: 3 });
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
@@ -133,10 +132,10 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
     });
 
     it('should accept agent, folder, and execution-type filters', async () => {
-      const result = await memory.getTopMemorySpaces({
+      const result = await memory.getTopSpaces({
         ...WINDOW,
-        agentId: FILTER_AGENT_ID,
-        folderKeys: [FILTER_FOLDER_KEY],
+        agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
+        folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
         executionType: ExecutionType.Runtime,
       });
 
@@ -145,7 +144,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
     });
 
     it('should return spaces with the expected shape', async () => {
-      const result = await memory.getTopMemorySpaces(WINDOW);
+      const result = await memory.getTopSpaces(WINDOW);
 
       if (!result.data || result.data.length === 0) {
         throw new Error('No memory spaces returned for the requested window');

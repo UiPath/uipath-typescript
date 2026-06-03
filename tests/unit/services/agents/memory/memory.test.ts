@@ -36,12 +36,12 @@ describe('MemoryService Unit Tests', () => {
     vi.clearAllMocks();
   });
 
-  describe('getMemoryTimeline', () => {
+  describe('getTimeline', () => {
     it('should retrieve the memory timeline successfully', async () => {
       const mockResponse = createMockMemoryGetTimelineResponse();
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await memoryService.getMemoryTimeline();
+      const result = await memoryService.getTimeline();
 
       expect(result.data).toHaveLength(2);
       expect(result.data?.[0].timeSlice).toBe(MEMORY_TEST_CONSTANTS.TIME_SLICE_1);
@@ -52,10 +52,10 @@ describe('MemoryService Unit Tests', () => {
     it('should call the endpoint with an empty body when no options are provided', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetTimelineResponse());
 
-      await memoryService.getMemoryTimeline();
+      await memoryService.getTimeline();
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MEMORY_ENDPOINTS.GET_MEMORY_TIMELINE,
+        MEMORY_ENDPOINTS.GET_TIMELINE,
         {},
         expect.anything(),
       );
@@ -73,10 +73,10 @@ describe('MemoryService Unit Tests', () => {
         executionType: ExecutionType.Runtime,
       };
 
-      await memoryService.getMemoryTimeline(options);
+      await memoryService.getTimeline(options);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MEMORY_ENDPOINTS.GET_MEMORY_TIMELINE,
+        MEMORY_ENDPOINTS.GET_TIMELINE,
         {
           startTime: MEMORY_TEST_CONSTANTS.START_TIME,
           endTime: MEMORY_TEST_CONSTANTS.END_TIME,
@@ -92,7 +92,7 @@ describe('MemoryService Unit Tests', () => {
     it('should omit undefined filters from the request body', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetTimelineResponse());
 
-      await memoryService.getMemoryTimeline({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
+      await memoryService.getTimeline({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
 
       const sentBody = mockApiClient.post.mock.calls[0][1];
       expect(sentBody).toEqual({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
@@ -103,18 +103,18 @@ describe('MemoryService Unit Tests', () => {
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(MEMORY_TEST_CONSTANTS.ERROR_MESSAGE));
 
-      await expect(memoryService.getMemoryTimeline()).rejects.toThrow(
+      await expect(memoryService.getTimeline()).rejects.toThrow(
         MEMORY_TEST_CONSTANTS.ERROR_MESSAGE,
       );
     });
   });
 
-  describe('getMemoryCallsTimeline', () => {
+  describe('getCallsTimeline', () => {
     it('should retrieve the memory calls timeline successfully', async () => {
       const mockResponse = createMockMemoryGetCallsTimelineResponse();
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await memoryService.getMemoryCallsTimeline();
+      const result = await memoryService.getCallsTimeline();
 
       expect(result.data).toHaveLength(2);
       expect(result.data?.[0].timeSlice).toBe(MEMORY_TEST_CONSTANTS.TIME_SLICE_1);
@@ -125,10 +125,10 @@ describe('MemoryService Unit Tests', () => {
     it('should call the endpoint with an empty body when no options are provided', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetCallsTimelineResponse());
 
-      await memoryService.getMemoryCallsTimeline();
+      await memoryService.getCallsTimeline();
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MEMORY_ENDPOINTS.GET_MEMORY_CALLS_TIMELINE,
+        MEMORY_ENDPOINTS.GET_CALLS_TIMELINE,
         {},
         expect.anything(),
       );
@@ -146,10 +146,10 @@ describe('MemoryService Unit Tests', () => {
         executionType: ExecutionType.Runtime,
       };
 
-      await memoryService.getMemoryCallsTimeline(options);
+      await memoryService.getCallsTimeline(options);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MEMORY_ENDPOINTS.GET_MEMORY_CALLS_TIMELINE,
+        MEMORY_ENDPOINTS.GET_CALLS_TIMELINE,
         {
           startTime: MEMORY_TEST_CONSTANTS.START_TIME,
           endTime: MEMORY_TEST_CONSTANTS.END_TIME,
@@ -165,7 +165,7 @@ describe('MemoryService Unit Tests', () => {
     it('should omit undefined filters from the request body', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetCallsTimelineResponse());
 
-      await memoryService.getMemoryCallsTimeline({ endTime: MEMORY_TEST_CONSTANTS.END_TIME });
+      await memoryService.getCallsTimeline({ endTime: MEMORY_TEST_CONSTANTS.END_TIME });
 
       const sentBody = mockApiClient.post.mock.calls[0][1];
       expect(sentBody).toEqual({ endTime: MEMORY_TEST_CONSTANTS.END_TIME });
@@ -176,18 +176,18 @@ describe('MemoryService Unit Tests', () => {
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(MEMORY_TEST_CONSTANTS.ERROR_MESSAGE_CALLS));
 
-      await expect(memoryService.getMemoryCallsTimeline()).rejects.toThrow(
+      await expect(memoryService.getCallsTimeline()).rejects.toThrow(
         MEMORY_TEST_CONSTANTS.ERROR_MESSAGE_CALLS,
       );
     });
   });
 
-  describe('getTopMemorySpaces', () => {
+  describe('getTopSpaces', () => {
     it('should retrieve the top memory spaces successfully', async () => {
       const mockResponse = createMockMemoryGetTopSpacesResponse();
       mockApiClient.post.mockResolvedValue(mockResponse);
 
-      const result = await memoryService.getTopMemorySpaces();
+      const result = await memoryService.getTopSpaces();
 
       expect(result.data).toHaveLength(2);
       expect(result.data?.[0].memorySpaceId).toBe(MEMORY_TEST_CONSTANTS.MEMORY_SPACE_ID);
@@ -200,10 +200,10 @@ describe('MemoryService Unit Tests', () => {
     it('should call the endpoint with an empty body when no options are provided', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetTopSpacesResponse());
 
-      await memoryService.getTopMemorySpaces();
+      await memoryService.getTopSpaces();
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MEMORY_ENDPOINTS.GET_TOP_MEMORY_SPACES,
+        MEMORY_ENDPOINTS.GET_TOP_SPACES,
         {},
         expect.anything(),
       );
@@ -222,10 +222,10 @@ describe('MemoryService Unit Tests', () => {
         limit: MEMORY_TEST_CONSTANTS.LIMIT,
       };
 
-      await memoryService.getTopMemorySpaces(options);
+      await memoryService.getTopSpaces(options);
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        MEMORY_ENDPOINTS.GET_TOP_MEMORY_SPACES,
+        MEMORY_ENDPOINTS.GET_TOP_SPACES,
         {
           startTime: MEMORY_TEST_CONSTANTS.START_TIME,
           endTime: MEMORY_TEST_CONSTANTS.END_TIME,
@@ -242,7 +242,7 @@ describe('MemoryService Unit Tests', () => {
     it('should omit limit from the request body when not provided', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetTopSpacesResponse());
 
-      await memoryService.getTopMemorySpaces({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
+      await memoryService.getTopSpaces({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
 
       const sentBody = mockApiClient.post.mock.calls[0][1];
       expect(sentBody).toEqual({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
@@ -252,7 +252,7 @@ describe('MemoryService Unit Tests', () => {
     it('should propagate API errors', async () => {
       mockApiClient.post.mockRejectedValue(new Error(MEMORY_TEST_CONSTANTS.ERROR_MESSAGE_SPACES));
 
-      await expect(memoryService.getTopMemorySpaces()).rejects.toThrow(
+      await expect(memoryService.getTopSpaces()).rejects.toThrow(
         MEMORY_TEST_CONSTANTS.ERROR_MESSAGE_SPACES,
       );
     });
