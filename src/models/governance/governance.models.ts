@@ -28,8 +28,9 @@ export interface GovernanceServiceModel {
   /**
    * Gets per-policy enforcement decisions across the requested time range.
    *
-   * Returns one row per policy evaluated within each governance enforcement
-   * event. Results are ordered by `startTime` descending.
+   * Returns the detailed audit log of every policy check — who did what, 
+   * when it happened, which policy was applied, and whether that policy 
+   * allowed or blocked the action.
    *
    * @param startTime - Inclusive lower bound on the trace start time. Required.
    * @param options - Optional filters and pagination options
