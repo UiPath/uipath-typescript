@@ -135,7 +135,6 @@ function validateKeyFormats(
       // Known SDK key in wrong format (e.g. client_id → clientId)
       collector.addError(MESSAGES.INVALID_KEY_FORMAT(key, matchingKey))
     }
-    // Unknown keys are allowed — they are injected as uipath:<kebab-case> meta tags
   }
 }
 
