@@ -214,6 +214,7 @@ nav:
   - Sample Application: https://github.com/UiPath/uipath-typescript/tree/main/samples
   - FAQ: FAQ.md
   - How To Contribute: CONTRIBUTING.md
+  - Integration Testing: integration-testing.md
   - Release Policy: release-policy.md
   - API Guide:
       - Data Fabric: https://docs.uipath.com/data-service/automation-cloud/latest/api-guide/get-entity-endpoint
