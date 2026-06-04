@@ -241,6 +241,35 @@ describe('ProcessInstancesService', () => {
       expect(result[0]).toHaveProperty('name', MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME);
     });
 
+    it('should transform span fields from PascalCase to camelCase', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockElementExecutionsResponse())
+        .mockResolvedValueOnce([createMockTraceSpan()]);
+
+      const result = await service.getExecutionHistory(instanceId, folderKey);
+      const historyItem = result[0];
+
+      // (a) transformed camelCase fields have correct values
+      expect(historyItem.id).toBe(MAESTRO_TEST_CONSTANTS.SPAN_ID);
+      expect(historyItem.traceId).toBe(MAESTRO_TEST_CONSTANTS.TRACE_ID);
+      expect(historyItem.name).toBe(MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME);
+      expect(historyItem.startedTime).toBe(MAESTRO_TEST_CONSTANTS.START_TIME);
+      expect(historyItem.endTime).toBe(MAESTRO_TEST_CONSTANTS.END_TIME);
+      expect(historyItem.updatedTime).toBe(MAESTRO_TEST_CONSTANTS.END_TIME);
+
+      // (b) original PascalCase API fields are absent
+      expect((historyItem as any).Id).toBeUndefined();
+      expect((historyItem as any).TraceId).toBeUndefined();
+      expect((historyItem as any).ParentId).toBeUndefined();
+      expect((historyItem as any).Name).toBeUndefined();
+      expect((historyItem as any).StartTime).toBeUndefined();
+      expect((historyItem as any).EndTime).toBeUndefined();
+      expect((historyItem as any).UpdatedAt).toBeUndefined();
+    });
+
     it('should only include spans matched to elementRuns', async () => {
       const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
       const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
