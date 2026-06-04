@@ -194,7 +194,7 @@ export interface MaestroProcessesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
@@ -216,6 +216,14 @@ export interface MaestroProcessesServiceModel {
    * // Get hourly breakdown
    * const statuses = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
    *   groupBy: TimeInterval.Hour,
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific process
+   * const filtered = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
    * });
    * ```
    *
@@ -243,7 +251,7 @@ export interface MaestroProcessesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
    *
    * @example
@@ -265,6 +273,14 @@ export interface MaestroProcessesServiceModel {
    * // Get weekly breakdown
    * const incidents = await maestroProcesses.getIncidentsTimeline(startTime, endTime, {
    *   groupBy: TimeInterval.Week,
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific process
+   * const filtered = await maestroProcesses.getIncidentsTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
    * });
    * ```
    */

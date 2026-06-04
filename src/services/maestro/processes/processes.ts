@@ -7,7 +7,7 @@ import type { IUiPath } from '../../../core/types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { MaestroProcessesServiceModel } from '../../../models/maestro/processes.models';
 import { createProcessWithMethods } from '../../../models/maestro/processes.models';
-import { buildInsightsTopBody, fetchInstanceStatusTimeline, fetchIncidentsTimeline, buildInsightsCommonBody } from '../insights';
+import { buildInsightsTopBody, buildInsightsTimelineBody, buildInsightsCommonBody } from '../insights';
 import { BpmnHelpers } from './helpers';
 import { track } from '../../../core/telemetry';
 import { createHeaders } from '../../../utils/http/headers';
@@ -189,7 +189,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
@@ -216,6 +216,14 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @example
    * ```typescript
+   * // Filter to a specific process
+   * const filtered = await maestroProcesses.getInstanceStatusTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
    * // Get all-time data (from Unix epoch to now)
    * const allTime = await maestroProcesses.getInstanceStatusTimeline(new Date(0), new Date());
    * ```
@@ -226,7 +234,11 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]> {
-    return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, false, options);
+    const { data } = await this.post<InstanceStatusTimelineResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+      buildInsightsTimelineBody(startTime, endTime, false, options),
+    );
+    return data ?? [];
   }
 
   /**
@@ -241,7 +253,7 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
    *
    * @example
@@ -265,6 +277,14 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *   groupBy: TimeInterval.Week,
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific process
+   * const filtered = await maestroProcesses.getIncidentsTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
    */
   @track('MaestroProcesses.GetIncidentsTimeline')
   async getIncidentsTimeline(
@@ -272,7 +292,11 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<IncidentTimelineResponse[]> {
-    return fetchIncidentsTimeline(this.post.bind(this), startTime, endTime, false, options);
+    const { data } = await this.post<{ dataPoints?: IncidentTimelineResponse[] }>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
+      buildInsightsTimelineBody(startTime, endTime, false, options),
+    );
+    return data?.dataPoints ?? [];
   }
 
   /**

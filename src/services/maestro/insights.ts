@@ -1,7 +1,5 @@
-import { ApiResponse } from '../base';
-import { IncidentTimelineResponse, InstanceStatusTimelineResponse, TimelineOptions } from '../../models/maestro';
+import { TimelineOptions } from '../../models/maestro';
 import type { MaestroProcessStatsRequest, TopQueryOptions } from '../../models/maestro';
-import { MAESTRO_ENDPOINTS } from '../../utils/constants/endpoints';
 
 /**
  * Builds the request body for Insights RTM "top" endpoints.
@@ -27,73 +25,29 @@ export function buildInsightsTopBody(startTime: Date, endTime: Date, isCaseManag
 }
 
 /**
- * Fetches instance status timeline from the Insights API.
- * Shared implementation used by both MaestroProcessesService and CasesService.
+ * Builds the request body for Insights RTM timeline endpoints
+ * (`InstanceStatusByDate`, `IncidentsByTimeWindow`).
  *
- * @param postFn - Bound post method from a BaseService subclass
  * @param startTime - Start of the time range to query
  * @param endTime - End of the time range to query
  * @param isCaseManagement - Whether to filter for case management processes
- * @param options - Optional settings for time bucketing granularity
- * @returns Promise resolving to an array of instance status timeline entries
+ * @param options - Optional time bucketing and filtering settings
+ * @returns Request body for the Insights RTM timeline endpoint
  * @internal
  */
-export async function fetchInstanceStatusTimeline(
-  postFn: <T>(path: string, data?: unknown) => Promise<ApiResponse<T>>,
-  startTime: Date,
-  endTime: Date,
-  isCaseManagement: boolean,
-  options?: TimelineOptions,
-): Promise<InstanceStatusTimelineResponse[]> {
-  const response = await postFn<InstanceStatusTimelineResponse[]>(
-    MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
-    {
-      commonParams: {
-        startTime: startTime.getTime(),
-        endTime: endTime.getTime(),
-        isCaseManagement,
-      },
-      timeSliceUnit: options?.groupBy,
-      timezoneOffset: new Date().getTimezoneOffset() * -1,
+export function buildInsightsTimelineBody(startTime: Date, endTime: Date, isCaseManagement: boolean, options?: TimelineOptions) {
+  return {
+    commonParams: {
+      startTime: startTime.getTime(),
+      endTime: endTime.getTime(),
+      isCaseManagement,
+      ...(options?.packageId ? { packageId: options.packageId } : {}),
+      ...(options?.version ? { version: options.version } : {}),
+      ...(options?.processKeys ? { processKeys: options.processKeys } : {}),
     },
-  );
-
-  return response.data ?? [];
-}
-
-/**
- * Fetches incident counts bucketed by time from the Insights API.
- * Shared implementation used by both MaestroProcessesService and CasesService.
- *
- * @param postFn - Bound post method from a BaseService subclass
- * @param startTime - Start of the time range to query
- * @param endTime - End of the time range to query
- * @param isCaseManagement - Whether to filter for case management processes
- * @param options - Optional settings for time bucketing granularity
- * @returns Promise resolving to an array of incident timeline data points
- * @internal
- */
-export async function fetchIncidentsTimeline(
-  postFn: <T>(path: string, data?: unknown) => Promise<ApiResponse<T>>,
-  startTime: Date,
-  endTime: Date,
-  isCaseManagement: boolean,
-  options?: TimelineOptions,
-): Promise<IncidentTimelineResponse[]> {
-  const response = await postFn<{ dataPoints?: IncidentTimelineResponse[] }>(
-    MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
-    {
-      commonParams: {
-        startTime: startTime.getTime(),
-        endTime: endTime.getTime(),
-        isCaseManagement,
-      },
-      timeSliceUnit: options?.groupBy,
-      timezoneOffset: new Date().getTimezoneOffset() * -1,
-    },
-  );
-
-  return response.data?.dataPoints ?? [];
+    timeSliceUnit: options?.groupBy,
+    timezoneOffset: new Date().getTimezoneOffset() * -1,
+  };
 }
 
 /**

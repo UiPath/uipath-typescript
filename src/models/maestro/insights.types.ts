@@ -80,6 +80,12 @@ export interface TimelineOptions {
    * @default TimeInterval.Day
    */
   groupBy?: TimeInterval;
+  /** Filter by package identifier */
+  packageId?: string;
+  /** Filter by package version */
+  version?: string;
+  /** Filter by one or more process keys. Pass `['<processKey>']` for a single process. */
+  processKeys?: string[];
 }
 
 /**

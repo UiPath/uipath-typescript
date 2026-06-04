@@ -166,7 +166,7 @@ export interface CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
@@ -188,6 +188,14 @@ export interface CasesServiceModel {
    * // Get weekly breakdown
    * const statuses = await cases.getInstanceStatusTimeline(startTime, endTime, {
    *   groupBy: TimeInterval.Week,
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific case process
+   * const filtered = await cases.getInstanceStatusTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
    * });
    * ```
    *
@@ -215,7 +223,7 @@ export interface CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
    *
    * @example
@@ -237,6 +245,14 @@ export interface CasesServiceModel {
    * // Get weekly breakdown
    * const incidents = await cases.getIncidentsTimeline(startTime, endTime, {
    *   groupBy: TimeInterval.Week,
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific case process
+   * const filtered = await cases.getIncidentsTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
    * });
    * ```
    */

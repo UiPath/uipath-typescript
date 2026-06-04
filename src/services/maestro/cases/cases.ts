@@ -7,7 +7,7 @@ import { ProcessType } from '../../../models/maestro/cases.internal-types';
 import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import type { CasesServiceModel } from '../../../models/maestro/cases.models';
 import { createCaseWithMethods, CaseGetAllWithMethodsResponse } from '../../../models/maestro/cases.models';
-import { buildInsightsTopBody, fetchInstanceStatusTimeline, fetchIncidentsTimeline, buildInsightsCommonBody } from '../insights';
+import { buildInsightsTopBody, buildInsightsTimelineBody, buildInsightsCommonBody } from '../insights';
 import { BaseService } from '../../base';
 import { track } from '../../../core/telemetry';
 import { createParams } from '../../../utils/http/params';
@@ -160,7 +160,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
    *
    * @example
@@ -187,6 +187,14 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @example
    * ```typescript
+   * // Filter to a specific case process
+   * const filtered = await cases.getInstanceStatusTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
+   *
+   * @example
+   * ```typescript
    * // Get all-time data (from Unix epoch to now)
    * const allTime = await cases.getInstanceStatusTimeline(new Date(0), new Date());
    * ```
@@ -197,7 +205,11 @@ export class CasesService extends BaseService implements CasesServiceModel {
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<InstanceStatusTimelineResponse[]> {
-    return fetchInstanceStatusTimeline(this.post.bind(this), startTime, endTime, true, options);
+    const { data } = await this.post<InstanceStatusTimelineResponse[]>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+      buildInsightsTimelineBody(startTime, endTime, true, options),
+    );
+    return data ?? [];
   }
 
   /**
@@ -212,7 +224,7 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
-   * @param options - Optional settings for time bucketing granularity
+   * @param options - Optional settings for filtering and time bucket granularity
    * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
    *
    * @example
@@ -236,6 +248,14 @@ export class CasesService extends BaseService implements CasesServiceModel {
    *   groupBy: TimeInterval.Week,
    * });
    * ```
+   *
+   * @example
+   * ```typescript
+   * // Filter to a specific case process
+   * const filtered = await cases.getIncidentsTimeline(startTime, endTime, {
+   *   processKeys: ['<processKey>'],
+   * });
+   * ```
    */
   @track('Cases.GetIncidentsTimeline')
   async getIncidentsTimeline(
@@ -243,7 +263,11 @@ export class CasesService extends BaseService implements CasesServiceModel {
     endTime: Date,
     options?: TimelineOptions,
   ): Promise<IncidentTimelineResponse[]> {
-    return fetchIncidentsTimeline(this.post.bind(this), startTime, endTime, true, options);
+    const { data } = await this.post<{ dataPoints?: IncidentTimelineResponse[] }>(
+      MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
+      buildInsightsTimelineBody(startTime, endTime, true, options),
+    );
+    return data?.dataPoints ?? [];
   }
 
   /**

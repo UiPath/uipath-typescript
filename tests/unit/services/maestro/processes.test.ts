@@ -266,6 +266,28 @@ describe('MaestroProcessesService', () => {
       );
     });
 
+    it('should forward packageId, version, and processKeys filters into commonParams', async () => {
+      mockApiClient.post.mockResolvedValue(mockResponse);
+
+      await service.getInstanceStatusTimeline(startDate, endDate, {
+        packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+        version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+        processKeys: [MAESTRO_TEST_CONSTANTS.PROCESS_KEY],
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INSTANCE_STATUS_BY_DATE,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+            version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+            processKeys: [MAESTRO_TEST_CONSTANTS.PROCESS_KEY],
+          }),
+        }),
+        {},
+      );
+    });
+
     it('should return empty array when API returns null', async () => {
       mockApiClient.post.mockResolvedValue(null);
 
@@ -335,6 +357,28 @@ describe('MaestroProcessesService', () => {
         MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
         expect.objectContaining({
           timeSliceUnit: TimeInterval.Week,
+        }),
+        {},
+      );
+    });
+
+    it('should forward packageId, version, and processKeys filters into commonParams', async () => {
+      mockApiClient.post.mockResolvedValue(mockApiResponse);
+
+      await service.getIncidentsTimeline(startDate, endDate, {
+        packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+        version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+        processKeys: [MAESTRO_TEST_CONSTANTS.PROCESS_KEY],
+      });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.INSIGHTS.INCIDENTS_BY_TIME_WINDOW,
+        expect.objectContaining({
+          commonParams: expect.objectContaining({
+            packageId: MAESTRO_TEST_CONSTANTS.PACKAGE_ID,
+            version: MAESTRO_TEST_CONSTANTS.PACKAGE_VERSION,
+            processKeys: [MAESTRO_TEST_CONSTANTS.PROCESS_KEY],
+          }),
         }),
         {},
       );

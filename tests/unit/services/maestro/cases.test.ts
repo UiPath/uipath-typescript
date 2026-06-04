@@ -212,7 +212,7 @@ describe('CasesService', () => {
   });
 
   describe('getInstanceStatusTimeline', () => {
-    it('should call fetchInstanceStatusTimeline with isCaseManagement true', async () => {
+    it('should call InstanceStatusByDate with isCaseManagement true', async () => {
       mockApiClient.post.mockResolvedValue([createMockInstanceStatusTimeline()]);
 
       const result = await service.getInstanceStatusTimeline(
@@ -233,7 +233,7 @@ describe('CasesService', () => {
   });
 
   describe('getIncidentsTimeline', () => {
-    it('should call fetchIncidentsTimeline with isCaseManagement true and unwrap dataPoints', async () => {
+    it('should call IncidentsByTimeWindow with isCaseManagement true and unwrap dataPoints', async () => {
       mockApiClient.post.mockResolvedValue({
         dataPoints: [createMockIncidentTimelineResponse()],
       });
