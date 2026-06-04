@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
@@ -14,6 +14,7 @@ import {
   EntityRecord,
   FieldDisplayType,
   FieldMetaData,
+  QueryFilterOperator,
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
 
@@ -1328,6 +1329,187 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       const idx = createdRecordIds.indexOf(inserted.Id);
       if (idx !== -1) createdRecordIds.splice(idx, 1);
+    });
+  });
+
+  // ─── Folder-scoped record CRUD ────────────────────────────────────────────
+  // Verifies that every record-CRUD method correctly forwards the
+  // X-UIPATH-FolderKey header for an entity that lives in a non-tenant folder.
+  //
+  // Skipped: beforeAll provisions a fresh folder-scoped entity via entities.create,
+  // which requires the DataFabric.Schema.Write OAuth scope — not granted to the
+  // standard integration-test PAT. Mirrors the existing skip on `create`,
+  // `updateById`, `deleteById`, and `entity schema methods (bound)` above.
+  describe.skip('Folder-scoped record CRUD', () => {
+    let folderEntityId!: string;
+    let folderKey!: string;
+    const folderRecordIds: string[] = [];
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+      if (!config.folderKey) {
+        throw new Error(
+          'INTEGRATION_TEST_FOLDER_KEY is not set — folder-scoped record CRUD tests need a folder the test PAT can write to',
+        );
+      }
+      folderKey = config.folderKey;
+
+      const { entities } = getServices();
+      const entityName = `sdk_fld_${mode}_${generateRandomString(8).toLowerCase()}`;
+      folderEntityId = await entities.create(
+        entityName,
+        [
+          { fieldName: 'name', type: EntityFieldDataType.STRING },
+          { fieldName: 'age', type: EntityFieldDataType.INTEGER },
+          { fieldName: 'isActive', type: EntityFieldDataType.BOOLEAN },
+        ],
+        { folderKey, displayName: entityName },
+      );
+      createdEntityIds.push(folderEntityId);
+    });
+
+    it('should insert a single record with folderKey via insertRecordById', async () => {
+      const { entities } = getServices();
+      const result = await entities.insertRecordById(
+        folderEntityId,
+        { name: `Alice_${generateRandomString(6)}`, age: 30, isActive: true },
+        { folderKey },
+      );
+
+      expect(result).toBeDefined();
+      expect(result.Id).toBeDefined();
+      folderRecordIds.push(result.Id);
+    });
+
+    it('should batch-insert records with folderKey via insertRecordsById', async () => {
+      const { entities } = getServices();
+      const result = await entities.insertRecordsById(
+        folderEntityId,
+        [
+          { name: `Bob_${generateRandomString(6)}`, age: 25, isActive: false },
+          { name: `Charlie_${generateRandomString(6)}`, age: 40, isActive: true },
+        ],
+        { folderKey },
+      );
+
+      expect(result.successRecords).toBeDefined();
+      expect(result.successRecords.length).toBe(2);
+
+      const ids = result.successRecords.map((r) => r.Id).filter(Boolean) as string[];
+      folderRecordIds.push(...ids);
+    });
+
+    it('should get a single record with folderKey via getRecordById', async () => {
+      const { entities } = getServices();
+      const record = await entities.getRecordById(
+        folderEntityId,
+        folderRecordIds[0],
+        { folderKey },
+      );
+
+      expect(record).toBeDefined();
+      expect(record.Id).toBe(folderRecordIds[0]);
+      expect(record.age).toBe(30);
+    });
+
+    it('should list paginated records with folderKey via getAllRecords', async () => {
+      const { entities } = getServices();
+      const result = await entities.getAllRecords(folderEntityId, {
+        folderKey,
+        pageSize: 10,
+      });
+
+      expect(result.items).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeGreaterThanOrEqual(folderRecordIds.length);
+      expect(hasValidPagination(result)).toBe(true);
+    });
+
+    it('should filter records with folderKey via queryRecordsById', async () => {
+      const { entities } = getServices();
+      const result = await entities.queryRecordsById(folderEntityId, {
+        folderKey,
+        filterGroup: {
+          queryFilters: [
+            { fieldName: 'isActive', operator: QueryFilterOperator.Equals, value: 'true' },
+          ],
+        },
+      });
+
+      expect(Array.isArray(result.items)).toBe(true);
+      // We inserted 2 active records (Alice + Charlie); no others exist in this fresh entity.
+      expect(result.items.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should update a record with folderKey via updateRecordById', async () => {
+      const { entities } = getServices();
+      const result = await entities.updateRecordById(
+        folderEntityId,
+        folderRecordIds[0],
+        { age: 31 },
+        { folderKey },
+      );
+
+      expect(result).toBeDefined();
+      expect(result.age).toBe(31);
+    });
+
+    it('should batch-update records with folderKey via updateRecordsById', async () => {
+      const { entities } = getServices();
+      const updates: EntityRecord[] = folderRecordIds.slice(1).map((id) => ({
+        Id: id,
+        isActive: true,
+      } as EntityRecord));
+
+      const result = await entities.updateRecordsById(folderEntityId, updates, { folderKey });
+
+      expect(result.successRecords).toBeDefined();
+      expect(result.successRecords.length).toBe(updates.length);
+    });
+
+    it('should delete a single record with folderKey via deleteRecordById', async () => {
+      const { entities } = getServices();
+      const idToDelete = folderRecordIds.pop()!;
+
+      await entities.deleteRecordById(folderEntityId, idToDelete, { folderKey });
+
+      // Verify gone via getAllRecords — the deleted Id should not appear in the list.
+      const page = await entities.getAllRecords(folderEntityId, { folderKey, pageSize: 50 });
+      const ids = page.items.map((r) => r.Id);
+      expect(ids).not.toContain(idToDelete);
+    });
+
+    it('should batch-delete records with folderKey via deleteRecordsById', async () => {
+      const { entities } = getServices();
+      if (folderRecordIds.length === 0) {
+        throw new Error('No folder records to batch-delete — prior insert tests may have failed to track IDs');
+      }
+
+      const result = await entities.deleteRecordsById(
+        folderEntityId,
+        [...folderRecordIds],
+        { folderKey },
+      );
+
+      expect(result.successRecords).toBeDefined();
+      folderRecordIds.length = 0;
+    });
+
+    afterAll(async () => {
+      const config = getTestConfig();
+      if (config.skipCleanup) return;
+      const { entities } = getServices();
+
+      if (folderRecordIds.length > 0) {
+        await entities
+          .deleteRecordsById(folderEntityId, folderRecordIds, { folderKey })
+          .catch(() => undefined);
+      }
+      if (folderEntityId) {
+        await entities.deleteById(folderEntityId, { folderKey }).catch(() => undefined);
+        const idx = createdEntityIds.indexOf(folderEntityId);
+        if (idx !== -1) createdEntityIds.splice(idx, 1);
+      }
     });
   });
 

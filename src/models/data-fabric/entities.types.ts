@@ -45,7 +45,7 @@ export interface EntityRecord {
 export type EntityGetRecordsByIdOptions = {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
-} & PaginationOptions;
+} & PaginationOptions & EntityFolderScopedOptions;
 
 /**
  * Options for getting all records of an entity
@@ -55,7 +55,7 @@ export type EntityGetAllRecordsOptions = EntityGetRecordsByIdOptions;
 /**
  * Options for getting a single entity record by entity ID and record ID
  */
-export interface EntityGetRecordByIdOptions {
+export interface EntityGetRecordByIdOptions extends EntityFolderScopedOptions {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
 }
@@ -63,7 +63,7 @@ export interface EntityGetRecordByIdOptions {
 /**
  * Common options for entity operations that modify multiple records
  */
-export interface EntityOperationOptions {
+export interface EntityOperationOptions extends EntityFolderScopedOptions {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
   /** Whether to fail on first error (default: false) */
@@ -74,7 +74,7 @@ export interface EntityOperationOptions {
  * Options for inserting a single record into an entity
  * @deprecated Use {@link EntityInsertRecordOptions} instead for better clarity on inserting a single record into an entity. This type will be removed in future versions.
  */
-export interface EntityInsertOptions {
+export interface EntityInsertOptions extends EntityFolderScopedOptions {
   /** Level of entity expansion (default: 0) */
   expansionLevel?: number;
 }
@@ -115,7 +115,7 @@ export interface EntityUpdateRecordsOptions extends EntityOperationOptions {}
  * Options for deleting data from an entity
  * @deprecated Use {@link EntityDeleteRecordsOptions} instead for better clarity on deleting records from an entity. This type will be removed in future versions.
  */
-export interface EntityDeleteOptions {
+export interface EntityDeleteOptions extends EntityFolderScopedOptions {
   /** Whether to fail on first error (default: false) */
   failOnFirst?: boolean;
 }
@@ -124,6 +124,16 @@ export interface EntityDeleteOptions {
  * Options for deleting records in an entity
  */
 export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
+
+/**
+ * Options for {@link EntityServiceModel.deleteRecordById}
+ */
+export interface EntityDeleteRecordByIdOptions extends EntityFolderScopedOptions {}
+
+/**
+ * Options for {@link EntityServiceModel.importRecordsById}
+ */
+export interface EntityImportRecordsByIdOptions extends EntityFolderScopedOptions {}
 
 
 /**
@@ -241,7 +251,7 @@ export type EntityQueryRecordsOptions = {
   aggregates?: EntityAggregate[];
   /** Field names to group aggregate results by. */
   groupBy?: string[];
-} & PaginationOptions;
+} & PaginationOptions & EntityFolderScopedOptions;
 
 /**
  * Response from querying entity records
@@ -304,15 +314,32 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
 
 
 /**
+ * Common shape for every folder-scoped Data Fabric entity operation.
+ * Forwarded on the wire as the `X-UIPATH-FolderKey` header.
+ */
+export interface EntityFolderScopedOptions {
+  /** Key identifying the folder the entity belongs to. Omit for tenant-level entities. */
+  folderKey?: string;
+}
+
+/**
+ * Options for {@link EntityServiceModel.getById}
+ */
+export interface EntityGetByIdOptions extends EntityFolderScopedOptions {}
+
+/**
+ * Options for {@link EntityServiceModel.deleteById}
+ */
+export interface EntityDeleteByIdOptions extends EntityFolderScopedOptions {}
+
+/**
  * Options for creating a new Data Fabric entity
  */
-export interface EntityCreateOptions {
+export interface EntityCreateOptions extends EntityFolderScopedOptions {
   /** Human-readable display name shown in the UI (defaults to `name` if omitted) */
   displayName?: string;
   /** Optional entity description */
   description?: string;
-  /** UUID of the folder to place the entity in (defaults to the tenant-level folder) */
-  folderKey?: string;
   /** Whether role-based access control is enabled for this entity (default: false) */
   isRbacEnabled?: boolean;
   /** Whether Analytics integration is enabled for this entity (default: false) */
@@ -344,7 +371,7 @@ export interface EntityRemoveFieldOptions {
  * (`displayName`, `description`, `isRbacEnabled`) can be combined; each is applied
  * only when the corresponding fields are provided.
  */
-export interface EntityUpdateByIdOptions {
+export interface EntityUpdateByIdOptions extends EntityFolderScopedOptions {
   /** New fields to add */
   addFields?: EntityCreateFieldOptions[];
   /** Fields to remove, each identified by field name */
@@ -379,10 +406,20 @@ export type EntityFileType = Blob | File | Uint8Array;
 /**
  * Optional options for uploading an attachment to an entity record
  */
-export interface EntityUploadAttachmentOptions {
+export interface EntityUploadAttachmentOptions extends EntityFolderScopedOptions {
   /** Optional expansion level (default: 0) */
   expansionLevel?: number;
 }
+
+/**
+ * Optional options for downloading an attachment from an entity record
+ */
+export interface EntityDownloadAttachmentOptions extends EntityFolderScopedOptions {}
+
+/**
+ * Optional options for deleting an attachment from an entity record
+ */
+export interface EntityDeleteAttachmentOptions extends EntityFolderScopedOptions {}
 
 /**
  * Response from uploading an attachment to an entity record
