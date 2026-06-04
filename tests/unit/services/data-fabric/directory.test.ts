@@ -117,26 +117,6 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       );
     });
 
-    it('should support PascalCase directory response envelopes', async () => {
-      mockApiClient.get.mockResolvedValue({
-        TotalCount: 1,
-        Results: [
-          {
-            externalId: 'principal-id',
-          },
-        ],
-      });
-
-      const result = await directoryService.getAll();
-
-      expect(result).toEqual([
-        {
-          externalId: 'principal-id',
-          roles: [],
-        },
-      ]);
-    });
-
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 

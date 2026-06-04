@@ -27,14 +27,14 @@ function extractDirectoryItems(data: RawDataFabricDirectoryListResponse | DataFa
   if (Array.isArray(data)) {
     return data;
   }
-  return data.results ?? data.Results ?? data.value ?? data.Value ?? data.data ?? [];
+  return data.results ?? data.value ?? data.data ?? [];
 }
 
 function extractTotalCount(data: RawDataFabricDirectoryListResponse | DataFabricDirectoryEntry[]): number | undefined {
   if (Array.isArray(data)) {
     return undefined;
   }
-  return data.totalCount ?? data.TotalCount;
+  return data.totalCount;
 }
 
 function normalizeDirectoryEntry(entry: DataFabricDirectoryEntry): DataFabricDirectoryEntry {

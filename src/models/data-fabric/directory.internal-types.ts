@@ -19,10 +19,7 @@ export interface DataFabricDirectoryRevokePayload {
 
 export interface RawDataFabricDirectoryListResponse {
   totalCount?: number;
-  TotalCount?: number;
   results?: DataFabricDirectoryEntry[];
-  Results?: DataFabricDirectoryEntry[];
   value?: DataFabricDirectoryEntry[];
-  Value?: DataFabricDirectoryEntry[];
   data?: DataFabricDirectoryEntry[];
 }
