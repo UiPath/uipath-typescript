@@ -13,7 +13,7 @@ function extractRoles(data: RawDataFabricRoleListResponse | DataFabricRole[]): D
   if (Array.isArray(data)) {
     return data;
   }
-  return data.results ?? data.Results ?? data.value ?? data.Value ?? data.data ?? [];
+  return data.results ?? data.value ?? data.data ?? [];
 }
 
 /**
