@@ -34,7 +34,7 @@ export interface PolicyTrace {
   /** This individual policy's enforcement contribution to the parent verdict. */
   policyEnforcement?: string;
   /** The outcome of one policy evaluation — whether it allowed or denied the action, and whether that decision was actively enforced or just simulated (NoOp). */
-  policyEvaluationResult?: PolicyEvaluationResult;
+  policyEvaluationResult?: string;
   /** Display name of the policy. */
   policyName?: string;
   /** Enforcement mode of the policy at the time of evaluation. */
