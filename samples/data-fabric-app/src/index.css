@@ -1,0 +1,364 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Apollo Vertex theme tokens (OKLCH).
+ * Source: https://apollo-vertex.vercel.app/foundation/colors
+ *
+ * Tokens are stored as bare `L C H` triples (no `oklch()` wrapper). The
+ * Tailwind config wraps them in `oklch(var(--token) / <alpha-value>)`, which
+ * is what makes opacity modifiers (`bg-primary/50`) compose correctly.
+ *
+ * Same token names as standard shadcn, so all the shadcn components work
+ * unchanged.
+ */
+
+@layer base {
+  :root {
+    /* Apollo Vertex font families. Loaded via <link> in index.html. */
+    --font-sans: 'Inter', ui-sans-serif, sans-serif, system-ui;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+    --background: 1 0 89.88;
+    --foreground: 0.2394 0.0455 252.45;
+    --card: 1 0 89.88;
+    --card-foreground: 0.2394 0.0455 252.45;
+    --popover: 1 0 89.88;
+    --popover-foreground: 0.2394 0.0455 252.45;
+    --muted: 0.963 0.0062 255.48;
+    --muted-foreground: 0.4594 0.028 264.25;
+
+    --primary: 0.64 0.115 208;
+    --primary-foreground: 1 0 89.88;
+    --secondary: 0.9593 0.0069 247.9;
+    --secondary-foreground: 0.2394 0.0455 252.45;
+    --accent: 0.9593 0.0069 247.9;
+    --accent-foreground: 0.2394 0.0455 252.45;
+
+    --destructive: 0.62 0.150 18;
+    --destructive-foreground: 1 0 89.88;
+    --success: 0.57 0.105 152;
+    --success-foreground: 1 0 89.88;
+    --warning: 0.80 0.1401 80.82;
+    --warning-foreground: 0.166 0.0283 203.34;
+    --info: 0.60 0.125 210;
+    --info-foreground: 1 0 89.88;
+
+    --border: 0.9229 0.0065 252.13;
+    --input: 0.9229 0.0065 252.13;
+    --ring: 0.64 0.115 208;
+
+    --sidebar: 0.9723 0.0074 260.73;
+    --sidebar-foreground: 0.2394 0.0455 252.445;
+    --sidebar-primary: 0.64 0.115 208;
+    --sidebar-primary-foreground: 0.166 0.0283 203.338;
+    --sidebar-accent: 0.9593 0.0069 247.9;
+    --sidebar-accent-foreground: 0.166 0.0283 203.338;
+    --sidebar-border: 0.9237 0.0133 262.378;
+    --sidebar-ring: 0.64 0.115 208;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0.21 0.03 258.5;
+    --foreground: 0.985 0 0;
+    --card: 0.233 0.036 254.7;
+    --card-foreground: 0.9525 0.011 225.98;
+    --popover: 0.21 0.03 258.5;
+    --popover-foreground: 0.985 0 0;
+    --muted: 0.2648 0.0329 254.38;
+    --muted-foreground: 0.72 0.03 254.38;
+
+    --primary: 0.69 0.112 207;
+    --primary-foreground: 0.166 0.0283 203.34;
+    --secondary: 0.3927 0.0289 240.86;
+    --secondary-foreground: 0.9416 0.0145 244.72;
+    --accent: 0.3927 0.0289 240.86;
+    --accent-foreground: 0.9416 0.0145 244.72;
+
+    --destructive: 0.68 0.155 18;
+    --destructive-foreground: 0.166 0.0283 203.34;
+    --success: 0.70 0.120 152;
+    --success-foreground: 0.166 0.0283 203.34;
+    --warning: 0.6889 0.1401 80.82;
+    --info: 0.69 0.112 207;
+    --info-foreground: 0.166 0.0283 203.34;
+
+    --border: 0.3068 0.0426 258.29;
+    --input: 0.3068 0.0426 258.29;
+    --ring: 0.69 0.112 207;
+
+    --sidebar: 0.162 0.031 257.7;
+    --sidebar-foreground: 0.9525 0.011 225.983;
+    --sidebar-primary: 0.69 0.112 207;
+    --sidebar-primary-foreground: 0.166 0.0283 203.34;
+    --sidebar-accent: 0.3927 0.0289 240.86;
+    --sidebar-accent-foreground: 0.9525 0.011 225.983;
+    --sidebar-border: 0.3068 0.0426 258.29;
+    --sidebar-ring: 0.69 0.112 207;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    /* Slight letter-spacing tightening at smaller sizes — matches Apollo Vertex
+       (their headings use `tracking-tight`; body left at default). */
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  code,
+  pre,
+  kbd,
+  samp,
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.025em; /* Tailwind's tracking-tight */
+  }
+}
+
+/*
+ * AG Grid (v33+) theme overrides via CSS variables.
+ *
+ * The data-table widget hard-codes `theme: themeQuartz`, which means the
+ * body `light`/`dark` class doesn't reach AG Grid through normal channels.
+ * AG Grid reads its colors from `--ag-*` CSS variables though, so we can
+ * override those globally and they take effect.
+ *
+ * Light mode uses Quartz defaults. Dark mode maps to our Apollo Vertex
+ * tokens so the grid matches the rest of the app.
+ */
+
+:root {
+  /* Light overrides — pull a few accents toward the Apollo Vertex palette
+     so the grid doesn't look out of place against the rest of the UI. */
+  --ag-active-color: oklch(0.64 0.115 208);
+  --ag-selected-row-background-color: oklch(0.64 0.115 208 / 0.08);
+  --ag-row-hover-color: oklch(0.963 0.0062 255.48);
+  --ag-header-background-color: oklch(0.9723 0.0074 260.73);
+  --ag-border-color: oklch(0.9229 0.0065 252.13);
+  --ag-row-border-color: oklch(0.9229 0.0065 252.13);
+  --ag-font-family: inherit;
+  --ag-font-size: 0.875rem;
+  /* `--ag-grid-size` drives most internal spacing; bumping it slightly so
+     the table has more breathing room without overwhelming. */
+  --ag-grid-size: 6px;
+  /* Header height fixed; row height is `auto` so multi-line content fits. */
+  --ag-header-height: 44px;
+  --ag-cell-horizontal-padding: 12px;
+}
+
+/* Minor polish for AG Grid that the theme tokens don't cover. */
+.ag-header-cell-label {
+  font-weight: 600;
+}
+.ag-cell-wrap-text {
+  word-break: break-word;
+}
+.ag-row {
+  transition: background-color 80ms ease;
+}
+
+/*
+ * Vertically center cell content.
+ *
+ * We use `autoHeight: true` on every column so rows grow to fit wrapped
+ * long values. Without this, AG Grid leaves the content top-aligned, so in
+ * a row where one column has 3 lines of text and another has a single ID,
+ * the single ID hugs the top instead of sitting at the row's vertical
+ * midpoint.
+ *
+ * IMPORTANT: scope the rule to non-editing cells. When a cell enters edit
+ * mode (`.ag-cell-inline-editing`), the widget mounts its editor *inside*
+ * the cell, and any `display: flex` on the cell pushes the editor input
+ * to a second line. The `:not()` keeps editors well-behaved.
+ */
+.ag-cell:not(.ag-cell-inline-editing):not(.ag-cell-not-inline-editing-placeholder) {
+  display: flex;
+  align-items: center;
+}
+
+/*
+ * Loading state — the widget renders `<div class="datatable-loading">Loading...</div>`
+ * while it fetches, top-aligned inside the (much taller) wrapping card.
+ * We center it, prepend a CSS-only spinner via ::before, and replace the
+ * default text with "Loading records…" via ::after.
+ */
+.datatable-loading {
+  height: 100% !important;
+  min-height: 240px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  /* Hide the bare text — we render our own label via ::after below.
+     `font-size: 0` collapses the original "Loading..." string while
+     leaving the inserted spinner + label visible at their own sizes. */
+  font-size: 0 !important;
+  color: oklch(var(--muted-foreground));
+}
+
+.datatable-loading::before,
+.datatable-loading::after {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.datatable-loading::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: datafabric-loading-spin 0.7s linear infinite;
+  opacity: 0.85;
+}
+
+.datatable-loading::after {
+  content: 'Loading records…';
+  letter-spacing: 0;
+}
+
+@keyframes datafabric-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Same treatment for the widget's error state, for visual consistency. */
+.datatable-error {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: oklch(var(--destructive));
+  font-size: 0.875rem;
+}
+
+/* Required-field marker: just the asterisk in the header name (added in
+   the column's `headerName`). No red tinting on the label or empty cells —
+   that turned out to be visually noisy on entities where most fields are
+   required. The `*` alone reads as "required" without screaming. */
+
+/*
+ * Widget toolbar polish.
+ *
+ * The data-table widget renders its toolbar with Apollo-Wind buttons. Out
+ * of the box they sit too tight together and lack horizontal padding — we
+ * give them more room and add a divider between toolbar and grid.
+ */
+.uipath-datatable-container > div:first-child {
+  /* Toolbar row — align actions to the right, like most app toolbars do. */
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  gap: 0.625rem !important;
+  justify-content: flex-end;
+}
+.uipath-datatable-container > div:first-child button {
+  /* Apollo-Wind buttons */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  height: 2.25rem;
+  font-size: 0.875rem;
+}
+/* Hide the widget's "Group by" dropdown — not part of the sample's UX. */
+.uipath-datatable-container > div:first-child > div.ml-auto {
+  display: none !important;
+}
+
+/*
+ * Collapse the widget toolbar when it has no visible buttons.
+ *
+ * We hide some toolbar actions (Refresh, Add Row, Insert Records) via
+ * `useWidgetToolbarOverrides`, since we surface those elsewhere in the
+ * page. The natively visible buttons — Show Diff, Discard, Delete Records —
+ * only appear when there's something to act on (pending edits / selected
+ * rows). The rest of the time the toolbar is empty, and an empty toolbar
+ * row with padding + border would just
+ * leave a stray strip above the grid — so we collapse it.
+ *
+ * `:has()` lets us condition on whether any non-hidden button exists.
+ */
+.uipath-datatable-container
+  > div:first-child:not(:has(button:not([style*='display: none']))) {
+  display: none !important;
+}
+
+/*
+ * Make the widget fill its wrapping div.
+ *
+ * `EntityDetail` wraps the widget in a fixed-height div
+ * (h-[calc(100vh-320px)] min-h-[480px]) so AG Grid has a viewport to expand
+ * into. The widget's own `.uipath-datatable-container`, however, sizes to
+ * its content by default — so on screens taller than the grid needs, there's
+ * empty space between the pagination row and the bottom of the wrapping
+ * card. Forcing the container to fill 100% height makes AG Grid expand its
+ * row area to fill, and the pagination panel sits flush at the bottom.
+ */
+.uipath-datatable-container {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+/* The grid area is whichever child isn't the toolbar — make it flex-fill. */
+.uipath-datatable-container > div:last-child {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.uipath-datatable-container .ag-paging-panel {
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+}
+.uipath-datatable-container .ag-root-wrapper-body {
+  margin-bottom: 0 !important;
+}
+
+/*
+ * The widget mounts its own toast `<section aria-label="Notifications alt+T">`
+ * inside `.uipath-datatable-container`. Even when empty it takes layout
+ * space (Sonner uses a fixed-height region), which is the trailing gap
+ * below the pagination row. We render our own Sonner Toaster at the app
+ * root, so the widget's instance is redundant — hide it.
+ */
+.uipath-datatable-container > section[aria-label*='Notifications'] {
+  display: none !important;
+}
+
+.dark {
+  --ag-foreground-color: oklch(0.985 0 0);
+  --ag-background-color: oklch(0.21 0.03 258.5);
+  --ag-header-foreground-color: oklch(0.985 0 0);
+  --ag-header-background-color: oklch(0.233 0.036 254.7);
+  --ag-row-hover-color: oklch(0.2648 0.0329 254.38);
+  --ag-selected-row-background-color: oklch(0.69 0.112 207 / 0.15);
+  --ag-odd-row-background-color: oklch(0.215 0.03 258.5);
+  --ag-border-color: oklch(0.3068 0.0426 258.29);
+  --ag-row-border-color: oklch(0.3068 0.0426 258.29);
+  --ag-secondary-border-color: oklch(0.3068 0.0426 258.29);
+  --ag-modal-overlay-background-color: oklch(0.21 0.03 258.5 / 0.66);
+  --ag-control-panel-background-color: oklch(0.233 0.036 254.7);
+  --ag-subheader-background-color: oklch(0.233 0.036 254.7);
+  --ag-input-background-color: oklch(0.233 0.036 254.7);
+  --ag-input-border-color: oklch(0.3068 0.0426 258.29);
+  --ag-input-focus-border-color: oklch(0.69 0.112 207);
+  --ag-disabled-foreground-color: oklch(0.72 0.03 254.38);
+  --ag-active-color: oklch(0.69 0.112 207);
+  --ag-checkbox-checked-color: oklch(0.69 0.112 207);
+  --ag-checkbox-unchecked-color: oklch(0.72 0.03 254.38);
+  --ag-range-selection-border-color: oklch(0.69 0.112 207);
+  --ag-tooltip-background-color: oklch(0.233 0.036 254.7);
+}

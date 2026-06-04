@@ -1,0 +1,8 @@
+{
+  "clientId": "<your-oauth-external-app-client-id>",
+  "scope": "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write",
+  "orgName": "<your-org-name>",
+  "tenantName": "<your-tenant-name>",
+  "baseUrl": "https://alpha.uipath.com",
+  "redirectUri": "http://localhost:5173"
+}
