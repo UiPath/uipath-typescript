@@ -1,24 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChoiceSets } from '@uipath/uipath-typescript/entities'
+import type { ChoiceSetGetAllResponse } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import { useAuth } from './useAuth'
 
-/**
- * Subset of `ChoiceSetGetAllResponse` we use in the list view.
- *
- * Mirrors what the SDK returns from `ChoiceSets.getAll()`. Kept as a local
- * type so the rest of the app stays decoupled from SDK internals.
- */
-export interface ChoiceSetListItem {
-  id: string
-  name: string
-  displayName: string
-  description?: string
-  createdBy?: string
-  createdTime?: string
-  updatedBy?: string
-  updatedTime?: string
-}
+/** Choice set row from `ChoiceSets.getAll()`. */
+export type ChoiceSetListItem = ChoiceSetGetAllResponse
 
 export interface UseChoiceSetsResult {
   choiceSets: ChoiceSetListItem[]
@@ -57,10 +44,8 @@ export function useChoiceSets(): UseChoiceSetsResult {
     setError(null)
     try {
       const svc = new ChoiceSets(sdk)
-      const result = await svc.getAll()
-      const list = (
-        Array.isArray(result) ? result : ((result as any).items ?? [])
-      ) as ChoiceSetListItem[]
+      // `ChoiceSets.getAll()` returns `ChoiceSetGetAllResponse[]` directly.
+      const list = await svc.getAll()
       setChoiceSets(list)
     } catch (err) {
       setError(

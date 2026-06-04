@@ -1,38 +1,30 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Entities } from '@uipath/uipath-typescript/entities'
+import type {
+  EntityGetResponse,
+  EntityRecord,
+  FieldMetaData,
+} from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import { useAuth } from './useAuth'
 import { entityNotSupportedReason } from '../lib/entityTypes'
 
-/** Minimal field shape we use; the SDK also exports `FieldMetaData`. */
-export interface EntityField {
-  id: string
-  name: string
-  // The SDK type definitions don't list `displayName` on FieldMetaData but
-  // the runtime response includes it (the widget keys its column config by
-  // this). We accept it optionally and fall back to `name` if absent.
-  displayName?: string
-  isPrimaryKey: boolean
-  isRequired: boolean
-  isSystemField: boolean
-  isAttachment: boolean
-  fieldDataType?: { name: string }
-}
+/**
+ * Field metadata for a Data Fabric entity. Re-exported from the SDK so
+ * consumers can `import type { EntityField } from './hooks/useEntity'`
+ * without reaching into the SDK package directly.
+ *
+ * `displayName` is added on top of the SDK's `FieldMetaData` because the
+ * runtime response includes it (the data-table widget keys its column
+ * config by it), even though the published SDK type omits it today.
+ */
+export type EntityField = FieldMetaData & { displayName?: string }
 
-/** Minimal entity schema; the SDK also exports `EntityGetResponse`. */
-export interface EntitySchema {
-  id: string
-  name: string
-  displayName: string
-  description?: string
-  entityType?: string
-  fields: EntityField[]
-  externalFields?: unknown[]
-  sourceJoinCriterias?: unknown[]
-}
+/** Entity schema returned by `Entities.getById()`. */
+export type EntitySchema = EntityGetResponse
 
 /** A single record. `Id` is always present; other fields are dynamic per entity. */
-export type EntityRow = { Id: string; [key: string]: unknown }
+export type EntityRow = EntityRecord
 
 export interface UseEntityResult {
   schema: EntitySchema | null
@@ -92,13 +84,11 @@ export function useEntity(entityId: string): UseEntityResult {
       setRecordsError(null)
       try {
         const svc = new Entities(sdk)
-        const result = await svc.getAllRecords(entityId)
-        const items = Array.isArray(result)
-          ? result
-          : ((result as any).items ?? [])
-        const rows = items as EntityRow[]
-        setRecords(rows)
-        return rows
+        // Without pagination options, `getAllRecords` returns a
+        // NonPaginatedResponse<EntityRecord> shaped as `{ items, totalCount }`.
+        const { items } = await svc.getAllRecords(entityId)
+        setRecords(items)
+        return items
       } catch (err) {
         setRecordsError(
           err instanceof UiPathError ? err.message : 'Failed to load records',
@@ -123,7 +113,7 @@ export function useEntity(entityId: string): UseEntityResult {
     setRecordsError(null)
     try {
       const svc = new Entities(sdk)
-      const entity = (await svc.getById(entityId)) as unknown as EntitySchema
+      const entity = await svc.getById(entityId)
       setSchema(entity)
       // NOTE: We deliberately do NOT call `fetchRecords` here. The records
       // widget (`<DataTable>`) owns its own data layer and runs

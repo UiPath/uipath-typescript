@@ -140,10 +140,9 @@ export function RecordEditor({
         await svc.updateRecordById(entityId, initial.Id, payload)
         recordId = initial.Id
       } else {
-        const result = (await svc.insertRecordById(
-          entityId,
-          payload,
-        )) as EntityRow
+        // `insertRecordById` returns `EntityInsertResponse extends EntityRecord`,
+        // so `Id` is guaranteed to be present — no cast needed.
+        const result = await svc.insertRecordById(entityId, payload)
         recordId = result.Id
       }
 

@@ -1,26 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Entities } from '@uipath/uipath-typescript/entities'
+import type { EntityGetResponse } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
 import { useAuth } from './useAuth'
 
-/**
- * Subset of `EntityGetResponse` we use in the list view.
- *
- * The SDK ships full types for these — see
- *   import type { EntityGetResponse } from '@uipath/uipath-typescript/entities'
- * — but using a narrow local type keeps the consuming components decoupled
- * from internal field additions in future SDK versions.
- */
-export interface EntityListItem {
-  id: string
-  name: string
-  displayName: string
-  entityType?: string
-  recordCount?: number
-  // Markers used to detect Virtual Data Objects — see `lib/entityTypes.ts`.
-  externalFields?: unknown[]
-  sourceJoinCriterias?: unknown[]
-}
+/** Entity row from `Entities.getAll()`. */
+export type EntityListItem = EntityGetResponse
 
 export interface UseEntitiesResult {
   entities: EntityListItem[]
@@ -53,14 +38,12 @@ export function useEntities(): UseEntitiesResult {
       // there's no shared client to manage. The instance is bound to the
       // authenticated `sdk` from useAuth().
       const svc = new Entities(sdk)
-      const result = await svc.getAll()
-      // `getAll()` returns `EntityGetResponse[]` when no pagination opts are
-      // passed; defensive against future SDK shape changes.
-      const all = (Array.isArray(result) ? result : (result as any).items ?? []) as EntityListItem[]
-      // Filter out ChoiceSet items — those now live in their own sidebar
-      // section sourced from `ChoiceSets.getAll()`, which carries choice-set-
-      // specific metadata the entity catalog doesn't include. Without this
-      // filter, choice sets would appear in both lists.
+      // `Entities.getAll()` returns `EntityGetResponse[]` directly (no
+      // pagination wrapper). Filter out ChoiceSet items here so they don't
+      // show up in both the entities and choice-sets sidebar sections —
+      // the choice-sets section is sourced from `ChoiceSets.getAll()` and
+      // carries choice-set-specific metadata.
+      const all = await svc.getAll()
       const list = all.filter((e) => e.entityType !== 'ChoiceSet')
       setEntities(list)
     } catch (err) {
