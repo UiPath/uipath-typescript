@@ -1,4 +1,4 @@
-import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions, AssetGetByNameOptions } from './assets.types';
+import { AssetGetAllOptions, AssetGetResponse, AssetGetByIdOptions, AssetGetByNameOptions, AssetNewValue, AssetUpdateValueByIdOptions } from './assets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination';
 
 /**
@@ -90,4 +90,37 @@ export interface AssetServiceModel {
    * ```
    */
   getByName(name: string, options?: AssetGetByNameOptions): Promise<AssetGetResponse>;
+
+  /**
+   * Updates the value of an existing asset by ID.
+   *
+   * Fetches the asset internally to determine its type, then updates only the value while
+   * preserving the asset's name, scope, and description.
+   *
+   * **Supported value types:** `Text`, `Integer`, and `Bool` only. Other types
+   * (`Credential`, `Secret`) throw a `ValidationError`.
+   *
+   * The `newValue` runtime type must match the asset's `valueType`:
+   * - `Text` → `string`
+   * - `Integer` → `number` (integer)
+   * - `Bool` → `boolean`
+   *
+   * @param id - Asset ID
+   * @param newValue - New value to apply (string for `Text`, number for `Integer`, boolean for `Bool`)
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
+   * @returns Promise resolving when the asset has been updated
+   *
+   * @example
+   * ```typescript
+   * // Update a Text asset by folder ID
+   * await assets.updateValueById(<assetId>, 'new-value', { folderId: <folderId> });
+   *
+   * // Update an Integer asset by folder key (GUID)
+   * await assets.updateValueById(<assetId>, 42, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // Update a Bool asset by folder path
+   * await assets.updateValueById(<assetId>, true, { folderPath: 'Shared/Finance' });
+   * ```
+   */
+  updateValueById(id: number, newValue: AssetNewValue, options?: AssetUpdateValueByIdOptions): Promise<void>;
 }

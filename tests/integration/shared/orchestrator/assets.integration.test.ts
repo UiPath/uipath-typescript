@@ -77,7 +77,7 @@ describe.each(modes)('Orchestrator Assets - Integration Tests [%s]', (mode) => {
       expect(result.name).toBeDefined();
       expect(result.valueType).toBeDefined();
       expect(typeof result.name).toBe('string');
-    });
+  });
   });
 
   describe('getByName', () => {
@@ -156,6 +156,42 @@ describe.each(modes)('Orchestrator Assets - Integration Tests [%s]', (mode) => {
       await expect(
         assets.getByName(missingName, { folderKey: config.folderKey }),
       ).rejects.toSatisfy(isNotFoundError);
+    });
+  });
+
+  describe('updateValueById', () => {
+    it('should update an existing text asset and persist the change', async () => {
+      const { assets } = getServices();
+      const config = getTestConfig();
+
+      if (!config.folderId) {
+        throw new Error('INTEGRATION_TEST_FOLDER_ID must be configured to test updateValueById');
+      }
+      const folderId = Number(config.folderId);
+
+      // Find an existing Text-type asset in the folder so we can update it safely
+      const allAssets = await assets.getAll({
+        folderId,
+        pageSize: 20,
+        filter: "ValueType eq 'Text'",
+      });
+
+      if (allAssets.items.length === 0) {
+        throw new Error('No Text-type assets available in the configured folder to exercise updateValueById');
+      }
+
+      const target = allAssets.items[0];
+      const previousValue = target.value ?? '';
+      const newValue = `sdk-test-${Date.now()}`;
+
+      const result = await assets.updateValueById(target.id, newValue, { folderId });
+      expect(result).toBeUndefined();
+
+      const refreshed = await assets.getById(target.id, folderId);
+      expect(refreshed.value).toBe(newValue);
+
+      // Restore the asset so the suite is idempotent
+      await assets.updateValueById(target.id, previousValue, { folderId });
     });
   });
 

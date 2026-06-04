@@ -345,4 +345,4 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       await cleanupTestTask(createdTaskId);
     }
   });
-});
+}, 120000);

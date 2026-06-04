@@ -54,7 +54,7 @@ export async function cleanupTestTask(
     await retryWithBackoff(async () => {
       // Attempt to unassign if assigned
       try {
-        await tasks.unassign({ taskIds: [taskId] });
+        await tasks.unassign([taskId]);
       } catch {
         // Ignore if already unassigned or can't be unassigned
       }
