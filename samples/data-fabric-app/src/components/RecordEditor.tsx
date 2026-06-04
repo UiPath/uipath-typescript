@@ -143,8 +143,8 @@ export function RecordEditor({
         const result = (await svc.insertRecordById(
           entityId,
           payload,
-        )) as { Id?: string } & EntityRow
-        recordId = result.Id || (result as EntityRow).Id
+        )) as EntityRow
+        recordId = result.Id
       }
 
       // 2. Delete attachments the user removed in edit mode.
