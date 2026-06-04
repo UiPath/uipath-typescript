@@ -42,6 +42,10 @@ INTEGRATION_TEST_SKIP_CLEANUP=false
 INTEGRATION_TEST_FOLDER_ID=2819046
 INTEGRATION_TEST_FOLDER_KEY=5f6dadf1-3677-49dc-8aca-c2999dd4b3ba
 
+# Folder path (e.g. "Shared/Finance") matching INTEGRATION_TEST_FOLDER_ID.
+# Used by getByName integration tests for assets/processes.
+INTEGRATION_TEST_FOLDER_PATH=
+
 # ============================================
 # Optional: Pre-existing Test Data
 # (for read-only tests that need existing resources)
@@ -50,9 +54,6 @@ INTEGRATION_TEST_FOLDER_KEY=5f6dadf1-3677-49dc-8aca-c2999dd4b3ba
 # Maestro test process key
 MAESTRO_TEST_PROCESS_KEY=
 
-# Case test process key
-CASE_TEST_PROCESS_KEY=55009bca-8c7d-4c3b-b146-c481b3ca1c4a
-
 # Orchestrator test process key
 ORCHESTRATOR_TEST_PROCESS_KEY=0B013150-CEFD-4608-B590-57029F7DFF3C
 
@@ -60,13 +61,16 @@ ORCHESTRATOR_TEST_PROCESS_KEY=0B013150-CEFD-4608-B590-57029F7DFF3C
 # Falls back to INTEGRATION_TEST_FOLDER_ID if not set
 JOBS_TEST_FOLDER_ID=2819046
 
+# Orchestrator attachment ID (UUID) for attachment getById tests
+ORCHESTRATOR_ATTACHMENT_ID=
+
 # Data Fabric test entity / choice set IDs and attachment field
 DATA_FABRIC_TEST_ENTITY_ID=ef91d745-fc36-f111-8ef3-6045bd00bc8b
 DATA_FABRIC_TEST_CHOICESET_ID=825c493c-fc36-f111-8ef3-6045bd00bc8b
 DATA_FABRIC_TEST_ATTACHMENT_FIELD=SomeFile
 
-# Traces test trace ID (dev)
-UIPATH_TRACES_TEST_TRACE_ID_DEV=2074c74b-9931-4072-9c00-8ceaa2a59724
+# Traces test trace ID
+TRACES_TEST_TRACE_ID=2074c74b-9931-4072-9c00-8ceaa2a59724
 ```
 
 ## Where tests live
