@@ -203,21 +203,21 @@ describe('GovernanceService Unit Tests', () => {
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when pageSize is zero', async () => {
+    it('should throw error when pageSize is zero', async () => {
       await expect(
         governanceService.getPolicyTraces(startTime, { pageSize: 0 } as PolicyTraceGetAllOptions),
       ).rejects.toThrow('pageSize must be a positive number');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when jumpToPage is zero', async () => {
+    it('should throw error when jumpToPage is zero', async () => {
       await expect(
         governanceService.getPolicyTraces(startTime, { jumpToPage: 0 } as PolicyTraceGetAllOptions),
       ).rejects.toThrow('jumpToPage must be a positive number');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
-    it('should throw ValidationError when cursor is malformed', async () => {
+    it('should throw error when cursor is malformed', async () => {
       await expect(
         governanceService.getPolicyTraces(startTime, {
           cursor: { value: 'not-a-valid-base64-json' },

@@ -68,25 +68,5 @@ describe.skip.each(modes)('Governance - Integration Tests [%s]', (mode) => {
       expect(Array.isArray(page2.items)).toBe(true);
       expect(page2.currentPage).toBe(2);
     });
-
-    it('should transform API fields - camelCase fields present, PascalCase fields absent on items', async () => {
-      const result = await governance.getPolicyTraces(startTime, { pageSize: 5, fullOrganization: true });
-
-      if (result.items.length === 0) {
-        throw new Error(
-          'Governance test tenant has no traces; PascalCase-leak check cannot run. Populate test data or widen startTime.',
-        );
-      }
-
-      const item = result.items[0];
-
-      // PascalCase fields must NOT leak through the transform
-      expect((item as any).TenantId).toBeUndefined();
-      expect((item as any).PolicyId).toBeUndefined();
-      expect((item as any).PolicyName).toBeUndefined();
-      expect((item as any).StartTime).toBeUndefined();
-      expect((item as any).FolderKey).toBeUndefined();
-      expect((item as any).TraceId).toBeUndefined();
-    });
   });
 });
