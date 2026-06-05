@@ -22,7 +22,7 @@ export enum PolicyEvaluationResult {
  * enforcement event. One enforcement event can produce multiple trace rows
  * when multiple policies contributed to the final verdict.
  */
-export interface PolicyTrace {
+export interface GovernancePolicyTrace {
   /** Tenant the trace was recorded in. Present even when `fullOrganization` is `true`. */
   tenantId?: string;
   /** The start time of governance enforcement event. */
@@ -74,8 +74,13 @@ export interface GovernanceFilterOptions {
    */
   endTime?: Date;
   /**
-   * When `true`, drops the tenant filter and queries the whole organization.
-   * Caller still has to be an organization admin.
+   * Whether to query the whole organization instead of just the current tenant.
+   *
+   * Defaults to tenant-scoped:
+   * - omitted → tenant-scoped (default)
+   * - `false` → tenant-scoped (explicit, same result)
+   * - `true` → org-wide across all tenants; requires an organization admin,
+   *   otherwise the request returns 403
    */
   fullOrganization?: boolean;
 }
@@ -86,7 +91,7 @@ export interface GovernanceFilterOptions {
  * All filters combine with AND semantics. Array filters match any value in
  * the array (OR within a single filter).
  */
-export type PolicyTraceGetAllOptions = PaginationOptions & GovernanceFilterOptions & {
+export type GovernancePolicyTraceGetAllOptions = PaginationOptions & GovernanceFilterOptions & {
   /** Filter by one or more policy evaluation results. */
   evaluationResult?: PolicyEvaluationResult[];
   /** Filter by one or more policy IDs. */

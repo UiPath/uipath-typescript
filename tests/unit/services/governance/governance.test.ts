@@ -5,15 +5,15 @@ import { createServiceTestDependencies, createMockApiClient } from '../../../uti
 import { GOVERNANCE_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import { GOVERNANCE_TEST_CONSTANTS, TEST_CONSTANTS } from '../../../utils/constants';
 import {
-  createMockRawPolicyTrace,
-  createMockRawPolicyTracesResponse,
+  createMockRawGovernancePolicyTrace,
+  createMockRawGovernancePolicyTracesResponse,
 } from '../../../utils/mocks/governance';
 import {
   PolicyEvaluationResult,
-  PolicyTraceGetAllOptions,
+  GovernancePolicyTraceGetAllOptions,
 } from '../../../../src/models/governance/governance.types';
 import type { PaginatedResponse } from '../../../../src/utils/pagination/types';
-import type { PolicyTrace } from '../../../../src/models/governance/governance.types';
+import type { GovernancePolicyTrace } from '../../../../src/models/governance/governance.types';
 
 vi.mock('../../../../src/core/http/api-client');
 
@@ -35,7 +35,7 @@ describe('GovernanceService Unit Tests', () => {
 
   describe('getPolicyTraces - non-paginated', () => {
     it('should return camelCase items wrapped in NonPaginatedResponse', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawPolicyTracesResponse());
+      mockApiClient.post.mockResolvedValue(createMockRawGovernancePolicyTracesResponse());
 
       const result = await governanceService.getPolicyTraces(startTime);
 
@@ -50,11 +50,11 @@ describe('GovernanceService Unit Tests', () => {
       expect(item.traceId).toBe(GOVERNANCE_TEST_CONSTANTS.TRACE_ID);
       expect(item.folderKey).toBe(GOVERNANCE_TEST_CONSTANTS.FOLDER_KEY);
       // NonPaginatedResponse has no pagination fields
-      expect((result as PaginatedResponse<PolicyTrace>).hasNextPage).toBeUndefined();
+      expect((result as PaginatedResponse<GovernancePolicyTrace>).hasNextPage).toBeUndefined();
     });
 
     it('should expose only camelCase fields (API returns camelCase, no transform applied)', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawPolicyTracesResponse());
+      mockApiClient.post.mockResolvedValue(createMockRawGovernancePolicyTracesResponse());
 
       const result = await governanceService.getPolicyTraces(startTime);
       const item = result.items[0];
@@ -64,7 +64,7 @@ describe('GovernanceService Unit Tests', () => {
     });
 
     it('should send required startTime, omit pagination params, and use endpoint', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawPolicyTracesResponse());
+      mockApiClient.post.mockResolvedValue(createMockRawGovernancePolicyTracesResponse());
 
       await governanceService.getPolicyTraces(startTime);
 
@@ -77,7 +77,7 @@ describe('GovernanceService Unit Tests', () => {
     });
 
     it('should serialize endTime Date to ISO and pass array filters through', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawPolicyTracesResponse());
+      mockApiClient.post.mockResolvedValue(createMockRawGovernancePolicyTracesResponse());
 
       const endTime = new Date(GOVERNANCE_TEST_CONSTANTS.END_TIME_ISO);
       await governanceService.getPolicyTraces(startTime, {
@@ -106,12 +106,12 @@ describe('GovernanceService Unit Tests', () => {
   describe('getPolicyTraces - paginated', () => {
     it('should return PaginatedResponse with currentPage starting at 1 (SDK 1-based)', async () => {
       mockApiClient.post.mockResolvedValue(
-        createMockRawPolicyTracesResponse([createMockRawPolicyTrace()]),
+        createMockRawGovernancePolicyTracesResponse([createMockRawGovernancePolicyTrace()]),
       );
 
       const result = await governanceService.getPolicyTraces(startTime, {
         pageSize: TEST_CONSTANTS.PAGE_SIZE,
-      }) as PaginatedResponse<PolicyTrace>;
+      }) as PaginatedResponse<GovernancePolicyTrace>;
 
       expect(result.currentPage).toBe(1);
       expect(result.supportsPageJump).toBe(true);
@@ -120,7 +120,7 @@ describe('GovernanceService Unit Tests', () => {
     });
 
     it('should map SDK 1-based pageNumber to API 0-based on the first paginated call', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawPolicyTracesResponse());
+      mockApiClient.post.mockResolvedValue(createMockRawGovernancePolicyTracesResponse());
 
       await governanceService.getPolicyTraces(startTime, { pageSize: 5 });
 
@@ -130,7 +130,7 @@ describe('GovernanceService Unit Tests', () => {
     });
 
     it('should subtract 1 from jumpToPage before sending to API', async () => {
-      mockApiClient.post.mockResolvedValue(createMockRawPolicyTracesResponse());
+      mockApiClient.post.mockResolvedValue(createMockRawGovernancePolicyTracesResponse());
 
       await governanceService.getPolicyTraces(startTime, { jumpToPage: 3, pageSize: 5 });
 
@@ -142,13 +142,13 @@ describe('GovernanceService Unit Tests', () => {
     it('should set hasNextPage=true when page is exactly full', async () => {
       const pageSize = 2;
       const items = Array.from({ length: pageSize }, (_, i) =>
-        createMockRawPolicyTrace({ traceId: `trace-${i}` }),
+        createMockRawGovernancePolicyTrace({ traceId: `trace-${i}` }),
       );
-      mockApiClient.post.mockResolvedValue(createMockRawPolicyTracesResponse(items));
+      mockApiClient.post.mockResolvedValue(createMockRawGovernancePolicyTracesResponse(items));
 
       const result = await governanceService.getPolicyTraces(startTime, {
         pageSize,
-      }) as PaginatedResponse<PolicyTrace>;
+      }) as PaginatedResponse<GovernancePolicyTrace>;
 
       expect(result.hasNextPage).toBe(true);
       expect(result.nextCursor).toBeDefined();
@@ -157,12 +157,12 @@ describe('GovernanceService Unit Tests', () => {
     it('should set hasNextPage=false when page is partial', async () => {
       const pageSize = 5;
       mockApiClient.post.mockResolvedValue(
-        createMockRawPolicyTracesResponse([createMockRawPolicyTrace()]),
+        createMockRawGovernancePolicyTracesResponse([createMockRawGovernancePolicyTrace()]),
       );
 
       const result = await governanceService.getPolicyTraces(startTime, {
         pageSize,
-      }) as PaginatedResponse<PolicyTrace>;
+      }) as PaginatedResponse<GovernancePolicyTrace>;
 
       expect(result.hasNextPage).toBe(false);
       expect(result.nextCursor).toBeUndefined();
@@ -171,21 +171,21 @@ describe('GovernanceService Unit Tests', () => {
     it('should round-trip pageNumber via cursor (next page → page 2 → API page 1)', async () => {
       const pageSize = 2;
       const fullPage = Array.from({ length: pageSize }, (_, i) =>
-        createMockRawPolicyTrace({ traceId: `trace-${i}` }),
+        createMockRawGovernancePolicyTrace({ traceId: `trace-${i}` }),
       );
-      mockApiClient.post.mockResolvedValueOnce(createMockRawPolicyTracesResponse(fullPage));
+      mockApiClient.post.mockResolvedValueOnce(createMockRawGovernancePolicyTracesResponse(fullPage));
 
-      const page1 = await governanceService.getPolicyTraces(startTime, { pageSize }) as PaginatedResponse<PolicyTrace>;
+      const page1 = await governanceService.getPolicyTraces(startTime, { pageSize }) as PaginatedResponse<GovernancePolicyTrace>;
       expect(page1.nextCursor).toBeDefined();
       expect(page1.hasNextPage).toBe(true);
 
       mockApiClient.post.mockResolvedValueOnce(
-        createMockRawPolicyTracesResponse([createMockRawPolicyTrace()]),
+        createMockRawGovernancePolicyTracesResponse([createMockRawGovernancePolicyTrace()]),
       );
 
       const page2 = await governanceService.getPolicyTraces(startTime, {
         cursor: page1.nextCursor,
-      }) as PaginatedResponse<PolicyTrace>;
+      }) as PaginatedResponse<GovernancePolicyTrace>;
 
       const [, body] = mockApiClient.post.mock.calls[1];
       expect(body.pageNumber).toBe(1);
@@ -205,14 +205,14 @@ describe('GovernanceService Unit Tests', () => {
 
     it('should throw error when pageSize is zero', async () => {
       await expect(
-        governanceService.getPolicyTraces(startTime, { pageSize: 0 } as PolicyTraceGetAllOptions),
+        governanceService.getPolicyTraces(startTime, { pageSize: 0 } as GovernancePolicyTraceGetAllOptions),
       ).rejects.toThrow('pageSize must be a positive number');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
 
     it('should throw error when jumpToPage is zero', async () => {
       await expect(
-        governanceService.getPolicyTraces(startTime, { jumpToPage: 0 } as PolicyTraceGetAllOptions),
+        governanceService.getPolicyTraces(startTime, { jumpToPage: 0 } as GovernancePolicyTraceGetAllOptions),
       ).rejects.toThrow('jumpToPage must be a positive number');
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });
@@ -221,7 +221,7 @@ describe('GovernanceService Unit Tests', () => {
       await expect(
         governanceService.getPolicyTraces(startTime, {
           cursor: { value: 'not-a-valid-base64-json' },
-        } as PolicyTraceGetAllOptions),
+        } as GovernancePolicyTraceGetAllOptions),
       ).rejects.toThrow();
       expect(mockApiClient.post).not.toHaveBeenCalled();
     });

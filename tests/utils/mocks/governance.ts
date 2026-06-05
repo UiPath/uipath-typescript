@@ -1,12 +1,12 @@
 import { GOVERNANCE_TEST_CONSTANTS } from '../constants/governance';
-import type { RawPolicyTraceItem } from '../../../src/models/governance/governance.internal-types';
+import type { RawGovernancePolicyTraceItem } from '../../../src/models/governance/governance.internal-types';
 
 /**
  * Creates a raw policy evaluation trace item (camelCase) matching the live API response shape.
  */
-export const createMockRawPolicyTrace = (
-  overrides: Partial<RawPolicyTraceItem> = {},
-): RawPolicyTraceItem => ({
+export const createMockRawGovernancePolicyTrace = (
+  overrides: Partial<RawGovernancePolicyTraceItem> = {},
+): RawGovernancePolicyTraceItem => ({
   tenantId: GOVERNANCE_TEST_CONSTANTS.TENANT_ID,
   startTime: GOVERNANCE_TEST_CONSTANTS.STARTED_TIME_API,
   finalEnforcement: 'Deny',
@@ -31,8 +31,8 @@ export const createMockRawPolicyTrace = (
 /**
  * Creates a raw policy evaluation traces response envelope (camelCase).
  */
-export const createMockRawPolicyTracesResponse = (
-  items: RawPolicyTraceItem[] = [createMockRawPolicyTrace()],
-): { items: RawPolicyTraceItem[] } => ({
+export const createMockRawGovernancePolicyTracesResponse = (
+  items: RawGovernancePolicyTraceItem[] = [createMockRawGovernancePolicyTrace()],
+): { items: RawGovernancePolicyTraceItem[] } => ({
   items,
 });

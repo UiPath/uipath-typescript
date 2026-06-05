@@ -1,6 +1,6 @@
 import type {
-  PolicyTrace,
-  PolicyTraceGetAllOptions,
+  GovernancePolicyTrace,
+  GovernancePolicyTraceGetAllOptions,
 } from './governance.types';
 import type {
   PaginatedResponse,
@@ -34,9 +34,9 @@ export interface GovernanceServiceModel {
    *
    * @param startTime - Inclusive lower bound on the trace start time.
    * @param options - Optional filters and pagination options
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link PolicyTrace}
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link GovernancePolicyTrace}
    *          without pagination options, or {@link PaginatedResponse} of
-   *          {@link PolicyTrace} when pagination options are used.
+   *          {@link GovernancePolicyTrace} when pagination options are used.
    *
    * @example
    * ```typescript
@@ -67,12 +67,12 @@ export interface GovernanceServiceModel {
    * }
    * ```
    */
-  getPolicyTraces<T extends PolicyTraceGetAllOptions = PolicyTraceGetAllOptions>(
+  getPolicyTraces<T extends GovernancePolicyTraceGetAllOptions = GovernancePolicyTraceGetAllOptions>(
     startTime: Date,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<PolicyTrace>
-      : NonPaginatedResponse<PolicyTrace>
+      ? PaginatedResponse<GovernancePolicyTrace>
+      : NonPaginatedResponse<GovernancePolicyTrace>
   >;
 }

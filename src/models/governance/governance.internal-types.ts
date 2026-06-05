@@ -1,7 +1,7 @@
 /**
  * Raw policy evaluation trace item as returned by API before transformation.
  */
-export interface RawPolicyTraceItem {
+export interface RawGovernancePolicyTraceItem {
   tenantId?: string;
   startTime: string;
   finalEnforcement?: string;

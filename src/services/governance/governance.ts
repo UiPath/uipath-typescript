@@ -15,8 +15,8 @@ import {
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
 import {
-  PolicyTrace,
-  PolicyTraceGetAllOptions,
+  GovernancePolicyTrace,
+  GovernancePolicyTraceGetAllOptions,
 } from '../../models/governance/governance.types';
 import { GovernanceServiceModel } from '../../models/governance/governance.models';
 
@@ -33,9 +33,9 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    *
    * @param startTime - Inclusive lower bound on the trace start time.
    * @param options - Optional filters and pagination options
-   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link PolicyTrace}
+   * @returns Promise resolving to {@link NonPaginatedResponse} of {@link GovernancePolicyTrace}
    *          without pagination options, or {@link PaginatedResponse} of
-   *          {@link PolicyTrace} when pagination options are used.
+   *          {@link GovernancePolicyTrace} when pagination options are used.
    *
    * @example
    * ```typescript
@@ -67,13 +67,13 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
    * ```
    */
   @track('Governance.GetPolicyTraces')
-  async getPolicyTraces<T extends PolicyTraceGetAllOptions = PolicyTraceGetAllOptions>(
+  async getPolicyTraces<T extends GovernancePolicyTraceGetAllOptions = GovernancePolicyTraceGetAllOptions>(
     startTime: Date,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<PolicyTrace>
-      : NonPaginatedResponse<PolicyTrace>
+      ? PaginatedResponse<GovernancePolicyTrace>
+      : NonPaginatedResponse<GovernancePolicyTrace>
   > {
     if (!startTime) {
       throw new ValidationError({ message: 'startTime is required for getPolicyTraces' });
@@ -85,7 +85,7 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
       endTime: options?.endTime?.toISOString(),
     };
 
-    return PaginationHelpers.getAll<typeof apiOptions, PolicyTrace>({
+    return PaginationHelpers.getAll<typeof apiOptions, GovernancePolicyTrace>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => GOVERNANCE_ENDPOINTS.POLICY.TRACES,
       method: HTTP_METHODS.POST,
@@ -103,8 +103,8 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
       },
     }, apiOptions) as Promise<
       T extends HasPaginationOptions<T>
-        ? PaginatedResponse<PolicyTrace>
-        : NonPaginatedResponse<PolicyTrace>
+        ? PaginatedResponse<GovernancePolicyTrace>
+        : NonPaginatedResponse<GovernancePolicyTrace>
     >;
   }
 }
