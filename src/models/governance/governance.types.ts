@@ -81,6 +81,8 @@ export interface GovernanceFilterOptions {
    * - `false` → tenant-scoped (explicit, same result)
    * - `true` → org-wide across all tenants; requires an organization admin,
    *   otherwise the request returns 403
+   *
+   * @default false
    */
   fullOrganization?: boolean;
 }
