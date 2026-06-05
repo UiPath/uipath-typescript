@@ -9,6 +9,7 @@ export const TASK_TYPE_ENDPOINTS: Record<TaskType, string> = {
   [TaskType.DocumentClassification]: TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
   [TaskType.External]: TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
   [TaskType.DataLabeling]: TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
+  [TaskType.QuickForm]: TASK_ENDPOINTS.GET_GENERIC_TASK_BY_ID,
 };
 
 export enum ActionCenterEventNames {

@@ -43,7 +43,9 @@ export enum TaskType {
   /** A document classification task for categorizing documents */
   DocumentClassification = 'DocumentClassificationTask',
   /** A data labeling task for annotating training data */
-  DataLabeling = 'DataLabelingTask'
+  DataLabeling = 'DataLabelingTask',
+  /** A schema-first HITL task rendered by FormLib in Action Center via a registered TaskSchema */
+  QuickForm = 'QuickFormTask'
 }
 
 export enum TaskPriority {
@@ -162,11 +164,49 @@ export interface TaskBaseResponse {
   lastModifiedTime: string | null;
 }
 
-export interface TaskCreateOptions {
+/**
+ * Options for creating an External task. `type` is the discriminator for the
+ * `TaskCreateOptions` union; omit it (or set it to `TaskType.External`) for
+ * the default external-task shape.
+ */
+export interface TaskCreateExternalOptions {
+  type?: TaskType.External;
   title: string;
   data?: Record<string, unknown>;
   priority?: TaskPriority;
 }
+
+/**
+ * Options for creating a QuickForm task — a schema-first HITL task rendered by
+ * FormLib in Action Center.
+ *
+ * Both `taskSchemaKey` and `schema` are sent on every call: Orchestrator upserts
+ * the schema by `taskSchemaKey`, then creates the task in the same call.
+ */
+export interface TaskCreateQuickFormOptions {
+  type: TaskType.QuickForm;
+  title: string;
+  /** UUID key under which Orchestrator registers/looks up the schema in TaskSchemas */
+  taskSchemaKey: string;
+  /** Inline schema body. Sent on every call so Orchestrator can upsert it */
+  schema: Record<string, unknown>;
+  data?: Record<string, unknown>;
+  priority?: TaskPriority;
+  /** Converted to wire-shape `tags` on submit */
+  labels?: string[];
+  isActionableMessageEnabled?: boolean;
+  /** When null on QuickForm, Orchestrator derives it from the referenced TaskSchema */
+  actionableMessageMetaData?: Record<string, unknown>;
+  /** Identifies the job that triggered the schema creation (paired with `schema`) */
+  creatorJobKey?: string;
+}
+
+/**
+ * Discriminated union over `type`. `tasks.create` accepts either shape — the
+ * `type` field on `TaskCreateQuickFormOptions` narrows it; omitting `type`
+ * defaults to the external-task shape.
+ */
+export type TaskCreateOptions = TaskCreateExternalOptions | TaskCreateQuickFormOptions;
 
 export interface RawTaskCreateResponse extends TaskBaseResponse {
   waitJobState: JobState | null;
@@ -243,6 +283,7 @@ export type TaskCompleteOptions =
   | { type: TaskType.DataLabeling; data?: any; action?: string }
   | { type: TaskType.Form; data: any; action: string }
   | { type: TaskType.App; data: any; action: string }
+  | { type: TaskType.QuickForm; data: any; action: string }
 
 /**
  * Options for completing a task when called from the service

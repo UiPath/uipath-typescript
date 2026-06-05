@@ -1,12 +1,13 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TaskService } from '../../../../src/services/action-center/tasks';
-import { 
-  TaskType, 
-  TaskPriority, 
+import {
+  TaskType,
+  TaskPriority,
   TaskAssignmentOptions,
   TaskCompletionOptions,
   TaskCreateOptions,
+  TaskCreateQuickFormOptions,
   TaskGetAllOptions,
   TaskGetUsersOptions
 } from '../../../../src/models/action-center/tasks.types';
@@ -137,6 +138,102 @@ describe('TaskService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(error);
 
       await expect(taskService.create(taskInput, TEST_CONSTANTS.FOLDER_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('create (QuickForm)', () => {
+    const QF_SCHEMA_KEY = '8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91';
+    const QF_SCHEMA: Record<string, unknown> = {
+      id: QF_SCHEMA_KEY,
+      fields: [
+        { id: 'invoice', type: 'text', label: 'Invoice', direction: 'input' },
+      ],
+      outcomes: [
+        { id: 'approve', name: 'Approve', type: 'string', isPrimary: true },
+      ],
+    };
+
+    const baseInput = (): TaskCreateQuickFormOptions => ({
+      type: TaskType.QuickForm,
+      title: TASK_TEST_CONSTANTS.TASK_TITLE,
+      taskSchemaKey: QF_SCHEMA_KEY,
+      schema: QF_SCHEMA,
+    });
+
+    const postBody = () => mockApiClient.post.mock.calls[0][1];
+
+    beforeEach(() => {
+      mockApiClient.post.mockResolvedValue(createMockTaskResponse({
+        title: TASK_TEST_CONSTANTS.TASK_TITLE,
+      }));
+    });
+
+    it('posts to the GenericTasks/CreateTask endpoint with type=QuickFormTask, schema, and taskSchemaKey', async () => {
+      await taskService.create(baseInput(), TEST_CONSTANTS.FOLDER_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.CREATE_GENERIC_TASK,
+        expect.objectContaining({
+          type: TaskType.QuickForm,
+          taskSchemaKey: QF_SCHEMA_KEY,
+          schema: QF_SCHEMA,
+          title: TASK_TEST_CONSTANTS.TASK_TITLE,
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        })
+      );
+    });
+
+    it('passes optional fields through verbatim and converts labels into tags', async () => {
+      await taskService.create({
+        ...baseInput(),
+        data: { invoice: 'INV-1234' },
+        priority: TaskPriority.High,
+        labels: ['finance', 'agent-escalation'],
+        isActionableMessageEnabled: true,
+        actionableMessageMetaData: { fieldSet: {}, actionSet: {} },
+        creatorJobKey: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+      }, TEST_CONSTANTS.FOLDER_ID);
+
+      const body = postBody();
+      expect(body.data).toEqual({ invoice: 'INV-1234' });
+      expect(body.priority).toBe(TaskPriority.High);
+      expect(body.isActionableMessageEnabled).toBe(true);
+      expect(body.actionableMessageMetaData).toEqual({ fieldSet: {}, actionSet: {} });
+      expect(body.creatorJobKey).toBe('3fa85f64-5717-4562-b3fc-2c963f66afa6');
+      expect(body.tags).toEqual([
+        { name: 'finance', displayName: 'finance', value: 'finance', displayValue: 'finance' },
+        { name: 'agent-escalation', displayName: 'agent-escalation', value: 'agent-escalation', displayValue: 'agent-escalation' },
+      ]);
+      // labels is the SDK input field; tags is the wire field — labels should NOT leak through
+      expect('labels' in body).toBe(false);
+    });
+
+    it('omits optional fields from the payload when not provided', async () => {
+      await taskService.create(baseInput(), TEST_CONSTANTS.FOLDER_ID);
+
+      const body = postBody();
+      for (const omitted of [
+        'priority',
+        'tags',
+        'isActionableMessageEnabled',
+        'actionableMessageMetaData',
+        'creatorJobKey',
+        'labels',
+      ]) {
+        expect(omitted in body).toBe(false);
+      }
+    });
+
+    it('propagates API errors', async () => {
+      mockApiClient.post.mockRejectedValue(createMockError(TEST_CONSTANTS.ERROR_MESSAGE));
+
+      await expect(
+        taskService.create(baseInput(), TEST_CONSTANTS.FOLDER_ID)
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

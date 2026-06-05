@@ -99,6 +99,46 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
     });
   });
 
+  describe('create (QuickForm)', () => {
+    it('should create a QuickForm task with inline schema', async () => {
+      const { tasks } = getServices();
+      const config = getTestConfig();
+
+      // Use a fresh schema key per run so we don't collide with prior tests.
+      const taskSchemaKey = crypto.randomUUID();
+      const quickFormTitle = generateTestResourceName(`QuickForm_${mode}`);
+
+      const schema = {
+        id: taskSchemaKey,
+        fields: [
+          { id: 'note', label: 'Reviewer Note', type: 'text', direction: 'input' },
+        ],
+        outcomes: [
+          { id: 'approve', name: 'Approve', type: 'string', isPrimary: true },
+          { id: 'reject', name: 'Reject', type: 'string', isPrimary: false },
+        ],
+      };
+
+      const folderId = config.folderId ? Number(config.folderId) : undefined;
+
+      const result = await tasks.create({
+        type: TaskType.QuickForm,
+        title: quickFormTitle,
+        taskSchemaKey,
+        schema,
+        data: { note: 'Sample input for QuickForm integration test' },
+        priority: TaskPriority.Medium,
+      }, folderId!);
+
+      expect(result).toBeDefined();
+      expect(result.title).toBe(quickFormTitle);
+      expect(result.id).toBeDefined();
+      expect(typeof result.id).toBe('number');
+
+      registerResource('tasks', { id: result.id, folderId });
+    });
+  });
+
   describe('getById', () => {
     it('should retrieve the created task by ID', async () => {
       if (!createdTaskId) {
@@ -345,4 +385,4 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       await cleanupTestTask(createdTaskId);
     }
   });
-}, 120000);
+});
