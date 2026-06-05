@@ -246,9 +246,6 @@ export interface MaestroProcessesServiceModel {
    * useful for rendering incident time-series charts. Use `groupBy` to control
    * the time bucket size (hour, day, or week) — defaults to day if not provided.
    *
-   * Each data point includes both `startTime` and `endTime` so the bucket
-   * boundaries are unambiguous across DST transitions.
-   *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param options - Optional settings for filtering and time bucket granularity
@@ -435,6 +432,26 @@ export interface ProcessMethods {
    * @returns Promise resolving to {@link InstanceStats}
    */
   getInstanceStats(startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats>;
+
+  /**
+   * Get instance status counts aggregated by date for this process.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for filtering and time bucket granularity (processKey is auto-captured from this process)
+   * @returns Promise resolving to an array of {@link InstanceStatusTimelineResponse}
+   */
+  getInstanceStatusTimeline(startTime: Date, endTime: Date, options?: Omit<TimelineOptions, 'processKeys'>): Promise<InstanceStatusTimelineResponse[]>;
+
+  /**
+   * Get incident counts aggregated by time bucket for this process.
+   *
+   * @param startTime - Start of the time range to query
+   * @param endTime - End of the time range to query
+   * @param options - Optional settings for filtering and time bucket granularity (processKey is auto-captured from this process)
+   * @returns Promise resolving to an array of {@link IncidentTimelineResponse}
+   */
+  getIncidentsTimeline(startTime: Date, endTime: Date, options?: Omit<TimelineOptions, 'processKeys'>): Promise<IncidentTimelineResponse[]>;
 }
 
 // Combined type for process data with methods
@@ -478,6 +495,16 @@ function createProcessMethods(processData: RawMaestroProcessGetAllResponse, serv
         startTime,
         endTime,
       });
+    },
+    getInstanceStatusTimeline(startTime: Date, endTime: Date, options?: Omit<TimelineOptions, 'processKeys'>): Promise<InstanceStatusTimelineResponse[]> {
+      if (!processData.processKey) throw new Error('Process key is undefined');
+
+      return service.getInstanceStatusTimeline(startTime, endTime, { ...options, processKeys: [processData.processKey] });
+    },
+    getIncidentsTimeline(startTime: Date, endTime: Date, options?: Omit<TimelineOptions, 'processKeys'>): Promise<IncidentTimelineResponse[]> {
+      if (!processData.processKey) throw new Error('Process key is undefined');
+
+      return service.getIncidentsTimeline(startTime, endTime, { ...options, processKeys: [processData.processKey] });
     }
   };
 }

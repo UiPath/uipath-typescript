@@ -120,9 +120,9 @@ export interface InstanceStatusTimelineResponse {
  * Incident count within a specific time bucket.
  */
 export interface IncidentTimelineResponse {
-  /** Start of the time bucket (ISO timestamp, e.g. `"2026-05-04T00:00:00"`) */
+  /** Start of the time bucket in local timezone (ISO 8601, e.g. `"2026-05-04T00:00:00"`) */
   startTime: string;
-  /** End of the time bucket (ISO timestamp, e.g. `"2026-05-11T00:00:00"`) */
+  /** End of the time bucket in local timezone (ISO 8601, e.g. `"2026-05-11T00:00:00"`) */
   endTime: string;
   /** Number of incidents that occurred within this time bucket */
   count: number;

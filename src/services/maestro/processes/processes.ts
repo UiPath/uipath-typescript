@@ -248,9 +248,6 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * useful for rendering incident time-series charts. Use `groupBy` to control
    * the time bucket size (hour, day, or week) — defaults to day if not provided.
    *
-   * Each data point includes both `startTime` and `endTime` so the bucket
-   * boundaries are unambiguous across DST transitions.
-   *
    * @param startTime - Start of the time range to query
    * @param endTime - End of the time range to query
    * @param options - Optional settings for filtering and time bucket granularity
