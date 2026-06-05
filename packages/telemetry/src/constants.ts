@@ -12,6 +12,8 @@ export const CONNECTION_STRING = '$CONNECTION_STRING';
 
 export const VERSION = 'Version';
 export const SERVICE = 'Service';
+export const CLOUD_ORGANIZATION_NAME = 'CloudOrganizationName';
+export const CLOUD_TENANT_NAME = 'CloudTenantName';
 export const CLOUD_ORGANIZATION_ID = 'CloudOrganizationId';
 export const CLOUD_TENANT_ID = 'CloudTenantId';
 export const CLOUD_USER_ID = 'CloudUserId';

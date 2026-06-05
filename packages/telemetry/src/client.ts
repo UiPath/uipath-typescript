@@ -13,8 +13,10 @@ import {
     APP_NAME,
     CLOUD_CLIENT_ID,
     CLOUD_ORGANIZATION_ID,
+    CLOUD_ORGANIZATION_NAME,
     CLOUD_REDIRECT_URI,
     CLOUD_TENANT_ID,
+    CLOUD_TENANT_NAME,
     CLOUD_URL,
     CLOUD_USER_ID,
     CONNECTION_STRING,
@@ -287,6 +289,8 @@ export class TelemetryClient {
             [VERSION]: opts?.sdkVersion ?? UNKNOWN,
             [SERVICE]: eventName,
             [CLOUD_URL]: this.createCloudUrl(),
+            [CLOUD_ORGANIZATION_NAME]: this.telemetryContext?.orgName ?? UNKNOWN,
+            [CLOUD_TENANT_NAME]: this.telemetryContext?.tenantName ?? UNKNOWN,
             [CLOUD_ORGANIZATION_ID]: this.telemetryContext?.orgId ?? UNKNOWN,
             [CLOUD_TENANT_ID]: this.telemetryContext?.tenantId ?? UNKNOWN,
             [CLOUD_USER_ID]: this.cloudUserId ?? UNKNOWN,
@@ -298,13 +302,14 @@ export class TelemetryClient {
 
     private createCloudUrl(): string {
         const baseUrl = this.telemetryContext?.baseUrl;
-        const orgId = this.telemetryContext?.orgId;
-        const tenantId = this.telemetryContext?.tenantId;
+        // Prefer the org/tenant ids; fall back to the names when absent.
+        const org = this.telemetryContext?.orgId || this.telemetryContext?.orgName;
+        const tenant = this.telemetryContext?.tenantId || this.telemetryContext?.tenantName;
 
-        if (!baseUrl || !orgId || !tenantId) {
+        if (!baseUrl || !org || !tenant) {
             return UNKNOWN;
         }
 
-        return `${baseUrl}/${orgId}/${tenantId}`;
+        return `${baseUrl}/${org}/${tenant}`;
     }
 }

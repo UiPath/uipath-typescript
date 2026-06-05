@@ -166,8 +166,10 @@ describe('TelemetryClient.track', () => {
             ...VALID_OPTIONS,
             context: {
                 baseUrl: 'https://example.com',
-                orgId: 'org',
-                tenantId: 'tenant',
+                orgName: 'org',
+                tenantName: 'tenant',
+                orgId: 'org-guid',
+                tenantId: 'tenant-guid',
                 clientId: 'client-1',
                 redirectUri: 'https://example.com/cb',
             },
@@ -182,14 +184,34 @@ describe('TelemetryClient.track', () => {
             ApplicationName: 'TestService',
             Version: '1.2.3',
             Service: 'Service.Method',
-            CloudUrl: 'https://example.com/org/tenant',
-            CloudOrganizationId: 'org',
-            CloudTenantId: 'tenant',
+            CloudUrl: 'https://example.com/org-guid/tenant-guid',
+            CloudOrganizationName: 'org',
+            CloudTenantName: 'tenant',
+            CloudOrganizationId: 'org-guid',
+            CloudTenantId: 'tenant-guid',
             CloudClientId: 'client-1',
             CloudRedirectUri: 'https://example.com/cb',
             custom: 'value',
         });
         expect(typeof logRecord.timestamp).toBe('number');
+    });
+
+    it('builds CloudUrl from org/tenant names when the ids are absent', async () => {
+        const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
+
+        client.initialize({
+            ...VALID_OPTIONS,
+            context: {
+                baseUrl: 'https://example.com',
+                orgName: 'org',
+                tenantName: 'tenant',
+            },
+        });
+
+        client.track('Some.Event');
+
+        const [logRecord] = mocks.emit.mock.calls[0];
+        expect(logRecord.attributes.CloudUrl).toBe('https://example.com/org/tenant');
     });
 
     it('falls back to the eventName as the body when no display name is given', async () => {
@@ -210,6 +232,8 @@ describe('TelemetryClient.track', () => {
         client.track('Some.Event');
 
         const [logRecord] = mocks.emit.mock.calls[0];
+        expect(logRecord.attributes.CloudOrganizationName).toBe('');
+        expect(logRecord.attributes.CloudTenantName).toBe('');
         expect(logRecord.attributes.CloudOrganizationId).toBe('');
         expect(logRecord.attributes.CloudTenantId).toBe('');
         expect(logRecord.attributes.CloudUrl).toBe('');
