@@ -76,9 +76,9 @@ describe.skip.each(modes)('Governance - Integration Tests [%s]', (mode) => {
 
       expect(result).toBeDefined();
       expect(typeof result.totalEvaluations).toBe('number');
-      expect(typeof result.allow).toBe('number');
-      expect(typeof result.deny).toBe('number');
-      expect(typeof result.noOp).toBe('number');
+      expect(typeof result.allowedCount).toBe('number');
+      expect(typeof result.deniedCount).toBe('number');
+      expect(typeof result.noOpCount).toBe('number');
     });
 
     it('should support a bounded range across the whole organization', async () => {

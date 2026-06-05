@@ -114,19 +114,16 @@ export type GovernancePolicyTraceGetAllOptions = PaginationOptions & GovernanceF
 
 /**
  * Aggregate governance enforcement counts returned by
- * {@link GovernanceServiceModel.getOperationSummary}.
- *
- * Each count reflects `governanceEvaluation` spans — one per AuthZ enforcement
- * verdict — over the requested time range, regardless of how many underlying
- * policies fed into each verdict.
+ * {@link GovernanceServiceModel.getOperationSummary}, covering the requested
+ * time range.
  */
 export interface GovernanceOperationSummary {
   /** Total number of governance enforcement evaluations in range. */
   totalEvaluations: number;
-  /** Count with a final `Allow` enforcement verdict. */
-  allow: number;
-  /** Count with a final `Deny` enforcement verdict. */
-  deny: number;
-  /** Count with a final `NoOp` (simulated) enforcement verdict. */
-  noOp: number;
+  /** Number of evaluations that resolved to `Allow`. */
+  allowedCount: number;
+  /** Number of evaluations that resolved to `Deny`. */
+  deniedCount: number;
+  /** Number of evaluations that resolved to `NoOp` (simulated). */
+  noOpCount: number;
 }

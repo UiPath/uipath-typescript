@@ -245,9 +245,9 @@ describe('GovernanceService Unit Tests', () => {
       const result = await governanceService.getOperationSummary(startTime);
 
       expect(result.totalEvaluations).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_TOTAL_EVALUATIONS);
-      expect(result.allow).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_ALLOW);
-      expect(result.deny).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_DENY);
-      expect(result.noOp).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_NOOP);
+      expect(result.allowedCount).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_ALLOW);
+      expect(result.deniedCount).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_DENY);
+      expect(result.noOpCount).toBe(GOVERNANCE_TEST_CONSTANTS.SUMMARY_NOOP);
     });
 
     it('should send required startTime and use the operation summary endpoint', async () => {
@@ -288,7 +288,7 @@ describe('GovernanceService Unit Tests', () => {
 
       const result = await governanceService.getOperationSummary(startTime);
 
-      expect(result).toEqual({ totalEvaluations: 0, allow: 0, deny: 0, noOp: 0 });
+      expect(result).toEqual({ totalEvaluations: 0, allowedCount: 0, deniedCount: 0, noOpCount: 0 });
     });
   });
 
