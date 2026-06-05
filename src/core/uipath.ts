@@ -116,8 +116,8 @@ export class UiPath implements IUiPath {
     // Initialize telemetry with SDK configuration
     telemetryClient.initialize({
       baseUrl: config.baseUrl,
-      orgId: config.orgName,
-      tenantId: config.tenantName,
+      orgName: config.orgName,
+      tenantName: config.tenantName,
       clientId: hasOAuthAuth ? config.clientId : undefined,
       redirectUri: hasOAuthAuth ? config.redirectUri : undefined
     });
