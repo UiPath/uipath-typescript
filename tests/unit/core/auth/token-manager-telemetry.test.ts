@@ -4,6 +4,7 @@ import { ExecutionContext } from '@/core/context/execution';
 import type { Config } from '@/core/config/config';
 import { telemetryClient } from '@/core/telemetry';
 import { TEST_CONSTANTS } from '@tests/utils/constants/common';
+import { TEST_USER_ID, createTestJwt } from '@tests/utils/jwt';
 
 // ---------------------------------------------------------------------------
 // Mock platform — plain (non-embedded, non-Action-Center) environment
@@ -18,21 +19,6 @@ vi.mock('@/utils/platform', () => ({
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-const TEST_USER_ID = 'user-guid-1234';
-
-/** Encodes a claims object as an unpadded base64url JWT segment. */
-function encodeJwtSegment(value: Record<string, unknown>): string {
-  return btoa(JSON.stringify(value))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-}
-
-/** Builds an unsigned JWT whose payload carries the given claims. */
-function createTestJwt(claims: Record<string, unknown>): string {
-  return `${encodeJwtSegment({ alg: 'none', typ: 'JWT' })}.${encodeJwtSegment(claims)}.signature`;
-}
-
 function makeManager() {
   const context = new ExecutionContext();
   const config: Config = {
