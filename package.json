@@ -206,7 +206,7 @@
         "test:coverage": "vitest --coverage"
     },
     "dependencies": {
-        "@uipath/core-telemetry": "^1.0.0-beta.2",
+        "@uipath/core-telemetry": "^1.0.0-beta.3",
         "socket.io-client": "^4.8.1"
     },
     "peerDependencies": {

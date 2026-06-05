@@ -42,4 +42,12 @@ export const telemetryClient = {
             context,
         });
     },
+
+    /**
+     * Sets the authenticated user's id so every subsequently emitted event
+     * carries it as `CloudUserId`.
+     */
+    setUserId(userId: string): void {
+        sdkClient.setUserId(userId);
+    },
 };

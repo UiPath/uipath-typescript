@@ -52,6 +52,13 @@ export class UiPath implements IUiPath {
   // deployments). Not accepted via the public constructor; lives here so the
   // SDK can flow it through to BaseService.config without polluting BaseConfig.
   #metaFolderKey?: string;
+  // Org/tenant ids captured from the meta tags before the constructor config
+  // is merged in. The `uipath:org-name`/`uipath:tenant-name` meta tags always
+  // carry org/tenant *ids* in coded-app deployments, whereas a
+  // constructor-supplied `orgName`/`tenantName` may be actual names — so the
+  // telemetry ids must be read from the meta tags.
+  #metaOrgId?: string;
+  #metaTenantId?: string;
 
   /** Read-only config for user convenience */
   public readonly config!: Readonly<BaseConfig>;
@@ -60,6 +67,8 @@ export class UiPath implements IUiPath {
     // Load configuration from meta tags
     const configFromMetaTags = loadFromMetaTags();
     this.#metaFolderKey = configFromMetaTags?.folderKey;
+    this.#metaOrgId = configFromMetaTags?.orgName;
+    this.#metaTenantId = configFromMetaTags?.tenantName;
 
     // Merge configuration: constructor config overrides meta tags
     const mergedConfig = config ? { ...configFromMetaTags, ...config } : configFromMetaTags;
@@ -113,9 +122,11 @@ export class UiPath implements IUiPath {
       tenantName: internalConfig.tenantName
     };
 
-    // Initialize telemetry with SDK configuration
+    // Initialize telemetry with SDK configuration.
     telemetryClient.initialize({
       baseUrl: config.baseUrl,
+      orgId: this.#metaOrgId,
+      tenantId: this.#metaTenantId,
       orgName: config.orgName,
       tenantName: config.tenantName,
       clientId: hasOAuthAuth ? config.clientId : undefined,
@@ -138,6 +149,8 @@ export class UiPath implements IUiPath {
     // Load from meta tags
     const metaConfig = loadFromMetaTags();
     this.#metaFolderKey = metaConfig?.folderKey;
+    this.#metaOrgId = metaConfig?.orgName;
+    this.#metaTenantId = metaConfig?.tenantName;
 
     // Merge with any partial config from constructor (constructor overrides meta tags)
     const merged = { ...metaConfig, ...this.#partialConfig };
