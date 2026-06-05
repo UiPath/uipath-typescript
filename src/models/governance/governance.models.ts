@@ -11,6 +11,9 @@ import type {
 /**
  * Service for inspecting governance policy enforcement on the UiPath platform.
  *
+ * See [Define governance policies](https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/define-governance-policies)
+ * for how governance policies are configured in Automation Ops.
+ *
  * All methods require the caller to be an organization administrator.
  *
  * ### Usage
