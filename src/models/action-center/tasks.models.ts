@@ -114,22 +114,43 @@ export interface TaskServiceModel {
   getById(id: number, options?: TaskGetByIdOptions, folderId?: number): Promise<TaskGetResponse>;
 
   /**
-   * Creates a new task
-   * 
-   * @param options - The task to be created
+   * Creates a new task. Pass `type: TaskType.QuickForm` (with `taskSchemaKey`
+   * and `schema`) for a schema-first HITL task rendered by FormLib in Action
+   * Center; otherwise the default `TaskType.External` shape is used.
+   *
+   * For QuickForm, `schema` is registered under `taskSchemaKey` on first use and
+   * reused (not updated) on subsequent calls with the same key, then the task is
+   * created in the same call. Schema keys are unique per tenant.
+   *
+   * @param task - The task to create. The `type` field discriminates the shape.
    * @param folderId - Required folder ID
    * @returns Promise resolving to the created task
    * {@link TaskCreateResponse}
    * @example
    * ```typescript
-   * import { TaskPriority } from '@uipath/uipath-typescript';
-   * const task = await tasks.create({
+   * import { TaskPriority, TaskType } from '@uipath/uipath-typescript';
+   *
+   * // External task (default)
+   * await tasks.create({
    *   title: "My Task",
    *   priority: TaskPriority.Medium
-   * }, <folderId>); // folderId is required
+   * }, <folderId>);
+   *
+   * // QuickForm task
+   * await tasks.create({
+   *   type: TaskType.QuickForm,
+   *   title: "Approve invoice",
+   *   taskSchemaKey: "8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91",
+   *   schema: {
+   *     id: "8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91",
+   *     fields: [{ id: "invoice", type: "text", label: "Invoice", direction: "input" }],
+   *     outcomes: [{ id: "approve", name: "Approve", type: "string", isPrimary: true }],
+   *   },
+   *   data: { invoice: "INV-1234" },
+   * }, <folderId>);
    * ```
    */
-  create(options: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse>;
+  create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse>;
 
   /**
    * Assigns tasks to users
