@@ -1,4 +1,4 @@
-import { TimelineOptions } from '../../models/maestro';
+import { TimeInterval, TimelineOptions } from '../../models/maestro';
 import type { MaestroProcessStatsRequest, TopQueryOptions } from '../../models/maestro';
 
 /**
@@ -45,7 +45,7 @@ export function buildInsightsTimelineBody(startTime: Date, endTime: Date, isCase
       ...(options?.version ? { version: options.version } : {}),
       ...(options?.processKeys ? { processKeys: options.processKeys } : {}),
     },
-    timeSliceUnit: options?.groupBy,
+    timeSliceUnit: options?.groupBy ?? TimeInterval.Day,
     timezoneOffset: new Date().getTimezoneOffset() * -1,
   };
 }
