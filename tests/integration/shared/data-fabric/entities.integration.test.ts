@@ -1336,45 +1336,40 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   // Verifies that every record-CRUD method correctly forwards the
   // X-UIPATH-FolderKey header for an entity that lives in a non-tenant folder.
   //
-  // Skipped: beforeAll provisions a fresh folder-scoped entity via entities.create,
-  // which requires the DataFabric.Schema.Write OAuth scope — not granted to the
-  // standard integration-test PAT. Mirrors the existing skip on `create`,
-  // `updateById`, `deleteById`, and `entity schema methods (bound)` above.
-  describe.skip('Folder-scoped record CRUD', () => {
+  // Uses a pre-existing folder-scoped entity (DATA_FABRIC_TEST_FOLDER_ENTITY_ID)
+  // so the suite runs with the standard integration-test PAT — entity schema
+  // create/delete are NOT exercised here (they live in the skipped schema-write
+  // describes above).
+  describe('Folder-scoped record CRUD', () => {
     let folderEntityId!: string;
     let folderKey!: string;
+    let folderEntityMetadata!: RawEntityGetResponse;
     const folderRecordIds: string[] = [];
 
     beforeAll(async () => {
       const config = getTestConfig();
       if (!config.folderKey) {
         throw new Error(
-          'INTEGRATION_TEST_FOLDER_KEY is not set — folder-scoped record CRUD tests need a folder the test PAT can write to',
+          'INTEGRATION_TEST_FOLDER_KEY is not set — folder-scoped record CRUD tests need the target folder key',
+        );
+      }
+      if (!config.dataFabricTestFolderEntityId) {
+        throw new Error(
+          'DATA_FABRIC_TEST_FOLDER_ENTITY_ID is not set — point this at an existing entity in the configured folder',
         );
       }
       folderKey = config.folderKey;
+      folderEntityId = config.dataFabricTestFolderEntityId;
 
+      // Fetch schema once so per-test record bodies match the entity's shape.
       const { entities } = getServices();
-      const entityName = `sdk_fld_${mode}_${generateRandomString(8).toLowerCase()}`;
-      folderEntityId = await entities.create(
-        entityName,
-        [
-          { fieldName: 'name', type: EntityFieldDataType.STRING },
-          { fieldName: 'age', type: EntityFieldDataType.INTEGER },
-          { fieldName: 'isActive', type: EntityFieldDataType.BOOLEAN },
-        ],
-        { folderKey, displayName: entityName },
-      );
-      createdEntityIds.push(folderEntityId);
+      folderEntityMetadata = await entities.getById(folderEntityId, { folderKey });
     });
 
     it('should insert a single record with folderKey via insertRecordById', async () => {
       const { entities } = getServices();
-      const result = await entities.insertRecordById(
-        folderEntityId,
-        { name: `Alice_${generateRandomString(6)}`, age: 30, isActive: true },
-        { folderKey },
-      );
+      const data = await buildDummyRecord(folderEntityMetadata);
+      const result = await entities.insertRecordById(folderEntityId, data, { folderKey });
 
       expect(result).toBeDefined();
       expect(result.Id).toBeDefined();
@@ -1383,17 +1378,15 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
     it('should batch-insert records with folderKey via insertRecordsById', async () => {
       const { entities } = getServices();
-      const result = await entities.insertRecordsById(
-        folderEntityId,
-        [
-          { name: `Bob_${generateRandomString(6)}`, age: 25, isActive: false },
-          { name: `Charlie_${generateRandomString(6)}`, age: 40, isActive: true },
-        ],
-        { folderKey },
-      );
+      const batch = await Promise.all([
+        buildDummyRecord(folderEntityMetadata),
+        buildDummyRecord(folderEntityMetadata),
+      ]);
+
+      const result = await entities.insertRecordsById(folderEntityId, batch, { folderKey });
 
       expect(result.successRecords).toBeDefined();
-      expect(result.successRecords.length).toBe(2);
+      expect(result.successRecords.length).toBe(batch.length);
 
       const ids = result.successRecords.map((r) => r.Id).filter(Boolean) as string[];
       folderRecordIds.push(...ids);
@@ -1401,65 +1394,58 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
     it('should get a single record with folderKey via getRecordById', async () => {
       const { entities } = getServices();
-      const record = await entities.getRecordById(
-        folderEntityId,
-        folderRecordIds[0],
-        { folderKey },
-      );
+      const record = await entities.getRecordById(folderEntityId, folderRecordIds[0], { folderKey });
 
       expect(record).toBeDefined();
       expect(record.Id).toBe(folderRecordIds[0]);
-      expect(record.age).toBe(30);
     });
 
     it('should list paginated records with folderKey via getAllRecords', async () => {
       const { entities } = getServices();
-      const result = await entities.getAllRecords(folderEntityId, {
-        folderKey,
-        pageSize: 10,
-      });
+      const result = await entities.getAllRecords(folderEntityId, { folderKey, pageSize: 10 });
 
       expect(result.items).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
-      expect(result.items.length).toBeGreaterThanOrEqual(folderRecordIds.length);
       expect(hasValidPagination(result)).toBe(true);
     });
 
-    it('should filter records with folderKey via queryRecordsById', async () => {
+    it('should query records with folderKey via queryRecordsById', async () => {
       const { entities } = getServices();
       const result = await entities.queryRecordsById(folderEntityId, {
         folderKey,
         filterGroup: {
           queryFilters: [
-            { fieldName: 'isActive', operator: QueryFilterOperator.Equals, value: 'true' },
+            { fieldName: 'Id', operator: QueryFilterOperator.Equals, value: folderRecordIds[0] },
           ],
         },
       });
 
       expect(Array.isArray(result.items)).toBe(true);
-      // We inserted 2 active records (Alice + Charlie); no others exist in this fresh entity.
-      expect(result.items.length).toBeGreaterThanOrEqual(2);
+      // The folder header must reach the server for the row to be retrievable; the
+      // filter narrows to the record we just inserted in this run.
+      expect(result.items.some((r) => r.Id === folderRecordIds[0])).toBe(true);
     });
 
     it('should update a record with folderKey via updateRecordById', async () => {
       const { entities } = getServices();
-      const result = await entities.updateRecordById(
-        folderEntityId,
-        folderRecordIds[0],
-        { age: 31 },
-        { folderKey },
-      );
+      const patch = await buildDummyRecord(folderEntityMetadata);
+      const result = await entities.updateRecordById(folderEntityId, folderRecordIds[0], patch, { folderKey });
 
       expect(result).toBeDefined();
-      expect(result.age).toBe(31);
+      expect(result.Id).toBe(folderRecordIds[0]);
     });
 
     it('should batch-update records with folderKey via updateRecordsById', async () => {
       const { entities } = getServices();
-      const updates: EntityRecord[] = folderRecordIds.slice(1).map((id) => ({
-        Id: id,
-        isActive: true,
-      } as EntityRecord));
+      const updates: EntityRecord[] = await Promise.all(
+        folderRecordIds.slice(1).map(async (id) => {
+          const patch = await buildDummyRecord(folderEntityMetadata);
+          return { Id: id, ...patch } as EntityRecord;
+        }),
+      );
+      if (updates.length === 0) {
+        throw new Error('No batch-inserted records to update — prior insert test must have failed');
+      }
 
       const result = await entities.updateRecordsById(folderEntityId, updates, { folderKey });
 
@@ -1473,10 +1459,16 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
       await entities.deleteRecordById(folderEntityId, idToDelete, { folderKey });
 
-      // Verify gone via getAllRecords — the deleted Id should not appear in the list.
-      const page = await entities.getAllRecords(folderEntityId, { folderKey, pageSize: 50 });
-      const ids = page.items.map((r) => r.Id);
-      expect(ids).not.toContain(idToDelete);
+      // Verify gone via queryRecordsById — the deleted Id should not appear.
+      const result = await entities.queryRecordsById(folderEntityId, {
+        folderKey,
+        filterGroup: {
+          queryFilters: [
+            { fieldName: 'Id', operator: QueryFilterOperator.Equals, value: idToDelete },
+          ],
+        },
+      });
+      expect(result.items.some((r) => r.Id === idToDelete)).toBe(false);
     });
 
     it('should batch-delete records with folderKey via deleteRecordsById', async () => {
@@ -1500,15 +1492,11 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       if (config.skipCleanup) return;
       const { entities } = getServices();
 
+      // Records only — the test entity is owned by the tenant, not created here.
       if (folderRecordIds.length > 0) {
         await entities
           .deleteRecordsById(folderEntityId, folderRecordIds, { folderKey })
           .catch(() => undefined);
-      }
-      if (folderEntityId) {
-        await entities.deleteById(folderEntityId, { folderKey }).catch(() => undefined);
-        const idx = createdEntityIds.indexOf(folderEntityId);
-        if (idx !== -1) createdEntityIds.splice(idx, 1);
       }
     });
   });
