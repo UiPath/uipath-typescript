@@ -12,10 +12,13 @@ type Logger = ReturnType<LoggerProvider['getLogger']>;
 import {
     APP_NAME,
     CLOUD_CLIENT_ID,
+    CLOUD_ORGANIZATION_ID,
     CLOUD_ORGANIZATION_NAME,
     CLOUD_REDIRECT_URI,
+    CLOUD_TENANT_ID,
     CLOUD_TENANT_NAME,
     CLOUD_URL,
+    CLOUD_USER_ID,
     CONNECTION_STRING,
     SERVICE,
     UNKNOWN,
@@ -186,6 +189,7 @@ export class TelemetryClient {
     private logProvider?: LoggerProvider;
     private logger?: Logger;
     private telemetryContext?: TelemetryContext;
+    private cloudUserId?: string;
 
     public initialize(options: TelemetryClientInitOptions): void {
         if (this.isInitialized) {
@@ -239,6 +243,17 @@ export class TelemetryClient {
         return this.options?.defaultEventName;
     }
 
+    /**
+     * Sets the authenticated user's id, reported as `CloudUserId` on every
+     * subsequently emitted event. Empty values are ignored and the
+     * previously set user id, if any, is kept.
+     */
+    public setUserId(userId: string): void {
+        if (userId) {
+            this.cloudUserId = userId;
+        }
+    }
+
     private setupTelemetryProvider(connectionString: string): void {
         // `setupTelemetryProvider` is only called from `initialize` after
         // `this.options` has been assigned, so the non-null assertion is safe.
@@ -276,6 +291,9 @@ export class TelemetryClient {
             [CLOUD_URL]: this.createCloudUrl(),
             [CLOUD_ORGANIZATION_NAME]: this.telemetryContext?.orgName ?? UNKNOWN,
             [CLOUD_TENANT_NAME]: this.telemetryContext?.tenantName ?? UNKNOWN,
+            [CLOUD_ORGANIZATION_ID]: this.telemetryContext?.orgId ?? UNKNOWN,
+            [CLOUD_TENANT_ID]: this.telemetryContext?.tenantId ?? UNKNOWN,
+            [CLOUD_USER_ID]: this.cloudUserId ?? UNKNOWN,
             [CLOUD_REDIRECT_URI]: this.telemetryContext?.redirectUri ?? UNKNOWN,
             [CLOUD_CLIENT_ID]: this.telemetryContext?.clientId ?? UNKNOWN,
             ...extraAttributes,
@@ -284,13 +302,14 @@ export class TelemetryClient {
 
     private createCloudUrl(): string {
         const baseUrl = this.telemetryContext?.baseUrl;
-        const orgId = this.telemetryContext?.orgName;
-        const tenantId = this.telemetryContext?.tenantName;
+        // Prefer the org/tenant ids; fall back to the names when absent.
+        const org = this.telemetryContext?.orgId || this.telemetryContext?.orgName;
+        const tenant = this.telemetryContext?.tenantId || this.telemetryContext?.tenantName;
 
-        if (!baseUrl || !orgId || !tenantId) {
+        if (!baseUrl || !org || !tenant) {
             return UNKNOWN;
         }
 
-        return `${baseUrl}/${orgId}/${tenantId}`;
+        return `${baseUrl}/${org}/${tenant}`;
     }
 }
