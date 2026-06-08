@@ -256,13 +256,17 @@ export interface CasesServiceModel {
    * @returns Promise resolving to an array of {@link ElementStats}
    * @example
    * ```typescript
-   * // Get element metrics for a case
+   * // First, list cases to find the processKey, packageId, and available versions
+   * const allCases = await cases.getAll();
+   * const caseItem = allCases[0];
+   *
+   * // Get element metrics for that case
    * const elements = await cases.getElementStats(
-   *   '<processKey>',
-   *   '<packageId>',
+   *   caseItem.processKey,
+   *   caseItem.packageId,
    *   new Date('2026-04-01'),
    *   new Date(),
-   *   '1.0.1'
+   *   caseItem.packageVersions[0]
    * );
    *
    * // Find elements with failures
@@ -270,6 +274,13 @@ export interface CasesServiceModel {
    * for (const element of failedElements) {
    *   console.log(`Failed element: ${element.elementId}, failures: ${element.failCount}`);
    * }
+   *
+   * // Using bound method on a case — auto-fills processKey and packageId
+   * const boundElements = await caseItem.getElementStats(
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   caseItem.packageVersions[0]
+   * );
    * ```
    */
   getElementStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<ElementStats[]>;
@@ -288,17 +299,28 @@ export interface CasesServiceModel {
    * @returns Promise resolving to {@link InstanceStats}
    * @example
    * ```typescript
-   * // Get instance status breakdown for a case
+   * // First, list cases to find the processKey, packageId, and available versions
+   * const allCases = await cases.getAll();
+   * const caseItem = allCases[0];
+   *
+   * // Get instance status breakdown for that case
    * const counts = await cases.getInstanceStats(
-   *   '<processKey>',
-   *   '<packageId>',
+   *   caseItem.processKey,
+   *   caseItem.packageId,
    *   new Date('2026-04-01'),
    *   new Date(),
-   *   '1.0.1'
+   *   caseItem.packageVersions[0]
    * );
    *
    * console.log(`Total: ${counts.totalCount}`);
    * console.log(`Completed: ${counts.completedCount}, Faulted: ${counts.faultedCount}`);
+   *
+   * // Using bound method on a case — auto-fills processKey and packageId
+   * const boundCounts = await caseItem.getInstanceStats(
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   caseItem.packageVersions[0]
+   * );
    * ```
    */
   getInstanceStats(processKey: string, packageId: string, startTime: Date, endTime: Date, packageVersion: string): Promise<InstanceStats>;

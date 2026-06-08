@@ -340,13 +340,17 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * @returns Promise resolving to an array of {@link ElementStats}
    * @example
    * ```typescript
-   * // Get element metrics for a process
+   * // First, list processes to find the processKey, packageId, and available versions
+   * const processes = await maestroProcesses.getAll();
+   * const process = processes[0];
+   *
+   * // Get element metrics for that process
    * const elements = await maestroProcesses.getElementStats(
-   *   '<processKey>',
-   *   '<packageId>',
+   *   process.processKey,
+   *   process.packageId,
    *   new Date('2026-04-01'),
    *   new Date(),
-   *   '1.0.1'
+   *   process.packageVersions[0]
    * );
    *
    * // Analyze element performance
@@ -355,6 +359,13 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    *   console.log(`  Success: ${element.successCount}, Failed: ${element.failCount}`);
    *   console.log(`  Avg duration: ${element.avgDurationMs}ms, P95: ${element.p95DurationMs}ms`);
    * }
+   *
+   * // Using bound method on a process — auto-fills processKey and packageId
+   * const boundElements = await process.getElementStats(
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   process.packageVersions[0]
+   * );
    * ```
    */
   @track('MaestroProcesses.GetElementStats')
@@ -380,18 +391,29 @@ export class MaestroProcessesService extends BaseService implements MaestroProce
    * @returns Promise resolving to {@link InstanceStats}
    * @example
    * ```typescript
-   * // Get instance status breakdown for a process
+   * // First, list processes to find the processKey, packageId, and available versions
+   * const processes = await maestroProcesses.getAll();
+   * const process = processes[0];
+   *
+   * // Get instance status breakdown for that process
    * const counts = await maestroProcesses.getInstanceStats(
-   *   '<processKey>',
-   *   '<packageId>',
+   *   process.processKey,
+   *   process.packageId,
    *   new Date('2026-04-01'),
    *   new Date(),
-   *   '1.0.1'
+   *   process.packageVersions[0]
    * );
    *
    * console.log(`Total: ${counts.totalCount}`);
    * console.log(`Running: ${counts.runningCount}, Completed: ${counts.completedCount}`);
    * console.log(`Faulted: ${counts.faultedCount}, Avg duration: ${counts.avgDurationMs}ms`);
+   *
+   * // Using bound method on a process — auto-fills processKey and packageId
+   * const boundCounts = await process.getInstanceStats(
+   *   new Date('2026-04-01'),
+   *   new Date(),
+   *   process.packageVersions[0]
+   * );
    * ```
    */
   @track('MaestroProcesses.GetInstanceStats')
