@@ -91,6 +91,7 @@ export interface GetAllPaginatedParams<T, R = T> {
       tokenParam?: string;
       countParam?: string;
       convertToSkip?: boolean;
+      zeroBased?: boolean;
     };
   };
 }
@@ -163,6 +164,7 @@ export interface RequestWithPaginationOptions extends RequestSpec {
       tokenParam?: string;
       countParam?: string;
       convertToSkip?: boolean;
+      zeroBased?: boolean;
     };
   };
 }
@@ -201,6 +203,9 @@ export interface PaginationConfig {
      *  When false, sends the pageNumber directly as the offset param value.
      *  Only applies to OFFSET pagination type. */
     convertToSkip?: boolean;
+    /** When true, sends `pageNumber - 1` as the offset param (for 0-based APIs).
+     *  Default false (1-based). Only applies when `convertToSkip` is false. */
+    zeroBased?: boolean;
   };
 }
 

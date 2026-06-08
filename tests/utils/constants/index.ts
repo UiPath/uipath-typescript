@@ -16,3 +16,4 @@ export * from './conversational-agent';
 export * from './attachments';
 export * from './feedback';
 export * from './traces';
+export * from './governance';

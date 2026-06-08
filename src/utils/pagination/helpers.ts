@@ -324,7 +324,7 @@ export class PaginationHelpers {
         getEndpoint: config.getEndpoint,
         folderId,
         headers: config.headers,
-        paginationParams: cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize },
+        paginationParams: cursor ? { cursor, pageSize } : jumpToPage !== undefined ? { jumpToPage, pageSize } : { pageSize },
         additionalParams: prefixedOptions,
         transformFn: config.transformFn,
         method: config.method,

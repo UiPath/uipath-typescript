@@ -18,6 +18,7 @@ export * from './models/action-center';
 export * from './models/conversational-agent';
 export * from './models/agents';
 export * from './models/document-understanding';
+export * from './models/governance';
 
 // Export error handling functionality (public API only)
 export * from './core/errors';

@@ -20,6 +20,7 @@ export * from './conversational-agent';
 export * from './feedback';
 export * from './attachments';
 export * from './traces';
+export * from './governance';
 
 // Re-export constants for convenience
 export * from '../constants';
