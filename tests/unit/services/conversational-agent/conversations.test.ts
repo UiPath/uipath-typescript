@@ -53,7 +53,7 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
     vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 
     // Reset pagination helpers mock before each test
-    vi.mocked(PaginationHelpers.getAll).mockReset();
+    vi.mocked(PaginationHelpers.getAllPaginated).mockReset();
 
     conversationalAgent = new ConversationalAgentService(instance);
   });
@@ -274,21 +274,22 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
   });
 
   describe('getAll', () => {
-    it('should return all conversations without pagination options', async () => {
+    it('should return paginated conversations when called without options', async () => {
       const mockResponse = createMockTransformedConversationCollection();
 
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
 
       const result = await conversationalAgent.conversations.getAll();
 
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+      expect(PaginationHelpers.getAllPaginated).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceAccess: expect.any(Object),
           getEndpoint: expect.toSatisfy((fn: Function) => fn() === CONVERSATION_ENDPOINTS.LIST),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
-        }),
-        undefined
+          paginationParams: { pageSize: undefined },
+          additionalParams: {},
+          options: expect.any(Object)
+        })
       );
 
       expect(result).toEqual(mockResponse);
@@ -301,14 +302,14 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
         nextCursor: TEST_CONSTANTS.NEXT_CURSOR,
       });
 
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
 
       const result = await conversationalAgent.conversations.getAll({ pageSize: TEST_CONSTANTS.PAGE_SIZE });
 
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.any(Object),
+      expect(PaginationHelpers.getAllPaginated).toHaveBeenCalledWith(
         expect.objectContaining({
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
+          paginationParams: { pageSize: TEST_CONSTANTS.PAGE_SIZE },
+          additionalParams: {}
         })
       );
 
@@ -317,24 +318,39 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       expect(result.nextCursor).toBe(TEST_CONSTANTS.NEXT_CURSOR);
     });
 
+    it('should forward cursor in paginationParams', async () => {
+      const mockResponse = createMockTransformedConversationCollection();
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
+
+      const cursor = { value: TEST_CONSTANTS.NEXT_CURSOR };
+      await conversationalAgent.conversations.getAll({ cursor });
+
+      expect(PaginationHelpers.getAllPaginated).toHaveBeenCalledWith(
+        expect.objectContaining({
+          paginationParams: { cursor, pageSize: undefined }
+        })
+      );
+    });
+
     it('should support sort option', async () => {
       const mockResponse = createMockTransformedConversationCollection();
 
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
 
       await conversationalAgent.conversations.getAll({ sort: 'descending' as any });
 
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.any(Object),
+      expect(PaginationHelpers.getAllPaginated).toHaveBeenCalledWith(
         expect.objectContaining({
-          sort: 'descending'
+          additionalParams: expect.objectContaining({
+            sort: 'descending'
+          })
         })
       );
     });
 
     it('should translate agentKey/agentId/label filters to backend names before forwarding', async () => {
       const mockResponse = createMockTransformedConversationCollection();
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
 
       const options: ConversationGetAllOptions = {
         agentKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_KEY,
@@ -343,23 +359,21 @@ describe('ConversationalAgent.conversations Unit Tests', () => {
       };
       await conversationalAgent.conversations.getAll(options);
 
-      const [ config, forwardedOptions ] = vi.mocked(PaginationHelpers.getAll).mock.calls[0];
+      const [ config ] = vi.mocked(PaginationHelpers.getAllPaginated).mock.calls[0];
       // SDK-facing names are mapped to backend names before forwarding to PaginationHelpers.
-      expect(forwardedOptions).toEqual(expect.objectContaining({
+      expect(config.additionalParams).toEqual(expect.objectContaining({
         agentReleaseKey: CONVERSATIONAL_AGENT_TEST_CONSTANTS.AGENT_KEY,
         agentReleaseId: CONVERSATIONAL_AGENT_TEST_CONSTANTS.FILTER_AGENT_ID,
         search: CONVERSATIONAL_AGENT_TEST_CONSTANTS.LABEL_QUERY
       }));
-      expect(forwardedOptions).not.toHaveProperty('agentKey');
-      expect(forwardedOptions).not.toHaveProperty('agentId');
-      expect(forwardedOptions).not.toHaveProperty('label');
-      // Conversational params must be excluded from the OData $-prefix.
-      expect(config.excludeFromPrefix).toEqual(expect.arrayContaining([ 'agentReleaseKey', 'agentReleaseId', 'search' ]));
+      expect(config.additionalParams).not.toHaveProperty('agentKey');
+      expect(config.additionalParams).not.toHaveProperty('agentId');
+      expect(config.additionalParams).not.toHaveProperty('label');
     });
 
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockRejectedValue(error);
 
       await expect(conversationalAgent.conversations.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });

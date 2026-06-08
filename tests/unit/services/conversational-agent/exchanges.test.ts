@@ -37,7 +37,7 @@ describe('ExchangeService Unit Tests', () => {
     vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
 
     // Reset pagination helpers mock before each test
-    vi.mocked(PaginationHelpers.getAll).mockReset();
+    vi.mocked(PaginationHelpers.getAllPaginated).mockReset();
 
     exchanges = new ExchangeService(instance);
   });
@@ -77,23 +77,24 @@ describe('ExchangeService Unit Tests', () => {
   });
 
   describe('getAll', () => {
-    it('should return all exchanges without pagination options', async () => {
+    it('should return paginated exchanges when called without options', async () => {
       const mockResponse = createMockTransformedExchangeCollection();
 
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
 
       const result = await exchanges.getAll(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID);
 
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+      expect(PaginationHelpers.getAllPaginated).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceAccess: expect.any(Object),
           getEndpoint: expect.toSatisfy((fn: Function) =>
             fn() === EXCHANGE_ENDPOINTS.LIST(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID)
           ),
           transformFn: expect.any(Function),
-          pagination: expect.any(Object)
-        }),
-        undefined
+          paginationParams: { pageSize: undefined },
+          additionalParams: {},
+          options: expect.any(Object)
+        })
       );
 
       expect(result).toEqual(mockResponse);
@@ -105,17 +106,17 @@ describe('ExchangeService Unit Tests', () => {
         nextCursor: TEST_CONSTANTS.NEXT_CURSOR,
       });
 
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
 
       const result = await exchanges.getAll(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         { pageSize: TEST_CONSTANTS.PAGE_SIZE }
       );
 
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.any(Object),
+      expect(PaginationHelpers.getAllPaginated).toHaveBeenCalledWith(
         expect.objectContaining({
-          pageSize: TEST_CONSTANTS.PAGE_SIZE
+          paginationParams: { pageSize: TEST_CONSTANTS.PAGE_SIZE },
+          additionalParams: {}
         })
       );
 
@@ -124,28 +125,46 @@ describe('ExchangeService Unit Tests', () => {
       expect(result.nextCursor).toBe(TEST_CONSTANTS.NEXT_CURSOR);
     });
 
+    it('should forward cursor in paginationParams', async () => {
+      const mockResponse = createMockTransformedExchangeCollection();
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
+
+      const cursor = { value: TEST_CONSTANTS.NEXT_CURSOR };
+      await exchanges.getAll(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+        { cursor }
+      );
+
+      expect(PaginationHelpers.getAllPaginated).toHaveBeenCalledWith(
+        expect.objectContaining({
+          paginationParams: { cursor, pageSize: undefined }
+        })
+      );
+    });
+
     it('should support exchangeSort and messageSort options', async () => {
       const mockResponse = createMockTransformedExchangeCollection();
 
-      vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockResolvedValue(mockResponse);
 
       await exchanges.getAll(
         CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
         { exchangeSort: 'descending' as any, messageSort: 'ascending' as any }
       );
 
-      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
-        expect.any(Object),
+      expect(PaginationHelpers.getAllPaginated).toHaveBeenCalledWith(
         expect.objectContaining({
-          exchangeSort: 'descending',
-          messageSort: 'ascending'
+          additionalParams: {
+            exchangeSort: 'descending',
+            messageSort: 'ascending'
+          }
         })
       );
     });
 
     it('should handle API errors', async () => {
       const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
-      vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
+      vi.mocked(PaginationHelpers.getAllPaginated).mockRejectedValue(error);
 
       await expect(
         exchanges.getAll(CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID)

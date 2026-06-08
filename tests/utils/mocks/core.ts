@@ -29,6 +29,7 @@ export const mockTransformUtils = {
 export const mockPaginationHelpers = {
   PaginationHelpers: {
     getAll: vi.fn(),
+    getAllPaginated: vi.fn(),
     hasPaginationParameters: vi.fn((options = {}) => {
       const { cursor, pageSize, jumpToPage } = options;
       return cursor !== undefined || pageSize !== undefined || jumpToPage !== undefined;

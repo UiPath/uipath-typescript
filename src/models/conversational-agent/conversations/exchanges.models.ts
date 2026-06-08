@@ -9,7 +9,7 @@ import type {
   FeedbackCreateResponse,
   ExchangeGetResponse
 } from './exchanges.types';
-import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
+import type { PaginatedResponse } from '@/utils/pagination';
 
 /**
  * Service for retrieving exchanges and managing feedback within a {@link ConversationServiceModel | Conversation}
@@ -32,18 +32,22 @@ import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } fr
  */
 export interface ExchangeServiceModel {
   /**
-   * Gets all exchanges for a conversation with optional filtering and pagination
+   * Gets exchanges for a conversation with optional filtering and pagination
+   *
+   * Returns a paginated response. When called without `pageSize`/`cursor`, the
+   * backend applies its default page size — inspect `hasNextPage`/`nextCursor`
+   * to navigate further pages.
    *
    * @param conversationId - The conversation ID to get exchanges for
    * @param options - Options for querying exchanges including optional pagination parameters
-   * @returns Promise resolving to either an array of exchanges {@link NonPaginatedResponse}<{@link ExchangeGetResponse}> or a {@link PaginatedResponse}<{@link ExchangeGetResponse}> when pagination options are used
+   * @returns Promise resolving to a {@link PaginatedResponse}<{@link ExchangeGetResponse}>
    * @example
    * ```typescript
-   * // Get all exchanges (non-paginated)
-   * const conversationExchanges = await exchanges.getAll(conversationId);
+   * // First page (backend default page size)
+   * const firstPageOfExchanges = await exchanges.getAll(conversationId);
    *
-   * // First page with pagination
-   * const firstPageOfExchanges = await exchanges.getAll(conversationId, { pageSize: 10 });
+   * // First page with explicit page size
+   * const pagedExchanges = await exchanges.getAll(conversationId, { pageSize: 10 });
    *
    * // Navigate using cursor
    * if (firstPageOfExchanges.hasNextPage) {
@@ -53,14 +57,10 @@ export interface ExchangeServiceModel {
    * }
    * ```
    */
-  getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
+  getAll(
     conversationId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ExchangeGetResponse>
-      : NonPaginatedResponse<ExchangeGetResponse>
-  >;
+    options?: ExchangeGetAllOptions
+  ): Promise<PaginatedResponse<ExchangeGetResponse>>;
 
   /**
    * Gets an exchange by ID with its messages
@@ -115,32 +115,42 @@ export interface ExchangeServiceModel {
  */
 export interface ConversationExchangeServiceModel {
   /**
-   * Gets all exchanges for this conversation with optional filtering and pagination
+   * Gets exchanges for this conversation with pagination and optional sort parameters
+   *
+   * Returns a paginated response. When called without `pageSize`/`cursor`, the
+   * backend applies its default page size — inspect `hasNextPage`/`nextCursor`
+   * to navigate further pages.
    *
    * @param options - Options for querying exchanges including optional pagination parameters
-   * @returns Promise resolving to either an array of exchanges or a paginated response
+   * @returns Promise resolving to a {@link PaginatedResponse}<{@link ExchangeGetResponse}>
    *
-   * @example
+   * @example Basic usage - default page size and sort order
    * ```typescript
    * const conversation = await conversationalAgent.conversations.getById(conversationId);
    *
-   * // Get all exchanges
-   * const allExchanges = await conversation.exchanges.getAll();
-   *
-   * // With pagination
-   * const firstPage = await conversation.exchanges.getAll({ pageSize: 10 });
+   * // First page
+   * const firstPage = await conversation.exchanges.getAll();
+   * 
+   * // Navigate using cursor
    * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
+   *   const nextPage = await conversation.exchanges.getAll({ cursor: pagedExchanges.nextCursor });
+   * }
+   * ```
+   * 
+   * @example With explicit page size and exchange/message sort orders
+   * ```typescript
+   * const conversation = await conversationalAgent.conversations.getById(conversationId);
+   * 
+   * // First page
+   * const firstPage = await conversation.exchanges.getAll({ pageSize: 10, exchangeSort: SortOrder.Descending, messageSort: SortOrder.Ascending });
+   * 
+   * // Navigate using cursor
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await conversation.exchanges.getAll({ cursor: pagedExchanges.nextCursor });
    * }
    * ```
    */
-  getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ExchangeGetResponse>
-      : NonPaginatedResponse<ExchangeGetResponse>
-  >;
+  getAll(options?: ExchangeGetAllOptions): Promise<PaginatedResponse<ExchangeGetResponse>>;
 
   /**
    * Gets an exchange by ID with its messages

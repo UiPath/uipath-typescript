@@ -76,7 +76,7 @@ export interface ConversationUpdateOptions {
 }
 
 export type ConversationGetAllOptions = PaginationOptions & {
-  /** Sort order for conversations */
+  /** Sort order for conversations (by the last activity timestamp) */
   sort?: SortOrder;
   /** GUID key of the agent to filter conversations by. */
   agentKey?: string;
