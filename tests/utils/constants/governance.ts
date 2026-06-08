@@ -24,4 +24,8 @@ export const GOVERNANCE_TEST_CONSTANTS = {
   EVALUATION_RESULT_DENY: 'Deny',
   EVALUATION_DETAILS: '{"matchedRule":"deny-external-storage"}',
   ERROR_GOVERNANCE_REQUEST_FAILED: 'Governance request failed',
+  SUMMARY_TOTAL_EVALUATIONS: 150,
+  SUMMARY_ALLOW: 90,
+  SUMMARY_DENY: 40,
+  SUMMARY_NOOP: 20,
 } as const;

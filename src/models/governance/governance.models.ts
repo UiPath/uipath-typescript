@@ -1,6 +1,8 @@
 import type {
   GovernancePolicyTrace,
   GovernancePolicyTraceGetAllOptions,
+  GovernanceFilterOptions,
+  GovernanceOperationSummary,
 } from './governance.types';
 import type {
   PaginatedResponse,
@@ -78,4 +80,36 @@ export interface GovernanceServiceModel {
       ? PaginatedResponse<GovernancePolicyTrace>
       : NonPaginatedResponse<GovernancePolicyTrace>
   >;
+
+  /**
+   * Gets aggregate governance enforcement counts across the requested time range.
+   *
+   * Returns the total number of evaluations along with how many resolved to
+   * `Allow`, `Deny`, or `NoOp`.
+   *
+   * @param startTime - Inclusive lower bound on the evaluation time.
+   * @param options - Optional `endTime` upper bound and `fullOrganization` flag
+   * @returns Promise resolving to {@link GovernanceOperationSummary}
+   *
+   * @example
+   * ```typescript
+   * import { Governance } from '@uipath/uipath-typescript/governance';
+   *
+   * const governance = new Governance(sdk);
+   *
+   * // Get operation summary from the specified start time to right now
+   * const summary = await governance.getOperationSummary(new Date('2024-01-01'));
+   * console.log(summary.totalEvaluations, summary.allowedCount, summary.deniedCount, summary.noOpCount);
+   *
+   * // Bounded range across the whole organization
+   * const ranged = await governance.getOperationSummary(
+   *   new Date('2024-01-01'),
+   *   { endTime: new Date(), fullOrganization: true },
+   * );
+   * ```
+   */
+  getOperationSummary(
+    startTime: Date,
+    options?: GovernanceFilterOptions,
+  ): Promise<GovernanceOperationSummary>;
 }

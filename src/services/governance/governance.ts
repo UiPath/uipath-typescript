@@ -14,11 +14,17 @@ import {
 } from '../../utils/pagination';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
 import { PaginationType } from '../../utils/pagination/internal-types';
+import { filterUndefined } from '../../utils/object';
 import {
   GovernancePolicyTrace,
   GovernancePolicyTraceGetAllOptions,
+  GovernanceFilterOptions,
+  GovernanceOperationSummary,
 } from '../../models/governance/governance.types';
 import { GovernanceServiceModel } from '../../models/governance/governance.models';
+import {
+  RawGovernanceOperationSummaryResponse,
+} from '../../models/governance/governance.internal-types';
 
 /**
  * Service for inspecting governance policy enforcement on the UiPath platform.
@@ -106,5 +112,61 @@ export class GovernanceService extends BaseService implements GovernanceServiceM
         ? PaginatedResponse<GovernancePolicyTrace>
         : NonPaginatedResponse<GovernancePolicyTrace>
     >;
+  }
+
+  /**
+   * Gets aggregate governance enforcement counts across the requested time range.
+   *
+   * Returns the total number of evaluations along with how many resolved to
+   * `Allow`, `Deny`, or `NoOp`.
+   *
+   * @param startTime - Inclusive lower bound on the evaluation time.
+   * @param options - Optional `endTime` upper bound and `fullOrganization` flag
+   * @returns Promise resolving to {@link GovernanceOperationSummary}
+   *
+   * @example
+   * ```typescript
+   * import { Governance } from '@uipath/uipath-typescript/governance';
+   *
+   * const governance = new Governance(sdk);
+   *
+   * // Get operation summary from the specified start time to right now
+   * const summary = await governance.getOperationSummary(new Date('2024-01-01'));
+   * console.log(summary.totalEvaluations, summary.allowedCount, summary.deniedCount, summary.noOpCount);
+   *
+   * // Bounded range across the whole organization
+   * const ranged = await governance.getOperationSummary(
+   *   new Date('2024-01-01'),
+   *   { endTime: new Date(), fullOrganization: true },
+   * );
+   * ```
+   */
+  @track('Governance.GetOperationSummary')
+  async getOperationSummary(
+    startTime: Date,
+    options?: GovernanceFilterOptions,
+  ): Promise<GovernanceOperationSummary> {
+    if (!startTime) {
+      throw new ValidationError({ message: 'startTime is required for getOperationSummary' });
+    }
+
+    const body = filterUndefined({
+      startTime: startTime.toISOString(),
+      endTime: options?.endTime?.toISOString(),
+      fullOrganization: options?.fullOrganization,
+    });
+
+    const response = await this.post<RawGovernanceOperationSummaryResponse>(
+      GOVERNANCE_ENDPOINTS.OPERATION.SUMMARY,
+      body,
+    );
+
+    const data = response.data;
+    return {
+      totalEvaluations: data.totalEvaluations ?? 0,
+      allowedCount: data.allow ?? 0,
+      deniedCount: data.deny ?? 0,
+      noOpCount: data.noOp ?? 0,
+    };
   }
 }

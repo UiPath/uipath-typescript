@@ -69,4 +69,26 @@ describe.skip.each(modes)('Governance - Integration Tests [%s]', (mode) => {
       expect(page2.currentPage).toBe(2);
     });
   });
+
+  describe('getOperationSummary', () => {
+    it('should retrieve aggregate enforcement counts as numbers', async () => {
+      const result = await governance.getOperationSummary(startTime);
+
+      expect(result).toBeDefined();
+      expect(typeof result.totalEvaluations).toBe('number');
+      expect(typeof result.allowedCount).toBe('number');
+      expect(typeof result.deniedCount).toBe('number');
+      expect(typeof result.noOpCount).toBe('number');
+    });
+
+    it('should support a bounded range across the whole organization', async () => {
+      const result = await governance.getOperationSummary(startTime, {
+        endTime: new Date(),
+        fullOrganization: true,
+      });
+
+      expect(result).toBeDefined();
+      expect(typeof result.totalEvaluations).toBe('number');
+    });
+  });
 });

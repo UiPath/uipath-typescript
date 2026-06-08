@@ -70,7 +70,7 @@ export interface GovernancePolicyTrace {
 export interface GovernanceFilterOptions {
   /**
    * Inclusive upper bound on trace start time. When omitted, the upper bound
-   * is open. 
+   * is open.
    */
   endTime?: Date;
   /**
@@ -111,3 +111,19 @@ export type GovernancePolicyTraceGetAllOptions = PaginationOptions & GovernanceF
   /** Filter by one or more distributed-trace IDs. */
   traceId?: string[];
 };
+
+/**
+ * Aggregate governance enforcement counts returned by
+ * {@link GovernanceServiceModel.getOperationSummary}, covering the requested
+ * time range.
+ */
+export interface GovernanceOperationSummary {
+  /** Total number of governance enforcement evaluations in range. */
+  totalEvaluations: number;
+  /** Number of evaluations that resolved to `Allow`. */
+  allowedCount: number;
+  /** Number of evaluations that resolved to `Deny`. */
+  deniedCount: number;
+  /** Number of evaluations that resolved to `NoOp` (simulated). */
+  noOpCount: number;
+}

@@ -21,3 +21,13 @@ export interface RawGovernancePolicyTraceItem {
   processKey?: string;
   jobKey?: string;
 }
+
+/**
+ * Raw governed operation summary response as returned by API before transformation.
+ */
+export interface RawGovernanceOperationSummaryResponse {
+  totalEvaluations?: number;
+  allow?: number;
+  deny?: number;
+  noOp?: number;
+}

@@ -1,5 +1,8 @@
 import { GOVERNANCE_TEST_CONSTANTS } from '../constants/governance';
-import type { RawGovernancePolicyTraceItem } from '../../../src/models/governance/governance.internal-types';
+import type {
+  RawGovernancePolicyTraceItem,
+  RawGovernanceOperationSummaryResponse,
+} from '../../../src/models/governance/governance.internal-types';
 
 /**
  * Creates a raw policy evaluation trace item (camelCase) matching the live API response shape.
@@ -35,4 +38,18 @@ export const createMockRawGovernancePolicyTracesResponse = (
   items: RawGovernancePolicyTraceItem[] = [createMockRawGovernancePolicyTrace()],
 ): { items: RawGovernancePolicyTraceItem[] } => ({
   items,
+});
+
+/**
+ * Creates a raw governed operation summary response (camelCase) matching the
+ * live API response shape.
+ */
+export const createMockRawGovernanceOperationSummary = (
+  overrides: Partial<RawGovernanceOperationSummaryResponse> = {},
+): RawGovernanceOperationSummaryResponse => ({
+  totalEvaluations: GOVERNANCE_TEST_CONSTANTS.SUMMARY_TOTAL_EVALUATIONS,
+  allow: GOVERNANCE_TEST_CONSTANTS.SUMMARY_ALLOW,
+  deny: GOVERNANCE_TEST_CONSTANTS.SUMMARY_DENY,
+  noOp: GOVERNANCE_TEST_CONSTANTS.SUMMARY_NOOP,
+  ...overrides,
 });
