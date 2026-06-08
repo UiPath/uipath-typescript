@@ -28,7 +28,9 @@ export enum AgentListSortColumn {
   LastIncident = 'LastIncident',
   ConsumedUnits = 'ConsumedUnits',
   FolderName = 'FolderName',
+  /** Quantity of AGU (Agent Units) consumed */
   QuantityAGU = 'QuantityAGU',
+  /** Quantity of PLTU (Platform Units) consumed */
   QuantityPLTU = 'QuantityPLTU',
   FolderPath = 'FolderPath',
 }
@@ -74,9 +76,9 @@ export interface AgentListItem {
   unitsQuantity: number;
   /** Display name of the units (if any). May be `null` or `""`. */
   unitsName: string | null;
-  /** AGU quantity consumed by this agent */
+  /** Quantity of AGU (Agent Units) consumed by this agent */
   quantityAGU: number;
-  /** PLTU quantity consumed by this agent */
+  /** Quantity of PLTU (Platform Units) consumed by this agent */
   quantityPLTU: number;
 }
 

@@ -11,7 +11,8 @@ import type {
 /**
  * Service for retrieving runtime data for UiPath Agents.
  *
- * @see {@link https://docs.uipath.com/agents/automation-cloud/latest/user-guide/about-agents | About Agents}
+ * See [About Agents](https://docs.uipath.com/agents/automation-cloud/latest/user-guide/about-agents)
+ * for an overview of UiPath Agents.
  */
 export interface AgentServiceModel {
   /**
