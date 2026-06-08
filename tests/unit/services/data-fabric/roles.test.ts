@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ApiClient } from '../../../../src/core/http/api-client';
+import { ValidationError } from '../../../../src/core/errors';
 import { DataFabricRoleService } from '../../../../src/services/data-fabric/roles';
 import { DATA_FABRIC_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import {
@@ -27,18 +28,16 @@ describe('DataFabricRoleService Unit Tests', () => {
 
   describe('getAll', () => {
     it('should list Data Fabric roles with stats enabled by default', async () => {
-      mockApiClient.get.mockResolvedValue({
-        results: [
-          { id: 'role-1', name: 'Administrator' },
-          { id: 'role-2', name: 'Data Writer' },
-        ],
-      });
+      mockApiClient.get.mockResolvedValue([
+        { id: 'role-1', name: 'Administrator', type: 'System', directoryEntityCount: 2 },
+        { id: 'role-2', name: 'Data Writer', type: 'System', directoryEntityCount: 4 },
+      ]);
 
       const result = await rolesService.getAll();
 
       expect(result).toEqual([
-        { id: 'role-1', name: 'Administrator' },
-        { id: 'role-2', name: 'Data Writer' },
+        { id: 'role-1', name: 'Administrator', type: 'System', directoryEntityCount: 2 },
+        { id: 'role-2', name: 'Data Writer', type: 'System', directoryEntityCount: 4 },
       ]);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
@@ -48,12 +47,12 @@ describe('DataFabricRoleService Unit Tests', () => {
 
     it('should support disabling role stats', async () => {
       mockApiClient.get.mockResolvedValue([
-        { id: 'role-1', name: 'Administrator' },
+        { id: 'role-1', name: 'Administrator', type: 'System' },
       ]);
 
       const result = await rolesService.getAll({ stats: false });
 
-      expect(result).toEqual([{ id: 'role-1', name: 'Administrator' }]);
+      expect(result).toEqual([{ id: 'role-1', name: 'Administrator', type: 'System' }]);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
         { params: { stats: false } }
@@ -64,6 +63,16 @@ describe('DataFabricRoleService Unit Tests', () => {
       mockApiClient.get.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 
       await expect(rolesService.getAll()).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+
+    it('should reject invalid role response formats', async () => {
+      mockApiClient.get.mockResolvedValue({ results: [] });
+      const result = rolesService.getAll();
+
+      await expect(result).rejects.toBeInstanceOf(ValidationError);
+      await expect(result).rejects.toThrow(
+        'Invalid Data Fabric roles response format.'
+      );
     });
   });
 });

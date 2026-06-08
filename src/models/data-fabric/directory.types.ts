@@ -13,34 +13,21 @@ export enum DataFabricDirectoryEntityType {
 /**
  * @internal
  */
+export type DataFabricDirectoryEntityTypeName = 'User' | 'Group' | 'Application';
+
+/**
+ * @internal
+ */
 export type DataFabricDirectoryEntityTypeInput =
   | DataFabricDirectoryEntityType
-  | 'User'
-  | 'user'
-  | 'Group'
-  | 'group'
-  | 'DirectoryGroup'
-  | 'directoryGroup'
-  | 'Application'
-  | 'application'
-  | 'ExternalApplication'
-  | 'externalApplication'
-  | 'DirectoryExternalApplication'
-  | 'directoryExternalApplication'
-  | 'Robot'
-  | 'robot'
-  | 'DirectoryRobot'
-  | 'directoryRobot'
-  | 'DirectoryRobotUser'
-  | 'directoryRobotUser';
+  | DataFabricDirectoryEntityTypeName;
 
 /**
  * @internal
  */
 export interface DataFabricDirectoryRole {
   id: string;
-  name?: string;
-  [key: string]: unknown;
+  name: string;
 }
 
 /**
@@ -48,13 +35,12 @@ export interface DataFabricDirectoryRole {
  */
 export interface DataFabricDirectoryEntry {
   externalId: string;
-  name?: string;
-  email?: string;
-  type?: DataFabricDirectoryEntityType | string;
+  name: string;
+  email?: string | null;
+  type: DataFabricDirectoryEntityTypeName;
   roles: DataFabricDirectoryRole[];
-  objectType?: string;
-  isUIEnabled?: boolean;
-  [key: string]: unknown;
+  objectType?: string | null;
+  isUIEnabled: boolean;
 }
 
 /**
@@ -76,7 +62,7 @@ export interface DataFabricDirectoryGetAllOptions {
  * @internal
  */
 export interface DataFabricDirectoryListResponse {
-  totalCount?: number;
+  totalCount: number;
   results: DataFabricDirectoryEntry[];
 }
 

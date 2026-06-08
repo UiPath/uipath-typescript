@@ -1,6 +1,6 @@
 import {
   DataFabricDirectoryEntityType,
-  DataFabricDirectoryEntry,
+  DataFabricDirectoryEntityTypeName,
 } from './directory.types';
 
 export interface DataFabricDirectoryAssignPayload {
@@ -17,9 +17,22 @@ export interface DataFabricDirectoryRevokePayload {
   externalIds: string[];
 }
 
+export interface RawDataFabricDirectoryRole {
+  id: string;
+  name: string;
+}
+
+export interface RawDataFabricDirectoryEntry {
+  externalId: string;
+  name: string;
+  email?: string | null;
+  type: DataFabricDirectoryEntityTypeName;
+  roles?: RawDataFabricDirectoryRole[] | null;
+  objectType?: string | null;
+  isUIEnabled: boolean;
+}
+
 export interface RawDataFabricDirectoryListResponse {
-  totalCount?: number;
-  results?: DataFabricDirectoryEntry[];
-  value?: DataFabricDirectoryEntry[];
-  data?: DataFabricDirectoryEntry[];
+  totalCount: number;
+  results: RawDataFabricDirectoryEntry[];
 }

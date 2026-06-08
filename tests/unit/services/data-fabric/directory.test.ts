@@ -37,6 +37,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
             name: 'MRSAdmin',
             type: 'Group',
             roles: [{ id: 'role-existing', name: 'Data Reader' }],
+            isUIEnabled: true,
           },
         ],
       });
@@ -51,6 +52,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
             name: 'MRSAdmin',
             type: 'Group',
             roles: [{ id: 'role-existing', name: 'Data Reader' }],
+            isUIEnabled: true,
           },
         ],
       });
@@ -60,26 +62,51 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       );
     });
 
-    it('should normalize array responses and default missing roles', async () => {
-      mockApiClient.get.mockResolvedValue([
-        {
-          externalId: 'user-id',
-          name: 'User Name',
-        },
-      ]);
-
-      const result = await directoryService.list();
-
-      expect(result).toEqual({
-        totalCount: undefined,
+    it('should default missing roles in directory entries', async () => {
+      mockApiClient.get.mockResolvedValue({
+        totalCount: 1,
         results: [
           {
             externalId: 'user-id',
             name: 'User Name',
-            roles: [],
+            type: 'User',
           },
         ],
       });
+
+      const result = await directoryService.list();
+
+      expect(result).toEqual({
+        totalCount: 1,
+        results: [
+          {
+            externalId: 'user-id',
+            name: 'User Name',
+            type: 'User',
+            roles: [],
+            isUIEnabled: true,
+          },
+        ],
+      });
+    });
+
+    it('should reject invalid directory response formats', async () => {
+      mockApiClient.get.mockResolvedValue({ value: [] });
+
+      await expect(directoryService.list()).rejects.toThrow(
+        'Invalid Data Fabric directory response format.'
+      );
+    });
+
+    it('should reject invalid directory entry response formats', async () => {
+      mockApiClient.get.mockResolvedValue({
+        totalCount: 1,
+        results: [{ externalId: 'user-id', name: 'User Name', type: 'DirectoryRobot' }],
+      });
+
+      await expect(directoryService.list()).rejects.toThrow(
+        'Invalid Data Fabric directory entry response format.'
+      );
     });
 
     it('should propagate API errors', async () => {
@@ -93,13 +120,15 @@ describe('DataFabricDirectoryService Unit Tests', () => {
     it('should page through all directory entries', async () => {
       const firstPage = Array.from({ length: 100 }, (_, index) => ({
         externalId: `principal-${index}`,
+        name: `Principal ${index}`,
+        type: 'User' as const,
         roles: [],
       }));
       mockApiClient.get
         .mockResolvedValueOnce({ totalCount: 101, results: firstPage })
         .mockResolvedValueOnce({
           totalCount: 101,
-          results: [{ externalId: 'principal-100', roles: [] }],
+          results: [{ externalId: 'principal-100', name: 'Principal 100', type: 'User', roles: [] }],
         });
 
       const result = await directoryService.getAll();
@@ -131,6 +160,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
         results: [
           {
             externalId: 'group-id',
+            name: 'MRSAdmin',
             type: 'Group',
             roles: [{ id: 'role-existing', name: 'Data Reader' }],
           },
@@ -207,15 +237,15 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       mockApiClient.post.mockResolvedValue(true);
 
       const result = await directoryService.assignRoles(
-        ['robot-id'],
-        'Robot',
+        ['user-id'],
+        'User',
         ['role-new'],
         { preserveExisting: false, uiEnabled: false }
       );
 
       expect(result).toEqual([
         {
-          principalId: 'robot-id',
+          principalId: 'user-id',
           roleIds: ['role-new'],
         },
       ]);
@@ -225,7 +255,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
         {
           directoryEntities: [
             {
-              externalId: 'robot-id',
+              externalId: 'user-id',
               type: DataFabricDirectoryEntityType.User,
               resolved: true,
             },
@@ -260,12 +290,12 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledTimes(2);
     });
 
-    it('should support application principal aliases', async () => {
+    it('should support application principal types', async () => {
       mockApiClient.post.mockResolvedValue(true);
 
       await directoryService.assignRoles(
         'application-id',
-        'ExternalApplication',
+        'Application',
         ['role-new'],
         { preserveExisting: false }
       );

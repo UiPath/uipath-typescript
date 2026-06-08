@@ -13,6 +13,7 @@ import {
 } from '../../models/data-fabric/directory.types';
 import {
   DataFabricDirectoryAssignPayload,
+  RawDataFabricDirectoryEntry,
   DataFabricDirectoryRevokePayload,
   RawDataFabricDirectoryListResponse,
 } from '../../models/data-fabric/directory.internal-types';
@@ -23,25 +24,70 @@ import { BaseService } from '../base';
 const DEFAULT_DIRECTORY_PAGE_SIZE = 100;
 const MAX_DIRECTORY_PAGE_SIZE = 100;
 
-function extractDirectoryItems(data: RawDataFabricDirectoryListResponse | DataFabricDirectoryEntry[]): DataFabricDirectoryEntry[] {
-  if (Array.isArray(data)) {
-    return data;
+function validateDirectoryListResponse(data: unknown): RawDataFabricDirectoryListResponse {
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+    throw new ValidationError({
+      message: 'Invalid Data Fabric directory response format.',
+    });
   }
-  return data.results ?? data.value ?? data.data ?? [];
-}
 
-function extractTotalCount(data: RawDataFabricDirectoryListResponse | DataFabricDirectoryEntry[]): number | undefined {
-  if (Array.isArray(data)) {
-    return undefined;
+  const response = data as Partial<RawDataFabricDirectoryListResponse>;
+  if (typeof response.totalCount !== 'number' || !Array.isArray(response.results)) {
+    throw new ValidationError({
+      message: 'Invalid Data Fabric directory response format.',
+    });
   }
-  return data.totalCount;
-}
 
-function normalizeDirectoryEntry(entry: DataFabricDirectoryEntry): DataFabricDirectoryEntry {
   return {
-    ...entry,
-    roles: entry.roles ?? [],
+    totalCount: response.totalCount,
+    results: response.results,
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isDirectoryEntityTypeName(value: unknown): value is DataFabricDirectoryEntry['type'] {
+  return value === 'User' || value === 'Group' || value === 'Application';
+}
+
+function isDirectoryRole(value: unknown): value is DataFabricDirectoryEntry['roles'][number] {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return typeof value.id === 'string' && typeof value.name === 'string';
+}
+
+function normalizeDirectoryEntry(entry: unknown): DataFabricDirectoryEntry {
+  if (!isRecord(entry) ||
+    typeof entry.externalId !== 'string' ||
+    typeof entry.name !== 'string' ||
+    !isDirectoryEntityTypeName(entry.type) ||
+    (entry.email !== undefined && entry.email !== null && typeof entry.email !== 'string') ||
+    (entry.objectType !== undefined && entry.objectType !== null && typeof entry.objectType !== 'string') ||
+    (entry.isUIEnabled !== undefined && typeof entry.isUIEnabled !== 'boolean') ||
+    (entry.roles !== undefined && entry.roles !== null && (!Array.isArray(entry.roles) || !entry.roles.every(isDirectoryRole)))
+  ) {
+    throw new ValidationError({
+      message: 'Invalid Data Fabric directory entry response format.',
+    });
+  }
+
+  const normalized: DataFabricDirectoryEntry = {
+    externalId: entry.externalId as string,
+    name: entry.name as string,
+    type: entry.type as DataFabricDirectoryEntry['type'],
+    roles: (entry.roles as DataFabricDirectoryEntry['roles'] | null | undefined) ?? [],
+    isUIEnabled: (entry.isUIEnabled as boolean | undefined) ?? true,
+  };
+  if (entry.email !== undefined) {
+    normalized.email = entry.email as string | null;
+  }
+  if (entry.objectType !== undefined) {
+    normalized.objectType = entry.objectType as string | null;
+  }
+  return normalized;
 }
 
 function normalizePrincipalIds(principalIds: string | string[]): string[] {
@@ -67,18 +113,12 @@ function normalizePrincipalType(type: DataFabricDirectoryEntityTypeInput): DataF
     });
   }
 
-  switch (type.toLowerCase()) {
-    case 'user':
-    case 'robot':
-    case 'directoryrobot':
-    case 'directoryrobotuser':
+  switch (type) {
+    case 'User':
       return DataFabricDirectoryEntityType.User;
-    case 'group':
-    case 'directorygroup':
+    case 'Group':
       return DataFabricDirectoryEntityType.Group;
-    case 'application':
-    case 'externalapplication':
-    case 'directoryexternalapplication':
+    case 'Application':
       return DataFabricDirectoryEntityType.Application;
     default:
       throw new ValidationError({
@@ -145,13 +185,14 @@ export class DataFabricDirectoryService extends BaseService implements DataFabri
       skip: options.skip,
       top: options.top ?? DEFAULT_DIRECTORY_PAGE_SIZE,
     });
-    const response = await this.get<RawDataFabricDirectoryListResponse | DataFabricDirectoryEntry[]>(
+    const response = await this.get<RawDataFabricDirectoryListResponse>(
       DATA_FABRIC_ENDPOINTS.DIRECTORY.GET_ALL,
       { params }
     );
-    const results = extractDirectoryItems(response.data).map(normalizeDirectoryEntry);
+    const data = validateDirectoryListResponse(response.data);
+    const results = data.results.map(normalizeDirectoryEntry);
     return {
-      totalCount: extractTotalCount(response.data),
+      totalCount: data.totalCount,
       results,
     };
   }

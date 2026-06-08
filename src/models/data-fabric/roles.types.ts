@@ -1,13 +1,17 @@
 /**
  * @internal
  */
+export type DataFabricRoleType = 'System' | 'UserDefined';
+
+/**
+ * @internal
+ */
 export interface DataFabricRole {
   id: string;
   name: string;
-  displayName?: string;
-  description?: string;
-  isSystem?: boolean;
-  [key: string]: unknown;
+  type: DataFabricRoleType;
+  directoryEntityCount?: number | null;
+  folderId?: string;
 }
 
 /**

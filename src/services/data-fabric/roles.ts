@@ -1,19 +1,41 @@
+import { ValidationError } from '../../core/errors';
 import { track } from '../../core/telemetry';
 import { DataFabricRoleServiceModel } from '../../models/data-fabric/roles.models';
 import {
   DataFabricRole,
   DataFabricRoleGetAllOptions,
 } from '../../models/data-fabric/roles.types';
-import { RawDataFabricRoleListResponse } from '../../models/data-fabric/roles.internal-types';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric';
 import { createParams } from '../../utils/http/params';
 import { BaseService } from '../base';
 
-function extractRoles(data: RawDataFabricRoleListResponse | DataFabricRole[]): DataFabricRole[] {
-  if (Array.isArray(data)) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isDataFabricRole(value: unknown): value is DataFabricRole {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const { id, name, type, directoryEntityCount, folderId } = value;
+  const hasValidDirectoryEntityCount = directoryEntityCount === undefined ||
+    directoryEntityCount === null ||
+    typeof directoryEntityCount === 'number';
+  const hasValidFolderId = folderId === undefined || typeof folderId === 'string';
+  return typeof id === 'string' &&
+    typeof name === 'string' &&
+    (type === 'System' || type === 'UserDefined') &&
+    hasValidDirectoryEntityCount &&
+    hasValidFolderId;
+}
+
+function validateRolesResponse(data: unknown): DataFabricRole[] {
+  if (Array.isArray(data) && data.every(isDataFabricRole)) {
     return data;
   }
-  return data.results ?? data.value ?? data.data ?? [];
+  throw new ValidationError({
+    message: 'Invalid Data Fabric roles response format.',
+  });
 }
 
 /**
@@ -51,10 +73,10 @@ export class DataFabricRoleService extends BaseService implements DataFabricRole
     const params = createParams({
       stats: options.stats ?? true,
     });
-    const response = await this.get<RawDataFabricRoleListResponse | DataFabricRole[]>(
+    const response = await this.get<DataFabricRole[]>(
       DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
       { params }
     );
-    return extractRoles(response.data);
+    return validateRolesResponse(response.data);
   }
 }
