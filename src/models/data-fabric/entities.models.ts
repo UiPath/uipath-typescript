@@ -425,6 +425,7 @@ export interface EntityServiceModel {
    *
    * @param id - UUID of the entity
    * @param file - CSV file to import as a Blob or File or Uint8Array
+   * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
    * @example
    * ```typescript
@@ -432,6 +433,9 @@ export interface EntityServiceModel {
    * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
    * const result = await entities.importRecordsById(<id>, fileInput.files[0]);
    * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.importRecordsById(<id>, fileInput.files[0], { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
@@ -857,6 +861,7 @@ export interface EntityMethods {
    * Imports records from a CSV file into this entity
    *
    * @param file - CSV file to import as a Blob, File, or Uint8Array
+   * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
    * @example
    * ```typescript
@@ -864,6 +869,9 @@ export interface EntityMethods {
    * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
    * const result = await entity.importRecords(fileInput.files[0]);
    * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entity.importRecords(fileInput.files[0], { folderKey: "<folderKey>" });
    * ```
    */
   importRecords(file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse>;

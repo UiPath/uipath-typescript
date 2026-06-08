@@ -588,6 +588,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @param id - UUID of the entity
    * @param file - CSV file to import (Blob, File, or Uint8Array)
+   * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to import result with record counts
    *
    * @example
@@ -608,6 +609,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * if (result.errorFileLink) {
    *   console.log(`Error file link: ${result.errorFileLink}`);
    * }
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.importRecordsById("<entityId>", fileInput.files[0], { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
