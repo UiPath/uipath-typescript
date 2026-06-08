@@ -39,10 +39,17 @@ export function useChoiceSet(choiceSetId: string): UseChoiceSetResult {
     setError(null)
     try {
       const svc = new ChoiceSets(sdk)
-      // Without pagination options, `getById` returns a
-      // NonPaginatedResponse<ChoiceSetGetResponse> shaped as `{ items, totalCount }`.
-      const { items } = await svc.getById(choiceSetId)
-      setValues(items)
+      // Each `getById` call returns ONE server-capped page — passing no options
+      // does NOT return every value. Loop the cursor and accumulate so the full
+      // set of choice values loads and the count shown in the UI is accurate.
+      const all: ChoiceSetValue[] = []
+      let page = await svc.getById(choiceSetId, { pageSize: 100 })
+      all.push(...page.items)
+      while (page.hasNextPage && page.nextCursor) {
+        page = await svc.getById(choiceSetId, { cursor: page.nextCursor })
+        all.push(...page.items)
+      }
+      setValues(all)
     } catch (err) {
       setError(
         err instanceof UiPathError ? err.message : 'Failed to load choice set',

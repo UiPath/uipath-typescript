@@ -84,11 +84,19 @@ export function useEntity(entityId: string): UseEntityResult {
       setRecordsError(null)
       try {
         const svc = new Entities(sdk)
-        // Without pagination options, `getAllRecords` returns a
-        // NonPaginatedResponse<EntityRecord> shaped as `{ items, totalCount }`.
-        const { items } = await svc.getAllRecords(entityId)
-        setRecords(items)
-        return items
+        // Each `getAllRecords` call returns ONE server-capped page — passing no
+        // options does NOT return every row. Loop the cursor and accumulate so
+        // the full record set is available to CSV export (which must not
+        // silently truncate large entities to the first page).
+        const all: EntityRow[] = []
+        let page = await svc.getAllRecords(entityId, { pageSize: 100 })
+        all.push(...page.items)
+        while (page.hasNextPage && page.nextCursor) {
+          page = await svc.getAllRecords(entityId, { cursor: page.nextCursor })
+          all.push(...page.items)
+        }
+        setRecords(all)
+        return all
       } catch (err) {
         setRecordsError(
           err instanceof UiPathError ? err.message : 'Failed to load records',
