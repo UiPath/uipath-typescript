@@ -1340,7 +1340,11 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
   // so the suite runs with the standard integration-test PAT — entity schema
   // create/delete are NOT exercised here (they live in the skipped schema-write
   // describes above).
-  describe('Folder-scoped record CRUD', () => {
+  //
+  // Skipped when DATA_FABRIC_TEST_FOLDER_ENTITY_ID is not configured — CI does
+  // not yet provision a persistent folder-scoped test entity. Run locally by
+  // setting both INTEGRATION_TEST_FOLDER_KEY and DATA_FABRIC_TEST_FOLDER_ENTITY_ID.
+  describe.skipIf(!process.env.DATA_FABRIC_TEST_FOLDER_ENTITY_ID || !process.env.INTEGRATION_TEST_FOLDER_KEY)('Folder-scoped record CRUD', () => {
     let folderEntityId!: string;
     let folderKey!: string;
     let folderEntityMetadata!: RawEntityGetResponse;
@@ -1348,18 +1352,8 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
 
     beforeAll(async () => {
       const config = getTestConfig();
-      if (!config.folderKey) {
-        throw new Error(
-          'INTEGRATION_TEST_FOLDER_KEY is not set — folder-scoped record CRUD tests need the target folder key',
-        );
-      }
-      if (!config.dataFabricTestFolderEntityId) {
-        throw new Error(
-          'DATA_FABRIC_TEST_FOLDER_ENTITY_ID is not set — point this at an existing entity in the configured folder',
-        );
-      }
-      folderKey = config.folderKey;
-      folderEntityId = config.dataFabricTestFolderEntityId;
+      folderKey = config.folderKey!;
+      folderEntityId = config.dataFabricTestFolderEntityId!;
 
       // Fetch schema once so per-test record bodies match the entity's shape.
       const { entities } = getServices();
