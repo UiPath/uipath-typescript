@@ -36,14 +36,14 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       const result = await memory.getTimeline();
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
 
     it('should retrieve the memory timeline for an explicit window', async () => {
       const result = await memory.getTimeline(WINDOW);
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
 
     it('should accept agent, folder, and execution-type filters', async () => {
@@ -55,17 +55,17 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       });
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
 
     it('should return points with the expected numeric shape', async () => {
       const result = await memory.getTimeline(WINDOW);
 
-      if (!result.data || result.data.length === 0) {
+      if (result.length === 0) {
         throw new Error('No memory timeline points returned for the requested window');
       }
 
-      const point = result.data[0];
+      const point = result[0];
       expect(typeof point.timeSlice).toBe('string');
       expect(typeof point.inMemoryCount).toBe('number');
       expect(typeof point.notInMemoryCount).toBe('number');
@@ -80,14 +80,14 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       const result = await memory.getCallsTimeline();
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
 
     it('should retrieve the memory calls timeline for an explicit window', async () => {
       const result = await memory.getCallsTimeline(WINDOW);
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
 
     it('should accept agent, folder, and execution-type filters', async () => {
@@ -99,17 +99,17 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       });
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
 
     it('should return points with the expected numeric shape', async () => {
       const result = await memory.getCallsTimeline(WINDOW);
 
-      if (!result.data || result.data.length === 0) {
+      if (result.length === 0) {
         throw new Error('No memory calls timeline points returned for the requested window');
       }
 
-      const point = result.data[0];
+      const point = result[0];
       expect(typeof point.timeSlice).toBe('string');
       expect(typeof point.memoryCallsCount).toBe('number');
     });
@@ -120,15 +120,15 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       const result = await memory.getTopSpaces();
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
 
     it('should respect the limit option', async () => {
       const result = await memory.getTopSpaces({ ...WINDOW, limit: 3 });
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
-      expect(result.data?.length ?? 0).toBeLessThanOrEqual(3);
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeLessThanOrEqual(3);
     });
 
     it('should accept agent, folder, and execution-type filters', async () => {
@@ -140,17 +140,17 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
       });
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+      expect(Array.isArray(result)).toBe(true);
     });
 
     it('should return spaces with the expected shape', async () => {
       const result = await memory.getTopSpaces(WINDOW);
 
-      if (!result.data || result.data.length === 0) {
+      if (result.length === 0) {
         throw new Error('No memory spaces returned for the requested window');
       }
 
-      const space = result.data[0];
+      const space = result[0];
       expect(typeof space.memorySpaceId).toBe('string');
       expect(typeof space.memorySpaceName).toBe('string');
       expect(typeof space.memoryCount).toBe('number');

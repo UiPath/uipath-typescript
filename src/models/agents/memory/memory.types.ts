@@ -1,5 +1,5 @@
 /**
- * Types for the Agent Memory analytics service.
+ * Types for the Agent Memory metrics service.
  */
 
 /**
@@ -20,32 +20,32 @@ export enum ExecutionType {
  * defaults to the last 24 hours, with `endTime` defaulting to now.
  */
 export interface MemoryFilterOptions {
-  /** Inclusive lower bound for the query window (ISO 8601, UTC). Defaults to 24 hours before `endTime` when omitted. */
+  /** Inclusive lower bound for the query window. Defaults to 24 hours before `endTime` when omitted. */
   startTime?: string;
-  /** Exclusive upper bound for the query window (ISO 8601, UTC). Defaults to now when omitted. */
+  /** Exclusive upper bound for the query window. Defaults to now when omitted. */
   endTime?: string;
   /** Filter to a single agent by ID. */
   agentId?: string;
   /** Filter to a specific agent version. */
   agentVersion?: string;
-  /** Folder keys (GUIDs) to scope the query. Results are limited to folders you can access. */
+  /** Folder keys to scope the query. Results are limited to folders you can access. */
   folderKeys?: string[];
   /** Filter to a specific execution kind. Omit to include both Debug and Runtime. */
   executionType?: ExecutionType;
 }
 
 /**
- * Options for {@link MemoryServiceModel.getTimeline}.
+ * Options for retrieving the agent-memory state timeline.
  */
 export interface MemoryGetTimelineOptions extends MemoryFilterOptions {}
 
 /**
- * Options for {@link MemoryServiceModel.getCallsTimeline}.
+ * Options for retrieving the memory-calls timeline.
  */
 export interface MemoryGetCallsTimelineOptions extends MemoryFilterOptions {}
 
 /**
- * Options for {@link MemoryServiceModel.getTopSpaces}.
+ * Options for retrieving the top memory spaces.
  */
 export interface MemoryGetTopSpacesOptions extends MemoryFilterOptions {
   /** Maximum number of memory spaces to return, ranked by memory count. Defaults to 5 when omitted. */
@@ -57,7 +57,7 @@ export interface MemoryGetTopSpacesOptions extends MemoryFilterOptions {
  * single time bucket.
  */
 export interface MemoryTimelinePoint {
-  /** Bucket timestamp (ISO 8601, UTC). */
+  /** Bucket timestamp. */
   timeSlice: string;
   /** Count of memory entries that were in-memory in this bucket. */
   inMemoryCount: number;
@@ -72,35 +72,18 @@ export interface MemoryTimelinePoint {
 }
 
 /**
- * Response from {@link MemoryServiceModel.getTimeline}.
- */
-export interface MemoryGetTimelineResponse {
-  /** Time-series points, one per bucket. May be absent when no data matches. */
-  data?: MemoryTimelinePoint[];
-}
-
-/**
  * One point on the memory-calls timeline — the count of memory calls for a
  * single time bucket.
  */
 export interface MemoryCallsTimelinePoint {
-  /** Bucket timestamp (ISO 8601, UTC). */
+  /** Bucket timestamp. */
   timeSlice: string;
   /** Number of memory calls in this bucket. */
   memoryCallsCount: number;
 }
 
 /**
- * Response from {@link MemoryServiceModel.getCallsTimeline}.
- */
-export interface MemoryGetCallsTimelineResponse {
-  /** Time-series points, one per bucket. May be absent when no data matches. */
-  data?: MemoryCallsTimelinePoint[];
-}
-
-/**
- * A single memory space with its enabled/disabled memory-entry breakdown,
- * as returned by {@link MemoryServiceModel.getTopSpaces}.
+ * A single memory space with its enabled/disabled memory-entry breakdown.
  */
 export interface MemorySpace {
   /** Memory space identifier. */
@@ -113,12 +96,4 @@ export interface MemorySpace {
   enabledMemoryCount: number;
   /** Count of disabled memory entries in this space. */
   disabledMemoryCount: number;
-}
-
-/**
- * Response from {@link MemoryServiceModel.getTopSpaces}.
- */
-export interface MemoryGetTopSpacesResponse {
-  /** Memory spaces ranked by memory count. May be absent when no data matches. */
-  data?: MemorySpace[];
 }

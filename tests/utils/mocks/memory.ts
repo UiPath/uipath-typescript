@@ -4,11 +4,8 @@
 
 import {
   MemoryTimelinePoint,
-  MemoryGetTimelineResponse,
   MemoryCallsTimelinePoint,
-  MemoryGetCallsTimelineResponse,
   MemorySpace,
-  MemoryGetTopSpacesResponse,
 } from '../../../src/models/agents/memory/memory.types';
 import { MEMORY_TEST_CONSTANTS } from '../constants/memory';
 
@@ -30,11 +27,11 @@ export function createMockMemoryTimelinePoint(
 }
 
 /**
- * Creates a memory timeline response envelope with two points by default.
+ * Creates a raw memory timeline API body (`{ data }` envelope) with two points by default.
  */
 export function createMockMemoryGetTimelineResponse(
   points?: MemoryTimelinePoint[],
-): MemoryGetTimelineResponse {
+): { data: MemoryTimelinePoint[] } {
   return {
     data: points ?? [
       createMockMemoryTimelinePoint(),
@@ -64,11 +61,11 @@ export function createMockMemoryCallsTimelinePoint(
 }
 
 /**
- * Creates a memory-calls timeline response envelope with two points by default.
+ * Creates a raw memory-calls timeline API body (`{ data }` envelope) with two points by default.
  */
 export function createMockMemoryGetCallsTimelineResponse(
   points?: MemoryCallsTimelinePoint[],
-): MemoryGetCallsTimelineResponse {
+): { data: MemoryCallsTimelinePoint[] } {
   return {
     data: points ?? [
       createMockMemoryCallsTimelinePoint(),
@@ -97,11 +94,11 @@ export function createMockMemorySpace(
 }
 
 /**
- * Creates a top-memory-spaces response envelope with two spaces by default.
+ * Creates a raw top-memory-spaces API body (`{ data }` envelope) with two spaces by default.
  */
 export function createMockMemoryGetTopSpacesResponse(
   spaces?: MemorySpace[],
-): MemoryGetTopSpacesResponse {
+): { data: MemorySpace[] } {
   return {
     data: spaces ?? [
       createMockMemorySpace(),

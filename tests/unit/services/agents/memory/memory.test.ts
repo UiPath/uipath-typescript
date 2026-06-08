@@ -43,10 +43,10 @@ describe('MemoryService Unit Tests', () => {
 
       const result = await memoryService.getTimeline();
 
-      expect(result.data).toHaveLength(2);
-      expect(result.data?.[0].timeSlice).toBe(MEMORY_TEST_CONSTANTS.TIME_SLICE_1);
-      expect(result.data?.[0].inMemoryCount).toBe(3);
-      expect(result.data?.[0].totalCount).toBe(4);
+      expect(result).toHaveLength(2);
+      expect(result[0].timeSlice).toBe(MEMORY_TEST_CONSTANTS.TIME_SLICE_1);
+      expect(result[0].inMemoryCount).toBe(3);
+      expect(result[0].totalCount).toBe(4);
     });
 
     it('should call the endpoint with an empty body when no options are provided', async () => {
@@ -116,10 +116,10 @@ describe('MemoryService Unit Tests', () => {
 
       const result = await memoryService.getCallsTimeline();
 
-      expect(result.data).toHaveLength(2);
-      expect(result.data?.[0].timeSlice).toBe(MEMORY_TEST_CONSTANTS.TIME_SLICE_1);
-      expect(result.data?.[0].memoryCallsCount).toBe(7);
-      expect(result.data?.[1].memoryCallsCount).toBe(12);
+      expect(result).toHaveLength(2);
+      expect(result[0].timeSlice).toBe(MEMORY_TEST_CONSTANTS.TIME_SLICE_1);
+      expect(result[0].memoryCallsCount).toBe(7);
+      expect(result[1].memoryCallsCount).toBe(12);
     });
 
     it('should call the endpoint with an empty body when no options are provided', async () => {
@@ -189,12 +189,12 @@ describe('MemoryService Unit Tests', () => {
 
       const result = await memoryService.getTopSpaces();
 
-      expect(result.data).toHaveLength(2);
-      expect(result.data?.[0].memorySpaceId).toBe(MEMORY_TEST_CONSTANTS.MEMORY_SPACE_ID);
-      expect(result.data?.[0].memorySpaceName).toBe(MEMORY_TEST_CONSTANTS.MEMORY_SPACE_NAME);
-      expect(result.data?.[0].memoryCount).toBe(9);
-      expect(result.data?.[0].enabledMemoryCount).toBe(6);
-      expect(result.data?.[0].disabledMemoryCount).toBe(3);
+      expect(result).toHaveLength(2);
+      expect(result[0].memorySpaceId).toBe(MEMORY_TEST_CONSTANTS.MEMORY_SPACE_ID);
+      expect(result[0].memorySpaceName).toBe(MEMORY_TEST_CONSTANTS.MEMORY_SPACE_NAME);
+      expect(result[0].memoryCount).toBe(9);
+      expect(result[0].enabledMemoryCount).toBe(6);
+      expect(result[0].disabledMemoryCount).toBe(3);
     });
 
     it('should call the endpoint with an empty body when no options are provided', async () => {
