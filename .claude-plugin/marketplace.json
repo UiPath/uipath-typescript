@@ -1,0 +1,16 @@
+{
+  "name": "uipath-coded-apps",
+  "owner": {
+    "name": "Shreyash Vaish"
+  },
+  "metadata": {
+    "description": "UiPath Coded Apps — create, preview, publish, and deploy coded apps end-to-end from Claude."
+  },
+  "plugins": [
+    {
+      "name": "uipath-coded-apps",
+      "source": "./",
+      "description": "Create, preview, publish, and deploy UiPath Coded Apps end-to-end — guided sign-in, no commands, returns the live app URL."
+    }
+  ]
+}
