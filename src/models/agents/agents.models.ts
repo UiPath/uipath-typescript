@@ -24,7 +24,7 @@ export interface AgentServiceModel {
    *
    * @param startTime - Inclusive lower bound for the query window
    * @param endTime - Exclusive upper bound for the query window
-   * @param options - Optional pagination, sort, and filters {@link AgentListOptions}
+   * @param options - Optional pagination, sort, and filters
    * @returns Promise resolving to a paginated or non-paginated list of {@link AgentListItem}
    * @example
    * ```typescript
