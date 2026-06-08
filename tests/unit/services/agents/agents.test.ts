@@ -21,12 +21,12 @@ const buildEnvelope = (agents: unknown[], totalCount: number, pageNumber = 0, pa
 // ===== TEST SUITE =====
 describe('AgentService Unit Tests', () => {
   let agentService: AgentService;
-  let mockApiClient: any;
+  let mockApiClient: ReturnType<typeof createMockApiClient>;
 
   beforeEach(() => {
     const { instance } = createServiceTestDependencies();
     mockApiClient = createMockApiClient();
-    vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+    vi.mocked(ApiClient).mockImplementation(() => mockApiClient as unknown as ApiClient);
     agentService = new AgentService(instance);
   });
 
