@@ -89,7 +89,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * 
    * // Navigate using cursor
    * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversation.exchanges.getAll({ cursor: pagedExchanges.nextCursor });
+   *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
    * }
    * ```
    * 
@@ -102,7 +102,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    * 
    * // Navigate using cursor
    * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversation.exchanges.getAll({ cursor: pagedExchanges.nextCursor });
+   *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
    * }
    * ```
    */

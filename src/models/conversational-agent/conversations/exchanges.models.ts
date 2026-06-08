@@ -133,7 +133,7 @@ export interface ConversationExchangeServiceModel {
    * 
    * // Navigate using cursor
    * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversation.exchanges.getAll({ cursor: pagedExchanges.nextCursor });
+   *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
    * }
    * ```
    * 
@@ -146,7 +146,7 @@ export interface ConversationExchangeServiceModel {
    * 
    * // Navigate using cursor
    * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversation.exchanges.getAll({ cursor: pagedExchanges.nextCursor });
+   *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
    * }
    * ```
    */
