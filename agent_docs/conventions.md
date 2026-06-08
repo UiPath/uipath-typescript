@@ -9,7 +9,7 @@
 - Prefer `private` keyword over underscore prefix for private methods
 - No `any` type — use `unknown` if truly unknown, then validate.
 - **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored. **Refinement**: when `pascalToCamelCaseKeys()` precedes `transformData()` in the pipeline, `pascalToCamelCaseKeys()` returns `any`, which makes `transformData(camelCased, EntityMap)` also return `any`. In that case a single `as TargetType` cast is sufficient — drop the `as unknown` intermediate.
-- Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return.
+- Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return. **Equally, do not mark fields as optional when the API always returns them** — misleading optional markers cause callers to add null-checks for values that are never null, and mask real type errors when the field is guaranteed.
 - Use enums for fixed value sets — **NEVER** leave raw strings/numbers. Raw values lose type safety and autocomplete.
 - **NEVER** write `param || {}` for required parameters — this hides bugs by silently accepting missing required data at call sites.
 
@@ -19,7 +19,7 @@
 - Types live in `src/models/{domain}/{domain}.types.ts`. Internal-only types go in `*.internal-types.ts`.
 - Constants live in `src/utils/constants/`. Endpoints are split per domain in `src/utils/constants/endpoints/` (e.g., `data-fabric.ts`, `maestro.ts`, `orchestrator.ts`).
 - Subpath exports: when adding a new service module, add entries to `package.json` `exports` and `rollup.config.js`.
-- Every public service method that makes an HTTP API call must be decorated with `@track('ServiceName.MethodName')` for telemetry — gaps are invisible until production debugging, when they're expensive. **Exception**: methods that are event handlers, window/DOM interactions, or UI-only operations (no HTTP calls) must NOT be tracked — tracking non-API methods causes excessive log ingestion with no diagnostic value.
+- Every public service method that makes an HTTP API call must be decorated with `@track('ServiceName.MethodName')` for telemetry — gaps are invisible until production debugging, when they're expensive. **Exception**: methods that are event handlers, window/DOM interactions, or UI-only operations (no HTTP calls) must NOT be tracked — tracking non-API methods causes excessive log ingestion with no diagnostic value. **Delegation anti-pattern**: when a public service method delegates to another service's public `@track`-decorated method, both `@track` decorators fire, causing double telemetry. Fix: extract the shared logic into an internal helper function (no `@track`) and have both public service methods call the helper directly.
 - Use named imports/exports (avoid default exports). Use barrel exports (`index.ts`) for public API. Never export internal types from barrel exports.
 - **Barrel files must use `export * from`**, not `export type * from`. Using `export type *` silently drops runtime values (classes, enums), causing `undefined` errors for SDK consumers. Note: individual `export type { Name }` for specific type-only re-exports is fine — the prohibition is on the wildcard form.
 - When a service method makes multiple independent API calls (e.g., chunk-based key resolution), parallelize them with `Promise.all` — sequential calls compound latency unnecessarily.
@@ -108,6 +108,7 @@ Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g.
 - **Group nested endpoints logically** (e.g., `ENTITY.ATTACHMENT.DOWNLOAD` not flat). Use short names — under a `CASE` group, use `REOPEN` not `REOPEN_CASE` since the group context already provides the prefix.
 - **Use consistent param names** across endpoints in the same group — if one endpoint uses `instanceId`, all should.
 - **NEVER** copy-paste JSDoc comments between endpoint groups — each constant needs its own comment. A "Asset Service Endpoints" comment on `JOB_ENDPOINTS` is a review rejection.
+- **NEVER** create a duplicate endpoint constant whose URL pattern is identical to an existing one. HTTP method differences (`GET` vs `PUT`) are resolved at the call site (`this.get()` vs `this.put()`), not in the constant. Either reuse the existing constant directly, or — if a distinct name genuinely aids readability — add an explicit comment explaining the intentional duplication.
 
 ## Pagination
 
