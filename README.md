@@ -282,7 +282,7 @@ import { Cases, CaseInstances } from '@uipath/uipath-typescript/cases';
 import { Tasks, TaskType } from '@uipath/uipath-typescript/tasks';
 import { Processes } from '@uipath/uipath-typescript/processes';
 import { Buckets } from '@uipath/uipath-typescript/buckets';
-import { ChoiceSets, Entities } from '@uipath/uipath-typescript/entities';
+import { ChoiceSets, DataFabricDirectory, DataFabricRoles, Entities } from '@uipath/uipath-typescript/entities';
 
 // Initialize SDK
 const sdk = new UiPath({ /* config */ });
@@ -297,6 +297,8 @@ const processes = new Processes(sdk);
 const buckets = new Buckets(sdk);
 const entities = new Entities(sdk);
 const choiceSets = new ChoiceSets(sdk);
+const dataFabricRoles = new DataFabricRoles(sdk);
+const dataFabricDirectory = new DataFabricDirectory(sdk);
 
 // Maestro - Get processes and their instances
 const allProcesses = await maestroProcesses.getAll();

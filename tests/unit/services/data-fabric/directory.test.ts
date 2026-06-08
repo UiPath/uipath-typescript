@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ApiClient } from '../../../../src/core/http/api-client';
-import { ValidationError } from '../../../../src/core/errors';
+import { ServerError, ValidationError } from '../../../../src/core/errors';
 import { DataFabricDirectoryService } from '../../../../src/services/data-fabric/directory';
 import { DataFabricDirectoryEntityType } from '../../../../src/models/data-fabric/directory.types';
 import { DATA_FABRIC_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
@@ -93,7 +93,10 @@ describe('DataFabricDirectoryService Unit Tests', () => {
     it('should reject invalid directory response formats', async () => {
       mockApiClient.get.mockResolvedValue({ value: [] });
 
-      await expect(directoryService.list()).rejects.toThrow(
+      const result = directoryService.list();
+
+      await expect(result).rejects.toBeInstanceOf(ServerError);
+      await expect(result).rejects.toThrow(
         'Invalid Data Fabric directory response format.'
       );
     });
@@ -104,7 +107,10 @@ describe('DataFabricDirectoryService Unit Tests', () => {
         results: [{ externalId: 'user-id', name: 'User Name', type: 'DirectoryRobot' }],
       });
 
-      await expect(directoryService.list()).rejects.toThrow(
+      const result = directoryService.list();
+
+      await expect(result).rejects.toBeInstanceOf(ServerError);
+      await expect(result).rejects.toThrow(
         'Invalid Data Fabric directory entry response format.'
       );
     });

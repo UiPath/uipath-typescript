@@ -1,4 +1,4 @@
-import { ValidationError } from '../../core/errors';
+import { ServerError, ValidationError } from '../../core/errors';
 import { track } from '../../core/telemetry';
 import { DataFabricDirectoryServiceModel } from '../../models/data-fabric/directory.models';
 import {
@@ -26,14 +26,14 @@ const MAX_DIRECTORY_PAGE_SIZE = 100;
 
 function validateDirectoryListResponse(data: unknown): RawDataFabricDirectoryListResponse {
   if (data === null || typeof data !== 'object' || Array.isArray(data)) {
-    throw new ValidationError({
+    throw new ServerError({
       message: 'Invalid Data Fabric directory response format.',
     });
   }
 
   const response = data as Partial<RawDataFabricDirectoryListResponse>;
   if (typeof response.totalCount !== 'number' || !Array.isArray(response.results)) {
-    throw new ValidationError({
+    throw new ServerError({
       message: 'Invalid Data Fabric directory response format.',
     });
   }
@@ -69,7 +69,7 @@ function normalizeDirectoryEntry(entry: unknown): DataFabricDirectoryEntry {
     (entry.isUIEnabled !== undefined && typeof entry.isUIEnabled !== 'boolean') ||
     (entry.roles !== undefined && entry.roles !== null && (!Array.isArray(entry.roles) || !entry.roles.every(isDirectoryRole)))
   ) {
-    throw new ValidationError({
+    throw new ServerError({
       message: 'Invalid Data Fabric directory entry response format.',
     });
   }

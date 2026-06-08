@@ -1,4 +1,4 @@
-import { ValidationError } from '../../core/errors';
+import { ServerError } from '../../core/errors';
 import { track } from '../../core/telemetry';
 import { DataFabricRoleServiceModel } from '../../models/data-fabric/roles.models';
 import {
@@ -33,7 +33,7 @@ function validateRolesResponse(data: unknown): DataFabricRole[] {
   if (Array.isArray(data) && data.every(isDataFabricRole)) {
     return data;
   }
-  throw new ValidationError({
+  throw new ServerError({
     message: 'Invalid Data Fabric roles response format.',
   });
 }
