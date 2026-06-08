@@ -11,6 +11,5 @@
     "low-code",
     "deploy",
     "orchestrator"
-  ],
-  "hooks": "./hooks/hooks.json"
+  ]
 }
