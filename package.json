@@ -185,6 +185,16 @@
                 "types": "./dist/agents/index.d.ts",
                 "default": "./dist/agents/index.cjs"
             }
+        },
+        "./governance": {
+            "import": {
+                "types": "./dist/governance/index.d.ts",
+                "default": "./dist/governance/index.mjs"
+            },
+            "require": {
+                "types": "./dist/governance/index.d.ts",
+                "default": "./dist/governance/index.cjs"
+            }
         }
     },
     "files": [

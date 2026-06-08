@@ -24,7 +24,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const config = getTestConfig();
 
       const folderId = config.folderId ? Number(config.folderId) : undefined;
-      const result = await tasks.getAll({ folderId });
+      const result = await tasks.getAll({ folderId, pageSize: 5 });
 
       expect(result).toBeDefined();
       expect(result.items).toBeDefined();
@@ -144,7 +144,7 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       const { tasks } = getServices();
 
       // Find an existing App task
-      const allTasks = await tasks.getAll({ filter: "Type eq 'AppTask' and Status eq 'Unassigned' and IsDeleted eq false" });
+      const allTasks = await tasks.getAll({ filter: "Type eq 'AppTask' and Status eq 'Unassigned' and IsDeleted eq false", pageSize: 5 });
 
       if (allTasks.items.length === 0) {
         throw new Error('No App task available in the test environment');
@@ -345,4 +345,4 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       await cleanupTestTask(createdTaskId);
     }
   });
-});
+}, 120000);

@@ -76,7 +76,7 @@ describe('AssetService Unit Tests', () => {
       expect(result.id).toBe(ASSET_TEST_CONSTANTS.ASSET_ID);
       expect(result.name).toBe(ASSET_TEST_CONSTANTS.ASSET_NAME);
       expect(result.key).toBe(ASSET_TEST_CONSTANTS.ASSET_KEY);
-      expect(result.valueType).toBe(AssetValueType.DBConnectionString,);
+      expect(result.valueType).toBe(AssetValueType.Text,);
       expect(result.valueScope).toBe(AssetValueScope.Global,);
 
       // Verify the API call has correct endpoint and headers
@@ -245,7 +245,7 @@ describe('AssetService Unit Tests', () => {
       expect(result.id).toBe(ASSET_TEST_CONSTANTS.ASSET_ID);
       expect(result.name).toBe(ASSET_TEST_CONSTANTS.ASSET_NAME);
       expect(result.key).toBe(ASSET_TEST_CONSTANTS.ASSET_KEY);
-      expect(result.valueType).toBe(AssetValueType.DBConnectionString);
+      expect(result.valueType).toBe(AssetValueType.Text);
 
       // Transform validation — camelCase fields present, PascalCase originals absent
       expect(result.createdTime).toBe(ASSET_TEST_CONSTANTS.CREATED_TIME);
@@ -400,6 +400,199 @@ describe('AssetService Unit Tests', () => {
       await expect(assetService.getByName(ASSET_TEST_CONSTANTS.ASSET_NAME))
         .rejects.toBeInstanceOf(ValidationError);
       expect(mockApiClient.get).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateValueById', () => {
+    const mockExistingAsset = (overrides: Record<string, unknown> = {}) =>
+      createMockRawAsset({
+        ValueType: AssetValueType.Text,
+        ValueScope: AssetValueScope.Global,
+        Value: 'old-value',
+        StringValue: 'old-value',
+        ...overrides,
+      });
+
+    it('should fetch the asset, then PUT with preserved name/scope/type and the new StringValue', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset());
+      mockApiClient.put.mockResolvedValue({});
+
+      const result = await assetService.updateValueById(
+        ASSET_TEST_CONSTANTS.ASSET_ID,
+        'new-text-value',
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(result).toBeUndefined();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
+      );
+
+      expect(mockApiClient.put).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.objectContaining({
+          Id: ASSET_TEST_CONSTANTS.ASSET_ID,
+          Name: ASSET_TEST_CONSTANTS.ASSET_NAME,
+          ValueScope: AssetValueScope.Global,
+          ValueType: AssetValueType.Text,
+          Description: ASSET_TEST_CONSTANTS.ASSET_DESCRIPTION,
+          StringValue: 'new-text-value',
+        }),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
+      );
+    });
+
+    it('should send IntValue when the existing asset is Integer', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset({ ValueType: AssetValueType.Integer }));
+      mockApiClient.put.mockResolvedValue({});
+
+      await assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 42, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      const [, body] = mockApiClient.put.mock.calls[0];
+      expect(body.ValueType).toBe(AssetValueType.Integer);
+      expect(body.IntValue).toBe(42);
+      expect(body.StringValue).toBeUndefined();
+    });
+
+    it('should send BoolValue when the existing asset is Bool (both true and false)', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset({ ValueType: AssetValueType.Bool }));
+      mockApiClient.put.mockResolvedValue({});
+
+      await assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, true, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      const [, trueBody] = mockApiClient.put.mock.calls[0];
+      expect(trueBody.ValueType).toBe(AssetValueType.Bool);
+      expect(trueBody.BoolValue).toBe(true);
+      expect(trueBody.StringValue).toBeUndefined();
+
+      // `false` is falsy — a naive truthy guard (e.g., `if (!newValue)`) would silently
+      // reject it. Lock in that the falsy-but-valid case still produces a PUT.
+      await assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, false, { folderId: TEST_CONSTANTS.FOLDER_ID });
+
+      const [, falseBody] = mockApiClient.put.mock.calls[1];
+      expect(falseBody.ValueType).toBe(AssetValueType.Bool);
+      expect(falseBody.BoolValue).toBe(false);
+      expect(falseBody.StringValue).toBeUndefined();
+    });
+
+    it('should throw ValidationError when id is missing', async () => {
+      await expect(
+        assetService.updateValueById(0, 'x', { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when no folder context is provided', async () => {
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 'x'),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should accept folderKey as folder context', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset());
+      mockApiClient.put.mockResolvedValue({});
+
+      await assetService.updateValueById(
+        ASSET_TEST_CONSTANTS.ASSET_ID,
+        'new-text-value',
+        { folderKey: ASSET_TEST_CONSTANTS.FOLDER_KEY },
+      );
+
+      expect(mockApiClient.put).toHaveBeenCalledWith(
+        ASSET_ENDPOINTS.GET_BY_ID(ASSET_TEST_CONSTANTS.ASSET_ID),
+        expect.any(Object),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'X-UIPATH-FolderKey': ASSET_TEST_CONSTANTS.FOLDER_KEY,
+          }),
+        }),
+      );
+    });
+
+    it('should throw ValidationError when newValue is null or undefined', async () => {
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, null as unknown as string, { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, undefined as unknown as string, { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when newValue type does not match Text asset', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset({ ValueType: AssetValueType.Text }));
+
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 42 as unknown as string, { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when newValue type does not match Integer asset', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset({ ValueType: AssetValueType.Integer }));
+
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 'not-a-number' as unknown as number, { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      // Non-integer numbers should also fail
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 1.5, { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when newValue type does not match Bool asset', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset({ ValueType: AssetValueType.Bool }));
+
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 'true' as unknown as boolean, { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should throw ValidationError when the existing asset valueType is unsupported', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset({ ValueType: AssetValueType.Credential }));
+
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 'x', { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      mockApiClient.get.mockResolvedValue(mockExistingAsset({ ValueType: AssetValueType.Secret }));
+
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 'x', { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toBeInstanceOf(ValidationError);
+
+      expect(mockApiClient.put).not.toHaveBeenCalled();
+    });
+
+    it('should propagate API errors from the PUT call', async () => {
+      mockApiClient.get.mockResolvedValue(mockExistingAsset());
+      mockApiClient.put.mockRejectedValue(createMockError(ASSET_TEST_CONSTANTS.ERROR_ASSET_NOT_FOUND));
+
+      await expect(
+        assetService.updateValueById(ASSET_TEST_CONSTANTS.ASSET_ID, 'x', { folderId: TEST_CONSTANTS.FOLDER_ID }),
+      ).rejects.toThrow(ASSET_TEST_CONSTANTS.ERROR_ASSET_NOT_FOUND);
     });
   });
 });

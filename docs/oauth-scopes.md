@@ -9,6 +9,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 | `getAll()` | `OR.Assets` or `OR.Assets.Read` |
 | `getById()` | `OR.Assets` or `OR.Assets.Read` |
 | `getByName()` | `OR.Assets` or `OR.Assets.Read` |
+| `updateValueById()` | `OR.Assets` or `OR.Assets.Write` |
 
 ## Jobs
 
@@ -86,7 +87,7 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 |--------|-------------|
 | `getAll()` | `PIMS` |
 | `getById()` | `PIMS` |
-| `getExecutionHistory()` | `PIMS` |
+| `getExecutionHistory()` | `PIMS` `Traces.Api` |
 | `getBpmn()` | `OR.Execution.Read` |
 | `getVariables()` | `PIMS` |
 | `getIncidents()` | `PIMS` |
@@ -192,6 +193,13 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 |--------|-------------|
 | `getById()` | `Traces.Api` |
 | `getSpansByIds()` | `Traces.Api` |
+
+## Governance
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
+| `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
 ## Processes
 

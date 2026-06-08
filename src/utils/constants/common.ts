@@ -93,6 +93,28 @@ export const SLA_SUMMARY_OFFSET_PARAMS = {
 };
 
 /**
+ * Governance pagination constants for page-number-based pagination
+ */
+export const GOVERNANCE_PAGINATION = {
+  /** Field name for items in governance response */
+  ITEMS_FIELD: 'items'
+};
+
+/**
+ * Governance OFFSET pagination parameter names (page-number style, 0-based, no skip conversion)
+ */
+export const GOVERNANCE_OFFSET_PARAMS = {
+  /** Page size parameter name */
+  PAGE_SIZE_PARAM: 'pageSize',
+
+  /** Page number parameter name (sent directly, 0-based) */
+  OFFSET_PARAM: 'pageNumber',
+
+  /** No count param needed */
+  COUNT_PARAM: undefined
+};
+
+/**
  * Process Instance pagination constants for token-based pagination
  */
 export const PROCESS_INSTANCE_PAGINATION = {

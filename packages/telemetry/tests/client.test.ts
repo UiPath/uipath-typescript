@@ -30,6 +30,8 @@ const VALID_OPTIONS: TelemetryClientInitOptions = {
 const VALID_CONNECTION_STRING =
     'InstrumentationKey=abc;IngestionEndpoint=https://example.com';
 
+const TEST_USER_ID = 'user-guid-1234';
+
 /**
  * `TelemetryClient.initialize` reads `CONNECTION_STRING` from `./constants`
  * at call time. Each test that needs to drive a specific value re-mocks
@@ -166,6 +168,8 @@ describe('TelemetryClient.track', () => {
                 baseUrl: 'https://example.com',
                 orgName: 'org',
                 tenantName: 'tenant',
+                orgId: 'org-guid',
+                tenantId: 'tenant-guid',
                 clientId: 'client-1',
                 redirectUri: 'https://example.com/cb',
             },
@@ -180,14 +184,34 @@ describe('TelemetryClient.track', () => {
             ApplicationName: 'TestService',
             Version: '1.2.3',
             Service: 'Service.Method',
-            CloudUrl: 'https://example.com/org/tenant',
+            CloudUrl: 'https://example.com/org-guid/tenant-guid',
             CloudOrganizationName: 'org',
             CloudTenantName: 'tenant',
+            CloudOrganizationId: 'org-guid',
+            CloudTenantId: 'tenant-guid',
             CloudClientId: 'client-1',
             CloudRedirectUri: 'https://example.com/cb',
             custom: 'value',
         });
         expect(typeof logRecord.timestamp).toBe('number');
+    });
+
+    it('builds CloudUrl from org/tenant names when the ids are absent', async () => {
+        const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
+
+        client.initialize({
+            ...VALID_OPTIONS,
+            context: {
+                baseUrl: 'https://example.com',
+                orgName: 'org',
+                tenantName: 'tenant',
+            },
+        });
+
+        client.track('Some.Event');
+
+        const [logRecord] = mocks.emit.mock.calls[0];
+        expect(logRecord.attributes.CloudUrl).toBe('https://example.com/org/tenant');
     });
 
     it('falls back to the eventName as the body when no display name is given', async () => {
@@ -210,9 +234,12 @@ describe('TelemetryClient.track', () => {
         const [logRecord] = mocks.emit.mock.calls[0];
         expect(logRecord.attributes.CloudOrganizationName).toBe('');
         expect(logRecord.attributes.CloudTenantName).toBe('');
+        expect(logRecord.attributes.CloudOrganizationId).toBe('');
+        expect(logRecord.attributes.CloudTenantId).toBe('');
         expect(logRecord.attributes.CloudUrl).toBe('');
         expect(logRecord.attributes.CloudClientId).toBe('');
         expect(logRecord.attributes.CloudRedirectUri).toBe('');
+        expect(logRecord.attributes.CloudUserId).toBe('');
     });
 
     it('reports the event name as the Service attribute and respects the explicit display name', async () => {
@@ -224,6 +251,45 @@ describe('TelemetryClient.track', () => {
         const [logRecord] = mocks.emit.mock.calls[0];
         expect(logRecord.body).toBe('Sdk.Run');
         expect(logRecord.attributes.Service).toBe('Tasks.Create');
+    });
+});
+
+describe('TelemetryClient.setUserId', () => {
+    it('populates CloudUserId on subsequent events', async () => {
+        const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
+        client.initialize(VALID_OPTIONS);
+
+        client.setUserId(TEST_USER_ID);
+        client.track('Some.Event');
+
+        const [logRecord] = mocks.emit.mock.calls[0];
+        expect(logRecord.attributes.CloudUserId).toBe(TEST_USER_ID);
+    });
+
+    it('reports CloudUserId as UNKNOWN on events emitted before a user id is set', async () => {
+        const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
+        client.initialize(VALID_OPTIONS);
+
+        client.track('Before.UserId');
+        client.setUserId(TEST_USER_ID);
+        client.track('After.UserId');
+
+        const [beforeRecord] = mocks.emit.mock.calls[0];
+        const [afterRecord] = mocks.emit.mock.calls[1];
+        expect(beforeRecord.attributes.CloudUserId).toBe('');
+        expect(afterRecord.attributes.CloudUserId).toBe(TEST_USER_ID);
+    });
+
+    it('keeps the previously set user id when called with an empty value', async () => {
+        const client = await clientWithConnectionString(VALID_CONNECTION_STRING);
+        client.initialize(VALID_OPTIONS);
+
+        client.setUserId(TEST_USER_ID);
+        client.setUserId('');
+        client.track('Some.Event');
+
+        const [logRecord] = mocks.emit.mock.calls[0];
+        expect(logRecord.attributes.CloudUserId).toBe(TEST_USER_ID);
     });
 });
 

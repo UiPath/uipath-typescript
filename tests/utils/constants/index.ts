@@ -17,3 +17,4 @@ export * from './attachments';
 export * from './feedback';
 export * from './traces';
 export * from './agents';
+export * from './governance';

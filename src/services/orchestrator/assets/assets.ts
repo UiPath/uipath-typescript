@@ -1,9 +1,10 @@
 import { FolderScopedService } from '../../folder-scoped';
-import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions } from '../../../models/orchestrator/assets.types';
+import { AssetGetResponse, AssetGetAllOptions, AssetGetByIdOptions, AssetGetByNameOptions, AssetNewValue, AssetUpdateValueByIdOptions, AssetValueScope, AssetValueType } from '../../../models/orchestrator/assets.types';
 import { AssetServiceModel } from '../../../models/orchestrator/assets.models';
 import { addPrefixToKeys, pascalToCamelCaseKeys, transformData } from '../../../utils/transform';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_ID } from '../../../utils/constants/headers';
+import { resolveFolderHeaders } from '../../../utils/folder/folder-headers';
 import { ASSET_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { ODATA_PREFIX, ODATA_OFFSET_PARAMS } from '../../../utils/constants/common';
 import { AssetMap } from '../../../models/orchestrator/assets.constants';
@@ -12,6 +13,7 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { track } from '../../../core/telemetry';
+import { ValidationError } from '../../../core/errors';
 
 /**
  * Service for interacting with UiPath Orchestrator Assets API
@@ -154,5 +156,124 @@ export class AssetService extends FolderScopedService implements AssetServiceMod
       options,
       (raw) => transformData(pascalToCamelCaseKeys(raw), AssetMap),
     );
+  }
+
+  /**
+   * Updates the value of an existing asset by ID.
+   *
+   * Fetches the asset internally to determine its type, then updates only the value while
+   * preserving the asset's name, scope, and description.
+   *
+   * **Supported value types:** `Text`, `Integer`, and `Bool` only. Other types
+   * (`Credential`, `Secret`) throw a `ValidationError`.
+   *
+   * The `newValue` runtime type must match the asset's `valueType`:
+   * - `Text` → `string`
+   * - `Integer` → `number` (integer)
+   * - `Bool` → `boolean`
+   *
+   * @param id - Asset ID
+   * @param newValue - New value to apply (string for `Text`, number for `Integer`, boolean for `Bool`)
+   * @param options - Folder scoping (`folderId` / `folderKey` / `folderPath`)
+   * @returns Promise resolving when the asset has been updated
+   *
+   * @example
+   * ```typescript
+   * import { Assets } from '@uipath/uipath-typescript/assets';
+   *
+   * const assets = new Assets(sdk);
+   *
+   * // Update a Text asset by folder ID
+   * await assets.updateValueById(<assetId>, 'new-value', { folderId: <folderId> });
+   *
+   * // Update an Integer asset by folder key (GUID)
+   * await assets.updateValueById(<assetId>, 42, { folderKey: '5f6dadf1-3677-49dc-8aca-c2999dd4b3ba' });
+   *
+   * // Update a Bool asset by folder path
+   * await assets.updateValueById(<assetId>, true, { folderPath: 'Shared/Finance' });
+   * ```
+   */
+  @track('Assets.UpdateValueById')
+  async updateValueById(id: number, newValue: AssetNewValue, options?: AssetUpdateValueByIdOptions): Promise<void> {
+    if (!id) {
+      throw new ValidationError({ message: 'id is required for updateValueById' });
+    }
+    if (newValue === null || newValue === undefined) {
+      throw new ValidationError({ message: 'newValue is required for updateValueById' });
+    }
+
+    const headers = resolveFolderHeaders({
+      folderId: options?.folderId,
+      folderKey: options?.folderKey,
+      folderPath: options?.folderPath,
+      resourceType: 'Assets.updateValueById',
+      fallbackFolderKey: this.config.folderKey,
+    });
+
+    const existingResponse = await this.get<{
+      Name: string;
+      ValueScope: AssetValueScope;
+      ValueType: AssetValueType;
+      Description: string | null;
+    }>(
+      ASSET_ENDPOINTS.GET_BY_ID(id),
+      { headers },
+    );
+    const existing = existingResponse.data;
+
+    const valueField = resolveValueField(id, existing.ValueType, newValue);
+
+    const body: Record<string, unknown> = {
+      Id: id,
+      Name: existing.Name,
+      ValueScope: existing.ValueScope,
+      ValueType: existing.ValueType,
+      Description: existing.Description,
+      [valueField]: newValue,
+    };
+
+    await this.put(
+      ASSET_ENDPOINTS.GET_BY_ID(id),
+      body,
+      { headers },
+    );
+  }
+}
+
+/**
+ * Maps the asset's `valueType` to the PUT body field carrying the new value, validating
+ * that the new value's runtime type matches the asset type.
+ */
+function resolveValueField(
+  id: number,
+  valueType: AssetValueType,
+  newValue: AssetNewValue,
+): 'StringValue' | 'IntValue' | 'BoolValue' {
+  switch (valueType) {
+    case AssetValueType.Text:
+      if (typeof newValue !== 'string') {
+        throw new ValidationError({
+          message: `Asset ${id} has valueType Text; newValue must be a string, got ${typeof newValue}`,
+        });
+      }
+      return 'StringValue';
+    case AssetValueType.Integer:
+      if (typeof newValue !== 'number' || !Number.isInteger(newValue)) {
+        throw new ValidationError({
+          message: `Asset ${id} has valueType Integer; newValue must be an integer number, got ${typeof newValue}`,
+        });
+      }
+      return 'IntValue';
+    case AssetValueType.Bool:
+      if (typeof newValue !== 'boolean') {
+        throw new ValidationError({
+          message: `Asset ${id} has valueType Bool; newValue must be a boolean, got ${typeof newValue}`,
+        });
+      }
+      return 'BoolValue';
+    default:
+      throw new ValidationError({
+        message: `updateValueById only supports Text, Integer, or Bool assets; asset ${id} has valueType ${valueType}`,
+      });
   }
 }

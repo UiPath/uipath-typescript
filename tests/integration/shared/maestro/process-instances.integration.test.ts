@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
@@ -6,6 +6,7 @@ import {
   InitMode,
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
+import type { ProcessInstanceExecutionHistoryResponse } from '../../../../src/models/maestro/process-instances.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -240,27 +241,60 @@ describe.each(modes)('Maestro Process Instances - Integration Tests [%s]', (mode
       }
     });
 
-    it('should retrieve execution history', async () => {
-      if (!testInstanceId) {
-        console.log('No instance ID available for testing');
-        return;
-      }
+    describe('execution history', () => {
+      let executionHistory!: ProcessInstanceExecutionHistoryResponse[];
 
-      const { processInstances } = getServices();
-
-      try {
-        const result = await processInstances.getExecutionHistory(testInstanceId);
-
-        expect(result).toBeDefined();
-        expect(Array.isArray(result)).toBe(true);
-
-        if (result.length > 0) {
-          const historyItem = result[0];
-          expect(historyItem).toBeDefined();
+      beforeAll(async () => {
+        if (!testInstanceId) {
+          throw new Error('No instance ID available for testing');
         }
-      } catch (error: any) {
-        console.log('Get execution history test failed:', error.message);
-      }
+
+        const { processInstances } = getServices();
+        const config = getTestConfig();
+
+        if (!config.folderKey) {
+          throw new Error('No folderKey configured for testing');
+        }
+
+        executionHistory = await processInstances.getExecutionHistory(testInstanceId, config.folderKey);
+      });
+
+      it('should retrieve execution history', () => {
+        expect(executionHistory).toBeDefined();
+        expect(Array.isArray(executionHistory)).toBe(true);
+
+        if (executionHistory.length > 0) {
+          const historyItem = executionHistory[0];
+          expect(typeof historyItem.id).toBe('string');
+          expect(typeof historyItem.traceId).toBe('string');
+          expect(typeof historyItem.name).toBe('string');
+          expect(typeof historyItem.startedTime).toBe('string');
+          expect(historyItem.parentId === null || typeof historyItem.parentId === 'string').toBe(true);
+          expect(historyItem.endTime === null || typeof historyItem.endTime === 'string').toBe(true);
+        }
+      });
+
+      it('should transform execution history fields from PascalCase to camelCase', () => {
+        if (executionHistory.length === 0) {
+          throw new Error('No execution history available to validate transform');
+        }
+
+        const historyItem = executionHistory[0];
+
+        // (a) transformed camelCase fields exist
+        expect(historyItem.id).toBeDefined();
+        expect(historyItem.traceId).toBeDefined();
+        expect(historyItem.name).toBeDefined();
+        expect(historyItem.startedTime).toBeDefined();
+
+        // (b) original PascalCase API fields are absent
+        expect((historyItem as any).Id).toBeUndefined();
+        expect((historyItem as any).TraceId).toBeUndefined();
+        expect((historyItem as any).ParentId).toBeUndefined();
+        expect((historyItem as any).Name).toBeUndefined();
+        expect((historyItem as any).StartTime).toBeUndefined();
+        expect((historyItem as any).EndTime).toBeUndefined();
+      });
     });
   });
 

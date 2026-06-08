@@ -10,7 +10,8 @@ import {
   TEST_CONSTANTS,
   createMockProcessInstance,
   createMockBpmnWithVariables,
-  createMockExecutionHistory,
+  createMockElementExecutionsResponse,
+  createMockTraceSpan,
   createMockProcessVariables,
   createMockMaestroApiOperationResponse
 } from '../../../utils/mocks';
@@ -19,8 +20,7 @@ import type {
   ProcessInstanceGetAllWithPaginationOptions,
   ProcessInstanceOperationOptions,
   ProcessInstanceGetVariablesOptions,
-  RawProcessInstanceGetResponse,
-  ProcessInstanceExecutionHistoryResponse
+  RawProcessInstanceGetResponse
 } from '../../../../src/models/maestro';
 
 // ===== MOCKING =====
@@ -208,33 +208,93 @@ describe('ProcessInstancesService', () => {
 
   describe('getExecutionHistory', () => {
     it('should return execution history for process instance', async () => {
-      
       const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
-      const mockApiResponse: ProcessInstanceExecutionHistoryResponse[] = [createMockExecutionHistory()];
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
 
-      mockApiClient.get.mockResolvedValue(mockApiResponse);
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockElementExecutionsResponse())
+        .mockResolvedValueOnce([createMockTraceSpan()]);
 
-      
-      const result = await service.getExecutionHistory(instanceId);
+      const result = await service.getExecutionHistory(instanceId, folderKey);
 
-      
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId),
-        {}
+        MAESTRO_ENDPOINTS.INSTANCES.GET_ELEMENT_EXECUTIONS(instanceId),
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        MAESTRO_ENDPOINTS.TRACES.GET_SPANS(MAESTRO_TEST_CONSTANTS.TRACE_ID),
+        {
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: folderKey
+          })
+        }
       );
 
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('id', MAESTRO_TEST_CONSTANTS.SPAN_ID);
       expect(result[0]).toHaveProperty('traceId', MAESTRO_TEST_CONSTANTS.TRACE_ID);
+      expect(result[0]).toHaveProperty('name', MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME);
+    });
+
+    it('should transform span fields from PascalCase to camelCase', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockElementExecutionsResponse())
+        .mockResolvedValueOnce([createMockTraceSpan()]);
+
+      const result = await service.getExecutionHistory(instanceId, folderKey);
+      const historyItem = result[0];
+
+      // (a) transformed camelCase fields have correct values
+      expect(historyItem.id).toBe(MAESTRO_TEST_CONSTANTS.SPAN_ID);
+      expect(historyItem.traceId).toBe(MAESTRO_TEST_CONSTANTS.TRACE_ID);
+      expect(historyItem.name).toBe(MAESTRO_TEST_CONSTANTS.ACTIVITY_NAME);
+      expect(historyItem.startedTime).toBe(MAESTRO_TEST_CONSTANTS.START_TIME);
+      expect(historyItem.endTime).toBe(MAESTRO_TEST_CONSTANTS.END_TIME);
+      expect(historyItem.updatedTime).toBe(MAESTRO_TEST_CONSTANTS.END_TIME);
+
+      // (b) original PascalCase API fields are absent
+      expect((historyItem as any).Id).toBeUndefined();
+      expect((historyItem as any).TraceId).toBeUndefined();
+      expect((historyItem as any).ParentId).toBeUndefined();
+      expect((historyItem as any).Name).toBeUndefined();
+      expect((historyItem as any).StartTime).toBeUndefined();
+      expect((historyItem as any).EndTime).toBeUndefined();
+      expect((historyItem as any).UpdatedAt).toBeUndefined();
+    });
+
+    it('should only include spans matched to elementRuns', async () => {
+      const instanceId = MAESTRO_TEST_CONSTANTS.INSTANCE_ID;
+      const folderKey = MAESTRO_TEST_CONSTANTS.FOLDER_KEY;
+      const unmatchedSpan = createMockTraceSpan({
+        Id: 'nested-agent-span-1',
+        ParentId: MAESTRO_TEST_CONSTANTS.SPAN_ID,
+        Name: 'LangGraph',
+        Attributes: null
+      });
+
+      mockApiClient.get
+        .mockResolvedValueOnce(createMockElementExecutionsResponse())
+        .mockResolvedValueOnce([createMockTraceSpan(), unmatchedSpan]);
+
+      const result = await service.getExecutionHistory(instanceId, folderKey);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('id', MAESTRO_TEST_CONSTANTS.SPAN_ID);
     });
 
     it('should handle API errors', async () => {
-      
       const error = new Error(TEST_CONSTANTS.ERROR_MESSAGE);
       mockApiClient.get.mockRejectedValue(error);
 
-      
-      await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+      await expect(service.getExecutionHistory(MAESTRO_TEST_CONSTANTS.INSTANCE_ID, MAESTRO_TEST_CONSTANTS.FOLDER_KEY)).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
 

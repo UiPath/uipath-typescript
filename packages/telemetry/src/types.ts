@@ -16,6 +16,8 @@ export interface TelemetryContext {
     baseUrl?: string;
     orgName?: string;
     tenantName?: string;
+    orgId?: string;
+    tenantId?: string;
     clientId?: string;
     redirectUri?: string;
 }

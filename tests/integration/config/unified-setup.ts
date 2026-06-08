@@ -13,6 +13,7 @@ import {
 import { Feedback } from '../../../src/services/agents/feedback';
 import { Agents } from '../../../src/services/agents';
 import { Traces } from '../../../src/services/observability/traces';
+import { Governance } from '../../../src/services/governance';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -50,6 +51,7 @@ export interface TestServices {
   feedback?: Feedback;
   traces?: Traces;
   agents?: Agents;
+  governance?: Governance;
 }
 
 /**
@@ -132,6 +134,7 @@ function createV1Services(config: IntegrationConfig): TestServices {
     feedback: new Feedback(sdk),
     traces: new Traces(sdk),
     agents: new Agents(sdk),
+    governance: new Governance(sdk),
   };
 }
 

@@ -13,14 +13,10 @@ export enum AssetValueScope {
  * Enum for Asset Value Type
  */
 export enum AssetValueType {
-  DBConnectionString = 'DBConnectionString',
-  HttpConnectionString = 'HttpConnectionString',
   Text = 'Text',
   Bool = 'Bool',
   Integer = 'Integer',
   Credential = 'Credential',
-  WindowsCredential = 'WindowsCredential',
-  KeyValueList = 'KeyValueList',
   Secret = 'Secret'
 }
 
@@ -73,3 +69,18 @@ export interface AssetGetByIdOptions extends BaseOptions {}
  * Options for getting a single asset by name
  */
 export interface AssetGetByNameOptions extends FolderScopedOptions {}
+
+/**
+ * New value accepted by {@link AssetServiceModel.updateValueById}.
+ *
+ * The runtime type must match the asset's `valueType`:
+ * - `Text` → `string`
+ * - `Integer` → `number`
+ * - `Bool` → `boolean`
+ */
+export type AssetNewValue = string | number | boolean;
+
+/**
+ * Options for updating an asset value by ID
+ */
+export interface AssetUpdateValueByIdOptions extends FolderScopedOptions {}

@@ -29,3 +29,6 @@ export * from './traces';
 
 // Agent endpoints
 export * from './agents';
+
+// Governance endpoints
+export * from './governance';

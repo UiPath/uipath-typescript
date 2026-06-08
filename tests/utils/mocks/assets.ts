@@ -21,7 +21,7 @@ export const createMockRawAsset = (overrides: Partial<any> = {}): any => {
     Key: ASSET_TEST_CONSTANTS.ASSET_KEY,
     Description: ASSET_TEST_CONSTANTS.ASSET_DESCRIPTION,
     ValueScope: AssetValueScope.Global,
-    ValueType: AssetValueType.DBConnectionString,
+    ValueType: AssetValueType.Text,
     Value: ASSET_TEST_CONSTANTS.ASSET_VALUE,
     KeyValueList: [
       {
@@ -58,7 +58,7 @@ export const createBasicAsset = (overrides: Partial<AssetGetResponse> = {}): Ass
     key: ASSET_TEST_CONSTANTS.ASSET_KEY,
     description: ASSET_TEST_CONSTANTS.ASSET_DESCRIPTION,
     valueScope: AssetValueScope.Global,
-    valueType: AssetValueType.DBConnectionString,
+    valueType: AssetValueType.Text,
     value: ASSET_TEST_CONSTANTS.ASSET_VALUE,
     keyValueList: [
       {

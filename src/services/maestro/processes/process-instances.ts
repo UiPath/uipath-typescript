@@ -19,14 +19,14 @@ import { MAESTRO_ENDPOINTS } from '../../../utils/constants/endpoints';
 import { createHeaders } from '../../../utils/http/headers';
 import { FOLDER_KEY, CONTENT_TYPES } from '../../../utils/constants/headers';
 import { transformData } from '../../../utils/transform';
-import { ProcessInstanceMap, ProcessInstanceExecutionHistoryMap } from '../../../models/maestro/process-instances.constants';
+import { ProcessInstanceMap } from '../../../models/maestro/process-instances.constants';
 import { BpmnXmlString } from '../../../models/maestro/process-instances.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../../utils/pagination';
 import { PaginationHelpers } from '../../../utils/pagination/helpers';
 import { PaginationType } from '../../../utils/pagination/internal-types';
 import { PROCESS_INSTANCE_PAGINATION, PROCESS_INSTANCE_TOKEN_PARAMS } from '../../../utils/constants/common';
 import { track } from '../../../core/telemetry';
-import { BpmnVariableMetadata } from '../../../models/maestro/process-instances.internal-types';
+import { BpmnVariableMetadata, ElementExecutionsApiResponse, TraceSpan } from '../../../models/maestro/process-instances.internal-types';
 
 
 export class ProcessInstancesService extends BaseService implements ProcessInstancesServiceModel {
@@ -119,14 +119,79 @@ export class ProcessInstancesService extends BaseService implements ProcessInsta
   /**
    * Get execution history (spans) for a process instance
    * @param instanceId The ID of the instance to get history for
-   * @returns Promise<ProcessInstanceExecutionHistoryResponse[]>
+   * @param folderKey The folder key for authorization
+   * @returns Promise resolving to execution history
+   * {@link ProcessInstanceExecutionHistoryResponse}
+   * @example
+   * ```typescript
+   * // Get execution history for a process instance
+   * const history = await processInstances.getExecutionHistory(
+   *   <instanceId>,
+   *   <folderKey>
+   * );
+   *
+   * // Analyze execution timeline
+   * history.forEach(span => {
+   *   console.log(`Activity: ${span.name}`);
+   *   console.log(`Start: ${span.startedTime}`);
+   *   console.log(`End: ${span.endTime}`);
+   * });
+   * ```
    */
   @track('ProcessInstances.GetExecutionHistory')
-  async getExecutionHistory(instanceId: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
-    const response = await this.get<ProcessInstanceExecutionHistoryResponse[]>(MAESTRO_ENDPOINTS.INSTANCES.GET_EXECUTION_HISTORY(instanceId));
-    return response.data.map(historyItem => 
-      transformData(historyItem, ProcessInstanceExecutionHistoryMap)
+  async getExecutionHistory(instanceId: string, folderKey: string): Promise<ProcessInstanceExecutionHistoryResponse[]> {
+    const headers = createHeaders({ [FOLDER_KEY]: folderKey });
+
+    const elementExecResponse = await this.get<ElementExecutionsApiResponse>(
+      MAESTRO_ENDPOINTS.INSTANCES.GET_ELEMENT_EXECUTIONS(instanceId),
+      { headers }
     );
+
+    const traceId = elementExecResponse.data.traceId;
+
+    const spansResponse = await this.get<TraceSpan[]>(
+      MAESTRO_ENDPOINTS.TRACES.GET_SPANS(traceId),
+      { headers }
+    );
+
+    // Build span lookup keyed by elementRunId extracted from Attributes JSON
+    const spanMap = new Map<string, TraceSpan>();
+    for (const span of spansResponse.data) {
+      try {
+        const attrs = span.Attributes ? JSON.parse(span.Attributes) : null;
+        if (attrs?.elementRunId) {
+          spanMap.set(attrs.elementRunId, span);
+        }
+      } catch {
+        // skip spans with unparseable Attributes — they won't match any elementRunId
+      }
+    }
+
+    const results: ProcessInstanceExecutionHistoryResponse[] = [];
+    for (const elementExec of elementExecResponse.data.elementExecutions) {
+      for (const run of elementExec.elementRuns) {
+        const span = spanMap.get(run.elementRunId);
+        if (span) {
+          results.push(this.mapSpanToHistory(span));
+        }
+      }
+    }
+
+    return results;
+  }
+
+  private mapSpanToHistory(span: TraceSpan): ProcessInstanceExecutionHistoryResponse {
+    return {
+      id: span.Id,
+      traceId: span.TraceId,
+      parentId: span.ParentId,
+      name: span.Name,
+      startedTime: span.StartTime,
+      endTime: span.EndTime,
+      attributes: span.Attributes,
+      updatedTime: span.UpdatedAt,
+      expiredTime: span.ExpiryTimeUtc,
+    };
   }
 
   /**
