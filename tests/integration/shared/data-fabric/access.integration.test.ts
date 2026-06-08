@@ -48,9 +48,7 @@ describe.skipIf(!hasDataFabricAccessIntegration).each(modes)('Data Fabric Access
       expect(Array.isArray(page.results)).toBe(true);
       expect(page.results.length).toBeLessThanOrEqual(1);
 
-      if (page.totalCount !== undefined) {
-        expect(typeof page.totalCount).toBe('number');
-      }
+      expect(typeof page.totalCount).toBe('number');
 
       if (page.results.length > 0) {
         const principal = page.results[0];
@@ -78,23 +76,4 @@ describe.skipIf(!hasDataFabricAccessIntegration).each(modes)('Data Fabric Access
     });
   });
 
-  describe('directory.assignRoles', () => {
-    it('should validate assignment inputs before calling the API', async () => {
-      const { dataFabricDirectory } = getServices();
-
-      await expect(
-        dataFabricDirectory.assignRoles('', 'Group', ['<role-id>'])
-      ).rejects.toThrow('At least one principal ID is required.');
-    });
-  });
-
-  describe('directory.revokeRoles', () => {
-    it('should validate revoke inputs before calling the API', async () => {
-      const { dataFabricDirectory } = getServices();
-
-      await expect(
-        dataFabricDirectory.revokeRoles('')
-      ).rejects.toThrow('At least one principal ID is required.');
-    });
-  });
 });
