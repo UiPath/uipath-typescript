@@ -12,7 +12,9 @@ import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 const modes: InitMode[] = ['v1'];
 
-describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
+// skip: insightsrtm_ endpoints reject PAT tokens entirely (401 regardless of scopes) and require OAuth.
+// Skipped at the outer level so the live-auth setup (setupUnifiedTests + beforeAll) does not run.
+describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let agents!: Agents;
@@ -25,8 +27,7 @@ describe.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     agents = services.agents;
   });
 
-  // skip: insightsrtm_ endpoints reject PAT tokens entirely (401 regardless of scopes) and require OAuth
-  describe.skip('getAll', () => {
+  describe('getAll', () => {
     const startTime = AGENT_TEST_CONSTANTS.START_TIME;
     const endTime = AGENT_TEST_CONSTANTS.END_TIME;
 
