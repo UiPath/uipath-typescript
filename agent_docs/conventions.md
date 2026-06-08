@@ -9,7 +9,7 @@
 - Prefer `private` keyword over underscore prefix for private methods
 - No `any` type — use `unknown` if truly unknown, then validate.
 - **NEVER** use `as unknown as` type casts — refactor to make types flow naturally. Casts hide real type errors and break when upstream types change. **One accepted exception**: `transformData()` returns `Record<string, unknown>`, so `transformData(data, EntityMap) as unknown as TargetType` is permitted when no typed overload is available. Every other `as unknown as` must be refactored. **Refinement**: when `pascalToCamelCaseKeys()` precedes `transformData()` in the pipeline, `pascalToCamelCaseKeys()` returns `any`, which makes `transformData(camelCased, EntityMap)` also return `any`. In that case a single `as TargetType` cast is sufficient — drop the `as unknown` intermediate.
-- Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return. **Equally, do not mark fields as optional when the API always returns them** — misleading optional markers cause callers to add null-checks for values that are never null, and mask real type errors when the field is guaranteed.
+- Mark optional fields as optional in type interfaces — over-requiring causes runtime `undefined` access on fields the API didn't return. **Equally, do not mark fields as optional when the API always returns them** — misleading optional markers force callers to add unnecessary `undefined` checks for fields that are always present, and mask real type errors when the field is guaranteed.
 - Use enums for fixed value sets — **NEVER** leave raw strings/numbers. Raw values lose type safety and autocomplete.
 - **NEVER** write `param || {}` for required parameters — this hides bugs by silently accepting missing required data at call sites.
 
@@ -108,7 +108,7 @@ Defined in `src/utils/constants/endpoints/` with separate files per domain (e.g.
 - **Group nested endpoints logically** (e.g., `ENTITY.ATTACHMENT.DOWNLOAD` not flat). Use short names — under a `CASE` group, use `REOPEN` not `REOPEN_CASE` since the group context already provides the prefix.
 - **Use consistent param names** across endpoints in the same group — if one endpoint uses `instanceId`, all should.
 - **NEVER** copy-paste JSDoc comments between endpoint groups — each constant needs its own comment. A "Asset Service Endpoints" comment on `JOB_ENDPOINTS` is a review rejection.
-- **NEVER** create a duplicate endpoint constant whose URL pattern is identical to an existing one. HTTP method differences (`GET` vs `PUT`) are resolved at the call site (`this.get()` vs `this.put()`), not in the constant. Either reuse the existing constant directly, or — if a distinct name genuinely aids readability — add an explicit comment explaining the intentional duplication.
+- Avoid creating a duplicate endpoint constant whose URL pattern is identical to an existing one. HTTP method differences (`GET` vs `PUT`) are resolved at the call site (`this.get()` vs `this.put()`), not in the constant. Either reuse the existing constant directly, or — if a distinct name genuinely aids readability — add an explicit comment explaining the intentional duplication.
 
 ## Pagination
 
