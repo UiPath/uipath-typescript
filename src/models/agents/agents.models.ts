@@ -1,7 +1,6 @@
 import type {
   AgentListItem,
   AgentListOptions,
-  AgentListTotals,
 } from './agents.types';
 import type {
   HasPaginationOptions,
@@ -11,6 +10,8 @@ import type {
 
 /**
  * Service for retrieving runtime data for UiPath Agents.
+ *
+ * @see {@link https://docs.uipath.com/agents/automation-cloud/latest/user-guide/about-agents | About Agents}
  */
 export interface AgentServiceModel {
   /**
@@ -19,17 +20,15 @@ export interface AgentServiceModel {
    *
    * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
    * `cursor`, or `jumpToPage`) are provided, otherwise a
-   * {@link NonPaginatedResponse}. Both shapes additionally carry the aggregate
-   * `totalUnitsConsumed`, `totalAGUnitsConsumed`, and `totalPLTUnitsConsumed`
-   * totals via {@link AgentListTotals}.
+   * {@link NonPaginatedResponse}.
    *
-   * @param startTime - Inclusive lower bound for the query window (ISO 8601, UTC)
-   * @param endTime - Exclusive upper bound for the query window (ISO 8601, UTC)
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
    * @param options - Optional pagination, sort, and filters {@link AgentListOptions}
-   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentListItem} plus {@link AgentListTotals}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link AgentListItem}
    * @example
    * ```typescript
-   * import { Agents } from '@uipath/uipath-typescript/agents';
+   * import { Agents, AgentListSortColumn } from '@uipath/uipath-typescript/agents';
    *
    * const agents = new Agents(sdk);
    *
@@ -38,16 +37,11 @@ export interface AgentServiceModel {
    *   '2025-05-01T00:00:00Z',
    *   '2026-05-14T00:00:00Z',
    * );
-   * console.log(`Total units consumed: ${result.totalUnitsConsumed}`);
    * result.items.forEach((agent) => {
    *   console.log(`${agent.agentName} — ${agent.unitsQuantity} units, health=${agent.healthScore}`);
    * });
-   * ```
-   * @example
-   * ```typescript
-   * // Paginated — sorted by health score descending
-   * import { AgentListSortColumn } from '@uipath/uipath-typescript/agents';
    *
+   * // Paginated — sorted by health score descending
    * const page = await agents.getAll(
    *   '2025-05-01T00:00:00Z',
    *   '2026-05-14T00:00:00Z',
@@ -73,7 +67,7 @@ export interface AgentServiceModel {
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>
-      ? PaginatedResponse<AgentListItem> & AgentListTotals
-      : NonPaginatedResponse<AgentListItem> & AgentListTotals
+      ? PaginatedResponse<AgentListItem>
+      : NonPaginatedResponse<AgentListItem>
   >;
 }

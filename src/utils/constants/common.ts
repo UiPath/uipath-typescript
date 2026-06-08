@@ -115,6 +115,31 @@ export const GOVERNANCE_OFFSET_PARAMS = {
 };
 
 /**
+ * Agents pagination constants — items and total count are nested under the response envelope
+ */
+export const AGENTS_PAGINATION = {
+  /** Dotted path to the items array in the agents response envelope */
+  ITEMS_FIELD: 'data.agents',
+
+  /** Dotted path to the total count in the agents response envelope */
+  TOTAL_COUNT_FIELD: 'pagination.totalCount'
+};
+
+/**
+ * Agents OFFSET pagination parameter names (page-number style, 0-based, no skip conversion)
+ */
+export const AGENTS_OFFSET_PARAMS = {
+  /** Page size parameter name */
+  PAGE_SIZE_PARAM: 'pageSize',
+
+  /** Page number parameter name (sent directly, 0-based) */
+  OFFSET_PARAM: 'pageNumber',
+
+  /** No count param needed */
+  COUNT_PARAM: undefined
+};
+
+/**
  * Process Instance pagination constants for token-based pagination
  */
 export const PROCESS_INSTANCE_PAGINATION = {
