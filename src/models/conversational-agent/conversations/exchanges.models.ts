@@ -55,6 +55,8 @@ export interface ExchangeServiceModel {
    *
    * @example With explicit page size and exchange/message sort orders
    * ```typescript
+   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
+   *
    * const firstPage = await exchanges.getAll(conversationId, {
    *   pageSize: 10,
    *   exchangeSort: SortOrder.Descending,
@@ -154,6 +156,8 @@ export interface ConversationExchangeServiceModel {
    *
    * @example With explicit page size and exchange/message sort orders
    * ```typescript
+   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
+   *
    * const conversation = await conversationalAgent.conversations.getById(conversationId);
    *
    * // First page

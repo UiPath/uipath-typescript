@@ -175,6 +175,8 @@ export class ConversationService extends BaseService implements ConversationServ
    *
    * @example With explicit page size and sort order (by last-activity timestamp)
    * ```typescript
+   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
+   *
    * // First page
    * const firstPage = await conversationalAgent.conversations.getAll({
    *   pageSize: 10,
@@ -218,11 +220,7 @@ export class ConversationService extends BaseService implements ConversationServ
     const { pageSize, cursor, jumpToPage, ...filterOptions } = options ?? {};
     // Translate SDK filter names (agentKey/agentId/label) to backend names before forwarding
     const additionalParams = transformRequest(filterOptions, ConversationGetAllFilterMap);
-    const paginationParams = cursor
-      ? { cursor, pageSize }
-      : jumpToPage
-        ? { jumpToPage, pageSize }
-        : { pageSize };
+    const paginationParams = cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize };
 
     return PaginationHelpers.getAllPaginated<RawConversationGetResponse, ConversationGetResponse>({
       serviceAccess: this.createPaginationServiceAccess(),

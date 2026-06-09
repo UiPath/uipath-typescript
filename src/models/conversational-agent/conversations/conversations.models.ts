@@ -144,6 +144,8 @@ export interface ConversationServiceModel {
    *
    * @example With explicit page size and sort order (by last-activity timestamp)
    * ```typescript
+   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
+   *
    * // First page
    * const firstPage = await conversationalAgent.conversations.getAll({
    *   pageSize: 10,

@@ -94,6 +94,8 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
    *
    * @example With explicit page size and exchange/message sort orders
    * ```typescript
+   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
+   *
    * const firstPage = await exchanges.getAll(conversationId, {
    *   pageSize: 10,
    *   exchangeSort: SortOrder.Descending,
@@ -117,11 +119,7 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
     options?: ExchangeGetAllOptions
   ): Promise<PaginatedResponse<ExchangeGetResponse>> {
     const { pageSize, cursor, jumpToPage, ...additionalParams } = options ?? {};
-    const paginationParams = cursor
-      ? { cursor, pageSize }
-      : jumpToPage
-        ? { jumpToPage, pageSize }
-        : { pageSize };
+    const paginationParams = cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize };
 
     return PaginationHelpers.getAllPaginated<Exchange, ExchangeGetResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
