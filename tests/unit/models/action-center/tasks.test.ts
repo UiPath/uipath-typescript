@@ -94,6 +94,28 @@ describe('Task Models', () => {
         expect(result).toEqual(mockResponse);
       });
 
+      it('should forward assignmentCriteria when assigning by email to a group', async () => {
+        const taskData = createBasicTask();
+        const task = createTaskWithMethods(taskData, mockService);
+
+        const mockResponse = createMockOperationResponse([
+          { taskId: TASK_TEST_CONSTANTS.TASK_ID, userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL }
+        ]);
+        mockService.assign = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await task.assign({
+          userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL,
+          assignmentCriteria: TaskAssignmentCriteria.AllUsers
+        });
+
+        expect(mockService.assign).toHaveBeenCalledWith({
+          taskId: TASK_TEST_CONSTANTS.TASK_ID,
+          userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL,
+          assignmentCriteria: TaskAssignmentCriteria.AllUsers
+        });
+        expect(result).toEqual(mockResponse);
+      });
+
       it('should throw error if taskId is undefined', async () => {
         const taskData = createBasicTask({ id: undefined });
         const task = createTaskWithMethods(taskData, mockService);
@@ -161,6 +183,28 @@ describe('Task Models', () => {
         expect(mockService.reassign).toHaveBeenCalledWith({
           taskId: TASK_TEST_CONSTANTS.TASK_ID,
           userId: TASK_TEST_CONSTANTS.USER_ID,
+          assignmentCriteria: TaskAssignmentCriteria.AllUsers
+        });
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('should forward assignmentCriteria when reassigning by email to a group', async () => {
+        const taskData = createBasicTask();
+        const task = createTaskWithMethods(taskData, mockService);
+
+        const mockResponse = createMockOperationResponse([
+          { taskId: TASK_TEST_CONSTANTS.TASK_ID, userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL }
+        ]);
+        mockService.reassign = vi.fn().mockResolvedValue(mockResponse);
+
+        const result = await task.reassign({
+          userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL,
+          assignmentCriteria: TaskAssignmentCriteria.AllUsers
+        });
+
+        expect(mockService.reassign).toHaveBeenCalledWith({
+          taskId: TASK_TEST_CONSTANTS.TASK_ID,
+          userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL,
           assignmentCriteria: TaskAssignmentCriteria.AllUsers
         });
         expect(result).toEqual(mockResponse);

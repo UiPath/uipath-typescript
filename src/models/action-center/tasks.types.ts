@@ -198,7 +198,7 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
   actionLabel?: string | null;
   taskSlaDetails?: TaskSlaDetail[] | null;
   completedByUser?: UserLoginInfo | null;
-  taskAssignmentCriteria?: string;
+  taskAssignmentCriteria?: TaskAssignmentCriteria;
   taskAssignees?: UserLoginInfo[] | null;
   taskSource?: TaskSource | null;
   processingTime?: number | null;
