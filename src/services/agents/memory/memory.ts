@@ -2,11 +2,11 @@ import { BaseService } from '../../base';
 import {
   MemoryFilterOptions,
   MemoryGetTimelineOptions,
-  MemoryTimelinePoint,
+  MemoryGetTimelineResponse,
   MemoryGetCallsTimelineOptions,
-  MemoryCallsTimelinePoint,
+  MemoryGetCallsTimelineResponse,
   MemoryGetTopSpacesOptions,
-  MemorySpace,
+  MemoryGetTopSpacesResponse,
 } from '../../../models/agents/memory/memory.types';
 import { MemoryServiceModel } from '../../../models/agents/memory/memory.models';
 import { MEMORY_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -17,25 +17,28 @@ import { track } from '../../../core/telemetry';
  */
 export class MemoryService extends BaseService implements MemoryServiceModel {
   /**
-   * Retrieves a time-series of agent-memory state counts bucketed across the
-   * requested window.
+   * Gets agent memory state over time, with optional filters.
    *
    * @param options - Optional time window and scope filters
-   * @returns Promise resolving to an array of {@link MemoryTimelinePoint}, one per time bucket. Empty when no data matches.
+   * @returns Promise resolving to an array of {@link MemoryGetTimelineResponse}, one per time bucket.
    * @example
    * ```typescript
-   * import { Memory, ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { Memory } from '@uipath/uipath-typescript/memory';
    *
    * const memory = new Memory(sdk);
    *
    * // Last 24 hours (default window)
    * const timeline = await memory.getTimeline();
    * console.log(timeline[0]?.inMemoryCount);
+   * ```
+   * @example
+   * ```typescript
+   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
    *
    * // Scoped to one agent in one folder, runtime executions only
    * const scoped = await memory.getTimeline({
-   *   startTime: '2026-05-01T00:00:00Z',
-   *   endTime: '2026-06-01T00:00:00Z',
+   *   startTime: new Date('2026-05-01T00:00:00Z'),
+   *   endTime: new Date('2026-06-01T00:00:00Z'),
    *   agentId: '<agentId>',
    *   folderKeys: ['<folderKey>'],
    *   executionType: ExecutionType.Runtime,
@@ -43,10 +46,10 @@ export class MemoryService extends BaseService implements MemoryServiceModel {
    * ```
    */
   @track('Memory.GetTimeline')
-  async getTimeline(options?: MemoryGetTimelineOptions): Promise<MemoryTimelinePoint[]> {
+  async getTimeline(options?: MemoryGetTimelineOptions): Promise<MemoryGetTimelineResponse[]> {
     const body = this.buildMemoryFilterBody(options);
 
-    const response = await this.post<{ data?: MemoryTimelinePoint[] }>(
+    const response = await this.post<{ data?: MemoryGetTimelineResponse[] }>(
       MEMORY_ENDPOINTS.GET_TIMELINE,
       body,
     );
@@ -55,25 +58,28 @@ export class MemoryService extends BaseService implements MemoryServiceModel {
   }
 
   /**
-   * Retrieves a time-series of memory-call counts bucketed across the requested
-   * window.
+   * Gets agent memory-access counts over time, with optional filters.
    *
    * @param options - Optional time window and scope filters
-   * @returns Promise resolving to an array of {@link MemoryCallsTimelinePoint}, one per time bucket. Empty when no data matches.
+   * @returns Promise resolving to an array of {@link MemoryGetCallsTimelineResponse}, one per time bucket.
    * @example
    * ```typescript
-   * import { Memory, ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { Memory } from '@uipath/uipath-typescript/memory';
    *
    * const memory = new Memory(sdk);
    *
    * // Last 24 hours (default window)
    * const timeline = await memory.getCallsTimeline();
    * console.log(timeline[0]?.memoryCallsCount);
+   * ```
+   * @example
+   * ```typescript
+   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
    *
    * // Scoped to one agent in one folder, runtime executions only
    * const scoped = await memory.getCallsTimeline({
-   *   startTime: '2026-05-01T00:00:00Z',
-   *   endTime: '2026-06-01T00:00:00Z',
+   *   startTime: new Date('2026-05-01T00:00:00Z'),
+   *   endTime: new Date('2026-06-01T00:00:00Z'),
    *   agentId: '<agentId>',
    *   folderKeys: ['<folderKey>'],
    *   executionType: ExecutionType.Runtime,
@@ -83,10 +89,10 @@ export class MemoryService extends BaseService implements MemoryServiceModel {
   @track('Memory.GetCallsTimeline')
   async getCallsTimeline(
     options?: MemoryGetCallsTimelineOptions,
-  ): Promise<MemoryCallsTimelinePoint[]> {
+  ): Promise<MemoryGetCallsTimelineResponse[]> {
     const body = this.buildMemoryFilterBody(options);
 
-    const response = await this.post<{ data?: MemoryCallsTimelinePoint[] }>(
+    const response = await this.post<{ data?: MemoryGetCallsTimelineResponse[] }>(
       MEMORY_ENDPOINTS.GET_CALLS_TIMELINE,
       body,
     );
@@ -95,25 +101,28 @@ export class MemoryService extends BaseService implements MemoryServiceModel {
   }
 
   /**
-   * Retrieves the top memory spaces ranked by memory count over the requested
-   * window.
+   * Gets the top memory spaces by memory count, with optional filters
    *
    * @param options - Optional limit, time window, and scope filters
-   * @returns Promise resolving to an array of {@link MemorySpace}, ranked by memory count. Empty when no data matches.
+   * @returns Promise resolving to an array of {@link MemoryGetTopSpacesResponse}, ranked by memory count.
    * @example
    * ```typescript
-   * import { Memory, ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { Memory } from '@uipath/uipath-typescript/memory';
    *
    * const memory = new Memory(sdk);
    *
    * // Top 5 memory spaces (default limit and window)
    * const top = await memory.getTopSpaces();
    * console.log(top[0]?.memorySpaceName, top[0]?.memoryCount);
+   * ```
+   * @example
+   * ```typescript
+   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
    *
    * // Top 10 spaces for one folder over an explicit window, runtime executions only
    * const topScoped = await memory.getTopSpaces({
-   *   startTime: '2026-05-01T00:00:00Z',
-   *   endTime: '2026-06-01T00:00:00Z',
+   *   startTime: new Date('2026-05-01T00:00:00Z'),
+   *   endTime: new Date('2026-06-01T00:00:00Z'),
    *   folderKeys: ['<folderKey>'],
    *   executionType: ExecutionType.Runtime,
    *   limit: 10,
@@ -123,11 +132,11 @@ export class MemoryService extends BaseService implements MemoryServiceModel {
   @track('Memory.GetTopSpaces')
   async getTopSpaces(
     options?: MemoryGetTopSpacesOptions,
-  ): Promise<MemorySpace[]> {
+  ): Promise<MemoryGetTopSpacesResponse[]> {
     const body = this.buildMemoryFilterBody(options);
     if (options?.limit !== undefined) body.limit = options.limit;
 
-    const response = await this.post<{ data?: MemorySpace[] }>(
+    const response = await this.post<{ data?: MemoryGetTopSpacesResponse[] }>(
       MEMORY_ENDPOINTS.GET_TOP_SPACES,
       body,
     );
@@ -137,8 +146,8 @@ export class MemoryService extends BaseService implements MemoryServiceModel {
 
   private buildMemoryFilterBody(options?: MemoryFilterOptions): Record<string, unknown> {
     const body: Record<string, unknown> = {};
-    if (options?.startTime !== undefined) body.startTime = options.startTime;
-    if (options?.endTime !== undefined) body.endTime = options.endTime;
+    if (options?.startTime !== undefined) body.startTime = options.startTime.toISOString();
+    if (options?.endTime !== undefined) body.endTime = options.endTime.toISOString();
     if (options?.agentId !== undefined) body.agentId = options.agentId;
     if (options?.agentVersion !== undefined) body.agentVersion = options.agentVersion;
     if (options?.folderKeys !== undefined) body.folderKeys = options.folderKeys;

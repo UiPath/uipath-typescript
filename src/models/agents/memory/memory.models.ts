@@ -1,10 +1,10 @@
 import {
   MemoryGetTimelineOptions,
-  MemoryTimelinePoint,
+  MemoryGetTimelineResponse,
   MemoryGetCallsTimelineOptions,
-  MemoryCallsTimelinePoint,
+  MemoryGetCallsTimelineResponse,
   MemoryGetTopSpacesOptions,
-  MemorySpace,
+  MemoryGetTopSpacesResponse,
 } from './memory.types';
 
 /**
@@ -27,86 +27,95 @@ import {
  */
 export interface MemoryServiceModel {
   /**
-   * Retrieves a time-series of agent-memory state counts bucketed across the
-   * requested window.
+   * Gets agent memory state over time, with optional filters.
    *
    * @param options - Optional time window and scope filters
-   * @returns Promise resolving to an array of {@link MemoryTimelinePoint}, one per time bucket. Empty when no data matches.
+   * @returns Promise resolving to an array of {@link MemoryGetTimelineResponse}, one per time bucket.
    * @example
    * ```typescript
-   * import { Memory, ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { Memory } from '@uipath/uipath-typescript/memory';
    *
    * const memory = new Memory(sdk);
    *
    * // Last 24 hours (default window)
    * const timeline = await memory.getTimeline();
    * console.log(timeline[0]?.inMemoryCount);
+   * ```
+   * @example
+   * ```typescript
+   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
    *
    * // Scoped to one agent in one folder, runtime executions only
    * const scoped = await memory.getTimeline({
-   *   startTime: '2026-05-01T00:00:00Z',
-   *   endTime: '2026-06-01T00:00:00Z',
+   *   startTime: new Date('2026-05-01T00:00:00Z'),
+   *   endTime: new Date('2026-06-01T00:00:00Z'),
    *   agentId: '<agentId>',
    *   folderKeys: ['<folderKey>'],
    *   executionType: ExecutionType.Runtime,
    * });
    * ```
    */
-  getTimeline(options?: MemoryGetTimelineOptions): Promise<MemoryTimelinePoint[]>;
+  getTimeline(options?: MemoryGetTimelineOptions): Promise<MemoryGetTimelineResponse[]>;
 
   /**
-   * Retrieves a time-series of memory-call counts bucketed across the requested
-   * window.
+   * Gets agent memory-access counts over time, with optional filters.
    *
    * @param options - Optional time window and scope filters
-   * @returns Promise resolving to an array of {@link MemoryCallsTimelinePoint}, one per time bucket. Empty when no data matches.
+   * @returns Promise resolving to an array of {@link MemoryGetCallsTimelineResponse}, one per time bucket.
    * @example
    * ```typescript
-   * import { Memory, ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { Memory } from '@uipath/uipath-typescript/memory';
    *
    * const memory = new Memory(sdk);
    *
    * // Last 24 hours (default window)
    * const timeline = await memory.getCallsTimeline();
    * console.log(timeline[0]?.memoryCallsCount);
+   * ```
+   * @example
+   * ```typescript
+   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
    *
    * // Scoped to one agent in one folder, runtime executions only
    * const scoped = await memory.getCallsTimeline({
-   *   startTime: '2026-05-01T00:00:00Z',
-   *   endTime: '2026-06-01T00:00:00Z',
-   *   agentId: '<agentId>',
+   *   startTime: new Date('2026-05-01T00:00:00Z'),
+   *   endTime: new Date('2026-06-01T00:00:00Z'),
+   *   agentId: '<agentId>', 
    *   folderKeys: ['<folderKey>'],
    *   executionType: ExecutionType.Runtime,
    * });
    * ```
    */
-  getCallsTimeline(options?: MemoryGetCallsTimelineOptions): Promise<MemoryCallsTimelinePoint[]>;
+  getCallsTimeline(options?: MemoryGetCallsTimelineOptions): Promise<MemoryGetCallsTimelineResponse[]>;
 
   /**
-   * Retrieves the top memory spaces ranked by memory count over the requested
-   * window.
+   * Gets the top memory spaces by memory count, with optional filters
    *
    * @param options - Optional limit, time window, and scope filters
-   * @returns Promise resolving to an array of {@link MemorySpace}, ranked by memory count. Empty when no data matches.
+   * @returns Promise resolving to an array of {@link MemoryGetTopSpacesResponse}, ranked by memory count.
    * @example
    * ```typescript
-   * import { Memory, ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { Memory } from '@uipath/uipath-typescript/memory';
    *
    * const memory = new Memory(sdk);
    *
    * // Top 5 memory spaces (default limit and window)
    * const top = await memory.getTopSpaces();
    * console.log(top[0]?.memorySpaceName, top[0]?.memoryCount);
+   * ```
+   * @example
+   * ```typescript
+   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
    *
    * // Top 10 spaces for one folder over an explicit window, runtime executions only
    * const topScoped = await memory.getTopSpaces({
-   *   startTime: '2026-05-01T00:00:00Z',
-   *   endTime: '2026-06-01T00:00:00Z',
+   *   startTime: new Date('2026-05-01T00:00:00Z'),
+   *   endTime: new Date('2026-06-01T00:00:00Z'),
    *   folderKeys: ['<folderKey>'],
    *   executionType: ExecutionType.Runtime,
    *   limit: 10,
    * });
    * ```
    */
-  getTopSpaces(options?: MemoryGetTopSpacesOptions): Promise<MemorySpace[]>;
+  getTopSpaces(options?: MemoryGetTopSpacesOptions): Promise<MemoryGetTopSpacesResponse[]>;
 }

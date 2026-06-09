@@ -21,10 +21,10 @@ export enum ExecutionType {
  */
 export interface MemoryFilterOptions {
   /** Inclusive lower bound for the query window. Defaults to 24 hours before `endTime` when omitted. */
-  startTime?: string;
+  startTime?: Date;
   /** Exclusive upper bound for the query window. Defaults to now when omitted. */
-  endTime?: string;
-  /** Filter to a single agent by ID. */
+  endTime?: Date;
+  /** Filter to a single agent by ID. Obtain an `agentId` from the Agents service. */
   agentId?: string;
   /** Filter to a specific agent version. */
   agentVersion?: string;
@@ -56,7 +56,7 @@ export interface MemoryGetTopSpacesOptions extends MemoryFilterOptions {
  * One point on the agent-memory state timeline — memory-state counts for a
  * single time bucket.
  */
-export interface MemoryTimelinePoint {
+export interface MemoryGetTimelineResponse {
   /** Bucket timestamp. */
   timeSlice: string;
   /** Count of memory entries that were in-memory in this bucket. */
@@ -75,7 +75,7 @@ export interface MemoryTimelinePoint {
  * One point on the memory-calls timeline — the count of memory calls for a
  * single time bucket.
  */
-export interface MemoryCallsTimelinePoint {
+export interface MemoryGetCallsTimelineResponse {
   /** Bucket timestamp. */
   timeSlice: string;
   /** Number of memory calls in this bucket. */
@@ -85,7 +85,7 @@ export interface MemoryCallsTimelinePoint {
 /**
  * A single memory space with its enabled/disabled memory-entry breakdown.
  */
-export interface MemorySpace {
+export interface MemoryGetTopSpacesResponse {
   /** Memory space identifier. */
   memorySpaceId: string;
   /** Memory space display name. */

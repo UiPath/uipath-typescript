@@ -7,8 +7,8 @@ import { MEMORY_TEST_CONSTANTS } from '../../../utils/constants';
 const modes: InitMode[] = ['v1'];
 
 const WINDOW = {
-  startTime: MEMORY_TEST_CONSTANTS.START_TIME,
-  endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+  startTime: new Date(MEMORY_TEST_CONSTANTS.START_TIME),
+  endTime: new Date(MEMORY_TEST_CONSTANTS.END_TIME),
 };
 
 // The filter tests pass arbitrary well-formed identifiers (AGENT_ID / FOLDER_KEY)

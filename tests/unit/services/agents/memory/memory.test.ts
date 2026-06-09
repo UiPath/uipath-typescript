@@ -64,9 +64,11 @@ describe('MemoryService Unit Tests', () => {
     it('should pass all provided filters into the request body', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetTimelineResponse());
 
+      const startTime = new Date(MEMORY_TEST_CONSTANTS.START_TIME);
+      const endTime = new Date(MEMORY_TEST_CONSTANTS.END_TIME);
       const options: MemoryGetTimelineOptions = {
-        startTime: MEMORY_TEST_CONSTANTS.START_TIME,
-        endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+        startTime,
+        endTime,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
@@ -78,8 +80,8 @@ describe('MemoryService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MEMORY_ENDPOINTS.GET_TIMELINE,
         {
-          startTime: MEMORY_TEST_CONSTANTS.START_TIME,
-          endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
           agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
           agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
           folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
@@ -92,10 +94,11 @@ describe('MemoryService Unit Tests', () => {
     it('should omit undefined filters from the request body', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetTimelineResponse());
 
-      await memoryService.getTimeline({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
+      const startTime = new Date(MEMORY_TEST_CONSTANTS.START_TIME);
+      await memoryService.getTimeline({ startTime });
 
       const sentBody = mockApiClient.post.mock.calls[0][1];
-      expect(sentBody).toEqual({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
+      expect(sentBody).toEqual({ startTime: startTime.toISOString() });
       expect(sentBody).not.toHaveProperty('agentId');
       expect(sentBody).not.toHaveProperty('executionType');
     });
@@ -137,9 +140,11 @@ describe('MemoryService Unit Tests', () => {
     it('should pass all provided filters into the request body', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetCallsTimelineResponse());
 
+      const startTime = new Date(MEMORY_TEST_CONSTANTS.START_TIME);
+      const endTime = new Date(MEMORY_TEST_CONSTANTS.END_TIME);
       const options: MemoryGetCallsTimelineOptions = {
-        startTime: MEMORY_TEST_CONSTANTS.START_TIME,
-        endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+        startTime,
+        endTime,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
@@ -151,8 +156,8 @@ describe('MemoryService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MEMORY_ENDPOINTS.GET_CALLS_TIMELINE,
         {
-          startTime: MEMORY_TEST_CONSTANTS.START_TIME,
-          endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
           agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
           agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
           folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
@@ -165,10 +170,11 @@ describe('MemoryService Unit Tests', () => {
     it('should omit undefined filters from the request body', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetCallsTimelineResponse());
 
-      await memoryService.getCallsTimeline({ endTime: MEMORY_TEST_CONSTANTS.END_TIME });
+      const endTime = new Date(MEMORY_TEST_CONSTANTS.END_TIME);
+      await memoryService.getCallsTimeline({ endTime });
 
       const sentBody = mockApiClient.post.mock.calls[0][1];
-      expect(sentBody).toEqual({ endTime: MEMORY_TEST_CONSTANTS.END_TIME });
+      expect(sentBody).toEqual({ endTime: endTime.toISOString() });
       expect(sentBody).not.toHaveProperty('startTime');
       expect(sentBody).not.toHaveProperty('folderKeys');
     });
@@ -212,9 +218,11 @@ describe('MemoryService Unit Tests', () => {
     it('should pass all provided filters including limit into the request body', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetTopSpacesResponse());
 
+      const startTime = new Date(MEMORY_TEST_CONSTANTS.START_TIME);
+      const endTime = new Date(MEMORY_TEST_CONSTANTS.END_TIME);
       const options: MemoryGetTopSpacesOptions = {
-        startTime: MEMORY_TEST_CONSTANTS.START_TIME,
-        endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+        startTime,
+        endTime,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
@@ -227,8 +235,8 @@ describe('MemoryService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         MEMORY_ENDPOINTS.GET_TOP_SPACES,
         {
-          startTime: MEMORY_TEST_CONSTANTS.START_TIME,
-          endTime: MEMORY_TEST_CONSTANTS.END_TIME,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
           agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
           agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
           folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
@@ -242,10 +250,11 @@ describe('MemoryService Unit Tests', () => {
     it('should omit limit from the request body when not provided', async () => {
       mockApiClient.post.mockResolvedValue(createMockMemoryGetTopSpacesResponse());
 
-      await memoryService.getTopSpaces({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
+      const startTime = new Date(MEMORY_TEST_CONSTANTS.START_TIME);
+      await memoryService.getTopSpaces({ startTime });
 
       const sentBody = mockApiClient.post.mock.calls[0][1];
-      expect(sentBody).toEqual({ startTime: MEMORY_TEST_CONSTANTS.START_TIME });
+      expect(sentBody).toEqual({ startTime: startTime.toISOString() });
       expect(sentBody).not.toHaveProperty('limit');
     });
 

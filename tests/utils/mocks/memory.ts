@@ -3,9 +3,9 @@
  */
 
 import {
-  MemoryTimelinePoint,
-  MemoryCallsTimelinePoint,
-  MemorySpace,
+  MemoryGetTimelineResponse,
+  MemoryGetCallsTimelineResponse,
+  MemoryGetTopSpacesResponse,
 } from '../../../src/models/agents/memory/memory.types';
 import { MEMORY_TEST_CONSTANTS } from '../constants/memory';
 
@@ -13,8 +13,8 @@ import { MEMORY_TEST_CONSTANTS } from '../constants/memory';
  * Creates a single memory timeline point with overridable fields.
  */
 export function createMockMemoryTimelinePoint(
-  overrides: Partial<MemoryTimelinePoint> = {},
-): MemoryTimelinePoint {
+  overrides: Partial<MemoryGetTimelineResponse> = {},
+): MemoryGetTimelineResponse {
   return {
     timeSlice: MEMORY_TEST_CONSTANTS.TIME_SLICE_1,
     inMemoryCount: 3,
@@ -30,8 +30,8 @@ export function createMockMemoryTimelinePoint(
  * Creates a raw memory timeline API body (`{ data }` envelope) with two points by default.
  */
 export function createMockMemoryGetTimelineResponse(
-  points?: MemoryTimelinePoint[],
-): { data: MemoryTimelinePoint[] } {
+  points?: MemoryGetTimelineResponse[],
+): { data: MemoryGetTimelineResponse[] } {
   return {
     data: points ?? [
       createMockMemoryTimelinePoint(),
@@ -51,8 +51,8 @@ export function createMockMemoryGetTimelineResponse(
  * Creates a single memory-calls timeline point with overridable fields.
  */
 export function createMockMemoryCallsTimelinePoint(
-  overrides: Partial<MemoryCallsTimelinePoint> = {},
-): MemoryCallsTimelinePoint {
+  overrides: Partial<MemoryGetCallsTimelineResponse> = {},
+): MemoryGetCallsTimelineResponse {
   return {
     timeSlice: MEMORY_TEST_CONSTANTS.TIME_SLICE_1,
     memoryCallsCount: 7,
@@ -64,8 +64,8 @@ export function createMockMemoryCallsTimelinePoint(
  * Creates a raw memory-calls timeline API body (`{ data }` envelope) with two points by default.
  */
 export function createMockMemoryGetCallsTimelineResponse(
-  points?: MemoryCallsTimelinePoint[],
-): { data: MemoryCallsTimelinePoint[] } {
+  points?: MemoryGetCallsTimelineResponse[],
+): { data: MemoryGetCallsTimelineResponse[] } {
   return {
     data: points ?? [
       createMockMemoryCallsTimelinePoint(),
@@ -81,8 +81,8 @@ export function createMockMemoryGetCallsTimelineResponse(
  * Creates a single memory space with overridable fields.
  */
 export function createMockMemorySpace(
-  overrides: Partial<MemorySpace> = {},
-): MemorySpace {
+  overrides: Partial<MemoryGetTopSpacesResponse> = {},
+): MemoryGetTopSpacesResponse {
   return {
     memorySpaceId: MEMORY_TEST_CONSTANTS.MEMORY_SPACE_ID,
     memorySpaceName: MEMORY_TEST_CONSTANTS.MEMORY_SPACE_NAME,
@@ -97,8 +97,8 @@ export function createMockMemorySpace(
  * Creates a raw top-memory-spaces API body (`{ data }` envelope) with two spaces by default.
  */
 export function createMockMemoryGetTopSpacesResponse(
-  spaces?: MemorySpace[],
-): { data: MemorySpace[] } {
+  spaces?: MemoryGetTopSpacesResponse[],
+): { data: MemoryGetTopSpacesResponse[] } {
   return {
     data: spaces ?? [
       createMockMemorySpace(),
