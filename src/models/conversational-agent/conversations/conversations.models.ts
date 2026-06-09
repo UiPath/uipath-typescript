@@ -118,7 +118,7 @@ export interface ConversationServiceModel {
   /**
    * Gets conversations with pagination and optional sort/filter parameters
    *
-   * Returns a paginated response. When called without `pageSize`/`cursor`, a 
+   * Returns a paginated response. When called without `pageSize`/`cursor`, a
    * default page size is applied - inspect `hasNextPage`/`nextCursor`
    * to navigate further pages.
    *
@@ -142,32 +142,39 @@ export interface ConversationServiceModel {
    * }
    * ```
    *
-   * @example With explicit page size
+   * @example With explicit page size and sort order (by last-activity timestamp)
    * ```typescript
    * // First page
-   * const firstPage = await conversationalAgent.conversations.getAll({ pageSize: 10 });
+   * const firstPage = await conversationalAgent.conversations.getAll({
+   *   pageSize: 10,
+   *   sort: SortOrder.Descending
+   * });
    *
-   * // Navigate using cursor
+   * // Navigate using cursor and same parameters
    * if (firstPage.hasNextPage) {
    *   const nextPage = await conversationalAgent.conversations.getAll({
+   *     pageSize: 10,
+   *     sort: SortOrder.Descending,
    *     cursor: firstPage.nextCursor
    *   });
    * }
    * ```
    *
-   * @example Explicit sort order by the last activity timestamp
+   * @example With agent-filter and label-search
    * ```typescript
-   * const result = await conversationalAgent.conversations.getAll({
-   *   sort: SortOrder.Descending
-   * });
-   * ```
-   *
-   * @example Filter by agent and search by label
-   * ```typescript
-   * const filtered = await conversationalAgent.conversations.getAll({
+   * const firstPage = await conversationalAgent.conversations.getAll({
    *   agentId: <agentId>,
    *   label: 'budget'
    * });
+   *
+   * // Navigate using cursor and same parameters
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await conversationalAgent.conversations.getAll({
+   *     agentId: <agentId>,
+   *     label: 'budget',
+   *     cursor: firstPage.nextCursor
+   *   });
+   * }
    * ```
    */
   getAll(options?: ConversationGetAllOptions): Promise<PaginatedResponse<ConversationGetResponse>>;

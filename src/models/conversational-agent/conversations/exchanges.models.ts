@@ -32,7 +32,7 @@ import type { PaginatedResponse } from '@/utils/pagination';
  */
 export interface ExchangeServiceModel {
   /**
-   * Gets exchanges for a conversation with optional filtering and pagination
+   * Gets exchanges for a conversation with pagination and optional sort parameters
    *
    * Returns a paginated response. When called without `pageSize`/`cursor`, the
    * backend applies its default page size — inspect `hasNextPage`/`nextCursor`
@@ -41,18 +41,33 @@ export interface ExchangeServiceModel {
    * @param conversationId - The conversation ID to get exchanges for
    * @param options - Options for querying exchanges including optional pagination parameters
    * @returns Promise resolving to a {@link PaginatedResponse}<{@link ExchangeGetResponse}>
-   * @example
-   * ```typescript
-   * // First page (backend default page size)
-   * const firstPageOfExchanges = await exchanges.getAll(conversationId);
    *
-   * // First page with explicit page size
-   * const pagedExchanges = await exchanges.getAll(conversationId, { pageSize: 10 });
+   * @example Basic usage - default page size and sort order
+   * ```typescript
+   * // First page
+   * const firstPage = await exchanges.getAll(conversationId);
    *
    * // Navigate using cursor
-   * if (firstPageOfExchanges.hasNextPage) {
-   *   const nextPageOfExchanges = await exchanges.getAll(conversationId, {
-   *     cursor: firstPageOfExchanges.nextCursor
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await exchanges.getAll(conversationId, { cursor: firstPage.nextCursor });
+   * }
+   * ```
+   *
+   * @example With explicit page size and exchange/message sort orders
+   * ```typescript
+   * const firstPage = await exchanges.getAll(conversationId, {
+   *   pageSize: 10,
+   *   exchangeSort: SortOrder.Descending,
+   *   messageSort: SortOrder.Ascending
+   * });
+   *
+   * // Navigate using cursor and same parameters
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await exchanges.getAll(conversationId, {
+   *     pageSize: 10,
+   *     exchangeSort: SortOrder.Descending,
+   *     messageSort: SortOrder.Ascending,
+   *     cursor: firstPage.nextCursor
    *   });
    * }
    * ```
@@ -130,23 +145,32 @@ export interface ConversationExchangeServiceModel {
    *
    * // First page
    * const firstPage = await conversation.exchanges.getAll();
-   * 
+   *
    * // Navigate using cursor
    * if (firstPage.hasNextPage) {
    *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
    * }
    * ```
-   * 
+   *
    * @example With explicit page size and exchange/message sort orders
    * ```typescript
    * const conversation = await conversationalAgent.conversations.getById(conversationId);
-   * 
+   *
    * // First page
-   * const firstPage = await conversation.exchanges.getAll({ pageSize: 10, exchangeSort: SortOrder.Descending, messageSort: SortOrder.Ascending });
-   * 
-   * // Navigate using cursor
+   * const firstPage = await conversation.exchanges.getAll({
+   *   pageSize: 10,
+   *   exchangeSort: SortOrder.Descending,
+   *   messageSort: SortOrder.Ascending
+   * });
+   *
+   * // Navigate using cursor and same parameters
    * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
+   *   const nextPage = await conversation.exchanges.getAll({
+   *     pageSize: 10,
+   *     exchangeSort: SortOrder.Descending,
+   *     messageSort: SortOrder.Ascending,
+   *     cursor: firstPage.nextCursor
+   *   });
    * }
    * ```
    */

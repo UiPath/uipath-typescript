@@ -71,38 +71,43 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   }
 
   /**
-   * Gets exchanges for this conversation with pagination and optional sort parameters
+   * Gets exchanges for a conversation with pagination and optional sort parameters
    *
    * Returns a paginated response. When called without `pageSize`/`cursor`, the
    * backend applies its default page size — inspect `hasNextPage`/`nextCursor`
    * to navigate further pages.
    *
+   * @param conversationId - The conversation ID to get exchanges for
    * @param options - Options for querying exchanges including optional pagination parameters
    * @returns Promise resolving to a {@link PaginatedResponse}<{@link ExchangeGetResponse}>
    *
    * @example Basic usage - default page size and sort order
    * ```typescript
-   * const conversation = await conversationalAgent.conversations.getById(conversationId);
-   *
    * // First page
-   * const firstPage = await conversation.exchanges.getAll();
-   * 
+   * const firstPage = await exchanges.getAll(conversationId);
+   *
    * // Navigate using cursor
    * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
+   *   const nextPage = await exchanges.getAll(conversationId, { cursor: firstPage.nextCursor });
    * }
    * ```
-   * 
+   *
    * @example With explicit page size and exchange/message sort orders
    * ```typescript
-   * const conversation = await conversationalAgent.conversations.getById(conversationId);
-   * 
-   * // First page
-   * const firstPage = await conversation.exchanges.getAll({ pageSize: 10, exchangeSort: SortOrder.Descending, messageSort: SortOrder.Ascending });
-   * 
-   * // Navigate using cursor
+   * const firstPage = await exchanges.getAll(conversationId, {
+   *   pageSize: 10,
+   *   exchangeSort: SortOrder.Descending,
+   *   messageSort: SortOrder.Ascending
+   * });
+   *
+   * // Navigate using cursor and same parameters
    * if (firstPage.hasNextPage) {
-   *   const nextPage = await conversation.exchanges.getAll({ cursor: firstPage.nextCursor });
+   *   const nextPage = await exchanges.getAll(conversationId, {
+   *     pageSize: 10,
+   *     exchangeSort: SortOrder.Descending,
+   *     messageSort: SortOrder.Ascending,
+   *     cursor: firstPage.nextCursor
+   *   });
    * }
    * ```
    */

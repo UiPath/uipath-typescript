@@ -5,6 +5,7 @@
 import type { SortOrder, ConversationJobStartOverrides, RawConversationGetResponse } from './types/core.types';
 import type { AgentInput } from './types/common.types';
 import type { ConversationGetResponse } from './conversations.models';
+import type { SessionCapabilities } from './types/events/protocol.types';
 import type { PaginationOptions } from '@/utils/pagination/types';
 import type { LogLevel } from '@/core/websocket';
 
@@ -34,6 +35,12 @@ export interface ConversationSessionOptions {
    * ```
    */
   logLevel?: LogLevel;
+
+  /**
+   * Optional capabilities of this client to advertise to the service when starting the session.
+   * Generally not needed unless the client is accessing more advanced features.
+   */
+  capabilities?: SessionCapabilities;
 }
 
 // ==================== Conversation Response Types ====================

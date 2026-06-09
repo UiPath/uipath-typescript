@@ -306,11 +306,12 @@ export interface Exchange {
 
 /**
  * Optional configuration options for when the service automatically starts agent job(s) to serve the conversation.
- * When not provided, service uses default configuration with RunAsMe set to false.
+ * When not provided, service uses recommended default configurations.
  */
 export interface ConversationJobStartOverrides {
   /**
-   * Whether the job(s) should run with the user's identity (RunAsMe). Defaults to false when not provided.
+   * Whether the job(s) should run with the user's identity (RunAsMe). When not provided, service 
+   * uses recommended default based on authentication-state and process-runtime.
    */
   runAsMe?: boolean;
 }
