@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
   getServices,
   getTestConfig,
@@ -8,7 +8,7 @@ import {
 } from '../../config/unified-setup';
 import { registerResource } from '../../utils/cleanup';
 import { generateTestResourceName } from '../../utils/helpers';
-import { TaskPriority, TaskType, TaskUserType } from '../../../../src/models/action-center/tasks.types';
+import { TaskPriority, TaskType, TaskUserType, TaskAssignmentCriteria } from '../../../../src/models/action-center/tasks.types';
 
 const modes: InitMode[] = ['v0', 'v1'];
 
@@ -258,6 +258,78 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
       } catch (error: any) {
         throw new Error(`Task unassignment failed: ${error.message}`);
       }
+    });
+  });
+
+  describe('Assignment with criteria', () => {
+    // Resolved once for the whole block — Action Center assignment is
+    // folder-scoped, and the user/group must exist to exercise the paths.
+    // (Single-user assignment by userId is already covered in "Assignment
+    // operations"; this block adds the userNameOrEmail and group-criteria paths.)
+    let folderId!: number;
+    let userNameOrEmail!: string;
+    let groupId!: number;
+    let criteriaTaskId!: number;
+
+    beforeAll(async () => {
+      const { tasks } = getServices();
+      const config = getTestConfig();
+
+      if (!config.folderId) {
+        throw new Error('folderId is required in the test config for assignment-criteria tests');
+      }
+      folderId = Number(config.folderId);
+
+      const users = await tasks.getUsers(folderId);
+
+      const individual = users.items.find(
+        (u) => u.type === TaskUserType.User || u.type === TaskUserType.DirectoryUser,
+      );
+      if (!individual) {
+        throw new Error('No individual user (User/DirectoryUser) in the folder to test single-user assignment');
+      }
+      userNameOrEmail = individual.emailAddress || individual.userName;
+
+      const group = users.items.find((u) => u.type === TaskUserType.DirectoryGroup);
+      if (!group) {
+        throw new Error('No DirectoryGroup in the folder to test group assignment');
+      }
+      groupId = group.id;
+
+      // One reusable External task; unassigned between cases so each assign
+      // starts from a clean state. Tasks have no delete API, so cleanup only
+      // unassigns — register it for the shared teardown.
+      const created = await tasks.create(
+        { title: generateTestResourceName(`CriteriaTask_${mode}`), priority: TaskPriority.Medium },
+        folderId,
+      );
+      criteriaTaskId = created.id;
+      registerResource('tasks', { id: criteriaTaskId, folderId });
+    });
+
+    it('should assign to a single user by userNameOrEmail', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.assign({ taskId: criteriaTaskId, userNameOrEmail });
+
+      expect(result.success).toBe(true);
+
+      const task = await tasks.getById(criteriaTaskId, {}, folderId);
+      expect(task.assignedToUser).toBeDefined();
+
+      await tasks.unassign(criteriaTaskId);
+    });
+
+    it('should assign to a directory group with the AllUsers criteria', async () => {
+      const { tasks } = getServices();
+
+      const result = await tasks.assign({
+        taskId: criteriaTaskId,
+        userId: groupId,
+        assignmentCriteria: TaskAssignmentCriteria.AllUsers,
+      });
+
+      expect(result.success).toBe(true);
     });
   });
 

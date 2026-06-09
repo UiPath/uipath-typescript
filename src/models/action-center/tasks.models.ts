@@ -165,6 +165,13 @@ export interface TaskServiceModel {
    *   userId: <groupId>, // a DirectoryGroup id from tasks.getUsers()
    *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
    * });
+   *
+   * // ...or identify the group by name instead of id
+   * const result = await tasks.assign({
+   *   taskId: <taskId>,
+   *   userNameOrEmail: "<groupName>",
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
    * ```
    */
   assign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
@@ -206,6 +213,13 @@ export interface TaskServiceModel {
    * const result = await tasks.reassign({
    *   taskId: <taskId>,
    *   userId: <groupId>, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
+   *
+   * // ...or identify the group by name instead of id
+   * const result = await tasks.reassign({
+   *   taskId: <taskId>,
+   *   userNameOrEmail: "<groupName>",
    *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
    * });
    * ```

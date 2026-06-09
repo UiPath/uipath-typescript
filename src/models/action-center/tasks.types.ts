@@ -208,10 +208,9 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
 /**
  * Defines how a task assignment is distributed.
  *
- * Omit it (or use {@link TaskAssignmentCriteria.SingleUser}) for a direct
- * single-user assignment. The group-based criteria are used when the assignee
- * is a directory group, telling the backend how to distribute the task across
- * the group's members.
+ * Defaults to {@link TaskAssignmentCriteria.SingleUser} (a direct single-user
+ * assignment) when not specified. The group-based criteria tell the backend how
+ * to distribute the task across the members of a directory group.
  */
 export enum TaskAssignmentCriteria {
   /** Assigned to a single user, like a direct assignment. */
@@ -220,26 +219,23 @@ export enum TaskAssignmentCriteria {
   Workload = 'Workload',
   /** Assigned to all users in the group. */
   AllUsers = 'AllUsers',
-  /** Assigned in a round-robin manner across the group's members. */
-  RoundRobin = 'RoundRobin',
-  /** Assigned hierarchically. */
-  Hierarchy = 'Hierarchy',
 }
 
 /**
  * Options for task assignment operations when called from a task instance
  * Requires either userId or userNameOrEmail, but not both. Optionally accepts
- * an assignment criteria — required when assigning to a directory group (e.g.
- * {@link TaskAssignmentCriteria.AllUsers}).
+ * an assignment criteria; defaults to a single-user assignment, set a group
+ * criteria (e.g. {@link TaskAssignmentCriteria.AllUsers}) for a directory group.
  */
 export type TaskAssignOptions = (
   | { userId: number; userNameOrEmail?: never }
   | { userId?: never; userNameOrEmail: string }
 ) & {
   /**
-   * How the assignment is distributed. Omit for a direct single-user
-   * assignment; set a group criteria (e.g. {@link TaskAssignmentCriteria.AllUsers})
-   * when the assignee is a directory group.
+   * How the assignment is distributed. Optional — defaults to
+   * {@link TaskAssignmentCriteria.SingleUser} (a direct single-user assignment).
+   * Set a group criteria (e.g. {@link TaskAssignmentCriteria.AllUsers}) to
+   * distribute the task across a directory group's members.
    */
   assignmentCriteria?: TaskAssignmentCriteria;
 };

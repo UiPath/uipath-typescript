@@ -342,6 +342,13 @@ export class TaskService extends BaseService implements TaskServiceModel {
    *   userId: 456, // a DirectoryGroup id from tasks.getUsers()
    *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
    * });
+   *
+   * // ...or identify the group by name instead of id
+   * const result = await tasks.assign({
+   *   taskId: 123,
+   *   userNameOrEmail: "My Group",
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
    * ```
    */
   @track('Tasks.Assign')
@@ -409,6 +416,13 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * const result = await tasks.reassign({
    *   taskId: 123,
    *   userId: 456, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
+   *
+   * // ...or identify the group by name instead of id
+   * const result = await tasks.reassign({
+   *   taskId: 123,
+   *   userNameOrEmail: "My Group",
    *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
    * });
    * ```
