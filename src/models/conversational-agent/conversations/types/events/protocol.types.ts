@@ -124,6 +124,11 @@ export interface ExchangeStartEvent {
    * The time the exchange started.
    */
   timestamp?: string;
+  /**
+   * Optional list of client-side tools the client supports. The server validates these against the agent's
+   * design-time definitions and forwards them to the runtime so it knows which tools to route client-side.
+   */
+  clientSideTools?: Array<{ name: string; inputSchema?: JSONValue; outputSchema?: JSONValue }>;
 }
 
 /**
@@ -392,6 +397,14 @@ export interface ToolCallStartEvent {
    * `requireConfirmation` is true so the client can render an editable form.
    */
   inputSchema?: JSONValue;
+  /**
+   * Output schema — used by the client to render the result form for client-side tools.
+   */
+  outputSchema?: JSONValue;
+  /**
+   * Indicates this tool call should be executed client-side rather than server-side.
+   */
+  isClientSideTool?: boolean;
 }
 
 /**
@@ -431,6 +444,17 @@ export interface ToolCallEndEvent {
    * Metadata pertaining to the tool call's execution or result.
    */
   metaData?: MetaData;
+}
+
+/**
+ * Signals to the client that the tool is about to be executed. Emitted in all scenarios
+ * (server-side and client-side tools). For client-side tools, the client should begin
+ * executing its registered handler upon receiving this event.
+ */
+export interface ExecutingToolCallEvent {
+  timestamp?: string;
+  /** The final tool input, reflecting any modifications made during tool-call confirmation. */
+  input?: ToolCallInputValue;
 }
 
 /**
@@ -475,6 +499,11 @@ export interface ToolCallEvent {
    * emitted with `requireConfirmation: true`.
    */
   confirmToolCall?: ToolCallConfirmationEvent;
+  /**
+   * Signals that the tool is about to be executed. For client-side tools,
+   * the client should begin executing its handler upon receiving this event.
+   */
+  executingToolCall?: ExecutingToolCallEvent;
   /**
    * Allows additional events to be sent in the context of the enclosing event stream.
    */

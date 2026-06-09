@@ -7,7 +7,7 @@
  */
 
 import type { MakeRequired } from '..';
-import type { ErrorEndEvent, ErrorStartEvent, MetaEvent, ToolCallConfirmationEvent, ToolCallEndEvent, ToolCallEvent, ToolCallStartEvent } from './protocol.types';
+import type { ErrorEndEvent, ErrorStartEvent, ExecutingToolCallEvent, MetaEvent, ToolCallConfirmationEvent, ToolCallEndEvent, ToolCallEvent, ToolCallStartEvent } from './protocol.types';
 
 /**
  * Aggregated data for a completed tool call
@@ -93,6 +93,19 @@ export type CompletedToolCall = ToolCallStartEvent & ToolCallEndEvent & {
  *   }
  * });
  * ```
+ *
+ * @example Handling client-side tool execution
+ * ```typescript
+ * message.onToolCallStart((toolCall) => {
+ *   const { isClientSideTool, toolName } = toolCall.startEvent;
+ *   if (!isClientSideTool) return;
+ *
+ *   toolCall.onExecutingToolCall(async (event) => {
+ *     const result = await runLocalProcess(toolName, event.input);
+ *     toolCall.sendToolCallEnd({ output: result });
+ *   });
+ * });
+ * ```
  */
 export interface ToolCallStream {
   /** Unique identifier for this tool call */
@@ -167,6 +180,24 @@ export interface ToolCallStream {
    * ```
    */
   onToolCallConfirm(callback: (confirmToolCall: ToolCallConfirmationEvent) => void): () => void;
+
+  /**
+   * Registers a handler for executingToolCall events. Fired when the tool is about
+   * to be executed. For client-side tools, the client should begin executing its
+   * handler upon receiving this event.
+   *
+   * @param cb - Callback receiving the executing event
+   * @returns Cleanup function to remove the handler
+   *
+   * @example Handling client-side tool execution
+   * ```typescript
+   * toolCall.onExecutingToolCall(async (event) => {
+   *   const result = await executeLocally(toolCall.startEvent.toolName, event.input);
+   *   toolCall.sendToolCallEnd({ output: result });
+   * });
+   * ```
+   */
+  onExecutingToolCall(cb: (event: ExecutingToolCallEvent) => void): () => void;
 
   // ==================== Sending ====================
 
