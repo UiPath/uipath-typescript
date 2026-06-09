@@ -1,0 +1,107 @@
+/**
+ * Notification inbox types — raw API shapes and request/response options.
+ */
+
+import type { PaginationOptions } from '../../utils/pagination/types';
+
+/**
+ * Priority level assigned to a notification by the publisher.
+ */
+export enum NotificationPriority {
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High',
+  Critical = 'Critical',
+}
+
+/**
+ * Severity classification of a notification topic.
+ */
+export enum NotificationCategory {
+  /** Informational — no action required. */
+  Info = 'Info',
+  /** Successful operation completed. */
+  Success = 'Success',
+  /** Warning — degraded behaviour or non-fatal issue. */
+  Warn = 'Warn',
+  /** Error — operation failed but the system continues. */
+  Error = 'Error',
+  /** Fatal — unrecoverable failure. */
+  Fatal = 'Fatal',
+}
+
+/**
+ * Notification delivery channel.
+ *
+ * `InApp` is always implicitly enabled (it is not returned by `getSupportedChannels()`);
+ * the others must be checked via `Subscriptions.getSupportedChannels()`.
+ */
+export enum NotificationMode {
+  /** Real-time in-app push (SignalR WebSocket). Always available. */
+  InApp = 'InApp',
+  /** Email delivery. */
+  Email = 'Email',
+  /** Slack delivery via Integration Service. */
+  Slack = 'Slack',
+  /** Microsoft Teams delivery via Integration Service. */
+  Teams = 'Teams',
+}
+
+/**
+ * Notification entry as returned by `GET /odata/v1/NotificationEntry`.
+ *
+ * Field selection: many internal/transport-layer fields (`partitionKey`, `correlationId`,
+ * `publicationId`, `messageVersion`, `messageTemplateKey`, `serviceRegistryName`,
+ * `entityOrgName`, `entityTenantName`) are returned by the API but dropped from the SDK
+ * because they have no use for an application developer.
+ */
+export interface NotificationGetResponse {
+  /** Notification GUID. */
+  id: string;
+  /** Resolved notification message text. */
+  message: string | null;
+  /** Whether the user has read this notification. */
+  isRead: boolean;
+  /** Name of the publisher (e.g. `Orchestrator`, `Actions`). */
+  publisherName: string;
+  /** Publisher GUID. */
+  publisherId: string;
+  /** Human-readable topic name. */
+  topicName: string;
+  /** Stable topic identifier (e.g. `Process.JobExecution.Faulted`). */
+  topicKeyName: string;
+  /** Topic GUID. */
+  topicId: string;
+  /** GUID of the user this notification belongs to (returned uppercase by the API). */
+  userId: string;
+  /** Email of the user. Often `null`. */
+  userEmail: string | null;
+  /** Tenant GUID this notification belongs to. Often `null` for org-scoped notifications. */
+  tenantId: string | null;
+  /** Notification priority. */
+  priority: NotificationPriority;
+  /** Notification severity category. */
+  category: NotificationCategory;
+  /** JSON string of template parameters — parse with `JSON.parse()`. May be `null`. */
+  messageParam: string | null;
+  /** URL to navigate to when the notification is clicked. */
+  redirectionUrl: string | null;
+  /** Unix epoch **seconds** when the notification was published. */
+  publishedOn: number;
+}
+
+/**
+ * Options for `Notifications.getAll()`.
+ *
+ * Supports OData query options (`filter`, `orderby`) and SDK cursor pagination.
+ *
+ * Notes:
+ * - `$select` and `$expand` are not exposed because the API returns 500 on `$select`
+ *   and there are no expandable relationships on this endpoint.
+ */
+export type NotificationGetAllOptions = {
+  /** OData `$filter` expression (e.g. `"isRead eq false"`). */
+  filter?: string;
+  /** OData `$orderby` expression (e.g. `"publishedOn desc"`). */
+  orderby?: string;
+} & PaginationOptions;

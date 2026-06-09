@@ -28,3 +28,6 @@ export * from './feedback';
 export * from './traces';
 // Governance endpoints
 export * from './governance';
+
+// Notification endpoints
+export * from './notification';

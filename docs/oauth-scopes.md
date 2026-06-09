@@ -201,6 +201,31 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `getPolicyTraces()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 | `getOperationSummary()` | `Insights.RealTimeData Insights OR.Folders.Read` |
 
+## Notifications
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `NotificationService` |
+| `markRead()` | `NotificationService` |
+| `markUnread()` | `NotificationService` |
+| `markAllRead()` | `NotificationService` |
+| `deleteNotifications()` | `NotificationService` |
+| `deleteAll()` | `NotificationService` |
+
+## Subscriptions
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `NotificationService` |
+| `getPublishers()` | `NotificationService` |
+| `getSupportedChannels()` | `NotificationService` |
+| `updateTopic()` | `NotificationService` |
+| `updateCategory()` | `NotificationService` |
+| `updatePublisher()` | `NotificationService` |
+| `updateTopicGroup()` | `NotificationService` |
+| `updateMode()` | `NotificationService` |
+| `reset()` | `NotificationService` |
+
 ## Processes
 
 | Method | OAuth Scope |

@@ -21,6 +21,7 @@ export * from './feedback';
 export * from './attachments';
 export * from './traces';
 export * from './governance';
+export * from './notification';
 
 // Re-export constants for convenience
 export * from '../constants';

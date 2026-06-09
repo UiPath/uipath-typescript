@@ -13,6 +13,7 @@ import {
 import { Feedback } from '../../../src/services/agents/feedback';
 import { Traces } from '../../../src/services/observability/traces';
 import { Governance } from '../../../src/services/governance';
+import { Notifications, Subscriptions } from '../../../src/services/notification';
 import { loadIntegrationConfig, IntegrationConfig } from './test-config';
 import { UiPath as LegacyUiPath } from '../../../src/uipath';
 import { afterAll, beforeAll } from 'vitest';
@@ -50,6 +51,8 @@ export interface TestServices {
   feedback?: Feedback;
   traces?: Traces;
   governance?: Governance;
+  notifications?: Notifications;
+  subscriptions?: Subscriptions;
 }
 
 /**
@@ -132,6 +135,8 @@ function createV1Services(config: IntegrationConfig): TestServices {
     feedback: new Feedback(sdk),
     traces: new Traces(sdk),
     governance: new Governance(sdk),
+    notifications: new Notifications(sdk),
+    subscriptions: new Subscriptions(sdk),
   };
 }
 

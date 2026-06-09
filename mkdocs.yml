@@ -202,6 +202,9 @@ nav:
             - Cases: api/interfaces/CasesServiceModel.md
             - Case Instances: api/interfaces/CaseInstancesServiceModel.md
           - Jobs: api/interfaces/JobServiceModel.md
+          - Notifications:
+            - Inbox: api/interfaces/NotificationServiceModel.md
+            - Subscriptions: api/interfaces/SubscriptionServiceModel.md
           - Processes: api/interfaces/ProcessServiceModel.md
           - Queues: api/interfaces/QueueServiceModel.md
           - Tasks: api/interfaces/TaskServiceModel.md

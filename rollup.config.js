@@ -213,6 +213,11 @@ const serviceEntries = [
     name: 'governance',
     input: 'src/services/governance/index.ts',
     output: 'governance/index'
+  },
+  {
+    name: 'notifications',
+    input: 'src/services/notification/index.ts',
+    output: 'notifications/index'
   }
 ];
 
