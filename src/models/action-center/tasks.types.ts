@@ -206,12 +206,43 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
 }
 
 /**
- * Options for task assignment operations when called from a task instance
- * Requires either userId or userNameOrEmail, but not both
+ * Defines how a task assignment is distributed.
+ *
+ * Omit it (or use {@link TaskAssignmentCriteria.SingleUser}) for a direct
+ * single-user assignment. The group-based criteria are used when the assignee
+ * is a directory group, telling the backend how to distribute the task across
+ * the group's members.
  */
-export type TaskAssignOptions =
+export enum TaskAssignmentCriteria {
+  /** Assigned to a single user, like a direct assignment. */
+  SingleUser = 'SingleUser',
+  /** Assigned to the group member with the fewest pending tasks. */
+  Workload = 'Workload',
+  /** Assigned to all users in the group. */
+  AllUsers = 'AllUsers',
+  /** Assigned in a round-robin manner across the group's members. */
+  RoundRobin = 'RoundRobin',
+  /** Assigned hierarchically. */
+  Hierarchy = 'Hierarchy',
+}
+
+/**
+ * Options for task assignment operations when called from a task instance
+ * Requires either userId or userNameOrEmail, but not both. Optionally accepts
+ * an assignment criteria — required when assigning to a directory group (e.g.
+ * {@link TaskAssignmentCriteria.AllUsers}).
+ */
+export type TaskAssignOptions = (
   | { userId: number; userNameOrEmail?: never }
-  | { userId?: never; userNameOrEmail: string };
+  | { userId?: never; userNameOrEmail: string }
+) & {
+  /**
+   * How the assignment is distributed. Omit for a direct single-user
+   * assignment; set a group criteria (e.g. {@link TaskAssignmentCriteria.AllUsers})
+   * when the assignee is a directory group.
+   */
+  assignmentCriteria?: TaskAssignmentCriteria;
+};
 
 /**
  * Options for task assignment operations when called from the service

@@ -156,6 +156,15 @@ export interface TaskServiceModel {
    *   { taskId: <taskId1>, userId: <userId> },
    *   { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
    * ]);
+   *
+   * // Assign to a directory group — set the assignment criteria so the
+   * // backend distributes the task across the group's members
+   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
+   * const result = await tasks.assign({
+   *   taskId: <taskId>,
+   *   userId: <groupId>, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
    * ```
    */
   assign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
@@ -191,6 +200,14 @@ export interface TaskServiceModel {
    *   { taskId: <taskId1>, userId: <userId> },
    *   { taskId: <taskId2>, userNameOrEmail: "user@example.com" }
    * ]);
+   *
+   * // Reassign to a directory group — set the assignment criteria
+   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
+   * const result = await tasks.reassign({
+   *   taskId: <taskId>,
+   *   userId: <groupId>, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
    * ```
    */
   reassign(options: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>>;
@@ -325,8 +342,8 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
       if (!taskData.id) throw new Error('Task ID is undefined');
 
       const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
-        ? { taskId: taskData.id, userId: options.userId }
-        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
+        ? { taskId: taskData.id, userId: options.userId, assignmentCriteria: options.assignmentCriteria }
+        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail!, assignmentCriteria: options.assignmentCriteria };
 
       return service.assign(assignmentOptions);
     },
@@ -335,8 +352,8 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
       if (!taskData.id) throw new Error('Task ID is undefined');
 
       const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
-        ? { taskId: taskData.id, userId: options.userId }
-        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail! };
+        ? { taskId: taskData.id, userId: options.userId, assignmentCriteria: options.assignmentCriteria }
+        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail!, assignmentCriteria: options.assignmentCriteria };
 
       return service.reassign(assignmentOptions);
     },

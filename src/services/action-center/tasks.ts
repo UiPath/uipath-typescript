@@ -333,6 +333,15 @@ export class TaskService extends BaseService implements TaskServiceModel {
    *     userNameOrEmail: "user@example.com"
    *   }
    * ]);
+   *
+   * // Assign to a directory group — set the assignment criteria so the
+   * // backend distributes the task across the group's members
+   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
+   * const result = await tasks.assign({
+   *   taskId: 123,
+   *   userId: 456, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
    * ```
    */
   @track('Tasks.Assign')
@@ -394,6 +403,14 @@ export class TaskService extends BaseService implements TaskServiceModel {
    *     userNameOrEmail: "user@example.com"
    *   }
    * ]);
+   *
+   * // Reassign to a directory group — set the assignment criteria
+   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
+   * const result = await tasks.reassign({
+   *   taskId: 123,
+   *   userId: 456, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
    * ```
    */
   @track('Tasks.Reassign')

@@ -1,9 +1,10 @@
 // ===== IMPORTS =====
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TaskService } from '../../../../src/services/action-center/tasks';
-import { 
-  TaskType, 
-  TaskPriority, 
+import {
+  TaskType,
+  TaskPriority,
+  TaskAssignmentCriteria,
   TaskAssignmentOptions,
   TaskCompletionOptions,
   TaskCreateOptions,
@@ -231,6 +232,33 @@ describe('TaskService Unit Tests', () => {
         expect.any(Object)
       );
     });
+
+    it('should include assignmentCriteria when assigning to a group', async () => {
+      const assignment = {
+        taskId: TASK_TEST_CONSTANTS.TASK_ID,
+        userId: TASK_TEST_CONSTANTS.USER_ID,
+        assignmentCriteria: TaskAssignmentCriteria.AllUsers
+      } as TaskAssignmentOptions;
+
+      mockApiClient.post.mockResolvedValue({ value: [] });
+
+      const result = await taskService.assign(assignment);
+
+      expect(result.success).toBe(true);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.ASSIGN_TASKS,
+        expect.objectContaining({
+          taskAssignments: expect.arrayContaining([
+            expect.objectContaining({
+              taskId: assignment.taskId,
+              userId: assignment.userId,
+              assignmentCriteria: TaskAssignmentCriteria.AllUsers
+            })
+          ])
+        }),
+        expect.any(Object)
+      );
+    });
   });
 
   describe('reassign', () => {
@@ -321,6 +349,33 @@ describe('TaskService Unit Tests', () => {
             expect.objectContaining({
               taskId: TASK_TEST_CONSTANTS.TASK_ID,
               userNameOrEmail: TASK_TEST_CONSTANTS.USER_EMAIL
+            })
+          ])
+        }),
+        expect.any(Object)
+      );
+    });
+
+    it('should include assignmentCriteria when reassigning to a group', async () => {
+      const assignment = {
+        taskId: TASK_TEST_CONSTANTS.TASK_ID,
+        userId: TASK_TEST_CONSTANTS.USER_ID,
+        assignmentCriteria: TaskAssignmentCriteria.AllUsers
+      } as TaskAssignmentOptions;
+
+      mockApiClient.post.mockResolvedValue({ value: [] });
+
+      const result = await taskService.reassign(assignment);
+
+      expect(result.success).toBe(true);
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        TASK_ENDPOINTS.REASSIGN_TASKS,
+        expect.objectContaining({
+          taskAssignments: expect.arrayContaining([
+            expect.objectContaining({
+              taskId: assignment.taskId,
+              userId: assignment.userId,
+              assignmentCriteria: TaskAssignmentCriteria.AllUsers
             })
           ])
         }),
