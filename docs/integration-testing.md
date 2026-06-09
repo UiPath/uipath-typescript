@@ -4,74 +4,11 @@ Every new method must have an integration test. These run against a live API and
 
 ## Environment configuration
 
-Integration tests read their configuration from `tests/.env.integration`. Create that file (it is git-ignored — never commit it) and populate the variables below.
+Integration tests read their configuration from `tests/.env.integration`. Create that file (it is git-ignored — never commit it) and populate it with the variables.
+
+The full, current set of config values lives in the team Slack canvas: [UiPath SDK – Integration Test Config (.env)](https://uipath.enterprise.slack.com/docs/TLXCE0J2Z/F0B9B5G7M2Q). Copy them into your local `tests/.env.integration` and fill in `UIPATH_SECRET` with your own PAT from the `procodeapps` org.
 
 > **Create test artifacts in the `integrationtest` tenant**, inside the **"Integration Test"** folder (`INTEGRATION_TEST_FOLDER_KEY` = `5f6dadf1-3677-49dc-8aca-c2999dd4b3ba`). Keeping all test data in this dedicated tenant and folder avoids polluting shared environments and keeps cleanup predictable.
-
-```bash
-# ============================================
-# Required Configuration
-# ============================================
-
-# UiPath Cloud URL (e.g., https://cloud.uipath.com)
-UIPATH_BASE_URL=https://alpha.api.uipath.com
-
-# Your UiPath organization name
-UIPATH_ORG_NAME=procodeapps
-
-# Your UiPath tenant name
-UIPATH_TENANT_NAME=integrationtest
-
-# Personal Access Token (PAT) for authentication.
-# Generate from UiPath Cloud > Admin > External Applications.
-# Never commit this value — keep it local only.
-UIPATH_SECRET=
-
-# ============================================
-# Test Settings
-# ============================================
-
-# Test timeout in milliseconds (default: 30000)
-INTEGRATION_TEST_TIMEOUT=30000
-
-# Set to 'true' to preserve test data after runs (useful for debugging)
-INTEGRATION_TEST_SKIP_CLEANUP=false
-
-# Default folder for tests. Create new test artifacts inside this folder
-# in the integrationtest tenant.
-INTEGRATION_TEST_FOLDER_ID=2819046
-INTEGRATION_TEST_FOLDER_KEY=5f6dadf1-3677-49dc-8aca-c2999dd4b3ba
-
-# Folder path (e.g. "Shared/Finance") matching INTEGRATION_TEST_FOLDER_ID.
-# Used by getByName integration tests for assets/processes.
-INTEGRATION_TEST_FOLDER_PATH=
-
-# ============================================
-# Optional: Pre-existing Test Data
-# (for read-only tests that need existing resources)
-# ============================================
-
-# Maestro test process key
-MAESTRO_TEST_PROCESS_KEY=
-
-# Orchestrator test process key
-ORCHESTRATOR_TEST_PROCESS_KEY=0B013150-CEFD-4608-B590-57029F7DFF3C
-
-# Jobs test folder ID (folder containing jobs for resume/suspend tests)
-# Falls back to INTEGRATION_TEST_FOLDER_ID if not set
-JOBS_TEST_FOLDER_ID=2819046
-
-# Orchestrator attachment ID (UUID) for attachment getById tests
-ORCHESTRATOR_ATTACHMENT_ID=
-
-# Data Fabric test entity / choice set IDs and attachment field
-DATA_FABRIC_TEST_ENTITY_ID=ef91d745-fc36-f111-8ef3-6045bd00bc8b
-DATA_FABRIC_TEST_CHOICESET_ID=825c493c-fc36-f111-8ef3-6045bd00bc8b
-DATA_FABRIC_TEST_ATTACHMENT_FIELD=SomeFile
-
-# Traces test trace ID
-TRACES_TEST_TRACE_ID=2074c74b-9931-4072-9c00-8ceaa2a59724
-```
 
 ## Where tests live
 
