@@ -28,6 +28,11 @@ export interface DataFabricRoleServiceModel {
    * const rolesWithoutStats = await roles.getAll({ stats: false });
    * ```
    *
+   * @example
+   * ```typescript
+   * const folderRoles = await roles.getAll({ folderKey: '<folder-key>' });
+   * ```
+   *
    * @internal
    */
   getAll(options?: DataFabricRoleGetAllOptions): Promise<DataFabricRole[]>;
