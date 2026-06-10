@@ -1,12 +1,16 @@
 import {
+  ChoiceSetGetAllOptions,
   ChoiceSetGetAllResponse,
   ChoiceSetGetResponse,
   ChoiceSetGetByIdOptions,
   ChoiceSetCreateOptions,
   ChoiceSetUpdateOptions,
+  ChoiceSetDeleteByIdOptions,
   ChoiceSetValueInsertOptions,
   ChoiceSetValueInsertResponse,
-  ChoiceSetValueUpdateResponse
+  ChoiceSetValueUpdateOptions,
+  ChoiceSetValueUpdateResponse,
+  ChoiceSetValueDeleteOptions,
 } from './choicesets.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
 
@@ -28,24 +32,34 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  */
 export interface ChoiceSetServiceModel {
   /**
-   * Gets all choice sets in the org
+   * Gets choice sets in the org
    *
+   * The Data Fabric choice-set list is scoped exclusively, not additively:
+   * omitting `folderKey` returns only tenant-level choice sets; passing
+   * `folderKey` returns only choice sets in that folder. To enumerate
+   * every choice set across folders, call `getAll()` once per folder
+   * plus once with no `folderKey` for the tenant scope.
+   *
+   * @param options - Optional {@link ChoiceSetGetAllOptions} (e.g. `folderKey` to list folder-scoped choice sets)
    * @returns Promise resolving to an array of choice set metadata
    * {@link ChoiceSetGetAllResponse}
    * @example
    * ```typescript
-   * // Get all choice sets
-   * const allChoiceSets = await choicesets.getAll();
+   * // Get tenant-level choice sets
+   * const tenantChoiceSets = await choicesets.getAll();
+   *
+   * // Get folder-scoped choice sets
+   * const folderChoiceSets = await choicesets.getAll({ folderKey: "<folderKey>" });
    *
    * // Iterate through choice sets
-   * allChoiceSets.forEach(choiceSet => {
+   * tenantChoiceSets.forEach(choiceSet => {
    *   console.log(`ChoiceSet: ${choiceSet.displayName} (${choiceSet.name})`);
    *   console.log(`Description: ${choiceSet.description}`);
    *   console.log(`Created by: ${choiceSet.createdBy}`);
    * });
    *
    * // Find a specific choice set by name
-   * const expenseTypes = allChoiceSets.find(cs => cs.name === 'ExpenseTypes');
+   * const expenseTypes = tenantChoiceSets.find(cs => cs.name === 'ExpenseTypes');
    *
    * // Check choice set details
    * if (expenseTypes) {
@@ -54,7 +68,7 @@ export interface ChoiceSetServiceModel {
    * }
    * ```
    */
-  getAll(): Promise<ChoiceSetGetAllResponse[]>;
+  getAll(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]>;
 
   /**
    * Gets choice set values by choice set ID with optional pagination
@@ -89,6 +103,9 @@ export interface ChoiceSetServiceModel {
    * if (page1.hasNextPage) {
    *   const page2 = await choicesets.getById(choiceSetId, { cursor: page1.nextCursor });
    * }
+   *
+   * // Folder-scoped choice set
+   * const folderValues = await choicesets.getById(choiceSetId, { folderKey: "<folderKey>" });
    * ```
    */
   getById<T extends ChoiceSetGetByIdOptions = ChoiceSetGetByIdOptions>(
@@ -162,10 +179,13 @@ export interface ChoiceSetServiceModel {
    * const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
    *
    * await choicesets.deleteById(expenseTypes.id);
+   *
+   * // Folder-scoped choice set
+   * await choicesets.deleteById(expenseTypes.id, { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
-  deleteById(choiceSetId: string): Promise<void>;
+  deleteById(choiceSetId: string, options?: ChoiceSetDeleteByIdOptions): Promise<void>;
 
   /**
    * Inserts a single value into a choice set.
@@ -185,6 +205,12 @@ export interface ChoiceSetServiceModel {
    *   displayName: 'Travel',
    * });
    * console.log(inserted.id);
+   *
+   * // Folder-scoped choice set: folderKey is required on the wire
+   * await choicesets.insertValueById(expenseTypes.id, 'TRAVEL', {
+   *   displayName: 'Travel',
+   *   folderKey: "<folderKey>",
+   * });
    * ```
    * @internal
    */
@@ -214,6 +240,11 @@ export interface ChoiceSetServiceModel {
    * const travel = values.items.find(v => v.name === 'TRAVEL');
    *
    * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel');
+   *
+   * // Folder-scoped choice set: folderKey is required on the wire
+   * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel', {
+   *   folderKey: "<folderKey>",
+   * });
    * ```
    * @internal
    */
@@ -221,6 +252,7 @@ export interface ChoiceSetServiceModel {
     choiceSetId: string,
     valueId: string,
     displayName: string,
+    options?: ChoiceSetValueUpdateOptions,
   ): Promise<ChoiceSetValueUpdateResponse>;
 
   /**
@@ -237,9 +269,12 @@ export interface ChoiceSetServiceModel {
    * const idsToDelete = values.items.slice(0, 2).map(v => v.id);
    *
    * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete);
+   *
+   * // Folder-scoped choice set
+   * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete, { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
-  deleteValuesById(choiceSetId: string, valueIds: string[]): Promise<void>;
+  deleteValuesById(choiceSetId: string, valueIds: string[], options?: ChoiceSetValueDeleteOptions): Promise<void>;
 }
 

@@ -27,6 +27,7 @@ import {
   EntityImportRecordsByIdOptions,
   EntityCreateOptions,
   EntityCreateFieldOptions,
+  EntityGetAllOptions,
   EntityGetByIdOptions,
   EntityDeleteByIdOptions,
   EntityDeleteRecordByIdOptions,
@@ -52,23 +53,33 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  */
 export interface EntityServiceModel {
   /**
-   * Gets all entities in the system
-   * 
-   * @returns Promise resolving to either an array of entities NonPaginatedResponse<EntityGetResponse> or a PaginatedResponse<EntityGetResponse> when pagination options are used.
+   * Gets entities in the system
+   *
+   * The Data Fabric entity list is scoped exclusively, not additively:
+   * omitting `folderKey` returns only tenant-level entities; passing
+   * `folderKey` returns only entities in that folder. To enumerate
+   * every entity across folders, call `getAll()` once per folder
+   * plus once with no `folderKey` for the tenant scope.
+   *
+   * @param options - Optional {@link EntityGetAllOptions} (e.g. `folderKey` to list folder-scoped entities)
+   * @returns Promise resolving to an array of entity metadata
    * {@link EntityGetResponse}
    * @example
    * ```typescript
-   * // Get all entities
-   * const allEntities = await entities.getAll();
+   * // Get tenant-level entities
+   * const tenantEntities = await entities.getAll();
+   *
+   * // Get folder-scoped entities for a specific folder
+   * const folderEntities = await entities.getAll({ folderKey: "<folderKey>" });
    *
    * // Iterate through entities
-   * allEntities.forEach(entity => {
+   * tenantEntities.forEach(entity => {
    *   console.log(`Entity: ${entity.displayName} (${entity.name})`);
    *   console.log(`Type: ${entity.entityType}`);
    * });
    *
    * // Find a specific entity by name
-   * const customerEntity = allEntities.find(e => e.name === 'Customer');
+   * const customerEntity = tenantEntities.find(e => e.name === 'Customer');
    *
    * // Use entity methods directly
    * if (customerEntity) {
@@ -86,7 +97,7 @@ export interface EntityServiceModel {
    * }
    * ```
    */
-  getAll(): Promise<EntityGetResponse[]>;
+  getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]>;
 
   /**
    * Gets entity metadata by entity ID with attached operation methods
@@ -157,6 +168,9 @@ export interface EntityServiceModel {
    *   cursor: paginatedResponse.nextCursor,
    *   expansionLevel: 1
    * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * const records = await entities.getAllRecords("<entityId>", { folderKey: "<folderKey>" });
    * ```
    */
   getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(entityId: string, options?: T): Promise<
@@ -196,6 +210,11 @@ export interface EntityServiceModel {
    * const record = await entities.getRecordById(<entityId>, recordId, {
    *   expansionLevel: 1
    * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * const record = await entities.getRecordById(<entityId>, recordId, {
+   *   folderKey: "<folderKey>"
+   * });
    * ```
    */
   getRecordById(entityId: string, recordId: string, options?: EntityGetRecordByIdOptions): Promise<EntityRecord>;
@@ -219,6 +238,11 @@ export interface EntityServiceModel {
    * // With options
    * const result = await entities.insertRecordById(<entityId>, { name: "John", age: 30 }, {
    *   expansionLevel: 1
+   * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.insertRecordById(<entityId>, { name: "John", age: 30 }, {
+   *   folderKey: "<folderKey>"
    * });
    * ```
    */
@@ -257,6 +281,12 @@ export interface EntityServiceModel {
    *   expansionLevel: 1,
    *   failOnFirst: true
    * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.insertRecordsById(<entityId>, [
+   *   { name: "John", age: 30 },
+   *   { name: "Jane", age: 25 }
+   * ], { folderKey: "<folderKey>" });
    * ```
    */
   insertRecordsById(id: string, data: Record<string, any>[], options?: EntityInsertRecordsOptions): Promise<EntityBatchInsertResponse>;
@@ -288,6 +318,11 @@ export interface EntityServiceModel {
    * const result = await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated", age: 31 }, {
    *   expansionLevel: 1
    * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.updateRecordById(<entityId>, <recordId>, { name: "John Updated" }, {
+   *   folderKey: "<folderKey>"
+   * });
    * ```
    */
   updateRecordById(entityId: string, recordId: string, data: Record<string, any>, options?: EntityUpdateRecordOptions): Promise<EntityUpdateRecordResponse>;
@@ -318,6 +353,11 @@ export interface EntityServiceModel {
    *   expansionLevel: 1,
    *   failOnFirst: true
    * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.updateRecordsById(<entityId>, [
+   *   { Id: "123", name: "John Updated" }
+   * ], { folderKey: "<folderKey>" });
    * ```
    */
   updateRecordsById(id: string, data: EntityRecord[], options?: EntityUpdateRecordsOptions): Promise<EntityUpdateResponse>;
@@ -339,6 +379,11 @@ export interface EntityServiceModel {
    * const result = await entities.deleteRecordsById(<entityId>, [
    *   <recordId-1>, <recordId-2>
    * ]);
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.deleteRecordsById(<entityId>, [
+   *   <recordId-1>, <recordId-2>
+   * ], { folderKey: "<folderKey>" });
    * ```
    */
   deleteRecordsById(id: string, recordIds: string[], options?: EntityDeleteRecordsOptions): Promise<EntityDeleteResponse>;
@@ -403,6 +448,12 @@ export interface EntityServiceModel {
    *   aggregates: [
    *     { function: EntityAggregateFunction.Count, field: "Id", alias: "total" },
    *   ],
+   * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.queryRecordsById(<id>, {
+   *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
+   *   folderKey: "<folderKey>",
    * });
    *
    * // Aggregate: total sum and average across all records (no grouping)

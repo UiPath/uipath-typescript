@@ -1,8 +1,23 @@
 import { BaseService } from '../base';
 import { ChoiceSetServiceModel } from '../../models/data-fabric/choicesets.models';
-import { ChoiceSetGetAllResponse, ChoiceSetGetResponse, ChoiceSetGetByIdOptions, ChoiceSetCreateOptions, ChoiceSetUpdateOptions, ChoiceSetValueInsertOptions, ChoiceSetValueInsertResponse, ChoiceSetValueUpdateResponse } from '../../models/data-fabric/choicesets.types';
+import {
+  ChoiceSetGetAllOptions,
+  ChoiceSetGetAllResponse,
+  ChoiceSetGetResponse,
+  ChoiceSetGetByIdOptions,
+  ChoiceSetCreateOptions,
+  ChoiceSetUpdateOptions,
+  ChoiceSetDeleteByIdOptions,
+  ChoiceSetValueInsertOptions,
+  ChoiceSetValueInsertResponse,
+  ChoiceSetValueUpdateOptions,
+  ChoiceSetValueUpdateResponse,
+  ChoiceSetValueDeleteOptions,
+} from '../../models/data-fabric/choicesets.types';
 import { RawChoiceSetGetAllResponse, RawChoiceSetGetResponse } from '../../models/data-fabric/choicesets.internal-types';
 import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
+import { FOLDER_KEY } from '../../utils/constants/headers';
+import { createHeaders } from '../../utils/http/headers';
 import { transformData, pascalToCamelCaseKeys } from '../../utils/transform';
 import { EntityMap } from '../../models/data-fabric/entities.constants';
 import { track } from '../../core/telemetry';
@@ -14,8 +29,13 @@ import { ValidationError, NotFoundError } from '../../core/errors';
 
 export class ChoiceSetService extends BaseService implements ChoiceSetServiceModel {
   /**
-   * Gets all choice sets in the system
+   * Gets choice sets in the system
    *
+   * The Data Fabric choice-set list is scoped exclusively, not additively:
+   * omitting `folderKey` returns only tenant-level choice sets; passing
+   * `folderKey` returns only choice sets in that folder.
+   *
+   * @param options - Optional {@link ChoiceSetGetAllOptions} (e.g. `folderKey` to list folder-scoped choice sets)
    * @returns Promise resolving to an array of choice set metadata
    *
    * @example
@@ -24,20 +44,18 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * const choiceSets = new ChoiceSets(sdk);
    *
-   * // Get all choice sets
-   * const allChoiceSets = await choiceSets.getAll();
+   * // Get tenant-level choice sets
+   * const tenantChoiceSets = await choiceSets.getAll();
    *
-   * // Iterate through choice sets
-   * allChoiceSets.forEach(choiceSet => {
-   *   console.log(`ChoiceSet: ${choiceSet.displayName} (${choiceSet.name})`);
-   *   console.log(`Description: ${choiceSet.description}`);
-   * });
+   * // Get folder-scoped choice sets
+   * const folderChoiceSets = await choiceSets.getAll({ folderKey: "<folderKey>" });
    * ```
    */
   @track('Choicesets.GetAll')
-  async getAll(): Promise<ChoiceSetGetAllResponse[]> {
+  async getAll(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]> {
     const rawResponse = await this.get<RawChoiceSetGetAllResponse[]>(
-      DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL
+      DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
     );
 
     // Transform field names
@@ -101,11 +119,16 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
       return transformData(camelCased, EntityMap) as unknown as ChoiceSetGetResponse;
     };
 
+    // folderKey is header-only — destructure it out so PaginationHelpers doesn't
+    // include it in the POST body alongside pagination params.
+    const { folderKey, ...rest } = options ?? {} as T;
+    const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_BY_ID(choiceSetId),
       transformFn,
       method: HTTP_METHODS.POST,
+      headers: createHeaders({ [FOLDER_KEY]: folderKey }),
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: CHOICESET_VALUES_PAGINATION.ITEMS_FIELD,
@@ -116,7 +139,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
           countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       }
-    }, options) as any;
+    }, downstreamOptions) as any;
   }
 
   /**
@@ -157,7 +180,11 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
         folderId: opts.folderKey ?? DATA_FABRIC_TENANT_FOLDER_ID,
       },
     };
-    const response = await this.post<string>(DATA_FABRIC_ENDPOINTS.CHOICESETS.CREATE, payload);
+    const response = await this.post<string>(
+      DATA_FABRIC_ENDPOINTS.CHOICESETS.CREATE,
+      payload,
+      { headers: createHeaders({ [FOLDER_KEY]: opts.folderKey }) },
+    );
     return response.data;
   }
 
@@ -191,10 +218,14 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
         message: 'updateById requires at least one of displayName or description.',
       });
     }
-    await this.patch(DATA_FABRIC_ENDPOINTS.CHOICESETS.UPDATE(choiceSetId), {
-      ...(options.displayName !== undefined && { displayName: options.displayName }),
-      ...(options.description !== undefined && { description: options.description }),
-    });
+    await this.patch(
+      DATA_FABRIC_ENDPOINTS.CHOICESETS.UPDATE(choiceSetId),
+      {
+        ...(options.displayName !== undefined && { displayName: options.displayName }),
+        ...(options.description !== undefined && { description: options.description }),
+      },
+      { headers: createHeaders({ [FOLDER_KEY]: options.folderKey }) },
+    );
   }
 
   /**
@@ -214,8 +245,12 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * @internal
    */
   @track('Choicesets.DeleteById')
-  async deleteById(choiceSetId: string): Promise<void> {
-    await this.post(DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(choiceSetId), {});
+  async deleteById(choiceSetId: string, options?: ChoiceSetDeleteByIdOptions): Promise<void> {
+    await this.post(
+      DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(choiceSetId),
+      {},
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
+    );
   }
 
   /**
@@ -236,6 +271,12 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *   displayName: 'Travel',
    * });
    * console.log(inserted.id);
+   *
+   * // Folder-scoped choice set: folderKey is required on the wire
+   * await choicesets.insertValueById(expenseTypes.id, 'TRAVEL', {
+   *   displayName: 'Travel',
+   *   folderKey: "<folderKey>",
+   * });
    * ```
    * @internal
    */
@@ -245,14 +286,15 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
     name: string,
     options?: ChoiceSetValueInsertOptions,
   ): Promise<ChoiceSetValueInsertResponse> {
-    const choiceSetName = await this.resolveChoiceSetName(choiceSetId);
+    const choiceSetName = await this.resolveChoiceSetName(choiceSetId, options?.folderKey);
     const payload = {
       Name: name,
       ...(options?.displayName !== undefined && { DisplayName: options.displayName }),
     };
     const response = await this.post<RawChoiceSetGetResponse>(
       DATA_FABRIC_ENDPOINTS.CHOICESETS.INSERT_BY_NAME(choiceSetName),
-      payload
+      payload,
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
     );
     const camelCased = pascalToCamelCaseKeys(response.data);
     return transformData(camelCased, EntityMap) as ChoiceSetValueInsertResponse;
@@ -278,6 +320,11 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * const travel = values.items.find(v => v.name === 'TRAVEL');
    *
    * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel');
+   *
+   * // Folder-scoped choice set: folderKey is required on the wire
+   * await choicesets.updateValueById(expenseTypes.id, travel.id, 'Business Travel', {
+   *   folderKey: "<folderKey>",
+   * });
    * ```
    * @internal
    */
@@ -286,12 +333,14 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
     choiceSetId: string,
     valueId: string,
     displayName: string,
+    options?: ChoiceSetValueUpdateOptions,
   ): Promise<ChoiceSetValueUpdateResponse> {
-    const choiceSetName = await this.resolveChoiceSetName(choiceSetId);
+    const choiceSetName = await this.resolveChoiceSetName(choiceSetId, options?.folderKey);
     const payload = { DisplayName: displayName };
     const response = await this.post<RawChoiceSetGetResponse>(
       DATA_FABRIC_ENDPOINTS.CHOICESETS.UPDATE_BY_NAME(choiceSetName, valueId),
-      payload
+      payload,
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
     );
     const camelCased = pascalToCamelCaseKeys(response.data);
     return transformData(camelCased, EntityMap) as ChoiceSetValueUpdateResponse;
@@ -315,12 +364,16 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * @internal
    */
   @track('Choicesets.DeleteValuesById')
-  async deleteValuesById(choiceSetId: string, valueIds: string[]): Promise<void> {
-    await this.post(DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE_BY_ID(choiceSetId), valueIds);
+  async deleteValuesById(choiceSetId: string, valueIds: string[], options?: ChoiceSetValueDeleteOptions): Promise<void> {
+    await this.post(
+      DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE_BY_ID(choiceSetId),
+      valueIds,
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) },
+    );
   }
 
-  private async resolveChoiceSetName(choiceSetId: string): Promise<string> {
-    const all = await this.getAll();
+  private async resolveChoiceSetName(choiceSetId: string, folderKey?: string): Promise<string> {
+    const all = await this.getAll(folderKey !== undefined ? { folderKey } : undefined);
     const match = all.find(cs => cs.id === choiceSetId);
     if (!match) {
       throw new NotFoundError({ message: `Choice set with id '${choiceSetId}' not found.` });

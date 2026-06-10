@@ -198,6 +198,36 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
       expect(typeof entity.getRecord).toBe('function');
       expect(typeof entity.downloadAttachment).toBe('function');
     });
+
+    // The Data Fabric entity list is scoped exclusively: omitting folderKey returns
+    // only tenant entities; passing folderKey returns only entities in that folder.
+    // The two sets are disjoint.
+    it('should return only folder-scoped entities when folderKey is provided', async () => {
+      const { entities } = getServices();
+      const folderKey = getTestConfig().folderKey;
+
+      if (!folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY is required to exercise folder-scoped getAll');
+      }
+
+      const [tenantEntities, folderEntities] = await Promise.all([
+        entities.getAll(),
+        entities.getAll({ folderKey }),
+      ]);
+
+      expect(Array.isArray(folderEntities)).toBe(true);
+
+      // Every folder-scoped entity carries the requested folder key
+      for (const entity of folderEntities) {
+        expect(entity.folderId).toBe(folderKey);
+      }
+
+      // Tenant scope and folder scope are disjoint — no entity appears in both
+      const folderIds = new Set(folderEntities.map((e) => e.id));
+      for (const tenantEntity of tenantEntities) {
+        expect(folderIds.has(tenantEntity.id)).toBe(false);
+      }
+    });
   });
 
   describe('getById', () => {

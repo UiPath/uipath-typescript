@@ -81,7 +81,7 @@ describe('ChoiceSetService Unit Tests', () => {
       // Verify the API call has correct endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-        {}
+        { headers: {} }
       );
     });
 
@@ -110,7 +110,7 @@ describe('ChoiceSetService Unit Tests', () => {
       // Verify the API call
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-        {}
+        { headers: {} }
       );
     });
 
@@ -338,7 +338,7 @@ describe('ChoiceSetService Unit Tests', () => {
             folderId: DATA_FABRIC_TENANT_FOLDER_ID,
           },
         },
-        {},
+        { headers: {} },
       );
     });
 
@@ -389,7 +389,7 @@ describe('ChoiceSetService Unit Tests', () => {
           displayName: 'Renamed Choice Set',
           description: 'Updated description',
         },
-        {},
+        { headers: {} },
       );
     });
 
@@ -447,7 +447,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
         {},
-        {},
+        { headers: {} },
       );
     });
 
@@ -478,7 +478,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.INSERT_BY_NAME(CHOICESET_TEST_CONSTANTS.CHOICESET_NAME),
         { Name: 'NEW_VAL', DisplayName: 'New Value' },
-        {},
+        { headers: {} },
       );
 
       expect(result.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
@@ -546,7 +546,7 @@ describe('ChoiceSetService Unit Tests', () => {
           CHOICESET_TEST_CONSTANTS.VALUE_ID,
         ),
         { DisplayName: 'Updated' },
-        {},
+        { headers: {} },
       );
 
       expect(result.id).toBe(CHOICESET_TEST_CONSTANTS.VALUE_ID);
@@ -598,7 +598,7 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.DELETE_BY_ID(CHOICESET_TEST_CONSTANTS.CHOICESET_ID),
         valueIds,
-        {},
+        { headers: {} },
       );
     });
 

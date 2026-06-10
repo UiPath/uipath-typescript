@@ -323,6 +323,11 @@ export interface EntityFolderScopedOptions {
 }
 
 /**
+ * Options for {@link EntityServiceModel.getAll}
+ */
+export interface EntityGetAllOptions extends EntityFolderScopedOptions {}
+
+/**
  * Options for {@link EntityServiceModel.getById}
  */
 export interface EntityGetByIdOptions extends EntityFolderScopedOptions {}

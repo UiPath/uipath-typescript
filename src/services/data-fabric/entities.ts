@@ -32,6 +32,7 @@ import {
   EntityCreateOptions,
   EntityCreateFieldOptions,
   EntityFieldDataType,
+  EntityGetAllOptions,
   EntityGetByIdOptions,
   EntityDeleteByIdOptions,
   EntityDeleteRecordByIdOptions,
@@ -144,6 +145,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   cursor: paginatedResponse.nextCursor,
    *   expansionLevel: 1
    * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * const records = await entities.getAllRecords("<entityId>", { folderKey: "<folderKey>" });
    * ```
    */
   @track('Entities.GetAllRecords')
@@ -182,7 +186,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record
-   * @param options - Query options including expansionLevel
+   * @param options - Query options including `expansionLevel` and `folderKey`
    * @returns Promise resolving to the entity record
    *
    * @example
@@ -193,6 +197,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * // With expansion level
    * const record = await sdk.entities.getRecordById(<entityId>, <recordId>, {
    *   expansionLevel: 1
+   * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * const record = await sdk.entities.getRecordById(<entityId>, <recordId>, {
+   *   folderKey: "<folderKey>"
    * });
    * ```
    */
@@ -234,6 +243,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * // With options
    * const result = await entities.insertRecordById("<entityId>", { name: "John", age: 30 }, {
    *   expansionLevel: 1
+   * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.insertRecordById("<entityId>", { name: "John", age: 30 }, {
+   *   folderKey: "<folderKey>"
    * });
    * ```
    */
@@ -283,6 +297,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   expansionLevel: 1,
    *   failOnFirst: true
    * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.insertRecordsById("<entityId>", [
+   *   { name: "John", age: 30 },
+   *   { name: "Jane", age: 25 }
+   * ], { folderKey: "<folderKey>" });
    * ```
    */
   @track('Entities.InsertRecordsById')
@@ -325,6 +345,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * // With options
    * const result = await entities.updateRecordById("<entityId>", "<recordId>", { name: "John Updated", age: 31 }, {
    *   expansionLevel: 1
+   * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.updateRecordById("<entityId>", "<recordId>", { name: "John Updated" }, {
+   *   folderKey: "<folderKey>"
    * });
    * ```
    */
@@ -375,6 +400,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   expansionLevel: 1,
    *   failOnFirst: true
    * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.updateRecordsById("<entityId>", [
+   *   { Id: "123", name: "John Updated" }
+   * ], { folderKey: "<folderKey>" });
    * ```
    */
   @track('Entities.UpdateRecordsById')
@@ -416,6 +446,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const result = await entities.deleteRecordsById("<entityId>", [
    *   "<recordId-1>", "<recordId-2>"
    * ]);
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.deleteRecordsById("<entityId>", [
+   *   "<recordId-1>", "<recordId-2>"
+   * ], { folderKey: "<folderKey>" });
    * ```
    */
   @track('Entities.DeleteRecordsById')
@@ -469,6 +504,13 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Gets all entities in the system
    *
+   * The Data Fabric entity list is scoped exclusively, not additively:
+   * omitting `folderKey` returns only tenant-level entities; passing
+   * `folderKey` returns only entities in that folder. To enumerate
+   * every entity across folders, call `getAll()` once per folder
+   * plus once with no `folderKey` for the tenant scope.
+   *
+   * @param options - Optional {@link EntityGetAllOptions} (e.g. `folderKey` to list folder-scoped entities)
    * @returns Promise resolving to an array of entity metadata
    *
    * @example
@@ -477,17 +519,21 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *
    * const entities = new Entities(sdk);
    *
-   * // Get all entities
-   * const allEntities = await entities.getAll();
+   * // Get tenant-level entities
+   * const tenantEntities = await entities.getAll();
+   *
+   * // Get folder-scoped entities
+   * const folderEntities = await entities.getAll({ folderKey: "<folderKey>" });
    *
    * // Call operations on an entity
-   * const records = await allEntities[0].getAllRecords();
+   * const records = await tenantEntities[0].getAllRecords();
    * ```
    */
   @track('Entities.GetAll')
-  async getAll(): Promise<EntityGetResponse[]> {
+  async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
     const response = await this.get<RawEntityGetResponse[]>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL
+      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
     );
     
     // Apply transformations
@@ -552,6 +598,12 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *     { function: EntityAggregateFunction.Sum, field: "amount", alias: "totalAmount" },
    *     { function: EntityAggregateFunction.Avg, field: "amount", alias: "avgAmount" },
    *   ],
+   * });
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.queryRecordsById("<entityId>", {
+   *   filterGroup: { queryFilters: [{ fieldName: "status", operator: QueryFilterOperator.Equals, value: "active" }] },
+   *   folderKey: "<folderKey>",
    * });
    * ```
    */

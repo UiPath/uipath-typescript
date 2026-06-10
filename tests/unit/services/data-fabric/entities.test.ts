@@ -339,7 +339,7 @@ describe("EntityService Unit Tests", () => {
       // Verify the API call
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        {},
+        { headers: {} },
       );
 
       expect(result[0].fields).toBeDefined();
@@ -398,7 +398,7 @@ describe("EntityService Unit Tests", () => {
       // Verify the API call
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
-        {},
+        { headers: {} },
       );
     });
 
