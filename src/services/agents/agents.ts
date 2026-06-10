@@ -2,6 +2,13 @@ import { BaseService } from '../base';
 import {
   AgentListItem,
   AgentListOptions,
+  AgentTraceErrorsTimelineOptions,
+  AgentTraceErrorsTimelineResponse,
+  AgentTraceFilterOptions,
+  AgentTraceLatencyTimelineOptions,
+  AgentTraceLatencyTimelineResponse,
+  AgentTraceUnitConsumptionOptions,
+  AgentTraceUnitConsumptionResponse,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -104,5 +111,151 @@ export class AgentService extends BaseService implements AgentServiceModel {
         ? PaginatedResponse<AgentListItem>
         : NonPaginatedResponse<AgentListItem>
     >;
+  }
+
+  /**
+   * Retrieves a trace-level time-series of error counts grouped by error name
+   * over the requested window.
+   *
+   * Counts errors observed in traces (distinct from agent-run errors). Returns
+   * one data point per (error name, time bucket); bucket size is chosen
+   * server-side based on the window length. Optionally filter by folder, agent,
+   * agent version, or execution type.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters {@link AgentTraceErrorsTimelineOptions}
+   * @returns Promise resolving to {@link AgentTraceErrorsTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents, AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * const result = await agents.getTraceErrorsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
+   * });
+   *
+   * // Scope to one agent version, runtime executions only
+   * const filtered = await agents.getTraceErrorsTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   *   { agentId: '<agentId>', agentVersion: '1.0.0', executionType: AgentExecutionType.Runtime },
+   * );
+   * ```
+   */
+  @track('Agents.GetTraceErrorsTimeline')
+  async getTraceErrorsTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentTraceErrorsTimelineOptions,
+  ): Promise<AgentTraceErrorsTimelineResponse> {
+    const response = await this.post<AgentTraceErrorsTimelineResponse>(
+      AGENTS_ENDPOINTS.GET_TRACE_ERRORS_TIMELINE,
+      this.buildTraceFilterBody(startTime, endTime, options),
+    );
+    return response.data;
+  }
+
+  /**
+   * Retrieves a trace-level time-series of latency over the requested window.
+   *
+   * Reports latency observed in traces (distinct from agent-run latency). The
+   * API emits one point per (series, time bucket) — typically a `P50` and a
+   * `P95` series per bucket — with `value` in decimal seconds. Bucket size is
+   * chosen server-side based on the window length. Optionally filter by folder,
+   * agent, agent version, or execution type.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters {@link AgentTraceLatencyTimelineOptions}
+   * @returns Promise resolving to {@link AgentTraceLatencyTimelineResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * const result = await agents.getTraceLatencyTimeline(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.data?.forEach((point) => {
+   *   console.log(`${point.date} ${point.name}: ${point.value}s`);
+   * });
+   * ```
+   */
+  @track('Agents.GetTraceLatencyTimeline')
+  async getTraceLatencyTimeline(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentTraceLatencyTimelineOptions,
+  ): Promise<AgentTraceLatencyTimelineResponse> {
+    const response = await this.post<AgentTraceLatencyTimelineResponse>(
+      AGENTS_ENDPOINTS.GET_TRACE_LATENCY_TIMELINE,
+      this.buildTraceFilterBody(startTime, endTime, options),
+    );
+    return response.data;
+  }
+
+  /**
+   * Retrieves trace-level per-agent unit consumption totals over the requested
+   * window.
+   *
+   * Returns a flat per-agent breakdown of agent units (AGU) and platform units
+   * (PLTU) consumed, one entry per (agent, version, folder) — distinct from the
+   * aggregate unit-consumption summary. Optionally filter by folder, agent,
+   * agent version, or execution type.
+   *
+   * @param startTime - Inclusive lower bound for the query window
+   * @param endTime - Exclusive upper bound for the query window
+   * @param options - Optional filters {@link AgentTraceUnitConsumptionOptions}
+   * @returns Promise resolving to {@link AgentTraceUnitConsumptionResponse}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * const result = await agents.getTraceUnitConsumption(
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2025-06-01T00:00:00Z'),
+   * );
+   * result.data?.forEach((row) => {
+   *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} AGU, ${row.platformUnitsConsumed} PLTU`);
+   * });
+   * ```
+   */
+  @track('Agents.GetTraceUnitConsumption')
+  async getTraceUnitConsumption(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentTraceUnitConsumptionOptions,
+  ): Promise<AgentTraceUnitConsumptionResponse> {
+    const response = await this.post<AgentTraceUnitConsumptionResponse>(
+      AGENTS_ENDPOINTS.GET_TRACE_UNIT_CONSUMPTION,
+      this.buildTraceFilterBody(startTime, endTime, options),
+    );
+    return response.data;
+  }
+
+  private buildTraceFilterBody(
+    startTime: Date,
+    endTime: Date,
+    options?: AgentTraceFilterOptions,
+  ): Record<string, unknown> {
+    const body: Record<string, unknown> = {
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+    };
+    if (options?.folderKeys !== undefined) body.folderKeys = options.folderKeys;
+    if (options?.agentId !== undefined) body.agentId = options.agentId;
+    if (options?.agentVersion !== undefined) body.agentVersion = options.agentVersion;
+    if (options?.executionType !== undefined) body.executionType = options.executionType;
+    return body;
   }
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { Agents } from '../../../../src/services/agents';
+import { AgentExecutionType } from '../../../../src/models/agents/agents.types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 /**
@@ -84,6 +85,92 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(second.items.length).toBeGreaterThan(0);
       expect(second.currentPage).toBe(2);
       expect(second.previousCursor).toBeDefined();
+    });
+  });
+
+  describe('getTraceErrorsTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve a trace-level timeline of error counts grouped by error name', async () => {
+      const result = await agents.getTraceErrorsTimeline(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (result.data && result.data.length > 0) {
+        const point = result.data[0];
+        expect(typeof point.name).toBe('string');
+        expect(typeof point.value).toBe('number');
+        expect(typeof point.date).toBe('string');
+      }
+    });
+
+    it('should accept Traceview-shaped filters without error', async () => {
+      const result = await agents.getTraceErrorsTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('getTraceLatencyTimeline', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve a trace-level latency timeline grouped by series', async () => {
+      const result = await agents.getTraceLatencyTimeline(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (result.data && result.data.length > 0) {
+        const point = result.data[0];
+        expect(typeof point.name).toBe('string');
+        expect(typeof point.value).toBe('number');
+        expect(typeof point.date).toBe('string');
+      }
+    });
+
+    it('should accept Traceview-shaped filters without error', async () => {
+      const result = await agents.getTraceLatencyTimeline(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('getTraceUnitConsumption', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve per-agent trace-level unit consumption totals', async () => {
+      const result = await agents.getTraceUnitConsumption(startTime, endTime);
+
+      expect(result).toBeDefined();
+      if (result.data && result.data.length > 0) {
+        const row = result.data[0];
+        expect(typeof row.agentId).toBe('string');
+        expect(typeof row.folderKey).toBe('string');
+        expect(typeof row.agentVersion).toBe('string');
+        expect(typeof row.agentUnitsConsumed).toBe('number');
+        expect(typeof row.platformUnitsConsumed).toBe('number');
+      }
+    });
+
+    it('should accept Traceview-shaped filters without error', async () => {
+      const result = await agents.getTraceUnitConsumption(startTime, endTime, {
+        folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
+        agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+        agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      expect(result).toBeDefined();
     });
   });
 });

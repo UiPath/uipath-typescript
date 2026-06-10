@@ -90,3 +90,112 @@ export type AgentListOptions = AgentFilterOptions & PaginationOptions & {
   /** Sort order for the result set. */
   orderBy?: AgentListOrderBy;
 };
+
+/**
+ * Job execution mode filter — `Debug` (test runs) or `Runtime` (production runs).
+ *
+ * Wire format is the string name (`"Debug"` / `"Runtime"`), per the API's
+ * `StringEnumConverter` serialization.
+ */
+export enum AgentExecutionType {
+  Debug = 'Debug',
+  Runtime = 'Runtime',
+}
+
+/**
+ * Filter fields shared by the trace-level agent endpoints
+ * (`/Traceview/errorsTimeline`, `/Traceview/latencyTimeline`,
+ * `/Traceview/unitConsumption`).
+ */
+export interface AgentTraceFilterOptions {
+  /** Folder keys (GUIDs) to scope the query. Intersected with the caller's accessible folders. */
+  folderKeys?: string[];
+  /** Filter to a single agent by ID. */
+  agentId?: string;
+  /** Filter to a specific agent version. */
+  agentVersion?: string;
+  /** Filter to a specific execution type — `Debug` (test runs) or `Runtime` (production runs). */
+  executionType?: AgentExecutionType;
+}
+
+/**
+ * One point on the trace-level errors timeline — error count for a single
+ * (error name, time bucket).
+ */
+export interface AgentTraceErrorsTimelinePoint {
+  /** Error name / category for this time-slice. */
+  name: string;
+  /** Count of errors in this time bucket for this name. */
+  value: number;
+  /** Bucket timestamp (ISO 8601, UTC). */
+  date: string;
+}
+
+/**
+ * Response from the trace-level errors timeline.
+ */
+export interface AgentTraceErrorsTimelineResponse {
+  /** Time-series points, one per (error name, time bucket). May be absent when no data matches. */
+  data?: AgentTraceErrorsTimelinePoint[];
+}
+
+/**
+ * Options for the trace-level errors timeline.
+ */
+export interface AgentTraceErrorsTimelineOptions extends AgentTraceFilterOptions {}
+
+/**
+ * One point on the trace-level latency timeline — a latency value for a single
+ * (series, time bucket).
+ */
+export interface AgentTraceLatencyTimelinePoint {
+  /** Series/grouping name for this latency point — e.g. a percentile label such as `P50` or `P95`. */
+  name: string;
+  /** Latency value in decimal seconds for this series and time bucket. */
+  value: number;
+  /** Bucket timestamp (ISO 8601, UTC). */
+  date: string;
+}
+
+/**
+ * Response from the trace-level latency timeline.
+ */
+export interface AgentTraceLatencyTimelineResponse {
+  /** Time-series points, one per (series, time bucket). May be absent when no data matches. */
+  data?: AgentTraceLatencyTimelinePoint[];
+}
+
+/**
+ * Options for the trace-level latency timeline.
+ */
+export interface AgentTraceLatencyTimelineOptions extends AgentTraceFilterOptions {}
+
+/**
+ * Per-agent unit consumption totals over the requested window (trace-level) —
+ * a flat per-(agent, version, folder) breakdown of AGU and PLTU consumed.
+ */
+export interface AgentTraceUnitConsumption {
+  /** Agent ID these totals belong to. */
+  agentId: string;
+  /** Folder key (GUID) the consumption was recorded in. */
+  folderKey: string;
+  /** Agent version these totals belong to. */
+  agentVersion: string;
+  /** Agent units (AGU) consumed over the window. */
+  agentUnitsConsumed: number;
+  /** Platform units (PLTU) consumed over the window. */
+  platformUnitsConsumed: number;
+}
+
+/**
+ * Response from the trace-level per-agent unit consumption.
+ */
+export interface AgentTraceUnitConsumptionResponse {
+  /** Per-agent consumption totals. May be absent when no data matches. */
+  data?: AgentTraceUnitConsumption[];
+}
+
+/**
+ * Options for the trace-level per-agent unit consumption.
+ */
+export interface AgentTraceUnitConsumptionOptions extends AgentTraceFilterOptions {}
