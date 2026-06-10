@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
-import { Memory } from '../../../../src/services/agents/memory';
-import { ExecutionType } from '../../../../src/models/agents/memory/memory.types';
+import { AgentMemory } from '../../../../src/services/agents/memory';
+import { AgentMemoryExecutionType } from '../../../../src/models/agents/memory/memory.types';
 import { MEMORY_TEST_CONSTANTS } from '../../../utils/constants';
 
 const modes: InitMode[] = ['v1'];
@@ -21,7 +21,7 @@ const WINDOW = {
 describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
-  let memory!: Memory;
+  let memory!: AgentMemory;
 
   beforeAll(() => {
     const service = getServices().memory;
@@ -51,7 +51,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
         ...WINDOW,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-        executionType: ExecutionType.Runtime,
+        executionType: AgentMemoryExecutionType.Runtime,
       });
 
       expect(result).toBeDefined();
@@ -95,7 +95,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
         ...WINDOW,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-        executionType: ExecutionType.Runtime,
+        executionType: AgentMemoryExecutionType.Runtime,
       });
 
       expect(result).toBeDefined();
@@ -136,7 +136,7 @@ describe.skip.each(modes)('Agent Memory - Integration Tests [%s]', (mode) => {
         ...WINDOW,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-        executionType: ExecutionType.Runtime,
+        executionType: AgentMemoryExecutionType.Runtime,
       });
 
       expect(result).toBeDefined();

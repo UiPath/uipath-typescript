@@ -1,41 +1,41 @@
 import {
-  MemoryGetTimelineOptions,
-  MemoryGetTimelineResponse,
-  MemoryGetCallsTimelineOptions,
-  MemoryGetCallsTimelineResponse,
-  MemoryGetTopSpacesOptions,
-  MemoryGetTopSpacesResponse,
+  AgentMemoryGetTimelineOptions,
+  AgentMemoryGetTimelineResponse,
+  AgentMemoryGetCallsTimelineOptions,
+  AgentMemoryGetCallsTimelineResponse,
+  AgentMemoryGetTopSpacesOptions,
+  AgentMemoryGetTopSpacesResponse,
 } from './memory.types';
 
 /**
  * Service for managing UiPath Agent Memory.
  *
- * Agent Memory is a shared store of human-in-the-loop interactions that
- * improves agent runtime reliability.
+ * Agent Memory is a persistent store of information an agent 
+ * retains across runs to improve runtime reliability.
  *
  * @example
  * ```typescript
  * import { UiPath } from '@uipath/uipath-typescript/core';
- * import { Memory } from '@uipath/uipath-typescript/memory';
+ * import { AgentMemory } from '@uipath/uipath-typescript/agent-memory';
  *
  * const sdk = new UiPath(config);
  * await sdk.initialize();
  *
- * const memory = new Memory(sdk);
+ * const memory = new AgentMemory(sdk);
  * const timeline = await memory.getTimeline();
  * ```
  */
-export interface MemoryServiceModel {
+export interface AgentMemoryServiceModel {
   /**
    * Gets agent memory state over time, with optional filters.
    *
    * @param options - Optional time window and scope filters
-   * @returns Promise resolving to an array of {@link MemoryGetTimelineResponse}, one per time bucket.
+   * @returns Promise resolving to an array of {@link AgentMemoryGetTimelineResponse}, one per time bucket.
    * @example
    * ```typescript
-   * import { Memory } from '@uipath/uipath-typescript/memory';
+   * import { AgentMemory } from '@uipath/uipath-typescript/agent-memory';
    *
-   * const memory = new Memory(sdk);
+   * const memory = new AgentMemory(sdk);
    *
    * // Last 24 hours (default window)
    * const timeline = await memory.getTimeline();
@@ -43,7 +43,7 @@ export interface MemoryServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { AgentMemoryExecutionType } from '@uipath/uipath-typescript/agent-memory';
    *
    * // Scoped to one agent in one folder, runtime executions only
    * const scoped = await memory.getTimeline({
@@ -51,22 +51,22 @@ export interface MemoryServiceModel {
    *   endTime: new Date('2026-06-01T00:00:00Z'),
    *   agentId: '<agentId>',
    *   folderKeys: ['<folderKey>'],
-   *   executionType: ExecutionType.Runtime,
+   *   executionType: AgentMemoryExecutionType.Runtime,
    * });
    * ```
    */
-  getTimeline(options?: MemoryGetTimelineOptions): Promise<MemoryGetTimelineResponse[]>;
+  getTimeline(options?: AgentMemoryGetTimelineOptions): Promise<AgentMemoryGetTimelineResponse[]>;
 
   /**
-   * Gets agent memory-access counts over time, with optional filters.
+   * Gets the number of agent memory calls (accesses to the memory store) over time, with optional filters.
    *
    * @param options - Optional time window and scope filters
-   * @returns Promise resolving to an array of {@link MemoryGetCallsTimelineResponse}, one per time bucket.
+   * @returns Promise resolving to an array of {@link AgentMemoryGetCallsTimelineResponse}, one per time bucket.
    * @example
    * ```typescript
-   * import { Memory } from '@uipath/uipath-typescript/memory';
+   * import { AgentMemory } from '@uipath/uipath-typescript/agent-memory';
    *
-   * const memory = new Memory(sdk);
+   * const memory = new AgentMemory(sdk);
    *
    * // Last 24 hours (default window)
    * const timeline = await memory.getCallsTimeline();
@@ -74,7 +74,7 @@ export interface MemoryServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { AgentMemoryExecutionType } from '@uipath/uipath-typescript/agent-memory';
    *
    * // Scoped to one agent in one folder, runtime executions only
    * const scoped = await memory.getCallsTimeline({
@@ -82,22 +82,22 @@ export interface MemoryServiceModel {
    *   endTime: new Date('2026-06-01T00:00:00Z'),
    *   agentId: '<agentId>', 
    *   folderKeys: ['<folderKey>'],
-   *   executionType: ExecutionType.Runtime,
+   *   executionType: AgentMemoryExecutionType.Runtime,
    * });
    * ```
    */
-  getCallsTimeline(options?: MemoryGetCallsTimelineOptions): Promise<MemoryGetCallsTimelineResponse[]>;
+  getCallsTimeline(options?: AgentMemoryGetCallsTimelineOptions): Promise<AgentMemoryGetCallsTimelineResponse[]>;
 
   /**
    * Gets the top memory spaces by memory count, with optional filters
    *
    * @param options - Optional limit, time window, and scope filters
-   * @returns Promise resolving to an array of {@link MemoryGetTopSpacesResponse}, ranked by memory count.
+   * @returns Promise resolving to an array of {@link AgentMemoryGetTopSpacesResponse}, ranked by memory count.
    * @example
    * ```typescript
-   * import { Memory } from '@uipath/uipath-typescript/memory';
+   * import { AgentMemory } from '@uipath/uipath-typescript/agent-memory';
    *
-   * const memory = new Memory(sdk);
+   * const memory = new AgentMemory(sdk);
    *
    * // Top 5 memory spaces (default limit and window)
    * const top = await memory.getTopSpaces();
@@ -105,17 +105,17 @@ export interface MemoryServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { ExecutionType } from '@uipath/uipath-typescript/memory';
+   * import { AgentMemoryExecutionType } from '@uipath/uipath-typescript/agent-memory';
    *
    * // Top 10 spaces for one folder over an explicit window, runtime executions only
    * const topScoped = await memory.getTopSpaces({
    *   startTime: new Date('2026-05-01T00:00:00Z'),
    *   endTime: new Date('2026-06-01T00:00:00Z'),
    *   folderKeys: ['<folderKey>'],
-   *   executionType: ExecutionType.Runtime,
+   *   executionType: AgentMemoryExecutionType.Runtime,
    *   limit: 10,
    * });
    * ```
    */
-  getTopSpaces(options?: MemoryGetTopSpacesOptions): Promise<MemoryGetTopSpacesResponse[]>;
+  getTopSpaces(options?: AgentMemoryGetTopSpacesOptions): Promise<AgentMemoryGetTopSpacesResponse[]>;
 }

@@ -11,10 +11,10 @@ import {
   createMockMemoryGetTopSpacesResponse,
 } from '../../../../utils/mocks/memory';
 import {
-  ExecutionType,
-  MemoryGetTimelineOptions,
-  MemoryGetCallsTimelineOptions,
-  MemoryGetTopSpacesOptions,
+  AgentMemoryExecutionType,
+  AgentMemoryGetTimelineOptions,
+  AgentMemoryGetCallsTimelineOptions,
+  AgentMemoryGetTopSpacesOptions,
 } from '../../../../../src/models/agents/memory/memory.types';
 
 // ===== MOCKING =====
@@ -66,13 +66,13 @@ describe('MemoryService Unit Tests', () => {
 
       const startTime = new Date(MEMORY_TEST_CONSTANTS.START_TIME);
       const endTime = new Date(MEMORY_TEST_CONSTANTS.END_TIME);
-      const options: MemoryGetTimelineOptions = {
+      const options: AgentMemoryGetTimelineOptions = {
         startTime,
         endTime,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-        executionType: ExecutionType.Runtime,
+        executionType: AgentMemoryExecutionType.Runtime,
       };
 
       await memoryService.getTimeline(options);
@@ -85,7 +85,7 @@ describe('MemoryService Unit Tests', () => {
           agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
           agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
           folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-          executionType: ExecutionType.Runtime,
+          executionType: AgentMemoryExecutionType.Runtime,
         },
         expect.anything(),
       );
@@ -142,13 +142,13 @@ describe('MemoryService Unit Tests', () => {
 
       const startTime = new Date(MEMORY_TEST_CONSTANTS.START_TIME);
       const endTime = new Date(MEMORY_TEST_CONSTANTS.END_TIME);
-      const options: MemoryGetCallsTimelineOptions = {
+      const options: AgentMemoryGetCallsTimelineOptions = {
         startTime,
         endTime,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-        executionType: ExecutionType.Runtime,
+        executionType: AgentMemoryExecutionType.Runtime,
       };
 
       await memoryService.getCallsTimeline(options);
@@ -161,7 +161,7 @@ describe('MemoryService Unit Tests', () => {
           agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
           agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
           folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-          executionType: ExecutionType.Runtime,
+          executionType: AgentMemoryExecutionType.Runtime,
         },
         expect.anything(),
       );
@@ -220,13 +220,13 @@ describe('MemoryService Unit Tests', () => {
 
       const startTime = new Date(MEMORY_TEST_CONSTANTS.START_TIME);
       const endTime = new Date(MEMORY_TEST_CONSTANTS.END_TIME);
-      const options: MemoryGetTopSpacesOptions = {
+      const options: AgentMemoryGetTopSpacesOptions = {
         startTime,
         endTime,
         agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
         agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
         folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-        executionType: ExecutionType.Runtime,
+        executionType: AgentMemoryExecutionType.Runtime,
         limit: MEMORY_TEST_CONSTANTS.LIMIT,
       };
 
@@ -240,7 +240,7 @@ describe('MemoryService Unit Tests', () => {
           agentId: MEMORY_TEST_CONSTANTS.AGENT_ID,
           agentVersion: MEMORY_TEST_CONSTANTS.AGENT_VERSION,
           folderKeys: [MEMORY_TEST_CONSTANTS.FOLDER_KEY],
-          executionType: ExecutionType.Runtime,
+          executionType: AgentMemoryExecutionType.Runtime,
           limit: MEMORY_TEST_CONSTANTS.LIMIT,
         },
         expect.anything(),

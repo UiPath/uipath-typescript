@@ -6,7 +6,7 @@
  * Execution kind to filter Agent Memory queries by. Omit to include both
  * Debug and Runtime executions.
  */
-export enum ExecutionType {
+export enum AgentMemoryExecutionType {
   /** Executions produced during agent debugging sessions. */
   Debug = 'Debug',
   /** Executions produced during production runtime. */
@@ -19,7 +19,7 @@ export enum ExecutionType {
  * All fields are optional. When `startTime`/`endTime` are omitted, the query
  * defaults to the last 24 hours, with `endTime` defaulting to now.
  */
-export interface MemoryFilterOptions {
+export interface AgentMemoryFilterOptions {
   /** Inclusive lower bound for the query window. Defaults to 24 hours before `endTime` when omitted. */
   startTime?: Date;
   /** Exclusive upper bound for the query window. Defaults to now when omitted. */
@@ -31,23 +31,23 @@ export interface MemoryFilterOptions {
   /** Folder keys to scope the query. Results are limited to folders you can access. */
   folderKeys?: string[];
   /** Filter to a specific execution kind. Omit to include both Debug and Runtime. */
-  executionType?: ExecutionType;
+  executionType?: AgentMemoryExecutionType;
 }
 
 /**
  * Options for retrieving the agent-memory state timeline.
  */
-export interface MemoryGetTimelineOptions extends MemoryFilterOptions {}
+export interface AgentMemoryGetTimelineOptions extends AgentMemoryFilterOptions {}
 
 /**
  * Options for retrieving the memory-calls timeline.
  */
-export interface MemoryGetCallsTimelineOptions extends MemoryFilterOptions {}
+export interface AgentMemoryGetCallsTimelineOptions extends AgentMemoryFilterOptions {}
 
 /**
  * Options for retrieving the top memory spaces.
  */
-export interface MemoryGetTopSpacesOptions extends MemoryFilterOptions {
+export interface AgentMemoryGetTopSpacesOptions extends AgentMemoryFilterOptions {
   /** Maximum number of memory spaces to return, ranked by memory count. Defaults to 5 when omitted. */
   limit?: number;
 }
@@ -56,7 +56,7 @@ export interface MemoryGetTopSpacesOptions extends MemoryFilterOptions {
  * One point on the agent-memory state timeline — memory-state counts for a
  * single time bucket.
  */
-export interface MemoryGetTimelineResponse {
+export interface AgentMemoryGetTimelineResponse {
   /** Bucket timestamp. */
   timeSlice: string;
   /** Count of memory entries that were in-memory in this bucket. */
@@ -75,7 +75,7 @@ export interface MemoryGetTimelineResponse {
  * One point on the memory-calls timeline — the count of memory calls for a
  * single time bucket.
  */
-export interface MemoryGetCallsTimelineResponse {
+export interface AgentMemoryGetCallsTimelineResponse {
   /** Bucket timestamp. */
   timeSlice: string;
   /** Number of memory calls in this bucket. */
@@ -85,7 +85,7 @@ export interface MemoryGetCallsTimelineResponse {
 /**
  * A single memory space with its enabled/disabled memory-entry breakdown.
  */
-export interface MemoryGetTopSpacesResponse {
+export interface AgentMemoryGetTopSpacesResponse {
   /** Memory space identifier. */
   memorySpaceId: string;
   /** Memory space display name. */

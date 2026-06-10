@@ -156,14 +156,14 @@
                 "default": "./dist/feedback/index.cjs"
             }
         },
-        "./memory": {
+        "./agent-memory": {
             "import": {
-                "types": "./dist/memory/index.d.ts",
-                "default": "./dist/memory/index.mjs"
+                "types": "./dist/agent-memory/index.d.ts",
+                "default": "./dist/agent-memory/index.mjs"
             },
             "require": {
-                "types": "./dist/memory/index.d.ts",
-                "default": "./dist/memory/index.cjs"
+                "types": "./dist/agent-memory/index.d.ts",
+                "default": "./dist/agent-memory/index.cjs"
             }
         },
         "./traces": {

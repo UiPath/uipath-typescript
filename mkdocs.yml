@@ -190,7 +190,7 @@ nav:
               - User Settings: api/interfaces/UserSettingsServiceModel.md
             - Feedback: api/interfaces/FeedbackServiceModel.md
             - Agents: api/interfaces/AgentServiceModel.md
-            - Memory: api/interfaces/MemoryServiceModel.md
+            - Agent Memory: api/interfaces/AgentMemoryServiceModel.md
           - Attachments:
             - api/interfaces/attachments/index.md
           - Assets: api/interfaces/AssetServiceModel.md
