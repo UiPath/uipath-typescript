@@ -24,4 +24,11 @@ export interface DataFabricRoleGetAllOptions {
    * Defaults to true to match the Data Fabric UI and CLI role-list flow.
    */
   stats?: boolean;
+
+  /**
+   * Optional folder key for folder-aware Role V2 requests.
+   *
+   * Forwarded on the wire as the `X-UIPATH-FolderKey` header.
+   */
+  folderKey?: string;
 }

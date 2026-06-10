@@ -59,6 +59,25 @@ describe('DataFabricRoleService Unit Tests', () => {
       );
     });
 
+    it('should pass folderKey via X-UIPATH-FolderKey header when provided', async () => {
+      mockApiClient.get.mockResolvedValue([
+        { id: 'role-1', name: 'Folder Role', type: 'UserDefined', folderId: 'folder-key' },
+      ]);
+
+      const result = await rolesService.getAll({ folderKey: 'folder-key' });
+
+      expect(result).toEqual([
+        { id: 'role-1', name: 'Folder Role', type: 'UserDefined', folderId: 'folder-key' },
+      ]);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
+        {
+          params: { stats: true },
+          headers: { 'X-UIPATH-FolderKey': 'folder-key' },
+        }
+      );
+    });
+
     it('should propagate API errors', async () => {
       mockApiClient.get.mockRejectedValue(new Error(TEST_CONSTANTS.ERROR_MESSAGE));
 

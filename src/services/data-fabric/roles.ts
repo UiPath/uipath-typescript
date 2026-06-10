@@ -5,7 +5,9 @@ import {
   DataFabricRole,
   DataFabricRoleGetAllOptions,
 } from '../../models/data-fabric/roles.types';
+import { FOLDER_KEY } from '../../utils/constants/headers';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric';
+import { createHeaders } from '../../utils/http/headers';
 import { createParams } from '../../utils/http/params';
 import { BaseService } from '../base';
 
@@ -66,6 +68,11 @@ export class DataFabricRoleService extends BaseService implements DataFabricRole
    * const rolesWithoutStats = await roles.getAll({ stats: false });
    * ```
    *
+   * @example
+   * ```typescript
+   * const folderRoles = await roles.getAll({ folderKey: '<folder-key>' });
+   * ```
+   *
    * @internal
    */
   @track('DataFabricRoles.GetAll')
@@ -73,9 +80,10 @@ export class DataFabricRoleService extends BaseService implements DataFabricRole
     const params = createParams({
       stats: options.stats ?? true,
     });
+    const headers = createHeaders({ [FOLDER_KEY]: options.folderKey });
     const response = await this.get<DataFabricRole[]>(
       DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
-      { params }
+      Object.keys(headers).length > 0 ? { params, headers } : { params }
     );
     return validateRolesResponse(response.data);
   }
