@@ -6,14 +6,16 @@ import { registerResource } from '../../utils/cleanup';
 import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
+const hasAgentFeedbackIntegration = process.env.AGENT_FEEDBACK_INTEGRATION === 'true';
+const skipAgentFeedbackIntegrationInCi = process.env.CI === 'true' && !hasAgentFeedbackIntegration;
 
-describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
+describe.skipIf(skipAgentFeedbackIntegrationInCi).each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let feedback: Feedback;
 
   beforeAll(() => {
-    if (process.env.AGENT_FEEDBACK_INTEGRATION !== 'true') {
+    if (!hasAgentFeedbackIntegration) {
       throw new Error(
         'AGENT_FEEDBACK_INTEGRATION must be set to run Agent Feedback integration tests ' +
         '(requires feedback API access on the configured external app/PAT)'

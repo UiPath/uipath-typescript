@@ -7,8 +7,10 @@ import {
 } from '../../../../src/models/observability/traces/traces.types';
 
 const modes: InitMode[] = ['v1'];
+const hasTracesIntegration = process.env.TRACES_INTEGRATION === 'true';
+const skipTracesIntegrationInCi = process.env.CI === 'true' && !hasTracesIntegration;
 
-describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
+describe.skipIf(skipTracesIntegrationInCi).each(modes)('Traces - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let traces!: Traces;
@@ -16,7 +18,7 @@ describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
   let existingSpanId!: string;
 
   beforeAll(async () => {
-    if (process.env.TRACES_INTEGRATION !== 'true') {
+    if (!hasTracesIntegration) {
       throw new Error(
         'TRACES_INTEGRATION must be set to run Traces integration tests ' +
         '(requires traces API access and a pre-existing trace ID)'

@@ -6,14 +6,16 @@ import {
 } from '../../config/unified-setup';
 
 const modes: InitMode[] = ['v0', 'v1'];
+const hasDataFabricAccessIntegration = process.env.DATA_FABRIC_ACCESS_INTEGRATION === 'true';
+const skipDataFabricAccessIntegrationInCi = process.env.CI === 'true' && !hasDataFabricAccessIntegration;
 
 // Data Fabric role and directory APIs require DataFabric.Data.Read on the test
 // external app. The standard CI tenant currently returns 403 for these APIs.
-describe.each(modes)('Data Fabric Access - Integration Tests [%s]', (mode) => {
+describe.skipIf(skipDataFabricAccessIntegrationInCi).each(modes)('Data Fabric Access - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   beforeAll(() => {
-    if (process.env.DATA_FABRIC_ACCESS_INTEGRATION !== 'true') {
+    if (!hasDataFabricAccessIntegration) {
       throw new Error(
         'DATA_FABRIC_ACCESS_INTEGRATION must be set to run Data Fabric access integration tests ' +
         '(requires DataFabric.Data.Read on the configured external app/PAT)'
