@@ -501,7 +501,8 @@ describe("Entity Models", () => {
 
         expect(mockService.deleteRecordById).toHaveBeenCalledWith(
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
-          ENTITY_TEST_CONSTANTS.RECORD_ID
+          ENTITY_TEST_CONSTANTS.RECORD_ID,
+          undefined,
         );
       });
 
@@ -712,6 +713,7 @@ describe("Entity Models", () => {
           ENTITY_TEST_CONSTANTS.ENTITY_ID,
           ENTITY_TEST_CONSTANTS.RECORD_ID,
           ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+          undefined,
         );
         expect(result).toBe(mockBlob);
       });
@@ -806,6 +808,7 @@ describe("Entity Models", () => {
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
         ENTITY_TEST_CONSTANTS.RECORD_ID,
         ENTITY_TEST_CONSTANTS.ATTACHMENT_FIELD_NAME,
+        undefined,
       );
       expect(result).toEqual(mockResponse);
     });
@@ -871,6 +874,20 @@ describe("Entity Models", () => {
 
       expect(mockService.deleteById).toHaveBeenCalledWith(
         ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        undefined,
+      );
+    });
+
+    it("entity.delete() should forward folderKey to service.deleteById", async () => {
+      const entityData = createBasicEntity();
+      const entity = createEntityWithMethods(entityData, mockService);
+      mockService.deleteById = vi.fn().mockResolvedValue(undefined);
+
+      await entity.delete({ folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID });
+
+      expect(mockService.deleteById).toHaveBeenCalledWith(
+        ENTITY_TEST_CONSTANTS.ENTITY_ID,
+        { folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID },
       );
     });
 

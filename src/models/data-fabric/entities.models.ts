@@ -14,6 +14,8 @@ import {
   EntityFileType,
   EntityUploadAttachmentOptions,
   EntityUploadAttachmentResponse,
+  EntityDownloadAttachmentOptions,
+  EntityDeleteAttachmentOptions,
   EntityDeleteAttachmentResponse,
   EntityInsertRecordsOptions,
   EntityUpdateRecordsOptions,
@@ -22,8 +24,12 @@ import {
   EntityInsertRecordOptions,
   EntityQueryRecordsOptions,
   EntityImportRecordsResponse,
+  EntityImportRecordsByIdOptions,
   EntityCreateOptions,
   EntityCreateFieldOptions,
+  EntityGetByIdOptions,
+  EntityDeleteByIdOptions,
+  EntityDeleteRecordByIdOptions,
   EntityUpdateByIdOptions,
 } from './entities.types';
 import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '../../utils/pagination/types';
@@ -86,6 +92,7 @@ export interface EntityServiceModel {
    * Gets entity metadata by entity ID with attached operation methods
    *
    * @param id - UUID of the entity
+   * @param options - Optional {@link EntityGetByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to entity metadata with operation methods
    * {@link EntityGetResponse}
    * @example
@@ -97,6 +104,9 @@ export interface EntityServiceModel {
    *
    * // Get entity metadata with methods
    * const entity = await entities.getById("<entityId>");
+   *
+   * // Folder-scoped: pass the entity's folder key
+   * const folderEntity = await entities.getById("<entityId>", { folderKey: "<folderKey>" });
    *
    * // Call operations directly on the entity
    * const records = await entity.getAllRecords();
@@ -117,7 +127,7 @@ export interface EntityServiceModel {
    * ]);
    * ```
    */
-  getById(id: string): Promise<EntityGetResponse>;
+  getById(id: string, options?: EntityGetByIdOptions): Promise<EntityGetResponse>;
 
   /**
    * Gets entity records by entity ID
@@ -341,6 +351,7 @@ export interface EntityServiceModel {
    *
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record to delete
+   * @param options - Optional {@link EntityDeleteRecordByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to void on success
    * @example
    * ```typescript
@@ -349,9 +360,12 @@ export interface EntityServiceModel {
    * const entities = new Entities(sdk);
    *
    * await entities.deleteRecordById("<entityId>", "<recordId>");
+   *
+   * // Folder-scoped: pass the entity's folder key
+   * await entities.deleteRecordById("<entityId>", "<recordId>", { folderKey: "<folderKey>" });
    * ```
    */
-  deleteRecordById(entityId: string, recordId: string): Promise<void>;
+  deleteRecordById(entityId: string, recordId: string, options?: EntityDeleteRecordByIdOptions): Promise<void>;
 
   /**
    * Queries entity records with filters, sorting, aggregates, and SDK-managed pagination
@@ -411,6 +425,7 @@ export interface EntityServiceModel {
    *
    * @param id - UUID of the entity
    * @param file - CSV file to import as a Blob or File or Uint8Array
+   * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
    * @example
    * ```typescript
@@ -418,10 +433,13 @@ export interface EntityServiceModel {
    * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
    * const result = await entities.importRecordsById(<id>, fileInput.files[0]);
    * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.importRecordsById(<id>, fileInput.files[0], { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
-  importRecordsById(id: string, file: EntityFileType): Promise<EntityImportRecordsResponse>;
+  importRecordsById(id: string, file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse>;
 
   /**
    * Downloads an attachment stored in a File-type field of an entity record.
@@ -429,6 +447,7 @@ export interface EntityServiceModel {
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
+   * @param options - Optional {@link EntityDownloadAttachmentOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to Blob containing the file content
    * @example
    * ```typescript
@@ -475,7 +494,7 @@ export interface EntityServiceModel {
    * fs.writeFileSync('attachment.pdf', buffer);
    * ```
    */
-  downloadAttachment(entityId: string, recordId: string, fieldName: string): Promise<Blob>;
+  downloadAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob>;
 
   /**
    * Uploads an attachment to a File-type field of an entity record.
@@ -486,7 +505,7 @@ export interface EntityServiceModel {
    * @param recordId - UUID of the record to upload the attachment to
    * @param fieldName - Name of the File-type field
    * @param file - File to upload (Blob, File, or Uint8Array)
-   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. expansionLevel)
+   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. `expansionLevel`, `folderKey` for folder-scoped entities)
    * @returns Promise resolving to {@link EntityUploadAttachmentResponse}
    * @example
    * ```typescript
@@ -507,6 +526,9 @@ export interface EntityServiceModel {
    * const file = fileInput.files[0];
    * const response = await entities.uploadAttachment(entityId, recordId, 'Documents', file);
    *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entities.uploadAttachment(entityId, recordId, 'Documents', file, { folderKey: "<folderKey>" });
+   *
    * // Node.js: Upload a file from disk
    * const fileBuffer = fs.readFileSync('document.pdf');
    * const blob = new Blob([fileBuffer], { type: 'application/pdf' });
@@ -521,6 +543,7 @@ export interface EntityServiceModel {
    * @param entityId - UUID of the entity
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
+   * @param options - Optional {@link EntityDeleteAttachmentOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to {@link EntityDeleteAttachmentResponse}
    * @example
    * ```typescript
@@ -544,7 +567,7 @@ export interface EntityServiceModel {
    * await entity.deleteAttachment(recordId, 'Documents');
    * ```
    */
-  deleteAttachment(entityId: string, recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
+  deleteAttachment(entityId: string, recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse>;
 
   /**
    * Creates a new Data Fabric entity with the given schema
@@ -580,14 +603,18 @@ export interface EntityServiceModel {
    * Deletes a Data Fabric entity and all its records
    *
    * @param id - UUID of the entity to delete
+   * @param options - Optional {@link EntityDeleteByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving when the entity is deleted
    * @example
    * ```typescript
    * await entities.deleteById(<id>);
+   *
+   * // Folder-scoped: pass the entity's folder key
+   * await entities.deleteById(<id>, { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
-  deleteById(id: string): Promise<void>;
+  deleteById(id: string, options?: EntityDeleteByIdOptions): Promise<void>;
 
   /**
    * Updates an existing Data Fabric entity — schema and/or metadata.
@@ -597,7 +624,6 @@ export interface EntityServiceModel {
    * only when the corresponding fields are provided.
    *
    * @param id - UUID of the entity to update
-   * @param name - name of the entity (required by the API)
    * @param options - Changes to apply ({@link EntityUpdateByIdOptions})
    * @returns Promise resolving when the update is complete
    *
@@ -630,6 +656,12 @@ export interface EntityServiceModel {
    *   updateFields: [
    *     { id: <fieldId>, lengthLimit: 1000 },
    *   ],
+   * });
+   *
+   * // Folder-scoped entity: add a field to an entity that lives in a non-tenant folder
+   * await entities.updateById(<id>, {
+   *   folderKey: "<folderKey>",
+   *   addFields: [{ fieldName: "notes", type: EntityFieldDataType.MULTILINE_TEXT }],
    * });
    * ```
    * @internal
@@ -710,9 +742,10 @@ export interface EntityMethods {
    * Use this method if you need trigger events to fire for the deleted record.
    *
    * @param recordId - UUID of the record to delete
+   * @param options - Optional {@link EntityDeleteRecordByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to void on success
    */
-  deleteRecord(recordId: string): Promise<void>;
+  deleteRecord(recordId: string, options?: EntityDeleteRecordByIdOptions): Promise<void>;
 
   /**
    * Get all records from this entity
@@ -740,9 +773,10 @@ export interface EntityMethods {
    *
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
+   * @param options - Optional {@link EntityDownloadAttachmentOptions} (e.g. folderKey)
    * @returns Promise resolving to Blob containing the file content
    */
-  downloadAttachment(recordId: string, fieldName: string): Promise<Blob>;
+  downloadAttachment(recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob>;
 
   /**
    * Uploads an attachment to a File-type field of an entity record
@@ -750,7 +784,7 @@ export interface EntityMethods {
    * @param recordId - UUID of the record to upload the attachment to
    * @param fieldName - Name of the File-type field
    * @param file - File to upload (Blob, File, or Uint8Array)
-   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. expansionLevel)
+   * @param options - Optional {@link EntityUploadAttachmentOptions} (e.g. expansionLevel, folderKey)
    * @returns Promise resolving to {@link EntityUploadAttachmentResponse}
    */
   uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse>;
@@ -760,9 +794,10 @@ export interface EntityMethods {
    *
    * @param recordId - UUID of the record containing the attachment
    * @param fieldName - Name of the File-type field containing the attachment
+   * @param options - Optional {@link EntityDeleteAttachmentOptions} (e.g. folderKey)
    * @returns Promise resolving to {@link EntityDeleteAttachmentResponse}
    */
-  deleteAttachment(recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse>;
+  deleteAttachment(recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse>;
 
   /**
    * @deprecated Use {@link insertRecord} instead.
@@ -826,6 +861,7 @@ export interface EntityMethods {
    * Imports records from a CSV file into this entity
    *
    * @param file - CSV file to import as a Blob, File, or Uint8Array
+   * @param options - Optional {@link EntityImportRecordsByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving to {@link EntityImportRecordsResponse} with record counts
    * @example
    * ```typescript
@@ -833,9 +869,12 @@ export interface EntityMethods {
    * const fileInput = document.getElementById('csv-input') as HTMLInputElement;
    * const result = await entity.importRecords(fileInput.files[0]);
    * console.log(`Inserted ${result.insertedRecords} of ${result.totalRecords} records`);
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entity.importRecords(fileInput.files[0], { folderKey: "<folderKey>" });
    * ```
    */
-  importRecords(file: EntityFileType): Promise<EntityImportRecordsResponse>;
+  importRecords(file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse>;
 
   /**
    * @deprecated Use {@link getAllRecords} instead.
@@ -850,15 +889,19 @@ export interface EntityMethods {
   /**
    * Deletes this entity and all its records
    *
+   * @param options - Optional {@link EntityDeleteByIdOptions} (e.g. `folderKey` for folder-scoped entities)
    * @returns Promise resolving when the entity is deleted
    * @example
    * ```typescript
    * const entity = await entities.getById(<id>);
    * await entity.delete();
+   *
+   * // Folder-scoped entity: pass the entity's folder key
+   * await entity.delete({ folderKey: "<folderKey>" });
    * ```
    * @internal
    */
-  delete(): Promise<void>;
+  delete(options?: EntityDeleteByIdOptions): Promise<void>;
 
   /**
    * Updates this entity — schema and/or metadata.
@@ -927,10 +970,10 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.deleteRecordsById(entityData.id, recordIds, options);
     },
 
-    async deleteRecord(recordId: string): Promise<void> {
+    async deleteRecord(recordId: string, options?: EntityDeleteRecordByIdOptions): Promise<void> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
       if (!recordId) throw new Error('Record ID is undefined');
-      return service.deleteRecordById(entityData.id, recordId);
+      return service.deleteRecordById(entityData.id, recordId, options);
     },
 
     async getAllRecords<T extends EntityGetAllRecordsOptions = EntityGetAllRecordsOptions>(options?: T): Promise<
@@ -948,9 +991,9 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.getRecordById(entityData.id, recordId, options);
     },
 
-    async downloadAttachment(recordId: string, fieldName: string): Promise<Blob> {
+    async downloadAttachment(recordId: string, fieldName: string, options?: EntityDownloadAttachmentOptions): Promise<Blob> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.downloadAttachment(entityData.id, recordId, fieldName);
+      return service.downloadAttachment(entityData.id, recordId, fieldName, options);
     },
 
     async uploadAttachment(recordId: string, fieldName: string, file: EntityFileType, options?: EntityUploadAttachmentOptions): Promise<EntityUploadAttachmentResponse> {
@@ -958,9 +1001,9 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.uploadAttachment(entityData.id, recordId, fieldName, file, options);
     },
 
-    async deleteAttachment(recordId: string, fieldName: string): Promise<EntityDeleteAttachmentResponse> {
+    async deleteAttachment(recordId: string, fieldName: string, options?: EntityDeleteAttachmentOptions): Promise<EntityDeleteAttachmentResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.deleteAttachment(entityData.id, recordId, fieldName);
+      return service.deleteAttachment(entityData.id, recordId, fieldName, options);
     },
 
     async queryRecords<T extends EntityQueryRecordsOptions = EntityQueryRecordsOptions>(options?: T): Promise<
@@ -972,9 +1015,9 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return service.queryRecordsById(entityData.id, options);
     },
 
-    async importRecords(file: EntityFileType): Promise<EntityImportRecordsResponse> {
+    async importRecords(file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.importRecordsById(entityData.id, file);
+      return service.importRecordsById(entityData.id, file, options);
     },
 
     async insert(data: Record<string, any>, options?: EntityInsertOptions): Promise<EntityInsertResponse> {
@@ -994,9 +1037,9 @@ function createEntityMethods(entityData: RawEntityGetResponse, service: EntitySe
       return this.getAllRecords(options);
     },
 
-    async delete(): Promise<void> {
+    async delete(options?: EntityDeleteByIdOptions): Promise<void> {
       if (!entityData.id) throw new Error('Entity ID is undefined');
-      return service.deleteById(entityData.id);
+      return service.deleteById(entityData.id, options);
     },
 
     async update(options: EntityUpdateByIdOptions): Promise<void> {
