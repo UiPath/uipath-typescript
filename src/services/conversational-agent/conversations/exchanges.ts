@@ -26,7 +26,7 @@ import type {
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
 import { EXCHANGE_ENDPOINTS } from '@/utils/constants/endpoints';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
+import { PaginatedResponse } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 
@@ -71,46 +71,63 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
   }
 
   /**
-   * Gets all exchanges for a conversation with optional filtering and pagination
+   * Gets exchanges for a conversation with pagination and optional sort parameters
    *
-   * The method returns either:
-   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
-   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   * Returns a paginated response. When called without `pageSize`/`cursor`, the
+   * backend applies its default page size — inspect `hasNextPage`/`nextCursor`
+   * to navigate further pages.
    *
    * @param conversationId - The conversation ID to get exchanges for
    * @param options - Options for querying exchanges including optional pagination parameters
-   * @returns Promise resolving to either an array of exchanges {@link NonPaginatedResponse}<{@link ExchangeGetResponse}> or a {@link PaginatedResponse}<{@link ExchangeGetResponse}> when pagination options are used
+   * @returns Promise resolving to a {@link PaginatedResponse}<{@link ExchangeGetResponse}>
    *
-   * @example
+   * @example Basic usage - default page size and sort order
    * ```typescript
-   * // Get all exchanges (non-paginated)
-   * const conversationExchanges = await exchanges.getAll(conversationId);
-   *
-   * // First page with pagination
-   * const firstPageOfExchanges = await exchanges.getAll(conversationId, { pageSize: 10 });
+   * // First page
+   * const firstPage = await exchanges.getAll(conversationId);
    *
    * // Navigate using cursor
-   * if (firstPageOfExchanges.hasNextPage) {
-   *   const nextPageOfExchanges = await exchanges.getAll(conversationId, { cursor: firstPageOfExchanges.nextCursor });
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await exchanges.getAll(conversationId, { cursor: firstPage.nextCursor });
+   * }
+   * ```
+   *
+   * @example With explicit page size and exchange/message sort orders
+   * ```typescript
+   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
+   *
+   * const firstPage = await exchanges.getAll(conversationId, {
+   *   pageSize: 10,
+   *   exchangeSort: SortOrder.Descending,
+   *   messageSort: SortOrder.Ascending
+   * });
+   *
+   * // Navigate using cursor and same parameters
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await exchanges.getAll(conversationId, {
+   *     pageSize: 10,
+   *     exchangeSort: SortOrder.Descending,
+   *     messageSort: SortOrder.Ascending,
+   *     cursor: firstPage.nextCursor
+   *   });
    * }
    * ```
    */
   @track('ConversationalAgent.Exchanges.GetAll')
-  async getAll<T extends ExchangeGetAllOptions = ExchangeGetAllOptions>(
+  async getAll(
     conversationId: string,
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ExchangeGetResponse>
-      : NonPaginatedResponse<ExchangeGetResponse>
-  > {
-    const transformFn = transformExchange;
+    options?: ExchangeGetAllOptions
+  ): Promise<PaginatedResponse<ExchangeGetResponse>> {
+    const { pageSize, cursor, jumpToPage, ...additionalParams } = options ?? {};
+    const paginationParams = cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize };
 
-    return PaginationHelpers.getAll({
+    return PaginationHelpers.getAllPaginated<Exchange, ExchangeGetResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => EXCHANGE_ENDPOINTS.LIST(conversationId),
-      transformFn,
-      pagination: {
+      paginationParams,
+      additionalParams,
+      transformFn: transformExchange,
+      options: {
         paginationType: PaginationType.TOKEN,
         itemsField: CONVERSATIONAL_PAGINATION.ITEMS_FIELD,
         continuationTokenField: CONVERSATIONAL_PAGINATION.CONTINUATION_TOKEN_FIELD,
@@ -118,9 +135,8 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
           pageSizeParam: CONVERSATIONAL_TOKEN_PARAMS.PAGE_SIZE_PARAM,
           tokenParam: CONVERSATIONAL_TOKEN_PARAMS.TOKEN_PARAM
         }
-      },
-      excludeFromPrefix: Object.keys(options || {}) // Conversational params are not OData
-    }, options) as any;
+      }
+    });
   }
 
   /**

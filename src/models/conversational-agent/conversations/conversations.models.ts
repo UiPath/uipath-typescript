@@ -19,7 +19,7 @@ import type {
 } from './conversations.types';
 import type { ExchangeServiceModel, ConversationExchangeServiceModel } from './exchanges.models';
 import type { ExchangeGetByIdOptions, CreateFeedbackOptions } from './exchanges.types';
-import type { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
+import type { PaginatedResponse } from '@/utils/pagination';
 import type { ConnectionStatus, ConnectionStatusChangedHandler } from '@/core/websocket';
 import type { SessionStream } from './types/events/session.types';
 
@@ -116,28 +116,23 @@ export interface ConversationServiceModel {
   create(agentId: number, folderId: number, options?: ConversationCreateOptions): Promise<ConversationCreateResponse>;
 
   /**
-   * Gets all conversations with optional filtering and pagination
+   * Gets conversations with pagination and optional sort/filter parameters
    *
-   * The method returns either:
-   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
-   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   * Returns a paginated response. When called without `pageSize`/`cursor`, a
+   * default page size is applied - inspect `hasNextPage`/`nextCursor`
+   * to navigate further pages.
    *
-   * @param options - Options for querying conversations including optional pagination parameters
-   * @returns Promise resolving to either an array of conversations {@link NonPaginatedResponse}<{@link ConversationGetResponse}> or a {@link PaginatedResponse}<{@link ConversationGetResponse}> when pagination options are used
+   * @param options - Options for querying conversations
+   * @returns Promise resolving to a {@link PaginatedResponse}<{@link ConversationGetResponse}>
    *
-   * @example Basic usage - get all conversations
-   * ```typescript
-   * const allConversations = await conversationalAgent.conversations.getAll();
-   *
-   * for (const conversation of allConversations.items) {
-   *   console.log(`${conversation.label} - created: ${conversation.createdTime}`);
-   * }
-   * ```
-   *
-   * @example With pagination
+   * @example Basic usage - default sort, pagination, and without filtering
    * ```typescript
    * // First page
-   * const firstPage = await conversationalAgent.conversations.getAll({ pageSize: 10 });
+   * const firstPage = await conversationalAgent.conversations.getAll();
+   *
+   * for (const conversation of firstPage.items) {
+   *   console.log(`${conversation.label} - created: ${conversation.createdTime}`);
+   * }
    *
    * // Navigate using cursor
    * if (firstPage.hasNextPage) {
@@ -147,29 +142,44 @@ export interface ConversationServiceModel {
    * }
    * ```
    *
-   * @example Sorted with limit
+   * @example With explicit page size and sort order (by last-activity timestamp)
    * ```typescript
-   * const result = await conversationalAgent.conversations.getAll({
-   *   sort: SortOrder.Descending,
-   *   pageSize: 20
+   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
+   *
+   * // First page
+   * const firstPage = await conversationalAgent.conversations.getAll({
+   *   pageSize: 10,
+   *   sort: SortOrder.Descending
    * });
+   *
+   * // Navigate using cursor and same parameters
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await conversationalAgent.conversations.getAll({
+   *     pageSize: 10,
+   *     sort: SortOrder.Descending,
+   *     cursor: firstPage.nextCursor
+   *   });
+   * }
    * ```
    *
-   * @example Filter by agent and search by label
+   * @example With agent-filter and label-search
    * ```typescript
-   * const filtered = await conversationalAgent.conversations.getAll({
+   * const firstPage = await conversationalAgent.conversations.getAll({
    *   agentId: <agentId>,
    *   label: 'budget'
    * });
+   *
+   * // Navigate using cursor and same parameters
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await conversationalAgent.conversations.getAll({
+   *     agentId: <agentId>,
+   *     label: 'budget',
+   *     cursor: firstPage.nextCursor
+   *   });
+   * }
    * ```
    */
-  getAll<T extends ConversationGetAllOptions = ConversationGetAllOptions>(
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ConversationGetResponse>
-      : NonPaginatedResponse<ConversationGetResponse>
-  >;
+  getAll(options?: ConversationGetAllOptions): Promise<PaginatedResponse<ConversationGetResponse>>;
 
   /**
    * Gets a conversation by ID

@@ -35,7 +35,7 @@ import { ConversationGetAllFilterMap, ConversationMap, createConversationWithMet
 // Utils
 import { CONVERSATIONAL_PAGINATION, CONVERSATIONAL_TOKEN_PARAMS } from '@/utils/constants/common';
 import { CONVERSATION_ENDPOINTS, ATTACHMENT_ENDPOINTS } from '@/utils/constants/endpoints';
-import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '@/utils/pagination';
+import { PaginatedResponse } from '@/utils/pagination';
 import { PaginationHelpers } from '@/utils/pagination/helpers';
 import { PaginationType } from '@/utils/pagination/internal-types';
 import { transformData, transformRequest, arrayDictionaryToRecord } from '@/utils/transform';
@@ -147,28 +147,23 @@ export class ConversationService extends BaseService implements ConversationServ
   }
 
   /**
-   * Gets all conversations with optional filtering and pagination
+   * Gets conversations with pagination and optional sort/filter parameters
    *
-   * The method returns either:
-   * - A NonPaginatedResponse with items array (when no pagination parameters are provided)
-   * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
+   * Returns a paginated response. When called without `pageSize`/`cursor`, a
+   * default page size is applied - inspect `hasNextPage`/`nextCursor`
+   * to navigate further pages.
    *
-   * @param options - Options for querying conversations including optional pagination parameters
-   * @returns Promise resolving to either an array of conversations {@link NonPaginatedResponse}<{@link ConversationGetResponse}> or a {@link PaginatedResponse}<{@link ConversationGetResponse}> when pagination options are used
+   * @param options - Options for querying conversations
+   * @returns Promise resolving to a {@link PaginatedResponse}<{@link ConversationGetResponse}>
    *
-   * @example Basic usage - get all conversations
-   * ```typescript
-   * const allConversations = await conversationalAgent.conversations.getAll();
-   *
-   * for (const conversation of allConversations.items) {
-   *   console.log(`${conversation.label} - created: ${conversation.createdTime}`);
-   * }
-   * ```
-   *
-   * @example With pagination
+   * @example Basic usage - default sort, pagination, and without filtering
    * ```typescript
    * // First page
-   * const firstPage = await conversationalAgent.conversations.getAll({ pageSize: 10 });
+   * const firstPage = await conversationalAgent.conversations.getAll();
+   *
+   * for (const conversation of firstPage.items) {
+   *   console.log(`${conversation.label} - created: ${conversation.createdTime}`);
+   * }
    *
    * // Navigate using cursor
    * if (firstPage.hasNextPage) {
@@ -178,46 +173,62 @@ export class ConversationService extends BaseService implements ConversationServ
    * }
    * ```
    *
-   * @example Sorted with limit
+   * @example With explicit page size and sort order (by last-activity timestamp)
    * ```typescript
-   * const result = await conversationalAgent.conversations.getAll({
-   *   sort: SortOrder.Descending,
-   *   pageSize: 20
+   * import { SortOrder } from '@uipath/uipath-typescript/conversational-agent';
+   *
+   * // First page
+   * const firstPage = await conversationalAgent.conversations.getAll({
+   *   pageSize: 10,
+   *   sort: SortOrder.Descending
    * });
+   *
+   * // Navigate using cursor and same parameters
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await conversationalAgent.conversations.getAll({
+   *     pageSize: 10,
+   *     sort: SortOrder.Descending,
+   *     cursor: firstPage.nextCursor
+   *   });
+   * }
    * ```
    *
-   * @example Filter by agent and search by label
+   * @example With agent-filter and label-search
    * ```typescript
-   * const filtered = await conversationalAgent.conversations.getAll({
+   * const firstPage = await conversationalAgent.conversations.getAll({
    *   agentId: <agentId>,
    *   label: 'budget'
    * });
+   *
+   * // Navigate using cursor and same parameters
+   * if (firstPage.hasNextPage) {
+   *   const nextPage = await conversationalAgent.conversations.getAll({
+   *     agentId: <agentId>,
+   *     label: 'budget',
+   *     cursor: firstPage.nextCursor
+   *   });
+   * }
    * ```
    */
   @track('ConversationalAgent.Conversations.GetAll')
-  async getAll<T extends ConversationGetAllOptions = ConversationGetAllOptions>(
-    options?: T
-  ): Promise<
-    T extends HasPaginationOptions<T>
-      ? PaginatedResponse<ConversationGetResponse>
-      : NonPaginatedResponse<ConversationGetResponse>
-  > {
-    // Transform function to convert API timestamps to SDK naming convention and add methods
+  async getAll(options?: ConversationGetAllOptions): Promise<PaginatedResponse<ConversationGetResponse>> {
     const transformFn = (conversation: RawConversationGetResponse) => {
       const transformedData = transformData(conversation, ConversationMap) as RawConversationGetResponse;
       return createConversationWithMethods(transformedData, this, this, this._exchangeService);
     };
 
+    const { pageSize, cursor, jumpToPage, ...filterOptions } = options ?? {};
     // Translate SDK filter names (agentKey/agentId/label) to backend names before forwarding
-    const apiOptions = options
-      ? transformRequest(options, ConversationGetAllFilterMap)
-      : undefined;
+    const additionalParams = transformRequest(filterOptions, ConversationGetAllFilterMap);
+    const paginationParams = cursor ? { cursor, pageSize } : jumpToPage ? { jumpToPage, pageSize } : { pageSize };
 
-    return PaginationHelpers.getAll({
+    return PaginationHelpers.getAllPaginated<RawConversationGetResponse, ConversationGetResponse>({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => CONVERSATION_ENDPOINTS.LIST,
+      paginationParams,
+      additionalParams,
       transformFn,
-      pagination: {
+      options: {
         paginationType: PaginationType.TOKEN,
         itemsField: CONVERSATIONAL_PAGINATION.ITEMS_FIELD,
         continuationTokenField: CONVERSATIONAL_PAGINATION.CONTINUATION_TOKEN_FIELD,
@@ -225,9 +236,8 @@ export class ConversationService extends BaseService implements ConversationServ
           pageSizeParam: CONVERSATIONAL_TOKEN_PARAMS.PAGE_SIZE_PARAM,
           tokenParam: CONVERSATIONAL_TOKEN_PARAMS.TOKEN_PARAM
         }
-      },
-      excludeFromPrefix: Object.keys(apiOptions || {}) // Conversational params are not OData
-    }, apiOptions as T | undefined) as any;
+      }
+    });
   }
 
   /**
@@ -270,10 +280,10 @@ export class ConversationService extends BaseService implements ConversationServ
    */
   @track('ConversationalAgent.Conversations.DeleteById')
   async deleteById(id: string): Promise<ConversationDeleteResponse> {
-    const response = await this.delete<ConversationDeleteResponse>(
+    const response = await this.delete<RawConversationGetResponse>(
       CONVERSATION_ENDPOINTS.DELETE(id)
     );
-    return response.data;
+    return transformData(response.data, ConversationMap) as ConversationDeleteResponse;
   }
 
   // ==================== Attachments ====================
