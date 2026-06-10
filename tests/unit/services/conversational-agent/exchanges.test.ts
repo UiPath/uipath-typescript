@@ -422,4 +422,55 @@ describe('ExchangeService Unit Tests', () => {
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
   });
+
+  describe('end', () => {
+    it('should end an exchange and return transformed result', async () => {
+      const mockExchange = createMockRawExchange();
+      mockApiClient.post.mockResolvedValue(mockExchange);
+
+      const result = await exchanges.end(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+      );
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID);
+      expect(result.exchangeId).toBe(CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID);
+
+      expect(mockApiClient.post).toHaveBeenCalledWith(
+        EXCHANGE_ENDPOINTS.END(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        ),
+        undefined,
+        expect.any(Object)
+      );
+    });
+
+    it('should transform messages within the ended exchange', async () => {
+      const mockExchange = createMockRawExchange();
+      mockApiClient.post.mockResolvedValue(mockExchange);
+
+      const result = await exchanges.end(
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+        CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+      );
+
+      expect(result.messages).toHaveLength(2);
+      expect(result.messages[0].role).toBe('user');
+      expect(result.messages[1].role).toBe('assistant');
+    });
+
+    it('should handle API errors', async () => {
+      const error = createMockError(TEST_CONSTANTS.ERROR_MESSAGE);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        exchanges.end(
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.CONVERSATION_ID,
+          CONVERSATIONAL_AGENT_TEST_CONSTANTS.EXCHANGE_ID
+        )
+      ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
 });

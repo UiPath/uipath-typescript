@@ -20,7 +20,8 @@ import type {
   FeedbackCreateResponse,
   ExchangeGetAllOptions,
   ExchangeGetByIdOptions,
-  ExchangeGetResponse
+  ExchangeGetResponse,
+  ExchangeEndResponse
 } from '@/models/conversational-agent';
 
 // Utils
@@ -200,5 +201,29 @@ export class ExchangeService extends BaseService implements ExchangeServiceModel
       options
     );
     return response.data;
+  }
+
+  /**
+   * Ends an exchange, setting the endedAt timestamp and stopping any running agent job
+   *
+   * @param conversationId - The conversation containing the exchange
+   * @param exchangeId - The exchange to end
+   * @returns Promise resolving to {@link ExchangeEndResponse}
+   *
+   * @example
+   * ```typescript
+   * const endedExchange = await exchanges.end(conversationId, exchangeId);
+   * console.log(`Exchange ended at: ${endedExchange.endedAt}`);
+   * ```
+   */
+  @track('ConversationalAgent.Exchanges.End')
+  async end(
+    conversationId: string,
+    exchangeId: string
+  ): Promise<ExchangeEndResponse> {
+    const response = await this.post<Exchange>(
+      EXCHANGE_ENDPOINTS.END(conversationId, exchangeId)
+    );
+    return transformExchange(response.data);
   }
 }
