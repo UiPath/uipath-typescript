@@ -75,7 +75,7 @@ export interface DataFabricDirectoryServiceModel {
    *
    * @example
    * ```typescript
-   * import { DataFabricDirectoryService, DataFabricRoleService } from '@uipath/uipath-typescript/entities';
+   * import { DataFabricDirectoryEntityTypeName, DataFabricDirectoryService, DataFabricRoleService } from '@uipath/uipath-typescript/entities';
    *
    * const roles = new DataFabricRoleService(sdk);
    * const directory = new DataFabricDirectoryService(sdk);
@@ -85,12 +85,12 @@ export interface DataFabricDirectoryServiceModel {
    *   throw new Error('DataWriter role not found');
    * }
    *
-   * await directory.assignRoles('<identity-group-id>', 'Group', [dataWriter.id]);
+   * await directory.assignRoles('<identity-group-id>', DataFabricDirectoryEntityTypeName.Group, [dataWriter.id]);
    * ```
    *
    * @example
    * ```typescript
-   * await directory.assignRoles('<identity-user-id>', 'User', ['<role-id>'], {
+   * await directory.assignRoles('<identity-user-id>', DataFabricDirectoryEntityTypeName.User, ['<role-id>'], {
    *   preserveExisting: false,
    * });
    * ```

@@ -13,7 +13,11 @@ export enum DataFabricDirectoryEntityType {
 /**
  * @internal
  */
-export type DataFabricDirectoryEntityTypeName = 'User' | 'Group' | 'Application';
+export enum DataFabricDirectoryEntityTypeName {
+  User = 'User',
+  Group = 'Group',
+  Application = 'Application',
+}
 
 /**
  * @internal

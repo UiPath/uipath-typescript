@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { ServerError, ValidationError } from '../../../../src/core/errors';
 import { DataFabricDirectoryService } from '../../../../src/services/data-fabric/directory';
-import { DataFabricDirectoryEntityType } from '../../../../src/models/data-fabric/directory.types';
+import {
+  DataFabricDirectoryEntityType,
+  DataFabricDirectoryEntityTypeName,
+} from '../../../../src/models/data-fabric/directory.types';
 import { DATA_FABRIC_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
 import {
   createMockApiClient,
@@ -176,7 +179,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
 
       const result = await directoryService.assignRoles(
         'group-id',
-        'Group',
+        DataFabricDirectoryEntityTypeName.Group,
         ['role-existing', 'role-new']
       );
 
@@ -212,7 +215,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
 
       const result = await directoryService.assignRoles(
         'new-group-id',
-        'Group',
+        DataFabricDirectoryEntityTypeName.Group,
         ['role-new']
       );
 
@@ -244,7 +247,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
 
       const result = await directoryService.assignRoles(
         ['user-id'],
-        'User',
+        DataFabricDirectoryEntityTypeName.User,
         ['role-new'],
         { preserveExisting: false, uiEnabled: false }
       );
@@ -278,7 +281,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
 
       const result = await directoryService.assignRoles(
         ['group-id', 'group-id-2'],
-        'Group',
+        DataFabricDirectoryEntityTypeName.Group,
         ['role-new'],
         { preserveExisting: false }
       );
@@ -301,7 +304,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
 
       await directoryService.assignRoles(
         'application-id',
-        'Application',
+        DataFabricDirectoryEntityTypeName.Application,
         ['role-new'],
         { preserveExisting: false }
       );
@@ -360,7 +363,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       await expect(
         directoryService.assignRoles(
           ['   '],
-          'Group',
+          DataFabricDirectoryEntityTypeName.Group,
           ['role-new']
         )
       ).rejects.toBeInstanceOf(ValidationError);
@@ -370,7 +373,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       await expect(
         directoryService.assignRoles(
           'group-id',
-          'Group',
+          DataFabricDirectoryEntityTypeName.Group,
           ['']
         )
       ).rejects.toBeInstanceOf(ValidationError);
@@ -392,7 +395,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       await expect(
         directoryService.assignRoles(
           'group-id',
-          'Group',
+          DataFabricDirectoryEntityTypeName.Group,
           ['role-new'],
           { preserveExisting: false }
         )
@@ -405,7 +408,7 @@ describe('DataFabricDirectoryService Unit Tests', () => {
       await expect(
         directoryService.assignRoles(
           'group-id',
-          'Group',
+          DataFabricDirectoryEntityTypeName.Group,
           ['role-new']
         )
       ).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
