@@ -613,7 +613,6 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * // Folder-scoped entity: pass the entity's folder key
    * await entities.importRecordsById("<entityId>", fileInput.files[0], { folderKey: "<folderKey>" });
    * ```
-   * @internal
    */
   @track('Entities.ImportRecordsById')
   async importRecordsById(id: string, file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse> {

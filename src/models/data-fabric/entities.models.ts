@@ -437,7 +437,6 @@ export interface EntityServiceModel {
    * // Folder-scoped entity: pass the entity's folder key
    * await entities.importRecordsById(<id>, fileInput.files[0], { folderKey: "<folderKey>" });
    * ```
-   * @internal
    */
   importRecordsById(id: string, file: EntityFileType, options?: EntityImportRecordsByIdOptions): Promise<EntityImportRecordsResponse>;
 
