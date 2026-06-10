@@ -7,11 +7,10 @@ import {
 
 const modes: InitMode[] = ['v0', 'v1'];
 const hasDataFabricAccessIntegration = process.env.DATA_FABRIC_ACCESS_INTEGRATION === 'true';
-const skipDataFabricAccessIntegrationInCi = process.env.CI === 'true' && !hasDataFabricAccessIntegration;
 
 // Data Fabric role and directory APIs require DataFabric.Data.Read on the test
 // external app. The standard CI tenant currently returns 403 for these APIs.
-describe.skipIf(skipDataFabricAccessIntegrationInCi).each(modes)('Data Fabric Access - Integration Tests [%s]', (mode) => {
+describe.each(modes)('Data Fabric Access - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   beforeAll(() => {

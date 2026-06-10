@@ -7,9 +7,8 @@ import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
 const hasAgentFeedbackIntegration = process.env.AGENT_FEEDBACK_INTEGRATION === 'true';
-const skipAgentFeedbackIntegrationInCi = process.env.CI === 'true' && !hasAgentFeedbackIntegration;
 
-describe.skipIf(skipAgentFeedbackIntegrationInCi).each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
+describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let feedback: Feedback;

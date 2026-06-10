@@ -8,9 +8,8 @@ import {
 
 const modes: InitMode[] = ['v1'];
 const hasTracesIntegration = process.env.TRACES_INTEGRATION === 'true';
-const skipTracesIntegrationInCi = process.env.CI === 'true' && !hasTracesIntegration;
 
-describe.skipIf(skipTracesIntegrationInCi).each(modes)('Traces - Integration Tests [%s]', (mode) => {
+describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let traces!: Traces;
