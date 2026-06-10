@@ -44,11 +44,13 @@ describe('Task Models', () => {
         
         const result = await task.assign({ userId: TASK_TEST_CONSTANTS.USER_ID });
 
-        
+
         expect(mockService.assign).toHaveBeenCalledWith({
           taskId: TASK_TEST_CONSTANTS.TASK_ID,
           userId: TASK_TEST_CONSTANTS.USER_ID
         });
+        // No criteria supplied — the key must be omitted, not forwarded as undefined.
+        expect(vi.mocked(mockService.assign).mock.calls[0][0]).not.toHaveProperty('assignmentCriteria');
         expect(result).toEqual(mockResponse);
       });
 

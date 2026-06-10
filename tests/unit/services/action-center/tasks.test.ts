@@ -245,6 +245,7 @@ describe('TaskService Unit Tests', () => {
       const result = await taskService.assign(assignment);
 
       expect(result.success).toBe(true);
+      expect(result.data).toEqual([assignment]);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         TASK_ENDPOINTS.ASSIGN_TASKS,
         expect.objectContaining({
@@ -368,6 +369,7 @@ describe('TaskService Unit Tests', () => {
       const result = await taskService.reassign(assignment);
 
       expect(result.success).toBe(true);
+      expect(result.data).toEqual([assignment]);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         TASK_ENDPOINTS.REASSIGN_TASKS,
         expect.objectContaining({

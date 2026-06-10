@@ -209,8 +209,8 @@ export interface RawTaskGetResponse extends TaskBaseResponse {
  * Defines how a task assignment is distributed.
  *
  * Defaults to {@link TaskAssignmentCriteria.SingleUser} (a direct single-user
- * assignment) when not specified. The group-based criteria tell the backend how
- * to distribute the task across the members of a directory group.
+ * assignment) when not specified. The group-based criteria tell Action Center
+ * how to distribute the task across the members of a directory group.
  */
 export enum TaskAssignmentCriteria {
   /** Assigned to a single user, like a direct assignment. */
@@ -219,6 +219,8 @@ export enum TaskAssignmentCriteria {
   Workload = 'Workload',
   /** Assigned to all users in the group. */
   AllUsers = 'AllUsers',
+  /** Assigned in a round-robin manner across the group's members. */
+  RoundRobin = 'RoundRobin',
 }
 
 /**

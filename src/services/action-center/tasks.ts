@@ -339,8 +339,8 @@ export class TaskService extends BaseService implements TaskServiceModel {
    * ```typescript
    * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
    *
-   * // Assign to a directory group by userId + criteria — the backend
-   * // distributes the task across the group's members
+   * // Assign to a directory group by userId + criteria — Action Center
+   * // distributes the task across the group's members based on the criteria
    * const result = await tasks.assign({
    *   taskId: 123,
    *   userId: 456, // a DirectoryGroup id from tasks.getUsers()

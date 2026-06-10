@@ -162,8 +162,8 @@ export interface TaskServiceModel {
    * ```typescript
    * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
    *
-   * // Assign to a directory group by userId + criteria — the backend
-   * // distributes the task across the group's members
+   * // Assign to a directory group by userId + criteria — Action Center
+   * // distributes the task across the group's members based on the criteria
    * const result = await tasks.assign({
    *   taskId: <taskId>,
    *   userId: <groupId>, // a DirectoryGroup id from tasks.getUsers()
@@ -363,9 +363,10 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
     async assign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
 
+      const criteria = options.assignmentCriteria !== undefined ? { assignmentCriteria: options.assignmentCriteria } : {};
       const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
-        ? { taskId: taskData.id, userId: options.userId, assignmentCriteria: options.assignmentCriteria }
-        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail!, assignmentCriteria: options.assignmentCriteria };
+        ? { taskId: taskData.id, userId: options.userId, ...criteria }
+        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail!, ...criteria };
 
       return service.assign(assignmentOptions);
     },
@@ -373,9 +374,10 @@ function createTaskMethods(taskData: RawTaskGetResponse | RawTaskCreateResponse,
     async reassign(options: TaskAssignOptions): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
       if (!taskData.id) throw new Error('Task ID is undefined');
 
+      const criteria = options.assignmentCriteria !== undefined ? { assignmentCriteria: options.assignmentCriteria } : {};
       const assignmentOptions: TaskAssignmentOptions = 'userId' in options && options.userId !== undefined
-        ? { taskId: taskData.id, userId: options.userId, assignmentCriteria: options.assignmentCriteria }
-        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail!, assignmentCriteria: options.assignmentCriteria };
+        ? { taskId: taskData.id, userId: options.userId, ...criteria }
+        : { taskId: taskData.id, userNameOrEmail: options.userNameOrEmail!, ...criteria };
 
       return service.reassign(assignmentOptions);
     },

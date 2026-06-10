@@ -329,7 +329,17 @@ describe.each(modes)('Action Center Tasks - Integration Tests [%s]', (mode) => {
         assignmentCriteria: TaskAssignmentCriteria.AllUsers,
       });
 
+      // Action Center responds 200 with an empty body on a successful assignment
+      // and with per-task failure details (errorCode/errorMessage) when an item
+      // fails. The SDK maps the empty body to success=true and echoes the request
+      // as `data`; a failure would instead surface error items here. Asserting the
+      // exact echoed payload proves the response carried no failure details.
       expect(result.success).toBe(true);
+      expect(result.data).toEqual([
+        { taskId: criteriaTaskId, userId: groupId, assignmentCriteria: TaskAssignmentCriteria.AllUsers },
+      ]);
+
+      await tasks.unassign(criteriaTaskId);
     });
   });
 
