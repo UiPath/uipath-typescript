@@ -8,7 +8,7 @@ Integration tests read their configuration from `tests/.env.integration`. Create
 
 The full, current set of config values lives in the team Slack canvas: [UiPath SDK – Integration Test Config (.env)](https://uipath.enterprise.slack.com/docs/TLXCE0J2Z/F0B9B5G7M2Q). Copy them into your local `tests/.env.integration` and fill in `UIPATH_SECRET` with your own PAT from the `procodeapps` org.
 
-> **Create test artifacts in the `integrationtest` tenant**, inside the **"Integration Test"** folder (`INTEGRATION_TEST_FOLDER_KEY` = `5f6dadf1-3677-49dc-8aca-c2999dd4b3ba`). Keeping all test data in this dedicated tenant and folder avoids polluting shared environments and keeps cleanup predictable.
+**Create test artifacts in the `integrationtest` tenant**, inside the **"Integration Test"** folder. Keeping all test data in this dedicated tenant and folder avoids polluting shared environments and keeps cleanup predictable.
 
 ## Where tests live
 
