@@ -11,3 +11,4 @@ export const SDK_SERVICE_NAME = 'UiPath.CodedActionApp.Sdk';
 export const CLOUD_ROLE_NAME = 'uipath-coded-action-app-sdk';
 export const SDK_LOGGER_NAME = 'uipath-coded-action-app-telemetry';
 export const SDK_RUN_EVENT = 'CodedActionApp.Sdk.Run';
+export const TS_SDK_CLOUD_ROLE_NAME = 'uipath-ts-sdk';

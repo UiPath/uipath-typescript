@@ -1,8 +1,10 @@
 // ===== IMPORTS =====
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { TelemetryContext } from '@uipath/core-telemetry';
 import { UiPath } from '../../../src/core/uipath';
 import { UiPathConfig } from '../../../src/core/config/config';
 import { ExecutionContext } from '../../../src/core/context/execution';
+import { telemetryClient } from '../../../src/core/telemetry';
 import { getConfig, getContext, getTokenManager, getPrivateSDK } from '../../utils/setup';
 import { TEST_CONSTANTS } from '../../utils/constants/common';
 
@@ -37,6 +39,13 @@ vi.mock('../../../src/core/auth/service', () => {
 });
 
 vi.mock('../../../src/core/http/api-client');
+
+// Mock meta-tag loading so the telemetry tests can drive the org/tenant ids
+// the deployment injects. Defaults to no meta tags (matching server-side use).
+const { mockLoadFromMetaTags } = vi.hoisted(() => ({ mockLoadFromMetaTags: vi.fn() }));
+vi.mock('../../../src/core/config/runtime', () => ({
+  loadFromMetaTags: mockLoadFromMetaTags,
+}));
 
 // ===== TEST SUITE =====
 describe('UiPath Core', () => {
@@ -418,6 +427,58 @@ describe('UiPath Core', () => {
       expect(getConfig(sdk1).orgName).toBe('org1');
       expect(getConfig(sdk2).orgName).toBe('org2');
       expect(getContext(sdk1)).not.toBe(getContext(sdk2));
+    });
+  });
+
+  describe('Telemetry', () => {
+    let initializeSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      initializeSpy = vi.spyOn(telemetryClient, 'initialize').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      initializeSpy.mockRestore();
+      mockLoadFromMetaTags.mockReset();
+    });
+
+    it('reports the meta-tag org/tenant values as orgId/tenantId and the merged config as orgName/tenantName', () => {
+      mockLoadFromMetaTags.mockReturnValue({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: 'meta-org-id',
+        tenantName: 'meta-tenant-id',
+      });
+
+      const sdk = new UiPath({ secret: TEST_CONSTANTS.CLIENT_SECRET });
+      expect(sdk).toBeInstanceOf(UiPath);
+
+      const context = initializeSpy.mock.calls[0][0] as TelemetryContext;
+      expect(context.orgId).toBe('meta-org-id');
+      expect(context.tenantId).toBe('meta-tenant-id');
+      // No constructor override, so the merged config values match the meta tags.
+      expect(context.orgName).toBe('meta-org-id');
+      expect(context.tenantName).toBe('meta-tenant-id');
+    });
+
+    it('uses the meta-tag ids for orgId/tenantId and the constructor override for orgName/tenantName', () => {
+      mockLoadFromMetaTags.mockReturnValue({
+        baseUrl: TEST_CONSTANTS.BASE_URL,
+        orgName: 'meta-org-id',
+        tenantName: 'meta-tenant-id',
+      });
+
+      const sdk = new UiPath({
+        orgName: 'constructor-org-name',
+        tenantName: 'constructor-tenant-name',
+        secret: TEST_CONSTANTS.CLIENT_SECRET,
+      });
+      expect(sdk).toBeInstanceOf(UiPath);
+
+      const context = initializeSpy.mock.calls[0][0] as TelemetryContext;
+      expect(context.orgId).toBe('meta-org-id');
+      expect(context.tenantId).toBe('meta-tenant-id');
+      expect(context.orgName).toBe('constructor-org-name');
+      expect(context.tenantName).toBe('constructor-tenant-name');
     });
   });
 });
