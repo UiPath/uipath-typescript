@@ -176,6 +176,16 @@
                 "default": "./dist/document-understanding/index.cjs"
             }
         },
+        "./agents": {
+            "import": {
+                "types": "./dist/agents/index.d.ts",
+                "default": "./dist/agents/index.mjs"
+            },
+            "require": {
+                "types": "./dist/agents/index.d.ts",
+                "default": "./dist/agents/index.cjs"
+            }
+        },
         "./governance": {
             "import": {
                 "types": "./dist/governance/index.d.ts",

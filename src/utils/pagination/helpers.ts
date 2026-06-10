@@ -262,8 +262,9 @@ export class PaginationHelpers {
     }
 
     // Extract and transform items from response
-    // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N })
-    const rawItems = Array.isArray(response.data) ? response.data : response.data?.[itemsField];
+    // Handle both plain array responses and envelope responses ({ value: [...], totalRecordCount: N }).
+    // itemsField may be a dotted path (e.g. 'data.agents') for nested envelopes.
+    const rawItems = Array.isArray(response.data) ? response.data : resolveNestedField(response.data, itemsField);
     const rawTotalCount = Array.isArray(response.data) ? undefined : resolveNestedField(response.data, totalCountField);
     const totalCount = typeof rawTotalCount === 'number' ? rawTotalCount : undefined;
 

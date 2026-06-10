@@ -230,3 +230,9 @@ The `ConversationalAgents` scope is required for real-time WebSocket sessions (`
 | `reassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `unassign()` | `OR.Tasks` or `OR.Tasks.Write` |
 | `complete()` | `OR.Tasks` or `OR.Tasks.Write` |
+
+## Agents
+
+| Method | OAuth Scope |
+|--------|-------------|
+| `getAll()` | `Insights.RealTimeData Insights OR.Folders.Read` |
