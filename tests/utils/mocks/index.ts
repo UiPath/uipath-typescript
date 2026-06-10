@@ -19,6 +19,7 @@ export * from './pagination';
 export * from './conversational-agent';
 export * from './feedback';
 export * from './attachments';
+export * from './memory';
 export * from './traces';
 export * from './governance';
 

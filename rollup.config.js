@@ -200,6 +200,11 @@ const serviceEntries = [
     output: 'feedback/index'
   },
   {
+    name: 'agent-memory',
+    input: 'src/services/agents/memory/index.ts',
+    output: 'agent-memory/index'
+  },
+  {
     name: 'traces',
     input: 'src/services/observability/traces/index.ts',
     output: 'traces/index'
