@@ -116,6 +116,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 | Service | Method | Supports `jumpToPage`? |
 |---------|--------|------------------------|
 | Agents | `getAll()` | ✅ Yes |
+| Agents | `getIncidents()` | ✅ Yes |
 | Assets | `getAll()` | ✅ Yes |
 | Buckets | `getAll()` | ✅ Yes |
 | Buckets | `getFiles()` | ✅ Yes |

@@ -90,3 +90,97 @@ export type AgentListOptions = AgentFilterOptions & PaginationOptions & {
   /** Sort order for the result set. */
   orderBy?: AgentListOrderBy;
 };
+
+/**
+ * Summary information about a single job execution — included on every
+ * incident entry to anchor the window.
+ */
+export interface AgentJobInfo {
+  /** Job key */
+  jobKey: string;
+  /** Folder key the job ran in */
+  folderKey: string;
+  /** Display name of the folder */
+  folderName: string;
+  /** Fully qualified folder path */
+  folderPath: string;
+  /** Job start time */
+  startTime: string;
+  /** Job end time. `null` while the job is still running. */
+  endTime: string | null;
+  /** Process key the job was launched from. `null` for ad-hoc jobs. */
+  processKey: string | null;
+}
+
+/**
+ * Columns available for ordering / grouping the agent incidents list.
+ */
+export enum AgentIncidentSortColumn {
+  AgentId = 'AgentId',
+  AgentName = 'AgentName',
+  ParentProcessName = 'ParentProcessName',
+  ErrorTitle = 'ErrorTitle',
+  FirstSeenStartTime = 'FirstSeenStartTime',
+  ExecutionCount = 'ExecutionCount',
+  Type = 'Type',
+  FirstSeenFolderName = 'FirstSeenFolderName',
+  FirstSeenFolderPath = 'FirstSeenFolderPath',
+  LastSeenStartTime = 'LastSeenStartTime',
+  LastSeenFolderName = 'LastSeenFolderName',
+  LastSeenFolderPath = 'LastSeenFolderPath',
+}
+
+/**
+ * Ordering directive for the agent incidents list.
+ */
+export interface AgentIncidentOrderBy {
+  /** Column to sort by */
+  column: AgentIncidentSortColumn;
+  /** Sort descending. Defaults to false (ascending) server-side. */
+  desc?: boolean;
+}
+
+/**
+ * One incident in the agent incidents list — an error/error-class observed
+ * for an agent over the requested window.
+ */
+export interface AgentIncident {
+  /** Incident type (e.g., "Error") */
+  type: string;
+  /** Error description */
+  description: string;
+  /** Agent ID */
+  agentId: string;
+  /** Agent display name. `null` if the agent has no display name set. */
+  agentName: string | null;
+  /** Job key where the incident was first seen */
+  jobKey: string;
+  /** Parent process name. `null` for jobs not bound to a parent process. */
+  parentProcess: string | null;
+  /** First-seen timestamp */
+  firstSeen: string;
+  /** Folder key where the incident was first observed */
+  folderKey: string;
+  /** Folder display name */
+  folderName: string;
+  /** Fully qualified folder path */
+  folderPath: string;
+  /** Number of error executions counted for this incident */
+  count: number;
+  /** First job in the window where this incident was observed */
+  firstSeenJob: AgentJobInfo;
+  /** Last job in the window where this incident was observed */
+  lastSeenJob: AgentJobInfo;
+}
+
+/**
+ * Options for the agent incidents list.
+ *
+ * Composes filter, pagination, and sort/group options.
+ */
+export type AgentIncidentsOptions = AgentFilterOptions & PaginationOptions & {
+  /** Sort order for the result set. */
+  orderBy?: AgentIncidentOrderBy;
+  /** Group results by one or more columns. */
+  groupBy?: AgentIncidentSortColumn[];
+};
