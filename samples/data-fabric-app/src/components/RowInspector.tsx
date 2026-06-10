@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { Download } from 'lucide-react'
 import { Entities } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../context/AuthContext'
 import type { EntitySchema, EntityRow } from '../hooks/useEntity'
 import {
   Dialog,
@@ -90,8 +90,10 @@ export function RowInspector({ entityId, recordId, schema, onClose }: Props) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
+      {/* Height capping lives in DialogContent — see ui/dialog.tsx. We just
+          declare width here. */}
+      <DialogContent className="sm:max-w-2xl gap-0">
+        <DialogHeader className="shrink-0 pb-4">
           <DialogTitle>Record details</DialogTitle>
           <DialogDescription>
             All fields including system metadata.{' '}
@@ -99,7 +101,9 @@ export function RowInspector({ entityId, recordId, schema, onClose }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto pr-1">
+        {/* `min-h-0` lets the flex-1 region shrink below content size so
+            the overflow-y-auto scroll actually engages on tall records. */}
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
           {loading && (
             <div className="space-y-2">
               {[...Array(6)].map((_, i) => (
@@ -164,7 +168,7 @@ export function RowInspector({ entityId, recordId, schema, onClose }: Props) {
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0 pt-4">
           <Button onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>

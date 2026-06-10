@@ -36,7 +36,23 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        // Positioning: anchored to the TOP of the viewport (not centered)
+        // because vertical centering causes tall dialogs to slide off
+        // the top as their content loads — the translate-y(-50%) computes
+        // against the dialog's actual height, so a dialog taller than the
+        // viewport ends up with its top above the screen. Top-anchored
+        // dialogs always have their header visible.
+        //
+        // Horizontal: the app's sidebar is `w-72` (18rem, 288px) wide, so
+        // viewport-center sits 144px left of the visible content-area
+        // center. Shifting the dialog right by `9rem` puts it visually
+        // centered over the records grid where the user expects it.
+        //
+        // Layout: flex column + max-h capped to dynamic viewport height
+        // (minus 2rem to leave breathing room). `dvh` correctly accounts
+        // for mobile browser chrome. `overflow-hidden` lets the inner
+        // body region scroll without the shell growing past `max-h`.
+        "fixed left-[calc(50%_+_9rem)] top-4 z-50 flex flex-col w-full max-w-lg max-h-[calc(100dvh_-_2rem)] translate-x-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:top-8 sm:rounded-lg",
         className
       )}
       {...props}

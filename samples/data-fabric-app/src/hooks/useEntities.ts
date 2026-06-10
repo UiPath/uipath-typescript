@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Entities } from '@uipath/uipath-typescript/entities'
 import type { EntityGetResponse } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
-import { useAuth } from './useAuth'
+import { useAuth } from '../context/AuthContext'
 
 /** Entity row from `Entities.getAll()`. */
 export type EntityListItem = EntityGetResponse

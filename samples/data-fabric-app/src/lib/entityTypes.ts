@@ -3,7 +3,6 @@
  *
  * The SDK's documented `EntityType` enum is
  *   `Entity | ChoiceSet | InternalEntity | SystemEntity`
- * but at runtime the API also returns values not in the enum (e.g. `Case`).
  * We treat the API's `entityType` as a plain string and centralise the
  * "what does this mean / can I query records on it" logic here so the rest
  * of the app stays decoupled from the schema variations.
@@ -37,8 +36,6 @@ export function entityTypeTooltip(entityType: string | undefined): string {
       return "Internal UiPath entity. Not accessible via the SDK's standard endpoints."
     case 'SystemEntity':
       return 'System-managed entity (e.g. Users, Roles). Read-only here.'
-    case 'Case':
-      return 'Case entity — a stateful record type backing Maestro case-management workflows.'
     default:
       return entityType ?? 'Unknown entity type'
   }
@@ -48,8 +45,9 @@ export function entityTypeTooltip(entityType: string | undefined): string {
  * Returns a reason string if this entity can't be browsed via `getAllRecords`,
  * or `null` if records can be fetched normally.
  *
- * `Case` is NOT in this list — Case entities are regular queryable records
- * with additional state-machine semantics. The standard CRUD endpoints work.
+ * Not in this list: `SystemEntity` — readable but not mutable. Handled
+ * separately via `isReadOnlyEntity()` so we can render the records in
+ * read-only mode instead of blocking the view entirely.
  */
 export function entityNotSupportedReason(
   entity: EntityTypeIndicators,
@@ -67,12 +65,6 @@ export function entityNotSupportedReason(
       "SDK's standard endpoints."
     )
   }
-  if (entity.entityType === 'SystemEntity') {
-    return (
-      "This is a system-managed entity (e.g. Users, Roles). Records aren't " +
-      'editable from here.'
-    )
-  }
   if (entity.entityType === 'ChoiceSet') {
     return (
       'This is a Choice Set, not a regular entity. Use the ChoiceSets ' +
@@ -80,4 +72,14 @@ export function entityNotSupportedReason(
     )
   }
   return null
+}
+
+/**
+ * Returns true if this entity is queryable but its records can't be created,
+ * updated, or deleted (e.g. system-managed entities like Users, Roles). The
+ * records view should render the grid but disable inline edits, suppress the
+ * Add data button, and hide the Delete Records action.
+ */
+export function isReadOnlyEntity(entity: EntityTypeIndicators): boolean {
+  return entity.entityType === 'SystemEntity'
 }

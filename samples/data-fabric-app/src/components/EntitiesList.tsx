@@ -330,7 +330,7 @@ function SectionHeader({
 }
 
 function ChoiceSetRow({
-  choiceSet: cs,
+  choiceSet,
   selected,
   onSelect,
 }: {
@@ -341,20 +341,22 @@ function ChoiceSetRow({
   return (
     <li>
       <button
-        onClick={() => onSelect(cs.id)}
+        onClick={() => onSelect(choiceSet.id)}
         className={`w-full text-left px-4 py-2 text-sm border-l-2 transition-colors ${
           selected
             ? 'border-primary bg-accent text-accent-foreground font-medium'
             : 'border-transparent text-foreground hover:bg-accent/50'
         }`}
-        title={cs.description || cs.displayName}
+        title={choiceSet.description || choiceSet.displayName}
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate">{cs.displayName || cs.name}</span>
+          <span className="truncate">
+            {choiceSet.displayName || choiceSet.name}
+          </span>
         </div>
-        {cs.description && (
+        {choiceSet.description && (
           <div className="text-xs text-muted-foreground mt-0.5 truncate">
-            {cs.description}
+            {choiceSet.description}
           </div>
         )}
       </button>
@@ -363,7 +365,7 @@ function ChoiceSetRow({
 }
 
 function EntityRow({
-  entity: e,
+  entity,
   selected,
   onSelect,
 }: {
@@ -371,17 +373,17 @@ function EntityRow({
   selected: boolean
   onSelect: (id: string) => void
 }) {
-  const isVDO = isVirtualDataObject(e)
-  const isNonStandard = e.entityType && e.entityType !== 'Entity'
+  const isVDO = isVirtualDataObject(entity)
+  const isNonStandard = entity.entityType && entity.entityType !== 'Entity'
   const tooltipText = isVDO
     ? 'Virtual Data Object — sourced from external systems via joins'
-    : entityTypeTooltip(e.entityType)
-  const badgeLabel = isVDO ? 'VDO' : e.entityType
+    : entityTypeTooltip(entity.entityType)
+  const badgeLabel = isVDO ? 'VDO' : entity.entityType
 
   return (
     <li>
       <button
-        onClick={() => onSelect(e.id)}
+        onClick={() => onSelect(entity.id)}
         className={`w-full text-left px-4 py-2 text-sm border-l-2 transition-colors ${
           selected
             ? 'border-primary bg-accent text-accent-foreground font-medium'
@@ -389,7 +391,9 @@ function EntityRow({
         }`}
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate">{e.displayName || e.name}</span>
+          <span className="truncate">
+            {entity.displayName || entity.name}
+          </span>
           {(isVDO || isNonStandard) && badgeLabel && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -403,9 +407,9 @@ function EntityRow({
             </Tooltip>
           )}
         </div>
-        {typeof e.recordCount === 'number' && !isVDO && (
+        {typeof entity.recordCount === 'number' && !isVDO && (
           <div className="text-xs text-muted-foreground mt-0.5">
-            {e.recordCount} record{e.recordCount === 1 ? '' : 's'}
+            {entity.recordCount} record{entity.recordCount === 1 ? '' : 's'}
           </div>
         )}
       </button>

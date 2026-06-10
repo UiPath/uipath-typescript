@@ -1,5 +1,5 @@
 import { Database, LogOut } from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from './ThemeToggle'
 

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Database } from 'lucide-react'
-import type { UiPathSDKConfig } from '@uipath/uipath-typescript/core'
-import { AuthProvider, useAuth } from './hooks/useAuth'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { LoginScreen } from './components/LoginScreen'
 import { Header } from './components/Header'
 import { EntitiesList } from './components/EntitiesList'
@@ -10,14 +9,6 @@ import { ChoiceSetDetail } from './components/ChoiceSetDetail'
 import { ThemeProvider } from './components/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-
-// Coded App pattern: the SDK fills required fields (clientId, orgName,
-// tenantName, baseUrl, scope, redirectUri) from `<meta name="uipath:*">`
-// tags injected at runtime — by the `@uipath/coded-apps-dev` Vite plugin
-// during local dev (which reads `uipath.json`), or by the UiPath platform
-// in deployed Coded Apps. The static type insists on those fields, so we
-// pass an empty object cast to satisfy it.
-const authConfig = {} as UiPathSDKConfig
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -94,7 +85,7 @@ function EmptyDetailState() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider config={authConfig}>
+      <AuthProvider>
         <TooltipProvider delayDuration={150}>
           <AppContent />
         </TooltipProvider>

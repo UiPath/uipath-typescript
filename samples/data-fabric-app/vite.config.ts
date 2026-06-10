@@ -39,13 +39,21 @@ function stripLayerWrappers(css: string): string {
 }
 
 /**
- * Strips `@layer` wrappers from every CSS file shipped by
- * `@uipath/ui-widgets-datatable`. The widget's JS internally does
- * `import "./DataTable.css"` (and similar), so those styles end up in
- * Vite's CSS pipeline — and Tailwind 3 errors on `@layer base` if it
- * appears outside a file that also has `@tailwind base`. Patching the
- * on-disk files removes the conflict cleanly. Re-runs on every dev
- * startup so a fresh `npm install` is automatically re-patched.
+ * Workaround for a known build-time issue with
+ * `@uipath/ui-widgets-datatable`.
+ *
+ * The widget's compiled CSS ships with raw `@layer` wrappers, which
+ * Tailwind 3 rejects if the file doesn't also contain `@tailwind base`.
+ * Since the widget auto-imports its own CSS via `import "./DataTable.css"`,
+ * those styles end up in Vite's CSS pipeline and the build errors out.
+ *
+ * This plugin patches the on-disk files in `node_modules` to strip the
+ * `@layer` wrappers at startup. Re-runs on every dev startup so a fresh
+ * `npm install` is automatically re-patched.
+ *
+ * TODO: this should be fixed upstream — the widget shouldn't ship CSS
+ * with `@layer` directives that require host-app coordination. Delete
+ * this plugin when the widget's CSS is fixed.
  */
 function patchWidgetStyles() {
   const widgetDir = path.resolve(

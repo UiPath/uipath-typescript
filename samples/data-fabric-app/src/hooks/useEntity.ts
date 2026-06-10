@@ -6,7 +6,7 @@ import type {
   FieldMetaData,
 } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
-import { useAuth } from './useAuth'
+import { useAuth } from '../context/AuthContext'
 import { entityNotSupportedReason } from '../lib/entityTypes'
 
 /**
@@ -46,22 +46,26 @@ export interface UseEntityResult {
 }
 
 /**
- * Loads one entity's schema and records.
+ * Loads one entity's schema and exposes an on-demand records fetcher.
  *
  * SDK calls:
- *  - `Entities.getById(id)`        → entity schema (fields, type, metadata)
- *  - `Entities.getAllRecords(id)`  → records inside the entity
+ *  - `Entities.getById(id)`        → entity schema (fields, type, metadata).
+ *    Always called on mount.
+ *  - `Entities.getAllRecords(id)`  → only when a caller invokes
+ *    `reloadRecords()` (CSV export, read-only records table for
+ *    SystemEntity). The records grid widget owns its own data layer for the
+ *    normal table view, so by default this hook does NOT prefetch records to
+ *    avoid duplicate network traffic.
  *
- * Schema and records have **separate loading + error states** so a records
- * fetch failure doesn't blank out the schema view.
+ * `recordsLoading` / `recordsError` are independent of the schema state so
+ * an on-demand records call failure doesn't blank out the schema view.
  *
- * VDOs / InternalEntity / SystemEntity / ChoiceSet are detected up-front via
- * `entityNotSupportedReason()` and the records call is **skipped** — the
- * standard `getAllRecords` endpoint doesn't apply to those entity kinds. Use
- * `entityNotSupportedReason(schema)` in the UI to show an explanation.
+ * VDOs / InternalEntity / ChoiceSet are detected up-front via
+ * `entityNotSupportedReason()` and the records call is short-circuited.
  *
  * @example
- *   const { schema, records, recordsLoading, reloadRecords } = useEntity(id)
+ *   const { schema, reloadRecords } = useEntity(id)
+ *   const rows = await reloadRecords()
  */
 export function useEntity(entityId: string): UseEntityResult {
   const { sdk } = useAuth()

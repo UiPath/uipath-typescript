@@ -43,15 +43,18 @@ const choiceValues = await choiceSets.getById(choiceSetId);
 
 ### SDK methods exercised by this sample
 
+All methods below are called directly from this app's code. The
+data-table widget independently calls additional SDK methods internally
+(batch insert/update/delete via instance methods on the Entity object)
+when users interact with the grid — those aren't listed here.
+
 | Service | Method | Where it's used |
 | ------- | ------ | --------------- |
 | `Entities` | `getAll` | Sidebar entity list (`useEntities`) |
 | `Entities` | `getById` | Schema panel + page header (`useEntity`) |
-| `Entities` | `getAllRecords` | CSV export (`useEntity.reloadRecords`) |
+| `Entities` | `getAllRecords` | CSV export + read-only records table (`useEntity.reloadRecords`) |
 | `Entities` | `getRecordById` | Row Inspector modal (`RowInspector`) |
 | `Entities` | `insertRecordById` | "Add data" modal (`RecordEditor`) |
-| `Entities` | `updateRecordById` | "Edit" mode in `RecordEditor` |
-| `Entities` | `deleteRecordById` | Delete-row flow |
 | `Entities` | `uploadAttachment` / `downloadAttachment` / `deleteAttachment` | File-type fields in `RecordEditor` + Row Inspector |
 | `ChoiceSets` | `getAll` | Sidebar "Choice sets" section (`useChoiceSets`) |
 | `ChoiceSets` | `getById` | Choice set detail view (`useChoiceSet`) |
@@ -66,7 +69,7 @@ npm install
 
 ### 1. Prerequisites
 
-- Node.js 18+ installed
+- [Node.js 20+](https://uipath.github.io/uipath-typescript/getting-started/#prerequisites)
 - UiPath Cloud tenant access
 - An OAuth External Application configured in UiPath Admin Center (Data Fabric scopes)
 
@@ -96,7 +99,7 @@ Edit `uipath.json`:
   "scope": "DataFabric.Schema.Read DataFabric.Data.Read DataFabric.Data.Write",
   "orgName": "<your-org-name>",
   "tenantName": "<your-tenant-name>",
-  "baseUrl": "https://cloud.uipath.com",
+  "baseUrl": "https://api.uipath.com",
   "redirectUri": "http://localhost:5173"
 }
 ```
@@ -155,7 +158,7 @@ src/
 
 ### Catalog sidebar
 - Two collapsible sections — **Entities** and **Choice Sets** — sourced from `Entities.getAll()` and `ChoiceSets.getAll()` respectively.
-- Search filters both sections at once; entity-type badges (VDO / Case / SystemEntity) help distinguish non-standard entities.
+- Search filters both sections at once; entity-type badges (VDO / SystemEntity) help distinguish non-standard entities.
 - Single refresh button reloads both lists in parallel.
 
 ### Entity detail
@@ -165,7 +168,7 @@ src/
 - Inline cell edits follow the widget's native **Show Diff → Commit Changes** flow — the user previews the pending changes in a diff dialog before applying them, and can discard at any point.
 - Click the `Id` cell to open a read-only **Row Inspector** that loads the full record via `Entities.getRecordById` (including system fields the grid hides).
 - "Export CSV" downloads the current records using the freshly-fetched data.
-- VDOs, Cases, InternalEntity, and SystemEntity are detected up-front and rendered with a friendly notice instead of a failing API call.
+- VDOs and InternalEntity are detected up-front and rendered with a friendly notice instead of a failing API call. SystemEntity renders in read-only mode.
 
 ### Choice set detail
 - Header pulls metadata (description, last updated) from `ChoiceSets.getAll()`.
@@ -195,6 +198,9 @@ npm run build
 Built bundle lives in `dist/`. From there:
 
 ```bash
+# Sign in with the uip CLI (interactive — pick the org + tenant to deploy to).
+uip login -it
+
 uip codedapp pack ./dist --name data-fabric-app --version 1.0.0
 uip codedapp publish
 uip codedapp deploy
@@ -208,11 +214,9 @@ See the [Coded Apps CLI reference](https://uipath.github.io/uipath-typescript/co
 
 1. **Authentication fails / "Invalid redirect URI"** — verify the redirect URI on the External App matches `http://localhost:5173` for dev, and your deployed URL for production.
 
-2. **400 on `/query_expansion` when opening a choice set** — known SDK gap: `ChoiceSets.getById` sometimes sends an empty body. Track the [SDK repo issues](https://github.com/UiPath/uipath-typescript/issues) for a fix.
+2. **Build errors / TypeScript complaints about node modules** — ensure `npm install` completed cleanly. Some peer-dep warnings are expected (the data-table widget targets React 18 but works fine with 19).
 
-3. **Build errors / TypeScript complaints about node modules** — ensure `npm install` completed cleanly. Some peer-dep warnings are expected (the data-table widget targets React 18 but works fine with 19).
-
-4. **Records grid shows "Loading…" indefinitely** — usually means the SDK couldn't initialize. Check the browser console for `UiPathError` messages and verify `uipath.json` has the right `orgName` / `tenantName`.
+3. **Records grid shows "Loading…" indefinitely** — usually means the SDK couldn't initialize. Check the browser console for `UiPathError` messages and verify `uipath.json` has the right `orgName` / `tenantName`.
 
 ### Getting help
 

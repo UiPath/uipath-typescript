@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ChoiceSets } from '@uipath/uipath-typescript/entities'
 import type { ChoiceSetGetAllResponse } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
-import { useAuth } from './useAuth'
+import { useAuth } from '../context/AuthContext'
 
 /** Choice set row from `ChoiceSets.getAll()`. */
 export type ChoiceSetListItem = ChoiceSetGetAllResponse

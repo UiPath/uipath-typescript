@@ -1,15 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ColDef } from 'ag-grid-community'
-import { Download, Plus, RefreshCw } from 'lucide-react'
+import { Calendar, Download, Plus, RefreshCw } from 'lucide-react'
 import { DataTable } from '@uipath/ui-widgets-datatable'
 import { Button } from '@/components/ui/button'
 import { RecordEditor } from './RecordEditor'
+import { ReadOnlyRecordsTable } from './ReadOnlyRecordsTable'
 import { RowInspector } from './RowInspector'
 // Widget styles are loaded via a <link> in index.html (synced from
 // node_modules by the syncWidgetStyles Vite plugin). This avoids PostCSS
 // processing the widget's compiled CSS, which would otherwise trip
 // Tailwind's strict `@layer base` check.
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../context/AuthContext'
 import { useEntity } from '../hooks/useEntity'
 import { useWidgetToolbarOverrides } from '../hooks/useWidgetToolbar'
 import { exportRecordsAsCsv } from '../lib/csvExport'
@@ -27,6 +28,7 @@ import {
 import {
   entityNotSupportedReason,
   entityTypeTooltip,
+  isReadOnlyEntity,
   isVirtualDataObject,
 } from '../lib/entityTypes'
 
@@ -54,37 +56,53 @@ interface Props {
  */
 export function EntityDetail({ entityId }: Props) {
   const { sdk } = useAuth()
-  const { schema, loading, error, reload, reloadRecords } = useEntity(entityId)
+  const {
+    schema,
+    records,
+    recordsLoading,
+    recordsError,
+    loading,
+    error,
+    reload,
+    reloadRecords,
+  } = useEntity(entityId)
   const [exporting, setExporting] = useState(false)
 
-  // Modal state. `creating` opens it in create mode; `editing` opens it
-  // pre-filled with that record. (Edit triggering UI isn't wired yet — the
-  // widget doesn't expose row selection; we'll add an "Edit selected" path
-  // once we decide on the trigger.)
+  // `creating` opens the Add data modal. `inspectingId` opens the Row
+  // Inspector for that record (trigger: click the Id cell — see
+  // `columnConfig['Id']`). Edits to existing rows go through the widget's
+  // own inline-edit + Show Diff flow, not through this component's state.
   const [creating, setCreating] = useState(false)
-  // Record-id currently open in the Row Inspector (read-only details view).
-  // Trigger: click the Id cell in the widget; see columnConfig['Id'].
   const [inspectingId, setInspectingId] = useState<string | null>(null)
 
-  // Hide the widget toolbar buttons we've replaced with our own UI
-  // (Add Row → "Add data" modal, Refresh → page-header button). Native
-  // "Show Diff → Commit Changes" flow stays intact for inline edits.
-  useWidgetToolbarOverrides()
+  // For read-only entities (e.g. SystemEntity) the widget can't render
+  // most columns — its useEntityData hook filters out system fields. We
+  // render our own `<ReadOnlyRecordsTable>` instead, which means we have
+  // to fetch the records ourselves (the widget would normally own that).
+  useEffect(() => {
+    if (schema && isReadOnlyEntity(schema)) {
+      void reloadRecords()
+    }
+  }, [schema, reloadRecords])
 
-  // Per-field AG Grid column overrides. Built from the schema we just
-  // loaded; the widget merges these with its defaults.
-  //
-  // What this configures per column:
-  //  - `wrapText` + `autoHeight`: long values wrap and rows grow to fit.
-  //  - `minWidth`: keeps columns readable when the user resizes.
-  //  - **Required-field markers**: headerName gets `*`, `headerClass` adds a
-  //    red tint, and `cellClassRules` paints empty required cells in red so
-  //    the user can see what's missing before clicking "Insert Records".
-  //
-  // IMPORTANT: this `useMemo` must live BEFORE any early returns, otherwise
-  // React's hooks-order invariant breaks when `loading` flips.
+  // Hide widget toolbar actions we've replaced with our own UI, and bridge
+  // the widget's silent-on-success commit flow into a sonner toast so the
+  // user sees confirmation when their inline edits land. See the hook for
+  // details.
+  useWidgetToolbarOverrides({
+    readOnly: !!schema && isReadOnlyEntity(schema),
+    onCommit: (kind, message) =>
+      kind === 'success' ? toast.success(message) : toast.error(message),
+  })
+
+  // Per-field AG Grid column overrides — required-field asterisks, wrap +
+  // autoHeight, custom Id cellRenderer that opens the Row Inspector. Must
+  // live BEFORE any early returns to keep hook order stable across renders.
   const columnConfig = useMemo(() => {
     if (!schema) return undefined
+    // Read-only entities (e.g. SystemEntity) get `editable: false` on every
+    // column so AG Grid's inline editors never mount.
+    const readOnly = isReadOnlyEntity(schema)
     const cfg: Record<string, ColDef> = {}
     // `schema.fields` can be missing when the backend returns a sparse
     // entity (e.g. some choice-set IDs return without a fields array).
@@ -97,6 +115,7 @@ export function EntityDetail({ entityId }: Props) {
         wrapText: true,
         autoHeight: true,
         minWidth: 140,
+        editable: !readOnly,
         // Required fields get an asterisk appended to the header. We
         // intentionally don't tint required headers/cells red — the `*`
         // alone is enough of a hint, and red highlighting got noisy on
@@ -114,6 +133,38 @@ export function EntityDetail({ entityId }: Props) {
         tooltipValueGetter: (params) =>
           params.value == null ? '' : String(params.value),
       }
+
+      // Date / datetime columns: when the cell is empty, render a small
+      // "Pick a date" hint with a calendar icon so the cell looks like
+      // a date picker affordance instead of just being blank. Doesn't
+      // affect inline-edit behaviour — AG Grid uses `cellEditor` for the
+      // editing state.
+      const typeName = field.fieldDataType?.name?.toUpperCase?.()
+      if (
+        typeName === 'DATE' ||
+        typeName === 'DATETIME' ||
+        typeName === 'DATETIME_WITH_TZ'
+      ) {
+        const isDate = typeName === 'DATE'
+        const placeholderLabel = isDate ? 'Pick a date' : 'Pick a date and time'
+        colDef.cellRenderer = (params: { value: unknown }) => {
+          if (params.value == null || params.value === '') {
+            // Match the apollo-wind `DateTimePicker` placeholder colour
+            // the widget uses for empty DATETIME cells (`text-muted-foreground`)
+            // so DATE and DATETIME cells look visually consistent.
+            return (
+              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <Calendar className="h-3.5 w-3.5 shrink-0" />
+                <span>{placeholderLabel}</span>
+              </span>
+            )
+          }
+          // Trim ISO date/time strings to the human-readable portion.
+          const s = String(params.value)
+          return isDate ? s.slice(0, 10) : s.slice(0, 16).replace('T', ' ')
+        }
+      }
+
       // The widget keys columnConfig by `f.displayName`. Register under
       // both displayName and name so the lookup matches in either case.
       cfg[label] = colDef
@@ -162,6 +213,7 @@ export function EntityDetail({ entityId }: Props) {
   }
 
   const unsupportedReason = entityNotSupportedReason(schema)
+  const readOnly = isReadOnlyEntity(schema)
   const showTypeBadge =
     unsupportedReason || (schema.entityType && schema.entityType !== 'Entity')
   const badgeLabel = isVirtualDataObject(schema) ? 'VDO' : schema.entityType
@@ -187,6 +239,7 @@ export function EntityDetail({ entityId }: Props) {
             showTypeBadge={!!showTypeBadge}
             badgeLabel={badgeLabel}
             badgeTooltip={badgeTooltip}
+            readOnly={readOnly}
           />
           {!unsupportedReason && schema.entityType !== 'ChoiceSet' && (
             <div className="flex items-center gap-2 shrink-0">
@@ -221,14 +274,25 @@ export function EntityDetail({ entityId }: Props) {
                 <Download className="h-4 w-4 mr-1.5" />
                 {exporting ? 'Exporting…' : 'Export CSV'}
               </Button>
-              <Button variant="outline" onClick={triggerWidgetRefresh}>
+              <Button
+                variant="outline"
+                onClick={
+                  readOnly
+                    ? () => void reloadRecords()
+                    : triggerWidgetRefresh
+                }
+              >
                 <RefreshCw className="h-4 w-4 mr-1.5" />
                 Refresh
               </Button>
-              <Button onClick={() => setCreating(true)}>
-                <Plus className="h-4 w-4 mr-1.5" />
-                Add data
-              </Button>
+              {/* "Add data" is hidden for read-only entities (e.g. SystemEntity)
+                  — the records are queryable but not mutable. */}
+              {!readOnly && (
+                <Button onClick={() => setCreating(true)}>
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Add data
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -251,6 +315,18 @@ export function EntityDetail({ entityId }: Props) {
             <AlertTitle>Records aren't viewable here</AlertTitle>
             <AlertDescription>{unsupportedReason}</AlertDescription>
           </Alert>
+        ) : readOnly ? (
+          // Read-only entities (e.g. SystemEntity). The data-table widget
+          // filters out fields where `isSystemField: true` — for SystemEntity
+          // that means every column except Id is hidden. We render our own
+          // simple table that shows ALL schema fields.
+          <ReadOnlyRecordsTable
+            fields={schema.fields}
+            records={records}
+            loading={recordsLoading}
+            error={recordsError}
+            onInspect={(id) => setInspectingId(id)}
+          />
         ) : (
           // Official UiPath widget — owns the entire records UI.
           // Docs: https://www.npmjs.com/package/@uipath/ui-widgets-datatable
@@ -286,11 +362,9 @@ export function EntityDetail({ entityId }: Props) {
           entityId={entityId}
           entityDisplayName={schema.displayName || schema.name}
           fields={editableFields}
-          initial={null}
           onClose={() => setCreating(false)}
           onSaved={async () => {
             setCreating(false)
-            // Reload schema + records so the widget shows the new row.
             await reload()
           }}
         />
@@ -327,11 +401,13 @@ function EntityHeader({
   showTypeBadge,
   badgeLabel,
   badgeTooltip,
+  readOnly,
 }: {
   schema: EntitySchema
   showTypeBadge: boolean
   badgeLabel: string | undefined
   badgeTooltip: string
+  readOnly: boolean
 }) {
   // No outer `mb-6` here — the parent layout in EntityDetail already wraps
   // this in a flex row with its own bottom margin.
@@ -348,6 +424,17 @@ function EntityHeader({
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-xs">
               {badgeTooltip}
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {readOnly && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline">Read-only</Badge>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              This entity is managed by the platform — records can be viewed
+              but not edited, added, or deleted.
             </TooltipContent>
           </Tooltip>
         )}

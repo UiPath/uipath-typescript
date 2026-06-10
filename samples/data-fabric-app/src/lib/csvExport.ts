@@ -1,6 +1,9 @@
 import type { EntityRow, EntityField } from '../hooks/useEntity'
 import { downloadBlobAsFile } from './download'
 
+/** Matches characters that require RFC 4180 quoting in a CSV cell. */
+const CSV_ESCAPE_REGEX = /[",\r\n]/
+
 /**
  * Exports the given records to a CSV file and triggers a browser download.
  *
@@ -65,7 +68,7 @@ function formatValue(value: unknown): string {
 
 function csvCell(input: string): string {
   // RFC 4180 escaping: quote if the value contains delimiters or newlines.
-  if (/[",\r\n]/.test(input)) {
+  if (CSV_ESCAPE_REGEX.test(input)) {
     return `"${input.replace(/"/g, '""')}"`
   }
   return input

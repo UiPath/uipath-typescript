@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { toast } from 'sonner'
-import { Download, Paperclip, Trash2 } from 'lucide-react'
-import { Entities } from '@uipath/uipath-typescript/entities'
+import { ChoiceSets, Entities } from '@uipath/uipath-typescript/entities'
+import type { ChoiceSetGetResponse } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
-import { useAuth } from '../hooks/useAuth'
-import type { EntityField, EntityRow } from '../hooks/useEntity'
+import { useAuth } from '../context/AuthContext'
+import type { EntityField } from '../hooks/useEntity'
 import {
   Dialog,
   DialogContent,
@@ -16,46 +16,40 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { downloadBlobAsFile } from '../lib/download'
 
 interface Props {
   entityId: string
   entityDisplayName?: string
   fields: EntityField[]
-  initial: EntityRow | null
   onClose: () => void
   onSaved: () => Promise<void> | void
 }
 
 /**
- * Modal form for creating or editing a single entity record.
+ * Modal form for creating a single entity record.
  *
  * SDK calls used:
- *  - `Entities.insertRecordById(entityId, payload)` for new records
- *  - `Entities.updateRecordById(entityId, recordId, payload)` for edits
- *  - `Entities.uploadAttachment(entityId, recordId, fieldName, file)` for
- *    File-type field uploads (chained after the record save so we have an Id)
- *  - `Entities.downloadAttachment(...)` and `deleteAttachment(...)` for
- *    existing attachments in edit mode
+ *  - `Entities.insertRecordById(entityId, payload)` — the new record
+ *  - `Entities.uploadAttachment(...)` — chained after the insert for any
+ *    File-type fields (the attachment endpoint needs the new record's Id)
+ *  - `ChoiceSets.getById(choiceSetId)` — populates the picker for fields
+ *    that reference a choice set
  *
- * Validation is client-side: required fields with empty values short-circuit
- * with an inline error before any network call.
+ * Edits to existing records happen through the data-table widget's native
+ * inline-edit + "Show Diff → Commit Changes" flow, not via this modal.
  */
 export function RecordEditor({
   entityId,
   entityDisplayName,
   fields,
-  initial,
   onClose,
   onSaved,
 }: Props) {
   const { sdk } = useAuth()
-  const isEdit = !!initial
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
-  // Split fields by kind so we can render them differently.
   const regularFields = useMemo(
     () => fields.filter((f) => !f.isAttachment),
     [fields],
@@ -65,20 +59,53 @@ export function RecordEditor({
     [fields],
   )
 
-  // State for plain field values (text/number/boolean/date).
   const initialState = useMemo(() => {
     const state: Record<string, unknown> = {}
-    for (const f of regularFields) {
-      state[f.name] = initial?.[f.name] ?? ''
-    }
+    for (const f of regularFields) state[f.name] = ''
     return state
-  }, [regularFields, initial])
+  }, [regularFields])
   const [values, setValues] = useState<Record<string, unknown>>(initialState)
-
-  // Attachments state: file picked for upload (keyed by fieldName), and a
-  // set of fields whose existing attachment should be deleted on save.
   const [files, setFiles] = useState<Record<string, File>>({})
-  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set())
+
+  // Choice-set values keyed by the choice-set id, loaded once when the
+  // modal opens so the picker renders synchronously thereafter.
+  const choiceSetIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          regularFields
+            .map((f) => choiceSetIdFor(f))
+            .filter((id): id is string => !!id),
+        ),
+      ),
+    [regularFields],
+  )
+  const [choiceSetValues, setChoiceSetValues] = useState<
+    Record<string, ChoiceSetGetResponse[]>
+  >({})
+
+  useEffect(() => {
+    if (choiceSetIds.length === 0) return
+    let cancelled = false
+    const load = async () => {
+      const svc = new ChoiceSets(sdk)
+      const next: Record<string, ChoiceSetGetResponse[]> = {}
+      for (const id of choiceSetIds) {
+        try {
+          const { items } = await svc.getById(id, { pageSize: 100 })
+          next[id] = items
+        } catch (err) {
+          console.error(`Failed to load choice set ${id}:`, err)
+          next[id] = []
+        }
+      }
+      if (!cancelled) setChoiceSetValues(next)
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [sdk, choiceSetIds])
 
   const update = (name: string, value: unknown) => {
     setValues((prev) => ({ ...prev, [name]: value }))
@@ -98,14 +125,8 @@ export function RecordEditor({
       const v = values[f.name]
       if (v === '' || v === null || v === undefined) errors[f.name] = 'Required'
     }
-    // Required attachment fields: must have either an existing value (edit
-    // mode, not pending-deleted) OR a newly picked file.
     for (const f of attachmentFields) {
-      if (!f.isRequired) continue
-      const hasExisting =
-        isEdit && initial?.[f.name] && !pendingDeletes.has(f.name)
-      const hasNew = !!files[f.name]
-      if (!hasExisting && !hasNew) errors[f.name] = 'Required'
+      if (f.isRequired && !files[f.name]) errors[f.name] = 'Required'
     }
     setFieldErrors(errors)
     return Object.keys(errors).length === 0
@@ -123,45 +144,24 @@ export function RecordEditor({
     try {
       const svc = new Entities(sdk)
 
-      // 1. Save scalar fields first; we need a recordId before we can upload
-      // any attachments.
       const payload: Record<string, unknown> = {}
       for (const f of regularFields) {
         const raw = values[f.name]
-        if (raw === '' || raw === undefined || raw === null) {
-          if (isEdit) payload[f.name] = null
-          continue
-        }
+        if (raw === '' || raw === undefined || raw === null) continue
         payload[f.name] = coerce(raw, f.fieldDataType?.name)
       }
 
-      let recordId: string
-      if (isEdit && initial) {
-        await svc.updateRecordById(entityId, initial.Id, payload)
-        recordId = initial.Id
-      } else {
-        // `insertRecordById` returns `EntityInsertResponse extends EntityRecord`,
-        // so `Id` is guaranteed to be present — no cast needed.
-        const result = await svc.insertRecordById(entityId, payload)
-        recordId = result.Id
-      }
+      // `insertRecordById` returns `EntityInsertResponse extends EntityRecord`,
+      // so `Id` is guaranteed to be present.
+      const result = await svc.insertRecordById(entityId, payload)
+      const recordId = result.Id
 
-      // 2. Delete attachments the user removed in edit mode.
-      for (const fieldName of pendingDeletes) {
-        try {
-          await svc.deleteAttachment(entityId, recordId, fieldName)
-        } catch (err) {
-          console.error(`Delete attachment ${fieldName} failed:`, err)
-        }
-      }
-
-      // 3. Upload new files. Each attachment is a separate API call.
+      // Upload attachments. Each is a separate API call against the new
+      // record id; we don't fail the whole save if one fails.
       for (const [fieldName, file] of Object.entries(files)) {
         try {
           await svc.uploadAttachment(entityId, recordId, fieldName, file)
         } catch (err) {
-          // Don't fail the whole save — record was saved, attachment was the
-          // separate step. Surface the failure clearly.
           toast.error(`Upload ${fieldName} failed`, {
             description:
               err instanceof UiPathError ? err.message : 'Unknown error',
@@ -169,7 +169,7 @@ export function RecordEditor({
         }
       }
 
-      toast.success(isEdit ? 'Record updated' : 'Record created')
+      toast.success('Record created')
       await onSaved()
     } catch (err) {
       setError(err instanceof UiPathError ? err.message : 'Save failed')
@@ -178,41 +178,26 @@ export function RecordEditor({
     }
   }
 
-  const handleDownload = async (fieldName: string) => {
-    if (!initial) return
-    try {
-      const svc = new Entities(sdk)
-      const blob = await svc.downloadAttachment(
-        entityId,
-        initial.Id,
-        fieldName,
-      )
-      downloadBlobAsFile(blob, fieldName)
-    } catch (err) {
-      toast.error('Download failed', {
-        description: err instanceof UiPathError ? err.message : 'Unknown error',
-      })
-    }
-  }
-
-  const title = isEdit ? 'Edit record' : 'New record'
-  const subtitle =
-    isEdit && initial
-      ? `Editing ${entityDisplayName ?? 'record'} · ${initial.Id}`
-      : `Add a new ${entityDisplayName ?? 'record'}`
+  const subtitle = `Add a new ${entityDisplayName ?? 'record'}`
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+      {/* Height capping lives in DialogContent — see ui/dialog.tsx. We just
+          declare width here. */}
+      <DialogContent className="sm:max-w-lg gap-0">
+        <DialogHeader className="shrink-0 pb-4">
+          <DialogTitle>New record</DialogTitle>
           <DialogDescription>{subtitle}</DialogDescription>
         </DialogHeader>
 
         <form
           id="record-editor-form"
           onSubmit={handleSubmit}
-          className="space-y-4 max-h-[60vh] overflow-y-auto pr-1"
+          // `min-h-0` is critical: without it, flex items default to
+          // `min-height: auto` (= intrinsic content height), so flex-1
+          // can't actually shrink and the overflow-y-auto scroll never
+          // engages.
+          className="flex-1 min-h-0 space-y-4 overflow-y-auto pr-1"
           noValidate
         >
           {error && (
@@ -233,6 +218,9 @@ export function RecordEditor({
               field={f}
               value={values[f.name]}
               error={fieldErrors[f.name]}
+              choiceSetValues={
+                choiceSetValues[choiceSetIdFor(f) ?? ''] ?? null
+              }
               onChange={(v) => update(f.name, v)}
             />
           ))}
@@ -241,10 +229,6 @@ export function RecordEditor({
             <AttachmentField
               key={f.id}
               field={f}
-              isEdit={isEdit}
-              hasExisting={
-                !!initial?.[f.name] && !pendingDeletes.has(f.name)
-              }
               pickedFile={files[f.name]}
               error={fieldErrors[f.name]}
               onPick={(file) =>
@@ -255,28 +239,16 @@ export function RecordEditor({
                   return next
                 })
               }
-              onDelete={() =>
-                setPendingDeletes((prev) => {
-                  const next = new Set(prev)
-                  next.add(f.name)
-                  return next
-                })
-              }
-              onDownload={() => handleDownload(f.name)}
             />
           ))}
         </form>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0 pt-4">
           <Button variant="ghost" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            form="record-editor-form"
-            disabled={saving}
-          >
-            {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Create record'}
+          <Button type="submit" form="record-editor-form" disabled={saving}>
+            {saving ? 'Saving…' : 'Create record'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -284,18 +256,32 @@ export function RecordEditor({
   )
 }
 
+/** Returns the choice-set id this field references, or null if it doesn't. */
+function choiceSetIdFor(field: EntityField): string | null {
+  const f = field as { choiceSetId?: string; referenceChoiceSet?: { id?: string } }
+  return f.choiceSetId ?? f.referenceChoiceSet?.id ?? null
+}
+
+/** Any of the SDK's date-shaped types (DATE, DATETIME, DATETIME_WITH_TZ). */
+function isDateLike(type: string): boolean {
+  return type === 'DATE' || type === 'DATETIME' || type === 'DATETIME_WITH_TZ'
+}
+
 function FieldInput({
   field,
   value,
   error,
+  choiceSetValues,
   onChange,
 }: {
   field: EntityField
   value: unknown
   error?: string
+  choiceSetValues: ChoiceSetGetResponse[] | null
   onChange: (v: unknown) => void
 }) {
-  const type = field.fieldDataType?.name?.toUpperCase?.() ?? 'STRING'
+  const rawType = field.fieldDataType?.name?.toUpperCase?.() ?? 'STRING'
+  const type = choiceSetIdFor(field) ? 'CHOICESET' : rawType
   const id = `field-${field.id}`
   const label = field.displayName || field.name
 
@@ -312,7 +298,14 @@ function FieldInput({
         )}
         <span className="ml-2 text-xs text-muted-foreground">{type}</span>
       </label>
-      {renderInputForType(type, id, value, onChange, inputClass)}
+      {renderInputForType(
+        type,
+        id,
+        value,
+        onChange,
+        inputClass,
+        choiceSetValues,
+      )}
       {error && <p className="text-xs text-destructive mt-1">{error}</p>}
     </div>
   )
@@ -320,22 +313,14 @@ function FieldInput({
 
 function AttachmentField({
   field,
-  isEdit,
-  hasExisting,
   pickedFile,
   error,
   onPick,
-  onDelete,
-  onDownload,
 }: {
   field: EntityField
-  isEdit: boolean
-  hasExisting: boolean
   pickedFile?: File
   error?: string
   onPick: (file: File | null) => void
-  onDelete: () => void
-  onDownload: () => void
 }) {
   const id = `field-${field.id}`
   const label = field.displayName || field.name
@@ -351,54 +336,18 @@ function AttachmentField({
         )}
         <span className="ml-2 text-xs text-muted-foreground">FILE</span>
       </label>
-
-      <div className="space-y-2">
-        {/* Existing attachment row (edit mode only) */}
-        {isEdit && hasExisting && (
-          <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm bg-muted/40">
-            <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="flex-1 text-muted-foreground italic">
-              Existing attachment
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onDownload}
-              className="h-7"
-            >
-              <Download className="h-3.5 w-3.5 mr-1" />
-              Download
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onDelete}
-              className="h-7 text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        )}
-
-        {/* File picker (always shown — for new uploads / replacements) */}
-        <div>
-          <input
-            id={id}
-            type="file"
-            onChange={(e) => onPick(e.target.files?.[0] ?? null)}
-            className="block text-sm text-foreground file:mr-3 file:py-1 file:px-2 file:rounded file:border file:border-input file:bg-background file:text-sm file:font-medium hover:file:bg-accent"
-          />
-          {pickedFile && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {pickedFile.name} · {(pickedFile.size / 1024).toFixed(1)} KB
-            </p>
-          )}
-        </div>
-
-        {error && <p className="text-xs text-destructive">{error}</p>}
-      </div>
+      <input
+        id={id}
+        type="file"
+        onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+        className="block text-sm text-foreground file:mr-3 file:py-1 file:px-2 file:rounded file:border file:border-input file:bg-background file:text-sm file:font-medium hover:file:bg-accent"
+      />
+      {pickedFile && (
+        <p className="text-xs text-muted-foreground mt-1">
+          {pickedFile.name} · {(pickedFile.size / 1024).toFixed(1)} KB
+        </p>
+      )}
+      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
     </div>
   )
 }
@@ -409,7 +358,41 @@ function renderInputForType(
   value: unknown,
   onChange: (v: unknown) => void,
   className: string,
+  choiceSetValues: ChoiceSetGetResponse[] | null,
 ) {
+  if (type === 'CHOICESET') {
+    // Picker populated from `ChoiceSets.getById()` for whatever choice set
+    // this field references. While the values are still loading we show a
+    // disabled placeholder rather than a broken-looking empty input.
+    if (choiceSetValues === null) {
+      return (
+        <input
+          id={id}
+          type="text"
+          value=""
+          disabled
+          placeholder="Loading choice set values…"
+          className={className}
+        />
+      )
+    }
+    return (
+      <select
+        id={id}
+        value={typeof value === 'string' ? value : ''}
+        onChange={(e) => onChange(e.target.value)}
+        className={className}
+      >
+        <option value="">—</option>
+        {choiceSetValues.map((v) => (
+          <option key={v.id} value={v.id}>
+            {v.displayName ?? v.name}
+          </option>
+        ))}
+      </select>
+    )
+  }
+
   if (type === 'BOOLEAN') {
     return (
       <select
@@ -446,12 +429,19 @@ function renderInputForType(
     )
   }
 
-  if (type === 'DATE' || type === 'DATETIME') {
+  if (isDateLike(type)) {
+    const isDate = type === 'DATE'
     return (
       <input
         id={id}
-        type={type === 'DATE' ? 'date' : 'datetime-local'}
-        value={value ? String(value).slice(0, 16) : ''}
+        type={isDate ? 'date' : 'datetime-local'}
+        // The browser inputs want YYYY-MM-DD (date) or YYYY-MM-DDTHH:mm
+        // (datetime-local). Slicing a longer string keeps it valid even
+        // when the SDK returns an ISO 8601 string with timezone offset
+        // (e.g. DATETIME_WITH_TZ → "2024-10-22T17:00:00+00:00").
+        value={
+          typeof value === 'string' ? value.slice(0, isDate ? 10 : 16) : ''
+        }
         onChange={(e) => onChange(e.target.value)}
         className={className}
       />
@@ -485,8 +475,18 @@ function coerce(raw: unknown, typeName?: string): unknown {
     if (raw === false || raw === 'false') return false
     return null
   }
-  if (type === 'DATE' || type === 'DATETIME') {
+  if (type === 'DATE') {
+    // Date is date-only (no time / TZ). Browser input gives YYYY-MM-DD —
+    // pass through unchanged.
     return String(raw)
+  }
+  if (type === 'DATETIME' || type === 'DATETIME_WITH_TZ') {
+    // Browser `<input type="datetime-local">` produces YYYY-MM-DDTHH:mm in
+    // the user's LOCAL timezone, with no zone suffix. The Data Fabric
+    // server expects an ISO 8601 instant. We parse as local then
+    // serialize as UTC ISO so the server interprets it correctly.
+    const d = new Date(String(raw))
+    return Number.isFinite(d.getTime()) ? d.toISOString() : String(raw)
   }
   return raw
 }

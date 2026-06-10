@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ChoiceSets } from '@uipath/uipath-typescript/entities'
 import type { ChoiceSetGetResponse } from '@uipath/uipath-typescript/entities'
 import { UiPathError } from '@uipath/uipath-typescript/core'
-import { useAuth } from './useAuth'
+import { useAuth } from '../context/AuthContext'
 
 /** One value inside a ChoiceSet — the SDK's `ChoiceSetGetResponse`. */
 export type ChoiceSetValue = ChoiceSetGetResponse
