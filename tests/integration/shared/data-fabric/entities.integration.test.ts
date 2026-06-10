@@ -764,8 +764,7 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
     });
   });
 
-  // Bulk import requires DataFabric.Data.Write scope — not supported via PAT token yet
-  describe.skip('importRecordsById', () => {
+  describe('importRecordsById', () => {
     it('should import records from a CSV blob', async () => {
       const { entities } = getServices();
       const config = getTestConfig();
