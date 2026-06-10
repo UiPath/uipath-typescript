@@ -2011,7 +2011,10 @@ describe("EntityService Unit Tests", () => {
         ).rejects.toThrow(/requires both referenceEntityId and referenceFieldId/);
       });
 
-      it("should emit isForeignKey, referenceEntity, referenceField — but NOT referenceType — for FILE fields", async () => {
+      it("should emit isForeignKey + user-supplied referenceEntity/referenceField — but NOT referenceType — for FILE fields", async () => {
+        // FILE columns are foreign keys to the per-tenant EntityAttachment internal entity;
+        // the caller must point referenceEntityId/referenceFieldId at it before the field
+        // can be persisted, so the SDK forwards them in the same nested shape as RELATIONSHIP.
         await entityService.create("my_entity", [{
           fieldName: "file_field",
           type: EntityFieldDataType.FILE,
@@ -2019,9 +2022,9 @@ describe("EntityService Unit Tests", () => {
           referenceFieldId: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID,
         }]);
         const f = getCreatedFields().find((x) => x.name === "file_field");
+        expect(f?.isForeignKey).toBe(true);
         expect(f?.referenceEntity).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID });
         expect(f?.referenceField).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID });
-        expect(f?.isForeignKey).toBe(true);
         expect(f?.referenceType).toBeUndefined();
       });
 
@@ -2449,7 +2452,10 @@ describe("EntityService Unit Tests", () => {
         expect(f.sqlType).toEqual({ name: "UNIQUEIDENTIFIER", lengthLimit: 300 });
       });
 
-      it("should emit isForeignKey, referenceEntity, referenceField — but NOT referenceType — for FILE fields", async () => {
+      it("should emit isForeignKey + user-supplied referenceEntity/referenceField — but NOT referenceType — for FILE fields", async () => {
+        // FILE columns are foreign keys to the per-tenant EntityAttachment internal entity;
+        // the caller must point referenceEntityId/referenceFieldId at it before the field
+        // can be persisted, so the SDK forwards them in the same nested shape as RELATIONSHIP.
         await entityService.updateById(ENTITY_TEST_CONSTANTS.ENTITY_ID, {
           addFields: [{
             fieldName: "file_field",
@@ -2460,9 +2466,9 @@ describe("EntityService Unit Tests", () => {
         });
         const fields = mockApiClient.post.mock.calls[0][1].entityDefinition.fields;
         const f = fields.find((x: FieldSchemaPayload) => x.name === "file_field");
+        expect(f.isForeignKey).toBe(true);
         expect(f.referenceEntity).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_ENTITY_ID });
         expect(f.referenceField).toEqual({ id: ENTITY_TEST_CONSTANTS.REFERENCE_FIELD_ID });
-        expect(f.isForeignKey).toBe(true);
         expect(f.referenceType).toBeUndefined();
       });
 

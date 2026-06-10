@@ -41,7 +41,7 @@ import { ENTITY_PAGINATION, ENTITY_OFFSET_PARAMS, HTTP_METHODS } from '../../uti
 import { DATA_FABRIC_ENDPOINTS, DATA_FABRIC_TENANT_FOLDER_ID } from '../../utils/constants/endpoints/data-fabric';
 import { RESPONSE_TYPES } from '../../utils/constants/headers';
 import { createParams } from '../../utils/http/params';
-import { transformData } from '../../utils/transform';
+import { pascalToCamelCaseKeys, transformData } from '../../utils/transform';
 import {
   EntityFieldTypeMap,
   EntityMap,
@@ -52,6 +52,42 @@ import {
 } from '../../models/data-fabric/entities.constants';
 import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
+
+/**
+ * Recognises an expanded FILE-field value (an EntityAttachment row) on a record.
+ *
+ * The `EntityId` + `FieldId` pair is structurally unique to attachment rows — no
+ * user-defined column on a record carries both — so any other expansion
+ * (SystemUser, related entity, choice set) will not match. Used by
+ * {@link transformExpandedAttachments} to decide which nested values to normalise.
+ */
+function isExpandedAttachment(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const v = value as Record<string, unknown>;
+  return 'EntityId' in v && 'FieldId' in v;
+}
+
+/**
+ * Normalises any expanded FILE-field values on a record so consumers always see
+ * camelCase attachment metadata regardless of how the wire serialises it (see
+ * {@link EntityRecord} for the documented FILE shape).
+ *
+ * Called after every read that can surface an expanded attachment
+ * (`getRecordById`, `getAllRecords`, `queryRecordsById`, the insert/update
+ * responses, and `uploadAttachment` when `expansionLevel >= 1`). When the FILE
+ * field is not expanded (default), its value is a UUID string and this helper
+ * is a no-op for that field.
+ */
+function transformExpandedAttachments<T extends Record<string, any>>(record: T): T {
+  if (!record || typeof record !== 'object') return record;
+  for (const key of Object.keys(record)) {
+    const value = record[key];
+    if (isExpandedAttachment(value)) {
+      (record as Record<string, any>)[key] = pascalToCamelCaseKeys(value);
+    }
+  }
+  return record;
+}
 
 /**
  * Service for interacting with the Data Fabric Entity API
@@ -146,14 +182,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.GET_ENTITY_RECORDS(entityId),
+      transformFn: (item: any) => transformExpandedAttachments(item as EntityRecord),
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
         totalCountField: ENTITY_PAGINATION.TOTAL_COUNT_FIELD,
         paginationParams: {
-          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,    
-          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,         
-          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM            
+          pageSizeParam: ENTITY_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: ENTITY_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: ENTITY_OFFSET_PARAMS.COUNT_PARAM
         }
       },
       excludeFromPrefix: ['expansionLevel'] // Don't add ODATA prefix to expansionLevel
@@ -194,7 +231,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    return response.data;
+    return transformExpandedAttachments(response.data);
   }
 
   /**
@@ -235,7 +272,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return response.data;
+    return transformExpandedAttachments(response.data);
   }
 
   /**
@@ -284,6 +321,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
+    if (response.data?.successRecords) {
+      response.data.successRecords = response.data.successRecords.map(transformExpandedAttachments);
+    }
     return response.data;
   }
 
@@ -326,7 +366,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
-    return response.data;
+    return transformExpandedAttachments(response.data);
   }
 
   /**
@@ -376,6 +416,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       }
     );
 
+    if (response.data?.successRecords) {
+      response.data.successRecords = response.data.successRecords.map(transformExpandedAttachments);
+    }
     return response.data;
   }
 
@@ -542,6 +585,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
       serviceAccess: this.createPaginationServiceAccess(),
       getEndpoint: () => DATA_FABRIC_ENDPOINTS.ENTITY.QUERY_BY_ID(id),
       method: HTTP_METHODS.POST,
+      transformFn: (item: any) => transformExpandedAttachments(item as EntityRecord),
       pagination: {
         paginationType: PaginationType.OFFSET,
         itemsField: ENTITY_PAGINATION.ITEMS_FIELD,
@@ -684,7 +728,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       { params }
     );
 
-    return response.data;
+    // Response is the full record; if expansionLevel >= 1 the FILE field is the
+    // expanded EntityAttachment row — normalise its keys to camelCase.
+    return transformExpandedAttachments(response.data);
   }
 
   /**
@@ -1052,12 +1098,16 @@ export class EntityService extends BaseService implements EntityServiceModel {
     });
   }
 
-  /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
+  /** Builds the wire-shape field payload for a single field on entity create / updateById. */
   private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
     const fieldType = field.type ?? EntityFieldDataType.STRING;
     this.validateFieldConstraints(fieldType, field, field.fieldName);
     const isRelationship = fieldType === EntityFieldDataType.RELATIONSHIP;
     const isFile = fieldType === EntityFieldDataType.FILE;
+    // RELATIONSHIP and FILE are both stored as foreign-key columns and therefore both need
+    // a target — RELATIONSHIP to the referenced entity, FILE to the per-tenant
+    // EntityAttachment internal entity. Caught here so callers fail at construction time
+    // with a clear message rather than getting a 400 with a generic backend error.
     if ((isRelationship || isFile) && (!field.referenceEntityId || !field.referenceFieldId)) {
       throw new ValidationError({
         message: `Field '${field.fieldName}' of type ${fieldType} requires both referenceEntityId and referenceFieldId (UUIDs of the target entity and field).`,

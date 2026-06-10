@@ -24,7 +24,21 @@ export enum EntityFieldDataType {
 }
 
 /**
- * Represents a single entity record
+ * Represents a single entity record. Field names mirror the entity's user-defined
+ * schema (case included); a handful of special field types have non-scalar values:
+ *
+ * - **`FILE`** — a UUID string identifying the attachment. Read the record with
+ *   `expansionLevel: 1` (on {@link getRecordById} / {@link getAllRecords} /
+ *   {@link queryRecordsById}) to expand it into an attachment-metadata object
+ *   instead — keys `id`, `name`, `path`, `size`, `type`, `recordId`, `entityId`,
+ *   `fieldId`, `createdBy`, `updatedBy`, `createTime`, `updateTime`. Use
+ *   {@link downloadAttachment} to fetch the binary.
+ * - **`RELATIONSHIP`** — the related record's `Id` (UUID string).
+ * - **`CHOICE_SET_SINGLE`** — the choice's numeric id.
+ * - **`CHOICE_SET_MULTIPLE`** — JSON-encoded array of choice ids.
+ *
+ * Other types are returned as their natural JSON value
+ * (string / number / boolean / null).
  */
 export interface EntityRecord {
   /**
@@ -296,9 +310,9 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
   type?: EntityFieldDataType;
   /** Choice set ID for choice-set fields */
   choiceSetId?: string;
-  /** UUID of the referenced entity (required when `type` is `RELATIONSHIP` or `FILE`) */
+  /** UUID of the referenced entity. Required for `RELATIONSHIP`. Ignored for `FILE` — server provisions the attachment table. */
   referenceEntityId?: string;
-  /** UUID of the referenced field on the target entity (required when `type` is `RELATIONSHIP` or `FILE`) */
+  /** UUID of the referenced field on the target entity. Required for `RELATIONSHIP`. Ignored for `FILE` — server provisions the attachment table. */
   referenceFieldId?: string;
 }
 
@@ -385,12 +399,19 @@ export interface EntityUploadAttachmentOptions {
 }
 
 /**
- * Response from uploading an attachment to an entity record
+ * Response from uploading an attachment to an entity record.
+ *
+ * The full {@link EntityRecord} after the upload — the targeted FILE field now points
+ * at the new attachment. By default that field is the attachment's UUID; pass
+ * `expansionLevel: 1` to {@link uploadAttachment} to receive the FILE field as the
+ * full attachment-metadata object instead (see {@link EntityRecord} for the shape).
  */
-export type EntityUploadAttachmentResponse = Record<string, unknown>;
+export type EntityUploadAttachmentResponse = EntityRecord;
 
 /**
- * Response from deleting an attachment from an entity record
+ * Response from deleting an attachment from an entity record.
+ *
+ * The API returns `200 OK` with an empty / opaque body when the deletion succeeds.
  */
 export type EntityDeleteAttachmentResponse = Record<string, unknown>;
 
