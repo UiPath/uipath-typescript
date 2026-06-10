@@ -98,11 +98,14 @@ tests/integration/
    INTEGRATION_TEST_SKIP_CLEANUP=false
    INTEGRATION_TEST_FOLDER_ID=
    DATA_FABRIC_ACCESS_INTEGRATION=false
+   AGENT_FEEDBACK_INTEGRATION=false
+   TRACES_INTEGRATION=false
 
    # Optional: Pre-existing Test Data
    MAESTRO_TEST_PROCESS_KEY=
    ORCHESTRATOR_TEST_PROCESS_KEY=
    DATA_FABRIC_TEST_ENTITY_ID=
+   TRACES_TEST_TRACE_ID=
    ```
 
 ### 4. Install Dependencies
@@ -161,6 +164,24 @@ prepared for access-management validation:
 
 ```bash
 DATA_FABRIC_ACCESS_INTEGRATION=true npm run test:integration -- tests/integration/shared/data-fabric/access.integration.test.ts
+```
+
+### Run Optional Agent Feedback Tests
+
+Agent Feedback integration tests are opt-in because they require feedback API
+authorization on the configured external app/PAT:
+
+```bash
+AGENT_FEEDBACK_INTEGRATION=true npm run test:integration -- tests/integration/shared/agents/feedback.integration.test.ts
+```
+
+### Run Optional Observability Traces Tests
+
+Observability Traces integration tests are opt-in because they require traces API
+authorization and a pre-existing trace ID:
+
+```bash
+TRACES_INTEGRATION=true TRACES_TEST_TRACE_ID=<trace-id> npm run test:integration -- tests/integration/shared/observability/traces.integration.test.ts
 ```
 
 ### Watch Mode
@@ -246,6 +267,9 @@ Tests skip gracefully when:
 | `INTEGRATION_TEST_SKIP_CLEANUP` | Skip cleanup after tests (useful for debugging) | `false` |
 | `INTEGRATION_TEST_FOLDER_ID` | Default folder ID for tests | (uses default folder) |
 | `DATA_FABRIC_ACCESS_INTEGRATION` | Enable opt-in Data Fabric role and directory access tests | `false` |
+| `AGENT_FEEDBACK_INTEGRATION` | Enable opt-in Agent Feedback tests requiring feedback API access | `false` |
+| `TRACES_INTEGRATION` | Enable opt-in Observability Traces tests requiring traces API access | `false` |
+| `TRACES_TEST_TRACE_ID` | Pre-existing trace ID for Observability Traces tests | (required when `TRACES_INTEGRATION=true`) |
 | `MAESTRO_TEST_PROCESS_KEY` | Pre-existing Maestro process for read-only tests | (optional) |
 | `ORCHESTRATOR_TEST_PROCESS_KEY` | Pre-existing Orchestrator process for start tests | (optional) |
 | `DATA_FABRIC_TEST_ENTITY_ID` | Pre-existing Data Fabric entity for record tests | (optional) |

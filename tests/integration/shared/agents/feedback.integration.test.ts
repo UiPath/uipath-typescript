@@ -6,8 +6,9 @@ import { registerResource } from '../../utils/cleanup';
 import { generateRandomString } from '../../utils/helpers';
 
 const modes: InitMode[] = ['v1'];
+const hasAgentFeedbackIntegration = process.env.AGENT_FEEDBACK_INTEGRATION === 'true';
 
-describe.each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
+describe.skipIf(!hasAgentFeedbackIntegration).each(modes)('Agent Feedback - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let feedback: Feedback;

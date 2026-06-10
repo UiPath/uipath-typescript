@@ -7,8 +7,9 @@ import {
 } from '../../../../src/models/observability/traces/traces.types';
 
 const modes: InitMode[] = ['v1'];
+const hasTracesIntegration = process.env.TRACES_INTEGRATION === 'true';
 
-describe.each(modes)('Traces - Integration Tests [%s]', (mode) => {
+describe.skipIf(!hasTracesIntegration).each(modes)('Traces - Integration Tests [%s]', (mode) => {
   setupUnifiedTests(mode);
 
   let traces!: Traces;
