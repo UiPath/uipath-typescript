@@ -173,4 +173,59 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
       expect(result).toBeDefined();
     });
   });
+
+  describe('getSpansByTraceId', () => {
+    it('should retrieve the flat span array for a trace', async () => {
+      const result = await agents.getSpansByTraceId(AGENT_TEST_CONSTANTS.TRACE_ID);
+
+      expect(Array.isArray(result)).toBe(true);
+      if (result.length === 0) {
+        throw new Error(
+          'No spans for the configured TRACE_ID — cannot verify span shape. ' +
+          'Point TRACE_ID at a trace that exists in the test tenant.',
+        );
+      }
+      const span = result[0];
+      expect(typeof span.id).toBe('string');
+      expect(span.traceId).toBe(AGENT_TEST_CONSTANTS.TRACE_ID);
+      expect(typeof span.name).toBe('string');
+      expect(typeof span.startTime).toBe('string');
+      expect(typeof span.attributes).toBe('string');
+    });
+  });
+
+  describe('getSpansByReference', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+
+    it('should retrieve spans matching a reference id in the hierarchy', async () => {
+      const result = await agents.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.items)).toBe(true);
+      if (result.items.length > 0) {
+        const span = result.items[0];
+        expect(typeof span.id).toBe('string');
+        expect(typeof span.traceId).toBe('string');
+        expect(typeof span.context === 'string' || span.context === null).toBe(true);
+      }
+    });
+
+    it('should return a paginated response with cursor navigation when pageSize is provided', async () => {
+      const result = await agents.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID, {
+        traceId: AGENT_TEST_CONSTANTS.TRACE_ID,
+        startTime,
+        endTime,
+        executionType: AgentExecutionType.Runtime,
+        pageSize: 2,
+      });
+
+      expect(result.items.length).toBeLessThanOrEqual(2);
+      expect(typeof result.hasNextPage).toBe('boolean');
+      expect(result.currentPage).toBe(1);
+      if (result.hasNextPage) {
+        expect(result.nextCursor).toBeDefined();
+      }
+    });
+  });
 });

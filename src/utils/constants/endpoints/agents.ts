@@ -13,4 +13,8 @@ export const AGENTS_ENDPOINTS = {
   GET_TRACE_LATENCY_TIMELINE: `${INSIGHTS_RTM_BASE}/Traceview/latencyTimeline`,
   /** Trace-level per-agent AGU/PLTU consumption totals. */
   GET_TRACE_UNIT_CONSUMPTION: `${INSIGHTS_RTM_BASE}/Traceview/unitConsumption`,
+  /** All spans for a single trace (flat array, not paginated). */
+  GET_SPANS_BY_TRACE_ID: (traceId: string) => `${INSIGHTS_RTM_BASE}/Traceview/spans/${traceId}`,
+  /** Paginated spans whose reference hierarchy contains the given reference id. */
+  GET_SPANS_BY_REFERENCE: (referenceId: string) => `${INSIGHTS_RTM_BASE}/Traceview/spans/reference/${referenceId}`,
 } as const;

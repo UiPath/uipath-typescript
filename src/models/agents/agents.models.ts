@@ -7,6 +7,8 @@ import type {
   AgentTraceLatencyTimelineResponse,
   AgentTraceUnitConsumptionOptions,
   AgentTraceUnitConsumptionResponse,
+  Span,
+  SpanGetByReferenceOptions,
 } from './agents.types';
 import type {
   HasPaginationOptions,
@@ -186,4 +188,78 @@ export interface AgentServiceModel {
     endTime: Date,
     options?: AgentTraceUnitConsumptionOptions,
   ): Promise<AgentTraceUnitConsumptionResponse>;
+
+  /**
+   * Retrieves every span belonging to a single trace.
+   *
+   * Returns a flat array of {@link Span} (not paginated), scoped to the caller's
+   * tenant and filtered to the folders the caller can access. `attributes` and
+   * `context` on each span are raw JSON strings — parse them with `JSON.parse()`.
+   *
+   * @param traceId - Identifier of the trace whose spans should be returned
+   * @returns Promise resolving to an array of {@link Span}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * const spans = await agents.getSpansByTraceId('<traceId>');
+   * spans.forEach((span) => {
+   *   console.log(`${span.name} (${span.startTime} → ${span.endTime ?? 'in progress'})`);
+   * });
+   * ```
+   */
+  getSpansByTraceId(traceId: string): Promise<Span[]>;
+
+  /**
+   * Retrieves spans whose reference hierarchy contains the given reference id.
+   *
+   * Matches spans where an entry in the span's `context.ReferenceHierarchy`
+   * array has a `ReferenceId` equal to `referenceId`. Optionally narrow the scan
+   * with `traceId`, restrict the hierarchy match with `serviceType` / `version`,
+   * bound the window with `startTime` / `endTime`, or filter by `executionType`.
+   * Omitting `traceId` scans the full tenant and can be slow on large tenants.
+   *
+   * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
+   * `cursor`, or `jumpToPage`) are provided, otherwise a
+   * {@link NonPaginatedResponse}.
+   *
+   * @param referenceId - Reference id matched against each span's `ReferenceHierarchy`
+   * @param options - Optional pagination and hierarchy/time filters {@link SpanGetByReferenceOptions}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link Span}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Bare minimum — server default page
+   * const result = await agents.getSpansByReference('<referenceId>');
+   * result.items.forEach((span) => console.log(span.name));
+   *
+   * // Scoped to one trace, runtime executions only, paginated
+   * import { AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const page = await agents.getSpansByReference('<referenceId>', {
+   *   traceId: '<traceId>',
+   *   executionType: AgentExecutionType.Runtime,
+   *   startTime: new Date('2025-05-01T00:00:00Z'),
+   *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   pageSize: 25,
+   * });
+   *
+   * if (page.hasNextPage && page.nextCursor) {
+   *   const next = await agents.getSpansByReference('<referenceId>', { cursor: page.nextCursor });
+   * }
+   * ```
+   */
+  getSpansByReference<T extends SpanGetByReferenceOptions = SpanGetByReferenceOptions>(
+    referenceId: string,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<Span>
+      : NonPaginatedResponse<Span>
+  >;
 }

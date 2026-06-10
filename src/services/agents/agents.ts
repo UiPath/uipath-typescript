@@ -9,6 +9,8 @@ import {
   AgentTraceLatencyTimelineResponse,
   AgentTraceUnitConsumptionOptions,
   AgentTraceUnitConsumptionResponse,
+  Span,
+  SpanGetByReferenceOptions,
 } from '../../models/agents/agents.types';
 import { AgentServiceModel } from '../../models/agents/agents.models';
 import { AGENTS_ENDPOINTS } from '../../utils/constants/endpoints';
@@ -16,6 +18,7 @@ import {
   HTTP_METHODS,
   AGENTS_PAGINATION,
   AGENTS_OFFSET_PARAMS,
+  TRACEVIEW_SPANS_PAGINATION,
 } from '../../utils/constants/common';
 import { track } from '../../core/telemetry';
 import { PaginationHelpers } from '../../utils/pagination/helpers';
@@ -241,6 +244,115 @@ export class AgentService extends BaseService implements AgentServiceModel {
       this.buildTraceFilterBody(startTime, endTime, options),
     );
     return response.data;
+  }
+
+  /**
+   * Retrieves every span belonging to a single trace.
+   *
+   * Returns a flat array of {@link Span} (not paginated), scoped to the caller's
+   * tenant and filtered to the folders the caller can access. `attributes` and
+   * `context` on each span are raw JSON strings — parse them with `JSON.parse()`.
+   *
+   * @param traceId - Identifier of the trace whose spans should be returned
+   * @returns Promise resolving to an array of {@link Span}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * const spans = await agents.getSpansByTraceId('<traceId>');
+   * spans.forEach((span) => {
+   *   console.log(`${span.name} (${span.startTime} → ${span.endTime ?? 'in progress'})`);
+   * });
+   * ```
+   */
+  @track('Agents.GetSpansByTraceId')
+  async getSpansByTraceId(traceId: string): Promise<Span[]> {
+    const response = await this.get<Span[]>(AGENTS_ENDPOINTS.GET_SPANS_BY_TRACE_ID(traceId));
+    return response.data;
+  }
+
+  /**
+   * Retrieves spans whose reference hierarchy contains the given reference id.
+   *
+   * Matches spans where an entry in the span's `context.ReferenceHierarchy`
+   * array has a `ReferenceId` equal to `referenceId`. Optionally narrow the scan
+   * with `traceId`, restrict the hierarchy match with `serviceType` / `version`,
+   * bound the window with `startTime` / `endTime`, or filter by `executionType`.
+   * Omitting `traceId` scans the full tenant and can be slow on large tenants.
+   *
+   * Returns a {@link PaginatedResponse} when pagination options (`pageSize`,
+   * `cursor`, or `jumpToPage`) are provided, otherwise a
+   * {@link NonPaginatedResponse}.
+   *
+   * @param referenceId - Reference id matched against each span's `ReferenceHierarchy`
+   * @param options - Optional pagination and hierarchy/time filters {@link SpanGetByReferenceOptions}
+   * @returns Promise resolving to a paginated or non-paginated list of {@link Span}
+   * @example
+   * ```typescript
+   * import { Agents } from '@uipath/uipath-typescript/agents';
+   *
+   * const agents = new Agents(sdk);
+   *
+   * // Bare minimum — server default page
+   * const result = await agents.getSpansByReference('<referenceId>');
+   * result.items.forEach((span) => console.log(span.name));
+   *
+   * // Scoped to one trace, runtime executions only, paginated
+   * import { AgentExecutionType } from '@uipath/uipath-typescript/agents';
+   *
+   * const page = await agents.getSpansByReference('<referenceId>', {
+   *   traceId: '<traceId>',
+   *   executionType: AgentExecutionType.Runtime,
+   *   startTime: new Date('2025-05-01T00:00:00Z'),
+   *   endTime: new Date('2025-06-01T00:00:00Z'),
+   *   pageSize: 25,
+   * });
+   *
+   * if (page.hasNextPage && page.nextCursor) {
+   *   const next = await agents.getSpansByReference('<referenceId>', { cursor: page.nextCursor });
+   * }
+   * ```
+   */
+  @track('Agents.GetSpansByReference')
+  async getSpansByReference<T extends SpanGetByReferenceOptions = SpanGetByReferenceOptions>(
+    referenceId: string,
+    options?: T,
+  ): Promise<
+    T extends HasPaginationOptions<T>
+      ? PaginatedResponse<Span>
+      : NonPaginatedResponse<Span>
+  > {
+    const { startTime, endTime, ...rest } = options ?? {};
+    const apiOptions = {
+      ...rest,
+      ...(startTime !== undefined ? { startTime: startTime.toISOString() } : {}),
+      ...(endTime !== undefined ? { endTime: endTime.toISOString() } : {}),
+    };
+
+    return PaginationHelpers.getAll<typeof apiOptions, Span>({
+      serviceAccess: this.createPaginationServiceAccess(),
+      getEndpoint: () => AGENTS_ENDPOINTS.GET_SPANS_BY_REFERENCE(referenceId),
+      method: HTTP_METHODS.GET,
+      excludeFromPrefix: Object.keys(apiOptions),
+      pagination: {
+        paginationType: PaginationType.OFFSET,
+        itemsField: TRACEVIEW_SPANS_PAGINATION.ITEMS_FIELD,
+        totalCountField: TRACEVIEW_SPANS_PAGINATION.TOTAL_COUNT_FIELD,
+        paginationParams: {
+          pageSizeParam: AGENTS_OFFSET_PARAMS.PAGE_SIZE_PARAM,
+          offsetParam: AGENTS_OFFSET_PARAMS.OFFSET_PARAM,
+          countParam: AGENTS_OFFSET_PARAMS.COUNT_PARAM,
+          convertToSkip: false,
+          zeroBased: true,
+        },
+      },
+    }, apiOptions) as Promise<
+      T extends HasPaginationOptions<T>
+        ? PaginatedResponse<Span>
+        : NonPaginatedResponse<Span>
+    >;
   }
 
   private buildTraceFilterBody(

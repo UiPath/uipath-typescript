@@ -199,3 +199,84 @@ export interface AgentTraceUnitConsumptionResponse {
  * Options for the trace-level per-agent unit consumption.
  */
 export interface AgentTraceUnitConsumptionOptions extends AgentTraceFilterOptions {}
+
+/**
+ * A single span record from the trace store.
+ *
+ * `attributes` and `context` are raw JSON strings — parse them with
+ * `JSON.parse()`. `status`, `source`, `spanType`, `verbosityLevel`, and
+ * `compressionType` are returned as strings (the API parses them to enums
+ * internally; no fixed value set is exposed).
+ */
+export interface Span {
+  /** Span ID. */
+  id: string;
+  /** ID of the trace this span belongs to. */
+  traceId: string;
+  /** Parent span ID. `null` for a root span. */
+  parentId: string | null;
+  /** Span name. */
+  name: string;
+  /** Span start time (ISO 8601, UTC). */
+  startTime: string;
+  /** Span end time (ISO 8601, UTC). `null` while the span is in progress. */
+  endTime: string | null;
+  /** Span attributes as a JSON string — parse with `JSON.parse()`. */
+  attributes: string;
+  /** Span status. */
+  status: string;
+  /** Organization ID (GUID). */
+  organizationId: string;
+  /** Tenant ID (GUID). May be `null`. */
+  tenantId: string | null;
+  /** Span retention expiry time (ISO 8601, UTC). May be `null`. */
+  expiryTimeUtc: string | null;
+  /** Folder key (GUID) the span was recorded in. May be `null`. */
+  folderKey: string | null;
+  /** Span source. May be `null`. */
+  source: string | null;
+  /** Span type. May be `null`. */
+  spanType: string | null;
+  /** Process key (GUID). May be `null`. */
+  processKey: string | null;
+  /** Job key (GUID). May be `null`. */
+  jobKey: string | null;
+  /** Reference ID (GUID). May be `null`. */
+  referenceId: string | null;
+  /** Verbosity level. May be `null`. */
+  verbosityLevel: string | null;
+  /** Record last-updated time (ISO 8601, UTC). */
+  updatedAt: string;
+  /** Whether the span payload is stored as a large (offloaded) payload. */
+  isLargePayload: boolean;
+  /** Payload compression type. May be `null`. */
+  compressionType: string | null;
+  /** Agent version that produced the span. May be `null`. */
+  agentVersion: string | null;
+  /**
+   * Raw span context as a JSON string — parse with `JSON.parse()`. Includes the
+   * `ReferenceHierarchy` array matched by {@link AgentServiceModel.getSpansByReference}.
+   * May be `null`.
+   */
+  context: string | null;
+}
+
+/**
+ * Options for {@link AgentServiceModel.getSpansByReference}.
+ *
+ * Composes the optional hierarchy/time filters with pagination options.
+ */
+export type SpanGetByReferenceOptions = PaginationOptions & {
+  /** Optional trace scope — narrows the scan to a single trace. */
+  traceId?: string;
+  /** Restrict matches to hierarchy entries with this service type. */
+  serviceType?: string;
+  /** Restrict matches to hierarchy entries with this version. */
+  version?: string;
+  /** Lower bound on span start time. */
+  startTime?: Date;
+  /** Upper bound on span end time. */
+  endTime?: Date;
+  /** Execution type filter — `Debug` (test runs) or `Runtime` (production runs). */
+  executionType?: AgentExecutionType;
+};

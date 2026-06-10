@@ -18,6 +18,12 @@ const buildEnvelope = (agents: unknown[], totalCount: number, pageNumber = 0, pa
   data: { agents },
 });
 
+// Spans-by-reference envelope: spans under `data`, total count under `pagination.totalCount`.
+const buildSpansEnvelope = (spans: unknown[], totalCount: number, pageNumber = 0, pageSize = 10) => ({
+  pagination: { totalCount, pageNumber, pageSize },
+  data: spans,
+});
+
 // ===== TEST SUITE =====
 describe('AgentService Unit Tests', () => {
   let agentService: AgentService;
@@ -353,6 +359,164 @@ describe('AgentService Unit Tests', () => {
       mockApiClient.post.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
       await expect(
         agentService.getTraceUnitConsumption(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getSpansByTraceId', () => {
+    const mockSpan = {
+      id: AGENT_TEST_CONSTANTS.SPAN_ID,
+      traceId: AGENT_TEST_CONSTANTS.TRACE_ID,
+      parentId: AGENT_TEST_CONSTANTS.PARENT_SPAN_ID,
+      name: AGENT_TEST_CONSTANTS.SPAN_NAME,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      attributes: AGENT_TEST_CONSTANTS.SPAN_ATTRIBUTES_JSON,
+      status: AGENT_TEST_CONSTANTS.SPAN_STATUS,
+      organizationId: AGENT_TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantId: null,
+      expiryTimeUtc: null,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      source: null,
+      spanType: null,
+      processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+      jobKey: AGENT_TEST_CONSTANTS.JOB_KEY,
+      referenceId: AGENT_TEST_CONSTANTS.REFERENCE_ID,
+      verbosityLevel: null,
+      updatedAt: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      isLargePayload: false,
+      compressionType: null,
+      agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+      context: AGENT_TEST_CONSTANTS.SPAN_CONTEXT_JSON,
+    };
+
+    it('should hit the spans-by-trace endpoint and return the flat span array', async () => {
+      mockApiClient.get.mockResolvedValue([mockSpan]);
+
+      const result = await agentService.getSpansByTraceId(AGENT_TEST_CONSTANTS.TRACE_ID);
+
+      expect(result).toEqual([mockSpan]);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        AGENTS_ENDPOINTS.GET_SPANS_BY_TRACE_ID(AGENT_TEST_CONSTANTS.TRACE_ID),
+        expect.any(Object),
+      );
+    });
+
+    it('should return an empty array when the trace has no spans', async () => {
+      mockApiClient.get.mockResolvedValue([]);
+
+      const result = await agentService.getSpansByTraceId(AGENT_TEST_CONSTANTS.TRACE_ID);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+      await expect(
+        agentService.getSpansByTraceId(AGENT_TEST_CONSTANTS.TRACE_ID),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getSpansByReference', () => {
+    const mockSpan = {
+      id: AGENT_TEST_CONSTANTS.SPAN_ID,
+      traceId: AGENT_TEST_CONSTANTS.TRACE_ID,
+      parentId: null,
+      name: AGENT_TEST_CONSTANTS.SPAN_NAME,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      attributes: AGENT_TEST_CONSTANTS.SPAN_ATTRIBUTES_JSON,
+      status: AGENT_TEST_CONSTANTS.SPAN_STATUS,
+      organizationId: AGENT_TEST_CONSTANTS.ORGANIZATION_ID,
+      tenantId: null,
+      expiryTimeUtc: null,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      source: null,
+      spanType: null,
+      processKey: null,
+      jobKey: null,
+      referenceId: AGENT_TEST_CONSTANTS.REFERENCE_ID,
+      verbosityLevel: null,
+      updatedAt: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      isLargePayload: false,
+      compressionType: null,
+      agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+      context: AGENT_TEST_CONSTANTS.SPAN_CONTEXT_JSON,
+    };
+
+    it('should return a non-paginated response (items + totalCount) when no pagination options are provided', async () => {
+      mockApiClient.get.mockResolvedValue(buildSpansEnvelope([mockSpan], 1));
+
+      const result = await agentService.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID);
+
+      expect(result.items).toEqual([mockSpan]);
+      expect(result.totalCount).toBe(1);
+      expect((result as { hasNextPage?: boolean }).hasNextPage).toBeUndefined();
+
+      const [endpoint] = mockApiClient.get.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_SPANS_BY_REFERENCE(AGENT_TEST_CONSTANTS.REFERENCE_ID));
+    });
+
+    it('should send pageSize + 0-based pageNumber as query params when pageSize is provided', async () => {
+      mockApiClient.get.mockResolvedValue(buildSpansEnvelope([], 0, 0, 25));
+
+      await agentService.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID, { pageSize: 25 });
+
+      const [, options] = mockApiClient.get.mock.calls[0];
+      expect(options.params.pageSize).toBe(25);
+      expect(options.params.pageNumber).toBe(0);
+    });
+
+    it('should convert jumpToPage (1-based) to a 0-based pageNumber', async () => {
+      mockApiClient.get.mockResolvedValue(buildSpansEnvelope([], 0, 2, 10));
+
+      await agentService.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID, { jumpToPage: 3, pageSize: 10 });
+
+      const [, options] = mockApiClient.get.mock.calls[0];
+      expect(options.params.pageNumber).toBe(2);
+      expect(options.params.pageSize).toBe(10);
+    });
+
+    it('should pass hierarchy/time filters as query params without OData prefixing', async () => {
+      mockApiClient.get.mockResolvedValue(buildSpansEnvelope([], 0));
+
+      await agentService.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID, {
+        pageSize: 10,
+        traceId: AGENT_TEST_CONSTANTS.TRACE_ID,
+        serviceType: AGENT_TEST_CONSTANTS.SPAN_SERVICE_TYPE,
+        version: AGENT_TEST_CONSTANTS.AGENT_VERSION,
+        startTime: new Date(AGENT_TEST_CONSTANTS.START_TIME),
+        endTime: new Date(AGENT_TEST_CONSTANTS.END_TIME),
+        executionType: AgentExecutionType.Runtime,
+      });
+
+      const [, options] = mockApiClient.get.mock.calls[0];
+      expect(options.params.traceId).toBe(AGENT_TEST_CONSTANTS.TRACE_ID);
+      expect(options.params.serviceType).toBe(AGENT_TEST_CONSTANTS.SPAN_SERVICE_TYPE);
+      expect(options.params.version).toBe(AGENT_TEST_CONSTANTS.AGENT_VERSION);
+      expect(options.params.startTime).toBe(new Date(AGENT_TEST_CONSTANTS.START_TIME).toISOString());
+      expect(options.params.endTime).toBe(new Date(AGENT_TEST_CONSTANTS.END_TIME).toISOString());
+      expect(options.params.executionType).toBe(AgentExecutionType.Runtime);
+      expect(options.params['$traceId']).toBeUndefined();
+    });
+
+    it('should return paginated response with hasNextPage + nextCursor when more pages exist', async () => {
+      mockApiClient.get.mockResolvedValue(buildSpansEnvelope(Array(10).fill(mockSpan), 25, 0, 10));
+
+      const result = await agentService.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID, { pageSize: 10 });
+
+      expect(result.items.length).toBe(10);
+      expect(result.totalCount).toBe(25);
+      expect((result as { hasNextPage?: boolean }).hasNextPage).toBe(true);
+      expect((result as { nextCursor?: unknown }).nextCursor).toBeDefined();
+      expect((result as { currentPage?: number }).currentPage).toBe(1);
+    });
+
+    it('should propagate API errors', async () => {
+      mockApiClient.get.mockRejectedValue(new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC));
+      await expect(
+        agentService.getSpansByReference(AGENT_TEST_CONSTANTS.REFERENCE_ID),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });

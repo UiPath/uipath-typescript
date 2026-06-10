@@ -140,6 +140,19 @@ export const AGENTS_OFFSET_PARAMS = {
 };
 
 /**
+ * Traceview spans pagination constants — items sit directly under `data`,
+ * total count under `pagination.totalCount`. Request params reuse
+ * {@link AGENTS_OFFSET_PARAMS} (pageSize + 0-based pageNumber).
+ */
+export const TRACEVIEW_SPANS_PAGINATION = {
+  /** Field name for the spans array in the response envelope */
+  ITEMS_FIELD: 'data',
+
+  /** Dotted path to the total count in the response envelope */
+  TOTAL_COUNT_FIELD: 'pagination.totalCount'
+};
+
+/**
  * Process Instance pagination constants for token-based pagination
  */
 export const PROCESS_INSTANCE_PAGINATION = {
