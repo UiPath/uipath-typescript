@@ -41,7 +41,7 @@ describe('DataFabricRoleService Unit Tests', () => {
       ]);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
-        { params: { stats: true } }
+        { params: { stats: true }, headers: {} }
       );
     });
 
@@ -55,7 +55,7 @@ describe('DataFabricRoleService Unit Tests', () => {
       expect(result).toEqual([{ id: 'role-1', name: 'Administrator', type: 'System' }]);
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
-        { params: { stats: false } }
+        { params: { stats: false }, headers: {} }
       );
     });
 

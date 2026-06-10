@@ -84,7 +84,7 @@ export class DataFabricRoleService extends BaseService implements DataFabricRole
     const headers = createHeaders({ [FOLDER_KEY]: options.folderKey });
     const response = await this.get<DataFabricRole[]>(
       DATA_FABRIC_ENDPOINTS.ROLES.GET_ALL,
-      Object.keys(headers).length > 0 ? { params, headers } : { params }
+      { params, headers }
     );
     return validateRolesResponse(response.data);
   }
