@@ -78,7 +78,7 @@ export interface ChoiceSetServiceModel {
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
    * @param choiceSetId - UUID of the choice set
-   * @param options - Pagination options
+   * @param options - Pagination options and optional `folderKey` (omit for tenant-level choice sets)
    * @returns Promise resolving to choice set values or paginated result
    * {@link ChoiceSetGetResponse}
    * @example
@@ -170,6 +170,7 @@ export interface ChoiceSetServiceModel {
    * Deletes a Data Fabric choice set and all its values.
    *
    * @param choiceSetId - UUID of the choice set to delete
+   * @param options - Optional {@link ChoiceSetDeleteByIdOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level
    * @returns Promise resolving when the choice set is deleted
    *
    * @example
@@ -260,6 +261,7 @@ export interface ChoiceSetServiceModel {
    *
    * @param choiceSetId - UUID of the parent choice set
    * @param valueIds - Array of value UUIDs to delete
+   * @param options - Optional {@link ChoiceSetValueDeleteOptions} — pass `folderKey` for folder-scoped choice sets; omit for tenant-level
    * @returns Promise resolving when the values are deleted
    *
    * @example

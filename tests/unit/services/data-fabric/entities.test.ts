@@ -410,6 +410,17 @@ describe("EntityService Unit Tests", () => {
         TEST_CONSTANTS.ERROR_MESSAGE,
       );
     });
+
+    it("should pass folderKey via X-UIPATH-FolderKey header when provided", async () => {
+      mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
+
+      await entityService.getAll({ folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+        { headers: { "X-UIPATH-FolderKey": ENTITY_TEST_CONSTANTS.FIELD_ID } },
+      );
+    });
   });
 
   describe("getAllRecords", () => {

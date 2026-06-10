@@ -73,7 +73,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * - A PaginatedResponse with navigation cursors (when any pagination parameter is provided)
    *
    * @param choiceSetId - UUID of the choice set
-   * @param options - Pagination options
+   * @param options - Pagination options and optional `folderKey` for folder-scoped choice sets
    * @returns Promise resolving to choice set values or paginated result
    *
    * @example
@@ -102,6 +102,9 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * if (page1.hasNextPage) {
    *   const page2 = await choiceSets.getById(choiceSetId, { cursor: page1.nextCursor });
    * }
+   *
+   * // Folder-scoped choice set
+   * const folderValues = await choiceSets.getById(choiceSetId, { folderKey: "<folderKey>" });
    * ```
    */
   @track('Choicesets.GetById')
@@ -232,6 +235,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * Deletes a Data Fabric choice set and all its values.
    *
    * @param choiceSetId - UUID of the choice set to delete
+   * @param options - Optional {@link ChoiceSetDeleteByIdOptions} (e.g. `folderKey` for folder-scoped choice sets)
    * @returns Promise resolving when the choice set is deleted
    *
    * @example
@@ -241,6 +245,9 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * const expenseTypes = allChoiceSets.find(cs => cs.name === 'expense_types');
    *
    * await choicesets.deleteById(expenseTypes.id);
+   *
+   * // Folder-scoped choice set
+   * await choicesets.deleteById(expenseTypes.id, { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
@@ -351,6 +358,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * @param choiceSetId - UUID of the parent choice set
    * @param valueIds - Array of value UUIDs to delete
+   * @param options - Optional {@link ChoiceSetValueDeleteOptions} (e.g. `folderKey` for folder-scoped choice sets)
    * @returns Promise resolving when the values are deleted
    *
    * @example
@@ -360,6 +368,9 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    * const idsToDelete = values.items.slice(0, 2).map(v => v.id);
    *
    * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete);
+   *
+   * // Folder-scoped choice set
+   * await choicesets.deleteValuesById('<choiceSetId>', idsToDelete, { folderKey: "<folderKey>" });
    * ```
    * @internal
    */
