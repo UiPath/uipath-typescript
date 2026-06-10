@@ -26,7 +26,6 @@ export enum AgentListSortColumn {
   LastRun = 'LastRun',
   HealthScore = 'HealthScore',
   LastIncident = 'LastIncident',
-  ConsumedUnits = 'ConsumedUnits',
   FolderName = 'FolderName',
   /** Quantity of AGU (Agent Units) consumed */
   QuantityAGU = 'QuantityAGU',

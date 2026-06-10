@@ -35,8 +35,8 @@ export interface AgentServiceModel {
    *
    * // Non-paginated — returns the server default page
    * const result = await agents.getAll(
-   *   '2025-05-01T00:00:00Z',
-   *   '2026-05-14T00:00:00Z',
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2026-05-14T00:00:00Z'),
    * );
    * result.items.forEach((agent) => {
    *   console.log(`${agent.agentName} — ${agent.unitsQuantity} units, health=${agent.healthScore}`);
@@ -44,8 +44,8 @@ export interface AgentServiceModel {
    *
    * // Paginated — sorted by health score descending
    * const page = await agents.getAll(
-   *   '2025-05-01T00:00:00Z',
-   *   '2026-05-14T00:00:00Z',
+   *   new Date('2025-05-01T00:00:00Z'),
+   *   new Date('2026-05-14T00:00:00Z'),
    *   {
    *     pageSize: 25,
    *     orderBy: { column: AgentListSortColumn.HealthScore, desc: true },
@@ -55,16 +55,16 @@ export interface AgentServiceModel {
    *
    * if (page.hasNextPage && page.nextCursor) {
    *   const next = await agents.getAll(
-   *     '2025-05-01T00:00:00Z',
-   *     '2026-05-14T00:00:00Z',
+   *     new Date('2025-05-01T00:00:00Z'),
+   *     new Date('2026-05-14T00:00:00Z'),
    *     { cursor: page.nextCursor },
    *   );
    * }
    * ```
    */
   getAll<T extends AgentListOptions = AgentListOptions>(
-    startTime: string,
-    endTime: string,
+    startTime: Date,
+    endTime: Date,
     options?: T,
   ): Promise<
     T extends HasPaginationOptions<T>

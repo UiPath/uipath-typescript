@@ -35,8 +35,8 @@ describe('AgentService Unit Tests', () => {
   });
 
   describe('getAll', () => {
-    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
-    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
     const mockAgent = {
       agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
       agentName: AGENT_TEST_CONSTANTS.AGENT_NAME_1,
@@ -69,8 +69,8 @@ describe('AgentService Unit Tests', () => {
       // Non-paginated body carries no pagination params
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
       expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_AGENTS);
-      expect(body.startTime).toBe(startTime);
-      expect(body.endTime).toBe(endTime);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
       expect(body.pageNumber).toBeUndefined();
       expect(body.pageSize).toBeUndefined();
     });
@@ -82,8 +82,8 @@ describe('AgentService Unit Tests', () => {
 
       const [endpoint, body] = mockApiClient.post.mock.calls[0];
       expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_AGENTS);
-      expect(body.startTime).toBe(startTime);
-      expect(body.endTime).toBe(endTime);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
       expect(body.pageNumber).toBe(0);
       expect(body.pageSize).toBe(25);
     });

@@ -28,8 +28,8 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
   });
 
   describe('getAll', () => {
-    const startTime = AGENT_TEST_CONSTANTS.START_TIME;
-    const endTime = AGENT_TEST_CONSTANTS.END_TIME;
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
     it('should retrieve the agent list with aggregate totals', async () => {
       const result = await agents.getAll(startTime, endTime);

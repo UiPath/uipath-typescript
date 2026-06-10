@@ -13,7 +13,7 @@
  * await sdk.initialize();
  *
  * const agents = new Agents(sdk);
- * const result = await agents.getAll('2025-05-01T00:00:00Z', '2026-05-14T00:00:00Z');
+ * const result = await agents.getAll(new Date('2025-05-01T00:00:00Z'), new Date('2026-05-14T00:00:00Z'));
  * ```
  *
  * @module
