@@ -145,7 +145,7 @@ export interface AgentIncidentOrderBy {
  * for an agent over the requested window.
  */
 export interface AgentIncident {
-  /** Incident type (e.g., "Error") */
+  /** Incident type */
   type: string;
   /** Error description */
   description: string;

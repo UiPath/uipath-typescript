@@ -238,6 +238,17 @@ describe('AgentService Unit Tests', () => {
       expect(body.groupBy).toEqual(groupBy);
     });
 
+    it('should pass array filters through the body without OData prefixing', async () => {
+      mockApiClient.post.mockResolvedValue(buildIncidentsEnvelope([], 0, 0, 10));
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      await agentService.getIncidents(startTime, endTime, { pageSize: 10, folderKeys });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual(folderKeys);
+      expect(body['$folderKeys']).toBeUndefined();
+    });
+
     it('should return paginated response with hasNextPage + nextCursor when more pages exist', async () => {
       mockApiClient.post.mockResolvedValue(buildIncidentsEnvelope(Array(2).fill(mockIncident), 39, 0, 2));
 
