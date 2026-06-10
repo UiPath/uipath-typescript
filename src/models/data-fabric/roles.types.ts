@@ -1,7 +1,10 @@
 /**
  * @internal
  */
-export type DataFabricRoleType = 'System' | 'UserDefined';
+export enum DataFabricRoleType {
+  System = 'System',
+  UserDefined = 'UserDefined',
+}
 
 /**
  * @internal

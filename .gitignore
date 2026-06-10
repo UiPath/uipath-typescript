@@ -31,6 +31,9 @@ coverage-integration/
 logs/
 *.log
 
+# Local smoke and scratch files
+.tmp/
+
 # Optional npm cache directory
 .npm
 

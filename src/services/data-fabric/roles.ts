@@ -4,6 +4,7 @@ import { DataFabricRoleServiceModel } from '../../models/data-fabric/roles.model
 import {
   DataFabricRole,
   DataFabricRoleGetAllOptions,
+  DataFabricRoleType,
 } from '../../models/data-fabric/roles.types';
 import { FOLDER_KEY } from '../../utils/constants/headers';
 import { DATA_FABRIC_ENDPOINTS } from '../../utils/constants/endpoints/data-fabric';
@@ -26,7 +27,7 @@ function isDataFabricRole(value: unknown): value is DataFabricRole {
   const hasValidFolderId = folderId === undefined || typeof folderId === 'string';
   return typeof id === 'string' &&
     typeof name === 'string' &&
-    (type === 'System' || type === 'UserDefined') &&
+    (type === DataFabricRoleType.System || type === DataFabricRoleType.UserDefined) &&
     hasValidDirectoryEntityCount &&
     hasValidFolderId;
 }
