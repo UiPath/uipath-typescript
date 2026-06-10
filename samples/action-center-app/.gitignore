@@ -1,0 +1,22 @@
+# Logs
+*.log
+npm-debug.log*
+
+# Build outputs
+node_modules
+dist
+dist-ssr
+
+# Local UiPath OAuth config (tenant-specific) — copy uipath.json.example to
+# uipath.json and fill in your values. Only the .example template is committed.
+uipath.json
+
+# Coded App publish artifacts
+.uipath
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.sw?
