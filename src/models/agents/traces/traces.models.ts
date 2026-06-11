@@ -1,12 +1,12 @@
 import {
-  AgentTraceErrorsTimelineOptions,
-  AgentTraceErrorsTimelineResponse,
-  AgentTraceLatencyTimelineOptions,
-  AgentTraceLatencyTimelineResponse,
-  AgentTraceUnitConsumptionOptions,
-  AgentTraceUnitConsumptionResponse,
+  AgentTraceGetErrorsTimelineOptions,
+  AgentTraceGetErrorsTimelineResponse,
+  AgentTraceGetLatencyTimelineOptions,
+  AgentTraceGetLatencyTimelineResponse,
+  AgentTraceGetUnitConsumptionOptions,
+  AgentTraceGetUnitConsumptionResponse,
   SpanResponse,
-  SpanGetByReferenceOptions,
+  AgentTraceGetSpansByReferenceOptions,
 } from './traces.types';
 import type {
   HasPaginationOptions,
@@ -22,7 +22,7 @@ export interface AgentTracesServiceModel {
    * Retrieves a trace-level time-series of error counts grouped by error name.
    *
    * @param options - Optional window and filters
-   * @returns Promise resolving to {@link AgentTraceErrorsTimelineResponse}
+   * @returns Promise resolving to an array of {@link AgentTraceGetErrorsTimelineResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
@@ -31,13 +31,13 @@ export interface AgentTracesServiceModel {
    *
    * // Get the errors timeline
    * const result = await trace.getErrorsTimeline();
-   * result.data?.forEach((point) => {
+   * result.forEach((point) => {
    *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
    * });
    * ```
    * @example
    * ```typescript
-   * import { AgentExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
    *
    * // Get the errors timeline for an agent version within a time window
    * const filtered = await trace.getErrorsTimeline({
@@ -45,19 +45,19 @@ export interface AgentTracesServiceModel {
    *   endTime: new Date('2025-06-01T00:00:00Z'),
    *   agentId: '<agentId>',
    *   agentVersion: '1.0.0',
-   *   executionType: AgentExecutionType.Runtime,
+   *   executionType: AgentTraceExecutionType.Runtime,
    * });
    * ```
    */
   getErrorsTimeline(
-    options?: AgentTraceErrorsTimelineOptions,
-  ): Promise<AgentTraceErrorsTimelineResponse>;
+    options?: AgentTraceGetErrorsTimelineOptions,
+  ): Promise<AgentTraceGetErrorsTimelineResponse[]>;
 
   /**
    * Retrieves a trace-level time-series of latency.
    *
    * @param options - Optional window and filters
-   * @returns Promise resolving to {@link AgentTraceLatencyTimelineResponse}
+   * @returns Promise resolving to an array of {@link AgentTraceGetLatencyTimelineResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
@@ -66,7 +66,7 @@ export interface AgentTracesServiceModel {
    *
    * // Get the latency timeline
    * const result = await trace.getLatencyTimeline();
-   * result.data?.forEach((point) => {
+   * result.forEach((point) => {
    *   console.log(`${point.date} ${point.name}: ${point.value}s`);
    * });
    * ```
@@ -80,14 +80,14 @@ export interface AgentTracesServiceModel {
    * ```
    */
   getLatencyTimeline(
-    options?: AgentTraceLatencyTimelineOptions,
-  ): Promise<AgentTraceLatencyTimelineResponse>;
+    options?: AgentTraceGetLatencyTimelineOptions,
+  ): Promise<AgentTraceGetLatencyTimelineResponse[]>;
 
   /**
    * Retrieves trace-level per-agent unit consumption totals.
    *
    * @param options - Optional window and filters
-   * @returns Promise resolving to {@link AgentTraceUnitConsumptionResponse}
+   * @returns Promise resolving to an array of {@link AgentTraceGetUnitConsumptionResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
@@ -96,7 +96,7 @@ export interface AgentTracesServiceModel {
    *
    * // Get per-agent unit consumption
    * const result = await trace.getUnitConsumption();
-   * result.data?.forEach((row) => {
+   * result.forEach((row) => {
    *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} AGU, ${row.platformUnitsConsumed} PLTU`);
    * });
    * ```
@@ -110,8 +110,8 @@ export interface AgentTracesServiceModel {
    * ```
    */
   getUnitConsumption(
-    options?: AgentTraceUnitConsumptionOptions,
-  ): Promise<AgentTraceUnitConsumptionResponse>;
+    options?: AgentTraceGetUnitConsumptionOptions,
+  ): Promise<AgentTraceGetUnitConsumptionResponse[]>;
 
   /**
    * Retrieves every span belonging to a single trace.
@@ -154,12 +154,12 @@ export interface AgentTracesServiceModel {
    * ```
    * @example
    * ```typescript
-   * import { AgentExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
    *
    * // Get spans by referenceId within a trace and time window
    * const page = await trace.getSpansByReference('<referenceId>', {
    *   traceId: '<traceId>',
-   *   executionType: AgentExecutionType.Runtime,
+   *   executionType: AgentTraceExecutionType.Runtime,
    *   startTime: new Date('2025-05-01T00:00:00Z'),
    *   endTime: new Date('2025-06-01T00:00:00Z'),
    *   pageSize: 25,
@@ -170,7 +170,7 @@ export interface AgentTracesServiceModel {
    * }
    * ```
    */
-  getSpansByReference<T extends SpanGetByReferenceOptions = SpanGetByReferenceOptions>(
+  getSpansByReference<T extends AgentTraceGetSpansByReferenceOptions = AgentTraceGetSpansByReferenceOptions>(
     referenceId: string,
     options?: T,
   ): Promise<

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { getServices, setupUnifiedTests, InitMode } from '../../config/unified-setup';
 import { AgentTraces } from '../../../../src/services/agents/traces';
-import { AgentExecutionType } from '../../../../src/models/agents/traces/traces.types';
+import { AgentTraceExecutionType } from '../../../../src/models/agents/traces/traces.types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 /**
@@ -36,8 +36,8 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getErrorsTimeline({ startTime, endTime });
 
       expect(result).toBeDefined();
-      if (result.data && result.data.length > 0) {
-        const point = result.data[0];
+      if (result.length > 0) {
+        const point = result[0];
         expect(typeof point.name).toBe('string');
         expect(typeof point.value).toBe('number');
         expect(typeof point.date).toBe('string');
@@ -51,7 +51,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
         folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-        executionType: AgentExecutionType.Runtime,
+        executionType: AgentTraceExecutionType.Runtime,
       });
 
       expect(result).toBeDefined();
@@ -66,8 +66,8 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getLatencyTimeline({ startTime, endTime });
 
       expect(result).toBeDefined();
-      if (result.data && result.data.length > 0) {
-        const point = result.data[0];
+      if (result.length > 0) {
+        const point = result[0];
         expect(typeof point.name).toBe('string');
         expect(typeof point.value).toBe('number');
         expect(typeof point.date).toBe('string');
@@ -81,7 +81,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
         folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-        executionType: AgentExecutionType.Runtime,
+        executionType: AgentTraceExecutionType.Runtime,
       });
 
       expect(result).toBeDefined();
@@ -96,8 +96,8 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
       const result = await trace.getUnitConsumption({ startTime, endTime });
 
       expect(result).toBeDefined();
-      if (result.data && result.data.length > 0) {
-        const row = result.data[0];
+      if (result.length > 0) {
+        const row = result[0];
         expect(typeof row.agentId).toBe('string');
         expect(typeof row.folderKey).toBe('string');
         expect(typeof row.agentVersion).toBe('string');
@@ -113,7 +113,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
         folderKeys: [AGENT_TEST_CONSTANTS.FOLDER_KEY_1],
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-        executionType: AgentExecutionType.Runtime,
+        executionType: AgentTraceExecutionType.Runtime,
       });
 
       expect(result).toBeDefined();
@@ -162,7 +162,7 @@ describe.skip.each(modes)('Agent Traces - Integration Tests [%s]', (mode) => {
         traceId: AGENT_TEST_CONSTANTS.TRACE_ID,
         startTime,
         endTime,
-        executionType: AgentExecutionType.Runtime,
+        executionType: AgentTraceExecutionType.Runtime,
         pageSize: 2,
       });
 

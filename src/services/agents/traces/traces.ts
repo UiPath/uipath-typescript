@@ -1,14 +1,14 @@
 import { BaseService } from '../../base';
 import {
   AgentTraceFilterOptions,
-  AgentTraceErrorsTimelineOptions,
-  AgentTraceErrorsTimelineResponse,
-  AgentTraceLatencyTimelineOptions,
-  AgentTraceLatencyTimelineResponse,
-  AgentTraceUnitConsumptionOptions,
-  AgentTraceUnitConsumptionResponse,
+  AgentTraceGetErrorsTimelineOptions,
+  AgentTraceGetErrorsTimelineResponse,
+  AgentTraceGetLatencyTimelineOptions,
+  AgentTraceGetLatencyTimelineResponse,
+  AgentTraceGetUnitConsumptionOptions,
+  AgentTraceGetUnitConsumptionResponse,
   SpanResponse,
-  SpanGetByReferenceOptions,
+  AgentTraceGetSpansByReferenceOptions,
 } from '../../../models/agents/traces/traces.types';
 import { AgentTracesServiceModel } from '../../../models/agents/traces/traces.models';
 import { AGENT_TRACES_ENDPOINTS } from '../../../utils/constants/endpoints';
@@ -34,7 +34,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * Retrieves a trace-level time-series of error counts grouped by error name.
    *
    * @param options - Optional window and filters
-   * @returns Promise resolving to {@link AgentTraceErrorsTimelineResponse}
+   * @returns Promise resolving to an array of {@link AgentTraceGetErrorsTimelineResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
@@ -43,13 +43,13 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    *
    * // Get the errors timeline
    * const result = await trace.getErrorsTimeline();
-   * result.data?.forEach((point) => {
+   * result.forEach((point) => {
    *   console.log(`${point.date} ${point.name}: ${point.value} errors`);
    * });
    * ```
    * @example
    * ```typescript
-   * import { AgentExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
    *
    * // Get the errors timeline for an agent version within a time window
    * const filtered = await trace.getErrorsTimeline({
@@ -57,26 +57,26 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    *   endTime: new Date('2025-06-01T00:00:00Z'),
    *   agentId: '<agentId>',
    *   agentVersion: '1.0.0',
-   *   executionType: AgentExecutionType.Runtime,
+   *   executionType: AgentTraceExecutionType.Runtime,
    * });
    * ```
    */
   @track('AgentTraces.GetErrorsTimeline')
   async getErrorsTimeline(
-    options?: AgentTraceErrorsTimelineOptions,
-  ): Promise<AgentTraceErrorsTimelineResponse> {
-    const response = await this.post<AgentTraceErrorsTimelineResponse>(
+    options?: AgentTraceGetErrorsTimelineOptions,
+  ): Promise<AgentTraceGetErrorsTimelineResponse[]> {
+    const response = await this.post<{ data?: AgentTraceGetErrorsTimelineResponse[] }>(
       AGENT_TRACES_ENDPOINTS.GET_ERRORS_TIMELINE,
       this.buildTraceFilterBody(options),
     );
-    return response.data;
+    return response.data.data ?? [];
   }
 
   /**
    * Retrieves a trace-level time-series of latency.
    *
    * @param options - Optional window and filters
-   * @returns Promise resolving to {@link AgentTraceLatencyTimelineResponse}
+   * @returns Promise resolving to an array of {@link AgentTraceGetLatencyTimelineResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
@@ -85,7 +85,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    *
    * // Get the latency timeline
    * const result = await trace.getLatencyTimeline();
-   * result.data?.forEach((point) => {
+   * result.forEach((point) => {
    *   console.log(`${point.date} ${point.name}: ${point.value}s`);
    * });
    * ```
@@ -100,20 +100,20 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    */
   @track('AgentTraces.GetLatencyTimeline')
   async getLatencyTimeline(
-    options?: AgentTraceLatencyTimelineOptions,
-  ): Promise<AgentTraceLatencyTimelineResponse> {
-    const response = await this.post<AgentTraceLatencyTimelineResponse>(
+    options?: AgentTraceGetLatencyTimelineOptions,
+  ): Promise<AgentTraceGetLatencyTimelineResponse[]> {
+    const response = await this.post<{ data?: AgentTraceGetLatencyTimelineResponse[] }>(
       AGENT_TRACES_ENDPOINTS.GET_LATENCY_TIMELINE,
       this.buildTraceFilterBody(options),
     );
-    return response.data;
+    return response.data.data ?? [];
   }
 
   /**
    * Retrieves trace-level per-agent unit consumption totals.
    *
    * @param options - Optional window and filters
-   * @returns Promise resolving to {@link AgentTraceUnitConsumptionResponse}
+   * @returns Promise resolving to an array of {@link AgentTraceGetUnitConsumptionResponse}
    * @example
    * ```typescript
    * import { AgentTraces } from '@uipath/uipath-typescript/agent-traces';
@@ -122,7 +122,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    *
    * // Get per-agent unit consumption
    * const result = await trace.getUnitConsumption();
-   * result.data?.forEach((row) => {
+   * result.forEach((row) => {
    *   console.log(`${row.agentId}: ${row.agentUnitsConsumed} AGU, ${row.platformUnitsConsumed} PLTU`);
    * });
    * ```
@@ -137,13 +137,13 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    */
   @track('AgentTraces.GetUnitConsumption')
   async getUnitConsumption(
-    options?: AgentTraceUnitConsumptionOptions,
-  ): Promise<AgentTraceUnitConsumptionResponse> {
-    const response = await this.post<AgentTraceUnitConsumptionResponse>(
+    options?: AgentTraceGetUnitConsumptionOptions,
+  ): Promise<AgentTraceGetUnitConsumptionResponse[]> {
+    const response = await this.post<{ data?: AgentTraceGetUnitConsumptionResponse[] }>(
       AGENT_TRACES_ENDPOINTS.GET_UNIT_CONSUMPTION,
       this.buildTraceFilterBody(options),
     );
-    return response.data;
+    return response.data.data ?? [];
   }
 
   /**
@@ -191,12 +191,12 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    * @example
    * ```typescript
-   * import { AgentExecutionType } from '@uipath/uipath-typescript/agent-traces';
+   * import { AgentTraceExecutionType } from '@uipath/uipath-typescript/agent-traces';
    *
    * // Get spans by referenceId within a trace and time window
    * const page = await trace.getSpansByReference('<referenceId>', {
    *   traceId: '<traceId>',
-   *   executionType: AgentExecutionType.Runtime,
+   *   executionType: AgentTraceExecutionType.Runtime,
    *   startTime: new Date('2025-05-01T00:00:00Z'),
    *   endTime: new Date('2025-06-01T00:00:00Z'),
    *   pageSize: 25,
@@ -208,7 +208,7 @@ export class AgentTracesService extends BaseService implements AgentTracesServic
    * ```
    */
   @track('AgentTraces.GetSpansByReference')
-  async getSpansByReference<T extends SpanGetByReferenceOptions = SpanGetByReferenceOptions>(
+  async getSpansByReference<T extends AgentTraceGetSpansByReferenceOptions = AgentTraceGetSpansByReferenceOptions>(
     referenceId: string,
     options?: T,
   ): Promise<

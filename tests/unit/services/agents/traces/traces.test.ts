@@ -4,7 +4,7 @@ import { AgentTracesService } from '../../../../../src/services/agents/traces/tr
 import { ApiClient } from '../../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../../utils/setup';
 import { AGENT_TRACES_ENDPOINTS } from '../../../../../src/utils/constants/endpoints';
-import { AgentExecutionType } from '../../../../../src/models/agents/traces/traces.types';
+import { AgentTraceExecutionType } from '../../../../../src/models/agents/traces/traces.types';
 import { AGENT_TEST_CONSTANTS } from '../../../../utils/constants';
 
 // ===== MOCKING =====
@@ -59,7 +59,7 @@ describe('AgentTracesService Unit Tests', () => {
 
       const result = await traceService.getErrorsTimeline({ startTime, endTime });
 
-      expect(result.data).toEqual(mockResponse.data);
+      expect(result).toEqual(mockResponse.data);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         AGENT_TRACES_ENDPOINTS.GET_ERRORS_TIMELINE,
         { startTime: startTime.toISOString(), endTime: endTime.toISOString() },
@@ -77,7 +77,7 @@ describe('AgentTracesService Unit Tests', () => {
         folderKeys,
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-        executionType: AgentExecutionType.Runtime,
+        executionType: AgentTraceExecutionType.Runtime,
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -88,7 +88,7 @@ describe('AgentTracesService Unit Tests', () => {
           folderKeys,
           agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
           agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-          executionType: AgentExecutionType.Runtime,
+          executionType: AgentTraceExecutionType.Runtime,
         },
         expect.any(Object),
       );
@@ -106,10 +106,10 @@ describe('AgentTracesService Unit Tests', () => {
       );
     });
 
-    it('should return response with absent data when API returns empty', async () => {
+    it('should return an empty array when API returns no data', async () => {
       mockApiClient.post.mockResolvedValue({});
       const result = await traceService.getErrorsTimeline();
-      expect(result.data).toBeUndefined();
+      expect(result).toEqual([]);
     });
 
     it('should propagate API errors', async () => {
@@ -147,7 +147,7 @@ describe('AgentTracesService Unit Tests', () => {
 
       const result = await traceService.getLatencyTimeline({ startTime, endTime });
 
-      expect(result.data).toEqual(mockResponse.data);
+      expect(result).toEqual(mockResponse.data);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         AGENT_TRACES_ENDPOINTS.GET_LATENCY_TIMELINE,
         { startTime: startTime.toISOString(), endTime: endTime.toISOString() },
@@ -165,7 +165,7 @@ describe('AgentTracesService Unit Tests', () => {
         folderKeys,
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-        executionType: AgentExecutionType.Runtime,
+        executionType: AgentTraceExecutionType.Runtime,
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -176,16 +176,16 @@ describe('AgentTracesService Unit Tests', () => {
           folderKeys,
           agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
           agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-          executionType: AgentExecutionType.Runtime,
+          executionType: AgentTraceExecutionType.Runtime,
         },
         expect.any(Object),
       );
     });
 
-    it('should return response with absent data when API returns empty', async () => {
+    it('should return an empty array when API returns no data', async () => {
       mockApiClient.post.mockResolvedValue({});
       const result = await traceService.getLatencyTimeline();
-      expect(result.data).toBeUndefined();
+      expect(result).toEqual([]);
     });
 
     it('should propagate API errors', async () => {
@@ -228,7 +228,7 @@ describe('AgentTracesService Unit Tests', () => {
 
       const result = await traceService.getUnitConsumption({ startTime, endTime });
 
-      expect(result.data).toEqual(mockResponse.data);
+      expect(result).toEqual(mockResponse.data);
       expect(mockApiClient.post).toHaveBeenCalledWith(
         AGENT_TRACES_ENDPOINTS.GET_UNIT_CONSUMPTION,
         { startTime: startTime.toISOString(), endTime: endTime.toISOString() },
@@ -246,7 +246,7 @@ describe('AgentTracesService Unit Tests', () => {
         folderKeys,
         agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
         agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-        executionType: AgentExecutionType.Runtime,
+        executionType: AgentTraceExecutionType.Runtime,
       });
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -257,16 +257,16 @@ describe('AgentTracesService Unit Tests', () => {
           folderKeys,
           agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
           agentVersion: AGENT_TEST_CONSTANTS.AGENT_VERSION,
-          executionType: AgentExecutionType.Runtime,
+          executionType: AgentTraceExecutionType.Runtime,
         },
         expect.any(Object),
       );
     });
 
-    it('should return response with absent data when API returns empty', async () => {
+    it('should return an empty array when API returns no data', async () => {
       mockApiClient.post.mockResolvedValue({});
       const result = await traceService.getUnitConsumption();
-      expect(result.data).toBeUndefined();
+      expect(result).toEqual([]);
     });
 
     it('should propagate API errors', async () => {
@@ -402,7 +402,7 @@ describe('AgentTracesService Unit Tests', () => {
         version: AGENT_TEST_CONSTANTS.AGENT_VERSION,
         startTime: new Date(AGENT_TEST_CONSTANTS.START_TIME),
         endTime: new Date(AGENT_TEST_CONSTANTS.END_TIME),
-        executionType: AgentExecutionType.Runtime,
+        executionType: AgentTraceExecutionType.Runtime,
       });
 
       const [, options] = mockApiClient.get.mock.calls[0];
@@ -411,7 +411,7 @@ describe('AgentTracesService Unit Tests', () => {
       expect(options.params.version).toBe(AGENT_TEST_CONSTANTS.AGENT_VERSION);
       expect(options.params.startTime).toBe(new Date(AGENT_TEST_CONSTANTS.START_TIME).toISOString());
       expect(options.params.endTime).toBe(new Date(AGENT_TEST_CONSTANTS.END_TIME).toISOString());
-      expect(options.params.executionType).toBe(AgentExecutionType.Runtime);
+      expect(options.params.executionType).toBe(AgentTraceExecutionType.Runtime);
       expect(options.params['$traceId']).toBeUndefined();
     });
 
