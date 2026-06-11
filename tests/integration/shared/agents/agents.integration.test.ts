@@ -87,36 +87,36 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     });
   });
 
-  describe('getIncidents', () => {
+  describe('getErrors', () => {
     const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
     const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
 
-    it('should retrieve a non-paginated list of incidents', async () => {
-      const result = await agents.getIncidents(startTime, endTime);
+    it('should retrieve a non-paginated list of errors', async () => {
+      const result = await agents.getErrors(startTime, endTime);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.items)).toBe(true);
       if (result.items.length === 0) {
         throw new Error(
-          'No incidents in the test tenant for the configured window — ' +
+          'No errors in the test tenant for the configured window — ' +
           'cannot verify response shape. Run errored agents in the tenant or widen the window.',
         );
       }
-      const incident = result.items[0];
-      expect(typeof incident.type).toBe('string');
-      expect(typeof incident.description).toBe('string');
-      expect(typeof incident.agentId).toBe('string');
-      expect(typeof incident.count).toBe('number');
-      expect(incident.firstSeenJob).toBeDefined();
-      expect(incident.lastSeenJob).toBeDefined();
+      const error = result.items[0];
+      expect(typeof error.type).toBe('string');
+      expect(typeof error.description).toBe('string');
+      expect(typeof error.agentId).toBe('string');
+      expect(typeof error.count).toBe('number');
+      expect(error.firstSeenJob).toBeDefined();
+      expect(error.lastSeenJob).toBeDefined();
     });
 
     it('should return paginated response with cursor navigation when pageSize is provided', async () => {
-      const result = await agents.getIncidents(startTime, endTime, { pageSize: 2 });
+      const result = await agents.getErrors(startTime, endTime, { pageSize: 2 });
 
       if (result.items.length === 0) {
         throw new Error(
-          'No incidents in the test tenant — cannot verify pagination. ' +
+          'No errors in the test tenant — cannot verify pagination. ' +
           'Run errored agents in the tenant or widen the window.',
         );
       }
@@ -129,15 +129,15 @@ describe.skip.each(modes)('Agents - Integration Tests [%s]', (mode) => {
     });
 
     it('should navigate to the next page via cursor', async () => {
-      const first = await agents.getIncidents(startTime, endTime, { pageSize: 2 });
+      const first = await agents.getErrors(startTime, endTime, { pageSize: 2 });
 
       if (!first.hasNextPage || !first.nextCursor) {
         throw new Error(
-          'Need at least 3 incidents in the tenant to verify cursor navigation.',
+          'Need at least 3 errors in the tenant to verify cursor navigation.',
         );
       }
 
-      const second = await agents.getIncidents(startTime, endTime, {
+      const second = await agents.getErrors(startTime, endTime, {
         cursor: first.nextCursor,
       });
 
