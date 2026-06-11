@@ -420,7 +420,7 @@ describe('BucketService Unit Tests', () => {
 
   describe('getFileMetaData', () => {
 
-    it('should return file metadata without pagination', async () => {
+    it('should return file metadata without pagination (deprecated positional form)', async () => {
       const mockBlobItems = createMockFileMetadata(3);
       const mockResponse = {
         items: mockBlobItems,
@@ -430,29 +430,30 @@ describe('BucketService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
       const result = await bucketService.getFileMetaData(
-        BUCKET_TEST_CONSTANTS.BUCKET_ID, 
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
         TEST_CONSTANTS.FOLDER_ID
       );
 
-      // Verify PaginationHelpers.getAll was called with correct parameters
+      // Verify PaginationHelpers.getAll was called with the right config + headers built from folderId
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceAccess: expect.any(Object),
-          getEndpoint: expect.toSatisfy(fn => fn(BUCKET_TEST_CONSTANTS.BUCKET_ID) === BUCKET_ENDPOINTS.GET_FILE_META_DATA(BUCKET_TEST_CONSTANTS.BUCKET_ID)), // BUCKET_ENDPOINTS.GET_FILE_META_DATA
+          getEndpoint: expect.toSatisfy(fn => fn(BUCKET_TEST_CONSTANTS.BUCKET_ID) === BUCKET_ENDPOINTS.GET_FILE_META_DATA(BUCKET_TEST_CONSTANTS.BUCKET_ID)),
           transformFn: expect.any(Function),
           pagination: expect.any(Object),
-          excludeFromPrefix: ['prefix']
+          excludeFromPrefix: ['prefix'],
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
         }),
-        expect.objectContaining({
-          folderId: TEST_CONSTANTS.FOLDER_ID
-        })
+        expect.any(Object),
       );
 
       expect(result).toEqual(mockResponse);
       expect(result.items).toHaveLength(3);
     });
 
-    it('should return paginated file metadata when pagination options provided', async () => {
+    it('should return paginated file metadata when pagination options provided (deprecated positional form)', async () => {
       const mockBlobItems = createMockFileMetadata(10);
       const mockResponse = {
         items: mockBlobItems,
@@ -466,34 +467,129 @@ describe('BucketService Unit Tests', () => {
 
       vi.mocked(PaginationHelpers.getAll).mockResolvedValue(mockResponse);
 
-      const options: BucketGetFileMetaDataWithPaginationOptions = { 
-        pageSize: TEST_CONSTANTS.PAGE_SIZE, 
-        prefix: BUCKET_TEST_CONSTANTS.PREFIX 
+      const options: BucketGetFileMetaDataWithPaginationOptions = {
+        pageSize: TEST_CONSTANTS.PAGE_SIZE,
+        prefix: BUCKET_TEST_CONSTANTS.PREFIX
       };
       const result = await bucketService.getFileMetaData(
-        BUCKET_TEST_CONSTANTS.BUCKET_ID, 
-        TEST_CONSTANTS.FOLDER_ID, 
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        TEST_CONSTANTS.FOLDER_ID,
         options
       ) as PaginatedResponse<BlobItem>;
 
-      // Verify PaginationHelpers.getAll was called with correct parameters
       expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceAccess: expect.any(Object),
           getEndpoint: expect.any(Function),
           transformFn: expect.any(Function),
           pagination: expect.any(Object),
-          excludeFromPrefix: ['prefix']
+          excludeFromPrefix: ['prefix'],
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
         }),
         expect.objectContaining({
           pageSize: TEST_CONSTANTS.PAGE_SIZE,
           prefix: BUCKET_TEST_CONSTANTS.PREFIX,
-          folderId: TEST_CONSTANTS.FOLDER_ID
-        })
+        }),
       );
 
       expect(result).toEqual(mockResponse);
       expect(result.hasNextPage).toBe(true);
+    });
+
+    it('should accept the new options-object form with folderId', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await bucketService.getFileMetaData(BUCKET_TEST_CONSTANTS.BUCKET_ID, {
+        folderId: TEST_CONSTANTS.FOLDER_ID,
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
+        expect.any(Object),
+      );
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_KEY]: expect.anything() }),
+        }),
+        expect.any(Object),
+      );
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_PATH_ENCODED]: expect.anything() }),
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it('should route folderKey from the options object to X-UIPATH-FolderKey', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await bucketService.getFileMetaData(BUCKET_TEST_CONSTANTS.BUCKET_ID, {
+        folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY,
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY,
+          }),
+        }),
+        expect.any(Object),
+      );
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }),
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it('should route folderPath from the options object to X-UIPATH-FolderPath-Encoded', async () => {
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await bucketService.getFileMetaData(BUCKET_TEST_CONSTANTS.BUCKET_ID, {
+        folderPath: BUCKET_TEST_CONSTANTS.FOLDER_PATH,
+      });
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_PATH_ENCODED]: BUCKET_TEST_CONSTANTS.FOLDER_PATH_ENCODED,
+          }),
+        }),
+        expect.any(Object),
+      );
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }),
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it('should fall back to the SDK init-time folderKey when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new BucketService(instance);
+
+      vi.mocked(PaginationHelpers.getAll).mockResolvedValue({ items: [], totalCount: 0 });
+
+      await scopedService.getFileMetaData(BUCKET_TEST_CONSTANTS.BUCKET_ID);
+
+      expect(PaginationHelpers.getAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY,
+          }),
+        }),
+        expect.any(Object),
+      );
     });
 
     it('should throw ValidationError when bucketId is missing', async () => {
@@ -501,9 +597,11 @@ describe('BucketService Unit Tests', () => {
         .rejects.toThrow('bucketId is required for getFileMetaData');
     });
 
-    it('should throw ValidationError when folderId is missing', async () => {
-      await expect(bucketService.getFileMetaData(BUCKET_TEST_CONSTANTS.BUCKET_ID, null as any))
-        .rejects.toThrow('folderId is required for getFileMetaData');
+    it('should throw ValidationError when no folder context can be resolved', async () => {
+      await expect(
+        bucketService.getFileMetaData(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(PaginationHelpers.getAll).not.toHaveBeenCalled();
     });
 
     it('should handle API errors', async () => {
@@ -511,7 +609,7 @@ describe('BucketService Unit Tests', () => {
       vi.mocked(PaginationHelpers.getAll).mockRejectedValue(error);
 
       await expect(bucketService.getFileMetaData(
-        BUCKET_TEST_CONSTANTS.BUCKET_ID, 
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
         TEST_CONSTANTS.FOLDER_ID
       )).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
     });
@@ -744,13 +842,95 @@ describe('BucketService Unit Tests', () => {
       })).rejects.toThrow('bucketId is required for uploadFile');
     });
 
-    it('should throw ValidationError when folderId is missing', async () => {
+    it('should throw ValidationError when no folder context can be resolved', async () => {
       await expect(bucketService.uploadFile({
         bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
-        folderId: null as any,
         path: BUCKET_TEST_CONSTANTS.FILE_PATH,
-        content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT])
-      })).rejects.toThrow('folderId is required for uploadFile');
+        content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+      })).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it('should route folderKey from the options object to X-UIPATH-FolderKey', async () => {
+      mockApiClient.get.mockResolvedValue(createMockWriteUriApiResponse());
+      // Stub fetch so _uploadToUri doesn't hit the network
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({ status: 200 } as Response);
+
+      try {
+        await bucketService.uploadFile({
+          bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY,
+          path: BUCKET_TEST_CONSTANTS.FILE_PATH,
+          content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+        });
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+          expect.objectContaining({
+            headers: expect.objectContaining({ [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY }),
+          }),
+        );
+        expect(mockApiClient.get).not.toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }) }),
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('should route folderPath from the options object to X-UIPATH-FolderPath-Encoded', async () => {
+      mockApiClient.get.mockResolvedValue(createMockWriteUriApiResponse());
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({ status: 200 } as Response);
+
+      try {
+        await bucketService.uploadFile({
+          bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          folderPath: BUCKET_TEST_CONSTANTS.FOLDER_PATH,
+          path: BUCKET_TEST_CONSTANTS.FILE_PATH,
+          content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+        });
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+          expect.objectContaining({
+            headers: expect.objectContaining({ [FOLDER_PATH_ENCODED]: BUCKET_TEST_CONSTANTS.FOLDER_PATH_ENCODED }),
+          }),
+        );
+        expect(mockApiClient.get).not.toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }) }),
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('should fall back to the SDK init-time folderKey when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new BucketService(instance);
+      mockApiClient.get.mockResolvedValue(createMockWriteUriApiResponse());
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({ status: 200 } as Response);
+
+      try {
+        await scopedService.uploadFile({
+          bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          path: BUCKET_TEST_CONSTANTS.FILE_PATH,
+          content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+        });
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+          expect.objectContaining({
+            headers: expect.objectContaining({ [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY }),
+          }),
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
 
     it('should throw ValidationError when path is missing', async () => {
@@ -781,6 +961,121 @@ describe('BucketService Unit Tests', () => {
         path: BUCKET_TEST_CONSTANTS.FILE_PATH,
         content: new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT])
       })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('uploadFile — positional form', () => {
+    it('should upload file using positional bucketId/path/content', async () => {
+      mockApiClient.get.mockResolvedValueOnce(createMockWriteUriApiResponse({
+        RequiresAuth: false,
+        Headers: { Keys: [], Values: [] },
+      }));
+      const mockFetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(null, { status: 201 }));
+
+      const result = await bucketService.uploadFile(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        Buffer.from(BUCKET_TEST_CONSTANTS.FILE_CONTENT),
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(result).toEqual({ success: true, statusCode: 201 });
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString() }),
+        }),
+      );
+      mockFetch.mockRestore();
+    });
+
+    it('should route folderKey from the positional options to X-UIPATH-FolderKey', async () => {
+      mockApiClient.get.mockResolvedValueOnce(createMockWriteUriApiResponse());
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({ status: 200 } as Response);
+
+      try {
+        await bucketService.uploadFile(
+          BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+          { folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY },
+        );
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+          expect.objectContaining({
+            headers: expect.objectContaining({ [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY }),
+          }),
+        );
+        expect(mockApiClient.get).not.toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }) }),
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('should route folderPath from the positional options to X-UIPATH-FolderPath-Encoded', async () => {
+      mockApiClient.get.mockResolvedValueOnce(createMockWriteUriApiResponse());
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockResolvedValue({ status: 200 } as Response);
+
+      try {
+        await bucketService.uploadFile(
+          BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+          { folderPath: BUCKET_TEST_CONSTANTS.FOLDER_PATH },
+        );
+
+        expect(mockApiClient.get).toHaveBeenCalledWith(
+          BUCKET_ENDPOINTS.GET_WRITE_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+          expect.objectContaining({
+            headers: expect.objectContaining({ [FOLDER_PATH_ENCODED]: BUCKET_TEST_CONSTANTS.FOLDER_PATH_ENCODED }),
+          }),
+        );
+        expect(mockApiClient.get).not.toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }) }),
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it('should throw ValidationError when positional bucketId is missing', async () => {
+      await expect(
+        bucketService.uploadFile(
+          null as any,
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        ),
+      ).rejects.toThrow('bucketId is required for uploadFile');
+    });
+
+    it('should throw ValidationError when positional path is missing', async () => {
+      await expect(
+        bucketService.uploadFile(
+          BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          null as any,
+          new Blob([BUCKET_TEST_CONSTANTS.FILE_CONTENT]),
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        ),
+      ).rejects.toThrow('path is required for uploadFile');
+    });
+
+    it('should throw ValidationError when positional content is missing', async () => {
+      await expect(
+        bucketService.uploadFile(
+          BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          null as any,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        ),
+      ).rejects.toThrow('content is required for uploadFile');
     });
   });
 
@@ -825,12 +1120,72 @@ describe('BucketService Unit Tests', () => {
       })).rejects.toThrow('bucketId is required for getUri');
     });
 
-    it('should throw ValidationError when folderId is missing', async () => {
+    it('should throw ValidationError when no folder context can be resolved', async () => {
       await expect(bucketService.getReadUri({
         bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
-        folderId: null as any,
-        path: BUCKET_TEST_CONSTANTS.FILE_PATH
-      })).rejects.toThrow('folderId is required for getUri');
+        path: BUCKET_TEST_CONSTANTS.FILE_PATH,
+      })).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it('should route folderKey from the options object to X-UIPATH-FolderKey', async () => {
+      mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
+
+      await bucketService.getReadUri({
+        bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY,
+        path: BUCKET_TEST_CONSTANTS.FILE_PATH,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY }),
+        }),
+      );
+      expect(mockApiClient.get).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }) }),
+      );
+    });
+
+    it('should route folderPath from the options object to X-UIPATH-FolderPath-Encoded', async () => {
+      mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
+
+      await bucketService.getReadUri({
+        bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        folderPath: BUCKET_TEST_CONSTANTS.FOLDER_PATH,
+        path: BUCKET_TEST_CONSTANTS.FILE_PATH,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_PATH_ENCODED]: BUCKET_TEST_CONSTANTS.FOLDER_PATH_ENCODED }),
+        }),
+      );
+      expect(mockApiClient.get).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }) }),
+      );
+    });
+
+    it('should fall back to the SDK init-time folderKey when no folder context is supplied', async () => {
+      const { instance } = createServiceTestDependencies({ folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY });
+      vi.mocked(ApiClient).mockImplementation(() => mockApiClient);
+      const scopedService = new BucketService(instance);
+      mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
+
+      await scopedService.getReadUri({
+        bucketId: BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        path: BUCKET_TEST_CONSTANTS.FILE_PATH,
+      });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY }),
+        }),
+      );
     });
 
     it('should throw ValidationError when path is missing', async () => {
@@ -850,6 +1205,92 @@ describe('BucketService Unit Tests', () => {
         folderId: TEST_CONSTANTS.FOLDER_ID,
         path: BUCKET_TEST_CONSTANTS.FILE_PATH
       })).rejects.toThrow(TEST_CONSTANTS.ERROR_MESSAGE);
+    });
+  });
+
+  describe('getReadUri — positional form', () => {
+    it('should get read URI using positional bucketId/path', async () => {
+      mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
+
+      const result = await bucketService.getReadUri(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderId: TEST_CONSTANTS.FOLDER_ID },
+      );
+
+      expect(result).toBeDefined();
+      expect(result.uri).toBe(BUCKET_TEST_CONSTANTS.READ_URI);
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          params: expect.objectContaining({ path: BUCKET_TEST_CONSTANTS.FILE_PATH }),
+          headers: expect.objectContaining({
+            [FOLDER_ID]: TEST_CONSTANTS.FOLDER_ID.toString(),
+          }),
+        }),
+      );
+    });
+
+    it('should route folderKey from the positional options to X-UIPATH-FolderKey', async () => {
+      mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
+
+      await bucketService.getReadUri(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderKey: BUCKET_TEST_CONSTANTS.FOLDER_KEY },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_KEY]: BUCKET_TEST_CONSTANTS.FOLDER_KEY }),
+        }),
+      );
+      expect(mockApiClient.get).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }) }),
+      );
+    });
+
+    it('should route folderPath from the positional options to X-UIPATH-FolderPath-Encoded', async () => {
+      mockApiClient.get.mockResolvedValue(createMockReadUriApiResponse());
+
+      await bucketService.getReadUri(
+        BUCKET_TEST_CONSTANTS.BUCKET_ID,
+        BUCKET_TEST_CONSTANTS.FILE_PATH,
+        { folderPath: BUCKET_TEST_CONSTANTS.FOLDER_PATH },
+      );
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        BUCKET_ENDPOINTS.GET_READ_URI(BUCKET_TEST_CONSTANTS.BUCKET_ID),
+        expect.objectContaining({
+          headers: expect.objectContaining({ [FOLDER_PATH_ENCODED]: BUCKET_TEST_CONSTANTS.FOLDER_PATH_ENCODED }),
+        }),
+      );
+      expect(mockApiClient.get).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ headers: expect.objectContaining({ [FOLDER_ID]: expect.anything() }) }),
+      );
+    });
+
+    it('should throw ValidationError when positional bucketId is missing', async () => {
+      await expect(
+        bucketService.getReadUri(
+          null as any,
+          BUCKET_TEST_CONSTANTS.FILE_PATH,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        ),
+      ).rejects.toThrow('bucketId is required for getUri');
+    });
+
+    it('should throw ValidationError when positional path is missing', async () => {
+      await expect(
+        bucketService.getReadUri(
+          BUCKET_TEST_CONSTANTS.BUCKET_ID,
+          null as any,
+          { folderId: TEST_CONSTANTS.FOLDER_ID },
+        ),
+      ).rejects.toThrow('path is required for getUri');
     });
   });
 

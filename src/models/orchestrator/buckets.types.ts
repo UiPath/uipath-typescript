@@ -78,11 +78,6 @@ export interface BucketGetUriOptions extends BaseOptions {
   bucketId: number;
 
   /**
-   * The ID of the folder
-   */
-  folderId: number;
-
-  /**
    * The full path to the BlobFile
    */
   path: string;
@@ -94,9 +89,24 @@ export interface BucketGetUriOptions extends BaseOptions {
 }
 
 /**
- * Request options for getting a read URI for a file in a bucket
+ * Optional parameters for the preferred `getReadUri(bucketId, path, options?)` form.
+ * Contains folder scoping (`folderId` / `folderKey` / `folderPath`),
+ * `expiryInMinutes`, and standard query options (`expand`, `select`).
  */
-export interface BucketGetReadUriOptions extends BucketGetUriOptions {}
+export interface BucketGetReadUriRequestOptions extends BaseOptions, FolderScopedOptions {
+  /**
+   * URL expiration time in minutes (0 for default)
+   */
+  expiryInMinutes?: number;
+}
+
+/**
+ * @deprecated Use the positional form: `getReadUri(bucketId, path, options?)`.
+ * See {@link BucketGetReadUriRequestOptions} for the supported options.
+ *
+ * Request options for getting a read URI for a file in a bucket.
+ */
+export interface BucketGetReadUriOptions extends BucketGetUriOptions, FolderScopedOptions {}
 
 /**
  * Request options for getting files in a bucket
@@ -111,7 +121,7 @@ export interface BucketGetFileMetaDataOptions {
 /**
  * Request options for getting files in a bucket with pagination support
  */
-export type BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataOptions & PaginationOptions;
+export type BucketGetFileMetaDataWithPaginationOptions = BucketGetFileMetaDataOptions & PaginationOptions & FolderScopedOptions;
 
 /**
  * Response from the GetFiles API
@@ -199,18 +209,23 @@ export type BucketGetFilesOptions = RequestOptions & PaginationOptions & FolderS
 export interface BucketDeleteFileOptions extends FolderScopedOptions {}
 
 /**
- * Options for uploading files to a bucket
+ * Optional parameters for the preferred
+ * `uploadFile(bucketId, path, content, options?)` form. Contains folder
+ * scoping (`folderId` / `folderKey` / `folderPath`).
  */
-export interface BucketUploadFileOptions {
+export interface BucketUploadFileRequestOptions extends FolderScopedOptions {}
+
+/**
+ * @deprecated Use the positional form: `uploadFile(bucketId, path, content, options?)`.
+ * See {@link BucketUploadFileRequestOptions} for the supported options.
+ *
+ * Options for uploading files to a bucket.
+ */
+export interface BucketUploadFileOptions extends FolderScopedOptions {
   /**
    * The ID of the bucket to upload to
    */
   bucketId: number;
-
-  /**
-   * The folder/organization unit ID for context
-   */
-  folderId: number;
 
   /**
    * Path where the file should be stored in the bucket
@@ -218,7 +233,7 @@ export interface BucketUploadFileOptions {
   path: string;
 
   /**
-   * File content to upload 
+   * File content to upload
    */
   content: Blob | Uint8Array<ArrayBuffer> | File;
 }
