@@ -334,6 +334,26 @@ export class TaskService extends BaseService implements TaskServiceModel {
    *   }
    * ]);
    * ```
+   *
+   * @example Group assignment
+   * ```typescript
+   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
+   *
+   * // Assign to a directory group by userId + criteria — Action Center
+   * // distributes the task across the group's members based on the criteria
+   * const result = await tasks.assign({
+   *   taskId: 123,
+   *   userId: 456, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
+   *
+   * // ...or identify the group by name instead of id
+   * const result2 = await tasks.assign({
+   *   taskId: 123,
+   *   userNameOrEmail: "My Group",
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
+   * ```
    */
   @track('Tasks.Assign')
   async assign(taskAssignments: TaskAssignmentOptions | TaskAssignmentOptions[]): Promise<OperationResponse<TaskAssignmentOptions[] | TaskAssignmentResponse[]>> {
@@ -394,6 +414,25 @@ export class TaskService extends BaseService implements TaskServiceModel {
    *     userNameOrEmail: "user@example.com"
    *   }
    * ]);
+   * ```
+   *
+   * @example Group reassignment
+   * ```typescript
+   * import { TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks';
+   *
+   * // Reassign to a directory group by userId + criteria
+   * const result = await tasks.reassign({
+   *   taskId: 123,
+   *   userId: 456, // a DirectoryGroup id from tasks.getUsers()
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
+   *
+   * // ...or identify the group by name instead of id
+   * const result2 = await tasks.reassign({
+   *   taskId: 123,
+   *   userNameOrEmail: "My Group",
+   *   assignmentCriteria: TaskAssignmentCriteria.AllUsers
+   * });
    * ```
    */
   @track('Tasks.Reassign')
