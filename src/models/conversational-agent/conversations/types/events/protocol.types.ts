@@ -109,6 +109,16 @@ export interface SessionEndingEvent {
 }
 
 /**
+ * A client-side tool that the client supports, declared during exchange start
+ * so the server knows which tools to route client-side.
+ */
+export interface ClientSideTool {
+  name: string;
+  inputSchema?: JSONValue;
+  outputSchema?: JSONValue;
+}
+
+/**
  * Signals the start of an exchange of messages within a conversation.
  */
 export interface ExchangeStartEvent {
@@ -128,7 +138,7 @@ export interface ExchangeStartEvent {
    * Optional list of client-side tools the client supports. The server validates these against the agent's
    * design-time definitions and forwards them to the runtime so it knows which tools to route client-side.
    */
-  clientSideTools?: Array<{ name: string; inputSchema?: JSONValue; outputSchema?: JSONValue }>;
+  clientSideTools?: ClientSideTool[];
 }
 
 /**
@@ -452,6 +462,9 @@ export interface ToolCallEndEvent {
  * executing its registered handler upon receiving this event.
  */
 export interface ExecutingToolCallEvent {
+  /**
+   * The time the tool call began executing.
+   */
   timestamp?: string;
   /** The final tool input, reflecting any modifications made during tool-call confirmation. */
   input?: ToolCallInputValue;
