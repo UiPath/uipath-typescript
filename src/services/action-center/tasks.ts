@@ -37,35 +37,65 @@ import { BaseService } from '../base';
  */
 export class TaskService extends BaseService implements TaskServiceModel {
   /**
-   * Creates a new task
-   * @param task - The task to be created
+   * Creates a new task. Pass `type: TaskType.QuickForm` (with `taskSchemaKey`
+   * and `schema`) for a schema-first HITL task rendered by FormLib in Action
+   * Center; otherwise the default `TaskType.External` shape is used.
+   *
+   * @param options - Task options. The `type` field discriminates the shape.
    * @param folderId - Required folder ID
    * @returns Promise resolving to the created task
-   * 
+   *
    * @example
    * ```typescript
    * import { Tasks } from '@uipath/uipath-typescript/tasks';
+   * import { TaskPriority, TaskType } from '@uipath/uipath-typescript';
    *
    * const tasks = new Tasks(sdk);
-   * const task = await tasks.create({
+   *
+   * // External task (default)
+   * await tasks.create({
    *   title: "My Task",
    *   priority: TaskPriority.Medium,
    *   data: { key: "value" }
-   * }, 123); // folderId is required
+   * }, 123);
+   *
+   * // QuickForm task — both taskSchemaKey AND schema are sent on every call:
+   * // Orchestrator upserts the schema by taskSchemaKey, then creates the task.
+   * await tasks.create({
+   *   type: TaskType.QuickForm,
+   *   title: "Approve invoice INV-1234",
+   *   taskSchemaKey: "8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91",
+   *   schema: {
+   *     id: "8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91",
+   *     fields: [
+   *       { id: "invoice", type: "text", label: "Invoice", direction: "input" },
+   *     ],
+   *     outcomes: [
+   *       { id: "approve", name: "Approve", type: "string", isPrimary: true },
+   *     ],
+   *   },
+   *   data: { invoice: "INV-1234" },
+   * }, 123);
    * ```
    */
   @track('Tasks.Create')
-  async create(task: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
+  async create(options: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse> {
     const headers = createHeaders({ [FOLDER_ID]: folderId });
-    
-    const externalTask = {
-      ...task,
-      type: TaskType.External //currently only external task is supported
-    };
-    
+
+    let payload: Record<string, unknown>;
+    if (options.type === TaskType.QuickForm) {
+      const { labels, ...rest } = options;
+      payload = labels === undefined ? rest : {
+        ...rest,
+        tags: labels.map(label => ({ name: label, displayName: label, value: label, displayValue: label })),
+      };
+    } else {
+      payload = { ...options, type: TaskType.External };
+    }
+
     const response = await this.post<TaskCreateResponse>(
       TASK_ENDPOINTS.CREATE_GENERIC_TASK,
-      externalTask,
+      payload,
       { headers }
     );
     // Transform time fields for consistency

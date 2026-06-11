@@ -1,6 +1,6 @@
-import type { 
+import type {
   RawTaskCreateResponse,
-  RawTaskGetResponse, 
+  RawTaskGetResponse,
   TaskAssignmentOptions,
   TaskAssignmentResponse,
   TaskCompletionOptions,
@@ -108,19 +108,40 @@ export interface TaskServiceModel {
   getById(id: number, options?: TaskGetByIdOptions, folderId?: number): Promise<TaskGetResponse>;
 
   /**
-   * Creates a new task
-   * 
-   * @param options - The task to be created
+   * Creates a new task. Pass `type: TaskType.QuickForm` (with `taskSchemaKey`
+   * and `schema`) for a schema-first HITL task rendered by FormLib in Action
+   * Center; otherwise the default `TaskType.External` shape is used.
+   *
+   * For QuickForm, both `taskSchemaKey` AND `schema` are sent on every call:
+   * Orchestrator upserts the schema in its TaskSchemas table keyed by
+   * `taskSchemaKey`, then creates the task in the same call.
+   *
+   * @param options - Task options. The `type` field discriminates the shape.
    * @param folderId - Required folder ID
    * @returns Promise resolving to the created task
    * {@link TaskCreateResponse}
    * @example
    * ```typescript
-   * import { TaskPriority } from '@uipath/uipath-typescript';
-   * const task = await tasks.create({
+   * import { TaskPriority, TaskType } from '@uipath/uipath-typescript';
+   *
+   * // External task (default)
+   * await tasks.create({
    *   title: "My Task",
    *   priority: TaskPriority.Medium
-   * }, <folderId>); // folderId is required
+   * }, <folderId>);
+   *
+   * // QuickForm task
+   * await tasks.create({
+   *   type: TaskType.QuickForm,
+   *   title: "Approve invoice",
+   *   taskSchemaKey: "8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91",
+   *   schema: {
+   *     id: "8e4f2a91-3c7e-4d2b-9b5c-1a6f8d3e2c91",
+   *     fields: [{ id: "invoice", type: "text", label: "Invoice", direction: "input" }],
+   *     outcomes: [{ id: "approve", name: "Approve", type: "string", isPrimary: true }],
+   *   },
+   *   data: { invoice: "INV-1234" },
+   * }, <folderId>);
    * ```
    */
   create(options: TaskCreateOptions, folderId: number): Promise<TaskCreateResponse>;
