@@ -117,7 +117,7 @@ console.log(`Total count: ${allAssets.totalCount}`);
 |---------|--------|------------------------|
 | Agents | `getAll()` | ✅ Yes |
 | Agents | `getErrors()` | ✅ Yes |
-| Agents | `getSpansByReference()` | ✅ Yes |
+| Agent Traces | `getSpansByReference()` | ✅ Yes |
 | Assets | `getAll()` | ✅ Yes |
 | Buckets | `getAll()` | ✅ Yes |
 | Buckets | `getFiles()` | ✅ Yes |

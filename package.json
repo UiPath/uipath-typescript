@@ -166,6 +166,16 @@
                 "default": "./dist/agent-memory/index.cjs"
             }
         },
+        "./agent-traces": {
+            "import": {
+                "types": "./dist/agent-traces/index.d.ts",
+                "default": "./dist/agent-traces/index.mjs"
+            },
+            "require": {
+                "types": "./dist/agent-traces/index.d.ts",
+                "default": "./dist/agent-traces/index.cjs"
+            }
+        },
         "./traces": {
             "import": {
                 "types": "./dist/traces/index.d.ts",
