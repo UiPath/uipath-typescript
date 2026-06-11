@@ -4,7 +4,7 @@ import { AgentService } from '../../../../src/services/agents/agents';
 import { ApiClient } from '../../../../src/core/http/api-client';
 import { createServiceTestDependencies, createMockApiClient } from '../../../utils/setup';
 import { AGENTS_ENDPOINTS } from '../../../../src/utils/constants/endpoints';
-import { AgentListSortColumn } from '../../../../src/models/agents/agents.types';
+import { AgentErrorSortColumn, AgentListSortColumn } from '../../../../src/models/agents/agents.types';
 import { AGENT_TEST_CONSTANTS } from '../../../utils/constants';
 
 // ===== MOCKING =====
@@ -16,6 +16,13 @@ vi.mock('../../../../src/core/http/api-client');
 const buildEnvelope = (agents: unknown[], totalCount: number, pageNumber = 0, pageSize = 10) => ({
   pagination: { totalCount, pageNumber, pageSize },
   data: { agents },
+});
+
+// Errors envelope: the items array is the `data` field directly (vs nested
+// under data.agents for the agents list).
+const buildErrorsEnvelope = (errors: unknown[], totalCount: number, pageNumber = 0, pageSize = 10) => ({
+  pagination: { totalCount, pageNumber, pageSize },
+  data: errors,
 });
 
 // ===== TEST SUITE =====
@@ -150,6 +157,125 @@ describe('AgentService Unit Tests', () => {
 
       await expect(
         agentService.getAll(startTime, endTime),
+      ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+    });
+  });
+
+  describe('getErrors', () => {
+    const startTime = new Date(AGENT_TEST_CONSTANTS.START_TIME);
+    const endTime = new Date(AGENT_TEST_CONSTANTS.END_TIME);
+    const mockJob = {
+      jobKey: AGENT_TEST_CONSTANTS.JOB_KEY,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      folderName: AGENT_TEST_CONSTANTS.FOLDER_NAME,
+      folderPath: AGENT_TEST_CONSTANTS.FOLDER_PATH,
+      startTime: AGENT_TEST_CONSTANTS.JOB_START_TIME,
+      endTime: AGENT_TEST_CONSTANTS.JOB_END_TIME,
+      processKey: AGENT_TEST_CONSTANTS.PROCESS_KEY,
+    };
+    const mockError = {
+      type: AGENT_TEST_CONSTANTS.ERROR_TYPE,
+      description: AGENT_TEST_CONSTANTS.ERROR_DESCRIPTION,
+      agentId: AGENT_TEST_CONSTANTS.AGENT_ID,
+      agentName: AGENT_TEST_CONSTANTS.AGENT_NAME_1,
+      jobKey: AGENT_TEST_CONSTANTS.JOB_KEY,
+      parentProcess: null,
+      firstSeen: AGENT_TEST_CONSTANTS.ERROR_FIRST_SEEN,
+      folderKey: AGENT_TEST_CONSTANTS.FOLDER_KEY_1,
+      folderName: AGENT_TEST_CONSTANTS.FOLDER_NAME,
+      folderPath: AGENT_TEST_CONSTANTS.FOLDER_PATH,
+      count: 3,
+      firstSeenJob: mockJob,
+      lastSeenJob: mockJob,
+    };
+    it('should return non-paginated response (items + totalCount) when no pagination options are provided', async () => {
+      mockApiClient.post.mockResolvedValue(buildErrorsEnvelope([mockError], 39));
+
+      const result = await agentService.getErrors(startTime, endTime);
+
+      expect(result.items).toEqual([mockError]);
+      expect(result.totalCount).toBe(39);
+      expect((result as { hasNextPage?: boolean }).hasNextPage).toBeUndefined();
+
+      const [endpoint, body] = mockApiClient.post.mock.calls[0];
+      expect(endpoint).toBe(AGENTS_ENDPOINTS.GET_INCIDENTS);
+      expect(body.startTime).toBe(startTime.toISOString());
+      expect(body.endTime).toBe(endTime.toISOString());
+      expect(body.pageNumber).toBeUndefined();
+      expect(body.pageSize).toBeUndefined();
+    });
+
+    it('should send pageSize + 0-based pageNumber when pageSize is provided', async () => {
+      mockApiClient.post.mockResolvedValue(buildErrorsEnvelope([], 0, 0, 2));
+
+      await agentService.getErrors(startTime, endTime, { pageSize: 2 });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.pageNumber).toBe(0);
+      expect(body.pageSize).toBe(2);
+    });
+
+    it('should convert jumpToPage (1-based) to a 0-based pageNumber', async () => {
+      mockApiClient.post.mockResolvedValue(buildErrorsEnvelope([], 0, 2, 10));
+
+      await agentService.getErrors(startTime, endTime, { jumpToPage: 3, pageSize: 10 });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.pageNumber).toBe(2);
+      expect(body.pageSize).toBe(10);
+    });
+
+    it('should send orderBy and groupBy in the camelCase body', async () => {
+      mockApiClient.post.mockResolvedValue(buildErrorsEnvelope([], 0, 0, 10));
+
+      const orderBy = { column: AgentErrorSortColumn.ExecutionCount, desc: true };
+      const groupBy = [AgentErrorSortColumn.Type];
+
+      await agentService.getErrors(startTime, endTime, { pageSize: 10, orderBy, groupBy });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.orderBy).toEqual(orderBy);
+      expect(body.groupBy).toEqual(groupBy);
+    });
+
+    it('should pass array filters through the body without OData prefixing', async () => {
+      mockApiClient.post.mockResolvedValue(buildErrorsEnvelope([], 0, 0, 10));
+
+      const folderKeys = [AGENT_TEST_CONSTANTS.FOLDER_KEY_1];
+      await agentService.getErrors(startTime, endTime, { pageSize: 10, folderKeys });
+
+      const [, body] = mockApiClient.post.mock.calls[0];
+      expect(body.folderKeys).toEqual(folderKeys);
+      expect(body['$folderKeys']).toBeUndefined();
+    });
+
+    it('should return paginated response with hasNextPage + nextCursor when more pages exist', async () => {
+      mockApiClient.post.mockResolvedValue(buildErrorsEnvelope(Array(2).fill(mockError), 39, 0, 2));
+
+      const result = await agentService.getErrors(startTime, endTime, { pageSize: 2 });
+
+      expect(result.items.length).toBe(2);
+      expect(result.totalCount).toBe(39);
+      expect((result as { hasNextPage?: boolean }).hasNextPage).toBe(true);
+      expect((result as { nextCursor?: unknown }).nextCursor).toBeDefined();
+      expect((result as { currentPage?: number }).currentPage).toBe(1);
+    });
+
+    it('should return empty items when no errors match the window', async () => {
+      mockApiClient.post.mockResolvedValue(buildErrorsEnvelope([], 0));
+
+      const result = await agentService.getErrors(startTime, endTime);
+
+      expect(result.items).toEqual([]);
+      expect(result.totalCount).toBe(0);
+    });
+
+    it('should propagate API errors', async () => {
+      const error = new Error(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
+      mockApiClient.post.mockRejectedValue(error);
+
+      await expect(
+        agentService.getErrors(startTime, endTime),
       ).rejects.toThrow(AGENT_TEST_CONSTANTS.ERROR_GENERIC);
     });
   });
