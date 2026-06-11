@@ -1,23 +1,148 @@
 # Getting Started
 
-An SDK enabling coded apps to be the UI for tasks within UiPath Action Center. SDK handles bi-directional communication between the coded app and UiPath Action Center host using `window.postMessage` events.
+**Coded Action Apps** let you build the user interface for Action Center tasks as custom web applications. This gives full control over the task layout, behavior, integrations and lets the app surface data from other UiPath services and external systems so reviewers have the context they need to complete the task.
+
+!!! warning "Cloud only"
+    Coded Action Apps are currently available on **UiPath Automation Cloud** only. Automation Suite and Dedicated deployments are not supported at this time.
+
+!!! tip "Communicating with Action Center"
+    To exchange task data with Action Center from within your app (receive the task, notify of changes, complete the task), use the [`@uipath/coded-action-app` SDK](../coded-action-app-sdk/getting-started.md).
+
+---
 
 ## Prerequisites
 
-- **Node.js** 20.x or higher (for development tooling)
-- **npm** 8.x or higher (or yarn/pnpm)
-- **TypeScript** 4.5+ (recommended)
+- **Node.js** 20.x or higher
+- **npm** 8.x or higher
 
-## Install the SDK
+## Install the CLI
+
+<!-- termynal -->
+
+```bash
+$ npm install -g @uipath/cli
+
+$ uip tools install codedapp
+```
+
+!!! info "Minimum versions"
+    Coded Action Apps requires **CLI version >= 0.9.0** and **codedapp tool version >= 0.9.0**.
+
+    Check your installed CLI version:
+
+    ```bash
+    uip --version
+    ```
+
+    Check your installed codedapp tool version:
+
+    ```bash
+    uip tools list
+    ```
+
+    To update the codedapp tool to the latest version:
+
+    ```bash
+    uip tools update
+    ```
+
+---
+
+## Install the Coded Action App SDK
+
+A coded action app runs inside a sandboxed iframe rendered by Action Center, so it can't read or write task data directly — the action app and its Action Center host live in separate browsing contexts. The [`@uipath/coded-action-app`](../coded-action-app-sdk/getting-started.md) SDK bridges that gap and wraps the underlying `window.postMessage` protocol behind a small, typed `CodedActionApp` API.
+
+Use the SDK to:
+
+- **Receive** the task and its data when your app loads — `getTask()`
+- **Notify** Action Center when the user edits the form, so it can enable the Save button — `setTaskData()`
+- **Complete** the task with the chosen action and final payload — `completeTask()`
+- **Display** toast messages inside Action Center — `showMessage()`
+
+A minimal flow looks like this:
+
+```typescript
+import { CodedActionApp } from '@uipath/coded-action-app';
+
+const service = new CodedActionApp();
+
+// 1. Load the task when the app starts
+const task = await service.getTask();
+console.log(task.title, task.data);
+
+// 2. Tell Action Center the form changed (enables Save button)
+service.setTaskData({ ...task.data, approved: true });
+
+// 3. Complete the task when the user submits
+const result = await service.completeTask('Approve', { approved: true, notes: 'Looks good' });
+if (!result.success) {
+  console.error(result.errorMessage);
+}
+```
+
+See the [SDK Getting Started guide](../coded-action-app-sdk/getting-started.md) for the full API and usage details.
+
+---
+
+### Which SDKs do I need in my coded action app?
+
+Every coded action app uses **two packages**, recommended to always use both for deployment compatibility using UiPath Solutions:
+
+- **`@uipath/coded-action-app`** — talks to Action Center (`getTask`, `setTaskData`, `completeTask`, `showMessage`). This is the package shown above.
+- **[`@uipath/uipath-typescript`](https://www.npmjs.com/package/@uipath/uipath-typescript)** (`npm install @uipath/uipath-typescript`) — provides `getAppBase()`, which you must use to set your app's base path so it resolves correctly behind the `<base href>` Action Center injects (see [Configure router base path](#2-configure-router-base-path-if-using-a-router)).
+
+Whether you need an OAuth `clientId` depends only on **what your app does** — not on which SDKs you install:
+
+| If your app: | Needs `clientId`? |
+|----------------|-------------------|
+| Reads/completes the task only | No |
+| Also calls other UiPath services (Orchestrator, Data Fabric, etc.) | **Yes** |
+
+!!! note "`getAppBase()` does not require a `clientId`"
+    `@uipath/uipath-typescript` serves two **independent** purposes. Calling `getAppBase()` to set your base path is a purely client-side helper and needs **no** OAuth `clientId`. You only need a `clientId` (from a registered external application) when you use the same SDK to call UiPath service APIs.
+
+---
+
+## Configure `uipath.json`
+
+Create a `uipath.json` at the root of your project. This file holds SDK and OAuth configuration used both during local development and at deployment time.
+
+```json
+{
+  "clientId": "your-oauth-client-id",
+  "scope": "your-scopes",
+  "orgName": "your-org",
+  "tenantName": "your-tenant",
+  "baseUrl": "https://api.uipath.com",
+  "redirectUri": "Irrelevant for coded action apps, use any non-empty string"
+}
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `clientId` | Conditional | A **non-confidential** OAuth client ID from an external application registered in your UiPath org. **Required only if your app calls other UiPath services**; not needed for apps that only interact with Action Center |
+| `scope` | Conditional | OAuth scopes your app needs. Only applies when `clientId` is set — scopes are bound to the client, so with no `clientId` there is no `scope`. Defaults to all scopes registered with the provided `clientId` |
+| `orgName` | No | Your UiPath organization name or ID |
+| `tenantName` | No | Your UiPath tenant name or ID |
+| `baseUrl` | No | UiPath platform base URL (defaults to `https://api.uipath.com`) |
+| `redirectUri` | No | OAuth redirect URI (only needed for local dev) |
+
+!!! tip
+    If `uipath.json` doesn't exist, `uip codedapp pack` creates it with empty values and warns you to fill in the required fields.
+
+---
+
+## Set Up Local Development (Optional)
+
+### 1. Install `@uipath/coded-apps-dev`
+Install `@uipath/coded-apps-dev` - a bundler plugin that injects SDK configuration into your app during local development, so you can run and test it against your UiPath tenant without any manual config.
 
 === "npm"
 
     <!-- termynal -->
 
     ```bash
-    $ npm install @uipath/coded-action-app
-
-    found 0 vulnerabilities
+    $ npm install --save-dev @uipath/coded-apps-dev
     ```
 
 === "yarn"
@@ -25,8 +150,7 @@ An SDK enabling coded apps to be the UI for tasks within UiPath Action Center. S
     <!-- termynal -->
 
     ```bash
-    $ yarn add @uipath/coded-action-app
-    ✨ Done in 1.85s.
+    $ yarn add --dev @uipath/coded-apps-dev
     ```
 
 === "pnpm"
@@ -34,163 +158,201 @@ An SDK enabling coded apps to be the UI for tasks within UiPath Action Center. S
     <!-- termynal -->
 
     ```bash
-    $ pnpm add @uipath/coded-action-app
+    $ pnpm add --save-dev @uipath/coded-apps-dev
     ```
 
-## Project Setup
+Then add the plugin to your bundler config:
 
-A coded action app is a standard browser-based web application that runs in UiPath Action Center. Set up your project as you normally would, then install the `@uipath/coded-action-app` SDK.
+=== "Vite"
 
-=== "TypeScript Project"
+    ```typescript title="vite.config.ts"
+    import { defineConfig } from 'vite'
+    import react from '@vitejs/plugin-react'
+    import { uipathCodedApps } from '@uipath/coded-apps-dev/vite'
 
-    <!-- termynal -->
-
-    ```bash
-    $ mkdir my-uipath-project && cd my-uipath-project
-    $ npm init -y
-    Wrote to package.json
-    $ npm install typescript @types/node ts-node --save-dev
-
-    added x packages in 1s
-    $ npx tsc --init
-    Created a new tsconfig.json
-    $ npm install @uipath/coded-action-app
-
-    added x packages in 1s
+    export default defineConfig({
+      base: './',
+      plugins: [
+        react(),
+        uipathCodedApps(),
+      ],
+    })
     ```
 
-=== "JavaScript Project"
+=== "Webpack"
 
-    <!-- termynal -->
+    ```javascript title="webpack.config.js"
+    const { uipathCodedApps } = require('@uipath/coded-apps-dev/webpack')
 
-    ```bash
-    $ mkdir my-uipath-project && cd my-uipath-project
-    $ npm init -y
-    Wrote to package.json
-    $ npm install @uipath/coded-action-app
-
-    added x packages in 1s
+    module.exports = {
+      plugins: [uipathCodedApps()],
+    }
     ```
 
-## Overview
+=== "Rollup"
 
-Action Center renders a coded action app within an iframe. `@uipath/coded-action-app` provides `CodedActionAppService` which offers the following capabilities:
+    ```javascript title="rollup.config.js"
+    import { uipathCodedApps } from '@uipath/coded-apps-dev/rollup'
 
-- **Receive** — `getTask()` — On app load, UiPath Action Center provides the task details along with task data.
-- **Notify** — `setTaskData()` — Notify Action Center when task data changes (e.g. to enable the Save button).
-- **Complete** — `completeTask()` — Completes the task when user clicks on submit buttons (e.g. `'Approve'` or `'Reject'` buttons).
-- **Display** — `showMessage()` — Displays toast messages inside Action Center.
+    export default {
+      plugins: [uipathCodedApps()],
+    }
+    ```
 
-## Import & Initialize
+=== "esbuild"
 
-```typescript
-import { CodedActionAppService } from '@uipath/coded-action-app';
+    ```javascript title="esbuild.config.js"
+    const { uipathCodedApps } = require('@uipath/coded-apps-dev/esbuild')
 
-const service = new CodedActionAppService();
+    require('esbuild').build({
+      plugins: [uipathCodedApps()],
+    })
+    ```
+
+The plugin reads `uipath.json` and injects the following `<meta>` tags into your `index.html` during local development:
+
+```html
+<meta name="uipath:client-id"    content="your-oauth-client-id">
+<meta name="uipath:scope"        content="OR.Execution OR.Folders">
+<meta name="uipath:org-name"     content="your-org">
+<meta name="uipath:tenant-name"  content="your-tenant">
+<meta name="uipath:base-url"     content="https://api.uipath.com">
+<meta name="uipath:redirect-uri" content="http://localhost:5173">
 ```
 
-The class is also exported under the alias `CodedActionApp` for convenience:
+When deployed, the platform injects these config tags automatically — the plugin is only needed for local development. At deployment, the platform also injects:
 
-```typescript
-import { CodedActionApp } from '@uipath/coded-action-app';
-
-const service = new CodedActionApp();
+```html
+<meta name="uipath:app-base"  content="/your-app-name/">
+<base href="/your-app-name/">
 ```
 
-## Usage
+### 2. Add Action Center redirect uri in your external application
+Add redirect uri `https://cloud.uipath.com/<orgId>/<tenantId>/actions_` to the external application you are using in `uipath.json`. Ignore if it already exists.
+(It is added automatically the first time any coded action app using this external application is deployed.)
 
-### Get task details from Action Center
+### 3. Open Action Center Coded Action App Debug page
+Action Center offers a task-simulation experience for coded action apps running on localhost.
+Open `https://cloud.uipath.com/<orgName>/<tenantName>/actions_/debug/coded-action-app`.
+Fill in the details in the page and load the app.
 
-Call this once when the app loads. It sends an event to Action Center and waits for the task details and data to be posted back. (**Recommended**: Do not call it more than once in your app)
+![Coded Action App Local Development](../assets/Coded-action-app-local-development.png)
 
-```typescript
-const taskData = await service.getTask();
 
-console.log(taskData.taskId);     // number
-console.log(taskData.title);      // string
-console.log(taskData.status);     // TaskStatus enum
-console.log(taskData.isReadOnly); // boolean
-console.log(taskData.data);       // the task's form data
-console.log(taskData.folderId);   // number
-console.log(taskData.folderName); // string
-console.log(taskData.theme);      // Theme enum — the UI theme Action Center is currently using
+---
+
+## Pre-deployment Checklist
+
+A coded action app is served behind the injected `<base href="/your-app-name/">` in your `index.html`. Make sure your app handles this correctly by following the best practices below:
+
+### 1. Configure relative asset paths
+
+Your bundler must output relative asset paths so they resolve correctly via the injected `<base href>`. Without this, assets will fail to load when deployed.
+
+=== "Vite"
+
+    ```typescript title="vite.config.ts"
+    export default defineConfig({
+      base: './',
+      plugins: [react(), uipathCodedApps()],
+    })
+    ```
+
+=== "Angular"
+
+    ```json title="angular.json"
+    {
+      "projects": {
+        "your-app": {
+          "architect": {
+            "build": {
+              "options": {
+                "baseHref": "./",
+                "deployUrl": "./"
+              }
+            }
+          }
+        }
+      }
+    }
+    ```
+
+!!! note "Vite: asset references in JS/TS code"
+    With `base: './'`, Vite rewrites paths in HTML and CSS automatically. For JS/TS code, import assets as ES modules or use `import.meta.env.BASE_URL` for files in the public folder:
+
+    ```typescript
+    // ✅ ES module import — Vite handles the path
+    import logo from './assets/logo.svg'
+
+    // ✅ Public folder — use BASE_URL, not an absolute path
+    const src = `${import.meta.env.BASE_URL}vite.svg`
+
+    // ❌ Breaks when deployed
+    const src = '/vite.svg'
+    ```
+
+### 2. Configure router base path (if using a router)
+
+If your app uses client-side routing, use `getAppBase()` as the router `basename`. It reads the `uipath:app-base` meta tag injected by the platform at runtime, and falls back to `'/'` locally — safe to use unconditionally.
+
+=== "React (Vite)"
+
+    ```tsx title="main.tsx"
+    import { getAppBase } from '@uipath/uipath-typescript'
+    import { BrowserRouter } from 'react-router-dom'
+
+    createRoot(document.getElementById('root')!).render(
+      <BrowserRouter basename={getAppBase()}>
+        {/* your routes */}
+      </BrowserRouter>
+    )
+    ```
+
+=== "React Router v6 (createBrowserRouter)"
+
+    ```tsx title="main.tsx"
+    import { getAppBase } from '@uipath/uipath-typescript'
+    import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+
+    const router = createBrowserRouter(routes, {
+      basename: getAppBase(),
+    })
+    ```
+
+=== "Angular Router"
+
+    ```typescript title="app.config.ts"
+    import { getAppBase } from '@uipath/uipath-typescript'
+    import { APP_BASE_HREF } from '@angular/common'
+
+    export const appConfig = {
+      providers: [
+        { provide: APP_BASE_HREF, useValue: getAppBase() },
+      ],
+    }
+    ```
+---
+
+## Deploy
+
+Coded action apps are published with `--type Action`, which registers the app so it can be selected as the user interface for an Action Center task.
+
+<!-- termynal -->
+
+```bash
+$ uip login
+$ npm run build
+$ uip codedapp pack dist -n <appName> --version 1.0.0
+$ uip codedapp publish --type Action
+$ uip codedapp deploy
 ```
 
-!!! note
-    This call will reject with an error if Action Center does not respond within 3 seconds, or if the parent origin is not trusted.
+Once deployed, the app is available in Action Center and can be assigned as the interface for a task.
 
-### Notify Action Center of data changes
+Refer to [CLI Reference](cli-reference.md) for details.
 
-Call this whenever the user modifies the task form data. Action Center uses this signal to enable its Save button. Make sure to pass the full current task data.
+---
 
-```typescript
-service.setTaskData({ field: 'updatedValue' });
-```
+## Network requirements
 
-### Complete a task
-
-Call this when the user submits the form to mark the task as complete. Provide the action taken (e.g. `"Approve"` or `"Reject"`) and the final data payload. The call returns a `Promise<TaskCompleteResponse>` that resolves once Action Center confirms the completion.
-
-```typescript
-const result = await service.completeTask('Approve', { approved: true, notes: 'Looks good' });
-
-if (!result.success) {
-  console.error(result.errorMessage);
-}
-```
-
-!!! note
-    Only one `completeTask` call may be in flight at a time. Calling it again before the previous call resolves will throw an error: `"A completeTask call is already in progress"`.
-
-### Display a message in Action Center
-
-Show a toast notification inside Action Center using one of the four severity levels.
-
-```typescript
-import { MessageSeverity } from '@uipath/coded-action-app';
-
-service.showMessage('Validation successful', MessageSeverity.Success);
-service.showMessage('Validation failed', MessageSeverity.Error);
-service.showMessage('Please review the details', MessageSeverity.Warning);
-service.showMessage('User information', MessageSeverity.Info);
-```
-
-## **Vibe Coding**
-
-The SDK is designed for rapid prototyping and development, making it perfect for vibe coding. Here are two ways to get started:
-
-### **Option 1: AI IDE Integration**
-
-After installing the SDK, supercharge your development with AI IDEs:
-
-1. **Install the SDK**: `npm install @uipath/coded-action-app`
-2. **Drag & Drop**: From your `node_modules/@uipath/coded-action-app` folder, drag the entire package into your AI IDE
-3. **Start Prompting**: Your AI assistant now has full context of the SDK!
-
-**Works with:**
-- **GitHub Copilot**
-- **Cursor**
-- **Claude**
-- **Any AI coding assistant**
-
-### **Option 2: Copy Documentation for LLMs**
-
-Give your AI assistant complete context by copying our documentation:
-
-=== "Copy Full Documentation"
-
-    **For Maximum Context:**
-    
-    1. **Download Complete Documentation**: [llms-full-content.txt](/uipath-typescript/coded-action-apps/llms.txt)
-    
-    2. **Copy and Paste**: Copy the entire content and paste it into your AI chat
-    
-    3. **Start Prompting**: Your AI now has complete SDK knowledge!
-
-=== "Copy Individual Pages"
-
-    **For Specific Features:**
-    
-    1. **Use the copy button** (📋) on any documentation page
-    2. **Paste into your AI chat** 
-    3. **Ask specific questions** about that feature
+Coded action apps have the same network requirements as coded apps. [Coded Apps Network Requirements](../../coded-apps/getting-started/#network-requirements)
