@@ -47,7 +47,9 @@ npm ls rollup vitest typescript --depth=0
 ## Build
 
 ```bash
-npm run build
+# The .d.ts bundling across ~20 subpath modules peaks above Node's default heap
+# cap on 7GB CI agents — grant 4GB explicitly to avoid an OOM abort.
+NODE_OPTIONS="--max-old-space-size=4096" npm run build
 ```
 
 Runs rollup and emits ESM, CJS, UMD bundles and `.d.ts` files per module into `dist/`.
@@ -116,6 +118,10 @@ npm run typecheck
 ### `npm error Failed to replace env in config: ${GITHUB_TOKEN}`
 
 Older npm versions fail hard when `.npmrc` references an unset variable. Set it to any non-empty value: `export GITHUB_TOKEN=local-dev-placeholder`.
+
+### Build aborts with `FatalProcessOutOfMemory` / `JavaScript heap out of memory`
+
+Node's default heap cap is below the build's peak memory on machines with ~7GB RAM (typical hosted CI agents). Re-run with an explicit 4GB heap: `NODE_OPTIONS="--max-old-space-size=4096" npm run build`.
 
 ### `vitest: command not found` / `rollup: command not found`
 
