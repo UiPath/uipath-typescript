@@ -140,6 +140,19 @@ export const AGENTS_OFFSET_PARAMS = {
 };
 
 /**
+ * Agents incidents pagination constants — the items array is the `data` field
+ * itself, total count is nested under the response envelope. Reuses
+ * AGENTS_OFFSET_PARAMS for request params (same 0-based page-number style).
+ */
+export const AGENTS_INCIDENTS_PAGINATION = {
+  /** Dotted path to the items array in the incidents response envelope */
+  ITEMS_FIELD: 'data',
+
+  /** Total count path — same envelope location as the agents list. */
+  TOTAL_COUNT_FIELD: AGENTS_PAGINATION.TOTAL_COUNT_FIELD
+};
+
+/**
  * Traceview spans pagination constants — items sit directly under `data`,
  * total count under `pagination.totalCount`. Request params reuse
  * {@link AGENTS_OFFSET_PARAMS} (pageSize + 0-based pageNumber).
