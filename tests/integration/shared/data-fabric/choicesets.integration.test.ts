@@ -11,16 +11,15 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
   const createdChoiceSetIds: string[] = [];
   const insertedValueIds: string[] = [];
 
-  // Folder-scoped resources tracked separately so the single top-level afterAll
-  // can clean them with their captured folderKey. Populated by the folder block.
+  // Folder-scoped CS created in the Folder-scoped operations describe block.
+  // Tracked here so the file-level afterAll can clean it up if a test failed
+  // before its own delete step ran.
   let folderScopedChoiceSetId: string | null = null;
   let folderScopedFolderKey: string | null = null;
-  const folderScopedValueIds: string[] = [];
 
   afterAll(async () => {
     const { choiceSets } = getServices();
 
-    // Clean up any leftover choice-set values from the value-level CRUD block.
     if (testChoiceSetId && insertedValueIds.length > 0) {
       try {
         await choiceSets.deleteValuesById(testChoiceSetId, insertedValueIds);
@@ -29,14 +28,6 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
       }
     }
 
-    // Folder-scoped cleanup (only populated when the folder-scoped describe block runs)
-    if (folderScopedChoiceSetId && folderScopedFolderKey && folderScopedValueIds.length > 0) {
-      try {
-        await choiceSets.deleteValuesById(folderScopedChoiceSetId, folderScopedValueIds, { folderKey: folderScopedFolderKey });
-      } catch {
-        // Ignore cleanup failures — test resources are sandboxed.
-      }
-    }
     if (folderScopedChoiceSetId && folderScopedFolderKey) {
       try {
         await choiceSets.deleteById(folderScopedChoiceSetId, { folderKey: folderScopedFolderKey });
@@ -347,43 +338,12 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
       expect(Array.isArray(values.items)).toBe(true);
     });
 
-    it('should require folderKey to insert and update values on a folder-scoped choice set', async () => {
-      const { choiceSets } = getServices();
-      const folderKey = folderScopedFolderKey!;
-
-      if (!folderScopedChoiceSetId) {
-        throw new Error('Folder-scoped choice set was not created in the previous test');
-      }
-
-      const valueName = `SDK_FLD_${generateRandomString(6)}`;
-      const inserted = await choiceSets.insertValueById(folderScopedChoiceSetId, valueName, {
-        displayName: 'Travel (folder)',
-        folderKey,
-      });
-      expect(inserted.id).toBeDefined();
-      folderScopedValueIds.push(inserted.id);
-
-      const updated = await choiceSets.updateValueById(
-        folderScopedChoiceSetId,
-        inserted.id,
-        'Travel (renamed)',
-        { folderKey },
-      );
-      expect(updated.displayName).toBe('Travel (renamed)');
-    });
-
     it('should delete a folder-scoped choice set with folderKey', async () => {
       const { choiceSets } = getServices();
       const folderKey = folderScopedFolderKey!;
 
       if (!folderScopedChoiceSetId) {
         throw new Error('Folder-scoped choice set was not created earlier in the suite');
-      }
-
-      // Remove leftover values first so deleteById succeeds
-      if (folderScopedValueIds.length > 0) {
-        await choiceSets.deleteValuesById(folderScopedChoiceSetId, folderScopedValueIds, { folderKey });
-        folderScopedValueIds.length = 0;
       }
 
       await choiceSets.deleteById(folderScopedChoiceSetId, { folderKey });
@@ -393,6 +353,126 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
 
       // Clear so the top-level afterAll doesn't try to delete it again
       folderScopedChoiceSetId = null;
+    });
+  });
+
+  // ─── Folder-scoped Choice value CRUD ──────────────────────────────────────
+  // Mirrors the tenant-scope `Choice value CRUD operations` block above, but
+  // against a pre-existing folder-scoped choice set named
+  // `aIntegrationTestFolderScoped` in the folder identified by
+  // INTEGRATION_TEST_FOLDER_KEY (looked up by name in beforeAll so the test
+  // env doesn't need a separate CS UUID).
+  //
+  // Skipped: same DataFabric.Schema.Write OAuth-scope restriction as the tenant
+  // value-CRUD block. Re-enable locally with describe.only when
+  // INTEGRATION_TEST_FOLDER_KEY is set, OAuth is configured, and the named
+  // choice set exists in that folder.
+  describe.skip('Folder-scoped Choice value CRUD operations', () => {
+    const FOLDER_CHOICE_SET_NAME = 'aIntegrationTestFolderScoped';
+    const folderValueIds: string[] = [];
+    let folderKey!: string;
+    let folderChoiceSetId!: string;
+
+    beforeAll(async () => {
+      const config = getTestConfig();
+      if (!config.folderKey) {
+        throw new Error('INTEGRATION_TEST_FOLDER_KEY is required for folder-scoped value-CRUD tests');
+      }
+      folderKey = config.folderKey;
+
+      const { choiceSets } = getServices();
+      const folderSets = await choiceSets.getAll({ folderKey });
+      const match = folderSets.find((cs) => cs.name === FOLDER_CHOICE_SET_NAME);
+      if (!match) {
+        throw new Error(
+          `Folder-scoped choice set '${FOLDER_CHOICE_SET_NAME}' not found in folder '${folderKey}' — create it first or update FOLDER_CHOICE_SET_NAME.`,
+        );
+      }
+      folderChoiceSetId = match.id;
+    });
+
+    afterAll(async () => {
+      if (folderValueIds.length === 0) return;
+      const { choiceSets } = getServices();
+      try {
+        await choiceSets.deleteValuesById(folderChoiceSetId, folderValueIds, { folderKey });
+      } catch {
+        // Ignore cleanup failures — test resources are sandboxed.
+      }
+    });
+
+    it('should insert a single value using insertValueById', async () => {
+      const { choiceSets } = getServices();
+
+      const valueName = `SDK_FLD_${generateRandomString(6)}`;
+      const result = await choiceSets.insertValueById(folderChoiceSetId, valueName, {
+        displayName: 'Travel',
+        folderKey,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBeDefined();
+      folderValueIds.push(result.id);
+    });
+
+    it('should verify inserted value via getById', async () => {
+      const { choiceSets } = getServices();
+
+      if (folderValueIds.length === 0) {
+        throw new Error('No inserted value available to verify');
+      }
+
+      const valueId = folderValueIds[0];
+      const result = await choiceSets.getById(folderChoiceSetId, { folderKey });
+      const found = result.items.find((v) => v.id === valueId);
+
+      expect(found).toBeDefined();
+      expect(found?.id).toBe(valueId);
+    });
+
+    it('should insert another value with default displayName', async () => {
+      const { choiceSets } = getServices();
+
+      const valueName = `SDK_FLD_SOLO_${generateRandomString(6)}`;
+      const result = await choiceSets.insertValueById(folderChoiceSetId, valueName, { folderKey });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBeDefined();
+      expect(result.name).toBe(valueName);
+      expect(result.displayName).toBe(valueName);
+      folderValueIds.push(result.id);
+    });
+
+    it('should update value using updateValueById', async () => {
+      const { choiceSets } = getServices();
+
+      if (folderValueIds.length === 0) {
+        throw new Error('No values available to update');
+      }
+
+      const valueId = folderValueIds[0];
+      const result = await choiceSets.updateValueById(
+        folderChoiceSetId,
+        valueId,
+        'Business Travel',
+        { folderKey },
+      );
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(valueId);
+      expect(result.displayName).toBe('Business Travel');
+    });
+
+    it('should delete values using deleteValuesById', async () => {
+      const { choiceSets } = getServices();
+
+      if (folderValueIds.length === 0) {
+        throw new Error('No values available to delete');
+      }
+
+      await choiceSets.deleteValuesById(folderChoiceSetId, folderValueIds, { folderKey });
+
+      folderValueIds.length = 0;
     });
   });
 });

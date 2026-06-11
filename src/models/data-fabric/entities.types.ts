@@ -310,6 +310,8 @@ export interface EntityCreateFieldOptions extends EntityFieldBase {
   referenceEntityId?: string;
   /** UUID of the referenced field on the target entity (required when `type` is `RELATIONSHIP` or `FILE`) */
   referenceFieldId?: string;
+  /** Folder key of the reference target when it lives outside the source's folder. Pass `DATA_FABRIC_TENANT_FOLDER_ID` for tenant-level system targets. */
+  referenceFolderKey?: string;
 }
 
 

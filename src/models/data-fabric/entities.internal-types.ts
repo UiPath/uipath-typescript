@@ -20,8 +20,23 @@ export interface FieldSchemaPayload {
   defaultValue?: string;
   choiceSetId?: string;
   referenceType?: ReferenceType;
-  referenceEntity?: { id: string };
+  referenceEntity?: ReferenceEntityPayload;
+  referenceChoiceSet?: ReferenceEntityPayload;
   referenceField?: { id: string };
+}
+
+/** Body embedded in `referenceEntity` / `referenceChoiceSet` on cross-folder field payloads. */
+export interface ReferenceEntityPayload {
+  id: string;
+  name?: string;
+  folderId?: string;
+  entityType?: string;
+  entityTypeId?: number;
+}
+
+export interface ResolvedReferenceMeta {
+  referenceEntity?: ReferenceEntityPayload;
+  referenceChoiceSet?: ReferenceEntityPayload;
 }
 
 /**

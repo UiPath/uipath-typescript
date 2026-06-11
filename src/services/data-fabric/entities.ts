@@ -58,7 +58,7 @@ import {
   ENTITY_FIELD_CONSTRAINT_DEFAULTS,
   ENTITY_FIELD_CONSTRAINT_SPEC,
 } from '../../models/data-fabric/entities.constants';
-import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint } from '../../models/data-fabric/entities.internal-types';
+import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
 
 /**
@@ -875,18 +875,37 @@ export class EntityService extends BaseService implements EntityServiceModel {
    *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
    *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
    * ]);
+   *
+   * // Cross-folder references — link a folder-scoped entity to entities and
+   * // system choice sets that live in another folder or at the tenant level.
+   * await entities.create("orderLine", [
+   *   {
+   *     fieldName: "order",
+   *     type: EntityFieldDataType.RELATIONSHIP,
+   *     referenceEntityId: "<orderEntityId>",
+   *     referenceFieldId: "<orderEntityPkId>",
+   *     referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
+   *   },
+   *   {
+   *     fieldName: "userType",
+   *     type: EntityFieldDataType.CHOICE_SET_SINGLE,
+   *     choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
+   *     // referenceFolderKey omitted → SDK looks up the target at tenant scope
+   *   },
+   * ], { folderKey: "<sourceFolderKey>" });
    * ```
    * @internal
    */
   @track('Entities.Create')
   async create(name: string, fields: EntityCreateFieldOptions[], options?: EntityCreateOptions): Promise<string> {
     const opts = options ?? {};
+    const fieldPayloads = await this.buildFieldsWithReferenceMeta(fields);
     const payload = {
       ...(opts.description !== undefined && { description: opts.description }),
       displayName: opts.displayName ?? name,
       entityDefinition: {
         name,
-        fields: fields.map(f => this.buildSchemaFieldPayload(f)),
+        fields: fieldPayloads,
         folderId: opts.folderKey ?? DATA_FABRIC_TENANT_FOLDER_ID,
         isRbacEnabled: opts.isRbacEnabled ?? false,
         isInsightsEnabled: opts.isAnalyticsEnabled ?? false,
@@ -1062,10 +1081,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
       });
     }
 
-    // Build and append new fields
     const newFields: FieldSchemaPayload[] = [];
     if (options.addFields?.length) {
-      newFields.push(...options.addFields.map(f => this.buildSchemaFieldPayload(f)));
+      newFields.push(...await this.buildFieldsWithReferenceMeta(options.addFields));
     }
 
     await this.post(
@@ -1179,8 +1197,47 @@ export class EntityService extends BaseService implements EntityServiceModel {
     });
   }
 
+  private async buildFieldsWithReferenceMeta(fields: EntityCreateFieldOptions[]): Promise<FieldSchemaPayload[]> {
+    const metas = await Promise.all(fields.map(f => this.buildReferenceMeta(f)));
+    return fields.map((f, i) => this.buildSchemaFieldPayload(f, metas[i]));
+  }
+
+  // Choice-set targets resolve server-side by NAME (the API rejects cross-folder
+  // refs with empty target name even when folderId is supplied), so the SDK
+  // fetches the name once for each cross-folder choice-set field. Relationship
+  // targets resolve by folderId — no lookup needed.
+  private async buildReferenceMeta(field: EntityCreateFieldOptions): Promise<ResolvedReferenceMeta | undefined> {
+    if (field.referenceFolderKey === undefined) return undefined;
+    if (field.referenceEntityId === undefined && field.choiceSetId === undefined) return undefined;
+
+    const folderId = field.referenceFolderKey;
+    const meta: ResolvedReferenceMeta = {};
+
+    if (field.referenceEntityId !== undefined) {
+      meta.referenceEntity = { id: field.referenceEntityId, folderId };
+    }
+    if (field.choiceSetId !== undefined) {
+      const lookupFolderKey = folderId === DATA_FABRIC_TENANT_FOLDER_ID ? undefined : folderId;
+      const target = await this.get<RawEntityGetResponse>(
+        DATA_FABRIC_ENDPOINTS.ENTITY.GET_BY_ID(field.choiceSetId),
+        { headers: createHeaders({ [FOLDER_KEY]: lookupFolderKey }) },
+      );
+      meta.referenceChoiceSet = {
+        id: field.choiceSetId,
+        name: target.data.name,
+        folderId,
+        entityType: 'ChoiceSet',
+        entityTypeId: 1,
+      };
+    }
+    return meta;
+  }
+
   /** Converts a user-facing EntityCreateFieldOptions to the raw API field payload */
-  private buildSchemaFieldPayload(field: EntityCreateFieldOptions): FieldSchemaPayload {
+  private buildSchemaFieldPayload(
+    field: EntityCreateFieldOptions,
+    refMeta?: ResolvedReferenceMeta,
+  ): FieldSchemaPayload {
     const fieldType = field.type ?? EntityFieldDataType.STRING;
     this.validateFieldConstraints(fieldType, field, field.fieldName);
     const isRelationship = fieldType === EntityFieldDataType.RELATIONSHIP;
@@ -1191,6 +1248,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
       });
     }
     const mapping = EntitySchemaFieldTypeMap[fieldType];
+    // Prefer the resolved {id, name, folderId} body so cross-folder targets resolve
+    // server-side; fall back to a bare {id} when no meta was fetched.
+    const referenceEntityBody = refMeta?.referenceEntity ?? (field.referenceEntityId !== undefined ? { id: field.referenceEntityId } : undefined);
+    const referenceChoiceSetBody = refMeta?.referenceChoiceSet;
     return {
       name: field.fieldName,
       displayName: field.displayName ?? field.fieldName,
@@ -1209,7 +1270,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
       ...(field.choiceSetId !== undefined && { choiceSetId: field.choiceSetId }),
       ...((isRelationship || isFile) && { isForeignKey: true }),
       ...(isRelationship && { referenceType: ReferenceType.ManyToOne }),
-      ...(field.referenceEntityId !== undefined && { referenceEntity: { id: field.referenceEntityId } }),
+      ...(referenceEntityBody !== undefined && { referenceEntity: referenceEntityBody }),
+      ...(referenceChoiceSetBody !== undefined && { referenceChoiceSet: referenceChoiceSetBody }),
       ...(field.referenceFieldId !== undefined && { referenceField: { id: field.referenceFieldId } }),
     };
   }

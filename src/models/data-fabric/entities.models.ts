@@ -645,6 +645,24 @@ export interface EntityServiceModel {
    *   { fieldName: "price", type: EntityFieldDataType.DECIMAL, decimalPrecision: 4, maxValue: 999999, minValue: 0 },
    *   { fieldName: "quantity", type: EntityFieldDataType.INTEGER, maxValue: 10000, minValue: 1, defaultValue: "0" },
    * ]);
+   *
+   * // Cross-folder references — link a folder-scoped entity to entities and
+   * // system choice sets that live in another folder or at the tenant level.
+   * await entities.create("orderLine", [
+   *   {
+   *     fieldName: "order",
+   *     type: EntityFieldDataType.RELATIONSHIP,
+   *     referenceEntityId: "<orderEntityId>",
+   *     referenceFieldId: "<orderEntityPkId>",
+   *     referenceFolderKey: "<otherFolderKey>",     // target lives in a different folder
+   *   },
+   *   {
+   *     fieldName: "userType",
+   *     type: EntityFieldDataType.CHOICE_SET_SINGLE,
+   *     choiceSetId: "<systemUserTypeChoiceSetId>", // tenant-level system choice set
+   *     // referenceFolderKey omitted → SDK looks up the target at tenant scope
+   *   },
+   * ], { folderKey: "<sourceFolderKey>" });
    * ```
    * @internal
    */
