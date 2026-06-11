@@ -1,4 +1,4 @@
-import { EntityFieldDataType, FieldDisplayType } from "./entities.types";
+import { EntityFieldDataType, EntityType, FieldDisplayType } from "./entities.types";
 import {
   EntitySchemaFieldMapping,
   SqlFieldType,
@@ -6,6 +6,15 @@ import {
   FieldConstraintRange,
 } from "./entities.internal-types";
 export { SqlFieldType } from "./entities.internal-types";
+
+/**
+ * Numeric type IDs that pair with {@link EntityType} on reference payloads
+ * (entityType + entityTypeId travel together in `referenceEntity` /
+ * `referenceChoiceSet` bodies on cross-folder schema upserts).
+ */
+export const ENTITY_TYPE_IDS = {
+  [EntityType.ChoiceSet]: 1,
+} as const;
 
 /**
  * Maps fields for Entities

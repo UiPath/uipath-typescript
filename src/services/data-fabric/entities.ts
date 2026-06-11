@@ -32,6 +32,7 @@ import {
   EntityCreateOptions,
   EntityCreateFieldOptions,
   EntityFieldDataType,
+  EntityType,
   EntityGetAllOptions,
   EntityGetByIdOptions,
   EntityDeleteByIdOptions,
@@ -57,6 +58,7 @@ import {
   FieldDisplayTypeToDataType,
   ENTITY_FIELD_CONSTRAINT_DEFAULTS,
   ENTITY_FIELD_CONSTRAINT_SPEC,
+  ENTITY_TYPE_IDS,
 } from '../../models/data-fabric/entities.constants';
 import { FieldSchemaPayload, SqlFieldType, EntityFieldConstraint, ResolvedReferenceMeta } from '../../models/data-fabric/entities.internal-types';
 import { track } from '../../core/telemetry';
@@ -1226,8 +1228,8 @@ export class EntityService extends BaseService implements EntityServiceModel {
         id: field.choiceSetId,
         name: target.data.name,
         folderId,
-        entityType: 'ChoiceSet',
-        entityTypeId: 1,
+        entityType: EntityType.ChoiceSet,
+        entityTypeId: ENTITY_TYPE_IDS[EntityType.ChoiceSet],
       };
     }
     return meta;
