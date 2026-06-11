@@ -228,6 +228,32 @@ describe.each(modes)('Data Fabric Entities - Integration Tests [%s]', (mode) => 
         expect(folderIds.has(tenantEntity.id)).toBe(false);
       }
     });
+
+    // includeAllFolders switches to the v2 endpoint, which returns tenant-level and
+    // folder-level entities together — a superset of the default tenant-only result.
+    it('should return tenant and folder entities together when includeAllFolders is true', async () => {
+      const { entities } = getServices();
+
+      const [tenantEntities, allEntities] = await Promise.all([
+        entities.getAll(),
+        entities.getAll({ includeAllFolders: true }),
+      ]);
+
+      expect(Array.isArray(allEntities)).toBe(true);
+      // The combined list is a superset of the tenant-only list
+      expect(allEntities.length).toBeGreaterThanOrEqual(tenantEntities.length);
+
+      const allIds = new Set(allEntities.map((e) => e.id));
+      for (const tenantEntity of tenantEntities) {
+        expect(allIds.has(tenantEntity.id)).toBe(true);
+      }
+
+      // Each entity still carries metadata with methods attached
+      for (const entity of allEntities) {
+        expect(entity.id).toBeDefined();
+        expect(typeof entity.getAllRecords).toBe('function');
+      }
+    });
   });
 
   describe('getById', () => {

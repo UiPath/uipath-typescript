@@ -325,7 +325,14 @@ export interface EntityFolderScopedOptions {
 /**
  * Options for {@link EntityServiceModel.getAll}
  */
-export interface EntityGetAllOptions extends EntityFolderScopedOptions {}
+export interface EntityGetAllOptions extends EntityFolderScopedOptions {
+  /**
+   * When `true`, returns tenant-level and folder-level entities together.
+   * Omit (or `false`) to return only tenant-level entities.
+   * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
+   */
+  includeAllFolders?: boolean;
+}
 
 /**
  * Options for {@link EntityServiceModel.getById}

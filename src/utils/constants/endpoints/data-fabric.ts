@@ -17,6 +17,8 @@ export const DATA_FABRIC_TENANT_FOLDER_ID = '00000000-0000-0000-0000-00000000000
 export const DATA_FABRIC_ENDPOINTS = {
   ENTITY: {
     GET_ALL: `${DATAFABRIC_BASE}/api/Entity`,
+    // Lists tenant-level and folder-level entities together (used by getAll when includeAllFolders is set)
+    GET_ALL_V2: `${DATAFABRIC_BASE}/api/v2/Entity`,
     GET_ENTITY_RECORDS: (entityId: string) => `${DATAFABRIC_BASE}/api/EntityService/entity/${entityId}/read`,
     GET_BY_ID: (entityId: string) => `${DATAFABRIC_BASE}/api/Entity/${entityId}`,
     GET_RECORD_BY_ID: (entityId: string, recordId: string) =>
