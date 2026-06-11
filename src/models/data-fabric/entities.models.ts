@@ -55,13 +55,14 @@ export interface EntityServiceModel {
   /**
    * Gets entities in the system
    *
-   * The Data Fabric entity list is scoped exclusively, not additively:
-   * omitting `folderKey` returns only tenant-level entities; passing
-   * `folderKey` returns only entities in that folder. To enumerate
-   * every entity across folders, call `getAll()` once per folder
-   * plus once with no `folderKey` for the tenant scope.
+   * By default the entity list is scoped exclusively: omitting `folderKey`
+   * returns only tenant-level entities; passing `folderKey` returns only
+   * entities in that folder. To list tenant-level and folder-level entities
+   * together in a single call, pass `includeAllFolders: true` (with no
+   * `folderKey`). When `folderKey` is provided it always wins, scoping the
+   * result to that single folder and ignoring `includeAllFolders`.
    *
-   * @param options - Optional {@link EntityGetAllOptions} (e.g. `folderKey` to list folder-scoped entities)
+   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeAllFolders` to list tenant and folder entities together)
    * @returns Promise resolving to an array of entity metadata
    * {@link EntityGetResponse}
    * @example
@@ -69,7 +70,10 @@ export interface EntityServiceModel {
    * // Get tenant-level entities
    * const tenantEntities = await entities.getAll();
    *
-   * // Get folder-scoped entities for a specific folder
+   * // Get tenant-level and folder-level entities together
+   * const allEntities = await entities.getAll({ includeAllFolders: true });
+   *
+   * // Get a single folder's entities
    * const folderEntities = await entities.getAll({ folderKey: "<folderKey>" });
    *
    * // Iterate through entities

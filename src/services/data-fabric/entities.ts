@@ -506,13 +506,14 @@ export class EntityService extends BaseService implements EntityServiceModel {
   /**
    * Gets all entities in the system
    *
-   * The Data Fabric entity list is scoped exclusively, not additively:
-   * omitting `folderKey` returns only tenant-level entities; passing
-   * `folderKey` returns only entities in that folder. To enumerate
-   * every entity across folders, call `getAll()` once per folder
-   * plus once with no `folderKey` for the tenant scope.
+   * By default the entity list is scoped exclusively: omitting `folderKey`
+   * returns only tenant-level entities; passing `folderKey` returns only
+   * entities in that folder. To list tenant-level and folder-level entities
+   * together in a single call, pass `includeAllFolders: true` (with no
+   * `folderKey`). When `folderKey` is provided it always wins, scoping the
+   * result to that single folder and ignoring `includeAllFolders`.
    *
-   * @param options - Optional {@link EntityGetAllOptions} (e.g. `folderKey` to list folder-scoped entities)
+   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeAllFolders` to list tenant and folder entities together)
    * @returns Promise resolving to an array of entity metadata
    *
    * @example
@@ -524,7 +525,10 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * // Get tenant-level entities
    * const tenantEntities = await entities.getAll();
    *
-   * // Get folder-scoped entities
+   * // Get tenant-level and folder-level entities together
+   * const allEntities = await entities.getAll({ includeAllFolders: true });
+   *
+   * // Get a single folder's entities
    * const folderEntities = await entities.getAll({ folderKey: "<folderKey>" });
    *
    * // Call operations on an entity
@@ -533,8 +537,15 @@ export class EntityService extends BaseService implements EntityServiceModel {
    */
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
+    // folderKey always wins: when present, scope to that folder via the v1 endpoint + header.
+    // Only when no folderKey is given does includeAllFolders switch to the v2 endpoint,
+    // which returns tenant-level and folder-level entities together.
+    const endpoint = !options?.folderKey && options?.includeAllFolders
+      ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2
+      : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;
+
     const response = await this.get<RawEntityGetResponse[]>(
-      DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
+      endpoint,
       { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
     );
     
