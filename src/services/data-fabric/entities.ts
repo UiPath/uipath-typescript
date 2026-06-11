@@ -509,11 +509,11 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * By default the entity list is scoped exclusively: omitting `folderKey`
    * returns only tenant-level entities; passing `folderKey` returns only
    * entities in that folder. To list tenant-level and folder-level entities
-   * together in a single call, pass `includeAllFolders: true` (with no
+   * together in a single call, pass `includeAllScopes: true` (with no
    * `folderKey`). When `folderKey` is provided it always wins, scoping the
-   * result to that single folder and ignoring `includeAllFolders`.
+   * result to that single folder and ignoring `includeAllScopes`.
    *
-   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeAllFolders` to list tenant and folder entities together)
+   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeAllScopes` to list tenant and folder entities together)
    * @returns Promise resolving to an array of entity metadata
    *
    * @example
@@ -526,7 +526,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
    * const tenantEntities = await entities.getAll();
    *
    * // Get tenant-level and folder-level entities together
-   * const allEntities = await entities.getAll({ includeAllFolders: true });
+   * const allEntities = await entities.getAll({ includeAllScopes: true });
    *
    * // Get a single folder's entities
    * const folderEntities = await entities.getAll({ folderKey: "<folderKey>" });
@@ -538,9 +538,9 @@ export class EntityService extends BaseService implements EntityServiceModel {
   @track('Entities.GetAll')
   async getAll(options?: EntityGetAllOptions): Promise<EntityGetResponse[]> {
     // folderKey always wins: when present, scope to that folder via the v1 endpoint + header.
-    // Only when no folderKey is given does includeAllFolders switch to the v2 endpoint,
+    // Only when no folderKey is given does includeAllScopes switch to the v2 endpoint,
     // which returns tenant-level and folder-level entities together.
-    const endpoint = !options?.folderKey && options?.includeAllFolders
+    const endpoint = !options?.folderKey && options?.includeAllScopes
       ? DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2
       : DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL;
 

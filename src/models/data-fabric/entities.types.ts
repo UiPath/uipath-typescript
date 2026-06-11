@@ -333,7 +333,7 @@ export interface EntityGetAllOptions extends EntityFolderScopedOptions {
    * Omit (or `false`) to return only tenant-level entities.
    * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
    */
-  includeAllFolders?: boolean;
+  includeAllScopes?: boolean;
 }
 
 /**

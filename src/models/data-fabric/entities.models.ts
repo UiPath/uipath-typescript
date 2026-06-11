@@ -58,11 +58,11 @@ export interface EntityServiceModel {
    * By default the entity list is scoped exclusively: omitting `folderKey`
    * returns only tenant-level entities; passing `folderKey` returns only
    * entities in that folder. To list tenant-level and folder-level entities
-   * together in a single call, pass `includeAllFolders: true` (with no
+   * together in a single call, pass `includeAllScopes: true` (with no
    * `folderKey`). When `folderKey` is provided it always wins, scoping the
-   * result to that single folder and ignoring `includeAllFolders`.
+   * result to that single folder and ignoring `includeAllScopes`.
    *
-   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeAllFolders` to list tenant and folder entities together)
+   * @param options - Optional {@link EntityGetAllOptions} (`folderKey` to list a single folder's entities, `includeAllScopes` to list tenant and folder entities together)
    * @returns Promise resolving to an array of entity metadata
    * {@link EntityGetResponse}
    * @example
@@ -71,7 +71,7 @@ export interface EntityServiceModel {
    * const tenantEntities = await entities.getAll();
    *
    * // Get tenant-level and folder-level entities together
-   * const allEntities = await entities.getAll({ includeAllFolders: true });
+   * const allEntities = await entities.getAll({ includeAllScopes: true });
    *
    * // Get a single folder's entities
    * const folderEntities = await entities.getAll({ folderKey: "<folderKey>" });

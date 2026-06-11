@@ -423,10 +423,10 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should call the v2 endpoint when includeAllFolders is true", async () => {
+    it("should call the v2 endpoint when includeAllScopes is true", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
-      await entityService.getAll({ includeAllFolders: true });
+      await entityService.getAll({ includeAllScopes: true });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL_V2,
@@ -434,10 +434,10 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should call the v1 endpoint when includeAllFolders is false", async () => {
+    it("should call the v1 endpoint when includeAllScopes is false", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
-      await entityService.getAll({ includeAllFolders: false });
+      await entityService.getAll({ includeAllScopes: false });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
@@ -445,12 +445,12 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should let folderKey win and call v1 with the header when both folderKey and includeAllFolders are provided", async () => {
+    it("should let folderKey win and call v1 with the header when both folderKey and includeAllScopes are provided", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({
         folderKey: ENTITY_TEST_CONSTANTS.FIELD_ID,
-        includeAllFolders: true,
+        includeAllScopes: true,
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
