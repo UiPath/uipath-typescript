@@ -125,14 +125,8 @@ export interface EntityDeleteOptions extends EntityFolderScopedOptions {
  */
 export interface EntityDeleteRecordsOptions extends EntityDeleteOptions {}
 
-/**
- * Options for {@link EntityServiceModel.deleteRecordById}
- */
 export interface EntityDeleteRecordByIdOptions extends EntityFolderScopedOptions {}
 
-/**
- * Options for {@link EntityServiceModel.importRecordsById}
- */
 export interface EntityImportRecordsByIdOptions extends EntityFolderScopedOptions {}
 
 
@@ -324,26 +318,18 @@ export interface EntityFolderScopedOptions {
   folderKey?: string;
 }
 
-/**
- * Options for {@link EntityServiceModel.getAll}
- */
 export interface EntityGetAllOptions extends EntityFolderScopedOptions {
   /**
-   * When `true`, returns tenant-level and folder-level entities together.
-   * Omit (or `false`) to return only tenant-level entities.
+   * When `true`, returns tenant-level and folder-level entities together
+   * (requires the `OR.Users` OAuth scope).
+   * Omit (or `false`, the default) to return only tenant-level entities — no `OR.Users` needed.
    * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
    */
   includeAllScopes?: boolean;
 }
 
-/**
- * Options for {@link EntityServiceModel.getById}
- */
 export interface EntityGetByIdOptions extends EntityFolderScopedOptions {}
 
-/**
- * Options for {@link EntityServiceModel.deleteById}
- */
 export interface EntityDeleteByIdOptions extends EntityFolderScopedOptions {}
 
 /**

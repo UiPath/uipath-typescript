@@ -65,6 +65,8 @@ This page lists the specific OAuth scopes required in external app for each SDK 
 
 ## ChoiceSets
 
+> **Folder-scoped choice sets require `OR.Users` in addition to the scope below.** Any CRUD operation on a folder choice set (passing `folderKey`), and `getAll({ includeFolderChoiceSets: true })` which lists all tenant and folder choice sets, need `OR.Users` as well.
+
 | Method | OAuth Scope |
 |--------|-------------|
 | `getAll()` | `DataFabric.Schema.Read` |

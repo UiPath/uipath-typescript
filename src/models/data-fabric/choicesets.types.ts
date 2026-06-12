@@ -50,10 +50,15 @@ export interface ChoiceSetGetResponse {
   recordOwner?: string;
 }
 
-/**
- * Options for {@link ChoiceSetServiceModel.getAll}
- */
-export interface ChoiceSetGetAllOptions extends EntityFolderScopedOptions {}
+export interface ChoiceSetGetAllOptions extends EntityFolderScopedOptions {
+  /**
+   * When `true`, also returns folder-level choice sets alongside tenant ones
+   * (requires the `OR.Users` OAuth scope).
+   * Omit (or `false`, the default) to return only tenant-level choice sets — no `OR.Users` needed.
+   * Ignored when `folderKey` is provided — `folderKey` always scopes the result to that single folder.
+   */
+  includeFolderChoiceSets?: boolean;
+}
 
 /**
  * Options for getting choice set values by choice set ID
@@ -80,9 +85,6 @@ export interface ChoiceSetUpdateOptions extends EntityFolderScopedOptions {
   description?: string;
 }
 
-/**
- * Options for {@link ChoiceSetServiceModel.deleteById}
- */
 export interface ChoiceSetDeleteByIdOptions extends EntityFolderScopedOptions {}
 
 /**
@@ -96,14 +98,8 @@ export interface ChoiceSetValueInsertOptions extends EntityFolderScopedOptions {
   displayName?: string;
 }
 
-/**
- * Options for {@link ChoiceSetServiceModel.updateValueById}
- */
 export interface ChoiceSetValueUpdateOptions extends EntityFolderScopedOptions {}
 
-/**
- * Options for {@link ChoiceSetServiceModel.deleteValuesById}
- */
 export interface ChoiceSetValueDeleteOptions extends EntityFolderScopedOptions {}
 
 /**

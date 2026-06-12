@@ -337,7 +337,7 @@ describe("EntityService Unit Tests", () => {
         expect(typeof entity.getAllRecords).toBe("function");
       });
 
-      // Verify the API call
+      // Verify the API call — default tenant-only via v1 endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
         { headers: {} },
@@ -396,7 +396,7 @@ describe("EntityService Unit Tests", () => {
         });
       });
 
-      // Verify the API call
+      // Verify the API call — default tenant-only via v1 endpoint
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.ENTITY.GET_ALL,
         { headers: {} },
@@ -423,7 +423,7 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should call the v2 endpoint when includeAllScopes is true", async () => {
+    it("should call the v2 endpoint when includeAllScopes is true (cross-scope)", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({ includeAllScopes: true });
@@ -434,7 +434,7 @@ describe("EntityService Unit Tests", () => {
       );
     });
 
-    it("should call the v1 endpoint when includeAllScopes is false", async () => {
+    it("should call the v1 endpoint when includeAllScopes is false (tenant-only)", async () => {
       mockApiClient.get.mockResolvedValue([createMockEntityResponse()]);
 
       await entityService.getAll({ includeAllScopes: false });

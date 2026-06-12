@@ -17,6 +17,7 @@ import {
   QueryFilterOperator,
   RawEntityGetResponse,
 } from '../../../../src/models/data-fabric/entities.types';
+import { DATA_FABRIC_TENANT_FOLDER_ID } from '../../../../src/utils/constants/endpoints/data-fabric';
 
 // Cache for choice set values to avoid repeated API calls within a test run
 const choiceSetValueCache = new Map<string, any[]>();
@@ -128,7 +129,7 @@ async function buildDummyRecord(entityMetadata: RawEntityGetResponse): Promise<R
       // key to return values. Tenant-level CS targets carry the all-zeros
       // folderId — treat that as "no folder header".
       const csFolderId = field.referenceChoiceSet?.folderId;
-      const csFolderKey = csFolderId && csFolderId !== '00000000-0000-0000-0000-000000000000' ? csFolderId : undefined;
+      const csFolderKey = csFolderId && csFolderId !== DATA_FABRIC_TENANT_FOLDER_ID ? csFolderId : undefined;
       const values = await getChoiceSetValues(choiceSetId, csFolderKey);
       if (values.length === 0) continue;
 

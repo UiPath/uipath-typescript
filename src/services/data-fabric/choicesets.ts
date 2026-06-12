@@ -29,13 +29,14 @@ import { ValidationError, NotFoundError } from '../../core/errors';
 
 export class ChoiceSetService extends BaseService implements ChoiceSetServiceModel {
   /**
-   * Gets choice sets in the system
+   * Gets choice sets in the system.
    *
-   * The Data Fabric choice-set list is scoped exclusively, not additively:
-   * omitting `folderKey` returns only tenant-level choice sets; passing
-   * `folderKey` returns only choice sets in that folder.
+   * Three call modes:
+   * - `getAll({ includeFolderChoiceSets: false })` — default. Returns only tenant-level choice sets. No `OR.Users` scope required.
+   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. Requires the `OR.Users` OAuth scope.
+   * - `getAll({ includeFolderChoiceSets: false, folderKey: "<uuid>" })` — returns only choice sets in that folder. `folderKey` always wins over `includeFolderChoiceSets`.
    *
-   * @param options - Optional {@link ChoiceSetGetAllOptions} (e.g. `folderKey` to list folder-scoped choice sets)
+   * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets, `includeFolderChoiceSets: true` to list tenant + folder choice sets together)
    * @returns Promise resolving to an array of choice set metadata
    *
    * @example
@@ -44,18 +45,28 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
    *
    * const choiceSets = new ChoiceSets(sdk);
    *
-   * // Get tenant-level choice sets
-   * const tenantChoiceSets = await choiceSets.getAll();
+   * // Tenant-only (default — no OR.Users needed)
+   * const tenantChoiceSets = await choiceSets.getAll({ includeFolderChoiceSets: false });
    *
-   * // Get folder-scoped choice sets
-   * const folderChoiceSets = await choiceSets.getAll({ folderKey: "<folderKey>" });
+   * // Tenant + folder choice sets together (requires OR.Users scope)
+   * const allChoiceSets = await choiceSets.getAll({ includeFolderChoiceSets: true });
+   *
+   * // A single folder's choice sets
+   * const folderChoiceSets = await choiceSets.getAll({ includeFolderChoiceSets: false, folderKey: "<folderKey>" });
    * ```
    */
   @track('Choicesets.GetAll')
   async getAll(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]> {
+    // The choice-set endpoint returns cross-scope results when called without
+    // a folder header. To stay tenant-only by default (no OR.Users required),
+    // send the tenant-marker UUID as the folder key unless the caller explicitly
+    // opts into cross-scope via includeFolderChoiceSets: true. folderKey always wins.
+    const folderKey = options?.folderKey
+      ?? (options?.includeFolderChoiceSets ? undefined : DATA_FABRIC_TENANT_FOLDER_ID);
+
     const rawResponse = await this.get<RawChoiceSetGetAllResponse[]>(
       DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-      { headers: createHeaders({ [FOLDER_KEY]: options?.folderKey }) }
+      { headers: createHeaders({ [FOLDER_KEY]: folderKey }) }
     );
 
     // Transform field names

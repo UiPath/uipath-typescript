@@ -78,10 +78,10 @@ describe('ChoiceSetService Unit Tests', () => {
       expect(result[0].createdTime).toBe(CHOICESET_TEST_CONSTANTS.CREATED_TIME);
       expect(result[0].updatedTime).toBe(CHOICESET_TEST_CONSTANTS.UPDATED_TIME);
 
-      // Verify the API call has correct endpoint
+      // Verify the API call — default tenant-only via tenant-marker header
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-        { headers: {} }
+        { headers: { 'X-UIPATH-FolderKey': DATA_FABRIC_TENANT_FOLDER_ID } }
       );
     });
 
@@ -107,10 +107,10 @@ describe('ChoiceSetService Unit Tests', () => {
         expect(choiceSet).toHaveProperty('updatedTime');
       });
 
-      // Verify the API call
+      // Verify the API call — default tenant-only via tenant-marker header
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
-        { headers: {} }
+        { headers: { 'X-UIPATH-FolderKey': DATA_FABRIC_TENANT_FOLDER_ID } }
       );
     });
 
@@ -157,6 +157,53 @@ describe('ChoiceSetService Unit Tests', () => {
       mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
 
       await choiceSetService.getAll({ folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': CHOICESET_TEST_CONSTANTS.FOLDER_KEY } }
+      );
+    });
+
+    it('should send tenant-marker folder header by default (tenant-only)', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll();
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': DATA_FABRIC_TENANT_FOLDER_ID } }
+      );
+    });
+
+    it('should send tenant-marker folder header when includeFolderChoiceSets is false', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll({ includeFolderChoiceSets: false });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: { 'X-UIPATH-FolderKey': DATA_FABRIC_TENANT_FOLDER_ID } }
+      );
+    });
+
+    it('should omit folder header when includeFolderChoiceSets is true (cross-scope)', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll({ includeFolderChoiceSets: true });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,
+        { headers: {} }
+      );
+    });
+
+    it('should let folderKey win when both folderKey and includeFolderChoiceSets are provided', async () => {
+      mockApiClient.get.mockResolvedValue([createMockChoiceSetResponse()]);
+
+      await choiceSetService.getAll({
+        folderKey: CHOICESET_TEST_CONSTANTS.FOLDER_KEY,
+        includeFolderChoiceSets: true,
+      });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         DATA_FABRIC_ENDPOINTS.CHOICESETS.GET_ALL,

@@ -32,40 +32,29 @@ import { PaginatedResponse, NonPaginatedResponse, HasPaginationOptions } from '.
  */
 export interface ChoiceSetServiceModel {
   /**
-   * Gets choice sets in the org
+   * Gets choice sets in the org.
    *
-   * The Data Fabric choice-set list is scoped exclusively, not additively:
-   * omitting `folderKey` returns only tenant-level choice sets; passing
-   * `folderKey` returns only choice sets in that folder. To enumerate
-   * every choice set across folders, call `getAll()` once per folder
-   * plus once with no `folderKey` for the tenant scope.
+   * Three call modes:
+   * - `getAll({ includeFolderChoiceSets: false })` — default. Returns only tenant-level choice sets. No `OR.Users` scope required.
+   * - `getAll({ includeFolderChoiceSets: true })` — returns tenant-level **and** folder-level choice sets together. Requires the `OR.Users` OAuth scope.
+   * - `getAll({ includeFolderChoiceSets: false, folderKey: "<uuid>" })` — returns only choice sets in that folder. `folderKey` always wins over `includeFolderChoiceSets`.
    *
-   * @param options - Optional {@link ChoiceSetGetAllOptions} (e.g. `folderKey` to list folder-scoped choice sets)
+   * @param options - Optional {@link ChoiceSetGetAllOptions} (`folderKey` to list a single folder's choice sets, `includeFolderChoiceSets: true` to list tenant + folder choice sets together)
    * @returns Promise resolving to an array of choice set metadata
    * {@link ChoiceSetGetAllResponse}
    * @example
    * ```typescript
-   * // Get tenant-level choice sets
-   * const tenantChoiceSets = await choicesets.getAll();
+   * // Tenant-only (default — no OR.Users needed)
+   * const tenantChoiceSets = await choicesets.getAll({ includeFolderChoiceSets: false });
    *
-   * // Get folder-scoped choice sets
-   * const folderChoiceSets = await choicesets.getAll({ folderKey: "<folderKey>" });
+   * // Tenant + folder choice sets together (requires OR.Users scope)
+   * const allChoiceSets = await choicesets.getAll({ includeFolderChoiceSets: true });
    *
-   * // Iterate through choice sets
-   * tenantChoiceSets.forEach(choiceSet => {
-   *   console.log(`ChoiceSet: ${choiceSet.displayName} (${choiceSet.name})`);
-   *   console.log(`Description: ${choiceSet.description}`);
-   *   console.log(`Created by: ${choiceSet.createdBy}`);
-   * });
+   * // A single folder's choice sets
+   * const folderChoiceSets = await choicesets.getAll({ includeFolderChoiceSets: false, folderKey: "<folderKey>" });
    *
    * // Find a specific choice set by name
    * const expenseTypes = tenantChoiceSets.find(cs => cs.name === 'ExpenseTypes');
-   *
-   * // Check choice set details
-   * if (expenseTypes) {
-   *   console.log(`Last updated: ${expenseTypes.updatedTime}`);
-   *   console.log(`Updated by: ${expenseTypes.updatedBy}`);
-   * }
    * ```
    */
   getAll(options?: ChoiceSetGetAllOptions): Promise<ChoiceSetGetAllResponse[]>;
