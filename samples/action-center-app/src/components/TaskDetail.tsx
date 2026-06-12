@@ -2,6 +2,27 @@ import { useState } from 'react'
 import { TaskStatus, TaskUserType, TaskAssignmentCriteria } from '@uipath/uipath-typescript/tasks'
 import type { TaskGetResponse, TaskAssignOptions } from '@uipath/uipath-typescript/tasks'
 import { UiPathError } from '@uipath/uipath-typescript/core'
+import { Alert, AlertDescription } from '@uipath/apollo-wind/components/ui/alert'
+import { Badge } from '@uipath/apollo-wind/components/ui/badge'
+import { Button } from '@uipath/apollo-wind/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@uipath/apollo-wind/components/ui/dialog'
+import { Input } from '@uipath/apollo-wind/components/ui/input'
+import { Label } from '@uipath/apollo-wind/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@uipath/apollo-wind/components/ui/select'
+import { Spinner } from '@uipath/apollo-wind/components/ui/spinner'
 import { useTask, useTaskUsers } from '../hooks/useTasks'
 import {
   statusBadge,
@@ -11,14 +32,6 @@ import {
   taskTypeLabel,
   buildCompleteOptions,
 } from '../taskUtils'
-import { Modal } from './Modal'
-
-const BTN_PRIMARY =
-  'rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50'
-const BTN_OUTLINE =
-  'rounded-md border px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50'
-const BTN_DANGER =
-  'rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50'
 
 interface Props {
   taskId: number
@@ -66,115 +79,124 @@ export function TaskDetail({ taskId, folderId, onClose, onChanged }: Props) {
 
   return (
     <>
-      <Modal title={task?.title ?? `Task #${taskId}`} onClose={onClose}>
-        {loading ? (
-          <p className="py-6 text-center text-sm text-gray-500">Loading task…</p>
-        ) : error ? (
-          <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>
-        ) : task ? (
-          <div className="space-y-5 text-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={statusBadge(task.status).className}>
-                {statusBadge(task.status).label}
-              </span>
-              <span className={priorityBadge(task.priority).className}>
-                {priorityBadge(task.priority).label}
-              </span>
-              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                {taskTypeLabel(task.type)}
-              </span>
-              {slaBadge(task.taskSlaDetail?.status) && (
-                <span className={slaBadge(task.taskSlaDetail?.status)!.className}>
-                  SLA: {slaBadge(task.taskSlaDetail?.status)!.label}
-                </span>
+      <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="truncate">{task?.title ?? `Task #${taskId}`}</DialogTitle>
+          </DialogHeader>
+
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Spinner label="Loading task…" showLabel />
+            </div>
+          ) : error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : task ? (
+            <div className="space-y-5 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={statusBadge(task.status).variant}>
+                  {statusBadge(task.status).label}
+                </Badge>
+                <Badge variant={priorityBadge(task.priority).variant}>
+                  {priorityBadge(task.priority).label}
+                </Badge>
+                <Badge variant="secondary">{taskTypeLabel(task.type)}</Badge>
+                {slaBadge(task.taskSlaDetail?.status) && (
+                  <Badge variant={slaBadge(task.taskSlaDetail?.status)!.variant}>
+                    SLA: {slaBadge(task.taskSlaDetail?.status)!.label}
+                  </Badge>
+                )}
+              </div>
+
+              <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
+                <Field
+                  label="Assignee"
+                  value={task.assignedToUser?.displayName ?? 'Unassigned'}
+                />
+                <Field label="Created" value={formatDateTime(task.createdTime)} />
+                {task.completedTime && (
+                  <Field label="Completed" value={formatDateTime(task.completedTime)} />
+                )}
+                {task.externalTag && <Field label="External tag" value={task.externalTag} mono />}
+                <Field label="Key" value={task.key} mono />
+              </dl>
+
+              {task.tags && task.tags.length > 0 && (
+                <Section title="Tags">
+                  <div className="flex flex-wrap gap-1.5">
+                    {task.tags.map((t) => (
+                      <Badge key={t.name} variant="secondary">
+                        {t.displayName || t.name}
+                        {t.displayValue ? `: ${t.displayValue}` : ''}
+                      </Badge>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {task.data && Object.keys(task.data).length > 0 && (
+                <Section title="Data">
+                  <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-1 rounded-lg border bg-muted/40 p-3">
+                    {Object.entries(task.data).map(([k, v]) => (
+                      <div key={k} className="contents">
+                        <dt className="truncate text-xs text-muted-foreground" title={k}>
+                          {k}
+                        </dt>
+                        <dd className="min-w-0 break-words text-xs">{renderValue(v)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </Section>
+              )}
+
+              {task.activities && task.activities.length > 0 && (
+                <Section title="Activity">
+                  <ul className="space-y-1.5">
+                    {task.activities.map((a, i) => (
+                      <li
+                        key={`${a.taskId}-${i}`}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <span>{a.activityType}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {formatDateTime(a.createdTime)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              )}
+
+              {actionError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{actionError}</AlertDescription>
+                </Alert>
               )}
             </div>
+          ) : null}
 
-            <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1.5">
-              <Field label="Assignee" value={task.assignedToUser?.displayName ?? 'Unassigned'} />
-              <Field label="Created" value={formatDateTime(task.createdTime)} />
-              {task.completedTime && (
-                <Field label="Completed" value={formatDateTime(task.completedTime)} />
+          {task && !isCompleted && (
+            <DialogFooter className="flex-wrap">
+              {!hasAssignee && <Button onClick={() => setSub('assign')}>Assign</Button>}
+              {hasAssignee && (
+                <Button variant="outline" onClick={() => setSub('reassign')}>
+                  Reassign
+                </Button>
               )}
-              {task.externalTag && <Field label="External tag" value={task.externalTag} mono />}
-              <Field label="Key" value={task.key} mono />
-            </dl>
-
-            {task.tags && task.tags.length > 0 && (
-              <Section title="Tags">
-                <div className="flex flex-wrap gap-1.5">
-                  {task.tags.map((t) => (
-                    <span
-                      key={t.name}
-                      className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
-                    >
-                      {t.displayName || t.name}
-                      {t.displayValue ? `: ${t.displayValue}` : ''}
-                    </span>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            {task.data && Object.keys(task.data).length > 0 && (
-              <Section title="Data">
-                <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-1 rounded-lg border bg-gray-50 p-3">
-                  {Object.entries(task.data).map(([k, v]) => (
-                    <div key={k} className="contents">
-                      <dt className="truncate text-xs text-gray-500" title={k}>
-                        {k}
-                      </dt>
-                      <dd className="min-w-0 break-words text-xs">{renderValue(v)}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </Section>
-            )}
-
-            {task.activities && task.activities.length > 0 && (
-              <Section title="Activity">
-                <ul className="space-y-1.5">
-                  {task.activities.map((a, i) => (
-                    <li key={`${a.taskId}-${i}`} className="flex items-center justify-between gap-2">
-                      <span>{a.activityType}</span>
-                      <span className="shrink-0 text-xs text-gray-500">
-                        {formatDateTime(a.createdTime)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-            )}
-
-            {actionError && (
-              <p className="rounded-md bg-red-50 p-2 text-sm text-red-700">{actionError}</p>
-            )}
-
-            {!isCompleted && (
-              <div className="flex flex-wrap gap-2 border-t pt-4">
-                {!hasAssignee && (
-                  <button className={BTN_PRIMARY} onClick={() => setSub('assign')}>
-                    Assign
-                  </button>
-                )}
-                {hasAssignee && (
-                  <button className={BTN_OUTLINE} onClick={() => setSub('reassign')}>
-                    Reassign
-                  </button>
-                )}
-                {hasAssignee && (
-                  <button className={BTN_OUTLINE} onClick={handleUnassign} disabled={busy}>
-                    {busy ? 'Unassigning…' : 'Unassign'}
-                  </button>
-                )}
-                <button className={BTN_OUTLINE} onClick={() => setSub('complete')}>
-                  Complete
-                </button>
-              </div>
-            )}
-          </div>
-        ) : null}
-      </Modal>
+              {hasAssignee && (
+                <Button variant="outline" onClick={handleUnassign} disabled={busy}>
+                  {busy ? 'Unassigning…' : 'Unassign'}
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => setSub('complete')}>
+                Complete
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {task && (sub === 'assign' || sub === 'reassign') && (
         <AssignForm
@@ -195,7 +217,7 @@ export function TaskDetail({ taskId, folderId, onClose, onChanged }: Props) {
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="contents">
-      <dt className="text-gray-500">{label}</dt>
+      <dt className="text-muted-foreground">{label}</dt>
       <dd className={`min-w-0 break-words ${mono ? 'font-mono text-xs' : ''}`}>{value}</dd>
     </div>
   )
@@ -204,7 +226,9 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</h4>
+      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h4>
       {children}
     </div>
   )
@@ -270,43 +294,60 @@ function AssignForm({
   }
 
   return (
-    <Modal title={mode === 'reassign' ? 'Reassign task' : 'Assign task'} onClose={onClose}>
-      <div className="space-y-3 text-sm">
-        {loading ? (
-          <p className="text-gray-500">Loading users…</p>
-        ) : error ? (
-          <p className="text-red-700">{error}</p>
-        ) : users.length === 0 ? (
-          <p className="text-gray-500">No assignable users found in this folder.</p>
-        ) : (
-          <label className="block">
-            <span className="text-gray-500">Assign to</span>
-            <select
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="mt-1 w-full rounded-md border px-2 py-2"
-            >
-              <option value="">Select a user…</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.displayName || u.userName}
-                  {u.emailAddress ? ` — ${u.emailAddress}` : ` (${u.type})`}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        {submitError && <p className="text-red-700">{submitError}</p>}
-        <div className="flex justify-end gap-2 pt-2">
-          <button className={BTN_OUTLINE} onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
-          <button className={BTN_PRIMARY} onClick={submit} disabled={!userId || busy}>
-            {busy ? 'Saving…' : mode === 'reassign' ? 'Reassign' : 'Assign'}
-          </button>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{mode === 'reassign' ? 'Reassign task' : 'Assign task'}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <Spinner label="Loading users…" showLabel />
+            </div>
+          ) : error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : users.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No assignable users found in this folder.
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="assign-user">Assign to</Label>
+              <Select value={userId} onValueChange={setUserId}>
+                <SelectTrigger id="assign-user">
+                  <SelectValue placeholder="Select a user…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={String(u.id)}>
+                      {u.displayName || u.userName}
+                      {u.emailAddress ? ` — ${u.emailAddress}` : ` (${u.type})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {submitError && (
+            <Alert variant="destructive">
+              <AlertDescription>{submitError}</AlertDescription>
+            </Alert>
+          )}
         </div>
-      </div>
-    </Modal>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={!userId || busy}>
+            {busy ? 'Saving…' : mode === 'reassign' ? 'Reassign' : 'Assign'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -345,35 +386,46 @@ function CompleteForm({
   }
 
   return (
-    <Modal title="Complete task" onClose={onClose}>
-      <div className="space-y-3 text-sm">
-        <label className="block">
-          <span className="text-gray-500">Action</span>
-          <input
-            type="text"
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-            placeholder="e.g. Approve"
-            className="mt-1 w-full rounded-md border px-2 py-2"
-          />
-        </label>
-        <p className="text-xs text-gray-500">
-          The action maps to the outcome the workflow expects. Use Reject, or type a custom action
-          and choose Complete.
-        </p>
-        {submitError && <p className="text-red-700">{submitError}</p>}
-        <div className="flex flex-wrap justify-end gap-2 pt-2">
-          <button className={BTN_OUTLINE} onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
-          <button className={BTN_DANGER} onClick={() => complete('Reject')} disabled={busy}>
-            Reject
-          </button>
-          <button className={BTN_PRIMARY} onClick={() => complete(action)} disabled={busy || !action.trim()}>
-            {busy ? 'Completing…' : `Complete (${action.trim() || '—'})`}
-          </button>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Complete task</DialogTitle>
+          <DialogDescription>
+            The action maps to the outcome the workflow expects. Use Reject, or type a custom
+            action and choose Complete.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="complete-action">Action</Label>
+            <Input
+              id="complete-action"
+              type="text"
+              value={action}
+              onChange={(e) => setAction(e.target.value)}
+              placeholder="e.g. Approve"
+            />
+          </div>
+          {submitError && (
+            <Alert variant="destructive">
+              <AlertDescription>{submitError}</AlertDescription>
+            </Alert>
+          )}
         </div>
-      </div>
-    </Modal>
+
+        <DialogFooter className="flex-wrap">
+          <Button variant="outline" onClick={onClose} disabled={busy}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={() => complete('Reject')} disabled={busy}>
+            Reject
+          </Button>
+          <Button onClick={() => complete(action)} disabled={busy || !action.trim()}>
+            {busy ? 'Completing…' : `Complete (${action.trim() || '—'})`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

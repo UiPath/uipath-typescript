@@ -62,9 +62,15 @@ export function useTasks(
 
   const filter = buildTaskFilter(filters)
 
-  // Reset to page 1 when the folder, filters, or admin scope change.
+  // Reset to page 1 AND clear the previous result set when the folder,
+  // filters, or admin scope change. Clearing `tasks` flips the table into its
+  // loading state immediately instead of letting the stale rows linger until
+  // the new fetch resolves.
   useEffect(() => {
     setPage(1)
+    setTasks([])
+    setTotalCount(0)
+    setTotalPages(1)
   }, [folderId, filter, asTaskAdmin])
 
   const load = useCallback(async () => {
