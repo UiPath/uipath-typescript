@@ -265,6 +265,13 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
 
       await choiceSets.deleteValuesById(choiceSetId, serviceLevelValueIds);
 
+      // Verify the deleted values are no longer present on the choice set
+      const remaining = await choiceSets.getById(choiceSetId);
+      const remainingIds = new Set(remaining.items.map((v) => v.id));
+      for (const deletedId of serviceLevelValueIds) {
+        expect(remainingIds.has(deletedId)).toBe(false);
+      }
+
       // Remove deleted IDs from the file-level tracking list
       for (const id of serviceLevelValueIds) {
         const idx = insertedValueIds.indexOf(id);
@@ -471,6 +478,13 @@ describe.each(modes)('Data Fabric ChoiceSets - Integration Tests [%s]', (mode) =
       }
 
       await choiceSets.deleteValuesById(folderChoiceSetId, folderValueIds, { folderKey });
+
+      // Verify the deleted values are no longer present on the choice set
+      const remaining = await choiceSets.getById(folderChoiceSetId, { folderKey });
+      const remainingIds = new Set(remaining.items.map((v) => v.id));
+      for (const deletedId of folderValueIds) {
+        expect(remainingIds.has(deletedId)).toBe(false);
+      }
 
       folderValueIds.length = 0;
     });

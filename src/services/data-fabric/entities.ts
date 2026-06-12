@@ -163,7 +163,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   > {
     // folderKey is header-only — destructure it out so PaginationHelpers doesn't serialise it
     // into the query string as $folderKey.
-    const { folderKey, ...rest } = options ?? {} as T;
+    const { folderKey, ...rest } = options ?? {};
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -627,7 +627,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
   ): Promise<T extends HasPaginationOptions<T> ? PaginatedResponse<EntityRecord> : NonPaginatedResponse<EntityRecord>> {
     // folderKey is header-only — destructure it out so PaginationHelpers doesn't include
     // it in the POST body alongside the query filters.
-    const { folderKey, ...rest } = options ?? {} as T;
+    const { folderKey, ...rest } = options ?? {};
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -1263,7 +1263,7 @@ export class EntityService extends BaseService implements EntityServiceModel {
     const mapping = EntitySchemaFieldTypeMap[fieldType];
     // Prefer the resolved {id, name, folderId} body so cross-folder targets resolve
     // server-side; fall back to a bare {id} when no meta was fetched.
-    const referenceEntityBody = refMeta?.referenceEntity ?? (field.referenceEntityId !== undefined ? { id: field.referenceEntityId } : undefined);
+    const referenceEntityBody = refMeta?.referenceEntity ?? (field.referenceEntityId === undefined ? undefined : { id: field.referenceEntityId });
     const referenceChoiceSetBody = refMeta?.referenceChoiceSet;
     return {
       name: field.fieldName,

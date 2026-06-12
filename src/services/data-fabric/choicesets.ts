@@ -135,7 +135,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
 
     // folderKey is header-only — destructure it out so PaginationHelpers doesn't
     // include it in the POST body alongside pagination params.
-    const { folderKey, ...rest } = options ?? {} as T;
+    const { folderKey, ...rest } = options ?? {};
     const downstreamOptions = options === undefined ? undefined : (rest as T);
     return PaginationHelpers.getAll({
       serviceAccess: this.createPaginationServiceAccess(),
@@ -395,7 +395,7 @@ export class ChoiceSetService extends BaseService implements ChoiceSetServiceMod
   }
 
   private async resolveChoiceSetName(choiceSetId: string, folderKey?: string): Promise<string> {
-    const all = await this.getAll(folderKey !== undefined ? { folderKey } : undefined);
+    const all = await this.getAll(folderKey === undefined ? undefined : { folderKey });
     const match = all.find(cs => cs.id === choiceSetId);
     if (!match) {
       throw new NotFoundError({ message: `Choice set with id '${choiceSetId}' not found.` });
