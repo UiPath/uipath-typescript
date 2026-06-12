@@ -160,6 +160,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *   { topicId: '<topicId>', isSubscribed: false, notificationMode: NotificationMode.Email },
    * ]);
    * ```
+   * @internal
    */
   @track('Subscriptions.UpdateTopic')
   async updateTopic(tenantId: string, subscriptions: TopicSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicResponse> {
@@ -191,6 +192,7 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
    *   },
    * ]);
    * ```
+   * @internal
    */
   @track('Subscriptions.UpdateCategory')
   async updateCategory(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoryResponse> {

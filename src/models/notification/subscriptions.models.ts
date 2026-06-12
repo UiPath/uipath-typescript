@@ -148,6 +148,7 @@ export interface SubscriptionServiceModel {
    *   { topicId: '<topicId>', isSubscribed: false, notificationMode: NotificationMode.Email },
    * ]);
    * ```
+   * @internal
    */
   updateTopic(tenantId: string, subscriptions: TopicSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicResponse>;
 
@@ -173,6 +174,7 @@ export interface SubscriptionServiceModel {
    *   },
    * ]);
    * ```
+   * @internal
    */
   updateCategory(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoryResponse>;
 }
