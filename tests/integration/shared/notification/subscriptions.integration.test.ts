@@ -110,6 +110,23 @@ describe.each(modes)('Subscriptions - Integration Tests [%s]', (mode) => {
     });
   });
 
-  // Note: no updateCategory integration test — needs richer tenant fixtures (multi-topic
-  // category coverage). Covered by unit tests for SDK shape.
+  describe('updatePublisher', () => {
+    it('should round-trip a publisher opt-in/out', async () => {
+      const original = firstPublisher.isUserOptin === true;
+
+      const flip = await subscriptions.updatePublisher(tenantId, [
+        { publisherId: firstPublisher.id, isUserOptIn: !original },
+      ]);
+      expect(flip.success).toBe(true);
+
+      const restore = await subscriptions.updatePublisher(tenantId, [
+        { publisherId: firstPublisher.id, isUserOptIn: original },
+      ]);
+      expect(restore.success).toBe(true);
+    });
+  });
+
+  // Note: no updateCategory / updateTopicGroup integration tests — they need richer
+  // tenant fixtures (multi-topic category coverage, configured topic groups). Covered
+  // by unit tests for SDK shape.
 });

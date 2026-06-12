@@ -7,8 +7,10 @@ import { BaseService } from '../base';
 
 import type {
   CategorySubscriptionUpdate,
+  PublisherSubscriptionUpdate,
   SubscriptionGetAllOptions,
   SubscriptionGetPublishersOptions,
+  TopicGroupSubscriptionUpdate,
   TopicSubscriptionUpdate,
 } from '../../models/notification/subscriptions.types';
 import type {
@@ -16,6 +18,8 @@ import type {
   SubscriptionGetSupportedChannelsResponse,
   SubscriptionServiceModel,
   SubscriptionUpdateCategoryResponse,
+  SubscriptionUpdatePublisherResponse,
+  SubscriptionUpdateTopicGroupResponse,
   SubscriptionUpdateTopicResponse,
 } from '../../models/notification/subscriptions.models';
 
@@ -196,6 +200,66 @@ export class SubscriptionService extends BaseService implements SubscriptionServ
   async updateCategory(tenantId: string, subscriptions: CategorySubscriptionUpdate[]): Promise<SubscriptionUpdateCategoryResponse> {
     await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_CATEGORY, {
       categorySubscriptions: subscriptions,
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { subscriptions } };
+  }
+
+  /**
+   * Updates publisher-level opt-in / opt-out. Each entry toggles the user's overall
+   * opt-in for a publisher and optionally scopes the change to specific entities.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param subscriptions - Publisher subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdatePublisherResponse}
+   *
+   * @example Opt out of a publisher entirely
+   * ```typescript
+   * await subscriptions.updatePublisher('<tenantId>', [
+   *   { publisherId: '<publisherId>', isUserOptIn: false },
+   * ]);
+   * ```
+   */
+  @track('Subscriptions.UpdatePublisher')
+  async updatePublisher(tenantId: string, subscriptions: PublisherSubscriptionUpdate[]): Promise<SubscriptionUpdatePublisherResponse> {
+    // API field is misspelled `publisherID` — map at send time.
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_PUBLISHER, {
+      publisherSubscriptions: subscriptions.map(({ publisherId, isUserOptIn, entities }) => ({
+        publisherID: publisherId,
+        isUserOptIn,
+        entities,
+      })),
+    }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
+    return { success: true, data: { subscriptions } };
+  }
+
+  /**
+   * Updates topic-group subscription preferences. Each entry scopes a topic group to
+   * a specific set of entities.
+   *
+   * @param tenantId - Tenant GUID (sent via `X-UIPATH-Internal-TenantId`)
+   * @param subscriptions - Topic-group subscription updates
+   * @returns Operation result echoing the submitted updates
+   * {@link SubscriptionUpdateTopicGroupResponse}
+   *
+   * @example Subscribe a topic group to two folders
+   * ```typescript
+   * await subscriptions.updateTopicGroup('<tenantId>', [
+   *   {
+   *     publisherId: '<publisherId>',
+   *     topicGroupName: 'JobNotifications',
+   *     entities: [
+   *       { id: '<folderId1>', type: 'Folder', isSubscribed: true },
+   *       { id: '<folderId2>', type: 'Folder', isSubscribed: true },
+   *     ],
+   *   },
+   * ]);
+   * ```
+   */
+  @track('Subscriptions.UpdateTopicGroup')
+  async updateTopicGroup(tenantId: string, subscriptions: TopicGroupSubscriptionUpdate[]): Promise<SubscriptionUpdateTopicGroupResponse> {
+    await this.post(SUBSCRIPTION_ENDPOINTS.UPDATE_TOPIC_GROUP, {
+      topicGroupSubscriptions: subscriptions,
     }, { headers: createHeaders({ [TENANT_ID]: tenantId }) });
     return { success: true, data: { subscriptions } };
   }
