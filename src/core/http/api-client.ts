@@ -84,7 +84,13 @@ export class ApiClient {
         searchParams.append(key, value.toString());
       });
     }
-    const fullUrl = searchParams.toString() ? `${url}?${searchParams.toString()}` : url;
+    // URLSearchParams.toString() uses application/x-www-form-urlencoded, which
+    // encodes spaces as `+`. OData `$filter` clauses (e.g. `Status eq 'X'`) must
+    // use `%20` for spaces — many OData backends treat `+` literally and the
+    // filter fails to parse. A literal `+` in a value is already encoded as
+    // `%2B` by URLSearchParams, so swapping the remaining `+` for `%20` is safe.
+    const queryString = searchParams.toString().replace(/\+/g, '%20');
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
 
     let body = undefined;
     

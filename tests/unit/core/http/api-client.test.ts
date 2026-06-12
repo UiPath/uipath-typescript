@@ -5,6 +5,11 @@ import { TEST_CONSTANTS } from '../../../utils/constants/common';
 
 const TRACEPARENT_REGEX = /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/;
 
+function queryOf(fullUrl: string): string {
+  const idx = fullUrl.indexOf('?');
+  return idx === -1 ? '' : fullUrl.slice(idx + 1);
+}
+
 const mockTokenManager = {
   getValidToken: vi.fn().mockResolvedValue(TEST_CONSTANTS.DEFAULT_ACCESS_TOKEN),
 };
@@ -18,10 +23,13 @@ const mockConfig = {
 const mockExecutionContext = {};
 
 let capturedHeaders: Record<string, string> = {};
+let capturedUrl = '';
 
 beforeEach(() => {
   capturedHeaders = {};
-  global.fetch = vi.fn().mockImplementation((_url: string, options: any) => {
+  capturedUrl = '';
+  global.fetch = vi.fn().mockImplementation((url: string, options: any) => {
+    capturedUrl = url;
     capturedHeaders = { ...options.headers };
     return Promise.resolve({
       ok: true,
@@ -88,6 +96,42 @@ describe('ApiClient traceparent', () => {
     await client.get('/test', { headers: { traceparent: custom } });
 
     expect(capturedHeaders['traceparent']).toBe(custom);
+  });
+});
+
+describe('ApiClient query string serialization', () => {
+  it('encodes spaces as %20, not + (required for OData $filter)', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { $filter: "Status eq 'Running'" } });
+
+    const query = queryOf(capturedUrl);
+    expect(query).not.toContain('+');
+    expect(query).toContain('%20');
+    // URLSearchParams also percent-encodes `$` and the single quotes
+    expect(query).toBe("%24filter=Status%20eq%20%27Running%27");
+  });
+
+  it('preserves a literal + in a value as %2B (not a space)', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { tag: 'a+b' } });
+
+    const query = queryOf(capturedUrl);
+    expect(query).toBe('tag=a%2Bb');
+    expect(query).not.toContain('a+b');
+  });
+
+  it('joins multiple params with &', async () => {
+    const client = createClient();
+    await client.get('/test', { params: { $top: 10, $skip: 5 } });
+
+    expect(queryOf(capturedUrl)).toBe('%24top=10&%24skip=5');
+  });
+
+  it('omits the query string entirely when no params are provided', async () => {
+    const client = createClient();
+    await client.get('/test');
+
+    expect(capturedUrl).not.toContain('?');
   });
 });
 
